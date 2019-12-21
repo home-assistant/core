@@ -5,7 +5,7 @@ import logging
 from keba_kecontact.connection import KebaKeContact
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -15,7 +15,6 @@ DOMAIN = "keba"
 SUPPORTED_COMPONENTS = ["binary_sensor", "sensor", "lock"]
 
 CONF_RFID = "rfid"
-CONF_NAME = "name"
 CONF_FS = "failsafe"
 CONF_FS_TIMEOUT = "failsafe_timeout"
 CONF_FS_FALLBACK = "failsafe_fallback"

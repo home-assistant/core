@@ -22,9 +22,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     keba = hass.data[DOMAIN]
 
     sensors = [
-        KebaBinarySensor(keba, "Online", "Wallbox", DEVICE_CLASS_CONNECTIVITY),
+        KebaBinarySensor(keba, "Online", "Status", DEVICE_CLASS_CONNECTIVITY),
         KebaBinarySensor(keba, "Plug", "Plug", DEVICE_CLASS_PLUG),
-        KebaBinarySensor(keba, "State", "Charging state", DEVICE_CLASS_POWER),
+        KebaBinarySensor(keba, "State", "Charging State", DEVICE_CLASS_POWER),
         KebaBinarySensor(keba, "Tmo FS", "Failsafe Mode", DEVICE_CLASS_SAFETY),
     ]
     async_add_entities(sensors)
