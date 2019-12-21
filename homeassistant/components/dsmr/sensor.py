@@ -32,9 +32,6 @@ ICON_POWER = "mdi:flash"
 ICON_POWER_FAILURE = "mdi:flash-off"
 ICON_SWELL_SAG = "mdi:pulse"
 
-# Smart meter sends telegram every 10 seconds or every second for DSMR 5
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
-
 RECONNECT_INTERVAL = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -49,13 +46,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+# Smart meter sends telegram every 10 seconds or every second for DSMR 5
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the DSMR sensor."""
     # Suppress logging
     logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
 
+    global MIN_TIME_BETWEEN_UPDATES
     dsmr_version = config[CONF_DSMR_VERSION]
+    if dsmr_version != "5B" or dsmr_version != "5":
+        MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
     # Define list of name,obis mappings to generate entities
     obis_mapping = [
@@ -240,12 +243,13 @@ class DSMREntity(Entity):
     @staticmethod
     def translate_tariff(value, dsmr_version):
         """Convert 2/1 to normal/low depening on DSMR version."""
-        # In Belgium 0001 is normal, 0002 is low
+        # DSMR V5B: Note: In Belgium values are swapped:
+        # Rate code 2 is used for low rate and rate code 1 is used for normal rate.
         if dsmr_version in ("5B"):
             if value == "0001":
-                return "normal"
-            if value == "0002":
-                return "low"
+                value = "0002"
+            elif value == "0002":
+                value = "0001"
         # DSMR V2.2: Note: Rate code 1 is used for low rate and rate code 2 is
         # used for normal rate.
         if value == "0002":
