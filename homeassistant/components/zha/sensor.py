@@ -109,7 +109,6 @@ class Sensor(ZhaEntity):
     _decimals = 1
     _device_class = None
     _divisor = 1
-    _domain = DOMAIN
     _multiplier = 1
     _unit = None
 

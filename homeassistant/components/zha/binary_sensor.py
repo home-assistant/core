@@ -102,7 +102,6 @@ async def _async_setup_entities(
 class BinarySensor(ZhaEntity, BinarySensorDevice):
     """ZHA BinarySensor."""
 
-    _domain = DOMAIN
     _device_class = None
 
     def __init__(self, **kwargs):
