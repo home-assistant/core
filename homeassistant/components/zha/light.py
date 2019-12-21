@@ -80,8 +80,6 @@ async def _async_setup_entities(
 class Light(ZhaEntity, light.Light):
     """Representation of a ZHA or ZLL light."""
 
-    _domain = light.DOMAIN
-
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
