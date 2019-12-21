@@ -1,6 +1,12 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
 import logging
 
+from homeassistant.components.device_tracker import (
+    ATTR_BATTERY,
+    ATTR_GPS,
+    ATTR_GPS_ACCURACY,
+    ATTR_LOCATION_NAME,
+)
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_GPS
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_LATITUDE, ATTR_LONGITUDE
@@ -9,13 +15,9 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
     ATTR_ALTITUDE,
-    ATTR_BATTERY,
     ATTR_COURSE,
     ATTR_DEVICE_ID,
     ATTR_DEVICE_NAME,
-    ATTR_GPS,
-    ATTR_GPS_ACCURACY,
-    ATTR_LOCATION_NAME,
     ATTR_SPEED,
     ATTR_VERTICAL_ACCURACY,
     SIGNAL_LOCATION_UPDATE,
