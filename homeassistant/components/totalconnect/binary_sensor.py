@@ -91,9 +91,14 @@ class TotalConnectBinarySensor(BinarySensorDevice):
         self._is_tampered = status == ZONE_STATUS_TAMPER
         self._is_low_battery = status == ZONE_STATUS_TROUBLE_LOW_BATTERY
 
-        if status in (ZONE_STATUS_NORMAL, ZONE_STATUS_BYPASSED):
+        if status in (
+            ZONE_STATUS_NORMAL,
+            ZONE_STATUS_BYPASSED,
+            ZONE_STATUS_LOW_BATTERY,
+            ZONE_STATUS_TROUBLE_LOW_BATTERY,
+        ):
             self._state = False
-        elif status in (ZONE_STATUS_FAULT, ZONE_STATUS_TRIGGERED):
+        elif status in (ZONE_STATUS_FAULT, ZONE_STATUS_TRIGGERED, ZONE_STATUS_TAMPER):
             self._state = True
         else:
             self._state = False
