@@ -46,20 +46,31 @@ class AbortFlow(FlowError):
         self.description_placeholders = description_placeholders
 
 
-class FlowManager:
+class BaseFlowManager:
     """Manage all the flows that are in progress."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        async_create_flow: Callable,
-        async_finish_flow: Callable,
     ) -> None:
         """Initialize the flow manager."""
         self.hass = hass
         self._progress: Dict[str, Any] = {}
-        self._async_create_flow = async_create_flow
-        self._async_finish_flow = async_finish_flow
+
+    async def async_create_flow(
+        self, handler_key: str, *, context: Dict[str, Any], data: Dict[str, Any]
+    ) -> "FlowHandler":
+        """Create a flow for specified handler.
+
+        Handler key is the domain of the component that we want to set up.
+        """
+        raise NotImplementedError(self.async_create_flow)
+
+    async def async_finish_flow(
+        self, flow: "FlowHandler", result: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Finish a config flow and add an entry."""
+        raise NotImplementedError(self.async_finish_flow)
 
     @callback
     def async_progress(self) -> List[Dict]:
@@ -75,7 +86,7 @@ class FlowManager:
         """Start a configuration flow."""
         if context is None:
             context = {}
-        flow = await self._async_create_flow(handler, context=context, data=data)
+        flow = await self.async_create_flow(handler, context=context, data=data)
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
@@ -168,7 +179,7 @@ class FlowManager:
             return result
 
         # We pass a copy of the result because we're mutating our version
-        result = await self._async_finish_flow(flow, dict(result))
+        result = await self.async_finish_flow(flow, dict(result))
 
         # _async_finish_flow may change result type, check it again
         if result["type"] == RESULT_TYPE_FORM:
@@ -179,6 +190,36 @@ class FlowManager:
         self._progress.pop(flow.flow_id)
 
         return result
+
+
+class FlowManager(BaseFlowManager):
+    """Manage all the flows that are in progress."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        async_create_flow: Callable,
+        async_finish_flow: Callable,
+    ) -> None:
+        """Initialize the flow manager."""
+        super().__init__(hass)
+        self._async_create_flow = async_create_flow
+        self._async_finish_flow = async_finish_flow
+
+    async def async_create_flow(
+        self, handler_key: str, *, context: Dict[str, Any], data: Dict[str, Any]
+    ) -> "FlowHandler":
+        """Create a flow for specified handler.
+
+        Handler key is the domain of the component that we want to set up.
+        """
+        return await self._async_create_flow(handler_key, context=context, data=data)
+
+    async def async_finish_flow(
+        self, flow: "FlowHandler", result: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Finish a config flow and add an entry."""
+        return await self._async_finish_flow(flow, result)
 
 
 class FlowHandler:
