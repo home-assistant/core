@@ -1,18 +1,18 @@
 """The tests for the humidifier component."""
-from unittest.mock import MagicMock
 from typing import List
+from unittest.mock import MagicMock
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.helpers.config_validation import make_entity_service_schema
-
 from homeassistant.components.humidifier import (
-    HumidifierDevice,
+    ATTR_HUMIDITY,
     OPERATION_MODE_HUMIDIFY,
     OPERATION_MODE_OFF,
-    ATTR_HUMIDITY,
+    HumidifierDevice,
 )
+from homeassistant.helpers.config_validation import make_entity_service_schema
+
 from tests.common import async_mock_service
 
 SET_HUMIDITY_SCHEMA = make_entity_service_schema(

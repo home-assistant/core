@@ -9,9 +9,9 @@ import voluptuous as vol
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
-    make_entity_service_schema,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
+    make_entity_service_schema,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -23,18 +23,20 @@ from .const import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
-    ATTR_HUMIDITY,
     ATTR_HUMIDIFIER_ACTION,
-    ATTR_OPERATION_MODE,
-    ATTR_OPERATION_MODES,
+    ATTR_HUMIDITY,
     ATTR_MAX_HUMIDITY,
     ATTR_MIN_HUMIDITY,
+    ATTR_OPERATION_MODE,
+    ATTR_OPERATION_MODES,
     ATTR_PRESET_MODE,
     ATTR_PRESET_MODES,
     ATTR_WATER_LEVEL,
+    DEFAULT_MAX_HUMIDITY,
+    DEFAULT_MIN_HUMIDITY,
     DOMAIN,
-    OPERATION_MODE_HUMIDIFY,
     OPERATION_MODE_DRY,
+    OPERATION_MODE_HUMIDIFY,
     OPERATION_MODE_HUMIDIFY_DRY,
     OPERATION_MODE_OFF,
     OPERATION_MODES,
@@ -48,8 +50,6 @@ from .const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_TEMPERATURE,
     SUPPORT_WATER_LEVEL,
-    DEFAULT_MIN_HUMIDITY,
-    DEFAULT_MAX_HUMIDITY,
 )
 
 SCAN_INTERVAL = timedelta(seconds=60)
