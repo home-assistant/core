@@ -60,8 +60,6 @@ async def _async_setup_entities(
 class Switch(ZhaEntity, SwitchDevice):
     """ZHA switch."""
 
-    _domain = DOMAIN
-
     def __init__(self, **kwargs):
         """Initialize the ZHA switch."""
         super().__init__(**kwargs)
