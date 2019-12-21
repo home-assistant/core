@@ -15,6 +15,7 @@ DOMAIN = "keba"
 SUPPORTED_COMPONENTS = ["binary_sensor", "sensor", "lock"]
 
 CONF_RFID = "rfid"
+CONF_NAME = "name"
 CONF_FS = "failsafe"
 CONF_FS_TIMEOUT = "failsafe_timeout"
 CONF_FS_FALLBACK = "failsafe_fallback"
@@ -29,6 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_NAME, default=""): cv.string,
                 vol.Optional(CONF_RFID, default="00845500"): cv.string,
                 vol.Optional(CONF_FS, default=False): cv.boolean,
                 vol.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
@@ -58,7 +60,8 @@ async def async_setup(hass, config):
     host = config[DOMAIN][CONF_HOST]
     rfid = config[DOMAIN][CONF_RFID]
     refresh_interval = config[DOMAIN][CONF_FS_INTERVAL]
-    keba = KebaHandler(hass, host, rfid, refresh_interval)
+    device_name = config[DOMAIN][CONF_NAME]
+    keba = KebaHandler(hass, host, rfid, refresh_interval, device_name)
     hass.data[DOMAIN] = keba
 
     # Wait for KebaHandler setup complete (initial values loaded)
@@ -105,14 +108,15 @@ async def async_setup(hass, config):
 class KebaHandler(KebaKeContact):
     """Representation of a KEBA charging station connection."""
 
-    def __init__(self, hass, host, rfid, refresh_interval):
+    def __init__(self, hass, host, rfid, refresh_interval, device_name):
         """Initialize charging station connection."""
         super().__init__(host, self.hass_callback)
 
         self._update_listeners = []
         self._hass = hass
         self.rfid = rfid
-        self.device_name = "keba_wallbox_"
+        self.device_name = device_name
+        self.device_id = "keba_wallbox_"
 
         # Ensure at least MAX_POLLING_INTERVAL seconds delay
         self._refresh_interval = max(MAX_POLLING_INTERVAL, refresh_interval)
@@ -148,7 +152,7 @@ class KebaHandler(KebaKeContact):
         # Request initial values and extract serial number
         await self.request_data()
         if self.get_value("Serial") is not None:
-            self.device_name = f"keba_wallbox_{self.get_value('Serial')}"
+            self.device_id = f"keba_wallbox_{self.get_value('Serial')}"
             return True
 
         return False

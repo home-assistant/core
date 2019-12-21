@@ -33,11 +33,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class KebaSensor(Entity):
     """The entity class for KEBA charging stations sensors."""
 
-    def __init__(self, keba, key, name, icon, unit, device_class=None):
+    def __init__(self, keba, key, sensor_name, icon, unit, device_class=None):
         """Initialize the KEBA Sensor."""
         self._key = key
         self._keba = keba
-        self._name = name
+        self._sensor_name = sensor_name
         self._device_class = device_class
         self._icon = icon
         self._unit = unit
@@ -52,12 +52,12 @@ class KebaSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        return f"{self._keba.device_name}_{self._name}"
+        return f"{self._keba.device_id}_{self._sensor_name}"
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return f"{self._keba.device_name} {self._sensor_name}"
 
     @property
     def device_class(self):

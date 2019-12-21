@@ -37,7 +37,7 @@ class KebaBinarySensor(BinarySensorDevice):
         """Initialize the KEBA Sensor."""
         self._key = key
         self._keba = keba
-        self._name = sensor_name
+        self._sensor_name = sensor_name
         self._device_class = device_class
         self._is_on = None
         self._attributes = {}
@@ -50,12 +50,12 @@ class KebaBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the binary sensor."""
-        return f"{self._keba.device_name}_{self._name}"
+        return f"{self._keba.device_id}_{self._sensor_name}"
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return f"{self._keba.device_name} {self._sensor_name}"
 
     @property
     def device_class(self):
