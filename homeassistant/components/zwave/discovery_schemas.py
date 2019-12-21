@@ -293,10 +293,12 @@ DISCOVERY_SCHEMAS = [
         const.DISC_COMPONENT: "light",
         const.DISC_GENERIC_DEVICE_CLASS: [
             const.GENERIC_TYPE_SWITCH_MULTILEVEL,
+            const.GENERIC_TYPE_SWITCH_BINARY,
             const.GENERIC_TYPE_SWITCH_REMOTE,
         ],
         const.DISC_SPECIFIC_DEVICE_CLASS: [
             const.SPECIFIC_TYPE_POWER_SWITCH_MULTILEVEL,
+            const.SPECIFIC_TYPE_POWER_SWITCH_BINARY,
             const.SPECIFIC_TYPE_SCENE_SWITCH_MULTILEVEL,
             const.SPECIFIC_TYPE_NOT_USED,
         ],
