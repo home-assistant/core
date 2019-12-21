@@ -243,17 +243,15 @@ class Illuminance(Sensor):
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
-    _device_class = DEVICE_CLASS_POWER  # FixMe: This could be other than POWER, see ZCL
+    _device_class = DEVICE_CLASS_POWER
 
     def formatter(self, value):
         """Pass through channel formatter."""
-        # ToDo: do formatting here and only get divisor & multiplier from the channel
         return self._channel.formatter_function(value)
 
     @property
     def unit_of_measurement(self):
         """Return Unit of measurement."""
-        # ToDo: move it from channel to here
         return self._channel.unit_of_measurement
 
 

@@ -221,13 +221,15 @@ class ZHAEntityRegistry:
     def strict_match(self, rule: MatchRule) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate for a strict match rule."""
 
-        def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
+        def decorator(zha_ent: CALLABLE_T) -> CALLABLE_T:
             """Register a strict match rule.
 
             all non emtpy fields of a match rule must match
             """
-            self._strict_registry[zha_entity._domain][rule] = zha_entity
-            return zha_entity
+            self._strict_registry[zha_ent._domain][  # pylint: disable=protected-access
+                rule
+            ] = zha_ent
+            return zha_ent
 
         return decorator
 
@@ -239,7 +241,9 @@ class ZHAEntityRegistry:
 
             any non emtpy fields of a match rule may match
             """
-            self._loose_registry[zha_entity._domain][rule] = zha_entity
+            self._loose_registry[
+                zha_entity._domain  # pylint: disable=protected-access
+            ][rule] = zha_entity
             return zha_entity
 
         return decorator
