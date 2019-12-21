@@ -11,7 +11,7 @@ import asyncio
 from collections import OrderedDict
 from itertools import chain
 import logging
-from typing import Any, Dict, Iterable, List, Optional, cast
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, cast
 
 import attr
 
@@ -22,6 +22,9 @@ from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.yaml import load_yaml
 
 from .typing import HomeAssistantType
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry  # noqa: F401
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -48,7 +51,7 @@ class RegistryEntry:
     unique_id = attr.ib(type=str)
     platform = attr.ib(type=str)
     name = attr.ib(type=str, default=None)
-    device_id = attr.ib(type=str, default=None)
+    device_id: Optional[str] = attr.ib(default=None)
     config_entry_id: Optional[str] = attr.ib(default=None)
     disabled_by = attr.ib(
         type=Optional[str],
@@ -135,16 +138,16 @@ class EntityRegistry:
     @callback
     def async_get_or_create(
         self,
-        domain,
-        platform,
-        unique_id,
+        domain: str,
+        platform: str,
+        unique_id: str,
         *,
-        suggested_object_id=None,
-        config_entry=None,
-        device_id=None,
-        known_object_ids=None,
-        disabled_by=None,
-    ):
+        suggested_object_id: Optional[str] = None,
+        config_entry: Optional["ConfigEntry"] = None,
+        device_id: Optional[str] = None,
+        known_object_ids: Optional[Iterable[str]] = None,
+        disabled_by: Optional[str] = None,
+    ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
         config_entry_id = None
         if config_entry:
@@ -153,7 +156,7 @@ class EntityRegistry:
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
 
         if entity_id:
-            return self._async_update_entity(
+            return self._async_update_entity(  # type: ignore
                 entity_id,
                 config_entry_id=config_entry_id or _UNDEF,
                 device_id=device_id or _UNDEF,
@@ -228,12 +231,15 @@ class EntityRegistry:
         disabled_by=_UNDEF,
     ):
         """Update properties of an entity."""
-        return self._async_update_entity(
-            entity_id,
-            name=name,
-            new_entity_id=new_entity_id,
-            new_unique_id=new_unique_id,
-            disabled_by=disabled_by,
+        return cast(  # cast until we have _async_update_entity type hinted
+            RegistryEntry,
+            self._async_update_entity(
+                entity_id,
+                name=name,
+                new_entity_id=new_entity_id,
+                new_unique_id=new_unique_id,
+                disabled_by=disabled_by,
+            ),
         )
 
     @callback

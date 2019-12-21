@@ -12,8 +12,7 @@ from homeassistant.loader import bind_hass
 
 from .typing import HomeAssistantType
 
-# mypy: allow-untyped-calls, allow-untyped-defs
-# mypy: no-check-untyped-defs, no-warn-return-any
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 _UNDEF = object()
@@ -71,10 +70,11 @@ def format_mac(mac: str) -> str:
 class DeviceRegistry:
     """Class to hold a registry of devices."""
 
-    def __init__(self, hass):
+    devices: Dict[str, DeviceEntry]
+
+    def __init__(self, hass: HomeAssistantType) -> None:
         """Initialize the device registry."""
         self.hass = hass
-        self.devices = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
