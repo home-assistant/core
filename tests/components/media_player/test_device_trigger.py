@@ -216,12 +216,13 @@ async def test_if_fires_on_state_change(hass, calls):
     )
 
     # Fake that the entity is playing.
+    hass.states.async_set("media_player.entity", STATE_PAUSED)
     hass.states.async_set("media_player.entity", STATE_PLAYING)
     await hass.async_block_till_done()
     assert len(calls) == 3
-    assert calls[2].data["some"] == "play - device - {} - off - playing - None".format(
-        "media_player.entity"
-    )
+    assert calls[2].data[
+        "some"
+    ] == "play - device - {} - paused - playing - None".format("media_player.entity")
 
     # Fake that the entity is playing.
     hass.states.async_set("media_player.entity", STATE_PAUSED)
