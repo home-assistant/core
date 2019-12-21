@@ -1,25 +1,15 @@
 """Interfaces with TotalConnect sensors."""
 import logging
 
+from homeassistant.components.binary_sensor import (DEVICE_CLASS_DOOR,
+                                                    DEVICE_CLASS_GAS,
+                                                    DEVICE_CLASS_SMOKE,
+                                                    BinarySensorDevice)
 from total_connect_client.TotalConnectClient import (
-    ZONE_TYPE_SECURITY,
-    ZONE_TYPE_FIRE_SMOKE,
-    ZONE_TYPE_CARBON_MONOXIDE,
-    ZONE_STATUS_NORMAL,
-    ZONE_STATUS_BYPASSED,
-    ZONE_STATUS_FAULT,
-    ZONE_STATUS_TAMPER,
-    ZONE_STATUS_LOW_BATTERY,
-    ZONE_STATUS_TROUBLE_LOW_BATTERY,
-    ZONE_STATUS_TRIGGERED,
-)
-
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_SMOKE,
-    DEVICE_CLASS_GAS,
-)
+    ZONE_STATUS_BYPASSED, ZONE_STATUS_FAULT, ZONE_STATUS_LOW_BATTERY,
+    ZONE_STATUS_NORMAL, ZONE_STATUS_TAMPER, ZONE_STATUS_TRIGGERED,
+    ZONE_STATUS_TROUBLE_LOW_BATTERY, ZONE_TYPE_CARBON_MONOXIDE,
+    ZONE_TYPE_FIRE_SMOKE, ZONE_TYPE_SECURITY)
 
 from . import DOMAIN as TOTALCONNECT_DOMAIN
 
@@ -99,11 +89,7 @@ class TotalConnectBinarySensor(BinarySensorDevice):
             ZONE_STATUS_TROUBLE_LOW_BATTERY,
         ):
             self._state = False
-        elif status in (
-            ZONE_STATUS_FAULT,
-            ZONE_STATUS_TRIGGERED,
-            ZONE_STATUS_TAMPER
-        ):
+        elif status in (ZONE_STATUS_FAULT, ZONE_STATUS_TRIGGERED, ZONE_STATUS_TAMPER):
             self._state = True
         else:
             self._state = False
