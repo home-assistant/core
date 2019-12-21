@@ -18,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_call_later
 from homeassistant.util import slugify
 
 from .config_flow import (
@@ -97,11 +96,8 @@ async def async_setup(hass, base_config):
                 data={CONF_USERNAME: email, CONF_PASSWORD: password},
             )
         )
-        async_call_later(
-            hass,
-            15,
-            lambda _: _update_entry(email, options={CONF_SCAN_INTERVAL: scan_interval}),
-        )
+        hass.data.setdefault(DOMAIN, {})
+        hass.data[DOMAIN][email] = {CONF_SCAN_INTERVAL: scan_interval}
     return True
 
 
@@ -111,6 +107,13 @@ async def async_setup_entry(hass, config_entry):
     hass.data.setdefault(DOMAIN, {})
     config = config_entry.data
     websession = aiohttp_client.async_get_clientsession(hass)
+    email = config_entry.title
+    if email in hass.data[DOMAIN] and CONF_SCAN_INTERVAL in hass.data[DOMAIN][email]:
+        scan_interval = hass.data[DOMAIN][email][CONF_SCAN_INTERVAL]
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_SCAN_INTERVAL: scan_interval}
+        )
+        hass.data[DOMAIN].pop(email)
     try:
         controller = TeslaAPI(
             websession,
