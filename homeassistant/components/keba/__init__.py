@@ -141,7 +141,7 @@ class KebaHandler(KebaKeContact):
         _LOGGER.debug("Periodic data request rescheduled")
         self._polling_task = self._hass.loop.create_task(self._periodic_request())
 
-    async def setup(self, loop=None):
+    async def setup(self, loop=None, *_):
         """Initialize KebaHandler object."""
         await super().setup(loop)
 
@@ -188,7 +188,7 @@ class KebaHandler(KebaKeContact):
         """Set current maximum in async way."""
         try:
             current = param["current"]
-            await self.set_current(current)
+            await self.set_current(float(current))
             # No fast polling as this function might be called regularly
         except (KeyError, ValueError) as ex:
             _LOGGER.warning("Current value is not correct. %s", ex)
