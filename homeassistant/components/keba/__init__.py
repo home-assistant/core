@@ -183,7 +183,7 @@ class KebaHandler(KebaKeContact):
         """Set energy target in async way."""
         try:
             energy = param["energy"]
-            await self.set_energy(energy)
+            await self.set_energy(float(energy))
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
             _LOGGER.warning("Energy value is not correct. %s", ex)
@@ -220,10 +220,10 @@ class KebaHandler(KebaKeContact):
     async def async_set_failsafe(self, param=None):
         """Set failsafe mode in async way."""
         try:
-            timout = param[CONF_FS_TIMEOUT]
+            timeout = param[CONF_FS_TIMEOUT]
             fallback = param[CONF_FS_FALLBACK]
             persist = param[CONF_FS_PERSIST]
-            await self.set_failsafe(timout, fallback, persist)
+            await self.set_failsafe(int(timeout), float(fallback), bool(persist))
             self._set_fast_polling()
         except (KeyError, ValueError) as ex:
             _LOGGER.warning(
