@@ -130,6 +130,7 @@ IGNORE_VIOLATIONS = [
     "prometheus",
     "conversation",
     "logbook",
+    "mobile_app",
     # These should be extracted to external package
     "pvoutput",
     "dwd_weather_warnings",
