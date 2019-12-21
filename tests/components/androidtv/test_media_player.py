@@ -714,7 +714,25 @@ async def test_adb_filesync(hass):
     ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
 
+    # Failed pull because path is not whitelisted
     with patch("androidtv.basetv.BaseTV.adb_pull") as patch_pull:
+        await hass.services.async_call(
+            ANDROIDTV_DOMAIN,
+            "adb_filesync",
+            {
+                ATTR_ENTITY_ID: entity_id,
+                "direction": "pull",
+                "device_path": device_path,
+                "local_path": local_path,
+            },
+            blocking=True,
+        )
+        patch_pull.assert_not_called()
+
+    # Successful pull
+    with patch("androidtv.basetv.BaseTV.adb_pull") as patch_pull, patch.object(
+        hass.config, "is_allowed_path", return_value=True
+    ):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
             "adb_filesync",
@@ -728,7 +746,10 @@ async def test_adb_filesync(hass):
         )
         patch_pull.assert_called_with(local_path, device_path)
 
-    with patch("androidtv.basetv.BaseTV.adb_push") as patch_push:
+    # Successful push
+    with patch("androidtv.basetv.BaseTV.adb_push") as patch_push, patch.object(
+        hass.config, "is_allowed_path", return_value=True
+    ):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
             "adb_filesync",

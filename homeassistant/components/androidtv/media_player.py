@@ -278,9 +278,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         def service_adb_filesync(service):
             """Transfer a file between your HA instance and an Android TV / Fire TV device."""
+            local_path = service.data.get(ATTR_LOCAL_PATH)
+            if not hass.config.is_allowed_path(local_path):
+                _LOGGER.warning("'%s' is not secure to load data from!", local_path)
+                return
+
             direction = service.data.get(ATTR_DIRECTION)
             device_path = service.data.get(ATTR_DEVICE_PATH)
-            local_path = service.data.get(ATTR_LOCAL_PATH)
             entity_id = service.data.get(ATTR_ENTITY_ID)
             target_devices = [
                 dev
