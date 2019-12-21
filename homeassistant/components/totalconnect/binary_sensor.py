@@ -9,6 +9,7 @@ from total_connect_client.TotalConnectClient import (
     ZONE_STATUS_BYPASSED,
     ZONE_STATUS_FAULT,
     ZONE_STATUS_TAMPER,
+    ZONE_STATUS_LOW_BATTERY,
     ZONE_STATUS_TROUBLE_LOW_BATTERY,
     ZONE_STATUS_TRIGGERED,
 )
@@ -98,7 +99,11 @@ class TotalConnectBinarySensor(BinarySensorDevice):
             ZONE_STATUS_TROUBLE_LOW_BATTERY,
         ):
             self._state = False
-        elif status in (ZONE_STATUS_FAULT, ZONE_STATUS_TRIGGERED, ZONE_STATUS_TAMPER):
+        elif status in (
+            ZONE_STATUS_FAULT,
+            ZONE_STATUS_TRIGGERED,
+            ZONE_STATUS_TAMPER
+        ):
             self._state = True
         else:
             self._state = False
