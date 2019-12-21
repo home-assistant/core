@@ -226,7 +226,7 @@ class ZHAEntityRegistry:
         def decorator(zha_ent: CALLABLE_T) -> CALLABLE_T:
             """Register a strict match rule.
 
-            all non emtpy fields of a match rule must match
+            All non empty fields of a match rule must match.
             """
             self._strict_registry[component][rule] = zha_ent
             return zha_ent
@@ -236,12 +236,12 @@ class ZHAEntityRegistry:
     def loose_match(
         self, component: str, rule: MatchRule
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
-        """Decorate for a loose match rule."""
+        """Decorate a loose match rule."""
 
         def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
             """Register a loose match rule.
 
-            any non emtpy fields of a match rule may match
+            All non empty fields of a match rule must match.
             """
             self._loose_registry[component][rule] = zha_entity
             return zha_entity
@@ -249,11 +249,11 @@ class ZHAEntityRegistry:
         return decorator
 
     def _strict_matched(self, zha_device, chnls: dict, rule: MatchRule) -> bool:
-        """Return True is this device matches the criteria."""
+        """Return True if this device matches the criteria."""
         return all(self._matched(zha_device, chnls, rule))
 
     def _loose_matched(self, zha_device, chnls: dict, rule: MatchRule) -> bool:
-        """Return True is this device matches the criteria."""
+        """Return True if this device matches the criteria."""
         return any(self._matched(zha_device, chnls, rule))
 
     @staticmethod

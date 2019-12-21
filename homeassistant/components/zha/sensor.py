@@ -193,7 +193,7 @@ class Battery(Sensor):
         return value
 
     async def async_state_attr_provider(self):
-        """Return device statr attrs for battery sensors."""
+        """Return device state attrs for battery sensors."""
         state_attrs = {}
         battery_size = await self._channel.get_attribute_value("battery_size")
         if battery_size is not None:
@@ -237,7 +237,7 @@ class Illuminance(Sensor):
 
     @staticmethod
     def formatter(value):
-        """Convert Illimination data."""
+        """Convert illumination data."""
         return round(pow(10, ((value - 1) / 10000)), 1)
 
 
