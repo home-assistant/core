@@ -38,6 +38,12 @@ async def async_handle_message(hass, config, request, context=None, enabled=True
 
         funct_ref = HANDLERS.get((directive.namespace, directive.name))
         if funct_ref:
+            _LOGGER.info(
+                "Processing %s.%s Payload: %s",
+                directive.namespace,
+                directive.name,
+                directive.payload,
+            )
             response = await funct_ref(hass, config, directive, context)
             if directive.has_endpoint:
                 response.merge_context_properties(directive.endpoint)
