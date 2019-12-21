@@ -21,6 +21,7 @@ CONF_FS_TIMEOUT = "failsafe_timeout"
 CONF_FS_FALLBACK = "failsafe_fallback"
 CONF_FS_PERSIST = "failsafe_persist"
 CONF_FS_INTERVAL = "refresh_interval"
+DEFAULT_NAME = "Keba Charging Station"
 
 MAX_POLLING_INTERVAL = 5  # in seconds
 MAX_FAST_POLLING_COUNT = 4
@@ -30,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_NAME, default=""): cv.string,
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_RFID, default="00845500"): cv.string,
                 vol.Optional(CONF_FS, default=False): cv.boolean,
                 vol.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
@@ -145,7 +146,7 @@ class KebaHandler(KebaKeContact):
         _LOGGER.debug("Periodic data request rescheduled")
         self._polling_task = self._hass.loop.create_task(self._periodic_request())
 
-    async def setup(self, loop=None, *_):
+    async def setup(self, loop=None):
         """Initialize KebaHandler object."""
         await super().setup(loop)
 

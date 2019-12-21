@@ -2,7 +2,7 @@
   "domain": "keba",
   "name": "Keba Charging Station",
   "documentation": "https://www.home-assistant.io/integrations/keba",
-  "requirements": ["keba-kecontact==0.2.0"],
+  "requirements": ["keba-kecontact==1.0.0"],
   "dependencies": [],
   "codeowners": [
     "@dannerph"
