@@ -6,5 +6,7 @@
     "pyownet==0.10.0.post1"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@garbled1"
+  ]
 }
