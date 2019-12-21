@@ -18,7 +18,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core.const import (
-    CHANNEL_ATTRIBUTE,
+    CHANNEL_OCCUPANCY,
     CHANNEL_ON_OFF,
     CHANNEL_ZONE,
     DATA_ZHA,
@@ -111,7 +111,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         self._device_state_attributes = {}
         self._zone_channel = self.cluster_channels.get(CHANNEL_ZONE)
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
-        self._attr_channel = self.cluster_channels.get(CHANNEL_ATTRIBUTE)
+        self._attr_channel = self.cluster_channels.get(CHANNEL_OCCUPANCY)
         self._zha_sensor_type = kwargs[SENSOR_TYPE]
 
     async def _determine_device_class(self):
