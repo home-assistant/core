@@ -217,6 +217,10 @@ class ElectricalMeasurement(Sensor):
         """Return True if HA needs to poll for state changes."""
         return True
 
+    def formatter(self, value) -> int:
+        """Return 'normalized' value."""
+        return round(value * self._channel.multiplier / self._channel.divisor)
+
 
 @STRICT_MATCH(MatchRule(generic_ids={CHANNEL_ST_HUMIDITY_CLUSTER}))
 @STRICT_MATCH(MatchRule(channel_names={CHANNEL_HUMIDITY}))
