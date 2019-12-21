@@ -209,7 +209,7 @@ class ZHAEntityRegistry:
         self._loose_registry = collections.defaultdict(dict)
 
     def get_entity(
-        self, component: str, zha_device, chnls: list, default: CALLABLE_T = None,
+        self, component: str, zha_device, chnls: list, default: CALLABLE_T = None
     ) -> CALLABLE_T:
         """Match a ZHA Channels to a ZHA Entity class."""
         for match in self._strict_registry[component]:
@@ -218,22 +218,24 @@ class ZHAEntityRegistry:
 
         return default
 
-    def strict_match(self, rule: MatchRule) -> Callable[[CALLABLE_T], CALLABLE_T]:
-        """Decorate for a strict match rule."""
+    def strict_match(
+        self, component: str, rule: MatchRule
+    ) -> Callable[[CALLABLE_T], CALLABLE_T]:
+        """Decorate a strict match rule."""
 
         def decorator(zha_ent: CALLABLE_T) -> CALLABLE_T:
             """Register a strict match rule.
 
             all non emtpy fields of a match rule must match
             """
-            self._strict_registry[zha_ent._domain][  # pylint: disable=protected-access
-                rule
-            ] = zha_ent
+            self._strict_registry[component][rule] = zha_ent
             return zha_ent
 
         return decorator
 
-    def loose_match(self, rule: MatchRule) -> Callable[[CALLABLE_T], CALLABLE_T]:
+    def loose_match(
+        self, component: str, rule: MatchRule
+    ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate for a loose match rule."""
 
         def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
@@ -241,9 +243,7 @@ class ZHAEntityRegistry:
 
             any non emtpy fields of a match rule may match
             """
-            self._loose_registry[
-                zha_entity._domain  # pylint: disable=protected-access
-            ][rule] = zha_entity
+            self._loose_registry[component][rule] = zha_entity
             return zha_entity
 
         return decorator
