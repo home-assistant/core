@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             dev_type = "std"
             if "EF" in family:
                 dev_type = "HobbyBoard"
-                family = bytes.decode(owproxy.read(f"{device}type"))
+                family = owproxy.read(f"{device}type").decode()
 
             if family not in hb_info_from_type(dev_type):
                 _LOGGER.warning(
@@ -141,7 +141,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         device_names.get(sensor_id, sensor_id),
                         device_file,
                         sensor_key,
-                        owproxy=owproxy,
+                        owproxy,
                     )
                 )
 
@@ -194,25 +194,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class OneWire(Entity):
     """Implementation of an One wire Sensor."""
 
-    def __init__(self, name, device_file, sensor_type, owproxy=None):
+    def __init__(self, name, device_file, sensor_type):
         """Initialize the sensor."""
         self._name = name + " " + sensor_type.capitalize()
         self._device_file = device_file
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._state = None
-        self._owproxy = owproxy
 
     def _read_value_raw(self):
         """Read the value as it is returned by the sensor."""
         with open(self._device_file, "r") as ds_device_file:
             lines = ds_device_file.readlines()
         return lines
-
-    def _read_value_ownet(self):
-        """Read a value from the owserver."""
-        if self._owproxy:
-            return bytes.decode(self._owproxy.read(self._device_file)).lstrip()
-        return None
 
     @property
     def name(self):
@@ -234,6 +227,17 @@ class OneWire(Entity):
 
 class OneWireProxy(OneWire):
     """Implementation of a One wire Sensor through owserver."""
+
+    def __init__(self, name, device_file, sensor_type, owproxy):
+        """Initialize the onewire sensor via owserver."""
+        super().__init__(name, device_file, sensor_type)
+        self._owproxy = owproxy
+
+    def _read_value_ownet(self):
+        """Read a value from the owserver."""
+        if self._owproxy:
+            return bytes.decode(self._owproxy.read(self._device_file)).lstrip()
+        return None
 
     def update(self):
         """Get the latest data from the device."""
