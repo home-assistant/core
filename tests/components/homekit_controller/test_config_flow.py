@@ -836,3 +836,85 @@ async def test_parse_overlapping_homekit_json(hass):
         "title_placeholders": {"name": "TestDevice"},
         "unique_id": "00:00:00:00:00:00",
     }
+
+
+async def test_unignore_works(hass):
+    """Test rediscovery triggered disovers work."""
+    discovery_info = {
+        "name": "TestDevice",
+        "address": "127.0.0.1",
+        "port": 8080,
+        "md": "TestDevice",
+        "pv": "1.0",
+        "id": "00:00:00:00:00:00",
+        "c#": 1,
+        "s#": 1,
+        "ff": 0,
+        "ci": 0,
+        "sf": 1,
+    }
+
+    pairing = mock.Mock(pairing_data={"AccessoryPairingID": "00:00:00:00:00:00"})
+    pairing.list_accessories_and_characteristics.return_value = [
+        {
+            "aid": 1,
+            "services": [
+                {
+                    "characteristics": [{"type": "23", "value": "Koogeek-LS1-20833F"}],
+                    "type": "3e",
+                }
+            ],
+        }
+    ]
+
+    flow = _setup_flow_handler(hass)
+
+    flow.controller.pairings = {"00:00:00:00:00:00": pairing}
+    flow.controller.discover.return_value = [discovery_info]
+
+    result = await flow.async_step_unignore({"unique_id": "00:00:00:00:00:00"})
+    assert result["type"] == "form"
+    assert result["step_id"] == "pair"
+    assert flow.context == {
+        "hkid": "00:00:00:00:00:00",
+        "title_placeholders": {"name": "TestDevice"},
+        "unique_id": "00:00:00:00:00:00",
+    }
+
+    # User initiates pairing by clicking on 'configure' - device enters pairing mode and displays code
+    result = await flow.async_step_pair({})
+    assert result["type"] == "form"
+    assert result["step_id"] == "pair"
+    assert flow.controller.start_pairing.call_count == 1
+
+    # Pairing finalized
+    result = await flow.async_step_pair({"pairing_code": "111-22-33"})
+    assert result["type"] == "create_entry"
+    assert result["title"] == "Koogeek-LS1-20833F"
+    assert result["data"] == pairing.pairing_data
+
+
+async def test_unignore_ignores_missing_devices(hass):
+    """Test rediscovery triggered disovers handle devices that have gone away."""
+    discovery_info = {
+        "name": "TestDevice",
+        "address": "127.0.0.1",
+        "port": 8080,
+        "md": "TestDevice",
+        "pv": "1.0",
+        "id": "00:00:00:00:00:00",
+        "c#": 1,
+        "s#": 1,
+        "ff": 0,
+        "ci": 0,
+        "sf": 1,
+    }
+
+    flow = _setup_flow_handler(hass)
+    flow.controller.discover.return_value = [discovery_info]
+
+    result = await flow.async_step_unignore({"unique_id": "00:00:00:00:00:01"})
+    assert result["type"] == "abort"
+    assert flow.context == {
+        "unique_id": "00:00:00:00:00:01",
+    }
