@@ -6,6 +6,13 @@
       "is_idle": "{entity_name} is idle",
       "is_paused": "{entity_name} is paused",
       "is_playing": "{entity_name} is playing"
+    },
+    "trigger_type": {
+      "turned_on": "{entity_name} turned on",
+      "turned_off": "{entity_name} turned off",
+      "became_idle": "{entity_name} became idle",
+      "paused": "{entity_name} paused",
+      "played": "{entity_name} played"
     }
   }
 }
