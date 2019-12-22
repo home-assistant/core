@@ -126,7 +126,7 @@ async def test_homekit_setup(hass, hk_driver):
     homekit = HomeKit(hass, BRIDGE_NAME, DEFAULT_PORT, None, {}, {}, DEFAULT_SAFE_MODE)
 
     with patch(
-        PATH_HOMEKIT + ".HomeDriver", return_value=hk_driver
+        PATH_HOMEKIT + ".accessories.HomeDriver", return_value=hk_driver
     ) as mock_driver, patch("homeassistant.util.get_local_ip") as mock_ip:
         mock_ip.return_value = IP_ADDRESS
         await hass.async_add_job(homekit.setup)
@@ -150,7 +150,9 @@ async def test_homekit_setup_ip_address(hass, hk_driver):
     """Test setup with given IP address."""
     homekit = HomeKit(hass, BRIDGE_NAME, DEFAULT_PORT, "172.0.0.0", {}, {}, None)
 
-    with patch(PATH_HOMEKIT + ".HomeDriver", return_value=hk_driver) as mock_driver:
+    with patch(
+        PATH_HOMEKIT + ".accessories.HomeDriver", return_value=hk_driver
+    ) as mock_driver:
         await hass.async_add_job(homekit.setup)
     mock_driver.assert_called_with(
         hass,
@@ -167,7 +169,9 @@ async def test_homekit_setup_advertise_ip(hass, hk_driver):
         hass, BRIDGE_NAME, DEFAULT_PORT, "0.0.0.0", {}, {}, None, "192.168.1.100"
     )
 
-    with patch(PATH_HOMEKIT + ".HomeDriver", return_value=hk_driver) as mock_driver:
+    with patch(
+        PATH_HOMEKIT + ".accessories.HomeDriver", return_value=hk_driver
+    ) as mock_driver:
         await hass.async_add_job(homekit.setup)
     mock_driver.assert_called_with(
         hass,
@@ -182,7 +186,7 @@ async def test_homekit_setup_safe_mode(hass, hk_driver):
     """Test if safe_mode flag is set."""
     homekit = HomeKit(hass, BRIDGE_NAME, DEFAULT_PORT, None, {}, {}, True)
 
-    with patch(PATH_HOMEKIT + ".HomeDriver", return_value=hk_driver):
+    with patch(PATH_HOMEKIT + ".accessories.HomeDriver", return_value=hk_driver):
         await hass.async_add_job(homekit.setup)
     assert homekit.driver.safe_mode is True
 
