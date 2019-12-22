@@ -44,7 +44,7 @@ async def test_flow_works(hass, aioclient_mock):
     )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == f"deCONZ-{BRIDGEID}"
+    assert result["title"] == BRIDGEID
     assert result["data"] == {
         config_flow.CONF_HOST: "1.2.3.4",
         config_flow.CONF_PORT: 80,
@@ -326,7 +326,7 @@ async def test_create_entry(hass, aioclient_mock):
     result = await flow._create_entry()
 
     assert result["type"] == "create_entry"
-    assert result["title"] == f"deCONZ-{BRIDGEID}"
+    assert result["title"] == BRIDGEID
     assert result["data"] == {
         config_flow.CONF_HOST: "1.2.3.4",
         config_flow.CONF_PORT: 80,

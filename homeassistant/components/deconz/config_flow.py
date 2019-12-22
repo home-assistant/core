@@ -153,9 +153,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except asyncio.TimeoutError:
                 return self.async_abort(reason="no_bridges")
 
-        return self.async_create_entry(
-            title="deCONZ-" + self.bridgeid, data=self.deconz_config
-        )
+        return self.async_create_entry(title=self.bridgeid, data=self.deconz_config)
 
     def _update_entry(self, entry, host, port, api_key=None):
         """Update existing entry."""
