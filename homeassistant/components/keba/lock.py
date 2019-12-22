@@ -22,11 +22,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class KebaLock(LockDevice):
     """The entity class for KEBA charging stations switch."""
 
-    def __init__(self, keba, name, entity_id):
+    def __init__(self, keba, name, entity_type):
         """Initialize the KEBA switch."""
         self._keba = keba
         self._name = name
-        self._entity_id = entity_id
+        self._entity_type = entity_type
         self._state = True
 
     @property
@@ -37,7 +37,7 @@ class KebaLock(LockDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the lock."""
-        return f"{self._keba.device_id}_{self._entity_id}"
+        return f"{self._keba.device_id}_{self._entity_type}"
 
     @property
     def name(self):
