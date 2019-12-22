@@ -8,6 +8,7 @@ import asyncio
 import datetime as dt
 import logging
 import os
+from time import sleep
 
 from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedError
 from haffmpeg.camera import CameraMjpeg
@@ -48,6 +49,10 @@ CONF_PROFILE = "profile"
 ATTR_PAN = "pan"
 ATTR_TILT = "tilt"
 ATTR_ZOOM = "zoom"
+ATTR_DISTANCE = "distance"
+ATTR_SPEED = "speed"
+ATTR_MOVE_MODE = "move_mode"
+ATTR_CONTINUOUS_DURATION = "ContinuousDuration"
 
 DIR_UP = "UP"
 DIR_DOWN = "DOWN"
@@ -55,6 +60,10 @@ DIR_LEFT = "LEFT"
 DIR_RIGHT = "RIGHT"
 ZOOM_OUT = "ZOOM_OUT"
 ZOOM_IN = "ZOOM_IN"
+
+CONTINUOUS_MOVE = "ContinuousMove"
+RELATIVE_MOVE = "RelativeMove"
+ABSOLUTE_MOVE = "AbsoluteMove"
 PTZ_NONE = "NONE"
 
 SERVICE_PTZ = "onvif_ptz"
@@ -82,6 +91,12 @@ SERVICE_PTZ_SCHEMA = vol.Schema(
         ATTR_PAN: vol.In([DIR_LEFT, DIR_RIGHT, PTZ_NONE]),
         ATTR_TILT: vol.In([DIR_UP, DIR_DOWN, PTZ_NONE]),
         ATTR_ZOOM: vol.In([ZOOM_OUT, ZOOM_IN, PTZ_NONE]),
+        ATTR_MOVE_MODE: vol.In(
+            [CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE, PTZ_NONE]
+        ),
+        vol.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
+        vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
+        vol.Optional(ATTR_SPEED, default=0.5): cv.small_float,
     }
 )
 
@@ -95,6 +110,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         pan = service.data.get(ATTR_PAN, None)
         tilt = service.data.get(ATTR_TILT, None)
         zoom = service.data.get(ATTR_ZOOM, None)
+        distance = service.data.get(ATTR_DISTANCE, None)
+        speed = service.data.get(ATTR_SPEED, None)
+        move_mode = service.data.get(ATTR_MOVE_MODE, "ContinuousMove")
+        continuous_duration = service.data.get(ATTR_CONTINUOUS_DURATION, None)
         all_cameras = hass.data[ONVIF_DATA][ENTITIES]
         entity_ids = await async_extract_entity_ids(hass, service)
         target_cameras = []
@@ -105,7 +124,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 camera for camera in all_cameras if camera.entity_id in entity_ids
             ]
         for camera in target_cameras:
-            await camera.async_perform_ptz(pan, tilt, zoom)
+            await camera.async_perform_ptz(
+                pan, tilt, zoom, distance, speed, move_mode, continuous_duration
+            )
 
     hass.services.async_register(
         DOMAIN, SERVICE_PTZ, async_handle_ptz, schema=SERVICE_PTZ_SCHEMA
@@ -167,7 +188,7 @@ class ONVIFHassCamera(Camera):
 
             await self.async_check_date_and_time()
             await self.async_obtain_input_uri()
-            self.setup_ptz()
+            await self.setup_ptz()
         except ClientConnectionError as err:
             _LOGGER.warning(
                 "Couldn't connect to camera '%s', but will retry later. Error: %s",
@@ -250,6 +271,35 @@ class ONVIFHassCamera(Camera):
                 "Couldn't get camera '%s' date/time. Error: %s", self._name, err
             )
 
+    async def async_obtain_profile_token(self):
+        """Obtain profile token to use with requests."""
+        try:
+            media_service = self._camera.get_service("media")
+
+            profiles = await media_service.GetProfiles()
+
+            _LOGGER.debug("Retrieved '%d' profiles", len(profiles))
+
+            if self._profile_index >= len(profiles):
+                _LOGGER.warning(
+                    "ONVIF Camera '%s' doesn't provide profile %d."
+                    " Using the last profile.",
+                    self._name,
+                    self._profile_index,
+                )
+                self._profile_index = -1
+
+            _LOGGER.debug("Using profile index '%d'", self._profile_index)
+
+            return profiles[self._profile_index].token
+        except exceptions.ONVIFError as err:
+            _LOGGER.error(
+                "Couldn't retrieve profile token of camera '%s'. Error: %s",
+                self._name,
+                err,
+            )
+            return None
+
     async def async_obtain_input_uri(self):
         """Set the input uri for the camera."""
         _LOGGER.debug(
@@ -304,40 +354,76 @@ class ONVIFHassCamera(Camera):
         except exceptions.ONVIFError as err:
             _LOGGER.error("Couldn't setup camera '%s'. Error: %s", self._name, err)
 
-    def setup_ptz(self):
+    async def setup_ptz(self):
         """Set up PTZ if available."""
         _LOGGER.debug("Setting up the ONVIF PTZ service")
-        if self._camera.get_service("ptz", create=False) is None:
+        if self._camera.get_service("ptz") is None:
             _LOGGER.debug("PTZ is not available")
         else:
             self._ptz_service = self._camera.create_ptz_service()
-            _LOGGER.debug("Completed set up of the ONVIF camera component")
+        _LOGGER.debug("Completed set up of the ONVIF camera component")
 
-    async def async_perform_ptz(self, pan, tilt, zoom):
+    async def async_perform_ptz(
+        self, pan, tilt, zoom, distance, speed, move_mode, continuous_duration
+    ):
         """Perform a PTZ action on the camera."""
         if self._ptz_service is None:
             _LOGGER.warning("PTZ actions are not supported on camera '%s'", self._name)
             return
 
         if self._ptz_service:
-            pan_val = 1 if pan == DIR_RIGHT else -1 if pan == DIR_LEFT else 0
-            tilt_val = 1 if tilt == DIR_UP else -1 if tilt == DIR_DOWN else 0
-            zoom_val = 1 if zoom == ZOOM_IN else -1 if zoom == ZOOM_OUT else 0
-            req = {
-                "Velocity": {
-                    "PanTilt": {"_x": pan_val, "_y": tilt_val},
-                    "Zoom": {"_x": zoom_val},
-                }
-            }
+            pan_val = (
+                distance if pan == DIR_RIGHT else -distance if pan == DIR_LEFT else 0
+            )
+            tilt_val = (
+                distance if tilt == DIR_UP else -distance if tilt == DIR_DOWN else 0
+            )
+            zoom_val = (
+                distance if zoom == ZOOM_IN else -distance if zoom == ZOOM_OUT else 0
+            )
+            speed_val = speed
+            _LOGGER.debug(
+                "Calling %s PTZ | Pan = %d | Tilt = %d | Zoom = %d | Speed = %d",
+                move_mode,
+                pan_val,
+                tilt_val,
+                zoom_val,
+                speed_val,
+            )
             try:
-                _LOGGER.debug(
-                    "Calling PTZ | Pan = %d | Tilt = %d | Zoom = %d",
-                    pan_val,
-                    tilt_val,
-                    zoom_val,
-                )
+                req = self._ptz_service.create_type(move_mode)
+                req.ProfileToken = await self.async_obtain_profile_token()
+                if move_mode == "ContinuousMove":
+                    req.Velocity = {
+                        "PanTilt": {"x": pan_val, "y": tilt_val},
+                        "Zoom": {"x": zoom_val},
+                    }
 
-                await self._ptz_service.ContinuousMove(req)
+                    await self._ptz_service.ContinuousMove(req)
+                    sleep(continuous_duration)
+                    req = self._ptz_service.create_type("Stop")
+                    req.ProfileToken = await self.async_obtain_profile_token()
+                    await self._ptz_service.Stop({"ProfileToken": req.ProfileToken})
+                elif move_mode == "RelativeMove":
+                    req.Translation = {
+                        "PanTilt": {"x": pan_val, "y": tilt_val},
+                        "Zoom": {"x": zoom_val},
+                    }
+                    req.Speed = {
+                        "PanTilt": {"x": speed_val, "y": speed_val},
+                        "Zoom": {"x": speed_val},
+                    }
+                    await self._ptz_service.RelativeMove(req)
+                elif move_mode == "AbsoluteMove":
+                    req.Position = {
+                        "PanTilt": {"x": pan_val, "y": tilt_val},
+                        "Zoom": {"x": zoom_val},
+                    }
+                    req.Speed = {
+                        "PanTilt": {"x": speed_val, "y": speed_val},
+                        "Zoom": {"x": speed_val},
+                    }
+                    await self._ptz_service.AbsoluteMove(req)
             except exceptions.ONVIFError as err:
                 if "Bad Request" in err.reason:
                     self._ptz_service = None
