@@ -2,11 +2,7 @@
   "domain": "sql",
   "name": "Sql",
   "documentation": "https://www.home-assistant.io/integrations/sql",
-  "requirements": [
-    "sqlalchemy==1.3.11"
-  ],
+  "requirements": ["sqlalchemy==1.3.12"],
   "dependencies": [],
-  "codeowners": [
-    "@dgomes"
-  ]
+  "codeowners": ["@dgomes"]
 }
