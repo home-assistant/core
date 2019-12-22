@@ -269,6 +269,39 @@ async def test_bridge_discovery_update_existing_entry(hass):
     assert entry.data[config_flow.CONF_HOST] == "mock-deconz"
 
 
+async def test_bridge_discovery_dont_update_existing_hassio_entry(hass):
+    """Test to ensure the SSDP discovery does not update an Hass.io entry."""
+    entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        source="hassio",
+        data={
+            config_flow.CONF_HOST: "core-deconz",
+            config_flow.CONF_BRIDGEID: "123ABC",
+            config_flow.CONF_UUID: "456DEF",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    gateway = Mock()
+    gateway.config_entry = entry
+    hass.data[config_flow.DOMAIN] = {"123ABC": gateway}
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://mock-deconz/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.DECONZ_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: "123ABC",
+            ssdp.ATTR_UPNP_UDN: "uuid:456DEF",
+        },
+        context={"source": "ssdp"},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data[config_flow.CONF_HOST] == "core-deconz"
+
+
 async def test_create_entry(hass, aioclient_mock):
     """Test that _create_entry work and that bridgeid can be requested."""
     aioclient_mock.get(
