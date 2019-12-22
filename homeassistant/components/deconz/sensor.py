@@ -59,7 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entity_handler.add_entity(new_sensor)
                 entities.append(new_sensor)
 
-            if sensor.battery:
+            if sensor.battery is not None:
                 new_battery = DeconzBattery(sensor, gateway)
                 if new_battery.unique_id not in batteries:
                     batteries.add(new_battery.unique_id)
@@ -225,6 +225,9 @@ class DeconzBatteryHandler:
     @callback
     def create_tracker(self, sensor):
         """Create new tracker for battery state."""
+        for tracker in self._trackers:
+            if sensor == tracker.sensor:
+                return
         self._trackers.add(DeconzSensorStateTracker(sensor, self.gateway))
 
     @callback
