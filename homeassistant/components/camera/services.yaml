@@ -69,17 +69,29 @@ record:
       example: 4
 
 onvif_ptz:
-  description: Pan/Tilt/Zoom service for ONVIF camera.
+  description: If your ONVIF camera supports PTZ, you will be able to pan, tilt or zoom your camera.
   fields:
     entity_id:
-      description: Name(s) of entities to pan, tilt or zoom.
-      example: 'camera.living_room_camera'
-    pan:
-      description: "Direction of pan. Allowed values: LEFT, RIGHT."
-      example: 'LEFT'
+      description: "String or list of strings that point at entity_ids of cameras. Else targets all."
+      example: "camera.living_room_camera"
     tilt:
-      description: "Direction of tilt. Allowed values: DOWN, UP."
-      example: 'DOWN'
+      description: "Tilt direction. Allowed values: UP, DOWN, NONE"
+      example: "UP"
+    pan:
+      description: "Pan direction. Allowed values: RIGHT, LEFT, NONE"
+      example: "RIGHT"
     zoom:
-      description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
-      example: "ZOOM_IN"
+      description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT, NONE"
+      example: "NONE"
+    distance:
+      description: "Distance coefficient. Sets how much PTZ should be executed in one request. Allowed values: floating point numbers, 0 to 1"
+      default: 0.1
+      example: 0.1
+    speed:
+      description: "Speed coefficient. Sets how fast PTZ will be executed. Allowed values: floating point numbers, 0 to 1"
+      default: 0.5
+      example: 0.5
+    move_mode:
+      description: "PTZ moving mode. ContinuousMode is mandatory if PTZ is supported, RelativeMode and AbsoluteMode are optionals implementations so depending of manufactors willing"
+      default: "ContinuousMode"
+      example: "RelativeMode"
