@@ -1117,11 +1117,9 @@ class AlexaRangeController(AlexaCapability):
         # Input Number Value
         if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
             min_value = float(self.entity.attributes[input_number.ATTR_MIN])
-            max_value = float(self.entity.attributes.get(input_number.ATTR_MAX))
+            max_value = float(self.entity.attributes[input_number.ATTR_MAX])
             precision = float(self.entity.attributes.get(input_number.ATTR_STEP, 1))
-            unit = self.entity.attributes.get(
-                input_number.ATTR_UNIT_OF_MEASUREMENT, None
-            )
+            unit = self.entity.attributes.get(input_number.ATTR_UNIT_OF_MEASUREMENT)
 
             self._resource = AlexaPresetResource(
                 ["Value"],

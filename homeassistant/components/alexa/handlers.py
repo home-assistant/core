@@ -1092,7 +1092,7 @@ async def async_api_set_range(hass, config, directive, context):
     # Fan Speed
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
         service = fan.SERVICE_SET_SPEED
-        speed = SPEED_FAN_MAP.get(int(range_value), None)
+        speed = SPEED_FAN_MAP.get(int(range_value))
 
         if not speed:
             msg = "Entity does not support value"
@@ -1129,8 +1129,8 @@ async def async_api_set_range(hass, config, directive, context):
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_value = float(range_value)
         service = input_number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes.get(input_number.ATTR_MIN))
-        max_value = float(entity.attributes.get(input_number.ATTR_MAX))
+        min_value = float(entity.attributes[input_number.ATTR_MIN])
+        max_value = float(entity.attributes[input_number.ATTR_MAX])
         data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
     else:
@@ -1201,8 +1201,8 @@ async def async_api_adjust_range(hass, config, directive, context):
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
         range_delta = float(range_delta)
         service = input_number.SERVICE_SET_VALUE
-        min_value = float(entity.attributes.get(input_number.ATTR_MIN))
-        max_value = float(entity.attributes.get(input_number.ATTR_MAX))
+        min_value = float(entity.attributes[input_number.ATTR_MIN])
+        max_value = float(entity.attributes[input_number.ATTR_MAX])
         current = float(entity.state)
         data[input_number.ATTR_VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
