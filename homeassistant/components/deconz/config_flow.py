@@ -161,7 +161,11 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _update_entry(self, entry, host, port, api_key=None):
         """Update existing entry."""
-        if entry.data[CONF_HOST] == host:
+        if (
+            entry.data[CONF_HOST] == host
+            and entry.data[CONF_PORT] == port
+            and (api_key is None or entry.data[CONF_API_KEY] == api_key)
+        ):
             return self.async_abort(reason="already_configured")
 
         entry.data[CONF_HOST] = host
@@ -186,6 +190,8 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if uuid == entry.data.get(CONF_UUID):
+                if entry.source == "hassio":
+                    return self.async_abort(reason="already_configured")
                 return self._update_entry(entry, parsed_url.hostname, parsed_url.port)
 
         bridgeid = discovery_info[ssdp.ATTR_UPNP_SERIAL]
