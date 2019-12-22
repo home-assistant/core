@@ -93,5 +93,5 @@ onvif_ptz:
       example: 0.5
     move_mode:
       description: "PTZ moving mode. ContinuousMode is mandatory if PTZ is supported, RelativeMode and AbsoluteMode are optionals implementations so depending of manufactors willing"
-      default: "ContinuousMode"
-      example: "RelativeMode"
+      default: "RelativeMode"
+      example: "ContinuousMode"
