@@ -66,6 +66,7 @@
    - service: ais_ai_service.check_local_ip
    - service: ais_amplifier_service.get_audio_mono
    - service: ais_shell_command.hdmi_control_disable
+   - service: ais_usb.lsusb
    - service: mqtt.publish
      data:
        payload: 1

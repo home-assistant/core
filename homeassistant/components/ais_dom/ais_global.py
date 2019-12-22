@@ -99,6 +99,9 @@ G_AIS_NEW_DEVICE_START_ADD_TIME = None
 G_AIS_DAY_MEDIA_VOLUME_LEVEL = None
 G_HTTP_REST_SERVICE_BASE_URL = "http://{}:8122"
 
+#
+G_USB_DEVICES = []
+
 
 def get_pass_for_ssid(ssid):
     for item in GLOBAL_SCAN_WIFI_ANSWER["ScanResult"]:
