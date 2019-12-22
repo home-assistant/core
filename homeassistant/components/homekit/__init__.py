@@ -303,6 +303,7 @@ class HomeKit:
 
     def setup(self):
         """Set up bridge and accessory driver."""
+        # pylint: disable=import-outside-toplevel
         from .accessories import HomeBridge, HomeDriver
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
