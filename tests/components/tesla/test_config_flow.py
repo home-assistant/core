@@ -8,11 +8,12 @@ from homeassistant.components.tesla.const import DOMAIN
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
     CONF_TOKEN,
     CONF_USERNAME,
 )
 
-from tests.common import mock_coro
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_form(hass):
@@ -59,7 +60,7 @@ async def test_form_invalid_auth(hass):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
+            {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
         )
 
     assert result2["type"] == "form"
@@ -77,11 +78,33 @@ async def test_form_cannot_connect(hass):
         side_effect=TeslaException(code=404),
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PASSWORD: "test", CONF_USERNAME: "test@email.com"}
+            result["flow_id"],
+            {CONF_PASSWORD: "test-password", CONF_USERNAME: "test-username"},
         )
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "connection_error"}
+
+
+async def test_form_repeat_identifier(hass):
+    """Test we handle repeat identifiers."""
+    entry = MockConfigEntry(domain=DOMAIN, title="test-username", data={}, options=None)
+    hass.config_entries._entries.append(entry)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "homeassistant.components.tesla.config_flow.TeslaAPI.connect",
+        return_value=mock_coro(("test-refresh-token", "test-access-token")),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "test-username", CONF_PASSWORD: "test-password"},
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {CONF_USERNAME: "identifier_exists"}
 
 
 async def test_import(hass):
@@ -94,10 +117,28 @@ async def test_import(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_PASSWORD: "test", CONF_USERNAME: "test@email.com"},
+            data={CONF_PASSWORD: "test-password", CONF_USERNAME: "test-username"},
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "test@email.com"
+    assert result["title"] == "test-username"
     assert result["data"][CONF_ACCESS_TOKEN] == "test-access-token"
     assert result["data"][CONF_TOKEN] == "test-refresh-token"
     assert result["description_placeholders"] is None
+
+
+async def test_option_flow(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    hass.config_entries._entries.append(entry)
+
+    flow = await hass.config_entries.options._async_create_flow(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+
+    result = await flow.async_step_init()
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await flow.async_step_init(user_input={CONF_SCAN_INTERVAL: 350})
+    assert result["type"] == "create_entry"
+    assert result["data"] == {CONF_SCAN_INTERVAL: 350}
