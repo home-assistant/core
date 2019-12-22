@@ -5,7 +5,7 @@ import logging
 from keba_kecontact.connection import KebaKeContact
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -20,7 +20,6 @@ CONF_FS_TIMEOUT = "failsafe_timeout"
 CONF_FS_FALLBACK = "failsafe_fallback"
 CONF_FS_PERSIST = "failsafe_persist"
 CONF_FS_INTERVAL = "refresh_interval"
-DEFAULT_NAME = "Keba Charging Station"
 
 MAX_POLLING_INTERVAL = 5  # in seconds
 MAX_FAST_POLLING_COUNT = 4
@@ -30,7 +29,6 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                 vol.Optional(CONF_RFID, default="00845500"): cv.string,
                 vol.Optional(CONF_FS, default=False): cv.boolean,
                 vol.Optional(CONF_FS_TIMEOUT, default=30): cv.positive_int,
@@ -60,8 +58,7 @@ async def async_setup(hass, config):
     host = config[DOMAIN][CONF_HOST]
     rfid = config[DOMAIN][CONF_RFID]
     refresh_interval = config[DOMAIN][CONF_FS_INTERVAL]
-    device_name = config[DOMAIN][CONF_NAME]
-    keba = KebaHandler(hass, host, rfid, refresh_interval, device_name)
+    keba = KebaHandler(hass, host, rfid, refresh_interval)
     hass.data[DOMAIN] = keba
 
     # Wait for KebaHandler setup complete (initial values loaded)
@@ -108,15 +105,15 @@ async def async_setup(hass, config):
 class KebaHandler(KebaKeContact):
     """Representation of a KEBA charging station connection."""
 
-    def __init__(self, hass, host, rfid, refresh_interval, device_name):
+    def __init__(self, hass, host, rfid, refresh_interval):
         """Initialize charging station connection."""
         super().__init__(host, self.hass_callback)
 
         self._update_listeners = []
         self._hass = hass
         self.rfid = rfid
-        self.device_name = device_name
-        self.device_id = "keba_wallbox_"
+        self.device_name = "keba"  # correct device name will be set in setup()
+        self.device_id = "keba_wallbox_"  # correct device id will be set in setup()
 
         # Ensure at least MAX_POLLING_INTERVAL seconds delay
         self._refresh_interval = max(MAX_POLLING_INTERVAL, refresh_interval)
@@ -151,8 +148,12 @@ class KebaHandler(KebaKeContact):
 
         # Request initial values and extract serial number
         await self.request_data()
-        if self.get_value("Serial") is not None:
+        if (
+            self.get_value("Serial") is not None
+            and self.get_value("Product") is not None
+        ):
             self.device_id = f"keba_wallbox_{self.get_value('Serial')}"
+            self.device_name = self.get_value("Product")
             return True
 
         return False
