@@ -217,6 +217,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     if address in hass.data[ANDROIDTV_DOMAIN]:
         _LOGGER.warning("Platform already setup on %s, skipping", address)
+        return
     else:
         if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
             device = AndroidTVDevice(
