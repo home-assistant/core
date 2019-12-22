@@ -30,20 +30,10 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 
 # importing channels updates registries
 from . import channels  # noqa: F401 pylint: disable=unused-import
-from .const import (
-    CONTROLLER,
-    SENSOR_ACCELERATION,
-    SENSOR_OCCUPANCY,
-    SENSOR_OPENING,
-    ZHA_GW_RADIO,
-    ZHA_GW_RADIO_DESCRIPTION,
-    ZONE,
-    RadioType,
-)
+from .const import CONTROLLER, ZHA_GW_RADIO, ZHA_GW_RADIO_DESCRIPTION, RadioType
 from .decorators import CALLABLE_T, DictRegistry, SetRegistry
 
 BINARY_SENSOR_CLUSTERS = SetRegistry()
-BINARY_SENSOR_TYPES = {}
 BINDABLE_CLUSTERS = SetRegistry()
 CHANNEL_ONLY_CLUSTERS = SetRegistry()
 CLUSTER_REPORT_CONFIGS = {}
@@ -103,15 +93,6 @@ def establish_device_mappings():
     }
 
     BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
-
-    BINARY_SENSOR_TYPES.update(
-        {
-            SMARTTHINGS_ACCELERATION_CLUSTER: SENSOR_ACCELERATION,
-            zcl.clusters.general.OnOff.cluster_id: SENSOR_OPENING,
-            zcl.clusters.measurement.OccupancySensing.cluster_id: SENSOR_OCCUPANCY,
-            zcl.clusters.security.IasZone.cluster_id: ZONE,
-        }
-    )
 
     DEVICE_CLASS[zigpy.profiles.zha.PROFILE_ID].update(
         {
