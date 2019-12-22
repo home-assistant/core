@@ -218,31 +218,31 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if address in hass.data[ANDROIDTV_DOMAIN]:
         _LOGGER.warning("Platform already setup on %s, skipping", address)
         return
-    else:
-        if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
-            device = AndroidTVDevice(
-                aftv,
-                config[CONF_NAME],
-                config[CONF_APPS],
-                config[CONF_GET_SOURCES],
-                config.get(CONF_TURN_ON_COMMAND),
-                config.get(CONF_TURN_OFF_COMMAND),
-            )
-            device_name = config[CONF_NAME] if CONF_NAME in config else "Android TV"
-        else:
-            device = FireTVDevice(
-                aftv,
-                config[CONF_NAME],
-                config[CONF_APPS],
-                config[CONF_GET_SOURCES],
-                config.get(CONF_TURN_ON_COMMAND),
-                config.get(CONF_TURN_OFF_COMMAND),
-            )
-            device_name = config[CONF_NAME] if CONF_NAME in config else "Fire TV"
 
-        add_entities([device])
-        _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
-        hass.data[ANDROIDTV_DOMAIN][address] = device
+    if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
+        device = AndroidTVDevice(
+            aftv,
+            config[CONF_NAME],
+            config[CONF_APPS],
+            config[CONF_GET_SOURCES],
+            config.get(CONF_TURN_ON_COMMAND),
+            config.get(CONF_TURN_OFF_COMMAND),
+        )
+        device_name = config[CONF_NAME] if CONF_NAME in config else "Android TV"
+    else:
+        device = FireTVDevice(
+            aftv,
+            config[CONF_NAME],
+            config[CONF_APPS],
+            config[CONF_GET_SOURCES],
+            config.get(CONF_TURN_ON_COMMAND),
+            config.get(CONF_TURN_OFF_COMMAND),
+        )
+        device_name = config[CONF_NAME] if CONF_NAME in config else "Fire TV"
+
+    add_entities([device])
+    _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
+    hass.data[ANDROIDTV_DOMAIN][address] = device
 
     if not hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
 
