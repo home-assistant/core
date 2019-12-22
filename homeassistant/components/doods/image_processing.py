@@ -14,12 +14,12 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
-    draw_box,
 )
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
 
