@@ -4,8 +4,8 @@ import logging
 from pyopnsense import diagnostics
 import voluptuous as vol
 
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_URL, CONF_API_KEY, CONF_VERIFY_SSL
 from homeassistant.helpers.discovery import load_platform
 
 _LOGGER = logging.getLogger(__name__)

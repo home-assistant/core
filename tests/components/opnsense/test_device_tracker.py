@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components import opnsense
 from homeassistant.components.opnsense import CONF_API_SECRET, DOMAIN
-from homeassistant.const import CONF_URL, CONF_API_KEY, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.setup import async_setup_component
 
 

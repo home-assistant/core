@@ -2,8 +2,7 @@
 import logging
 
 from homeassistant.components.device_tracker import DeviceScanner
-
-from homeassistant.components.opnsense import OPNSENSE_DATA, CONF_TRACKER_INTERFACE
+from homeassistant.components.opnsense import CONF_TRACKER_INTERFACE, OPNSENSE_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
