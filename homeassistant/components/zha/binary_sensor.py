@@ -95,21 +95,20 @@ async def _async_setup_entities(
     async_add_entities(entities, update_before_add=True)
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ACCELEROMETER}))
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_OCCUPANCY}))
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ON_OFF}))
 class BinarySensor(ZhaEntity, BinarySensorDevice):
     """ZHA BinarySensor."""
+
+    DEVICE_CLASS = None
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA binary sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._channel = channels[0]
-        self._device_class = None
+        self._device_class = self.DEVICE_CLASS
 
     async def get_device_class(self):
         """Get the HA device class from the channel."""
-        self._device_class = DEVICE_CLASS_REGISTRY.get(self._channel.name)
+        pass
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -145,16 +144,33 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
     async def async_update(self):
         """Attempt to retrieve on off state from the binary sensor."""
         await super().async_update()
-        if hasattr(self._channel, "value_attribute"):
-            self._state = await self._channel.get_attribute_value(
-                self._channel.value_attribute
-            )
-        else:
-            self._state = await self._channel.get_attribute_value("on_off")
+        attribute = getattr(self._channel, "value_attribute", "on_off")
+        self._state = await self._channel.get_attribute_value(attribute)
+
+
+@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ACCELEROMETER}))
+class Accelerometer(BinarySensor):
+    """ZHA BinarySensor."""
+
+    DEVICE_CLASS = DEVICE_CLASS_MOTION
+
+
+@STRICT_MATCH(MatchRule(channel_names={CHANNEL_OCCUPANCY}))
+class Occupancy(BinarySensor):
+    """ZHA BinarySensor."""
+
+    DEVICE_CLASS = DEVICE_CLASS_OCCUPANCY
+
+
+@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ON_OFF}))
+class Opening(BinarySensor):
+    """ZHA BinarySensor."""
+
+    DEVICE_CLASS = DEVICE_CLASS_OPENING
 
 
 @STRICT_MATCH(MatchRule(channel_names={CHANNEL_ZONE}))
-class BinarySensor(BinarySensor):
+class IASZone(BinarySensor):
     """ZHA IAS BinarySensor."""
 
     async def get_device_class(self) -> None:
