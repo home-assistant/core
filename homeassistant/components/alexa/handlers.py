@@ -3,7 +3,14 @@ import logging
 import math
 
 from homeassistant import core as ha
-from homeassistant.components import cover, fan, group, light, media_player
+from homeassistant.components import (
+    cover,
+    fan,
+    group,
+    input_number,
+    light,
+    media_player,
+)
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -1080,12 +1087,12 @@ async def async_api_set_range(hass, config, directive, context):
     domain = entity.domain
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
-    range_value = int(directive.payload["rangeValue"])
+    range_value = directive.payload["rangeValue"]
 
     # Fan Speed
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
         service = fan.SERVICE_SET_SPEED
-        speed = SPEED_FAN_MAP.get(range_value, None)
+        speed = SPEED_FAN_MAP.get(int(range_value), None)
 
         if not speed:
             msg = "Entity does not support value"
@@ -1098,6 +1105,7 @@ async def async_api_set_range(hass, config, directive, context):
 
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        range_value = int(range_value)
         if range_value == 0:
             service = cover.SERVICE_CLOSE_COVER
         elif range_value == 100:
@@ -1108,6 +1116,7 @@ async def async_api_set_range(hass, config, directive, context):
 
     # Cover Tilt Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
+        range_value = int(range_value)
         if range_value == 0:
             service = cover.SERVICE_CLOSE_COVER_TILT
         elif range_value == 100:
@@ -1115,6 +1124,14 @@ async def async_api_set_range(hass, config, directive, context):
         else:
             service = cover.SERVICE_SET_COVER_TILT_POSITION
             data[cover.ATTR_POSITION] = range_value
+
+    # Input Number Value
+    elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
+        range_value = float(range_value)
+        service = input_number.SERVICE_SET_VALUE
+        min_value = float(entity.attributes.get(input_number.ATTR_MIN))
+        max_value = float(entity.attributes.get(input_number.ATTR_MAX))
+        data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
     else:
         msg = "Entity does not support directive"
@@ -1145,11 +1162,12 @@ async def async_api_adjust_range(hass, config, directive, context):
     domain = entity.domain
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
-    range_delta = int(directive.payload["rangeValueDelta"])
+    range_delta = directive.payload["rangeValueDelta"]
     response_value = 0
 
     # Fan Speed
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
+        range_delta = int(range_delta)
         service = fan.SERVICE_SET_SPEED
         current_range = RANGE_FAN_MAP.get(entity.attributes.get(fan.ATTR_SPEED), 0)
         speed = SPEED_FAN_MAP.get(
@@ -1163,6 +1181,7 @@ async def async_api_adjust_range(hass, config, directive, context):
 
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        range_delta = int(range_delta)
         service = SERVICE_SET_COVER_POSITION
         current = entity.attributes.get(cover.ATTR_POSITION)
         data[cover.ATTR_POSITION] = response_value = min(
@@ -1171,10 +1190,22 @@ async def async_api_adjust_range(hass, config, directive, context):
 
     # Cover Tilt Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
+        range_delta = int(range_delta)
         service = SERVICE_SET_COVER_TILT_POSITION
         current = entity.attributes.get(cover.ATTR_TILT_POSITION)
         data[cover.ATTR_TILT_POSITION] = response_value = min(
             100, max(0, range_delta + current)
+        )
+
+    # Input Number Value
+    elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
+        range_delta = float(range_delta)
+        service = input_number.SERVICE_SET_VALUE
+        min_value = float(entity.attributes.get(input_number.ATTR_MIN))
+        max_value = float(entity.attributes.get(input_number.ATTR_MAX))
+        current = float(entity.state)
+        data[input_number.ATTR_VALUE] = response_value = min(
+            max_value, max(min_value, range_delta + current)
         )
 
     else:
