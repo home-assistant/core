@@ -46,13 +46,6 @@ CLASS_MAPPING = {
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
-DEVICE_CLASS_REGISTRY = {
-    CHANNEL_ACCELEROMETER: DEVICE_CLASS_MOVING,
-    CHANNEL_OCCUPANCY: DEVICE_CLASS_OCCUPANCY,
-    CHANNEL_ON_OFF: DEVICE_CLASS_OPENING,
-}
-
-
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up Zigbee Home Automation binary sensors."""
     pass
@@ -152,7 +145,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
 class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""
 
-    DEVICE_CLASS = DEVICE_CLASS_MOTION
+    DEVICE_CLASS = DEVICE_CLASS_MOVING
 
 
 @STRICT_MATCH(MatchRule(channel_names={CHANNEL_OCCUPANCY}))
