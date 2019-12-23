@@ -34,8 +34,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = config.get(CONF_LIGHTS)
     devices = []
 
-    for dev_name, config in switches.items():
-        devices.append(PilightLight(hass, dev_name, config))
+    for dev_name, dev_config in switches.items():
+        devices.append(PilightLight(hass, dev_name, dev_config))
 
     add_entities(devices)
 
@@ -46,7 +46,6 @@ class PilightLight(PilightBaseDevice, Light):
     def __init__(self, hass, name, config):
         """Initialize a switch."""
         super().__init__(hass, name, config)
-        self._brightness = 255
         self._dimlevel_min = config.get(CONF_DIMLEVEL_MIN)
         self._dimlevel_max = config.get(CONF_DIMLEVEL_MAX)
 

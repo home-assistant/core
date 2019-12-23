@@ -85,6 +85,8 @@ class PilightBaseDevice(RestoreEntity):
         if any(self._code_on_receive) or any(self._code_off_receive):
             hass.bus.listen(pilight.EVENT, self._handle_code)
 
+        self._brightness = 255
+
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
