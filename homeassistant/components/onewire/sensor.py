@@ -113,7 +113,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             devices = []
         for device in devices:
             _LOGGER.debug("found device: %s", device)
-            family = bytes.decode(owproxy.read(f"{device}family"))
+            family = owproxy.read(f"{device}family").decode()
             dev_type = "std"
             if "EF" in family:
                 dev_type = "HobbyBoard"
@@ -130,7 +130,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 if "moisture" in sensor_key:
                     s_id = sensor_key.split("_")[1]
                     is_leaf = int(
-                        bytes.decode(owproxy.read(f"{device}moisture/is_leaf.{s_id}"))
+                        owproxy.read(f"{device}moisture/is_leaf.{s_id}").decode()
                     )
                     if is_leaf:
                         sensor_key = f"wetness_{id}"
