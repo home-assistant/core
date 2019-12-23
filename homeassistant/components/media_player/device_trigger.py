@@ -5,6 +5,10 @@ import voluptuous as vol
 
 from homeassistant.components.automation import AutomationActionType, state
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
+from homeassistant.components.media_player.const import (
+    SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
+)
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
@@ -43,25 +47,36 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         if entry.domain != DOMAIN:
             continue
 
+        state = hass.states.get(entry.entity_id)
+
+        # We need a state or else we can't populate the different triggers
+        if state is None:
+            continue
+
+        supported_features = state.attributes["supported_features"]
+
         # Add triggers for each entity that belongs to this integration
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turned_on",
-            }
-        )
-        triggers.append(
-            {
-                CONF_PLATFORM: "device",
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "turned_off",
-            }
-        )
+        if supported_features & SUPPORT_TURN_ON:
+            triggers.append(
+                {
+                    CONF_PLATFORM: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "turned_on",
+                }
+            )
+        if supported_features & SUPPORT_TURN_OFF:
+            triggers.append(
+                {
+                    CONF_PLATFORM: "device",
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "turned_off",
+                }
+            )
+
         triggers.append(
             {
                 CONF_PLATFORM: "device",

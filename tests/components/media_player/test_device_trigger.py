@@ -50,6 +50,9 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    hass.states.async_set(
+        "media_player.test_5678", "attributes", {"supported_features": 260}
+    )
     expected_triggers = [
         {
             "platform": "device",
