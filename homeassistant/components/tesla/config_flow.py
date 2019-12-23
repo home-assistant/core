@@ -38,8 +38,6 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the config flow."""
-        self.login = None
-        self.config = {}
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
@@ -63,8 +61,6 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors={CONF_USERNAME: "identifier_exists"},
                 description_placeholders={},
             )
-
-        self.config[CONF_USERNAME] = user_input[CONF_USERNAME]
 
         try:
             info = await validate_input(self.hass, user_input)
