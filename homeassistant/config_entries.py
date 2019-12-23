@@ -408,9 +408,11 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         self.config_entries = config_entries
 
     async def async_finish_flow(
-        self, flow: "ConfigFlow", result: Dict[str, Any]
+        self, flow: data_entry_flow.FlowHandler, result: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Finish a config flow and add an entry."""
+        flow = cast(ConfigFlow, flow)
+
         # Remove notification if no other discovery config entries in progress
         if not any(
             ent["context"]["source"] in DISCOVERY_SOURCES
@@ -476,7 +478,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         return result
 
     async def async_create_flow(
-        self, handler_key: str, *, context: Dict[str, Any], data: Dict[str, Any]
+        self, handler_key: str, *, context: Optional[Dict] = None, data: Any = None
     ) -> "ConfigFlow":
         """Create a flow for specified handler.
 
@@ -508,7 +510,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         if handler is None:
             raise data_entry_flow.UnknownHandler
 
-        source = context["source"]
+        source = "unknown" if not context else context["source"]
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
@@ -867,7 +869,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
     """Flow to set options for a configuration entry."""
 
     async def async_create_flow(
-        self, handler_key: str, *, context: Dict[str, Any], data: Dict[str, Any]
+        self, handler_key: str, *, context: Optional[Dict] = None, data: Any = None
     ) -> Optional["OptionsFlow"]:
         """Create an options flow for a config entry.
 
@@ -884,15 +886,17 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
         return flow
 
     async def async_finish_flow(
-        self, flow: "OptionsFlow", result: Dict[str, Any]
-    ) -> Optional[Dict[str, Any]]:
+        self, flow: data_entry_flow.FlowHandler, result: Dict[str, Any]
+    ) -> Dict[str, Any]:
         """Finish an options flow and update options for configuration entry.
 
         Flow.handler and entry_id is the same thing to map flow with entry.
         """
+        flow = cast(OptionsFlow, flow)
+
         entry = self.hass.config_entries.async_get_entry(flow.handler)
         if entry is None:
-            return None
+            raise UnknownEntry
         self.hass.config_entries.async_update_entry(entry, options=result["data"])
 
         result["result"] = True

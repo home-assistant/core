@@ -55,8 +55,8 @@ class FlowManager:
         self._progress: Dict[str, Any] = {}
 
     async def async_create_flow(
-        self, handler_key: str, *, context: Dict[str, Any], data: Dict[str, Any]
-    ) -> "FlowHandler":
+        self, handler_key: str, *, context: Optional[Dict] = None, data: Any = None
+    ) -> Optional["FlowHandler"]:
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to set up.
@@ -84,6 +84,8 @@ class FlowManager:
         if context is None:
             context = {}
         flow = await self.async_create_flow(handler, context=context, data=data)
+        if not flow:
+            raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex

@@ -76,17 +76,19 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         self.auth_manager = auth_manager
 
     async def async_create_flow(
-        self, handler_key: _ProviderKey, *, context: Optional[Dict], data: Optional[Any]
-    ) -> data_entry_flow.FlowHandler:
+        self, handler_key: str, *, context: Optional[Dict] = None, data: Any = None
+    ) -> Optional[data_entry_flow.FlowHandler]:
         """Create a login flow."""
-        auth_provider = self.auth_manager._providers[handler_key]
+        auth_provider = self.auth_manager._providers[cast(_ProviderKey, handler_key)]
 
         return await auth_provider.async_login_flow(context)
 
     async def async_finish_flow(
-        self, flow: LoginFlow, result: Dict[str, Any]
+        self, flow: data_entry_flow.FlowHandler, result: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Return a user as result of login flow."""
+        flow = cast(LoginFlow, flow)
+
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return result
 
