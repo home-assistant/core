@@ -22,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_PORT): cv.string})}, extra=vol.ALLOW_EXTRA
 )
 
-COMPONENT_TYPES = ["switch", "sensor", "binary_sensor", "cover", "climate"]
+COMPONENT_TYPES = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
 
 
 async def async_setup(hass, config):
