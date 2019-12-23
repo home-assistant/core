@@ -68,7 +68,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "became_idle",
+            "type": "becomes_idle",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -82,7 +82,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
         {
             "platform": "device",
             "domain": DOMAIN,
-            "type": "played",
+            "type": "starts_playing",
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
         },
@@ -144,7 +144,7 @@ async def test_if_fires_on_state_change(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": "media_player.entity",
-                        "type": "played",
+                        "type": "starts_playing",
                     },
                     "action": {
                         "service": "test.automation",
@@ -182,7 +182,7 @@ async def test_if_fires_on_state_change(hass, calls):
                         "domain": DOMAIN,
                         "device_id": "",
                         "entity_id": "media_player.entity",
-                        "type": "became_idle",
+                        "type": "becomes_idle",
                     },
                     "action": {
                         "service": "test.automation",

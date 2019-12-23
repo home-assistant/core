@@ -23,7 +23,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
 
-TRIGGER_TYPES = {"turned_on", "turned_off", "became_idle", "paused", "played"}
+TRIGGER_TYPES = {"turned_on", "turned_off", "becomes_idle", "paused", "starts_playing"}
 
 TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     {
@@ -68,7 +68,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "became_idle",
+                CONF_TYPE: "becomes_idle",
             }
         )
         triggers.append(
@@ -86,7 +86,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
                 CONF_DEVICE_ID: device_id,
                 CONF_DOMAIN: DOMAIN,
                 CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "played",
+                CONF_TYPE: "starts_playing",
             }
         )
 
@@ -108,13 +108,13 @@ async def async_attach_trigger(
     elif config[CONF_TYPE] == "turned_off":
         from_state = STATE_ON
         to_state = STATE_OFF
-    elif config[CONF_TYPE] == "played":
+    elif config[CONF_TYPE] == "starts_playing":
         from_state = STATE_PAUSED
         to_state = STATE_PLAYING
     elif config[CONF_TYPE] == "paused":
         from_state = STATE_PLAYING
         to_state = STATE_PAUSED
-    elif config[CONF_TYPE] == "became_idle":
+    elif config[CONF_TYPE] == "becomes_idle":
         from_state = STATE_PAUSED
         to_state = STATE_IDLE
 

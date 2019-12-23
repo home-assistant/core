@@ -10,9 +10,9 @@
     "trigger_type": {
       "turned_on": "{entity_name} turned on",
       "turned_off": "{entity_name} turned off",
-      "became_idle": "{entity_name} became idle",
+      "becomes_idle": "{entity_name} becomes idle",
       "paused": "{entity_name} paused",
-      "played": "{entity_name} played"
+      "starts_playing": "{entity_name} starts playing"
     }
   }
 }
