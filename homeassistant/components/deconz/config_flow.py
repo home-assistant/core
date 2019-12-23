@@ -184,10 +184,10 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if self.bridgeid == entry.unique_id and entry.source != "hassio":
+            if self.bridgeid == entry.unique_id:
+                if entry.source == "hassio":
+                    return self.async_abort(reason="already_configured")
                 return self._update_entry(entry, parsed_url.hostname, parsed_url.port)
-
-        self._abort_if_unique_id_configured()
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"host": parsed_url.hostname}
