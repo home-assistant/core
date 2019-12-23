@@ -89,7 +89,7 @@ async def test_form_cannot_connect(hass):
 async def test_form_repeat_identifier(hass):
     """Test we handle repeat identifiers."""
     entry = MockConfigEntry(domain=DOMAIN, title="test-username", data={}, options=None)
-    hass.config_entries._entries.append(entry)
+    entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -129,16 +129,32 @@ async def test_import(hass):
 async def test_option_flow(hass):
     """Test config flow options."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
-    hass.config_entries._entries.append(entry)
+    entry.add_to_hass(hass)
 
-    flow = await hass.config_entries.options._async_create_flow(
-        entry.entry_id, context={"source": "test"}, data=None
-    )
+    result = await hass.config_entries.options.flow.async_init(entry.entry_id)
 
-    result = await flow.async_step_init()
     assert result["type"] == "form"
     assert result["step_id"] == "init"
 
-    result = await flow.async_step_init(user_input={CONF_SCAN_INTERVAL: 350})
+    result = await hass.config_entries.options.flow.async_configure(
+        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 350}
+    )
     assert result["type"] == "create_entry"
     assert result["data"] == {CONF_SCAN_INTERVAL: 350}
+
+
+async def test_option_flow_input_floor(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.flow.async_init(entry.entry_id)
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.flow.async_configure(
+        result["flow_id"], user_input={CONF_SCAN_INTERVAL: 1}
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {CONF_SCAN_INTERVAL: 300}
