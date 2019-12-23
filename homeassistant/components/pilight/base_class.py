@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import pilight
+from homeassistant.components.pilight import DOMAIN, EVENT, SERVICE_NAME
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
@@ -83,7 +83,7 @@ class PilightBaseDevice(RestoreEntity):
                 code_list.append(_ReceiveHandle(code, echo))
 
         if any(self._code_on_receive) or any(self._code_off_receive):
-            hass.bus.listen(pilight.EVENT, self._handle_code)
+            hass.bus.listen(EVENT, self._handle_code)
 
         self._brightness = 255
 
@@ -149,12 +149,10 @@ class PilightBaseDevice(RestoreEntity):
                 if dimlevel is not None:
                     code.update({"dimlevel": dimlevel})
 
-                self._hass.services.call(
-                    pilight.DOMAIN, pilight.SERVICE_NAME, code, blocking=True
-                )
+                self._hass.services.call(DOMAIN, SERVICE_NAME, code, blocking=True)
             else:
                 self._hass.services.call(
-                    pilight.DOMAIN, pilight.SERVICE_NAME, self._code_off, blocking=True
+                    DOMAIN, SERVICE_NAME, self._code_off, blocking=True
                 )
 
         self._is_on = turn_on
