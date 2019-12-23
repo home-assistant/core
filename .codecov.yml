@@ -6,6 +6,7 @@ coverage:
       default:
         target: 90
         threshold: 0.09
+        kishore: kish
   notify:
     # Notify codecov room in Discord. The webhook URL (encrypted below) ends in /slack which is why we configure a Slack notification.
     slack:
