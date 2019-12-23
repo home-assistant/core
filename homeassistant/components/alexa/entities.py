@@ -11,6 +11,7 @@ from homeassistant.components import (
     group,
     image_processing,
     input_boolean,
+    input_number,
     light,
     lock,
     media_player,
@@ -672,5 +673,23 @@ class ImageProcessingCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         yield AlexaEventDetectionSensor(self.hass, self.entity)
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
+
+@ENTITY_ADAPTERS.register(input_number.DOMAIN)
+class InputNumberCapabilities(AlexaEntity):
+    """Class to represent input_number capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+
+        yield AlexaRangeController(
+            self.entity, instance=f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}"
+        )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
