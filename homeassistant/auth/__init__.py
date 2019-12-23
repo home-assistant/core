@@ -76,7 +76,11 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
         self.auth_manager = auth_manager
 
     async def async_create_flow(
-        self, handler_key: str, *, context: Optional[Dict[str, Any]] = None, data: Optional[Dict[str, Any]] = None
+        self,
+        handler_key: str,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
     ) -> data_entry_flow.FlowHandler:
         """Create a login flow."""
         auth_provider = self.auth_manager._providers[cast(_ProviderKey, handler_key)]

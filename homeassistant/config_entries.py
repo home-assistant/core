@@ -872,7 +872,11 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
     """Flow to set options for a configuration entry."""
 
     async def async_create_flow(
-        self, handler_key: str, *, context: Optional[Dict[str, Any]] = None, data: Optional[Dict[str, Any]] = None
+        self,
+        handler_key: str,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
     ) -> "OptionsFlow":
         """Create an options flow for a config entry.
 
