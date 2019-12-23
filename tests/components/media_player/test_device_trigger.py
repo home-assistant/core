@@ -51,7 +51,7 @@ async def test_get_triggers(hass, device_reg, entity_reg):
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     hass.states.async_set(
-        "media_player.test_5678", "attributes", {"supported_features": 260}
+        "media_player.test_5678", "attributes", {"supported_features": 384}
     )
     expected_triggers = [
         {
