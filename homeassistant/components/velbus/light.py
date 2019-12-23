@@ -1,10 +1,15 @@
 """Support for Velbus light dimmers."""
 import logging
 
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_TRANSITION,
-                                            SUPPORT_BRIGHTNESS,
-                                            SUPPORT_TRANSITION, Light)
 from velbus.util import VelbusException
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_TRANSITION,
+    Light,
+)
 
 from . import VelbusEntity
 from .const import DOMAIN
