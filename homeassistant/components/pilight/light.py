@@ -3,16 +3,17 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.light import PLATFORM_SCHEMA, Light, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    Light,
+)
 from homeassistant.const import CONF_LIGHTS
 import homeassistant.helpers.config_validation as cv
 
 from .base_class import SWITCHES_SCHEMA, PilightBaseDevice
-
-from .const import (
-    CONF_DIMLEVEL_MIN,
-    CONF_DIMLEVEL_MAX
-)
+from .const import CONF_DIMLEVEL_MAX, CONF_DIMLEVEL_MIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,14 +34,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = config.get(CONF_LIGHTS)
     devices = []
 
-    for dev_name, properties in switches.items():
-        devices.append(
-            PilightLight(
-                hass,
-                dev_name,
-                properties
-            )
-        )
+    for dev_name, config in switches.items():
+        devices.append(PilightLight(hass, dev_name, config))
 
     add_entities(devices)
 
@@ -48,12 +43,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PilightLight(PilightBaseDevice, Light):
     """Representation of a Pilight switch."""
 
-    def __init__(self, hass, name, properties):
+    def __init__(self, hass, name, config):
         """Initialize a switch."""
-        super().__init__(hass, name, properties)
+        super().__init__(hass, name, config)
         self._brightness = 255
-        self._dimlevel_min = properties.get(CONF_DIMLEVEL_MIN)
-        self._dimlevel_max = properties.get(CONF_DIMLEVEL_MAX)
+        self._dimlevel_min = config.get(CONF_DIMLEVEL_MIN)
+        self._dimlevel_max = config.get(CONF_DIMLEVEL_MAX)
 
     @property
     def brightness(self):

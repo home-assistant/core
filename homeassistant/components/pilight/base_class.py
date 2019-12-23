@@ -4,26 +4,28 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components import pilight
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_PROTOCOL,
     CONF_STATE,
-    STATE_ON
+    STATE_OFF,
+    STATE_ON,
 )
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
+    CONF_ECHO,
+    CONF_OFF,
     CONF_OFF_CODE,
     CONF_OFF_CODE_RECEIVE,
+    CONF_ON,
     CONF_ON_CODE,
     CONF_ON_CODE_RECEIVE,
     CONF_SYSTEMCODE,
     CONF_UNIT,
     CONF_UNITCODE,
-    CONF_ECHO
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,12 +33,12 @@ _LOGGER = logging.getLogger(__name__)
 COMMAND_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_PROTOCOL): cv.string,
-        vol.Optional("on"): cv.positive_int,
-        vol.Optional("off"): cv.positive_int,
+        vol.Optional(CONF_ON): cv.positive_int,
+        vol.Optional(CONF_OFF): cv.positive_int,
         vol.Optional(CONF_UNIT): cv.positive_int,
         vol.Optional(CONF_UNITCODE): cv.positive_int,
         vol.Optional(CONF_ID): vol.Any(cv.positive_int, cv.string),
-        vol.Optional(CONF_STATE): cv.string,
+        vol.Optional(CONF_STATE): vol.Any(STATE_ON, STATE_OFF),
         vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
     },
     extra=vol.ALLOW_EXTRA,
@@ -49,12 +51,8 @@ SWITCHES_SCHEMA = vol.Schema(
         vol.Required(CONF_ON_CODE): COMMAND_SCHEMA,
         vol.Required(CONF_OFF_CODE): COMMAND_SCHEMA,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_OFF_CODE_RECEIVE, default=[]): vol.All(
-            cv.ensure_list, [COMMAND_SCHEMA]
-        ),
-        vol.Optional(CONF_ON_CODE_RECEIVE, default=[]): vol.All(
-            cv.ensure_list, [COMMAND_SCHEMA]
-        )
+        vol.Optional(CONF_OFF_CODE_RECEIVE): vol.All(cv.ensure_list, [COMMAND_SCHEMA]),
+        vol.Optional(CONF_ON_CODE_RECEIVE): vol.All(cv.ensure_list, [COMMAND_SCHEMA]),
     }
 )
 
@@ -62,16 +60,16 @@ SWITCHES_SCHEMA = vol.Schema(
 class PilightBaseDevice(RestoreEntity):
     """Base class for pilight switches and lights."""
 
-    def __init__(self, hass, name, properties):
+    def __init__(self, hass, name, config):
         """Initialize a device."""
         self._hass = hass
-        self._name = properties.get(CONF_NAME, name)
-        self._state = False
-        self._code_on = properties.get(CONF_ON_CODE)
-        self._code_off = properties.get(CONF_OFF_CODE)
+        self._name = config.get(CONF_NAME, name)
+        self._is_on = False
+        self._code_on = config.get(CONF_ON_CODE)
+        self._code_off = config.get(CONF_OFF_CODE)
 
-        code_on_receive = properties.get(CONF_ON_CODE_RECEIVE)
-        code_off_receive = properties.get(CONF_OFF_CODE_RECEIVE)
+        code_on_receive = config.get(CONF_ON_CODE_RECEIVE, [])
+        code_off_receive = config.get(CONF_OFF_CODE_RECEIVE, [])
 
         self._code_on_receive = []
         self._code_off_receive = []
@@ -92,7 +90,8 @@ class PilightBaseDevice(RestoreEntity):
         await super().async_added_to_hass()
         state = await self.async_get_last_state()
         if state:
-            self._state = state.state == STATE_ON
+            self._is_on = state.state == STATE_ON
+            self._brightness = state.attributes.get("brightness")
 
     @property
     def name(self):
@@ -112,7 +111,7 @@ class PilightBaseDevice(RestoreEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._state
+        return self._is_on
 
     def _handle_code(self, call):
         """Check if received code by the pilight-daemon.
@@ -146,7 +145,7 @@ class PilightBaseDevice(RestoreEntity):
             if turn_on:
                 code = self._code_on
                 if dimlevel is not None:
-                    code.update({'dimlevel': dimlevel})
+                    code.update({"dimlevel": dimlevel})
 
                 self._hass.services.call(
                     pilight.DOMAIN, pilight.SERVICE_NAME, code, blocking=True
@@ -156,7 +155,7 @@ class PilightBaseDevice(RestoreEntity):
                     pilight.DOMAIN, pilight.SERVICE_NAME, self._code_off, blocking=True
                 )
 
-        self._state = turn_on
+        self._is_on = turn_on
         self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):

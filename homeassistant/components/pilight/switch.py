@@ -21,14 +21,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     switches = config.get(CONF_SWITCHES)
     devices = []
 
-    for dev_name, properties in switches.items():
-        devices.append(
-            PilightSwitch(
-                hass,
-                dev_name,
-                properties
-            )
-        )
+    for dev_name, config in switches.items():
+        devices.append(PilightSwitch(hass, dev_name, config))
 
     add_entities(devices)
 
@@ -36,6 +30,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PilightSwitch(PilightBaseDevice, SwitchDevice):
     """Representation of a Pilight switch."""
 
-    def __init__(self, hass, name, properties):
+    def __init__(self, hass, name, config):
         """Initialize a switch."""
-        super().__init__(hass, name, properties)
+        super().__init__(hass, name, config)
