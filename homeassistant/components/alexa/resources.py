@@ -266,9 +266,9 @@ class AlexaPresetResource(AlexaCapabilityResource):
         """Initialize an Alexa presetResource."""
         super().__init__(labels)
         self._presets = []
-        self._minimum_value = int(min_value)
-        self._maximum_value = int(max_value)
-        self._precision = int(precision)
+        self._minimum_value = min_value
+        self._maximum_value = max_value
+        self._precision = precision
         self._unit_of_measure = None
         if unit in AlexaGlobalCatalog.__dict__.values():
             self._unit_of_measure = unit

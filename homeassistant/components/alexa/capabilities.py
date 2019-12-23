@@ -1,7 +1,7 @@
 """Alexa capabilities."""
 import logging
 
-from homeassistant.components import cover, fan, image_processing, light
+from homeassistant.components import cover, fan, image_processing, input_number, light
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
 import homeassistant.components.climate.const as climate
 import homeassistant.components.media_player.const as media_player
@@ -1054,6 +1054,10 @@ class AlexaRangeController(AlexaCapability):
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
             return self.entity.attributes.get(cover.ATTR_CURRENT_TILT_POSITION)
 
+        # Input Number Value
+        if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
+            return float(self.entity.state)
+
         return None
 
     def configuration(self):
@@ -1107,6 +1111,28 @@ class AlexaRangeController(AlexaCapability):
                 max_value=100,
                 precision=1,
                 unit=AlexaGlobalCatalog.UNIT_PERCENT,
+            )
+            return self._resource.serialize_capability_resources()
+
+        # Input Number Value
+        if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
+            min_value = float(self.entity.attributes[input_number.ATTR_MIN])
+            max_value = float(self.entity.attributes[input_number.ATTR_MAX])
+            precision = float(self.entity.attributes.get(input_number.ATTR_STEP, 1))
+            unit = self.entity.attributes.get(input_number.ATTR_UNIT_OF_MEASUREMENT)
+
+            self._resource = AlexaPresetResource(
+                ["Value"],
+                min_value=min_value,
+                max_value=max_value,
+                precision=precision,
+                unit=unit,
+            )
+            self._resource.add_preset(
+                value=min_value, labels=[AlexaGlobalCatalog.VALUE_MINIMUM]
+            )
+            self._resource.add_preset(
+                value=max_value, labels=[AlexaGlobalCatalog.VALUE_MAXIMUM]
             )
             return self._resource.serialize_capability_resources()
 
