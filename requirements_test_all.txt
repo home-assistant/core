@@ -228,7 +228,7 @@ hole==0.5.0
 holidays==0.9.11
 
 # homeassistant.components.frontend
-ais-dom-frontend==20191204.2
+ais-dom-frontend==20191204.3
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.7
