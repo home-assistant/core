@@ -399,7 +399,7 @@ crimereports==1.0.1
 datadog==0.15.0
 
 # homeassistant.components.metoffice
-datapoint==0.4.3
+datapoint==0.9.5
 
 # homeassistant.components.decora
 # decora==0.6
