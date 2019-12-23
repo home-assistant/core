@@ -36,9 +36,6 @@ class TeslaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize the config flow."""
-
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)
