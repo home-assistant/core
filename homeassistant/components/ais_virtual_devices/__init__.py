@@ -68,59 +68,91 @@ async def async_setup(hass, config):
     )
 
     hass.states.async_set(
-        "group.all_switches",
-        "on",
+        "group.all_ais_switches",
+        "",
+        {
+            "entity_id": [],
+            "order": 1,
+            "control": "hidden",
+            "friendly_name": "Przełączniki",
+            "context_key_words": "przełaczniki",
+            "context_answer": "OK, wybrano wszystkie przełączniki. Możesz powiedzieć co włączyć lub nawigować pilotem "
+            "by sprawdzać status oraz przełączać.",
+            "remote_group_view": "group.all_devices",
+        },
+    )
+
+    hass.states.async_set(
+        "group.all_ais_lights",
+        "",
         {
             "entity_id": [],
             "order": 2,
             "control": "hidden",
-            "friendly_name": "Wszystkie przełączniki",
-            "context_key_words": "przełaczniki",
-            "context_answer": "OK, wybrano wszystkie przełączniki. Możesz powiedzieć co włączyć lub nawigować pilotem "
+            "friendly_name": "Światła",
+            "context_key_words": "światła",
+            "context_answer": "OK, wybrano wszystkie światła. Możesz powiedzieć co włączyć lub nawigować pilotem by "
+            "sprawdzać status oraz przełączać",
+            "remote_group_view": "group.all_devices",
+        },
+    )
+
+    hass.states.async_set(
+        "group.all_ais_sensors",
+        "",
+        {
+            "entity_id": [],
+            "order": 3,
+            "control": "hidden",
+            "friendly_name": "Czujniki",
+            "context_key_words": "czujniki",
+            "context_answer": "OK, wybrano wszystkie czujniki.",
+            "remote_group_view": "group.all_devices",
+        },
+    )
+
+    hass.states.async_set(
+        "group.all_ais_fans",
+        "",
+        {
+            "entity_id": [],
+            "order": 4,
+            "control": "hidden",
+            "friendly_name": "Wentylatory",
+            "context_key_words": "wentylatory",
+            "context_answer": "OK, wybrano wszystkie wentylatory.",
+            "remote_group_view": "group.all_devices",
+        },
+    )
+
+    hass.states.async_set(
+        "group.all_devices",
+        "on",
+        {
+            "entity_id": [
+                "group.all_ais_switches",
+                "group.all_ais_lights",
+                "group.all_ais_sensors",
+                "group.all_ais_fans",
+            ],
+            "order": 2,
+            "control": "hidden",
+            "friendly_name": "Urządzenia",
+            "context_key_words": "urządzenia",
+            "context_answer": "OK, wybrano wszystkie urządzenia. Możesz powiedzieć co włączyć lub nawigować pilotem "
             "by sprawdzać status oraz przełączać.",
             "remote_group_view": "Mój Dom",
         },
     )
 
     hass.states.async_set(
-        "group.all_lights",
+        "group.all_ais_automations",
         "on",
         {
             "entity_id": [],
             "order": 3,
             "control": "hidden",
-            "friendly_name": "Wszystkie światła",
-            "context_key_words": "światła",
-            "context_answer": "OK, wybrano wszystkie światła. Możesz powiedzieć co włączyć lub nawigować pilotem by "
-            "sprawdzać status oraz przełączać",
-            "remote_group_view": "Mój Dom",
-        },
-    )
-
-    hass.states.async_set(
-        "group.all_ais_sensors",
-        "on",
-        {
-            "entity_id": [],
-            "order": 4,
-            "control": "hidden",
-            "friendly_name": "Wszystkie czujniki",
-            "context_key_words": "czujniki",
-            "context_answer": "OK, wybrano wszystkie czujniki.",
-            "remote_group_view": "Mój Dom",
-        },
-    )
-
-    hass.states.async_set(
-        "group.all_fans",
-        "on",
-        {
-            "entity_id": [],
-            "order": 5,
-            "control": "hidden",
-            "friendly_name": "Wszystkie wentylatory",
-            "context_key_words": "wentylatory",
-            "context_answer": "OK, wybrano wszystkie wentylatory.",
+            "friendly_name": "Automatyzacje",
             "remote_group_view": "Mój Dom",
         },
     )
@@ -139,7 +171,7 @@ async def async_setup(hass, config):
                 "sensor.dark_sky_hourly_summary",
                 "sensor.dark_sky_daily_summary",
             ],
-            "order": 6,
+            "order": 4,
             "control": "hidden",
             "friendly_name": "Pogoda",
             "remote_group_view": "Mój Dom",
@@ -157,21 +189,9 @@ async def async_setup(hass, config):
                 "sensor.weekofyear",
                 "binary_sensor.dzien_pracujacy",
             ],
-            "order": 7,
+            "order": 5,
             "control": "hidden",
             "friendly_name": "Kalendarium",
-            "remote_group_view": "Mój Dom",
-        },
-    )
-
-    hass.states.async_set(
-        "group.all_automations",
-        "on",
-        {
-            "entity_id": [],
-            "order": 8,
-            "control": "hidden",
-            "friendly_name": "Automatyzacje",
             "remote_group_view": "Mój Dom",
         },
     )

@@ -192,15 +192,7 @@ def async_setup(hass, config):
     def state_changed(state_event):
         """ Called on state change """
         entity_id = state_event.data.get("entity_id")
-        if entity_id in (
-            "group.all_automations",
-            "group.all_switches",
-            "group.all_lights",
-        ):
-            hass.async_add_job(
-                hass.services.async_call("ais_ai_service", "prepare_remote_menu")
-            )
-        elif entity_id.startswith("media_player."):
+        if entity_id.startswith("media_player."):
             _new = state_event.data["new_state"].attributes
             if state_event.data["old_state"] is None:
                 _old = {"friendly_name": "new ais dome device"}

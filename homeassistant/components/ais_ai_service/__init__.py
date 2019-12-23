@@ -785,7 +785,7 @@ def set_curr_group(hass, group):
     else:
         CURR_GROUP_VIEW = group["remote_group_view"]
         CURR_GROUP = group
-    # set display context for mega audio plauer
+    # set display context for mega audio player
     if CURR_GROUP["entity_id"] in (
         "group.radio_player",
         "group.podcast_player",
@@ -1526,6 +1526,15 @@ def select_entity(hass, long_press):
                 # start searching for the device
                 hass.services.call("script", "ais_scan_iot_devices_in_network")
                 return
+            elif CURR_ENTITIE.startswith("group."):
+                for group in GROUP_ENTITIES:
+                    if group["entity_id"] == CURR_ENTITIE:
+                        gg = group
+                        break
+                if len(gg["entities"]) > 0:
+                    _say_it(hass, str(len(gg["entities"])) + " pozycji")
+                else:
+                    _say_it(hass, "Brak pozycji")
             else:
                 _say_it(hass, "Tej pozycji nie można zmieniać")
 
@@ -2031,19 +2040,18 @@ def get_groups(hass):
     global GROUP_ENTITIES
     all_ais_sensors = []
     all_ais_persons = []
+    all_ais_automations = []
+    all_ais_switches = []
+    all_ais_lights = []
     entities = hass.states.async_all()
     GROUP_ENTITIES = []
 
     def add_menu_item(l_entity):
-        l_entities = l_entity.attributes.get("entity_id")
-        if l_entity.entity_id == "group.all_automations":
-            l_entities = [e for e in l_entities if not e.startswith("automation.ais_")]
-
         l_group = {
             "friendly_name": l_entity.attributes.get("friendly_name"),
             "order": l_entity.attributes.get("order"),
             "entity_id": l_entity.entity_id,
-            "entities": l_entities,
+            "entities": l_entity.attributes.get("entity_id"),
             "context_key_words": l_entity.attributes.get("context_key_words"),
             "context_answer": l_entity.attributes.get("context_answer"),
             "context_suffix": l_entity.attributes.get("context_suffix"),
@@ -2052,7 +2060,7 @@ def get_groups(hass):
         }
         GROUP_ENTITIES.append(l_group)
 
-    def getKey(item):
+    def get_key(item):
         return item["order"]
 
     for entity in entities:
@@ -2061,45 +2069,45 @@ def get_groups(hass):
             if remote is not None:
                 add_menu_item(entity)
         elif entity.entity_id.startswith("sensor."):
-            # add sensors to the all_ais_sensors group
             device_class = entity.attributes.get("device_class", None)
             if device_class is not None:
                 all_ais_sensors.append(entity.entity_id)
         elif entity.entity_id.startswith("person."):
             all_ais_persons.append(entity.entity_id)
+        elif entity.entity_id.startswith(
+            "automation."
+        ) and not entity.entity_id.startswith("automation.ais_"):
+            all_ais_automations.append(entity.entity_id)
+        elif entity.entity_id.startswith("switch."):
+            all_ais_switches.append(entity.entity_id)
+        elif entity.entity_id.startswith("light."):
+            all_ais_lights.append(entity.entity_id)
 
     # update group on remote
     all_unique_sensors = list(set(all_ais_sensors))
     all_unique_sensors.sort()
     all_unique_persons = list(set(all_ais_persons))
     all_unique_persons.sort()
+    all_unique_automations = list(set(all_ais_automations))
+    all_unique_automations.sort()
+    all_unique_switches = list(set(all_ais_switches))
+    all_unique_switches.sort()
+    all_unique_lights = list(set(all_ais_lights))
+    all_unique_lights.sort()
+
+    GROUP_ENTITIES = sorted(GROUP_ENTITIES, key=get_key)
+
     for group in GROUP_ENTITIES:
-        if group["entity_id"] == "group.all_ais_persons":
-            group["entities"] = tuple(all_unique_persons)
+        if group["entity_id"] == "group.all_ais_automations":
+            group["entities"] = all_unique_automations
+        elif group["entity_id"] == "group.all_ais_persons":
+            group["entities"] = all_unique_persons
         elif group["entity_id"] == "group.all_ais_sensors":
-            if len(all_unique_sensors) == 0:
-                # remove group sensors from remote if empty and exists
-                if group in GROUP_ENTITIES:
-                    GROUP_ENTITIES.remove(group)
-            else:
-                group["entities"] = tuple(all_unique_sensors)
-
-    hass.async_add_job(
-        hass.services.async_call(
-            "group",
-            "set",
-            {"object_id": "all_ais_persons", "entities": all_unique_persons},
-        )
-    )
-    hass.async_add_job(
-        hass.services.async_call(
-            "group",
-            "set",
-            {"object_id": "all_ais_sensors", "entities": all_unique_sensors},
-        )
-    )
-
-    GROUP_ENTITIES = sorted(GROUP_ENTITIES, key=getKey)
+            group["entities"] = all_unique_sensors
+        elif group["entity_id"] == "group.all_ais_switches":
+            group["entities"] = all_unique_switches
+        elif group["entity_id"] == "group.all_ais_lights":
+            group["entities"] = all_unique_lights
 
 
 @asyncio.coroutine

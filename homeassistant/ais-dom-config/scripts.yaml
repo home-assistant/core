@@ -24,7 +24,6 @@ ais_cloud_sync:
     - service: ais_cloud.get_radio_types
     - service: ais_cloud.get_podcast_types
     - service: ais_cloud.get_rss_news_category
-    - service: ais_ai_service.prepare_remote_menu
 
 ais_stop_system:
   alias: 'Wyłączenie bramki'
