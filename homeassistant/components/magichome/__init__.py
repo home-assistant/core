@@ -30,8 +30,6 @@ MAGICHOME_TYPE_TO_HA = {
     "light": "light",
     "scene": "scene",
     "switch": "switch",
-    "socket": "socket",
-    "controller": "controller",
 }
 
 CONFIG_SCHEMA = vol.Schema(

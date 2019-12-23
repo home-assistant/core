@@ -3,7 +3,7 @@
   "name": "MagicHome",
   "documentation": "https://www.home-assistant.io/components/magichome",
   "requirements": [
-    "magichome==0.1.45"
+    "magichome==0.1.46"
   ],
   "dependencies": [],
   "codeowners": ["@ZNEGGE-SDK"]
