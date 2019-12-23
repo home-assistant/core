@@ -1,0 +1,100 @@
+# Input text to input Zigbee2mqtt friendly_name for scripts
+input_text:
+  zigbee2mqtt_old_name:
+    name: Stara Nazwa Encji
+  zigbee2mqtt_new_name:
+    name: Nowa Nazwa Encji
+  zigbee2mqtt_remove:
+    name: Encja do Usunięcia
+
+# Scripts for renaming & removing devices
+script:
+  zigbee2mqtt_rename:
+    alias: Zmiana Nazwy Encji
+    sequence:
+      service: mqtt.publish
+      data_template:
+        topic: zigbee2mqtt/bridge/config/rename
+        payload_template: >-
+          {
+            "old": "{{ states.input_text.zigbee2mqtt_old_name.state | string }}",
+            "new": "{{ states.input_text.zigbee2mqtt_new_name.state | string }}"
+          }
+  zigbee2mqtt_remove:
+    alias: Usunięcie Encji
+    sequence:
+      service: mqtt.publish
+      data_template:
+        topic: zigbee2mqtt/bridge/config/remove
+        payload_template: "{{ states.input_text.zigbee2mqtt_remove.state | string }}"
+
+# Timer for joining time remaining (120 sec = 2 min)
+timer:
+  zigbee_permit_join:
+    name: Czas parowania
+    duration: 120
+
+sensor:
+  # Sensor for monitoring the bridge state
+  - platform: mqtt
+    name: Status Serwisu Zigbee2mqtt
+    state_topic: "zigbee2mqtt/bridge/state"
+    icon: mdi:usb-port
+  # Sensor for Showing the Zigbee2mqtt Version
+  - platform: mqtt
+    name: Wersja Zigbee2mqtt
+    state_topic: "zigbee2mqtt/bridge/config"
+    value_template: "{{ value_json.version }}"
+    icon: mdi:zigbee
+  # Sensor for Showing the Coordinator Version
+  - platform: mqtt
+    name: Wersja Kordynatora
+    state_topic: "zigbee2mqtt/bridge/config"
+    value_template: "{{ value_json.coordinator }}"
+    icon: mdi:chip
+  - platform: mqtt
+    name: Zigbee2mqtt Networkmap
+    state_topic: "zigbee2mqtt/bridge/networkmap/raw"
+    value_template: >-
+      {{ now().strftime('%Y-%m-%d %H:%M:%S') }}
+    json_attributes_topic: "zigbee2mqtt/bridge/networkmap/raw"
+
+# Switch for enabling joining
+switch:
+  - platform: mqtt
+    name: "Zigbee Tryb Parowania"
+    state_topic: "zigbee2mqtt/bridge/config/permit_join"
+    command_topic: "zigbee2mqtt/bridge/config/permit_join"
+    payload_on: "true"
+    payload_off: "false"
+
+automation:
+  # Automation to start timer when enable join is turned on
+  - id: zigbee_join_enabled
+    alias: Zigbee Tryb Parowania
+    hide_entity: true
+    trigger:
+      platform: state
+      entity_id: switch.zigbee_tryb_parowania
+      to: "on"
+    action:
+      service: timer.start
+      entity_id: timer.zigbee_permit_join
+  # Automation to stop timer when switch turned off and turn off switch when timer finished
+  - id: zigbee_join_disabled
+    alias: Zigbee Wyłączenie trybu parowania
+    hide_entity: true
+    trigger:
+      - platform: event
+        event_type: timer.finished
+        event_data:
+          entity_id: timer.zigbee_permit_join
+      - platform: state
+        entity_id: switch.zigbee_tryb_parowania
+        to: "off"
+    action:
+      - service: timer.cancel
+        data:
+          entity_id: timer.zigbee_permit_join
+      - service: switch.turn_off
+        entity_id: switch.zigbee_tryb_parowania

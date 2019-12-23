@@ -8,6 +8,7 @@ import asyncio
 import logging
 import pyinotify
 import re
+import os
 import subprocess
 import homeassistant.components.ais_dom.ais_global as ais_global
 
@@ -34,18 +35,31 @@ def prepare_usb_device(hass, device_info):
 
     # add info in app
     if device_info["id"] == G_ZIGBEE_ID:
-        """Register the built-in zigbee panel."""
+        # Register the built-in zigbee panel
         hass.components.frontend.async_register_built_in_panel(
-            "lovelace/zigbee", "Zigbee", "mdi:zigbee"
+            "lovelace/ais_zigbee", "Zigbee", "mdi:zigbee"
         )
+        # start pm2 zigbee service
+        os.system("pm2 stop zigbee")
+        os.system("pm2 delete zigbee")
+        os.system(
+            "cd /data/data/pl.sviete.dom/files/home/zigbee2mqtt && pm2 start npm --name zigbee --output NULL "
+            "--error NULL --restart-delay=30000 -- run start "
+        )
+        os.system("pm2 save")
 
 
 def remove_usb_device(hass, device_info):
     # stop service and remove device from dict
     ais_global.G_USB_DEVICES.remove(device_info)
 
-    """Unregister the built-in zigbee panel."""
-    hass.components.frontend.async_remove_panel("lovelace/zigbee")
+    if device_info["id"] == G_ZIGBEE_ID:
+        # Unregister the built-in zigbee panel
+        hass.components.frontend.async_remove_panel("lovelace/ais_zigbee")
+        # stop pm2 zigbee service
+        os.system("pm2 stop zigbee")
+        os.system("pm2 delete zigbee")
+        os.system("pm2 save")
 
 
 @asyncio.coroutine
@@ -92,7 +106,11 @@ async def async_setup(hass, config):
 
     async def lsusb(call):
         # check if the call was from scheduler or service / web app
-        _lsusb()
+        devices = _lsusb()
+        for device in devices:
+            if device["id"] == G_ZIGBEE_ID:
+                # USB zigbee dongle
+                prepare_usb_device(hass, device)
 
     hass.services.async_register(DOMAIN, "lsusb", lsusb)
     return True
