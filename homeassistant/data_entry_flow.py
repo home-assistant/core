@@ -1,4 +1,5 @@
 """Classes to help gather user submissions."""
+import abc
 import logging
 from typing import Any, Dict, List, Optional, cast
 import uuid
@@ -46,7 +47,7 @@ class AbortFlow(FlowError):
         self.description_placeholders = description_placeholders
 
 
-class FlowManager:
+class FlowManager(abc.ABC):
     """Manage all the flows that are in progress."""
 
     def __init__(self, hass: HomeAssistant,) -> None:
@@ -54,6 +55,7 @@ class FlowManager:
         self.hass = hass
         self._progress: Dict[str, Any] = {}
 
+    @abc.abstractmethod
     async def async_create_flow(
         self, handler_key: str, *, context: Optional[Dict] = None, data: Any = None
     ) -> Optional["FlowHandler"]:
@@ -61,13 +63,14 @@ class FlowManager:
 
         Handler key is the domain of the component that we want to set up.
         """
-        raise NotImplementedError(self.async_create_flow)
+        pass
 
+    @abc.abstractmethod
     async def async_finish_flow(
         self, flow: "FlowHandler", result: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Finish a config flow and add an entry."""
-        raise NotImplementedError(self.async_finish_flow)
+        pass
 
     @callback
     def async_progress(self) -> List[Dict]:
