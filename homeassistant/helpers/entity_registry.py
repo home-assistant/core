@@ -385,10 +385,10 @@ class EntityRegistry:
             if entry.entity_id in existing or entry.disabled:
                 continue
 
+            attrs = {"restored": True}
+
             if entry.capabilities:
-                attrs = dict(entry.capabilities)
-            else:
-                attrs = {}
+                attrs.update(entry.capabilities)
 
             if entry.supported_features:
                 attrs[ATTR_SUPPORTED_FEATURES] = entry.supported_features

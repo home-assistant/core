@@ -907,6 +907,11 @@ class MockEntity(entity.Entity):
         return self._handle("unique_id")
 
     @property
+    def state(self):
+        """Return the state of the entity."""
+        return self._handle("state")
+
+    @property
     def available(self):
         """Return True if entity is available."""
         return self._handle("available")

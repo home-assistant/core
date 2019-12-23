@@ -811,3 +811,22 @@ async def test_entity_info_added_to_entity_registry(hass):
     print(entry_default)
     assert entry_default.capabilities == {"max": 100}
     assert entry_default.supported_features == 5
+
+
+async def test_override_restored_entities(hass):
+    """Test that we allow overriding restored entities."""
+    registry = mock_registry(hass)
+    registry.async_get_or_create(
+        "test_domain", "test_domain", "1234", suggested_object_id="world"
+    )
+
+    hass.states.async_set("test_domain.world", "unavailable", {"restored": True})
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    await component.async_add_entities(
+        [MockEntity(unique_id="1234", state="on", entity_id="test_domain.world")], True
+    )
+
+    state = hass.states.get("test_domain.world")
+    assert state.state == "on"

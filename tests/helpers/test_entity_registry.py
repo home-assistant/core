@@ -511,6 +511,7 @@ async def test_restore_states(hass):
     simple = hass.states.get("light.simple")
     assert simple is not None
     assert simple.state == STATE_UNAVAILABLE
+    assert simple.attributes == {"restored": True}
 
     disabled = hass.states.get("light.disabled")
     assert disabled is None
@@ -522,4 +523,5 @@ async def test_restore_states(hass):
         "max": 100,
         "supported_features": 5,
         "device_class": "mock-device-class",
+        "restored": True,
     }
