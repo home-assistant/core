@@ -52,7 +52,7 @@ ATTR_ZOOM = "zoom"
 ATTR_DISTANCE = "distance"
 ATTR_SPEED = "speed"
 ATTR_MOVE_MODE = "move_mode"
-ATTR_CONTINUOUS_DURATION = "ContinuousDuration"
+ATTR_CONTINUOUS_DURATION = "continuous_duration"
 
 DIR_UP = "UP"
 DIR_DOWN = "DOWN"
