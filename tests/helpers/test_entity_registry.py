@@ -5,7 +5,8 @@ from unittest.mock import patch
 import asynctest
 import pytest
 
-from homeassistant.core import callback, valid_entity_id
+from homeassistant.const import EVENT_HOMEASSISTANT_START, STATE_UNAVAILABLE
+from homeassistant.core import CoreState, callback, valid_entity_id
 from homeassistant.helpers import entity_registry
 
 from tests.common import MockConfigEntry, flush_store, mock_registry
@@ -475,3 +476,50 @@ async def test_disabled_by_system_options(registry):
         "light", "hue", "BBBB", config_entry=mock_config, disabled_by="user"
     )
     assert entry2.disabled_by == "user"
+
+
+async def test_restore_states(hass):
+    """Test restoring states."""
+    hass.state = CoreState.not_running
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    registry.async_get_or_create(
+        "light", "hue", "1234", suggested_object_id="simple",
+    )
+    # Should not be created
+    registry.async_get_or_create(
+        "light",
+        "hue",
+        "5678",
+        suggested_object_id="disabled",
+        disabled_by=entity_registry.DISABLED_HASS,
+    )
+    registry.async_get_or_create(
+        "light",
+        "hue",
+        "9012",
+        suggested_object_id="all_info_set",
+        capabilities={"max": 100},
+        supported_features=5,
+        device_class="mock-device-class",
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+
+    simple = hass.states.get("light.simple")
+    assert simple is not None
+    assert simple.state == STATE_UNAVAILABLE
+
+    disabled = hass.states.get("light.disabled")
+    assert disabled is None
+
+    all_info_set = hass.states.get("light.all_info_set")
+    assert all_info_set is not None
+    assert all_info_set.state == STATE_UNAVAILABLE
+    assert all_info_set.attributes == {
+        "max": 100,
+        "supported_features": 5,
+        "device_class": "mock-device-class",
+    }

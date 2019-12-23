@@ -15,6 +15,12 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, cast
 
 import attr
 
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_SUPPORTED_FEATURES,
+    EVENT_HOMEASSISTANT_START,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
@@ -66,7 +72,7 @@ class RegistryEntry:
             )
         ),
     )
-    capabilities: Dict[str, Any] = attr.ib(factory=dict)
+    capabilities: Optional[Dict[str, Any]] = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
     device_class: Optional[str] = attr.ib(default=None)
     domain = attr.ib(type=str, init=False, repr=False)
@@ -199,7 +205,7 @@ class EntityRegistry:
             unique_id=unique_id,
             platform=platform,
             disabled_by=disabled_by,
-            capabilities=capabilities or {},
+            capabilities=capabilities,
             supported_features=supported_features or 0,
             device_class=device_class,
         )
@@ -339,6 +345,11 @@ class EntityRegistry:
 
     async def async_load(self) -> None:
         """Load the entity registry."""
+        if not self.hass.is_running:
+            self.hass.bus.async_listen(
+                EVENT_HOMEASSISTANT_START, self._write_unavailable_states
+            )
+
         data = await self.hass.helpers.storage.async_migrator(
             self.hass.config.path(PATH_REGISTRY),
             self._store,
@@ -363,6 +374,29 @@ class EntityRegistry:
                 )
 
         self.entities = entities
+
+    @callback
+    def _write_unavailable_states(self, _):
+        """Make sure state machine contains entry for each registered entity."""
+        states = self.hass.states
+        existing = set(states.async_entity_ids())
+
+        for entry in self.entities.values():
+            if entry.entity_id in existing or entry.disabled:
+                continue
+
+            if entry.capabilities:
+                attrs = dict(entry.capabilities)
+            else:
+                attrs = {}
+
+            if entry.supported_features:
+                attrs[ATTR_SUPPORTED_FEATURES] = entry.supported_features
+
+            if entry.device_class:
+                attrs[ATTR_DEVICE_CLASS] = entry.device_class
+
+            states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)
 
     @callback
     def async_schedule_save(self) -> None:
