@@ -8,8 +8,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
-                                              dispatcher_send)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from magichome import MagicHomeApi
@@ -27,11 +26,7 @@ SIGNAL_UPDATE_ENTITY = "magichome_update"
 SERVICE_FORCE_UPDATE = "force_update"
 SERVICE_PULL_DEVICES = "pull_devices"
 
-MAGICHOME_TYPE_TO_HA = {
-    "light": "light",
-    "scene": "scene",
-    "switch": "switch",
-}
+MAGICHOME_TYPE_TO_HA = {"light": "light", "scene": "scene", "switch": "switch"}
 
 CONFIG_SCHEMA = vol.Schema(
     {
