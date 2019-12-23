@@ -4178,12 +4178,12 @@ class AisOpenCover(intent.IntentHandler):
                     message = "Urządzenie " + name + " jest niedostępne"
                 else:
                     yield from hass.services.async_call(
-                        core.DOMAIN,
+                        "cover",
                         SERVICE_OPEN_COVER,
                         {ATTR_ENTITY_ID: entity.entity_id},
                         blocking=True,
                     )
-                    message = "OK, włączono {}".format(entity.name)
+                    message = "OK, otwieram {}".format(entity.name)
                 success = True
             else:
                 message = "Urządzenia " + name + " nie można otworzyć"
@@ -4216,12 +4216,12 @@ class AisCloseCover(intent.IntentHandler):
                     msg = "Urządzenie {} jest niedostępne".format(entity.name)
                 else:
                     yield from hass.services.async_call(
-                        core.DOMAIN,
+                        "cover",
                         SERVICE_TURN_OFF,
                         {ATTR_ENTITY_ID: entity.entity_id},
                         blocking=True,
                     )
-                    msg = "OK, zamknięto {}".format(entity.name)
+                    msg = "OK, zamykam {}".format(entity.name)
                     success = True
             else:
                 msg = "Urządzenia " + name + " nie można zamknąć"
