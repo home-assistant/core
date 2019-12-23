@@ -10,7 +10,7 @@ from homeassistant.components import magichome
 from homeassistant.helpers.json import JSONEncoder
 
 
-# @pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def mock_history(hass):
     """Mock history component loaded."""
     hass.config.components.add("history")
