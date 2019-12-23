@@ -510,7 +510,10 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         if handler is None:
             raise data_entry_flow.UnknownHandler
 
-        source = "unknown" if not context else context["source"]
+        if not context or "source" not in context:
+            raise KeyError("Context not set or doesn't have a source set")
+
+        source = context["source"]
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
@@ -869,15 +872,15 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
     """Flow to set options for a configuration entry."""
 
     async def async_create_flow(
-        self, handler_key: str, *, context: Optional[Dict] = None, data: Any = None
-    ) -> Optional["OptionsFlow"]:
+        self, handler_key: str, *, context: Optional[Dict[str, Any]] = None, data: Optional[Dict[str, Any]] = None
+    ) -> "OptionsFlow":
         """Create an options flow for a config entry.
 
         Entry_id and flow.handler is the same thing to map entry with flow.
         """
         entry = self.hass.config_entries.async_get_entry(handler_key)
         if entry is None:
-            return None
+            raise UnknownEntry(handler_key)
 
         if entry.domain not in HANDLERS:
             raise data_entry_flow.UnknownHandler
@@ -896,7 +899,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
 
         entry = self.hass.config_entries.async_get_entry(flow.handler)
         if entry is None:
-            raise UnknownEntry
+            raise UnknownEntry(flow.handler)
         self.hass.config_entries.async_update_entry(entry, options=result["data"])
 
         result["result"] = True
