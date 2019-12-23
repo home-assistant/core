@@ -26,7 +26,11 @@ SIGNAL_UPDATE_ENTITY = "magichome_update"
 SERVICE_FORCE_UPDATE = "force_update"
 SERVICE_PULL_DEVICES = "pull_devices"
 
-MAGICHOME_TYPE_TO_HA = {"light": "light", "scene": "scene", "switch": "switch"}
+MAGICHOME_TYPE_TO_HA = {
+    "light": "light",
+    "scene": "scene",
+    "switch": "switch",
+}
 
 CONFIG_SCHEMA = vol.Schema(
     {
