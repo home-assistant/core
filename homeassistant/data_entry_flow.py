@@ -57,7 +57,11 @@ class FlowManager(abc.ABC):
 
     @abc.abstractmethod
     async def async_create_flow(
-        self, handler_key: str, *, context: Optional[Dict[str, Any]] = None, data: Optional[Dict[str, Any]] = None
+        self,
+        handler_key: str,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
     ) -> "FlowHandler":
         """Create a flow for specified handler.
 
