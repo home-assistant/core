@@ -52,7 +52,7 @@ class VelbusDimmer(VelbusEntity, Light):
         return self._module.get_dimmer_state(self._channel)
 
     def turn_on(self, **kwargs):
-        """Instruct the Velbus dimmer to set requested brightness level"""
+        """Instruct the Velbus dimmer to set requested brightness level."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
         else:
@@ -99,7 +99,3 @@ class VelbusDimmer(VelbusEntity, Light):
             )
         except VelbusException as err:
             _LOGGER.error("A Velbus error occurred: %s", err)
-
-    async def async_update(self):
-        self._module.update_states()
-
