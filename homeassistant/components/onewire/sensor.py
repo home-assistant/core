@@ -236,7 +236,7 @@ class OneWireProxy(OneWire):
     def _read_value_ownet(self):
         """Read a value from the owserver."""
         if self._owproxy:
-            return bytes.decode(self._owproxy.read(self._device_file)).lstrip()
+            return self._owproxy.read(self._device_file).decode().lstrip()
         return None
 
     def update(self):
