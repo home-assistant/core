@@ -449,7 +449,11 @@ async def remove_group(group, zha_gateway):
                         group.group_id
                     )
                 )
-        await asyncio.gather(*tasks)
+        if tasks:
+            await asyncio.gather(*tasks)
+        else:
+            # we have members but none are tracked by ZHA for whatever reason
+            zha_gateway.application_controller.groups.pop(group.group_id)
     else:
         zha_gateway.application_controller.groups.pop(group.group_id)
 
