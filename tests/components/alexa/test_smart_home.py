@@ -9,6 +9,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
+    SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
@@ -2912,3 +2913,127 @@ async def test_input_number_float(hass):
         "value",
         instance="input_number.value",
     )
+
+
+async def test_media_player_eq_modes(hass):
+    """Test media player discovery with sound mode list."""
+    device = (
+        "media_player.test",
+        "on",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "sound_mode": "tv",
+            "sound_mode_list": ["movie", "music", "night", "sport", "tv", "rocknroll"],
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "media_player#test"
+    assert appliance["friendlyName"] == "Test media player"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa",
+        "Alexa.EqualizerController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+    )
+
+    eq_capability = get_capability(capabilities, "Alexa.EqualizerController")
+    assert eq_capability is not None
+    assert "modes" in eq_capability["configurations"]
+
+    eq_modes = eq_capability["configurations"]["modes"]
+    assert {"name": "rocknroll"} not in eq_modes["supported"]
+    assert {"name": "ROCKNROLL"} not in eq_modes["supported"]
+
+    for mode in ("MOVIE", "MUSIC", "NIGHT", "SPORT", "TV"):
+        assert {"name": mode} in eq_modes["supported"]
+
+        call, _ = await assert_request_calls_service(
+            "Alexa.EqualizerController",
+            "SetMode",
+            "media_player#test",
+            "media_player.select_sound_mode",
+            hass,
+            payload={"mode": mode},
+        )
+        assert call.data["sound_mode"] == mode.lower()
+
+
+async def test_media_player_sound_mode_list_none(hass):
+    """Test EqualizerController bands directive not supported."""
+    device = (
+        "media_player.test",
+        "on",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "sound_mode": "unknown",
+            "sound_mode_list": None,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+    assert appliance["endpointId"] == "media_player#test"
+    assert appliance["friendlyName"] == "Test media player"
+
+
+async def test_media_player_eq_bands_not_supported(hass):
+    """Test EqualizerController bands directive not supported."""
+    device = (
+        "media_player.test_bands",
+        "on",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "sound_mode": "tv",
+            "sound_mode_list": ["movie", "music", "night", "sport", "tv", "rocknroll"],
+        },
+    )
+    await discovery_test(device, hass)
+
+    context = Context()
+
+    # Test for SetBands Error
+    request = get_new_request(
+        "Alexa.EqualizerController", "SetBands", "media_player#test_bands"
+    )
+    request["directive"]["payload"] = {"bands": [{"name": "BASS", "value": -2}]}
+    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+
+    assert "event" in msg
+    msg = msg["event"]
+    assert msg["header"]["name"] == "ErrorResponse"
+    assert msg["header"]["namespace"] == "Alexa"
+    assert msg["payload"]["type"] == "INVALID_DIRECTIVE"
+
+    # Test for AdjustBands Error
+    request = get_new_request(
+        "Alexa.EqualizerController", "AdjustBands", "media_player#test_bands"
+    )
+    request["directive"]["payload"] = {
+        "bands": [{"name": "BASS", "levelDelta": 3, "levelDirection": "UP"}]
+    }
+    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+
+    assert "event" in msg
+    msg = msg["event"]
+    assert msg["header"]["name"] == "ErrorResponse"
+    assert msg["header"]["namespace"] == "Alexa"
+    assert msg["payload"]["type"] == "INVALID_DIRECTIVE"
+
+    # Test for ResetBands Error
+    request = get_new_request(
+        "Alexa.EqualizerController", "ResetBands", "media_player#test_bands"
+    )
+    request["directive"]["payload"] = {
+        "bands": [{"name": "BASS", "levelDelta": 3, "levelDirection": "UP"}]
+    }
+    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+
+    assert "event" in msg
+    msg = msg["event"]
+    assert msg["header"]["name"] == "ErrorResponse"
+    assert msg["header"]["namespace"] == "Alexa"
+    assert msg["payload"]["type"] == "INVALID_DIRECTIVE"
