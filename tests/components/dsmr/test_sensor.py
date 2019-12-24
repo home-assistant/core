@@ -239,6 +239,36 @@ async def test_belgian_meter(hass, mock_connection_factory):
     assert gas_consumption.attributes.get("unit_of_measurement") == "m3"
 
 
+async def test_belgian_meter_low(hass, mock_connection_factory):
+    """Test if Belgian meter is correctly parsed."""
+    (connection_factory, transport, protocol) = mock_connection_factory
+
+    from dsmr_parser.obis_references import ELECTRICITY_ACTIVE_TARIFF
+    from dsmr_parser.objects import CosemObject
+
+    config = {"platform": "dsmr", "dsmr_version": "5B"}
+
+    telegram = {
+        ELECTRICITY_ACTIVE_TARIFF: CosemObject([{"value": "0002", "unit": ""}]),
+    }
+
+    with assert_setup_component(1):
+        await async_setup_component(hass, "sensor", {"sensor": config})
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to update
+    await asyncio.sleep(0)
+
+    # tariff should be translated in human readable and have no unit
+    power_tariff = hass.states.get("sensor.power_tariff")
+    assert power_tariff.state == "low"
+    assert power_tariff.attributes.get("unit_of_measurement") == ""
+
+
 async def test_tcp(hass, mock_connection_factory):
     """If proper config provided TCP connection should be made."""
     (connection_factory, transport, protocol) = mock_connection_factory
