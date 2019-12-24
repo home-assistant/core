@@ -196,3 +196,11 @@ class Inputs:
         "video3": "VIDEO 3",
         "xbox": "XBOX",
     }
+
+    VALID_SOUND_MODE_MAP = {
+        "movie": "MOVIE",
+        "music": "MUSIC",
+        "night": "NIGHT",
+        "sport": "SPORT",
+        "tv": "TV",
+    }
