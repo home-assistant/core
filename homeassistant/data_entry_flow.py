@@ -76,12 +76,17 @@ class FlowManager(abc.ABC):
         """Finish a config flow and add an entry."""
         pass
 
+    async def async_post_init(self, flow: "FlowHandler", result: Dict[str, Any]) -> None:
+        """Entry has finished executing its first step asynchronously."""
+        pass
+
     @callback
     def async_progress(self) -> List[Dict]:
         """Return the flows in progress."""
         return [
             {"flow_id": flow.flow_id, "handler": flow.handler, "context": flow.context}
             for flow in self._progress.values()
+            if flow.cur_step is not None
         ]
 
     async def async_init(
@@ -99,7 +104,12 @@ class FlowManager(abc.ABC):
         flow.context = context
         self._progress[flow.flow_id] = flow
 
-        return await self._async_handle_step(flow, flow.init_step, data)
+        result = await self._async_handle_step(flow, flow.init_step, data)
+
+        if result["type"] != RESULT_TYPE_ABORT:
+            await self.async_post_init(flow, result)
+
+        return result
 
     async def async_configure(
         self, flow_id: str, user_input: Optional[Dict] = None

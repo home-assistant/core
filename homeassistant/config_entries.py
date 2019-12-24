@@ -61,7 +61,13 @@ ENTRY_STATE_FAILED_UNLOAD = "failed_unload"
 UNRECOVERABLE_STATES = (ENTRY_STATE_MIGRATION_ERROR, ENTRY_STATE_FAILED_UNLOAD)
 
 DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
-DISCOVERY_SOURCES = (SOURCE_SSDP, SOURCE_ZEROCONF, SOURCE_DISCOVERY, SOURCE_IMPORT)
+DISCOVERY_SOURCES = (
+    SOURCE_SSDP,
+    SOURCE_ZEROCONF,
+    SOURCE_DISCOVERY,
+    SOURCE_IMPORT,
+    SOURCE_UNIGNORE,
+)
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
@@ -511,7 +517,15 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         if not context or "source" not in context:
             raise KeyError("Context not set or doesn't have a source set")
 
-        source = context["source"]
+        flow = cast(ConfigFlow, handler())
+        flow.init_step = context["source"]
+        return flow
+
+    async def async_post_init(
+        self, flow: data_entry_flow.FlowHandler, result: dict
+    ) -> None:
+        """After a flow is initialised trigger new flow notifications."""
+        source = flow.context["source"]
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
@@ -524,10 +538,6 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
                 ),
                 notification_id=DISCOVERY_NOTIFICATION_ID,
             )
-
-        flow = cast(ConfigFlow, handler())
-        flow.init_step = source
-        return flow
 
 
 class ConfigEntries:
