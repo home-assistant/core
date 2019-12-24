@@ -155,7 +155,7 @@ class Timer(RestoreEntity):
         """Return the state attributes."""
         return {
             ATTR_DURATION: str(self._duration),
-            ATTR_REMAINING: str(self._remaining)[:7],
+            ATTR_REMAINING: str(self._remaining),
         }
 
     async def async_added_to_hass(self):
