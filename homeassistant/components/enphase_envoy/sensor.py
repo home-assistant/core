@@ -80,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             try:
                 inverters = await envoy_reader.inverters_production()
             except requests.exceptions.HTTPError:
-                _LOGGER.warning(
+                _LOGGER.error(
                     "Authentication for Inverter data failed during setup: %s",
                     ip_address,
                 )
@@ -153,6 +153,9 @@ class EnvoySensor(Entity):
         """Get the latest data from the Enphase Envoy device."""
         await self._envoy_data.update()
         self._state = self._envoy_data.get_state(self._type, self._name)
+        self._last_reported = self._envoy_data.get_state_attributes(
+            self._type, self._name
+        )
 
 
 class EnvoyData:
@@ -166,68 +169,62 @@ class EnvoyData:
     @Throttle(MIN_SCAN_INTERVAL)
     async def update(self):
         """Get the latest data from the Enphase Envoy device."""
-        # try:
-        #    self.data = self._eagle_reader.update()
-        #    _LOGGER.debug("API data: %s", self.data)
-        # except (ConnectError, HTTPError, Timeout, ValueError) as error:
-        #    _LOGGER.error("Unable to connect during update: %s", error)
-        #    self.data = {}
-
         try:
             self.data = await self._envoy_reader.update()
-            _LOGGER.error(self.data)
-            # _LOGGER.warning(f"Data: {self._type} - {data.get(self._type)}")
+            _LOGGER.debug("API data: %s", self.data)
         except (
             requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+            requests.exceptions.Timeout,
             json.decoder.JSONDecodeError,
             KeyError,
             IndexError,
             TypeError,
+            ConnectionError,
+            ValueError,
         ) as err:
-            _LOGGER.warning("Exception: %s", err)
+            _LOGGER.error("Exception: %s", err)
+            self.data = {}
 
     def get_state(self, sensor_type, name):
         """Get the sensor value from the dictionary."""
-        # state = self.data.get(sensor_type)
-
         state = ""
         if sensor_type != "inverters":
-
-            # try:
-            #    _state = await getattr(self._envoy_reader, self._type)()
-            # except (requests.exceptions.ConnectionError, json.decoder.JSONDecodeError, KeyError, IndexError, RuntimeError) as e:
-            #    _LOGGER.warning(e)
-            #    return
-
             if isinstance(self.data.get(sensor_type), int):
                 state = self.data.get(sensor_type)
-                _LOGGER.warning("Type: %s State: %s", sensor_type, state)
+                _LOGGER.debug("Updating: %s - %s", sensor_type, state)
             else:
                 state = None
-
         elif sensor_type == "inverters":
-
-            # try:
-            #    inverters = await (self._envoy_reader.inverters_production())
-            #    _LOGGER.warning(f"Got inverter data: {inverters}")
-            # except requests.exceptions.HTTPError:
-            #    _LOGGER.warning(
-            #        "Authentication for Inverter data failed during update: %s",
-            #        self._envoy_reader.host,
-            #    )
-            # except (requests.exceptions.ConnectionError, json.decoder.JSONDecodeError, KeyError, IndexError, RuntimeError) as e:
-            #    _LOGGER.warning(e)
-
             if isinstance(self.data.get("inverters_production"), dict):
                 serial_number = name.split(" ")[2]
                 state = self.data.get("inverters_production").get(serial_number)[0]
-                # self._state = inverters[serial_number][0]
-                # self._last_reported = self.data.get("inverters_production").get(serial_number)[1]
-                # self._last_reported = inverters[serial_number][1]
-                # _LOGGER.warning(f"Inverter {data.get(self._type)} - {self._last_reported}: {self._state} W")
-                _LOGGER.warning("Inv: %s Data: %s", serial_number, state)
+                _LOGGER.debug(
+                    "Updating: %s (%s) - %s", sensor_type, serial_number, state
+                )
             else:
                 state = None
 
-        _LOGGER.debug("Updating: %s - %s", sensor_type, state)
         return state
+
+    def get_state_attributes(self, sensor_type, name):
+        """Get attribute data for Inverters."""
+        last_reported = None
+
+        if sensor_type == "inverters":
+            if isinstance(self.data.get("inverters_production"), dict):
+                serial_number = name.split(" ")[2]
+                last_reported = self.data.get("inverters_production").get(
+                    serial_number
+                )[1]
+                _LOGGER.debug(
+                    "Updating: %s (%s) - %s", sensor_type, serial_number, last_reported
+                )
+                return last_reported
+            else:
+                _LOGGER.debug(
+                    "Instance: %s",
+                    isinstance(self.data.get("inverters_production"), dict),
+                )
+        else:
+            _LOGGER.debug("No attributes for: %s", sensor_type)
