@@ -1429,6 +1429,9 @@ pyowlet==1.0.3
 # homeassistant.components.openweathermap
 pyowm==2.10.0
 
+# homeassistant.components.onewire
+pyownet==0.10.0.post1
+
 # homeassistant.components.elv
 pypca==0.0.7
 
