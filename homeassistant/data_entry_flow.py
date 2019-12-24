@@ -58,7 +58,7 @@ class FlowManager(abc.ABC):
     @abc.abstractmethod
     async def async_create_flow(
         self,
-        handler_key: str,
+        handler_key: Any,
         *,
         context: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,

@@ -478,7 +478,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
         return result
 
     async def async_create_flow(
-        self, handler_key: str, *, context: Optional[Dict] = None, data: Any = None
+        self, handler_key: Any, *, context: Optional[Dict] = None, data: Any = None
     ) -> "ConfigFlow":
         """Create a flow for specified handler.
 
@@ -877,7 +877,7 @@ class OptionsFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: str,
+        handler_key: Any,
         *,
         context: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,

@@ -77,14 +77,15 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
 
     async def async_create_flow(
         self,
-        handler_key: str,
+        handler_key: Any,
         *,
         context: Optional[Dict[str, Any]] = None,
         data: Optional[Dict[str, Any]] = None,
     ) -> data_entry_flow.FlowHandler:
         """Create a login flow."""
-        auth_provider = self.auth_manager._providers[cast(_ProviderKey, handler_key)]
-
+        auth_provider = self.auth_manager.get_auth_provider(*handler_key)
+        if not auth_provider:
+            raise KeyError(f"Unknown auth provider {handler_key}")
         return await auth_provider.async_login_flow(context)
 
     async def async_finish_flow(
@@ -101,7 +102,10 @@ class AuthManagerFlowManager(data_entry_flow.FlowManager):
             result["result"] = result["data"]
             return result
 
-        auth_provider = self.auth_manager._providers[result["handler"]]
+        auth_provider = self.auth_manager.get_auth_provider(*result["handler"])
+        if not auth_provider:
+            raise KeyError(f"Unknown auth provider {result['handler']}")
+
         credentials = await auth_provider.async_get_or_create_credentials(
             result["data"]
         )
