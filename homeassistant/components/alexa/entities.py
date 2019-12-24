@@ -42,6 +42,7 @@ from .capabilities import (
     AlexaContactSensor,
     AlexaDoorbellEventSource,
     AlexaEndpointHealth,
+    AlexaEqualizerController,
     AlexaEventDetectionSensor,
     AlexaInputController,
     AlexaLockController,
@@ -521,6 +522,9 @@ class MediaPlayerCapabilities(AlexaEntity):
 
         if supported & media_player.const.SUPPORT_PLAY_MEDIA:
             yield AlexaChannelController(self.entity)
+
+        if supported & media_player.const.SUPPORT_SELECT_SOUND_MODE:
+            yield AlexaEqualizerController(self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
