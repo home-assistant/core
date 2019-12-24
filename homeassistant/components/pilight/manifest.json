@@ -6,5 +6,5 @@
     "pilight==0.1.1"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@trekky12"]
 }
