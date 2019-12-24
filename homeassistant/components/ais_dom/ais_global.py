@@ -125,7 +125,7 @@ def say_direct(text):
             timeout=1,
         )
     except Exception as e:
-        _LOGGER.info("problem to send the text to speech via http: " + str(e))
+        _LOGGER.debug("problem to send the text to speech via http: " + str(e))
 
 
 def get_sercure_android_id_dom():

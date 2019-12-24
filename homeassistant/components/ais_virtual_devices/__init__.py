@@ -78,7 +78,7 @@ async def async_setup(hass, config):
             "context_key_words": "przełaczniki",
             "context_answer": "OK, wybrano wszystkie przełączniki. Możesz powiedzieć co włączyć lub nawigować pilotem "
             "by sprawdzać status oraz przełączać.",
-            "remote_group_view": "group.all_devices",
+            "remote_group_view": "group.all_ais_devices",
         },
     )
 
@@ -93,7 +93,7 @@ async def async_setup(hass, config):
             "context_key_words": "światła",
             "context_answer": "OK, wybrano wszystkie światła. Możesz powiedzieć co włączyć lub nawigować pilotem by "
             "sprawdzać status oraz przełączać",
-            "remote_group_view": "group.all_devices",
+            "remote_group_view": "group.all_ais_devices",
         },
     )
 
@@ -107,7 +107,67 @@ async def async_setup(hass, config):
             "friendly_name": "Czujniki",
             "context_key_words": "czujniki",
             "context_answer": "OK, wybrano wszystkie czujniki.",
-            "remote_group_view": "group.all_devices",
+            "remote_group_view": "group.all_ais_devices",
+        },
+    )
+
+    hass.states.async_set(
+        "group.all_ais_climates",
+        "",
+        {
+            "entity_id": [],
+            "order": 4,
+            "control": "hidden",
+            "friendly_name": "Termostaty",
+            "remote_group_view": "group.all_ais_devices",
+        },
+    )
+
+    hass.states.async_set(
+        "group.all_ais_covers",
+        "",
+        {
+            "entity_id": [],
+            "order": 5,
+            "control": "hidden",
+            "friendly_name": "Zasłony",
+            "remote_group_view": "group.all_ais_devices",
+        },
+    )
+
+    hass.states.async_set(
+        "group.all_ais_vacuums",
+        "",
+        {
+            "entity_id": [],
+            "order": 6,
+            "control": "hidden",
+            "friendly_name": "Odkurzacze",
+            "remote_group_view": "group.all_ais_devices",
+        },
+    )
+
+    hass.states.async_set(
+        "group.all_ais_locks",
+        "",
+        {
+            "entity_id": [],
+            "order": 7,
+            "control": "hidden",
+            "friendly_name": "Zamki",
+            "remote_group_view": "group.all_ais_devices",
+        },
+    )
+
+    hass.states.async_set(
+        "group.all_ais_cameras",
+        "",
+        {
+            "entity_id": [],
+            "order": 8,
+            "control": "hidden",
+            "friendly_name": "Kamery",
+            "remote_group_view": "group.all_ais_devices",
         },
     )
 
@@ -116,23 +176,26 @@ async def async_setup(hass, config):
         "",
         {
             "entity_id": [],
-            "order": 4,
+            "order": 9,
             "control": "hidden",
             "friendly_name": "Wentylatory",
-            "context_key_words": "wentylatory",
-            "context_answer": "OK, wybrano wszystkie wentylatory.",
-            "remote_group_view": "group.all_devices",
+            "remote_group_view": "group.all_ais_devices",
         },
     )
 
     hass.states.async_set(
-        "group.all_devices",
-        "on",
+        "group.all_ais_devices",
+        "",
         {
             "entity_id": [
                 "group.all_ais_switches",
                 "group.all_ais_lights",
                 "group.all_ais_sensors",
+                "group.all_ais_climates",
+                "group.all_ais_covers",
+                "group.all_ais_vacuums",
+                "group.all_ais_locks",
+                "group.all_ais_cameras",
                 "group.all_ais_fans",
             ],
             "order": 2,
@@ -158,6 +221,18 @@ async def async_setup(hass, config):
     )
 
     hass.states.async_set(
+        "group.all_ais_scenes",
+        "on",
+        {
+            "entity_id": [],
+            "order": 4,
+            "control": "hidden",
+            "friendly_name": "Sceny",
+            "remote_group_view": "Mój Dom",
+        },
+    )
+
+    hass.states.async_set(
         "group.ais_pogoda",
         "on",
         {
@@ -171,7 +246,7 @@ async def async_setup(hass, config):
                 "sensor.dark_sky_hourly_summary",
                 "sensor.dark_sky_daily_summary",
             ],
-            "order": 4,
+            "order": 5,
             "control": "hidden",
             "friendly_name": "Pogoda",
             "remote_group_view": "Mój Dom",
@@ -189,7 +264,7 @@ async def async_setup(hass, config):
                 "sensor.weekofyear",
                 "binary_sensor.dzien_pracujacy",
             ],
-            "order": 5,
+            "order": 6,
             "control": "hidden",
             "friendly_name": "Kalendarium",
             "remote_group_view": "Mój Dom",

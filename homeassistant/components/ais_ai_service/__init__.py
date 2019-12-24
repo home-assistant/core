@@ -741,6 +741,15 @@ def get_curr_group():
     return CURR_GROUP
 
 
+def get_group_from_group(entity_id):
+    global CURR_GROUP
+    for group in GROUP_ENTITIES:
+        if group["entity_id"] == entity_id:
+            CURR_GROUP = group
+            break
+    return CURR_GROUP
+
+
 def get_curr_group_idx():
     idx = 0
     for group in GROUP_ENTITIES:
@@ -1366,6 +1375,7 @@ def select_entity(hass, long_press):
     # OK on remote
     if CURR_GROUP_VIEW is None:
         # no group view was selected
+        get_groups(hass)
         set_curr_group_view()
         say_curr_group_view(hass)
         return
@@ -1373,6 +1383,13 @@ def select_entity(hass, long_press):
         # no group is selected - we need to select the first one
         # from the group view
         set_curr_group(hass, None)
+        say_curr_group(hass)
+        return
+    # group in group
+    if CURR_GROUP["entity_id"] == "group.all_ais_devices":
+        get_groups(hass)
+        gg = CURR_GROUP["entities"]
+        set_curr_group(hass, get_group_from_group(gg[0]))
         say_curr_group(hass)
         return
     if CURR_ENTITIE is None:
@@ -1526,15 +1543,6 @@ def select_entity(hass, long_press):
                 # start searching for the device
                 hass.services.call("script", "ais_scan_iot_devices_in_network")
                 return
-            elif CURR_ENTITIE.startswith("group."):
-                for group in GROUP_ENTITIES:
-                    if group["entity_id"] == CURR_ENTITIE:
-                        gg = group
-                        break
-                if len(gg["entities"]) > 0:
-                    _say_it(hass, str(len(gg["entities"])) + " pozycji")
-                else:
-                    _say_it(hass, "Brak pozycji")
             else:
                 _say_it(hass, "Tej pozycji nie można zmieniać")
 
@@ -1631,6 +1639,7 @@ def can_entity_be_entered(hass, entity):
             "script.",
             "light.",
             "automation.",
+            "group.",
         )
     ):
         return False
@@ -1914,8 +1923,14 @@ def go_up_in_menu(hass):
                 go_home(hass)
         elif not CURR_ENTITIE_ENTERED:
             # go up in the group menu
-            set_curr_group(hass, None)
-            say_curr_group(hass)
+            # check if we have group in group
+            if CURR_GROUP is not None:
+                if CURR_GROUP["remote_group_view"].startswith("group."):
+                    set_curr_group(hass, CURR_GROUP)
+                    say_curr_group(hass)
+                    return
+                set_curr_group(hass, None)
+                say_curr_group(hass)
         else:
             CURR_ENTITIE_ENTERED = False
             if CURR_ENTITIE.startswith("input_text."):
@@ -1939,9 +1954,16 @@ def go_up_in_menu(hass):
     # no entity is selected, check if the group is selected
     elif CURR_GROUP is not None:
         # go up in the group view menu
-        set_curr_group_view()
-        say_curr_group_view(hass)
-        return
+        # check if group in group
+        if CURR_GROUP["remote_group_view"].startswith("group."):
+            gg = get_group_from_group(CURR_GROUP["remote_group_view"])
+            set_curr_group(hass, gg)
+            say_curr_group(hass)
+            return
+        else:
+            set_curr_group_view()
+            say_curr_group_view(hass)
+            return
     # can't go up, beep
     _beep_it(hass, 33)
 
@@ -2041,8 +2063,15 @@ def get_groups(hass):
     all_ais_sensors = []
     all_ais_persons = []
     all_ais_automations = []
+    all_ais_scenes = []
     all_ais_switches = []
     all_ais_lights = []
+    all_ais_climates = []
+    all_ais_covers = []
+    all_ais_locks = []
+    all_ais_vacuums = []
+    all_ais_cameras = []
+    all_ais_fans = []
     entities = hass.states.async_all()
     GROUP_ENTITIES = []
 
@@ -2078,10 +2107,24 @@ def get_groups(hass):
             "automation."
         ) and not entity.entity_id.startswith("automation.ais_"):
             all_ais_automations.append(entity.entity_id)
+        elif entity.entity_id.startswith("scene."):
+            all_ais_scenes.append(entity.entity_id)
         elif entity.entity_id.startswith("switch."):
             all_ais_switches.append(entity.entity_id)
         elif entity.entity_id.startswith("light."):
             all_ais_lights.append(entity.entity_id)
+        elif entity.entity_id.startswith("climate."):
+            all_ais_climates.append(entity.entity_id)
+        elif entity.entity_id.startswith("cover."):
+            all_ais_covers.append(entity.entity_id)
+        elif entity.entity_id.startswith("lock."):
+            all_ais_locks.append(entity.entity_id)
+        elif entity.entity_id.startswith("vacuum."):
+            all_ais_vacuums.append(entity.entity_id)
+        elif entity.entity_id.startswith("camera."):
+            all_ais_cameras.append(entity.entity_id)
+        elif entity.entity_id.startswith("fan."):
+            all_ais_fans.append(entity.entity_id)
 
     # update group on remote
     all_unique_sensors = list(set(all_ais_sensors))
@@ -2090,16 +2133,32 @@ def get_groups(hass):
     all_unique_persons.sort()
     all_unique_automations = list(set(all_ais_automations))
     all_unique_automations.sort()
+    all_unique_scenes = list(set(all_ais_scenes))
+    all_unique_scenes.sort()
     all_unique_switches = list(set(all_ais_switches))
     all_unique_switches.sort()
     all_unique_lights = list(set(all_ais_lights))
     all_unique_lights.sort()
+    all_unique_climates = list(set(all_ais_climates))
+    all_unique_climates.sort()
+    all_unique_covers = list(set(all_ais_covers))
+    all_unique_covers.sort()
+    all_unique_locks = list(set(all_ais_locks))
+    all_unique_locks.sort()
+    all_unique_vacuums = list(set(all_ais_vacuums))
+    all_unique_vacuums.sort()
+    all_unique_cameras = list(set(all_ais_cameras))
+    all_unique_cameras.sort()
+    all_unique_fans = list(set(all_ais_fans))
+    all_unique_fans.sort()
 
     GROUP_ENTITIES = sorted(GROUP_ENTITIES, key=get_key)
 
     for group in GROUP_ENTITIES:
         if group["entity_id"] == "group.all_ais_automations":
             group["entities"] = all_unique_automations
+        elif group["entity_id"] == "group.all_ais_scenes":
+            group["entities"] = all_unique_scenes
         elif group["entity_id"] == "group.all_ais_persons":
             group["entities"] = all_unique_persons
         elif group["entity_id"] == "group.all_ais_sensors":
@@ -2108,6 +2167,18 @@ def get_groups(hass):
             group["entities"] = all_unique_switches
         elif group["entity_id"] == "group.all_ais_lights":
             group["entities"] = all_unique_lights
+        elif group["entity_id"] == "group.all_ais_climates":
+            group["entities"] = all_unique_climates
+        elif group["entity_id"] == "group.all_ais_covers":
+            group["entities"] = all_unique_covers
+        elif group["entity_id"] == "group.all_ais_locks":
+            group["entities"] = all_unique_locks
+        elif group["entity_id"] == "group.all_ais_vacuums":
+            group["entities"] = all_unique_vacuums
+        elif group["entity_id"] == "group.all_ais_cameras":
+            group["entities"] = all_unique_cameras
+        elif group["entity_id"] == "group.all_ais_fans":
+            group["entities"] = all_unique_fans
 
 
 @asyncio.coroutine
@@ -3230,7 +3301,7 @@ def _post_message(message, hass):
             timeout=1,
         )
     except Exception as e:
-        _LOGGER.info("problem to send the text to speech via http: " + str(e))
+        _LOGGER.debug("problem to send the text to speech via http: " + str(e))
 
 
 def _beep_it(hass, tone):
@@ -3329,7 +3400,6 @@ def _process_code(hass, data):
         if CURR_BUTTON_LONG_PRESS is True:
             CURR_BUTTON_LONG_PRESS = False
 
-    _LOGGER.info("KeyCode: -> " + str(code))
     # set the code in global variable
     CURR_BUTTON_CODE = code
     # show the code in web app
