@@ -120,7 +120,20 @@ class AlexaCapability:
 
     @staticmethod
     def configuration():
-        """Return the configuration object."""
+        """Return the configuration object.
+
+        Applicable to the ThermostatController, SecurityControlPanel, ModeController, RangeController,
+        and EventDetectionSensor.
+        """
+        return []
+
+    @staticmethod
+    def configurations():
+        """Return the configurations object.
+
+        The plural configurations object is different that the singular configuration object.
+        Applicable to EqualizerController interface.
+        """
         return []
 
     @staticmethod
@@ -176,6 +189,11 @@ class AlexaCapability:
         configuration = self.configuration()
         if configuration:
             result["configuration"] = configuration
+
+        # The plural configurations object is different than the singular configuration object above.
+        configurations = self.configurations()
+        if configurations:
+            result["configurations"] = configurations
 
         semantics = self.semantics()
         if semantics:
@@ -1356,3 +1374,55 @@ class AlexaEventDetectionSensor(AlexaCapability):
                 }
             },
         }
+
+
+class AlexaEqualizerController(AlexaCapability):
+    """Implements Alexa.EqualizerController.
+
+    https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-equalizercontroller.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.EqualizerController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports.
+
+        Either bands, mode or both can be specified. Only mode is supported at this time.
+        """
+        return [{"name": "mode"}]
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "mode":
+            raise UnsupportedProperty(name)
+
+        sound_mode = self.entity.attributes.get(media_player.ATTR_SOUND_MODE)
+        if sound_mode and sound_mode.upper() in (
+            "MOVIE",
+            "MUSIC",
+            "NIGHT",
+            "SPORT",
+            "TV",
+        ):
+            return sound_mode.upper()
+
+        return None
+
+    def configurations(self):
+        """Return the sound modes supported in the configurations object.
+
+        Valid Values for modes are: MOVIE, MUSIC, NIGHT, SPORT, TV.
+        """
+        configurations = None
+        sound_mode_list = self.entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST)
+        if sound_mode_list:
+            supported_sound_modes = []
+            for sound_mode in sound_mode_list:
+                if sound_mode.upper() in ("MOVIE", "MUSIC", "NIGHT", "SPORT", "TV"):
+                    supported_sound_modes.append({"name": sound_mode.upper()})
+
+            configurations = {"modes": {"supported": supported_sound_modes}}
+
+        return configurations
