@@ -1,4 +1,6 @@
 """Support for Enphase Envoy solar energy monitor."""
+from datetime import timedelta
+import json
 import logging
 
 from envoy_reader.envoy_reader import EnvoyReader
@@ -17,8 +19,11 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
+
+MIN_SCAN_INTERVAL = timedelta(seconds=30)
 
 SENSORS = {
     "production": ("Envoy Current Energy Production", POWER_WATT),
@@ -65,6 +70,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     envoy_reader = EnvoyReader(ip_address, username, password)
 
+    envoy_data = EnvoyData(envoy_reader)
+    await envoy_data.update()
+
     entities = []
     # Iterate through the list of sensors
     for condition in monitored_conditions:
@@ -81,8 +89,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             if isinstance(inverters, dict):
                 for inverter in inverters:
                     entities.append(
-                        Envoy(
-                            envoy_reader,
+                        EnvoySensor(
+                            envoy_data,
                             condition,
                             f"{name}{SENSORS[condition][0]} {inverter}",
                             SENSORS[condition][1],
@@ -91,8 +99,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         else:
             entities.append(
-                Envoy(
-                    envoy_reader,
+                EnvoySensor(
+                    envoy_data,
                     condition,
                     f"{name}{SENSORS[condition][0]}",
                     SENSORS[condition][1],
@@ -101,12 +109,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(entities)
 
 
-class Envoy(Entity):
+class EnvoySensor(Entity):
     """Implementation of the Enphase Envoy sensors."""
 
-    def __init__(self, envoy_reader, sensor_type, name, unit):
+    def __init__(self, envoy_data, sensor_type, name, unit):
         """Initialize the sensor."""
-        self._envoy_reader = envoy_reader
+        self._envoy_data = envoy_data
         self._type = sensor_type
         self._name = name
         self._unit_of_measurement = unit
@@ -142,27 +150,84 @@ class Envoy(Entity):
         return None
 
     async def async_update(self):
-        """Get the energy production data from the Enphase Envoy."""
-        if self._type != "inverters":
-            _state = await getattr(self._envoy_reader, self._type)()
-            if isinstance(_state, int):
-                self._state = _state
-            else:
-                _LOGGER.error(_state)
-                self._state = None
+        """Get the latest data from the Enphase Envoy device."""
+        await self._envoy_data.update()
+        self._state = self._envoy_data.get_state(self._type, self._name)
 
-        elif self._type == "inverters":
-            try:
-                inverters = await (self._envoy_reader.inverters_production())
-            except requests.exceptions.HTTPError:
-                _LOGGER.warning(
-                    "Authentication for Inverter data failed during update: %s",
-                    self._envoy_reader.host,
-                )
 
-            if isinstance(inverters, dict):
-                serial_number = self._name.split(" ")[2]
-                self._state = inverters[serial_number][0]
-                self._last_reported = inverters[serial_number][1]
+class EnvoyData:
+    """Get the latest data from the Enphase Envoy device."""
+
+    def __init__(self, envoy_reader):
+        """Initialize the data object."""
+        self._envoy_reader = envoy_reader
+        self.data = {}
+
+    @Throttle(MIN_SCAN_INTERVAL)
+    async def update(self):
+        """Get the latest data from the Enphase Envoy device."""
+        # try:
+        #    self.data = self._eagle_reader.update()
+        #    _LOGGER.debug("API data: %s", self.data)
+        # except (ConnectError, HTTPError, Timeout, ValueError) as error:
+        #    _LOGGER.error("Unable to connect during update: %s", error)
+        #    self.data = {}
+
+        try:
+            self.data = await self._envoy_reader.update()
+            _LOGGER.error(self.data)
+            # _LOGGER.warning(f"Data: {self._type} - {data.get(self._type)}")
+        except (
+            requests.exceptions.ConnectionError,
+            json.decoder.JSONDecodeError,
+            KeyError,
+            IndexError,
+            TypeError,
+        ) as err:
+            _LOGGER.warning("Exception: %s", err)
+
+    def get_state(self, sensor_type, name):
+        """Get the sensor value from the dictionary."""
+        # state = self.data.get(sensor_type)
+
+        state = ""
+        if sensor_type != "inverters":
+
+            # try:
+            #    _state = await getattr(self._envoy_reader, self._type)()
+            # except (requests.exceptions.ConnectionError, json.decoder.JSONDecodeError, KeyError, IndexError, RuntimeError) as e:
+            #    _LOGGER.warning(e)
+            #    return
+
+            if isinstance(self.data.get(sensor_type), int):
+                state = self.data.get(sensor_type)
+                _LOGGER.warning("Type: %s State: %s", sensor_type, state)
             else:
-                self._state = None
+                state = None
+
+        elif sensor_type == "inverters":
+
+            # try:
+            #    inverters = await (self._envoy_reader.inverters_production())
+            #    _LOGGER.warning(f"Got inverter data: {inverters}")
+            # except requests.exceptions.HTTPError:
+            #    _LOGGER.warning(
+            #        "Authentication for Inverter data failed during update: %s",
+            #        self._envoy_reader.host,
+            #    )
+            # except (requests.exceptions.ConnectionError, json.decoder.JSONDecodeError, KeyError, IndexError, RuntimeError) as e:
+            #    _LOGGER.warning(e)
+
+            if isinstance(self.data.get("inverters_production"), dict):
+                serial_number = name.split(" ")[2]
+                state = self.data.get("inverters_production").get(serial_number)[0]
+                # self._state = inverters[serial_number][0]
+                # self._last_reported = self.data.get("inverters_production").get(serial_number)[1]
+                # self._last_reported = inverters[serial_number][1]
+                # _LOGGER.warning(f"Inverter {data.get(self._type)} - {self._last_reported}: {self._state} W")
+                _LOGGER.warning("Inv: %s Data: %s", serial_number, state)
+            else:
+                state = None
+
+        _LOGGER.debug("Updating: %s - %s", sensor_type, state)
+        return state
