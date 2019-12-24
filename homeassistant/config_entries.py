@@ -469,7 +469,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             unique_id=flow.unique_id,
         )
 
-        self.config_entries.async_add(entry)
+        await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
             await self.config_entries.async_remove(existing_entry.entry_id)
