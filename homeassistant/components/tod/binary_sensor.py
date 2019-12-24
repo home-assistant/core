@@ -174,6 +174,14 @@ class TodSensor(BinarySensorDevice):
 
         self._time_before = before_event_date
 
+        # Check after value is today
+        if (
+            self._time_after > self.current_datetime
+            and self._time_before > self.current_datetime + timedelta(days=1)
+        ):
+            self._time_after -= timedelta(days=1)
+            self._time_before -= timedelta(days=1)
+
         # Add offset to utc boundaries according to the configuration
         self._time_after += self._after_offset
         self._time_before += self._before_offset
