@@ -402,10 +402,13 @@ class ConfigEntry:
 class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
     """Manage all the config entry flows that are in progress."""
 
-    def __init__(self, hass: HomeAssistant, config_entries: "ConfigEntries"):
+    def __init__(
+        self, hass: HomeAssistant, config_entries: "ConfigEntries", hass_config: dict
+    ):
         """Initialize the config entry flow manager."""
         super().__init__(hass)
         self.config_entries = config_entries
+        self._hass_config = hass_config
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: Dict[str, Any]
@@ -465,14 +468,11 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             connection_class=flow.CONNECTION_CLASS,
             unique_id=flow.unique_id,
         )
-        self.config_entries._entries.append(entry)
 
-        await self.config_entries.async_setup(entry.entry_id)
+        self.config_entries.async_add(entry)
 
         if existing_entry is not None:
             await self.config_entries.async_remove(existing_entry.entry_id)
-
-        self.config_entries._async_schedule_save()
 
         result["result"] = entry
         return result
@@ -491,9 +491,7 @@ class ConfigEntriesFlowManager(data_entry_flow.FlowManager):
             raise data_entry_flow.UnknownHandler
 
         # Make sure requirements and dependencies of component are resolved
-        await async_process_deps_reqs(
-            self.hass, self.config_entries._hass_config, integration
-        )
+        await async_process_deps_reqs(self.hass, self._hass_config, integration)
 
         try:
             integration.get_platform("config_flow")
@@ -541,7 +539,7 @@ class ConfigEntries:
     def __init__(self, hass: HomeAssistant, hass_config: dict) -> None:
         """Initialize the entry manager."""
         self.hass = hass
-        self.flow = ConfigEntriesFlowManager(hass, self)
+        self.flow = ConfigEntriesFlowManager(hass, self, hass_config)
         self.options = OptionsFlowManager(hass)
         self._hass_config = hass_config
         self._entries: List[ConfigEntry] = []
@@ -575,6 +573,12 @@ class ConfigEntries:
         if domain is None:
             return list(self._entries)
         return [entry for entry in self._entries if entry.domain == domain]
+
+    async def async_add(self, entry: ConfigEntry) -> None:
+        """Add and setup an entry."""
+        self._entries.append(entry)
+        await self.async_setup(entry.entry_id)
+        self._async_schedule_save()
 
     async def async_remove(self, entry_id: str) -> Dict[str, Any]:
         """Remove an entry."""
