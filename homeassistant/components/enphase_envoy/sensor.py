@@ -152,7 +152,7 @@ class EnvoySensor(Entity):
     async def async_update(self):
         """Get the latest data from the Enphase Envoy device."""
         await self._envoy_data.update()
-        self._state = self._envoy_data.get_state(self._type, self._name)
+        self._state = self._envoy_data.get_state(self._type, self._name, self._state)
         self._last_reported = self._envoy_data.get_state_attributes(
             self._type, self._name
         )
@@ -186,7 +186,7 @@ class EnvoyData:
             _LOGGER.error("Exception: %s", err)
             self.data = {}
 
-    def get_state(self, sensor_type, name):
+    def get_state(self, sensor_type, name, previous_state):
         """Get the sensor value from the dictionary."""
         state = ""
         if sensor_type != "inverters":
@@ -194,6 +194,9 @@ class EnvoyData:
                 state = self.data.get(sensor_type)
                 _LOGGER.debug("Updating: %s - %s", sensor_type, state)
             else:
+                _LOGGER.debug(
+                    "State Instance: %s", isinstance(self.data.get(sensor_type), int),
+                )
                 state = None
         elif sensor_type == "inverters":
             if isinstance(self.data.get("inverters_production"), dict):
@@ -203,7 +206,15 @@ class EnvoyData:
                     "Updating: %s (%s) - %s", sensor_type, serial_number, state
                 )
             else:
-                state = None
+                _LOGGER.debug(
+                    "State Instance: %s",
+                    isinstance(self.data.get("inverters_production"), dict),
+                )
+                _LOGGER.debug("Using previous state of: %s", previous_state)
+                # Sometimes the HTTP connection for Inverters to the Envoy will fail which will cause a None value
+                # to be returned.  When this occurs the HA sensor will just return the previously
+                # known state.  Should this be done here or in HA itself through a template?
+                state = previous_state
 
         return state
 
@@ -223,7 +234,7 @@ class EnvoyData:
                 return last_reported
             else:
                 _LOGGER.debug(
-                    "Instance: %s",
+                    "Attrib Instance: %s",
                     isinstance(self.data.get("inverters_production"), dict),
                 )
         else:
