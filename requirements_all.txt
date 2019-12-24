@@ -680,6 +680,9 @@ homematicip==0.10.13
 # homeassistant.components.horizon
 horimote==0.4.1
 
+# homeassistant.components.iammeter
+iammeter==0.1.2
+
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
