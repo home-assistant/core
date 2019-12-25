@@ -169,7 +169,11 @@ class KeyboardRemote:
         else:
             # check for symlinked paths matching descriptor
             for d, h in self.handlers_by_descriptor.items():
-                if os.path.realpath(d) == descriptor:
+                if h.dev is not None:
+                    fullpath = h.dev.path
+                else:
+                    fullpath = os.path.realpath(d)
+                if fullpath == descriptor:
                     handler = h
 
         return (dev, handler)
