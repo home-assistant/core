@@ -2,6 +2,7 @@
 # pylint: disable=import-error
 import asyncio
 import logging
+import os
 
 import aionotify
 from evdev import InputDevice, categorize, ecodes, list_devices
@@ -165,6 +166,11 @@ class KeyboardRemote:
             handler = self.handlers_by_descriptor[descriptor]
         elif dev.name in self.handlers_by_name:
             handler = self.handlers_by_name[dev.name]
+        else:
+            # check for symlinked paths matching descriptor
+            for d, h in self.handlers_by_descriptor.items():
+                if os.path.realpath(d) == descriptor:
+                    handler = h
 
         return (dev, handler)
 
