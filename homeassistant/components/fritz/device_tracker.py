@@ -1,7 +1,7 @@
 """Support for FRITZ!Box routers."""
 import logging
 
-from fritzconnection import FritzHosts  # pylint: disable=import-error
+from fritzconnection.lib.fritzhosts import FritzHosts  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (

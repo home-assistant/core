@@ -2,8 +2,8 @@
 from datetime import timedelta
 import logging
 
-from fritzconnection import FritzStatus  # pylint: disable=import-error
-from fritzconnection.fritzconnection import (  # pylint: disable=import-error
+from fritzconnection.lib.fritzstatus import FritzStatus  # pylint: disable=import-error
+from fritzconnection.core.exceptions import (  # pylint: disable=import-error
     FritzConnectionException,
 )
 from requests.exceptions import RequestException
