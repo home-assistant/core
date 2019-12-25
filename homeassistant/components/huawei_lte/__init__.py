@@ -28,6 +28,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
     CONF_URL,
@@ -54,6 +55,7 @@ from .const import (
     ALL_KEYS,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
+    DEFAULT_NOTIFY_SERVICE_NAME,
     DOMAIN,
     KEY_DEVICE_BASIC_INFORMATION,
     KEY_DEVICE_INFORMATION,
@@ -82,9 +84,10 @@ NOTIFY_SCHEMA = vol.Any(
     None,
     vol.Schema(
         {
+            vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_RECIPIENT): vol.Any(
                 None, vol.All(cv.ensure_list, [cv.string])
-            )
+            ),
         }
     ),
 )
@@ -262,6 +265,13 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         ):
             new_options[f"{CONF_RECIPIENT}_from_yaml"] = yaml_recipient
             new_options[CONF_RECIPIENT] = yaml_recipient
+        yaml_notify_name = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_NAME)
+        if (
+            yaml_notify_name is not None
+            and yaml_notify_name != config_entry.options.get(f"{CONF_NAME}_from_yaml")
+        ):
+            new_options[f"{CONF_NAME}_from_yaml"] = yaml_notify_name
+            new_options[CONF_NAME] = yaml_notify_name
         # Update entry if overrides were found
         if new_data or new_options:
             hass.config_entries.async_update_entry(
@@ -353,7 +363,11 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         hass,
         NOTIFY_DOMAIN,
         DOMAIN,
-        {CONF_URL: url, CONF_RECIPIENT: config_entry.options.get(CONF_RECIPIENT)},
+        {
+            CONF_URL: url,
+            CONF_NAME: config_entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
+            CONF_RECIPIENT: config_entry.options.get(CONF_RECIPIENT),
+        },
         hass.data[DOMAIN].hass_config,
     )
 
