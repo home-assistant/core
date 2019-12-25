@@ -256,10 +256,11 @@ class YeelightDevice:
         # active_mode 0: daylight mode / 1: moonlight mode (ceiling light only)
         if self._active_mode is not None:
             return self._active_mode == ACTIVE_MODE_NIGHTLIGHT
-        elif self._nightlight_brightness is not None:
+
+        if self._nightlight_brightness is not None:
             return int(self._nightlight_brightness) > 0
-        else:
-            return False
+
+        return False
 
     @property
     def is_color_flow_enabled(self) -> bool:
