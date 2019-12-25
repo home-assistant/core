@@ -1,6 +1,6 @@
 """Support for Velux covers."""
 from pyvlx import OpeningDevice, Position
-from pyvlx.opening_device import Awning, Blind, RollerShutter, Window, GarageDoor
+from pyvlx.opening_device import Awning, Blind, GarageDoor, RollerShutter, Window
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
