@@ -6,6 +6,7 @@ from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
+from homeassistant.components.input_number import DOMAIN as INPUT_NUMBER
 from homeassistant.components.light import DOMAIN as LIGHT
 from homeassistant.components.lock import DOMAIN as LOCK
 from homeassistant.components.sensor import DOMAIN as SENSOR
@@ -46,6 +47,7 @@ BAUD_RATES = [2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 2560
 BINDINGS = "bindings"
 
 CHANNEL_ACCELEROMETER = "accelerometer"
+CHANNEL_ANALOG_OUTPUT = "analog_output"
 CHANNEL_ATTRIBUTE = "attribute"
 CHANNEL_BASIC = "basic"
 CHANNEL_COLOR = "light_color"
@@ -73,7 +75,17 @@ CLUSTER_COMMANDS_SERVER = "server_commands"
 CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
-COMPONENTS = (BINARY_SENSOR, COVER, DEVICE_TRACKER, FAN, LIGHT, LOCK, SENSOR, SWITCH)
+COMPONENTS = (
+    BINARY_SENSOR,
+    COVER,
+    DEVICE_TRACKER,
+    FAN,
+    INPUT_NUMBER,
+    LIGHT,
+    LOCK,
+    SENSOR,
+    SWITCH,
+)
 
 CONF_BAUDRATE = "baudrate"
 CONF_DATABASE = "database_path"

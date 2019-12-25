@@ -48,6 +48,7 @@ class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
         self._unsubs = []
         self.remove_future = None
         for channel in channels:
+            _LOGGER.debug(channel.name)
             self.cluster_channels[channel.name] = channel
 
     @property

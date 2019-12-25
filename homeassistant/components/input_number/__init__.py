@@ -105,7 +105,7 @@ CONFIG_SCHEMA = vol.Schema(
             )
         )
     },
-    required=True,
+    required=False,
     extra=vol.ALLOW_EXTRA,
 )
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
@@ -115,7 +115,7 @@ STORAGE_VERSION = 1
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up an input slider."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
@@ -134,9 +134,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         component, storage_collection, InputNumber
     )
 
-    await yaml_collection.async_load(
-        [{CONF_ID: id_, **(conf or {})} for id_, conf in config[DOMAIN].items()]
-    )
+    if DOMAIN in config:
+        await yaml_collection.async_load(
+            [{CONF_ID: id_, **(conf or {})} for id_, conf in config[DOMAIN].items()]
+        )
     await storage_collection.async_load()
 
     collection.StorageCollectionWebsocket(
@@ -205,6 +206,16 @@ class NumberStorageCollection(collection.StorageCollection):
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
         return _cv_input_number({**data, **update_data})
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class InputNumber(RestoreEntity):
@@ -288,7 +299,10 @@ class InputNumber(RestoreEntity):
             return
 
         state = await self.async_get_last_state()
-        value = state and float(state.state)
+        try:
+            value = state and float(state.state)
+        except ValueError:
+            value = None
 
         # Check against None because value can be 0
         if value is not None and self._minimum <= value <= self._maximum:
