@@ -55,6 +55,7 @@ from .const import (
     ALL_KEYS,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
+    DEFAULT_NOTIFY_SERVICE_NAME,
     DOMAIN,
     KEY_DEVICE_BASIC_INFORMATION,
     KEY_DEVICE_INFORMATION,
@@ -364,7 +365,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         DOMAIN,
         {
             CONF_URL: url,
-            CONF_NAME: config_entry.options.get(CONF_NAME),
+            CONF_NAME: config_entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
             CONF_RECIPIENT: config_entry.options.get(CONF_RECIPIENT),
         },
         hass.data[DOMAIN].hass_config,

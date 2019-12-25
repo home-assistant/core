@@ -31,7 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 
 # see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
-from .const import CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME
+from .const import CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME, DEFAULT_NOTIFY_SERVICE_NAME
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -253,7 +253,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         data_schema = vol.Schema(
             {
                 vol.Optional(
-                    CONF_NAME, default=self.config_entry.options.get(CONF_NAME, DOMAIN),
+                    CONF_NAME,
+                    default=self.config_entry.options.get(
+                        CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME
+                    ),
                 ): str,
                 vol.Optional(
                     CONF_RECIPIENT,
