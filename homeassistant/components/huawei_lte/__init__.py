@@ -51,6 +51,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    ADMIN_SERVICES,
     ALL_KEYS,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
@@ -64,6 +65,8 @@ from .const import (
     KEY_WLAN_HOST_LIST,
     SERVICE_CLEAR_TRAFFIC_STATISTICS,
     SERVICE_REBOOT,
+    SERVICE_RESUME_INTEGRATION,
+    SERVICE_SUSPEND_INTEGRATION,
     UPDATE_OPTIONS_SIGNAL,
     UPDATE_SIGNAL,
 )
@@ -134,6 +137,7 @@ class Router:
     )
     unload_handlers: List[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
     client: Client
+    suspended = attr.ib(init=False, default=False)
 
     def __attrs_post_init__(self):
         """Set up internal state on init."""
@@ -188,6 +192,10 @@ class Router:
     def update(self) -> None:
         """Update router data."""
 
+        if self.suspended:
+            _LOGGER.debug("Integration suspended, not updating data")
+            return
+
         self._get_data(KEY_DEVICE_INFORMATION, self.client.device.information)
         if self.data.get(KEY_DEVICE_INFORMATION):
             # Full information includes everything in basic
@@ -207,15 +215,8 @@ class Router:
 
         self.signal_update()
 
-    def cleanup(self, *_) -> None:
-        """Clean up resources."""
-
-        self.subscriptions.clear()
-
-        for handler in self.unload_handlers:
-            handler()
-        self.unload_handlers.clear()
-
+    def logout(self) -> None:
+        """Log out router session."""
         if not isinstance(self.connection, AuthorizedConnection):
             return
         try:
@@ -226,6 +227,17 @@ class Router:
             _LOGGER.debug("Logout not supported when not logged in", exc_info=True)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Logout error", exc_info=True)
+
+    def cleanup(self, *_) -> None:
+        """Clean up resources."""
+
+        self.subscriptions.clear()
+
+        for handler in self.unload_handlers:
+            handler()
+        self.unload_handlers.clear()
+
+        self.logout()
 
 
 @attr.s
@@ -427,15 +439,29 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
             return
 
         if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
+            if router.suspended:
+                _LOGGER.debug("%s: ignored, integration suspended", service.service)
+                return
             result = router.client.monitoring.set_clear_traffic()
             _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_REBOOT:
+            if router.suspended:
+                _LOGGER.debug("%s: ignored, integration suspended", service.service)
+                return
             result = router.client.device.reboot()
             _LOGGER.debug("%s: %s", service.service, result)
+        elif service.service == SERVICE_RESUME_INTEGRATION:
+            # Login will be handled automatically on demand
+            router.suspended = False
+            _LOGGER.debug("%s: %s", service.service, "done")
+        elif service.service == SERVICE_SUSPEND_INTEGRATION:
+            router.logout()
+            router.suspended = True
+            _LOGGER.debug("%s: %s", service.service, "done")
         else:
             _LOGGER.error("%s: unsupported service", service.service)
 
-    for service in (SERVICE_CLEAR_TRAFFIC_STATISTICS, SERVICE_REBOOT):
+    for service in ADMIN_SERVICES:
         hass.helpers.service.async_register_admin_service(
             DOMAIN, service, service_handler, schema=SERVICE_SCHEMA,
         )
