@@ -168,13 +168,13 @@ class KeyboardRemote:
             handler = self.handlers_by_name[dev.name]
         else:
             # check for symlinked paths matching descriptor
-            for d, h in self.handlers_by_descriptor.items():
-                if h.dev is not None:
-                    fullpath = h.dev.path
+            for test_descriptor, test_handler in self.handlers_by_descriptor.items():
+                if test_handler.dev is not None:
+                    fullpath = test_handler.dev.path
                 else:
-                    fullpath = os.path.realpath(d)
+                    fullpath = os.path.realpath(test_descriptor)
                 if fullpath == descriptor:
-                    handler = h
+                    handler = test_handler
 
         return (dev, handler)
 
