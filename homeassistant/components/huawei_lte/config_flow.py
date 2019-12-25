@@ -21,7 +21,13 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import ssdp
-from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_URL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 
 # see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
@@ -247,9 +253,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         data_schema = vol.Schema(
             {
                 vol.Optional(
+                    CONF_NAME, default=self.config_entry.options.get(CONF_NAME, DOMAIN),
+                ): str,
+                vol.Optional(
                     CONF_RECIPIENT,
                     default=self.config_entry.options.get(CONF_RECIPIENT, ""),
-                ): str
+                ): str,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

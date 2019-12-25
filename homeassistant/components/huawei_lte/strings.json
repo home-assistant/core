@@ -33,6 +33,7 @@
         "step": {
             "init": {
                 "data": {
+                    "name": "Notification service name",
                     "recipient": "SMS notification recipients",
                     "track_new_devices": "Track new devices"
                 }
