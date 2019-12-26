@@ -284,7 +284,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     elif device_type == BulbType.Color:
         if nl_switch_light and device.is_nightlight_supported:
             _lights_setup_helper(YeelightColorLightWithNightlightSwitch)
-            _lights_setup_helper(YeelightNightLightMode)
+            _lights_setup_helper(YeelightNightLightModeWithWithoutBrightnessControl)
         else:
             _lights_setup_helper(YeelightColorLightWithoutNightlightSwitch)
     elif device_type == BulbType.WhiteTemp:
@@ -932,6 +932,18 @@ class YeelightNightLightModeWithAmbientSupport(YeelightNightLightMode):
     @property
     def _power_property(self):
         return "main_power"
+
+
+class YeelightNightLightModeWithWithoutBrightnessControl(YeelightNightLightMode):
+    """Representation of a Yeelight, when in nightlight mode.
+
+    It represents case when nightlight mode brightness control is not supported.
+    """
+
+    @property
+    def supported_features(self):
+        """Flag no supported features."""
+        return 0
 
 
 class YeelightWithAmbientWithoutNightlight(YeelightWhiteTempWithoutNightlightSwitch):
