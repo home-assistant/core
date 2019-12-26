@@ -120,12 +120,10 @@ class KeyboardRemote:
         # add initial devices (do this AFTER starting watcher in order to
         # avoid race conditions leading to missing device connections)
         initial_start_monitoring = set()
-        descriptors = await self.hass.async_add_executor_job(
-            lambda: list_devices(DEVINPUT)
-        )
+        descriptors = await self.hass.async_add_executor_job(list_devices, DEVINPUT)
         for descriptor in descriptors:
             dev, handler = await self.hass.async_add_executor_job(
-                lambda: self.get_device_handler(descriptor)
+                self.get_device_handler, descriptor
             )
 
             if handler is None:
@@ -201,7 +199,7 @@ class KeyboardRemote:
                     or (event.flags & aionotify.Flags.ATTRIB)
                 ) and not descriptor_active:
                     dev, handler = await self.hass.async_add_executor_job(
-                        lambda: self.get_device_handler(descriptor)
+                        self.get_device_handler, descriptor
                     )
                     if handler is None:
                         continue
