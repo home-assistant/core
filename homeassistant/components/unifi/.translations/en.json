@@ -33,6 +33,9 @@
                     "track_wired_clients": "Include wired network clients"
                 }
             },
+            "init": {
+                "data": {}
+            },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Create bandwidth usage sensors for network clients"

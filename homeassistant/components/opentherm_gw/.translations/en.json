@@ -10,10 +10,8 @@
             "init": {
                 "data": {
                     "device": "Path or URL",
-                    "floor_temperature": "Floor climate temperature",
                     "id": "ID",
-                    "name": "Name",
-                    "precision": "Climate temperature precision"
+                    "name": "Name"
                 },
                 "title": "OpenTherm Gateway"
             }

@@ -5,7 +5,6 @@
         },
         "error": {
             "certificate_error": "Certificate could not be validated",
-            "certificate_fetch_failed": "Can not fetch certificate from this host and port combination",
             "connection_timeout": "Timeout when connecting to this host",
             "host_port_exists": "This host and port combination is already configured",
             "resolve_failed": "This host can not be resolved",
