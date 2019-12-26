@@ -13,6 +13,7 @@ FLOWS = [
     "ambiclimate",
     "ambient_station",
     "axis",
+    "balboa",
     "cast",
     "cert_expiry",
     "coolmaster",

@@ -1135,6 +1135,9 @@ pyatome==0.1.1
 # homeassistant.components.apple_tv
 pyatv==0.3.13
 
+# homeassistant.components.balboa
+pybalboa==0.3
+
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
 

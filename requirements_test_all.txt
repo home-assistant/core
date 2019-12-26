@@ -385,6 +385,9 @@ pyalmond==0.0.2
 # homeassistant.components.arlo
 pyarlo==0.2.3
 
+# homeassistant.components.balboa
+pybalboa==0.3
+
 # homeassistant.components.blackbird
 pyblackbird==0.5
 
