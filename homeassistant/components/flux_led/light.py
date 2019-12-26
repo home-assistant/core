@@ -1,4 +1,5 @@
 """Support for Flux lights."""
+import asyncio
 import logging
 import random
 import socket
@@ -24,7 +25,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_MODE, CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.color as color_util
+from homeassistant.util import slugify, color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,8 +141,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Flux lights."""
+    name = config.get(CONF_NAME)
     lights = []
     light_ips = []
 
@@ -155,10 +157,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         light = FluxLight(device)
         lights.append(light)
         light_ips.append(ipaddr)
-
-    if not config.get(CONF_AUTOMATIC_ADD, False):
-        add_entities(lights, True)
-        return
 
     # Find the bulbs on the LAN
     scanner = BulbScanner()
@@ -174,7 +172,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         light = FluxLight(device)
         lights.append(light)
 
-    add_entities(lights, True)
+    async_add_entities(lights)
+
+    async def async_update(call=None):
+        """Update lights."""
+        for light in lights:
+            await light.async_update()
+
+    service_name = slugify("{} {}".format(name, "update"))
+    hass.services.async_register(DOMAIN, service_name, async_update)
 
 
 class FluxLight(Light):
@@ -190,7 +196,7 @@ class FluxLight(Light):
         self._bulb = None
         self._error_reported = False
 
-    def _connect(self):
+    async def _connect(self):
         """Connect to Flux light."""
 
         self._bulb = WifiLedBulb(self._ipaddr, timeout=5)
@@ -205,7 +211,7 @@ class FluxLight(Light):
             else:
                 self._mode = MODE_RGB
 
-    def _disconnect(self):
+    async def _disconnect(self):
         """Disconnect from Flux light."""
         self._bulb = None
 
@@ -275,10 +281,11 @@ class FluxLight(Light):
 
         return None
 
-    def turn_on(self, **kwargs):
+    async def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         if not self.is_on:
             self._bulb.turnOn()
+            await asyncio.sleep(1)
 
         hs_color = kwargs.get(ATTR_HS_COLOR)
 
@@ -298,8 +305,10 @@ class FluxLight(Light):
                 brightness = self.brightness
             if color_temp > COLOR_TEMP_WARM_VS_COLD_WHITE_CUT_OFF:
                 self._bulb.setRgbw(w=brightness)
+                await asyncio.sleep(1)
             else:
                 self._bulb.setRgbw(w2=brightness)
+                await asyncio.sleep(1)
             return
 
         # Show warning if effect set with rgb, brightness, or white level
@@ -314,6 +323,7 @@ class FluxLight(Light):
             self._bulb.setRgb(
                 random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
             )
+            await asyncio.sleep(1)
             return
 
         if effect == EFFECT_CUSTOM:
@@ -323,11 +333,13 @@ class FluxLight(Light):
                     self._custom_effect[CONF_SPEED_PCT],
                     self._custom_effect[CONF_TRANSITION],
                 )
+                await asyncio.sleep(1)
             return
 
         # Effect selection
         if effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
+            await asyncio.sleep(1)
             return
 
         # Preserve current brightness on color/white level change
@@ -337,6 +349,7 @@ class FluxLight(Light):
         # Preserve color on brightness/white level change
         if rgb is None:
             rgb = self._bulb.getRgb()
+            await asyncio.sleep(1)
 
         if white is None and self._mode == MODE_RGBW:
             white = self.white_value
@@ -344,27 +357,31 @@ class FluxLight(Light):
         # handle W only mode (use brightness instead of white value)
         if self._mode == MODE_WHITE:
             self._bulb.setRgbw(0, 0, 0, w=brightness)
+            await asyncio.sleep(1)
 
         # handle RGBW mode
         elif self._mode == MODE_RGBW:
             self._bulb.setRgbw(*tuple(rgb), w=white, brightness=brightness)
+            await asyncio.sleep(1)
 
         # handle RGB mode
         else:
             self._bulb.setRgb(*tuple(rgb), brightness=brightness)
+            await asyncio.sleep(1)
 
-    def turn_off(self, **kwargs):
+    async def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
         self._bulb.turnOff()
+        await asyncio.sleep(1)
 
-    def update(self):
+    async def async_update(self):
         """Synchronize state with bulb."""
         if not self.available:
             try:
-                self._connect()
+                await self._connect()
                 self._error_reported = False
             except socket.error:
-                self._disconnect()
+                await self._disconnect()
                 if not self._error_reported:
                     _LOGGER.warning(
                         "Failed to connect to bulb %s, %s", self._ipaddr, self._name
@@ -373,3 +390,4 @@ class FluxLight(Light):
                 return
 
         self._bulb.update_state(retry=2)
+        await asyncio.sleep(1)
