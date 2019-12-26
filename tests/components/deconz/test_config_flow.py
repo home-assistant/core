@@ -283,7 +283,7 @@ async def test_bridge_discovery_dont_update_existing_hassio_entry(hass):
             config_flow.CONF_HOST: "core-deconz",
             config_flow.CONF_BRIDGEID: "123ABC",
         },
-        unique_id="123ABC"
+        unique_id="123ABC",
     )
     entry.add_to_hass(hass)
 
@@ -393,7 +393,7 @@ async def test_hassio_dont_update_instance(hass):
             config_flow.CONF_HOST: "1.2.3.4",
             config_flow.CONF_PORT: 80,
             config_flow.CONF_API_KEY: "ABCDEF",
-            config_flow.CONF_SERIAL: BRIDGEID
+            config_flow.CONF_SERIAL: BRIDGEID,
         },
         context={"source": "hassio"},
     )
