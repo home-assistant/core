@@ -120,7 +120,9 @@ class KeyboardRemote:
         # add initial devices (do this AFTER starting watcher in order to
         # avoid race conditions leading to missing device connections)
         initial_start_monitoring = set()
-        descriptors = list_devices(DEVINPUT)
+        descriptors = await self.hass.async_add_executor_job(
+            lambda: list_devices(DEVINPUT)
+        )
         for descriptor in descriptors:
             dev, handler = await self.hass.async_add_executor_job(
                 lambda: self.get_device_handler(descriptor)
