@@ -122,7 +122,9 @@ class KeyboardRemote:
         initial_start_monitoring = set()
         descriptors = list_devices(DEVINPUT)
         for descriptor in descriptors:
-            dev, handler = self.get_device_handler(descriptor)
+            dev, handler = await self.hass.async_add_executor_job(
+                lambda: self.get_device_handler(descriptor)
+            )
 
             if handler is None:
                 continue
@@ -196,7 +198,9 @@ class KeyboardRemote:
                     (event.flags & aionotify.Flags.CREATE)
                     or (event.flags & aionotify.Flags.ATTRIB)
                 ) and not descriptor_active:
-                    dev, handler = self.get_device_handler(descriptor)
+                    dev, handler = await self.hass.async_add_executor_job(
+                        lambda: self.get_device_handler(descriptor)
+                    )
                     if handler is None:
                         continue
                     self.active_handlers_by_descriptor[descriptor] = handler
@@ -252,7 +256,7 @@ class KeyboardRemote:
             """Stop event monitoring task and issue event."""
             if self.monitor_task is not None:
                 try:
-                    self.dev.ungrab()
+                    await self.hass.async_add_executor_job(self.dev.ungrab)
                 except OSError:
                     pass
                 # monitoring of the device form the event loop and closing of the
@@ -282,7 +286,7 @@ class KeyboardRemote:
 
             try:
                 _LOGGER.debug("Start device monitoring")
-                dev.grab()
+                await self.hass.async_add_executor_job(dev.grab)
                 async for event in dev.async_read_loop():
                     if event.type is ecodes.EV_KEY:
                         if event.value in self.key_values:
