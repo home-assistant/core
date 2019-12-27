@@ -120,9 +120,10 @@ async def async_setup_entry(hass, config_entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, "browse_path", {"path": G_CLOUD_PREFIX})
-    )
+    if ais_global.G_AIS_START_IS_DONE:
+        hass.async_create_task(
+            hass.services.async_call(DOMAIN, "browse_path", {"path": G_CLOUD_PREFIX})
+        )
     return True
 
 

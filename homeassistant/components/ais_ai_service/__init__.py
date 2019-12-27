@@ -2109,7 +2109,10 @@ def get_groups(hass):
             all_ais_automations.append(entity.entity_id)
         elif entity.entity_id.startswith("scene."):
             all_ais_scenes.append(entity.entity_id)
-        elif entity.entity_id.startswith("switch."):
+        elif (
+            entity.entity_id.startswith("switch.")
+            and entity.entity_id != "switch.zigbee_tryb_parowania"
+        ):
             all_ais_switches.append(entity.entity_id)
         elif entity.entity_id.startswith("light."):
             all_ais_lights.append(entity.entity_id)
@@ -2121,7 +2124,10 @@ def get_groups(hass):
             all_ais_locks.append(entity.entity_id)
         elif entity.entity_id.startswith("vacuum."):
             all_ais_vacuums.append(entity.entity_id)
-        elif entity.entity_id.startswith("camera."):
+        elif (
+            entity.entity_id.startswith("camera.")
+            and entity.entity_id != "camera.remote_access"
+        ):
             all_ais_cameras.append(entity.entity_id)
         elif entity.entity_id.startswith("fan."):
             all_ais_fans.append(entity.entity_id)

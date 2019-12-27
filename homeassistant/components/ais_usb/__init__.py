@@ -62,11 +62,12 @@ def prepare_usb_device(hass, device_info):
             "--error NULL --restart-delay=30000 -- run start "
         )
         os.system("pm2 save")
-        hass.async_add_job(
-            hass.services.async_call(
-                "ais_ai_service", "say_it", {"text": "Uruchomiono serwis zigbee"}
+        if ais_global.G_AIS_START_IS_DONE:
+            hass.async_add_job(
+                hass.services.async_call(
+                    "ais_ai_service", "say_it", {"text": "Uruchomiono serwis zigbee"}
+                )
             )
-        )
 
 
 def remove_usb_device(hass, device_info):
