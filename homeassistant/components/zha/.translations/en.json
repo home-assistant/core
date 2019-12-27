@@ -71,5 +71,18 @@
             "remote_button_short_release": "\"{subtype}\" button released",
             "remote_button_triple_press": "\"{subtype}\" button triple clicked"
         }
+    },
+    "options": {
+        "step": {
+            "zha_network_options": {
+                "data": {
+                    "enable_quirks": "Enable Quirks",
+                    "enable_source_routing": "Enable Zigbee source routing",
+                    "radio_type": "Radio Type",
+                    "usb_path": "USB Device Path"
+                },
+                "description": "ZHA Options"
+            }
+        }
     }
 }

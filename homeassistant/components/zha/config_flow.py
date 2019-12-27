@@ -1,13 +1,17 @@
 """Config flow for ZHA."""
 import asyncio
 from collections import OrderedDict
+import copy
 import os
 
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.core import callback
 
 from .core.const import (
+    CONF_ENABLE_QUIRKS,
+    CONF_ENABLE_SOURCE_ROUTING,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
     CONTROLLER,
@@ -26,6 +30,12 @@ class ZhaFlowHandler(config_entries.ConfigFlow):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return ZHAOptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input=None):
         """Handle a zha config flow start."""
@@ -60,6 +70,62 @@ class ZhaFlowHandler(config_entries.ConfigFlow):
 
         return self.async_create_entry(
             title=import_info[CONF_USB_PATH], data=import_info
+        )
+
+
+class ZHAOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle ZHA options."""
+
+    def __init__(self, config_entry):
+        """Initialize ZHA options flow."""
+        self.options = copy.deepcopy(config_entry.options)
+        self.options[CONF_USB_PATH] = config_entry.options.get(
+            CONF_USB_PATH, config_entry.data.get(CONF_USB_PATH)
+        )
+        self.options[CONF_RADIO_TYPE] = config_entry.options.get(
+            CONF_RADIO_TYPE, config_entry.data.get(CONF_RADIO_TYPE)
+        )
+        self.options[CONF_ENABLE_QUIRKS] = config_entry.options.get(
+            CONF_ENABLE_QUIRKS, True
+        )
+        self.options[CONF_ENABLE_SOURCE_ROUTING] = config_entry.options.get(
+            CONF_ENABLE_SOURCE_ROUTING, False
+        )
+
+    async def async_step_init(self, user_input=None):
+        """Manage the ZHA options."""
+        return await self.async_step_zha_options()
+
+    async def async_step_zha_options(self, user_input=None):
+        """Manage the ZHA Zigpy configuration options."""
+        if user_input is not None:
+            self.options[CONF_USB_PATH] = user_input[CONF_USB_PATH]
+            self.options[CONF_RADIO_TYPE] = user_input[CONF_RADIO_TYPE]
+            self.options[CONF_ENABLE_QUIRKS] = user_input[CONF_ENABLE_QUIRKS]
+            self.options[CONF_ENABLE_SOURCE_ROUTING] = user_input[
+                CONF_ENABLE_SOURCE_ROUTING
+            ]
+            return self.async_create_entry(title="", data=self.options)
+
+        return self.async_show_form(
+            step_id="zha_network_options",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_USB_PATH, default=self.options[CONF_USB_PATH]
+                    ): str,
+                    vol.Optional(
+                        CONF_RADIO_TYPE, default=self.options[CONF_RADIO_TYPE]
+                    ): vol.In(RadioType.list()),
+                    vol.Required(
+                        CONF_ENABLE_QUIRKS, default=self.options[CONF_ENABLE_QUIRKS]
+                    ): bool,
+                    vol.Required(
+                        CONF_ENABLE_SOURCE_ROUTING,
+                        default=self.options[CONF_ENABLE_SOURCE_ROUTING],
+                    ): bool,
+                }
+            ),
         )
 
 

@@ -94,6 +94,7 @@ CONF_DEVICE_CONFIG = "device_config"
 CONF_ENABLE_QUIRKS = "enable_quirks"
 CONF_RADIO_TYPE = "radio_type"
 CONF_USB_PATH = "usb_path"
+CONF_ENABLE_SOURCE_ROUTING = "enable_source_routing"
 CONTROLLER = "controller"
 
 DATA_DEVICE_CONFIG = "zha_device_config"
