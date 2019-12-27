@@ -661,7 +661,6 @@ wled==0.2.1
 # homeassistant.components.bluesound
 # homeassistant.components.startca
 # homeassistant.components.ted5000
-# homeassistant.components.yr
 # homeassistant.components.zestimate
 xmltodict==0.12.0
 

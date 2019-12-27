@@ -394,7 +394,6 @@ homeassistant/components/yeelight/* @rytilahti @zewelor
 homeassistant/components/yeelightsunflower/* @lindsaymarkward
 homeassistant/components/yessssms/* @flowolf
 homeassistant/components/yi/* @bachya
-homeassistant/components/yr/* @danielhiversen
 homeassistant/components/zeroconf/* @robbiet480 @Kane610
 homeassistant/components/zha/* @dmulcahey @adminiuga
 homeassistant/components/zone/* @home-assistant/core
