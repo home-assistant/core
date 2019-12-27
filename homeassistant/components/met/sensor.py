@@ -46,8 +46,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
-) -> None:
-    """Set up the Met sensor."""
+) -> bool:
+    """Set up the Met sensor from a config entry."""
     elevation = entry.data.get(CONF_ELEVATION, hass.config.elevation or 0)
     forecast = entry.data.get(CONF_FORECAST, DEFAULT_FORECAST)
     latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
@@ -58,7 +58,11 @@ async def async_setup_entry(
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
-    coordinates = {"lat": str(latitude), "lon": str(longitude), "msl": str(elevation)}
+    coordinates = {
+        "lat": str(latitude),
+        "lon": str(longitude),
+        "msl": str(elevation),
+    }
 
     entities = []
     for sensor_type in SENSOR_TYPES:
@@ -68,12 +72,13 @@ async def async_setup_entry(
     weather = MetData(hass, coordinates, forecast, entities)
     async_track_utc_time_change(hass, weather.updating_devices, minute=31, second=0)
     await weather.fetching_data()
+    return True
 
 
 class MetSensor(Entity):
     """Representation of an Met sensor."""
 
-    def __init__(self, name: str, sensor_type):
+    def __init__(self, name: str, sensor_type: str):
         """Initialize the sensor."""
         self.type = sensor_type
         self._name = f"{name} {SENSOR_TYPES[self.type][SENSOR_TYPE_NAME]}"

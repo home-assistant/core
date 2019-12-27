@@ -2,9 +2,10 @@
 import logging
 from random import randrange
 
-import metno
+from metno import MetWeatherData
 
 from homeassistant.components.weather import WeatherEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
@@ -16,7 +17,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.dt import DEFAULT_TIME_ZONE
 
 from .const import API_URL, ATTRIBUTION, CONF_TRACK_HOME, DEFAULT_NAME
 
@@ -36,15 +38,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([MetWeather(config)])
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Add a weather entity from a config_entry."""
-    async_add_entities([MetWeather(config_entry.data)])
+    async_add_entities([MetWeather(entry.data)])
 
 
 class MetWeather(WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
-    def __init__(self, config):
+    def __init__(self, config: dict):
         """Initialise the platform with a data instance and site."""
         self._config = config
         self._unsub_track_home = None
@@ -81,7 +85,7 @@ class MetWeather(WeatherEntity):
             "lon": str(longitude),
             "msl": str(elevation),
         }
-        self._weather_data = metno.MetWeatherData(
+        self._weather_data = MetWeatherData(
             coordinates, async_get_clientsession(self.hass), API_URL
         )
 
@@ -125,8 +129,7 @@ class MetWeather(WeatherEntity):
     def _update(self, *_):
         """Get the latest data from Met.no."""
         self._current_weather_data = self._weather_data.get_current_weather()
-        time_zone = dt_util.DEFAULT_TIME_ZONE
-        self._forecast_data = self._weather_data.get_forecast(time_zone)
+        self._forecast_data = self._weather_data.get_forecast(DEFAULT_TIME_ZONE)
         self.async_write_ha_state()
 
     @property

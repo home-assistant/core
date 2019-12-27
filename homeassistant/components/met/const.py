@@ -19,6 +19,7 @@ SYMBOL_API_URL = (
 ATTRIBUTION = (
     "Weather forecast from met.no, delivered by the Norwegian Meteorological Institute."
 )
+# https://api.met.no/license_data.html
 
 HOME_LOCATION_NAME = "Home"
 
