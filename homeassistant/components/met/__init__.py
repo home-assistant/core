@@ -7,7 +7,7 @@ from homeassistant.core import Config, HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_FORECAST, DEFAULT_FORECAST, DEFAULT_NAME, DOMAIN
+from .const import CONF_FORECAST, DEFAULT_FORECAST, DOMAIN, HOME_LOCATION_NAME
 
 COMPONENT_SCHEMA = vol.Schema(
     {
@@ -19,7 +19,7 @@ COMPONENT_SCHEMA = vol.Schema(
         vol.Inclusive(
             CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
         ): cv.longitude,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=HOME_LOCATION_NAME): cv.string,
     }
 )
 
