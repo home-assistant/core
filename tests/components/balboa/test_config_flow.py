@@ -74,4 +74,3 @@ async def test_form_already_configured(hass):
         )
 
     assert result2["type"] == "abort"
-    assert result2["errors"] == {"base": "already_configured"}
