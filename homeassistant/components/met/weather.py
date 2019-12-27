@@ -28,21 +28,15 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Met.no weather platform."""
     _LOGGER.warning("Loading Met.no via platform config is deprecated")
-
-    # Add defaults.
-    config = {CONF_ELEVATION: hass.config.elevation, **config}
-
-    if config.get(CONF_LATITUDE) is None:
-        config[CONF_TRACK_HOME] = True
-
-    async_add_entities([MetWeather(config)])
+    pass
 
 
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
-) -> None:
-    """Add a weather entity from a config_entry."""
+) -> bool:
+    """Set up the Met weather from a config entry."""
     async_add_entities([MetWeather(entry.data)])
+    return True
 
 
 class MetWeather(WeatherEntity):
