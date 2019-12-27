@@ -5,6 +5,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from .config_flow import configured_drivers
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -15,21 +16,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a drive sensor based on a rclone config entry."""
-    from homeassistant.components.ais_drives_service import rclone_get_remotes_long, DRIVES_TYPES
+    from homeassistant.components.ais_drives_service import (
+        rclone_get_remotes_long,
+        DRIVES_TYPES,
+    )
+
     remotes = rclone_get_remotes_long()
     conf_drives = configured_drivers(hass)
     sensors = []
     for remote in remotes:
         drive_type = remote["type"]
-        code, icon = DRIVES_TYPES[drive_type]
+        try:
+            code, icon = DRIVES_TYPES[drive_type]
+        except Exception as e:
+            icon = "mdi:nas"
         srn = slugify(remote["name"])
-        # if srn in conf_drives:
-        #     _LOGGER.info('Drive exists ' + srn)
-        # else:
-        #     # check if sensor exists
-        #     #state = hass.states.get('sensor.ais_drives_service_' + srn)
-        #     #if state is None:
-        sensors.append(DriveSensor(srn, icon))
+        sensors.append(DriveSensor(srn, icon, drive_type))
 
     async_add_entities(sensors, True)
 
@@ -37,12 +39,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class DriveSensor(Entity):
     """Implementation of a Drive sensor."""
 
-    def __init__(self, name, icon):
+    def __init__(self, name, icon, drive_type):
         """Initialize the Drive sensor."""
         self._icon = icon
         self._name = name
         self._data = None
         self._attrs = {}
+        self._drive_type = drive_type
 
     @property
     def icon(self):
@@ -52,12 +55,26 @@ class DriveSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return 1
+        from homeassistant.components.ais_drives_service import rclone_get_remote_size
+
+        rs = rclone_get_remote_size(self._name)
+        return rs
 
     # @property
     # def unit_of_measurement(self):
     #     """Return the unit of measurement of this entity, if any."""
     #     return '%'
+
+    # @property
+    # def device_info(self):
+    #     return {
+    #         "identifiers": {("Rclone", self._name)},
+    #         "name": self._name,
+    #         "manufacturer": "AI-Speaker",
+    #         "model": self._drive_type,
+    #         "sw_version": "Rclone",
+    #         "via_device": None,
+    #     }
 
     @property
     def should_poll(self):
@@ -76,6 +93,7 @@ class DriveSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+
         @callback
         def update():
             """Update the state."""

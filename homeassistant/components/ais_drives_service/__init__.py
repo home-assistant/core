@@ -34,9 +34,11 @@ _LOGGER = logging.getLogger(__name__)
 
 TYPE_DRIVE = "drive"
 TYPE_MEGA = "mega"
+TYPE_FTP = "ftp"
 DRIVES_TYPES = {
     TYPE_DRIVE: ("Google Drive", "mdi:google-drive"),
     TYPE_MEGA: ("Mega", "mdi:cloud"),
+    TYPE_FTP: ("FTP", "mdi:nas"),
 }
 
 
@@ -118,6 +120,9 @@ async def async_setup_entry(hass, config_entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, "browse_path", {"path": G_CLOUD_PREFIX})
+    )
     return True
 
 
@@ -151,6 +156,21 @@ def get_remotes_types_by_name(remote_name):
         if item[0] == remote_name:
             drive_type = k
     return drive_type
+
+
+def rclone_get_remote_size(remote_name):
+    rclone_cmd = ["rclone", "size", remote_name + ":", G_RCLONE_CONF]
+    proc = subprocess.run(
+        rclone_cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+    rclone_size = ""
+    #  will wait for the process to complete and then we are going to return the output
+    if "" != proc.stderr:
+        _LOGGER.error("Nie można pobrać informacji o pojemności dysku: " + proc.stderr)
+    else:
+        for l in proc.stdout.split("\n"):
+            rclone_size = rclone_size + l
+    return rclone_size
 
 
 def rclone_get_remotes_long():
@@ -307,6 +327,73 @@ def rclone_set_auth_mega(drive_name, user, passwd):
         child.expect("password:", timeout=10)
         _LOGGER.info(str(child.before, "utf-8"))
         child.sendline(passwd)
+        # Edit advanced config? (y/n)
+        child.expect("y/n>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("n")
+        # Yes this is OK
+        child.expect("y/e/d>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("y")
+        # Quit config
+        child.expect("e/n/d/r/c/s/q>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("q")
+        #
+        child.kill(0)
+        return "ok"
+    except Exception as e:
+        return "ERROR: " + str(e)
+
+
+def rclone_set_auth_ftp(drive_name, host, port, user_name, password):
+    try:
+        import pexpect
+
+        if len(password) == 0:
+            password = "guest"
+        rclone_cmd = "rclone config " + G_RCLONE_CONF
+        child = pexpect.spawn(rclone_cmd)
+        # Current remotes:
+        child.expect("/q>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("n")
+        # name
+        child.expect("name>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(drive_name)
+        # storage
+        child.expect("Storage>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("ftp")
+        # host
+        child.expect("host>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(host)
+        # anonymous or username
+        child.expect("user>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(user_name)
+        # port
+        child.expect("port>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(str(port))
+        # Yes type in my own password
+        child.expect("y/g>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("y")
+        # password
+        child.expect("password:", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(password)
+        # confirm password
+        child.expect("password:", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(password)
+        # tls
+        child.expect("tls>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("false")
         # Edit advanced config? (y/n)
         child.expect("y/n>", timeout=10)
         _LOGGER.info(str(child.before, "utf-8"))
@@ -517,6 +604,8 @@ class LocalData:
         for i in remotes:
             if i["type"] == "drive":
                 icon = "folder-google-drive"
+            elif i["type"] == "ftp":
+                icon = "nas"
             else:
                 icon = "onedrive"
             items_info.append(
@@ -712,6 +801,8 @@ class LocalData:
                 "--drive-shared-with-me",
             ]
         else:
+            if path.endswith(":"):
+                path = path + "/"
             rclone_cmd = [
                 "rclone",
                 "lsjson",

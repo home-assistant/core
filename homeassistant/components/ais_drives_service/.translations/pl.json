@@ -28,10 +28,20 @@
                     "email": "login - email",
                     "password": "hasło"
                 }
+            },
+            "ftp": {
+                "description": "Aby dodać dysk FTP do Asystenta domowego: \n Wypełnij i zatwierdz poniższy formularz. \n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "title": "Dodawanie zdalengo dysku FTP do Asystenta domowego",
+                "data": {
+                    "host": "host",
+                    "port": "port",
+                    "username": "login",
+                    "password": "hasło"
+                }
             }
         },
         "error": {
-          "identifier_exists": "Name already registered",
+          "identifier_exists": "Dysk z taką nazwą jest już dodany",
           "token_error": "Błędny token",
           "rclone_error": "Błąd połączenia"
         }
