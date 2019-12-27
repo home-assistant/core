@@ -98,9 +98,9 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
-        self.send_key("KEY")
+        self.send_key(None)
 
-    def get_remote(self):
+    def get_remote(self, clean=False):
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
@@ -118,7 +118,11 @@ class SamsungTVDevice(MediaPlayerDevice):
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
+                    #                    if key !:
                     self.get_remote().control(key)
+                    #                    else:
+                    # clean existing connection (used only to test is TV is on)
+                    #                        self.get_remote(True)
                     break
                 except (
                     samsung_exceptions.ConnectionClosed,
@@ -133,7 +137,8 @@ class SamsungTVDevice(MediaPlayerDevice):
             # We got a response so it's on.
             self._state = STATE_ON
             self._remote = None
-            LOGGER.debug("Failed sending command %s", key, exc_info=True)
+            if key:
+                LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return
         except OSError:
             # Different reasons, e.g. hostname not resolveable

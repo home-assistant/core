@@ -156,7 +156,7 @@ async def test_send_key(hass, remote):
     state = hass.states.get(ENTITY_ID)
     # key and update called
     assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_VOLUP"), call("KEY")]
+    assert remote.control.call_args_list == [call("KEY_VOLUP"), call(None)]
     assert state.state == STATE_ON
 
 
@@ -186,7 +186,7 @@ async def test_send_key_connection_closed_retry_succeed(hass, remote):
     assert remote.control.call_args_list == [
         call("KEY_VOLUP"),
         call("KEY_VOLUP"),
-        call("KEY"),
+        call(None),
     ]
     assert state.state == STATE_ON
 
@@ -337,7 +337,7 @@ async def test_volume_up(hass, remote):
     )
     # key and update called
     assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_VOLUP"), call("KEY")]
+    assert remote.control.call_args_list == [call("KEY_VOLUP"), call(None)]
 
 
 async def test_volume_down(hass, remote):
@@ -348,7 +348,7 @@ async def test_volume_down(hass, remote):
     )
     # key and update called
     assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_VOLDOWN"), call("KEY")]
+    assert remote.control.call_args_list == [call("KEY_VOLDOWN"), call(None)]
 
 
 async def test_mute_volume(hass, remote):
@@ -362,7 +362,7 @@ async def test_mute_volume(hass, remote):
     )
     # key and update called
     assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_MUTE"), call("KEY")]
+    assert remote.control.call_args_list == [call("KEY_MUTE"), call(None)]
 
 
 async def test_media_play(hass, remote):
@@ -373,7 +373,7 @@ async def test_media_play(hass, remote):
     )
     # key and update called
     assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_PLAY"), call("KEY")]
+    assert remote.control.call_args_list == [call("KEY_PLAY"), call(None)]
 
 
 async def test_media_pause(hass, remote):
@@ -384,7 +384,7 @@ async def test_media_pause(hass, remote):
     )
     # key and update called
     assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_PAUSE"), call("KEY")]
+    assert remote.control.call_args_list == [call("KEY_PAUSE"), call(None)]
 
 
 async def test_media_next_track(hass, remote):
@@ -395,7 +395,7 @@ async def test_media_next_track(hass, remote):
     )
     # key and update called
     assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_CHUP"), call("KEY")]
+    assert remote.control.call_args_list == [call("KEY_CHUP"), call(None)]
 
 
 async def test_media_previous_track(hass, remote):
@@ -406,7 +406,7 @@ async def test_media_previous_track(hass, remote):
     )
     # key and update called
     assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_CHDOWN"), call("KEY")]
+    assert remote.control.call_args_list == [call("KEY_CHDOWN"), call(None)]
 
 
 async def test_turn_on_with_turnon(hass, remote, delay):
@@ -456,7 +456,7 @@ async def test_play_media(hass, remote):
             call("KEY_7"),
             call("KEY_6"),
             call("KEY_ENTER"),
-            call("KEY"),
+            call(None),
         ]
         assert len(sleeps) == 3
 
@@ -477,7 +477,7 @@ async def test_play_media_invalid_type(hass, remote):
     )
     # only update called
     assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY")]
+    assert remote.control.call_args_list == [call(None)]
 
 
 async def test_play_media_channel_as_string(hass, remote):
@@ -496,7 +496,7 @@ async def test_play_media_channel_as_string(hass, remote):
     )
     # only update called
     assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY")]
+    assert remote.control.call_args_list == [call(None)]
 
 
 async def test_play_media_channel_as_non_positive(hass, remote):
@@ -514,7 +514,7 @@ async def test_play_media_channel_as_non_positive(hass, remote):
     )
     # only update called
     assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY")]
+    assert remote.control.call_args_list == [call(None)]
 
 
 async def test_select_source(hass, remote):
@@ -528,7 +528,7 @@ async def test_select_source(hass, remote):
     )
     # key and update called
     assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_HDMI"), call("KEY")]
+    assert remote.control.call_args_list == [call("KEY_HDMI"), call(None)]
 
 
 async def test_select_source_invalid_source(hass, remote):
@@ -542,4 +542,4 @@ async def test_select_source_invalid_source(hass, remote):
     )
     # only update called
     assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY")]
+    assert remote.control.call_args_list == [call(None)]
