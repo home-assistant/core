@@ -30,12 +30,12 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
-        """Init MetFlowHandler."""
+        """Initialize the config flow."""
         self._errors = {}
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
-        self._errors = {}
+        errors = {}
 
         if user_input is not None:
             if (
@@ -45,17 +45,18 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
                 )
-            self._errors[CONF_NAME] = "name_exists"
+            errors[CONF_NAME] = "name_exists"
 
         return await self._show_config_form(
             name=HOME_LOCATION_NAME,
             latitude=self.hass.config.latitude,
             longitude=self.hass.config.longitude,
             elevation=self.hass.config.elevation,
+            errors=errors,
         )
 
     async def _show_config_form(
-        self, name=None, latitude=None, longitude=None, elevation=None
+        self, name=None, latitude=None, longitude=None, elevation=None, errors=None
     ):
         """Show the configuration form to edit location data."""
         return self.async_show_form(
@@ -68,7 +69,7 @@ class MetFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_ELEVATION, default=elevation): int,
                 }
             ),
-            errors=self._errors,
+            errors=errors or {},
         )
 
     async def async_step_onboarding(self, data=None):
