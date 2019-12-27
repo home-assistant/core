@@ -1,12 +1,15 @@
 {
     "config": {
         "error": {
-            "name_exists": "Location already exists"
+            "already_configured": "Name or location already exists",
+            "coordinates_not_set": "Latitude or longitude not set in Home Assistant config",
+            "unknown": "Unknown error: please try again later"
         },
         "step": {
             "user": {
                 "data": {
                     "elevation": "Elevation",
+                    "forecast": "Forecast",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "name": "Name"

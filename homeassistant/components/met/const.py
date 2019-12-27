@@ -1,5 +1,4 @@
 """Constants for Met component."""
-from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.const import (
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
@@ -11,6 +10,10 @@ from homeassistant.const import (
 DOMAIN = "met"
 DEFAULT_NAME = "Met"
 
+HOME_LOCATION_NAME = "Home"
+
+CONF_TRACK_HOME = "track_home"
+
 API_URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"
 SYMBOL_API_URL = (
     "https://api.met.no/weatherapi/weathericon/1.1/?symbol={0};content_type=image/png"
@@ -21,13 +24,6 @@ ATTRIBUTION = (
 )
 # https://api.met.no/license_data.html
 
-HOME_LOCATION_NAME = "Home"
-
-CONF_TRACK_HOME = "track_home"
-
-# Weather
-ENTITY_ID_SENSOR_FORMAT = WEATHER_DOMAIN + ".met_{}"
-ENTITY_ID_SENSOR_FORMAT_HOME = ENTITY_ID_SENSOR_FORMAT.format(HOME_LOCATION_NAME)
 
 # Sensor
 CONF_FORECAST = "forecast"

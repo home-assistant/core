@@ -9,12 +9,15 @@
                     "name": "Name",
                     "latitude": "Latitude",
                     "longitude": "Longitude",
-                    "elevation": "Elevation"
+                    "elevation": "Elevation",
+                    "forecast": "Forecast"
                 }
             }
         },
         "error": {
-            "name_exists": "Location already exists"
+            "already_configured": "Name or location already exists",
+            "coordinates_not_set": "Latitude or longitude not set in Home Assistant config",
+            "unknown": "Unknown error: please try again later"
         }
     }
 }

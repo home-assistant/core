@@ -1,18 +1,7 @@
 """Tests for the Met sensor platform."""
-from datetime import datetime
-from unittest.mock import patch
-
-import pytest
-
 from homeassistant import config_entries
-from homeassistant.components.met.const import API_URL, CONF_FORECAST, DOMAIN
+from homeassistant.components.met.const import CONF_FORECAST, DOMAIN
 from homeassistant.const import CONF_NAME, PRESSURE_HPA, TEMP_CELSIUS
-import homeassistant.util.dt as dt_util
-
-from tests.common import load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
-
-NOW = datetime(2016, 6, 9, 1, tzinfo=dt_util.UTC)
 
 
 async def setup_component(hass, config):
@@ -34,17 +23,7 @@ async def setup_component(hass, config):
     await hass.async_block_till_done()
 
 
-@pytest.fixture(name="met_data")
-def mock_controller_data(aioclient_mock: AiohttpClientMocker):
-    """Mock a successful data."""
-    aioclient_mock.get(
-        API_URL, text=load_fixture("met.no.xml"),
-    )
-    with patch("homeassistant.components.met.sensor.dt_util.utcnow", return_value=NOW):
-        yield
-
-
-async def test_default_setup(hass, met_data):
+async def test_default_setup(hass, mock_data):
     """Test the default setup."""
     await setup_component(hass, {})
 
@@ -107,7 +86,7 @@ async def test_default_setup(hass, met_data):
     assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
 
 
-async def test_name_setup(hass, met_data):
+async def test_name_setup(hass, mock_data):
     """Test a custom setup with name."""
     config = {
         CONF_NAME: "Bengbu",
@@ -159,7 +138,7 @@ async def test_name_setup(hass, met_data):
     assert state is not None
 
 
-async def test_forecast_setup(hass, met_data):
+async def test_forecast_setup(hass, mock_data):
     """Test a custom setup with 24h forecast."""
     config = {
         CONF_FORECAST: 24,
