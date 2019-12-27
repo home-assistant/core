@@ -25,7 +25,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_MODE, CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import slugify, color as color_util
+from homeassistant.util import color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,7 +143,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Flux lights."""
-    name = config.get(CONF_NAME)
     lights = []
     light_ips = []
 
@@ -178,9 +177,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         """Update lights."""
         for light in lights:
             await light.async_update()
-
-    service_name = slugify("{} {}".format(name, "update"))
-    hass.services.async_register(DOMAIN, service_name, async_update)
 
 
 class FluxLight(Light):
@@ -281,7 +277,7 @@ class FluxLight(Light):
 
         return None
 
-    async def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         if not self.is_on:
             self._bulb.turnOn()
@@ -369,7 +365,7 @@ class FluxLight(Light):
             self._bulb.setRgb(*tuple(rgb), brightness=brightness)
             await asyncio.sleep(1)
 
-    async def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
         self._bulb.turnOff()
         await asyncio.sleep(1)
