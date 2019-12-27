@@ -1,10 +1,18 @@
 """Tests for the Met sensor platform."""
 from homeassistant import config_entries
-from homeassistant.components.met.const import CONF_FORECAST, DOMAIN
-from homeassistant.const import CONF_NAME, PRESSURE_HPA, TEMP_CELSIUS
+from homeassistant.components.met.const import CONF_FORECAST, CONF_TRACK_HOME, DOMAIN
+from homeassistant.const import (
+    CONF_ELEVATION,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+    CONF_NAME,
+    PRESSURE_HPA,
+    TEMP_CELSIUS,
+)
+from homeassistant.helpers.typing import HomeAssistantType
 
 
-async def setup_component(hass, config):
+async def setup_component(hass: HomeAssistantType, config):
     """Set up the platform."""
 
     hass.allow_pool = True
@@ -23,9 +31,64 @@ async def setup_component(hass, config):
     await hass.async_block_till_done()
 
 
-async def test_default_setup(hass, mock_data):
-    """Test the default setup."""
-    await setup_component(hass, {})
+async def test_setup(hass: HomeAssistantType, mock_data):
+    """Test a custom setup with name."""
+    config = {
+        CONF_NAME: "San Diego",
+        CONF_LATITUDE: 0,
+        CONF_LONGITUDE: 0,
+        CONF_ELEVATION: 0,
+    }
+    await setup_component(hass, config)
+
+    assert len(hass.states.async_all()) == 14
+
+    state = hass.states.get("sensor.san_diego_symbol")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_precipitation")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_temperature")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_wind_speed")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_wind_gust")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_pressure")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_wind_direction")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_humidity")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_fog")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_cloudiness")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_low_clouds")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_medium_clouds")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_high_clouds")
+    assert state is not None
+
+    state = hass.states.get("sensor.san_diego_dewpoint_temperature")
+    assert state is not None
+
+
+async def test_track_home_setup(hass: HomeAssistantType, mock_data):
+    """Test the track_home setup."""
+    await setup_component(hass, {CONF_TRACK_HOME: True})
 
     assert len(hass.states.async_all()) == 14
 
@@ -86,61 +149,10 @@ async def test_default_setup(hass, mock_data):
     assert state.attributes.get("unit_of_measurement") == TEMP_CELSIUS
 
 
-async def test_name_setup(hass, mock_data):
-    """Test a custom setup with name."""
-    config = {
-        CONF_NAME: "Bengbu",
-    }
-    await setup_component(hass, config)
-
-    assert len(hass.states.async_all()) == 14
-
-    state = hass.states.get("sensor.bengbu_symbol")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_precipitation")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_temperature")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_wind_speed")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_wind_gust")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_pressure")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_wind_direction")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_humidity")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_fog")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_cloudiness")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_low_clouds")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_medium_clouds")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_high_clouds")
-    assert state is not None
-
-    state = hass.states.get("sensor.bengbu_dewpoint_temperature")
-    assert state is not None
-
-
-async def test_forecast_setup(hass, mock_data):
+async def test_forecast_setup(hass: HomeAssistantType, mock_data):
     """Test a custom setup with 24h forecast."""
     config = {
+        CONF_TRACK_HOME: True,
         CONF_FORECAST: 24,
     }
     await setup_component(hass, config)

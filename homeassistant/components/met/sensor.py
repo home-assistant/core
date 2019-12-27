@@ -26,6 +26,7 @@ from .const import (
     API_URL,
     ATTRIBUTION,
     CONF_FORECAST,
+    CONF_TRACK_HOME,
     DEFAULT_FORECAST,
     DEFAULT_NAME,
     SENSOR_TYPE_CLASS,
@@ -48,15 +49,22 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> bool:
     """Set up the Met sensor from a config entry."""
-    elevation = entry.data.get(CONF_ELEVATION, hass.config.elevation or 0)
-    forecast = entry.data.get(CONF_FORECAST, DEFAULT_FORECAST)
-    latitude = entry.data.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = entry.data.get(CONF_LONGITUDE, hass.config.longitude)
-    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
+
+    if entry.data.get(CONF_TRACK_HOME):
+        latitude = hass.config.latitude
+        longitude = hass.config.longitude
+        elevation = hass.config.elevation
+    else:
+        latitude = entry.data[CONF_LATITUDE]
+        longitude = entry.data[CONF_LONGITUDE]
+        elevation = entry.data[CONF_ELEVATION]
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
+
+    forecast = entry.data.get(CONF_FORECAST, DEFAULT_FORECAST)
+    name = entry.data.get(CONF_NAME, DEFAULT_NAME)
 
     coordinates = {
         "lat": str(latitude),
