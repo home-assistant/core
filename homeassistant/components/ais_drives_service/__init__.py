@@ -598,7 +598,7 @@ class LocalData:
                 {
                     "name": i["name"],
                     "icon": icon,
-                    "path": self.current_path + i["name"] + ":",
+                    "path": self.current_path + i["name"] + ":/",
                 }
             )
         self.hass.states.set(
@@ -614,7 +614,7 @@ class LocalData:
 
         if self.current_path.endswith(":"):
             for remote in G_RCLONE_REMOTES_LONG:
-                if "dyski-zdalne:" + remote["name"] + ":" == self.current_path:
+                if "dyski-zdalne:" + remote["name"] + ":/" == self.current_path:
                     if remote["type"] == "drive":
                         items_info.append(
                             {
@@ -626,10 +626,7 @@ class LocalData:
                         )
                         break
         for item in self.folders_json:
-            if self.current_path.endswith(":"):
-                path = self.current_path + item["Path"]
-            else:
-                path = self.current_path + "/" + item["Path"]
+            path = self.current_path + "/" + item["Path"]
 
             l_icon = "file-outline"
             if item["IsDir"]:
@@ -690,8 +687,8 @@ class LocalData:
             if self.is_rclone_path(self.current_path):
                 if self.current_path == G_CLOUD_PREFIX:
                     self.current_path = G_LOCAL_FILES_ROOT
-                elif self.current_path == G_CLOUD_PREFIX + self.rclone_remote_from_path(
-                    self.current_path
+                elif self.current_path.endswith("://") or self.current_path.endswith(
+                    ":/"
                 ):
                     self.current_path = G_CLOUD_PREFIX
                 elif self.current_path.count("/") == 0:
@@ -746,12 +743,6 @@ class LocalData:
             return True
         return False
 
-    def rclone_remote_from_path(self, path):
-        remote = path.replace(G_CLOUD_PREFIX, "")
-        k = remote.find(":")
-        remote = remote[: k + 1]
-        return remote
-
     def rclone_fix_permissions(self):
         command = 'su -c "chmod -R 777 /sdcard/rclone"'
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
@@ -787,8 +778,6 @@ class LocalData:
                 "--drive-shared-with-me",
             ]
         else:
-            if path.endswith(":"):
-                path = path + "/"
             rclone_cmd = [
                 "rclone",
                 "lsjson",
@@ -942,15 +931,11 @@ class LocalData:
         else:
             self.dispalay_current_path()
             # file was selected, check the MimeType
-            # "MimeType":"audio/mp3" and "text/plain" are supported
+            # "MimeType audio/mp3" and "text/plain" are supported
             path = path.replace(G_CLOUD_PREFIX, "")
             if mime_type is None:
                 mime_type = ""
-            if (
-                mime_type.startswith("audio/")
-                or mime_type.startswith("video/")
-                or mime_type.startswith("application/")
-            ):
+            if mime_type.startswith("audio/") or mime_type.startswith("video/"):
                 # StreamTask().execute(fileItem);
                 self.say("Pobieram i odtwarzam: " + str(item_name))
                 self.rclone_serve_and_play_the_stream(path, item_path)
