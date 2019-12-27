@@ -2,7 +2,7 @@
   "domain": "ring",
   "name": "Ring",
   "documentation": "https://www.home-assistant.io/integrations/ring",
-  "requirements": ["ring_doorbell==0.2.5"],
+  "requirements": ["ring_doorbell==0.2.8"],
   "dependencies": ["ffmpeg"],
   "codeowners": []
 }
