@@ -11,6 +11,7 @@ from typing import List, Optional
 
 from serial import SerialException
 import zigpy.device as zigpy_dev
+from bellows.zigbee.application import CONF_PARAM_SRC_RTG
 
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
@@ -35,6 +36,7 @@ from .const import (
     ATTR_TYPE,
     CONF_BAUDRATE,
     CONF_DATABASE,
+    CONF_ENABLE_SOURCE_ROUTING,
     CONF_RADIO_TYPE,
     CONF_USB_PATH,
     CONTROLLER,
@@ -115,6 +117,8 @@ class ZHAGateway:
         self.debug_enabled = False
         self._log_relay_handler = LogRelayHandler(hass, self)
         self._config_entry = config_entry
+        self._zigpy_options = {}
+        self._config_entry.add_update_listener(self.async_options_updated)
 
     async def async_initialize(self):
         """Initialize controller and connect radio."""
@@ -128,6 +132,10 @@ class ZHAGateway:
         usb_path = self._config_entry.data.get(CONF_USB_PATH)
         baudrate = self._config.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
         radio_type = self._config_entry.data.get(CONF_RADIO_TYPE)
+
+        self._zigpy_options[CONF_PARAM_SRC_RTG] = self._config_entry.options.get(
+            CONF_ENABLE_SOURCE_ROUTING, False
+        )
 
         radio_details = RADIO_TYPES[radio_type]
         radio = radio_details[ZHA_GW_RADIO]()
@@ -143,7 +151,10 @@ class ZHAGateway:
         else:
             database = os.path.join(self._hass.config.config_dir, DEFAULT_DATABASE_NAME)
 
-        self.application_controller = radio_details[CONTROLLER](radio, database)
+        self.application_controller = radio_details[CONTROLLER](
+            radio, database, self._zigpy_options
+        )
+
         apply_application_controller_patch(self)
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
@@ -212,6 +223,25 @@ class ZHAGateway:
                 if dev.is_mains_powered
             ]
         )
+
+    @staticmethod
+    async def async_options_updated(hass, config_entry):
+        """Handle the update signal from updating the config entry."""
+        gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+        await gateway.async_update_options(config_entry)
+
+    async def async_update_options(self, config_entry):
+        """Triggered by config entry options updates."""
+        _LOGGER.debug(
+            "ZHA config entry options updated from: %s to: %s",
+            self._config_entry.options,
+            config_entry.options,
+        )
+        self._config_entry = config_entry
+        self.application_controller.use_source_routing = self._config_entry.options.get(
+            CONF_ENABLE_SOURCE_ROUTING, False
+        )
+        await self.application_controller.set_source_routing()
 
     def device_joined(self, device):
         """Handle device joined.

@@ -20,11 +20,8 @@
   "options": {
     "step": {
       "zha_network_options": {
-        "description": "ZHA Options",
+        "description": "ZHA Network Options",
         "data": {
-          "radio_type": "Radio Type",
-          "usb_path": "USB Device Path",
-          "enable_quirks": "Enable Quirks",
           "enable_source_routing": "Enable Zigbee source routing"
         }
       }
