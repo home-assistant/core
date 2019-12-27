@@ -39,6 +39,21 @@ def prepare_usb_device(hass, device_info):
         hass.components.frontend.async_register_built_in_panel(
             "lovelace/ais_zigbee", "Zigbee", "mdi:zigbee"
         )
+        # check if zigbee already exists
+        if not os.path.isdir("/data/data/pl.sviete.dom/files/home/zigbee2mqtt"):
+            # download
+            hass.async_add_job(
+                hass.services.async_call(
+                    "ais_ai_service",
+                    "say_it",
+                    {
+                        "text": "Nie znaleziono pakietu Zigbee2Mqtt zainstaluj go przed pierwszym uruchomieniem usługi "
+                        "Zigbee. Szczegóły w dokumentacji Asystenta domowego."
+                    },
+                )
+            )
+            return
+
         # start pm2 zigbee service
         os.system("pm2 stop zigbee")
         os.system("pm2 delete zigbee")
@@ -47,6 +62,11 @@ def prepare_usb_device(hass, device_info):
             "--error NULL --restart-delay=30000 -- run start "
         )
         os.system("pm2 save")
+        hass.async_add_job(
+            hass.services.async_call(
+                "ais_ai_service", "say_it", {"text": "Uruchomiono serwis zigbee"}
+            )
+        )
 
 
 def remove_usb_device(hass, device_info):
@@ -60,6 +80,11 @@ def remove_usb_device(hass, device_info):
         os.system("pm2 stop zigbee")
         os.system("pm2 delete zigbee")
         os.system("pm2 save")
+        hass.async_add_job(
+            hass.services.async_call(
+                "ais_ai_service", "say_it", {"text": "Zatrzymano serwis zigbee"}
+            )
+        )
 
 
 @asyncio.coroutine

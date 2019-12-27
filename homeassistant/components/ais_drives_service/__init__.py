@@ -158,21 +158,6 @@ def get_remotes_types_by_name(remote_name):
     return drive_type
 
 
-def rclone_get_remote_size(remote_name):
-    rclone_cmd = ["rclone", "size", remote_name + ":", G_RCLONE_CONF]
-    proc = subprocess.run(
-        rclone_cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    rclone_size = ""
-    #  will wait for the process to complete and then we are going to return the output
-    if "" != proc.stderr:
-        _LOGGER.error("Nie można pobrać informacji o pojemności dysku: " + proc.stderr)
-    else:
-        for l in proc.stdout.split("\n"):
-            rclone_size = rclone_size + l
-    return rclone_size
-
-
 def rclone_get_remotes_long():
     global G_RCLONE_REMOTES_LONG
     G_RCLONE_REMOTES_LONG = []

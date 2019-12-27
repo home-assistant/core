@@ -5,8 +5,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from .config_flow import configured_drivers
+from datetime import timedelta
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(minutes=600)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -43,9 +45,9 @@ class DriveSensor(Entity):
         """Initialize the Drive sensor."""
         self._icon = icon
         self._name = name
-        self._data = None
         self._attrs = {}
         self._drive_type = drive_type
+        self._state = ""
 
     @property
     def icon(self):
@@ -55,10 +57,7 @@ class DriveSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        from homeassistant.components.ais_drives_service import rclone_get_remote_size
-
-        rs = rclone_get_remote_size(self._name)
-        return rs
+        return self._state
 
     # @property
     # def unit_of_measurement(self):
@@ -106,6 +105,27 @@ class DriveSensor(Entity):
     async def async_update(self):
         """Get the latest data and update the state."""
         try:
-            self._data = 1
-        except KeyError:
-            return
+            from homeassistant.components.ais_drives_service import G_RCLONE_CONF
+            import subprocess
+
+            self._state = ""
+            rclone_cmd = ["rclone", "size", self._name + ":", G_RCLONE_CONF]
+            proc = subprocess.run(
+                rclone_cmd,
+                encoding="utf-8",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=3,
+            )
+            #  will wait for the process to complete and then we are going to return the output
+            if "" != proc.stderr:
+                self._state = (
+                    "Nie można pobrać informacji o pojemności dysku " + self._name
+                )
+                _LOGGER.error(str(proc.stderr))
+            else:
+                for li in proc.stdout.split("\n"):
+                    self._state = self._state + li
+
+        except Exception:
+            pass
