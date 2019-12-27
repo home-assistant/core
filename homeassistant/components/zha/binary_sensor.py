@@ -85,7 +85,8 @@ async def _async_setup_entities(
         if entity:
             entities.append(entity(**discovery_info))
 
-    async_add_entities(entities, update_before_add=True)
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
 
 class BinarySensor(ZhaEntity, BinarySensorDevice):

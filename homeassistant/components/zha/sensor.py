@@ -90,7 +90,8 @@ async def _async_setup_entities(
     for discovery_info in discovery_infos:
         entities.append(await make_sensor(discovery_info))
 
-    async_add_entities(entities, update_before_add=True)
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
 
 async def make_sensor(discovery_info):
