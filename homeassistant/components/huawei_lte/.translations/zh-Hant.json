@@ -33,6 +33,7 @@
         "step": {
             "init": {
                 "data": {
+                    "name": "\u901a\u77e5\u670d\u52d9\u540d\u7a31",
                     "recipient": "\u7c21\u8a0a\u901a\u77e5\u6536\u4ef6\u8005",
                     "track_new_devices": "\u8ffd\u8e64\u65b0\u8a2d\u5099"
                 }
