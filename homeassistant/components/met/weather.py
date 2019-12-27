@@ -3,9 +3,8 @@ import logging
 from random import randrange
 
 import metno
-import voluptuous as vol
 
-from homeassistant.components.weather import PLATFORM_SCHEMA, WeatherEntity
+from homeassistant.components.weather import WeatherEntity
 from homeassistant.const import (
     CONF_ELEVATION,
     CONF_LATITUDE,
@@ -15,35 +14,13 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_call_later
 import homeassistant.util.dt as dt_util
 
-from .const import CONF_TRACK_HOME
+from .const import API_URL, ATTRIBUTION, CONF_TRACK_HOME, DEFAULT_NAME
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTRIBUTION = (
-    "Weather forecast from met.no, delivered by the Norwegian "
-    "Meteorological Institute."
-)
-DEFAULT_NAME = "Met.no"
-
-URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Inclusive(
-            CONF_LATITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.latitude,
-        vol.Inclusive(
-            CONF_LONGITUDE, "coordinates", "Latitude and longitude must exist together"
-        ): cv.longitude,
-        vol.Optional(CONF_ELEVATION): int,
-    }
-)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -105,7 +82,7 @@ class MetWeather(WeatherEntity):
             "msl": str(elevation),
         }
         self._weather_data = metno.MetWeatherData(
-            coordinates, async_get_clientsession(self.hass), URL
+            coordinates, async_get_clientsession(self.hass), API_URL
         )
 
     async def _core_config_updated(self, _event):

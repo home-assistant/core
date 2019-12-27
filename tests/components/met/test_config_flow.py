@@ -1,4 +1,4 @@
-"""Tests for Met.no config flow."""
+"""Tests for Met config flow."""
 from homeassistant import data_entry_flow
 from homeassistant.components.met import config_flow
 from homeassistant.components.met.const import (
