@@ -34,6 +34,7 @@ async def test_form(hass):
     assert result2["title"] == "Test Title"
     assert result2["data"] == {
         "host": "1.1.1.1",
+        "name": "Spa",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -72,5 +73,5 @@ async def test_form_already_configured(hass):
             result["flow_id"], {"host": "1.1.1.1"},
         )
 
-    assert result2["type"] == "form"
+    assert result2["type"] == "abort"
     assert result2["errors"] == {"base": "already_configured"}
