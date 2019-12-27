@@ -217,9 +217,16 @@ class ZHAEntityRegistry:
         return default
 
     def strict_match(
-        self, component: str, rule: MatchRule
+        self,
+        component: str,
+        channel_names: Union[Callable, Set[str], str] = set(),
+        generic_ids: Union[Callable, Set[str], str] = set(),
+        manufacturers: Union[Callable, Set[str], str] = set(),
+        models: Union[Callable, Set[str], str] = set(),
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a strict match rule."""
+
+        rule = MatchRule(channel_names, generic_ids, manufacturers, models)
 
         def decorator(zha_ent: CALLABLE_T) -> CALLABLE_T:
             """Register a strict match rule.
@@ -232,9 +239,16 @@ class ZHAEntityRegistry:
         return decorator
 
     def loose_match(
-        self, component: str, rule: MatchRule
+        self,
+        component: str,
+        channel_names: Union[Callable, Set[str], str] = set(),
+        generic_ids: Union[Callable, Set[str], str] = set(),
+        manufacturers: Union[Callable, Set[str], str] = set(),
+        models: Union[Callable, Set[str], str] = set(),
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a loose match rule."""
+
+        rule = MatchRule(channel_names, generic_ids, manufacturers, models)
 
         def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
             """Register a loose match rule.

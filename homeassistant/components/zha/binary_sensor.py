@@ -28,7 +28,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
     ZHA_DISCOVERY_NEW,
 )
-from .core.registries import ZHA_ENTITIES, MatchRule
+from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -141,28 +141,28 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         self._state = await self._channel.get_attribute_value(attribute)
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ACCELEROMETER}))
+@STRICT_MATCH(channel_names=CHANNEL_ACCELEROMETER)
 class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""
 
     DEVICE_CLASS = DEVICE_CLASS_MOVING
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_OCCUPANCY}))
+@STRICT_MATCH(channel_names=CHANNEL_OCCUPANCY)
 class Occupancy(BinarySensor):
     """ZHA BinarySensor."""
 
     DEVICE_CLASS = DEVICE_CLASS_OCCUPANCY
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ON_OFF}))
+@STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
 class Opening(BinarySensor):
     """ZHA BinarySensor."""
 
     DEVICE_CLASS = DEVICE_CLASS_OPENING
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ZONE}))
+@STRICT_MATCH(channel_names=CHANNEL_ZONE)
 class IASZone(BinarySensor):
     """ZHA IAS BinarySensor."""
 

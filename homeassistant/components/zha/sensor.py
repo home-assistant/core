@@ -30,7 +30,7 @@ from .core.const import (
     SIGNAL_STATE_ATTR,
     ZHA_DISCOVERY_NEW,
 )
-from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES, MatchRule
+from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import ZhaEntity
 
 PARALLEL_UPDATES = 5
@@ -175,7 +175,7 @@ class Sensor(ZhaEntity):
         return round(float(value * self._multiplier) / self._divisor)
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_POWER_CONFIGURATION}))
+@STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
 class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
@@ -203,7 +203,7 @@ class Battery(Sensor):
         return state_attrs
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ELECTRICAL_MEASUREMENT}))
+@STRICT_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurement(Sensor):
     """Active power measurement."""
 
@@ -221,8 +221,8 @@ class ElectricalMeasurement(Sensor):
         return round(value * self._channel.multiplier / self._channel.divisor)
 
 
-@STRICT_MATCH(MatchRule(generic_ids={CHANNEL_ST_HUMIDITY_CLUSTER}))
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_HUMIDITY}))
+@STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
+@STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)
 class Humidity(Sensor):
     """Humidity sensor."""
 
@@ -231,7 +231,7 @@ class Humidity(Sensor):
     _unit = "%"
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ILLUMINANCE}))
+@STRICT_MATCH(channel_names=CHANNEL_ILLUMINANCE)
 class Illuminance(Sensor):
     """Illuminance Sensor."""
 
@@ -244,7 +244,7 @@ class Illuminance(Sensor):
         return round(pow(10, ((value - 1) / 10000)), 1)
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_SMARTENERGY_METERING}))
+@STRICT_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
@@ -260,7 +260,7 @@ class SmartEnergyMetering(Sensor):
         return self._channel.unit_of_measurement
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_PRESSURE}))
+@STRICT_MATCH(channel_names=CHANNEL_PRESSURE)
 class Pressure(Sensor):
     """Pressure sensor."""
 
@@ -269,7 +269,7 @@ class Pressure(Sensor):
     _unit = "hPa"
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_TEMPERATURE}))
+@STRICT_MATCH(channel_names=CHANNEL_TEMPERATURE)
 class Temperature(Sensor):
     """Temperature Sensor."""
 
