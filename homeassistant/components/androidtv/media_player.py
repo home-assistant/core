@@ -219,26 +219,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.warning("Platform already setup on %s, skipping", address)
         return
 
+    device_args = [
+        aftv,
+        config[CONF_NAME],
+        config[CONF_APPS],
+        config[CONF_GET_SOURCES],
+        config.get(CONF_TURN_ON_COMMAND),
+        config.get(CONF_TURN_OFF_COMMAND),
+    ]
+
     if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
-        device = AndroidTVDevice(
-            aftv,
-            config[CONF_NAME],
-            config[CONF_APPS],
-            config[CONF_GET_SOURCES],
-            config.get(CONF_TURN_ON_COMMAND),
-            config.get(CONF_TURN_OFF_COMMAND),
-        )
-        device_name = config[CONF_NAME] if CONF_NAME in config else "Android TV"
+        device = AndroidTVDevice(*device_args)
+        device_name = config.get(CONF_NAME, "Android TV")
     else:
-        device = FireTVDevice(
-            aftv,
-            config[CONF_NAME],
-            config[CONF_APPS],
-            config[CONF_GET_SOURCES],
-            config.get(CONF_TURN_ON_COMMAND),
-            config.get(CONF_TURN_OFF_COMMAND),
-        )
-        device_name = config[CONF_NAME] if CONF_NAME in config else "Fire TV"
+        device = FireTVDevice(*device_args)
+        device_name = config.get(CONF_NAME, "Fire TV")
 
     add_entities([device])
     _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
