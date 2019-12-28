@@ -248,7 +248,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            # Preserve existing options, for example *_from_yaml markers
+            data = {**self.config_entry.options, **user_input}
+            return self.async_create_entry(title="", data=data)
 
         data_schema = vol.Schema(
             {
