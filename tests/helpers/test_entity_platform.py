@@ -800,7 +800,10 @@ async def test_entity_info_added_to_entity_registry(hass):
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
 
     entity_default = MockEntity(
-        unique_id="default", capability_attributes={"max": 100}, supported_features=5
+        unique_id="default",
+        capability_attributes={"max": 100},
+        supported_features=5,
+        device_class="mock-device-class",
     )
 
     await component.async_add_entities([entity_default])
@@ -811,6 +814,7 @@ async def test_entity_info_added_to_entity_registry(hass):
     print(entry_default)
     assert entry_default.capabilities == {"max": 100}
     assert entry_default.supported_features == 5
+    assert entry_default.device_class == "mock-device-class"
 
 
 async def test_override_restored_entities(hass):

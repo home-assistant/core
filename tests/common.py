@@ -922,6 +922,11 @@ class MockEntity(entity.Entity):
         return self._handle("device_info")
 
     @property
+    def device_class(self):
+        """Info how device should be classified."""
+        return self._handle("device_class")
+
+    @property
     def capability_attributes(self):
         """Info about capabilities."""
         return self._handle("capability_attributes")

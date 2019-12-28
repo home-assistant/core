@@ -349,6 +349,7 @@ class EntityPlatform:
                 disabled_by=disabled_by,
                 capabilities=entity.capability_attributes,
                 supported_features=entity.supported_features,
+                device_class=entity.device_class,
             )
 
             entity.registry_entry = entry
