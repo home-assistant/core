@@ -92,7 +92,7 @@ onvif_ptz:
       default: 0.5
       example: 0.5
     continuous_duration:
-      description: "Set ContinuousMove delay in milliseconds before stoping the move"
+      description: "Set ContinuousMove delay in seconds before stoping the move"
       default: 0.5
       example: 0.5
     move_mode:
