@@ -35,8 +35,6 @@ async def verify_redirect_uri(hass, client_id, redirect_uri):
     if redirect_uri == "homeassistant://auth-callback" and client_id in (
         "https://home-assistant.io/android",
         "https://home-assistant.io/iOS",
-        "https://home-assistant.io/iOS/beta-auth",
-        "https://home-assistant.io/iOS/dev-auth",
     ):
         return True
 
