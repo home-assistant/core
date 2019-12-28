@@ -96,20 +96,25 @@ DEVICE_ANDROIDTV = "androidtv"
 DEVICE_FIRETV = "firetv"
 DEVICE_CLASSES = [DEFAULT_DEVICE_CLASS, DEVICE_ANDROIDTV, DEVICE_FIRETV]
 
-DIRECTION_PULL = "pull"
-DIRECTION_PUSH = "push"
-
 SERVICE_ADB_COMMAND = "adb_command"
-SERVICE_ADB_FILESYNC = "adb_filesync"
+SERVICE_DOWNLOAD = "download"
+SERVICE_UPLOAD = "upload"
 
 SERVICE_ADB_COMMAND_SCHEMA = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_COMMAND): cv.string}
 )
 
-SERVICE_ADB_FILESYNC_SCHEMA = vol.Schema(
+SERVICE_DOWNLOAD_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_DEVICE_PATH): cv.string,
+        vol.Required(ATTR_LOCAL_PATH): cv.string,
+    }
+)
+
+SERVICE_UPLOAD_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-        vol.Required(ATTR_DIRECTION): vol.In([DIRECTION_PULL, DIRECTION_PUSH]),
         vol.Required(ATTR_DEVICE_PATH): cv.string,
         vol.Required(ATTR_LOCAL_PATH): cv.string,
     }
@@ -270,16 +275,41 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             schema=SERVICE_ADB_COMMAND_SCHEMA,
         )
 
-    if not hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_FILESYNC):
+    if not hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_DOWNLOAD):
 
-        def service_adb_filesync(service):
-            """Transfer a file between your HA instance and an Android TV / Fire TV device."""
+        def service_download(service):
+            """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
             local_path = service.data.get(ATTR_LOCAL_PATH)
             if not hass.config.is_allowed_path(local_path):
                 _LOGGER.warning("'%s' is not secure to load data from!", local_path)
                 return
 
-            direction = service.data.get(ATTR_DIRECTION)
+            device_path = service.data.get(ATTR_DEVICE_PATH)
+            entity_id = service.data.get(ATTR_ENTITY_ID)
+            target_device = [
+                dev
+                for dev in hass.data[ANDROIDTV_DOMAIN].values()
+                if dev.entity_id in entity_id
+            ][0]
+
+            target_device.adb_pull(local_path, device_path)
+
+        hass.services.register(
+            ANDROIDTV_DOMAIN,
+            SERVICE_DOWNLOAD,
+            service_download,
+            schema=SERVICE_DOWNLOAD_SCHEMA,
+        )
+
+    if not hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_UPLOAD):
+
+        def service_upload(service):
+            """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
+            local_path = service.data.get(ATTR_LOCAL_PATH)
+            if not hass.config.is_allowed_path(local_path):
+                _LOGGER.warning("'%s' is not secure to load data from!", local_path)
+                return
+
             device_path = service.data.get(ATTR_DEVICE_PATH)
             entity_id = service.data.get(ATTR_ENTITY_ID)
             target_devices = [
@@ -289,13 +319,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ]
 
             for target_device in target_devices:
-                target_device.adb_filesync(direction, local_path, device_path)
+                target_device.adb_push(local_path, device_path)
 
         hass.services.register(
             ANDROIDTV_DOMAIN,
-            SERVICE_ADB_FILESYNC,
-            service_adb_filesync,
-            schema=SERVICE_ADB_FILESYNC_SCHEMA,
+            SERVICE_UPLOAD,
+            service_upload,
+            schema=SERVICE_UPLOAD_SCHEMA,
         )
 
 
@@ -515,12 +545,14 @@ class ADBDevice(MediaPlayerDevice):
         return self._adb_response
 
     @adb_decorator()
-    def adb_filesync(self, direction, local_path, device_path):
-        """Transfer a file between your HA instance and an Android TV / Fire TV device."""
-        if direction == DIRECTION_PULL:
-            self.aftv.adb_pull(local_path, device_path)
-        else:
-            self.aftv.adb_push(local_path, device_path)
+    def adb_pull(self, local_path, device_path):
+        """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
+        self.aftv.adb_pull(local_path, device_path)
+
+    @adb_decorator()
+    def adb_push(self, local_path, device_path):
+        """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
+        self.aftv.adb_push(local_path, device_path)
 
 
 class AndroidTVDevice(ADBDevice):

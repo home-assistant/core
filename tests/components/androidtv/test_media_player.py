@@ -74,7 +74,7 @@ CONFIG_FIRETV_ADB_SERVER = {
 }
 
 
-def _setup(hass, config):
+def _setup(config):
     """Perform common setup tasks for the tests."""
     if CONF_ADB_SERVER_IP not in config[DOMAIN]:
         patch_key = "python"
@@ -97,7 +97,7 @@ async def _test_reconnect(hass, caplog, config):
 
     https://developers.home-assistant.io/docs/en/integration_quality_scale_index.html
     """
-    patch_key, entity_id = _setup(hass, config)
+    patch_key, entity_id = _setup(config)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
@@ -168,7 +168,7 @@ async def _test_adb_shell_returns_none(hass, config):
 
     The state should be `None` and the device should be unavailable.
     """
-    patch_key, entity_id = _setup(hass, config)
+    patch_key, entity_id = _setup(config)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
@@ -276,7 +276,7 @@ async def test_setup_with_adbkey(hass):
     """Test that setup succeeds when using an ADB key."""
     config = CONFIG_ANDROIDTV_PYTHON_ADB.copy()
     config[DOMAIN][CONF_ADBKEY] = hass.config.path("user_provided_adbkey")
-    patch_key, entity_id = _setup(hass, config)
+    patch_key, entity_id = _setup(config)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
@@ -294,7 +294,7 @@ async def _test_sources(hass, config0):
     """Test that sources (i.e., apps) are handled correctly for Android TV and Fire TV devices."""
     config = config0.copy()
     config[DOMAIN][CONF_APPS] = {"com.app.test1": "TEST 1"}
-    patch_key, entity_id = _setup(hass, config)
+    patch_key, entity_id = _setup(config)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
@@ -366,7 +366,7 @@ async def _test_select_source(hass, config0, source, expected_arg, method_patch)
     """Test that the methods for launching and stopping apps are called correctly when selecting a source."""
     config = config0.copy()
     config[DOMAIN][CONF_APPS] = {"com.app.test1": "TEST 1"}
-    patch_key, entity_id = _setup(hass, config)
+    patch_key, entity_id = _setup(config)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
@@ -523,7 +523,7 @@ async def test_firetv_select_source_stop_app_id_no_name(hass):
 
 async def _test_setup_fail(hass, config):
     """Test that the entity is not created when the ADB connection is not established."""
-    patch_key, entity_id = _setup(hass, config)
+    patch_key, entity_id = _setup(config)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(False)[
         patch_key
@@ -573,12 +573,14 @@ async def test_setup_two_devices(hass):
 
 async def test_setup_same_device_twice(hass):
     """Test that setup succeeds with a duplicated config entry."""
-    patch_key = "server"
+    patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
     ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+        state = hass.states.get(entity_id)
+        assert state is not None
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
@@ -588,8 +590,7 @@ async def test_setup_same_device_twice(hass):
 
 async def test_adb_command(hass):
     """Test sending a command via the `androidtv.adb_command` service."""
-    patch_key = "server"
-    entity_id = "media_player.android_tv"
+    patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
     command = "test command"
     response = "test response"
 
@@ -672,8 +673,7 @@ async def test_adb_command_get_properties(hass):
 
 async def test_update_lock_not_acquired(hass):
     """Test that the state does not get updated when a `LockNotAcquiredException` is raised."""
-    patch_key = "server"
-    entity_id = "media_player.android_tv"
+    patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
@@ -702,10 +702,9 @@ async def test_update_lock_not_acquired(hass):
         assert state.state == STATE_IDLE
 
 
-async def test_adb_filesync(hass):
-    """Test the `androidtv.adb_filesync` service."""
-    patch_key = "server"
-    entity_id = "media_player.android_tv"
+async def test_download(hass):
+    """Test the `androidtv.download` service."""
+    patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
     device_path = "device/path"
     local_path = "local/path"
 
@@ -714,14 +713,13 @@ async def test_adb_filesync(hass):
     ], patchers.patch_shell("")[patch_key]:
         assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
 
-    # Failed pull because path is not whitelisted
+    # Failed download because path is not whitelisted
     with patch("androidtv.basetv.BaseTV.adb_pull") as patch_pull:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            "adb_filesync",
+            "download",
             {
                 ATTR_ENTITY_ID: entity_id,
-                "direction": "pull",
                 "device_path": device_path,
                 "local_path": local_path,
             },
@@ -729,16 +727,15 @@ async def test_adb_filesync(hass):
         )
         patch_pull.assert_not_called()
 
-    # Successful pull
+    # Successful download
     with patch("androidtv.basetv.BaseTV.adb_pull") as patch_pull, patch.object(
         hass.config, "is_allowed_path", return_value=True
     ):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            "adb_filesync",
+            "download",
             {
                 ATTR_ENTITY_ID: entity_id,
-                "direction": "pull",
                 "device_path": device_path,
                 "local_path": local_path,
             },
@@ -746,16 +743,41 @@ async def test_adb_filesync(hass):
         )
         patch_pull.assert_called_with(local_path, device_path)
 
-    # Successful push
+
+async def test_upload(hass):
+    """Test the `androidtv.upload` service."""
+    patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
+    device_path = "device/path"
+    local_path = "local/path"
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+    # Failed upload because path is not whitelisted
+    with patch("androidtv.basetv.BaseTV.adb_push") as patch_push:
+        await hass.services.async_call(
+            ANDROIDTV_DOMAIN,
+            "upload",
+            {
+                ATTR_ENTITY_ID: entity_id,
+                "device_path": device_path,
+                "local_path": local_path,
+            },
+            blocking=True,
+        )
+        patch_push.assert_not_called()
+
+    # Successful upload
     with patch("androidtv.basetv.BaseTV.adb_push") as patch_push, patch.object(
         hass.config, "is_allowed_path", return_value=True
     ):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            "adb_filesync",
+            "upload",
             {
                 ATTR_ENTITY_ID: entity_id,
-                "direction": "push",
                 "device_path": device_path,
                 "local_path": local_path,
             },
