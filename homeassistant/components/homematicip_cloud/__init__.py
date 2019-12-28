@@ -3,10 +3,10 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+from homematicip.aio.device import AsyncSwitchMeasuring
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.aio.home import AsyncHome
 from homematicip.base.helpers import handle_config
-from homematicip.aio.device import AsyncSwitchMeasuring
 import voluptuous as vol
 
 from homeassistant import config_entries
