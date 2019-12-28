@@ -1601,7 +1601,7 @@ python-nmap==0.6.1
 python-pushover==0.4
 
 # homeassistant.components.qbittorrent
-python-qbittorrent==0.3.1
+python-qbittorrent==0.4.1
 
 # homeassistant.components.ripple
 python-ripple-api==0.0.3

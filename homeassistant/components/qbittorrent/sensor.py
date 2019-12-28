@@ -107,7 +107,7 @@ class QBittorrentSensor(Entity):
     def update(self):
         """Get the latest data from qBittorrent and updates the state."""
         try:
-            data = self.client.sync()
+            data = self.client.sync_main_data()
             self._available = True
         except RequestException:
             _LOGGER.error("Connection lost")
