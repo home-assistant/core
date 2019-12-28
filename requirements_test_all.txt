@@ -265,7 +265,7 @@ keyring==20.0.0
 keyrings.alt==3.4.0
 
 # homeassistant.components.dyson
-libpurecool==0.5.0
+libpurecool==0.6.0
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.7.2
