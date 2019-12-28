@@ -3,18 +3,23 @@ import logging
 
 import voluptuous as vol
 
+"""ADD SUPPORT FOR IS_CLOSING IS_OPENING & IS_CLOSED maybe? """
+
 from homeassistant.components import cover, mqtt
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
     SUPPORT_CLOSE,
+    SUPPORT_IS_CLOSING,
     SUPPORT_CLOSE_TILT,
     SUPPORT_OPEN,
+    SUPPORT_IS_OPENING,
     SUPPORT_OPEN_TILT,
     SUPPORT_SET_POSITION,
     SUPPORT_SET_TILT_POSITION,
     SUPPORT_STOP,
+    SUPPORT_IS_CLOSED,
     SUPPORT_STOP_TILT,
     CoverDevice,
 )
