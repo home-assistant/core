@@ -310,7 +310,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                     if isinstance(device, AsyncSwitchMeasuring):
                         await device.reset_energy_counter()
 
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         DOMAIN,
         SERVICE_RESET_ENERGY_COUNTER,
         _async_reset_energy_counter,
