@@ -1,10 +1,11 @@
 """Web socket API for Zigbee Home Automation devices."""
 
 import asyncio
+import collections
 import logging
+from typing import Any
 
 import voluptuous as vol
-from zigpy import types
 from zigpy.types.named import EUI64
 import zigpy.zdo.types as zdo_types
 
@@ -32,6 +33,7 @@ from .core.const import (
     ATTR_WARNING_DEVICE_STROBE,
     ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE,
     ATTR_WARNING_DEVICE_STROBE_INTENSITY,
+    BINDINGS,
     CHANNEL_IAS_WD,
     CLUSTER_COMMAND_SERVER,
     CLUSTER_COMMANDS_CLIENT,
@@ -163,6 +165,8 @@ SERVICE_SCHEMAS = {
         }
     ),
 }
+
+ClusterBinding = collections.namedtuple("ClusterBinding", "id endpoint_id type name")
 
 
 @websocket_api.require_admin
@@ -775,6 +779,23 @@ async def websocket_unbind_devices(hass, connection, msg):
     )
 
 
+def is_cluster_binding(value: Any) -> ClusterBinding:
+    """Validate and transform a cluster binding."""
+    if not isinstance(value, collections.Mapping):
+        raise vol.Invalid("Not a cluster binding")
+    try:
+        cluster_binding = ClusterBinding(
+            name=value["name"],
+            type=value["type"],
+            id=value["id"],
+            endpoint_id=value["endpoint_id"],
+        )
+    except KeyError:
+        raise vol.Invalid("Not a cluster binding")
+
+    return cluster_binding
+
+
 @websocket_api.require_admin
 @websocket_api.async_response
 @websocket_api.websocket_command(
@@ -782,6 +803,7 @@ async def websocket_unbind_devices(hass, connection, msg):
         vol.Required(TYPE): "zha/groups/bind",
         vol.Required(ATTR_SOURCE_IEEE): EUI64.convert,
         vol.Required(GROUP_ID): cv.positive_int,
+        vol.Required(BINDINGS): vol.All(cv.ensure_list, [is_cluster_binding]),
     }
 )
 async def websocket_bind_group(hass, connection, msg):
@@ -789,10 +811,10 @@ async def websocket_bind_group(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_SOURCE_IEEE]
     group_id = msg[GROUP_ID]
+    bindings = msg[BINDINGS]
+    source_device = zha_gateway.get_device(source_ieee)
 
-    await async_group_binding_operation(
-        zha_gateway, source_ieee, group_id, zdo_types.ZDOCmd.Bind_req
-    )
+    await source_device.async_bind_to_group(group_id, bindings)
 
 
 @websocket_api.require_admin
@@ -802,6 +824,7 @@ async def websocket_bind_group(hass, connection, msg):
         vol.Required(TYPE): "zha/groups/unbind",
         vol.Required(ATTR_SOURCE_IEEE): EUI64.convert,
         vol.Required(GROUP_ID): cv.positive_int,
+        vol.Required(BINDINGS): vol.All(cv.ensure_list, [is_cluster_binding]),
     }
 )
 async def websocket_unbind_group(hass, connection, msg):
@@ -809,10 +832,9 @@ async def websocket_unbind_group(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_SOURCE_IEEE]
     group_id = msg[GROUP_ID]
-
-    await async_group_binding_operation(
-        zha_gateway, source_ieee, group_id, zdo_types.ZDOCmd.Unbind_req
-    )
+    bindings = msg[BINDINGS]
+    source_device = zha_gateway.get_device(source_ieee)
+    await source_device.async_unbind_from_group(group_id, bindings)
 
 
 async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operation):
@@ -855,66 +877,6 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
         )
     res = await asyncio.gather(*(t[0] for t in bind_tasks), return_exceptions=True)
     for outcome, log_msg in zip(res, bind_tasks):
-        if isinstance(outcome, Exception):
-            fmt = log_msg[1] + " failed: %s"
-        else:
-            fmt = log_msg[1] + " completed: %s"
-        zdo.debug(fmt, *(log_msg[2] + (outcome,)))
-
-
-async def async_group_binding_operation(zha_gateway, source_ieee, group_id, operation):
-    """Create or remove a direct zigbee binding between a device and a group."""
-
-    source_device = zha_gateway.get_device(source_ieee)
-    zdo = source_device.async_get_zdo()
-    endpoints = source_device.async_get_endpoints()
-    source_clusters = [6, 8, 768]
-
-    destination_address = zdo_types.MultiAddress()
-    destination_address.addrmode = types.uint8_t(1)
-    destination_address.nwk = types.uint16_t(group_id)
-
-    tasks = []
-    op_msg = "0x%04x: %s %s, ep: %s, cluster: %s to group: 0x%04x"
-    for source_cluster in source_clusters:
-        source_endpoint_id = None
-        for endpoint_id, endpoint in endpoints:
-            if endpoint_id == 0:
-                continue
-            if source_cluster in endpoint.out_clusters:
-                source_endpoint_id = endpoint_id
-                break
-        if not source_endpoint_id:
-            _LOGGER.debug(
-                "0x%04x: skipping %s cluster as non present",
-                source_device.nwk,
-                source_cluster,
-            )
-            continue
-        op_params = (
-            source_device.nwk,
-            operation.name,
-            str(source_device.ieee),
-            source_endpoint_id,
-            source_cluster,
-            group_id,
-        )
-        zdo.debug("processing " + op_msg, *op_params)
-        tasks.append(
-            (
-                zdo.request(
-                    operation,
-                    source_device.ieee,
-                    source_endpoint_id,
-                    source_cluster,
-                    destination_address,
-                ),
-                op_msg,
-                op_params,
-            )
-        )
-    res = await asyncio.gather(*(t[0] for t in tasks), return_exceptions=True)
-    for outcome, log_msg in zip(res, tasks):
         if isinstance(outcome, Exception):
             fmt = log_msg[1] + " failed: %s"
         else:
