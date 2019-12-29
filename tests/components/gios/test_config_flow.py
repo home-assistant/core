@@ -4,10 +4,8 @@ from gios import ApiError
 
 from homeassistant import data_entry_flow
 from homeassistant.components.gios import config_flow
-from homeassistant.components.gios.const import CONF_STATION_ID, DOMAIN
+from homeassistant.components.gios.const import CONF_STATION_ID
 from homeassistant.const import CONF_NAME
-
-from tests.common import MockConfigEntry
 
 CONFIG = {
     CONF_NAME: "Foo",
@@ -47,33 +45,13 @@ async def test_invalid_station_id(hass):
     with patch("gios.Gios._get_stations", return_value=VALID_STATIONS):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
+        flow.context = {}
 
         result = await flow.async_step_user(
             user_input={CONF_NAME: "Foo", CONF_STATION_ID: 0}
         )
 
         assert result["errors"] == {CONF_STATION_ID: "wrong_station_id"}
-
-
-async def test_duplicate_station_id_error(hass):
-    """Test that errors are shown when duplicate stations IDs are added."""
-    with patch("gios.Gios._get_stations", return_value=VALID_STATIONS), patch(
-        "gios.Gios._get_station", return_value=VALID_STATION
-    ), patch("gios.Gios._get_station", return_value=VALID_STATION), patch(
-        "gios.Gios._get_sensor", return_value=VALID_SENSOR
-    ), patch(
-        "gios.Gios._get_indexes", return_value=VALID_INDEXES
-    ):
-        MockConfigEntry(
-            domain=DOMAIN, unique_id=CONFIG[CONF_STATION_ID], data=CONFIG
-        ).add_to_hass(hass)
-        flow = config_flow.GiosFlowHandler()
-        flow.hass = hass
-        flow.context = {}
-
-        result = await flow.async_step_user(user_input=CONFIG)
-
-        assert result["errors"] == {CONF_STATION_ID: "station_id_exists"}
 
 
 async def test_invalid_sensor_data(hass):
@@ -85,6 +63,7 @@ async def test_invalid_sensor_data(hass):
     ):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
+        flow.context = {}
 
         result = await flow.async_step_user(user_input=CONFIG)
 
@@ -96,6 +75,7 @@ async def test_cannot_connect(hass):
     with patch("gios.Gios._async_get", side_effect=ApiError("error")):
         flow = config_flow.GiosFlowHandler()
         flow.hass = hass
+        flow.context = {}
 
         result = await flow.async_step_user(user_input=CONFIG)
 

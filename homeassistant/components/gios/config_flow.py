@@ -32,9 +32,10 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                already_configured = self._async_current_ids()
-                if user_input[CONF_STATION_ID] in already_configured:
-                    raise StationIdExists()
+                await self.async_set_unique_id(
+                    user_input[CONF_STATION_ID], raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured()
 
                 websession = async_get_clientsession(self.hass)
 
@@ -45,14 +46,9 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 if not gios.available:
                     raise InvalidSensorsData()
 
-                await self.async_set_unique_id(
-                    user_input[CONF_STATION_ID], raise_on_progress=False
-                )
                 return self.async_create_entry(
                     title=user_input[CONF_STATION_ID], data=user_input,
                 )
-            except StationIdExists:
-                errors[CONF_STATION_ID] = "station_id_exists"
             except (ApiError, ClientConnectorError, asyncio.TimeoutError):
                 errors["base"] = "cannot_connect"
             except NoStationError:
@@ -67,7 +63,3 @@ class GiosFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
 class InvalidSensorsData(exceptions.HomeAssistantError):
     """Error to indicate invalid sensors data."""
-
-
-class StationIdExists(exceptions.HomeAssistantError):
-    """Error to indicate that station with station_id is already configured."""
