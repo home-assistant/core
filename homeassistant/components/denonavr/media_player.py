@@ -34,6 +34,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 import homeassistant.helpers.config_validation as cv
+
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
