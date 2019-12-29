@@ -179,8 +179,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_deconz_bridge")
 
         self.bridge_id = normalize_bridge_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
-        await self.async_set_unique_id(self.bridge_id)
-
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -189,6 +187,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="already_configured")
                 return self._update_entry(entry, parsed_url.hostname, parsed_url.port)
 
+        await self.async_set_unique_id(self.bridge_id)
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"host": parsed_url.hostname}
 
@@ -205,7 +204,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the discovery component.
         """
         self.bridge_id = normalize_bridge_id(user_input[CONF_SERIAL])
-        await self.async_set_unique_id(self.bridge_id)
         gateway = self.hass.data.get(DOMAIN, {}).get(self.bridge_id)
 
         if gateway:
@@ -216,6 +214,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input[CONF_API_KEY],
             )
 
+        await self.async_set_unique_id(self.bridge_id)
         self._hassio_discovery = user_input
 
         return await self.async_step_hassio_confirm()
