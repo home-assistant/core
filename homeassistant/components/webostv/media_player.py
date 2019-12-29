@@ -107,7 +107,7 @@ def cmd(func):
 class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
-    def __init__(self, client, name, customize, on_script):
+    def __init__(self, client, name, customize={}, on_script=None):
         """Initialize the webos device."""
         self._client = client
         self._name = name
