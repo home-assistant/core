@@ -5,21 +5,12 @@ from unittest import mock
 from homeassistant.components.denonavr import media_player as denonavr
 
 
-class FakeDenonDevice(denonavr.DenonDevice):
-    """A fake device without the client setup required for the real one."""
-
-    def __init__(self, *args, **kwargs):
-        """Initialise parameters needed for tests with fake values."""
-        self._receiver = mock.MagicMock()
-        self._name = "fake_device"
-
-
 class TestDenonDevice(unittest.TestCase):
-    """Test the LgWebOSDevice class."""
+    """Test the DenonDevice class."""
 
     def setUp(self):
         """Configure a fake device for each test."""
-        self.device = FakeDenonDevice()
+        self.device = denonavr.DenonDevice(mock.MagicMock())
 
     def test_get_command(self):
         """Test generic command functionality."""
