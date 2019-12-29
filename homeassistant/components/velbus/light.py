@@ -29,11 +29,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     for address, channel in modules_data:
         module = cntrl.get_module(address)
-        entities.append(VelbusDimmer(module, channel))
+        entities.append(VelbusLight(module, channel))
     async_add_entities(entities)
 
 
-class VelbusDimmer(VelbusEntity, Light):
+class VelbusLight(VelbusEntity, Light):
     """Representation of a light dimmer."""
 
     @property
@@ -52,33 +52,27 @@ class VelbusDimmer(VelbusEntity, Light):
         return self._module.get_dimmer_state(self._channel)
 
     def turn_on(self, **kwargs):
-        """Instruct the Velbus dimmer to set requested brightness level."""
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = int(kwargs[ATTR_BRIGHTNESS])
-        else:
-            brightness = 0
+        """Instruct the Velbus light to turn on."""
         if ATTR_TRANSITION in kwargs:
             transitiontime = int(kwargs[ATTR_TRANSITION])
         else:
             transitiontime = 0
-
         try:
             if ATTR_BRIGHTNESS in kwargs:
                 self._module.set_dimmer_state(
                     self._channel,
-                    brightness,
+                    int(kwargs[ATTR_BRIGHTNESS]),
                     transitiontime,
-                    self.async_schedule_update_ha_state(False),
                 )
             else:
                 self._module.restore_dimmer_state(
-                    self._channel, transitiontime, self.async_schedule_update_ha_state()
+                    self._channel, transitiontime
                 )
         except VelbusException as err:
             _LOGGER.error("A Velbus error occurred: %s", err)
 
     def turn_off(self, **kwargs):
-        """Instruct the velbus dimmer to turn off."""
+        """Instruct the velbus light to turn off."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
         else:
@@ -87,7 +81,6 @@ class VelbusDimmer(VelbusEntity, Light):
             transitiontime = int(kwargs[ATTR_TRANSITION])
         else:
             transitiontime = 0
-
         try:
             self._module.set_dimmer_state(
                 self._channel,
