@@ -419,6 +419,16 @@ class ZHADevice(LogMixin):
         }
 
     @callback
+    def async_get_endpoints(self):
+        """Get zigbee endpoints for this device."""
+        return self._zigpy_device.endpoints.items()
+
+    @callback
+    def async_get_zdo(self):
+        """Get the zigbee device object for this device."""
+        return self._zigpy_device.zdo
+
+    @callback
     def async_get_cluster(self, endpoint_id, cluster_id, cluster_type=CLUSTER_TYPE_IN):
         """Get zigbee cluster from this entity."""
         clusters = self.async_get_clusters()
