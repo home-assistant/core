@@ -107,7 +107,7 @@ def cmd(func):
 class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
-    def __init__(self, client, name, customize={}, on_script=None):
+    def __init__(self, client, name, customize, on_script=None):
         """Initialize the webos device."""
         self._client = client
         self._name = name
@@ -315,8 +315,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         """Simulate play pause media player."""
         if self._playing:
             return self.media_pause()
-        else:
-            return self.media_play()
+
+        return self.media_play()
 
     @cmd
     async def async_select_source(self, source):
@@ -393,8 +393,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         current_input = self._client.get_input()
         if current_input == LIVETV_APP_ID:
             return self._client.channel_up()
-        else:
-            return self._client.fast_forward()
+
+        return self._client.fast_forward()
 
     @cmd
     def async_media_previous_track(self):
@@ -402,8 +402,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         current_input = self._client.get_input()
         if current_input == LIVETV_APP_ID:
             return self._client.channel_down()
-        else:
-            return self._client.rewind()
+
+        return self._client.rewind()
 
     @cmd
     def async_button(self, button):
