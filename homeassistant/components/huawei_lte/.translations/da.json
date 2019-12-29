@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Denne enhed er allerede ved at blive konfigureret",
+            "not_huawei_lte": "Ikke en Huawei LTE-enhed"
+        },
+        "error": {
+            "connection_timeout": "Timeout for forbindelse"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Navn p\u00e5 meddelelsestjeneste (\u00e6ndring kr\u00e6ver genstart)"
+                }
+            }
+        }
+    }
+}

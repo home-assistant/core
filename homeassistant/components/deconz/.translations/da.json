@@ -54,10 +54,26 @@
             "dim_up": "D\u00e6mp op",
             "left": "Venstre",
             "open": "\u00c5ben",
-            "right": "H\u00f8jre"
+            "right": "H\u00f8jre",
+            "side_1": "Side 1",
+            "side_2": "Side 2",
+            "side_3": "Side 3",
+            "side_4": "Side 4",
+            "side_5": "Side 5",
+            "side_6": "Side 6"
         },
         "trigger_type": {
-            "remote_gyro_activated": "Enhed rystet"
+            "remote_awakened": "Enheden v\u00e6kket",
+            "remote_double_tap": "Enheden \"{subtype}\" dobbelttappet",
+            "remote_falling": "Enheden er i frit fald",
+            "remote_gyro_activated": "Enhed rystet",
+            "remote_moved": "Enheden flyttede med \"{subtype}\" op",
+            "remote_rotate_from_side_1": "Enhed roteret fra \"side 1\" til \"{subtype}\"",
+            "remote_rotate_from_side_2": "Enhed roteret fra \"side 2\" til \"{subtype}\"",
+            "remote_rotate_from_side_3": "Enhed roteret fra \"side 3\" til \"{subtype}\"",
+            "remote_rotate_from_side_4": "Enhed roteret fra \"side 4\" til \"{subtype}\"",
+            "remote_rotate_from_side_5": "Enhed roteret fra \"side 5\" til \"{subtype}\"",
+            "remote_rotate_from_side_6": "Enhed roteret fra \"side 6\" til \"{subtype}\""
         }
     },
     "options": {
