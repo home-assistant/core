@@ -2,9 +2,8 @@
 import logging
 from typing import Any, Dict
 
-import voluptuous as vol
-
 from homepanelapi.api import HomePanelApi
+import voluptuous as vol
 
 from homeassistant.components.home_panel.const import (
     CONF_CARD,
@@ -29,7 +28,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-
 
 _LOGGER = logging.getLogger(__name__)
 

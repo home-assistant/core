@@ -1,9 +1,8 @@
 """Config flow to configure the Home Panel integration."""
 import logging
 
-import voluptuous as vol
-
 from homepanelapi.api import HomePanelApi
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.home_panel.const import DOMAIN
