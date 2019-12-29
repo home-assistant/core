@@ -38,6 +38,27 @@ PAIRING_FINISH_ABORT_ERRORS = [
     (homekit.AccessoryNotFoundError, "accessory_not_found_error")
 ]
 
+INVALID_PAIRING_CODES = [
+    "aaa-aa-aaa",
+    "aaa-11-aaa",
+    "111-aa-aaa",
+    "aaa-aa-111",
+    "1111-1-111",
+    "a111-11-111",
+    " 111-11-111",
+    "111-11-111 ",
+    "111-11-111a",
+    "1111111",
+]
+
+
+VALID_PAIRING_CODES = [
+    "111-11-111",
+    "123-45-678",
+    "11111111",
+    "98765432",
+]
+
 
 def _setup_flow_handler(hass):
     flow = config_flow.HomekitControllerFlowHandler()
@@ -55,6 +76,23 @@ async def _setup_flow_zeroconf(hass, discovery_info):
         "homekit_controller", context={"source": "zeroconf"}, data=discovery_info
     )
     return result
+
+
+@pytest.mark.parametrize("pairing_code", INVALID_PAIRING_CODES)
+def test_invalid_pairing_codes(pairing_code):
+    """Test ensure_pin_format raises for an invalid pin code."""
+    with pytest.raises(homekit.exceptions.MalformedPinError):
+        config_flow.ensure_pin_format(pairing_code)
+
+
+@pytest.mark.parametrize("pairing_code", VALID_PAIRING_CODES)
+def test_valid_pairing_codes(pairing_code):
+    """Test ensure_pin_format corrects format for a valid pin in an alternative format."""
+    valid_pin = config_flow.ensure_pin_format(pairing_code).split("-")
+    assert len(valid_pin) == 3
+    assert len(valid_pin[0]) == 3
+    assert len(valid_pin[1]) == 2
+    assert len(valid_pin[2]) == 3
 
 
 async def test_discovery_works(hass):
@@ -100,7 +138,7 @@ async def test_discovery_works(hass):
 
     # Pairing doesn't error error and pairing results
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
-    result = await flow.async_step_pair({"pairing_code": "111-22-33"})
+    result = await flow.async_step_pair({"pairing_code": "111-22-333"})
     assert result["type"] == "create_entry"
     assert result["title"] == "Koogeek-LS1-20833F"
     assert result["data"] == pairing.pairing_data
@@ -148,7 +186,7 @@ async def test_discovery_works_upper_case(hass):
     ]
 
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
-    result = await flow.async_step_pair({"pairing_code": "111-22-33"})
+    result = await flow.async_step_pair({"pairing_code": "111-22-333"})
     assert result["type"] == "create_entry"
     assert result["title"] == "Koogeek-LS1-20833F"
     assert result["data"] == pairing.pairing_data
@@ -197,7 +235,7 @@ async def test_discovery_works_missing_csharp(hass):
 
     flow.controller.pairings = {"00:00:00:00:00:00": pairing}
 
-    result = await flow.async_step_pair({"pairing_code": "111-22-33"})
+    result = await flow.async_step_pair({"pairing_code": "111-22-333"})
     assert result["type"] == "create_entry"
     assert result["title"] == "Koogeek-LS1-20833F"
     assert result["data"] == pairing.pairing_data
@@ -380,7 +418,7 @@ async def test_pair_unable_to_pair(hass):
     assert flow.controller.start_pairing.call_count == 1
 
     # Pairing doesn't error but no pairing object is generated
-    result = await flow.async_step_pair({"pairing_code": "111-22-33"})
+    result = await flow.async_step_pair({"pairing_code": "111-22-333"})
     assert result["type"] == "form"
     assert result["errors"]["pairing_code"] == "unable_to_pair"
 
@@ -487,7 +525,7 @@ async def test_pair_abort_errors_on_finish(hass, exception, expected):
 
     # User submits code - pairing fails but can be retried
     flow.finish_pairing.side_effect = exception("error")
-    result = await flow.async_step_pair({"pairing_code": "111-22-33"})
+    result = await flow.async_step_pair({"pairing_code": "111-22-333"})
     assert result["type"] == "abort"
     assert result["reason"] == expected
     assert flow.context == {
@@ -527,7 +565,7 @@ async def test_pair_form_errors_on_finish(hass, exception, expected):
 
     # User submits code - pairing fails but can be retried
     flow.finish_pairing.side_effect = exception("error")
-    result = await flow.async_step_pair({"pairing_code": "111-22-33"})
+    result = await flow.async_step_pair({"pairing_code": "111-22-333"})
     assert result["type"] == "form"
     assert result["errors"]["pairing_code"] == expected
     assert flow.context == {
@@ -640,7 +678,7 @@ async def test_user_works(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "pair"
 
-    result = await flow.async_step_pair({"pairing_code": "111-22-33"})
+    result = await flow.async_step_pair({"pairing_code": "111-22-333"})
     assert result["type"] == "create_entry"
     assert result["title"] == "Koogeek-LS1-20833F"
     assert result["data"] == pairing.pairing_data
@@ -889,7 +927,7 @@ async def test_unignore_works(hass):
     assert flow.controller.start_pairing.call_count == 1
 
     # Pairing finalized
-    result = await flow.async_step_pair({"pairing_code": "111-22-33"})
+    result = await flow.async_step_pair({"pairing_code": "111-22-333"})
     assert result["type"] == "create_entry"
     assert result["title"] == "Koogeek-LS1-20833F"
     assert result["data"] == pairing.pairing_data

@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import re
 
 import homekit
 from homekit.controller.ip_implementation import IpPairing
@@ -16,6 +17,8 @@ from .const import DOMAIN, KNOWN_DEVICES
 HOMEKIT_IGNORE = ["Home Assistant Bridge"]
 HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"
+
+PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +60,20 @@ def find_existing_host(hass, serial):
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data["AccessoryPairingID"] == serial:
             return entry
+
+
+def ensure_pin_format(pin):
+    """
+    Ensure a pin code is correctly formatted.
+
+    Ensures a pin code is in the format 111-11-111. Handles codes with and without dashes.
+
+    If incorrect code is entered, an exception is raised.
+    """
+    match = PIN_FORMAT.search(pin)
+    if not match:
+        raise homekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
+    return "{}-{}-{}".format(*match.groups())
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -277,6 +294,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         if pair_info:
             code = pair_info["pairing_code"]
             try:
+                code = ensure_pin_format(code)
+
                 await self.hass.async_add_executor_job(self.finish_pairing, code)
 
                 pairing = self.controller.pairings.get(self.hkid)
