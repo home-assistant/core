@@ -10,6 +10,7 @@
     "http"
   ],
   "codeowners": [
-    "@robbiet480"
+    "@robbiet480",
+    "@agners"
   ]
 }

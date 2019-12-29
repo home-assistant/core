@@ -11,7 +11,12 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_FILENAME,
+    CONF_NAME,
+    CONF_UNIT_SYSTEM,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -137,6 +142,8 @@ BATTERY_LEVELS = {"High": 100, "Medium": 50, "Low": 20, "Empty": 0}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
+        vol.Optional(CONF_FILENAME, default=FITBIT_CONFIG_FILE): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
         vol.Optional(
             CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES
         ): vol.All(cv.ensure_list, [vol.In(FITBIT_RESOURCES_LIST)]),
@@ -151,18 +158,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def request_app_setup(hass, config, add_entities, config_path, discovery_info=None):
     """Assist user with configuring the Fitbit dev application."""
     configurator = hass.components.configurator
+    config_file = config.get(CONF_FILENAME)
+    name = config.get(CONF_NAME)
+    configuring_name = "fitbit" if name is None else "fitbit_" + name
 
     def fitbit_configuration_callback(callback_data):
         """Handle configuration updates."""
-        config_path = hass.config.path(FITBIT_CONFIG_FILE)
+        config_path = hass.config.path(config_file)
         if os.path.isfile(config_path):
-            config_file = load_json(config_path)
-            if config_file == DEFAULT_CONFIG:
+            config_data = load_json(config_path)
+            if config_data == DEFAULT_CONFIG:
                 error_msg = (
-                    "You didn't correctly modify fitbit.conf",
+                    f"You didn't correctly modify {config_file}",
                     " please try again",
                 )
-                configurator.notify_errors(_CONFIGURING["fitbit"], error_msg)
+                configurator.notify_errors(_CONFIGURING[configuring_name], error_msg)
             else:
                 setup_platform(hass, config, add_entities, discovery_info)
         else:
@@ -181,10 +191,10 @@ def request_app_setup(hass, config, add_entities, config_path, discovery_info=No
         start_url, config_path
     )
 
-    submit = "I have saved my Client ID and Client Secret into fitbit.conf."
+    submit = "I have saved my Client ID and Client Secret into {config_file}."
 
-    _CONFIGURING["fitbit"] = configurator.request_config(
-        "Fitbit",
+    _CONFIGURING[configuring_name] = configurator.request_config(
+        configuring_name,
         fitbit_configuration_callback,
         description=description,
         submit_caption=submit,
@@ -192,12 +202,12 @@ def request_app_setup(hass, config, add_entities, config_path, discovery_info=No
     )
 
 
-def request_oauth_completion(hass):
+def request_oauth_completion(hass, configuring_name):
     """Request user complete Fitbit OAuth2 flow."""
     configurator = hass.components.configurator
-    if "fitbit" in _CONFIGURING:
+    if configuring_name in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING["fitbit"], "Failed to register, please try again."
+            _CONFIGURING[configuring_name], "Failed to register, please try again."
         )
 
         return
@@ -209,8 +219,8 @@ def request_oauth_completion(hass):
 
     description = f"Please authorize Fitbit by visiting {start_url}"
 
-    _CONFIGURING["fitbit"] = configurator.request_config(
-        "Fitbit",
+    _CONFIGURING[configuring_name] = configurator.request_config(
+        configuring_name,
         fitbit_configuration_callback,
         description=description,
         submit_caption="I have authorized Fitbit.",
@@ -219,7 +229,10 @@ def request_oauth_completion(hass):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fitbit sensor."""
-    config_path = hass.config.path(FITBIT_CONFIG_FILE)
+    config_path = hass.config.path(config.get(CONF_FILENAME))
+    name = config.get(CONF_NAME)
+    configuring_name = "fitbit" if name is None else "fitbit_" + name
+
     if os.path.isfile(config_path):
         config_file = load_json(config_path)
         if config_file == DEFAULT_CONFIG:
@@ -232,8 +245,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         request_app_setup(hass, config, add_entities, config_path, discovery_info=None)
         return False
 
-    if "fitbit" in _CONFIGURING:
-        hass.components.configurator.request_done(_CONFIGURING.pop("fitbit"))
+    if configuring_name in _CONFIGURING:
+        hass.components.configurator.request_done(_CONFIGURING.pop(configuring_name))
 
     access_token = config_file.get(ATTR_ACCESS_TOKEN)
     refresh_token = config_file.get(ATTR_REFRESH_TOKEN)
@@ -275,6 +288,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                             authd_client,
                             config_path,
                             resource,
+                            name,
                             hass.config.units.is_metric,
                             clock_format,
                             dev_extra,
@@ -286,6 +300,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         authd_client,
                         config_path,
                         resource,
+                        name,
                         hass.config.units.is_metric,
                         clock_format,
                     )
@@ -317,7 +332,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hass.http.register_redirect(FITBIT_AUTH_START, fitbit_auth_start_url)
         hass.http.register_view(FitbitAuthCallbackView(config, add_entities, oauth))
 
-        request_oauth_completion(hass)
+        request_oauth_completion(hass, configuring_name)
 
 
 class FitbitAuthCallbackView(HomeAssistantView):
@@ -391,7 +406,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
                 ATTR_CLIENT_SECRET: self.oauth.client_secret,
                 ATTR_LAST_SAVED_AT: int(time.time()),
             }
-        save_json(hass.config.path(FITBIT_CONFIG_FILE), config_contents)
+        save_json(hass.config.path(self.config.get(CONF_FILENAME)), config_contents)
 
         hass.async_add_job(setup_platform, hass, self.config, self.add_entities)
 
@@ -402,7 +417,14 @@ class FitbitSensor(Entity):
     """Implementation of a Fitbit sensor."""
 
     def __init__(
-        self, client, config_path, resource_type, is_metric, clock_format, extra=None
+        self,
+        client,
+        config_path,
+        resource_type,
+        prefix,
+        is_metric,
+        clock_format,
+        extra=None,
     ):
         """Initialize the Fitbit sensor."""
         self.client = client
@@ -414,6 +436,9 @@ class FitbitSensor(Entity):
         self._name = FITBIT_RESOURCES_LIST[self.resource_type][0]
         if self.extra:
             self._name = "{0} Battery".format(self.extra.get("deviceVersion"))
+        elif prefix:
+            self._name = "{0} {1}".format(prefix, self._name)
+
         unit_type = FITBIT_RESOURCES_LIST[self.resource_type][1]
         if unit_type == "":
             split_resource = self.resource_type.split("/")

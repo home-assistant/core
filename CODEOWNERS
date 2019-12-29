@@ -102,7 +102,7 @@ homeassistant/components/evohome/* @zxdavb
 homeassistant/components/fastdotcom/* @rohankapoorcom
 homeassistant/components/file/* @fabaff
 homeassistant/components/filter/* @dgomes
-homeassistant/components/fitbit/* @robbiet480
+homeassistant/components/fitbit/* @robbiet480 @agners
 homeassistant/components/fixer/* @fabaff
 homeassistant/components/flock/* @fabaff
 homeassistant/components/flume/* @ChrisMandich
