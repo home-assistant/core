@@ -27,6 +27,7 @@ PAIRING_START_ABORT_ERRORS = [
 ]
 
 PAIRING_FINISH_FORM_ERRORS = [
+    (homekit.exceptions.MalformedPinError, "authentication_error"),
     (homekit.MaxPeersError, "max_peers_error"),
     (homekit.AuthenticationError, "authentication_error"),
     (homekit.UnknownError, "unknown_error"),

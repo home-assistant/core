@@ -284,6 +284,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                     return await self._entry_from_accessory(pairing)
 
                 errors["pairing_code"] = "unable_to_pair"
+            except homekit.exceptions.MalformedPinError:
+                # Library claimed pin was invalid before even making an API call
+                errors["pairing_code"] = "authentication_error"
             except homekit.AuthenticationError:
                 # PairSetup M4 - SRP proof failed
                 # PairSetup M6 - Ed25519 signature verification failed
