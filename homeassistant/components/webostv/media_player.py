@@ -1,11 +1,11 @@
 """Support for interface with an LG webOS Smart TV."""
-from functools import wraps
 import asyncio
 from datetime import timedelta
+from functools import wraps
 import logging
-from websockets.exceptions import ConnectionClosed
 
-from aiopylgtv import PyLGTVPairException, PyLGTVCmdException
+from aiopylgtv import PyLGTVCmdException, PyLGTVPairException
+from websockets.exceptions import ConnectionClosed
 
 from homeassistant import util
 from homeassistant.components.media_player import MediaPlayerDevice
@@ -33,7 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.script import Script
 
-from . import DOMAIN, CONF_ON_ACTION, CONF_SOURCES
+from . import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,14 +61,18 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the LG WebOS TV platform."""
 
+    if discovery_info is None:
+        return
+
     host = discovery_info.get(CONF_HOST)
     name = discovery_info.get(CONF_NAME)
     customize = discovery_info.get(CONF_CUSTOMIZE)
     turn_on_action = discovery_info.get(CONF_ON_ACTION)
 
     client = hass.data[DOMAIN][host]["client"]
+    on_script = Script(hass, turn_on_action) if turn_on_action else None
 
-    device = LgWebOSMediaPlayerDevice(hass, client, name, customize, turn_on_action)
+    device = LgWebOSMediaPlayerEntity(client, name, customize, on_script)
 
     hass.data[DOMAIN][host]["media_player"] = device
 
@@ -100,24 +104,16 @@ def cmd(func):
     return wrapper
 
 
-class LgWebOSMediaPlayerDevice(MediaPlayerDevice):
+class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
-    def __init__(self, hass, client, name, customize, on_action):
+    def __init__(self, client, name, customize, on_script):
         """Initialize the webos device."""
-        # self._client = WebOsClient(
-        # host,
-        # config,
-        # timeout_connect=timeout,
-        # standby_connection=standby_connection,
-        # ping_interval=10,
-        # )
-        self.hass = hass
         self._client = client
-        self._on_script = Script(hass, on_action) if on_action else None
-        self._customize = customize
-
         self._name = name
+        self._customize = customize
+        self._on_script = on_script
+
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -132,17 +128,11 @@ class LgWebOSMediaPlayerDevice(MediaPlayerDevice):
         self._channel = None
         self._last_icon = None
 
-    @property
-    def should_poll(self):
-        """Poll for auto connect."""
-        return True
-
     async def async_added_to_hass(self):
         """Connect and subscribe to state updates."""
         await self._client.register_state_update_callback(
             self.async_handle_state_update
         )
-        # await self.async_update()
 
         # force state update if needed
         if self._state is None:

@@ -1,24 +1,20 @@
 """Support for WebOS TV."""
 import asyncio
 import logging
+
+from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
+import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
-from aiopylgtv import WebOsClient
-from aiopylgtv import PyLGTVPairException, PyLGTVCmdException
-
-import voluptuous as vol
-
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
     CONF_FILENAME,
     CONF_HOST,
-    CONF_NAME,
-    CONF_TIMEOUT,
     CONF_ICON,
+    CONF_NAME,
     ENTITY_MATCH_ALL,
-    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -54,7 +50,6 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(CONF_HOST): cv.string,
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-                        vol.Optional(CONF_TIMEOUT, default=2): cv.positive_int,
                         vol.Optional(
                             CONF_STANDBY_CONNECTION, default=False
                         ): cv.boolean,
@@ -67,7 +62,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-CALL_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
+CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
 
 BUTTON_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_BUTTON): cv.string})
 
@@ -121,13 +116,10 @@ async def async_setup_tv(hass, config, conf):
     """Set up a LG WebOS TV based on host parameter."""
 
     host = conf.get(CONF_HOST)
-    timeout = conf.get(CONF_TIMEOUT)
     standby_connection = conf.get(CONF_STANDBY_CONNECTION)
-    configfile = hass.config.path(conf.get(CONF_FILENAME))
+    config_file = hass.config.path(conf.get(CONF_FILENAME))
 
-    client = WebOsClient(
-        host, configfile, timeout, standby_connection=standby_connection
-    )
+    client = WebOsClient(host, config_file, standby_connection=standby_connection)
 
     hass.data[DOMAIN][host] = {"client": client}
 

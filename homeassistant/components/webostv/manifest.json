@@ -3,9 +3,7 @@
   "name": "Webostv",
   "documentation": "https://www.home-assistant.io/integrations/webostv",
   "requirements": [
-    "aiopylgtv==0.2.0",
-    "websockets==8.0.2",
-    "numpy==1.17.4"
+    "aiopylgtv==0.2.4"
   ],
   "dependencies": ["configurator"],
   "codeowners": []

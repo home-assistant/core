@@ -188,7 +188,7 @@ aionotion==1.1.0
 aiopvapi==1.6.14
 
 # homeassistant.components.webostv
-aiopylgtv==0.2.0
+aiopylgtv==0.2.4
 
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
@@ -902,7 +902,6 @@ nuheat==0.3.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-# homeassistant.components.webostv
 numpy==1.17.4
 
 # homeassistant.components.oasa_telematics
@@ -2016,9 +2015,6 @@ webexteamssdk==1.1.1
 
 # homeassistant.components.gpmdp
 websocket-client==0.54.0
-
-# homeassistant.components.webostv
-websockets==8.0.2
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.4.0

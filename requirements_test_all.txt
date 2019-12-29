@@ -69,7 +69,7 @@ aiohue==1.9.2
 aionotion==1.1.0
 
 # homeassistant.components.webostv
-aiopylgtv==0.2.0
+aiopylgtv==0.2.4
 
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
@@ -305,7 +305,6 @@ nuheat==0.3.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-# homeassistant.components.webostv
 numpy==1.17.4
 
 # homeassistant.components.google
@@ -626,9 +625,6 @@ wakeonlan==1.1.6
 
 # homeassistant.components.folder_watcher
 watchdog==0.8.3
-
-# homeassistant.components.webostv
-websockets==8.0.2
 
 # homeassistant.components.withings
 withings-api==2.1.3

@@ -1,8 +1,9 @@
 """Support for LG WebOS TV notification service."""
-import logging
 import asyncio
+import logging
+
+from aiopylgtv import PyLGTVCmdException, PyLGTVPairException
 from websockets.exceptions import ConnectionClosed
-from aiopylgtv import PyLGTVPairException, PyLGTVCmdException
 
 from homeassistant.components.notify import ATTR_DATA, BaseNotificationService
 from homeassistant.const import CONF_HOST, CONF_ICON
@@ -20,7 +21,7 @@ async def async_get_service(hass, config, discovery_info=None):
 
     client = hass.data[DOMAIN][host]["client"]
 
-    svc = LgWebOSNotificationService(hass, client, icon_path)
+    svc = LgWebOSNotificationService(client, icon_path)
 
     return svc
 
@@ -28,9 +29,8 @@ async def async_get_service(hass, config, discovery_info=None):
 class LgWebOSNotificationService(BaseNotificationService):
     """Implement the notification service for LG WebOS TV."""
 
-    def __init__(self, hass, client, icon_path):
+    def __init__(self, client, icon_path):
         """Initialize the service."""
-        self.hass = hass
         self._client = client
         self._icon_path = icon_path
 
