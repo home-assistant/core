@@ -708,7 +708,7 @@ ibmiotf==0.3.4
 iglo==1.2.7
 
 # homeassistant.components.ihc
-ihcsdk==2.3.0
+ihcsdk==2.4.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.4.0
