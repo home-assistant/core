@@ -6,6 +6,7 @@
             "already_in_progress": "Plex konfigureres",
             "discovery_no_file": "Der blev ikke fundet nogen legacy konfigurationsfil",
             "invalid_import": "Importeret konfiguration er ugyldig",
+            "non-interactive": "Ikke-interaktiv import",
             "token_request_timeout": "Timeout ved hentning af token",
             "unknown": "Mislykkedes af ukendt \u00e5rsag"
         },

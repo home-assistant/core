@@ -2,7 +2,7 @@
     "mfa_setup": {
         "notify": {
             "abort": {
-                "no_available_service": "Ingen underretningstjenester til r\u00e5dighed."
+                "no_available_service": "Ingen meddelelsestjenester tilg\u00e6ngelige."
             },
             "error": {
                 "invalid_code": "Ugyldig kode, pr\u00f8v venligst igen."

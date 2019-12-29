@@ -5,7 +5,7 @@
             "one_instance_allowed": "Det er kun n\u00f8dvendigt med en ops\u00e6tning."
         },
         "create_entry": {
-            "default": "For at sende begivenheder til Home Assistant skal du konfigurere webhook funktionen i Traccar.\n\n Brug f\u00f8lgende URL: `{webhook_url}`\n \n Se [dokumentationen]({docs_url}) for yderligere oplysninger."
+            "default": "For at sende h\u00e6ndelser til Home Assistant skal du konfigurere webhook-funktionen i Traccar.\n\nBrug f\u00f8lgende webadresse: `{webhook_url}`\n \nSe [dokumentationen]({docs_url}) for yderligere oplysninger."
         },
         "step": {
             "user": {
