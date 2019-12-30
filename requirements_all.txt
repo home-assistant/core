@@ -1889,6 +1889,9 @@ statsd==3.2.1
 # homeassistant.components.steam_online
 steamodd==4.21
 
+# homeassistant.components.stookalert
+stookalert==0.1.1
+
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
 
