@@ -172,10 +172,12 @@ def establish_device_mappings():
 
 
 def set_or_callable(value):
-    """Convert single str to a set. Pass through callables and sets."""
+    """Convert single str or None to a set. Pass through callables and sets."""
+    if value is None:
+        return frozenset()
     if callable(value):
         return value
-    if type(value) in (frozenset, set, list):
+    if isinstance(value, (frozenset, set, list)):
         return frozenset(value)
     return frozenset([str(value)])
 
@@ -207,7 +209,7 @@ class ZHAEntityRegistry:
         self._loose_registry = collections.defaultdict(dict)
 
     def get_entity(
-        self, component: str, zha_device, chnls: list, default: CALLABLE_T = None
+        self, component: str, zha_device, chnls: dict, default: CALLABLE_T = None
     ) -> CALLABLE_T:
         """Match a ZHA Channels to a ZHA Entity class."""
         for match in self._strict_registry[component]:
@@ -219,10 +221,10 @@ class ZHAEntityRegistry:
     def strict_match(
         self,
         component: str,
-        channel_names: Union[Callable, Set[str], str] = set(),
-        generic_ids: Union[Callable, Set[str], str] = set(),
-        manufacturers: Union[Callable, Set[str], str] = set(),
-        models: Union[Callable, Set[str], str] = set(),
+        channel_names: Union[Callable, Set[str], str] = None,
+        generic_ids: Union[Callable, Set[str], str] = None,
+        manufacturers: Union[Callable, Set[str], str] = None,
+        models: Union[Callable, Set[str], str] = None,
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a strict match rule."""
 
@@ -241,10 +243,10 @@ class ZHAEntityRegistry:
     def loose_match(
         self,
         component: str,
-        channel_names: Union[Callable, Set[str], str] = set(),
-        generic_ids: Union[Callable, Set[str], str] = set(),
-        manufacturers: Union[Callable, Set[str], str] = set(),
-        models: Union[Callable, Set[str], str] = set(),
+        channel_names: Union[Callable, Set[str], str] = None,
+        generic_ids: Union[Callable, Set[str], str] = None,
+        manufacturers: Union[Callable, Set[str], str] = None,
+        models: Union[Callable, Set[str], str] = None,
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a loose match rule."""
 
@@ -269,7 +271,7 @@ class ZHAEntityRegistry:
         return any(self._matched(zha_device, chnls, rule))
 
     @staticmethod
-    def _matched(zha_device, chnls: list, rule: MatchRule) -> bool:
+    def _matched(zha_device, chnls: dict, rule: MatchRule) -> list:
         """Return a list of field matches."""
         if not any(attr.asdict(rule).values()):
             return [False]
