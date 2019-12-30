@@ -350,7 +350,9 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
         power_to = []
 
         if "connections" not in power_flow:
-            _LOGGER.error("Missing connections in power flow data")
+            _LOGGER.debug(
+                "Missing connections in power flow data; assuming site does not have any"
+            )
             return
 
         for connection in power_flow["connections"]:
