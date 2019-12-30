@@ -412,6 +412,10 @@ async def async_api_lock(hass, config, directive, context):
 @HANDLERS.register(("Alexa.LockController", "Unlock"))
 async def async_api_unlock(hass, config, directive, context):
     """Process an unlock request."""
+    if config.locale not in ("de-DE", "en-US", "ja-JP"):
+        msg = f"The unlock directive is not supported for the following locales: {config.locale}"
+        raise AlexaInvalidDirectiveError(msg)
+
     entity = directive.entity
     await hass.services.async_call(
         entity.domain,

@@ -56,6 +56,8 @@ class AlexaCapability:
     https://developer.amazon.com/docs/device-apis/message-guide.html
     """
 
+    SUPPORTED_LOCALES = "en-US"
+
     def __init__(self, entity, instance=None):
         """Initialize an Alexa capability."""
         self.entity = entity
@@ -239,6 +241,21 @@ class Alexa(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-interface.html
     """
 
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "fr-CA",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
+
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa"
@@ -249,6 +266,19 @@ class AlexaEndpointHealth(AlexaCapability):
 
     https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#report-state-when-alexa-requests-it
     """
+
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
 
     def __init__(self, hass, entity):
         """Initialize the entity."""
@@ -287,6 +317,19 @@ class AlexaPowerController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-powercontroller.html
     """
 
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
+
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.PowerController"
@@ -323,6 +366,17 @@ class AlexaLockController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-lockcontroller.html
     """
 
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-US",
+        "es-ES",
+        "it-IT",
+        "ja-JP",
+    )
+
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.LockController"
@@ -357,6 +411,17 @@ class AlexaSceneController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-scenecontroller.html
     """
 
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+    )
+
     def __init__(self, entity, supports_deactivation):
         """Initialize the entity."""
         super().__init__(entity)
@@ -372,6 +437,19 @@ class AlexaBrightnessController(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-brightnesscontroller.html
     """
+
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -403,6 +481,19 @@ class AlexaColorController(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-colorcontroller.html
     """
+
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -436,6 +527,19 @@ class AlexaColorTemperatureController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-colortemperaturecontroller.html
     """
 
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
+
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.ColorTemperatureController"
@@ -464,6 +568,19 @@ class AlexaPercentageController(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-percentagecontroller.html
     """
+
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -499,6 +616,8 @@ class AlexaSpeaker(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-speaker.html
     """
 
+    SUPPORTED_LOCALES = ("de-DE", "en-AU", "en-CA", "en-GB", "en-IN", "en-US")
+
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.Speaker"
@@ -510,6 +629,8 @@ class AlexaStepSpeaker(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-stepspeaker.html
     """
 
+    SUPPORTED_LOCALES = ("de-DE", "en-AU", "en-CA", "en-GB", "en-IN", "en-US")
+
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.StepSpeaker"
@@ -520,6 +641,8 @@ class AlexaPlaybackController(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-playbackcontroller.html
     """
+
+    SUPPORTED_LOCALES = ("de-DE", "en-AU", "en-CA", "en-GB", "en-IN", "en-US", "fr-FR")
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -554,6 +677,8 @@ class AlexaInputController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-inputcontroller.html
     """
 
+    SUPPORTED_LOCALES = ("de-DE", "en-AU", "en-CA", "en-GB", "en-IN", "en-US")
+
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.InputController"
@@ -581,6 +706,19 @@ class AlexaTemperatureSensor(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-temperaturesensor.html
     """
+
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
 
     def __init__(self, hass, entity):
         """Initialize the entity."""
@@ -637,6 +775,8 @@ class AlexaContactSensor(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-contactsensor.html
     """
 
+    SUPPORTED_LOCALES = ("en-CA", "en-US")
+
     def __init__(self, hass, entity):
         """Initialize the entity."""
         super().__init__(entity)
@@ -674,6 +814,8 @@ class AlexaMotionSensor(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-motionsensor.html
     """
 
+    SUPPORTED_LOCALES = ("en-CA", "en-US")
+
     def __init__(self, hass, entity):
         """Initialize the entity."""
         super().__init__(entity)
@@ -710,6 +852,19 @@ class AlexaThermostatController(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-thermostatcontroller.html
     """
+
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
 
     def __init__(self, hass, entity):
         """Initialize the entity."""
@@ -819,6 +974,19 @@ class AlexaPowerLevelController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-powerlevelcontroller.html
     """
 
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
+
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.PowerLevelController"
@@ -853,6 +1021,8 @@ class AlexaSecurityPanelController(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-securitypanelcontroller.html
     """
+
+    SUPPORTED_LOCALES = ("en-AU", "en-CA", "en-IN", "en-US")
 
     def __init__(self, hass, entity):
         """Initialize the entity."""
@@ -905,6 +1075,21 @@ class AlexaModeController(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-modecontroller.html
     """
+
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "fr-CA",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
 
     def __init__(self, entity, instance, non_controllable=False):
         """Initialize the entity."""
@@ -1030,6 +1215,21 @@ class AlexaRangeController(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-rangecontroller.html
     """
+
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "fr-CA",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
 
     def __init__(self, entity, instance, non_controllable=False):
         """Initialize the entity."""
@@ -1198,6 +1398,21 @@ class AlexaToggleController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-togglecontroller.html
     """
 
+    SUPPORTED_LOCALES = (
+        "de-DE",
+        "en-AU",
+        "en-CA",
+        "en-GB",
+        "en-IN",
+        "en-US",
+        "es-ES",
+        "es-MX",
+        "fr-CA",
+        "fr-FR",
+        "it-IT",
+        "ja-JP",
+    )
+
     def __init__(self, entity, instance, non_controllable=False):
         """Initialize the entity."""
         super().__init__(entity, instance)
@@ -1252,6 +1467,8 @@ class AlexaChannelController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-channelcontroller.html
     """
 
+    SUPPORTED_LOCALES = ("de-DE", "en-AU", "en-CA", "en-GB", "en-IN", "en-US")
+
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.ChannelController"
@@ -1262,6 +1479,8 @@ class AlexaDoorbellEventSource(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-doorbelleventsource.html
     """
+
+    SUPPORTED_LOCALES = "en-US"
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -1277,6 +1496,8 @@ class AlexaPlaybackStateReporter(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-playbackstatereporter.html
     """
+
+    SUPPORTED_LOCALES = ("de-DE", "en-GB", "en-US", "fr-FR")
 
     def name(self):
         """Return the Alexa API name of this interface."""
@@ -1314,6 +1535,8 @@ class AlexaSeekController(AlexaCapability):
     https://developer.amazon.com/docs/device-apis/alexa-seekcontroller.html
     """
 
+    SUPPORTED_LOCALES = ("de-DE", "en-GB", "en-US")
+
     def name(self):
         """Return the Alexa API name of this interface."""
         return "Alexa.SeekController"
@@ -1324,6 +1547,8 @@ class AlexaEventDetectionSensor(AlexaCapability):
 
     https://developer.amazon.com/docs/device-apis/alexa-eventdetectionsensor.html
     """
+
+    SUPPORTED_LOCALES = "en-US"
 
     def __init__(self, hass, entity):
         """Initialize the entity."""
@@ -1381,6 +1606,8 @@ class AlexaEqualizerController(AlexaCapability):
 
     https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-equalizercontroller.html
     """
+
+    SUPPORTED_LOCALES = "en-US"
 
     def name(self):
         """Return the Alexa API name of this interface."""

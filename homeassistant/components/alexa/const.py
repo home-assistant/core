@@ -19,6 +19,7 @@ CONF_ENTITY_CONFIG = "entity_config"
 CONF_ENDPOINT = "endpoint"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
+CONF_LOCALE = "locale"
 
 ATTR_UID = "uid"
 ATTR_UPDATE_DATE = "updateDate"
