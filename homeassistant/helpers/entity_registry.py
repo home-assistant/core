@@ -45,6 +45,8 @@ DISABLED_HASS = "hass"
 DISABLED_USER = "user"
 DISABLED_INTEGRATION = "integration"
 
+ATTR_RESTORED = "restored"
+
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"
 
@@ -345,10 +347,7 @@ class EntityRegistry:
 
     async def async_load(self) -> None:
         """Load the entity registry."""
-        if not self.hass.is_running:
-            self.hass.bus.async_listen(
-                EVENT_HOMEASSISTANT_START, self._write_unavailable_states
-            )
+        async_setup_entity_restore(self.hass, self)
 
         data = await self.hass.helpers.storage.async_migrator(
             self.hass.config.path(PATH_REGISTRY),
@@ -374,29 +373,6 @@ class EntityRegistry:
                 )
 
         self.entities = entities
-
-    @callback
-    def _write_unavailable_states(self, _):
-        """Make sure state machine contains entry for each registered entity."""
-        states = self.hass.states
-        existing = set(states.async_entity_ids())
-
-        for entry in self.entities.values():
-            if entry.entity_id in existing or entry.disabled:
-                continue
-
-            attrs = {"restored": True}
-
-            if entry.capabilities:
-                attrs.update(entry.capabilities)
-
-            if entry.supported_features:
-                attrs[ATTR_SUPPORTED_FEATURES] = entry.supported_features
-
-            if entry.device_class:
-                attrs[ATTR_DEVICE_CLASS] = entry.device_class
-
-            states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)
 
     @callback
     def async_schedule_save(self) -> None:
@@ -477,3 +453,53 @@ async def _async_migrate(entities: Dict[str, Any]) -> Dict[str, List[Dict[str, A
             {"entity_id": entity_id, **info} for entity_id, info in entities.items()
         ]
     }
+
+
+@callback
+def async_setup_entity_restore(
+    hass: HomeAssistantType, registry: EntityRegistry
+) -> None:
+    """Set up the entity restore mechanism."""
+
+    @callback
+    def cleanup_restored_states(event: Event) -> None:
+        """Clean up restored states."""
+        if event.data["action"] != "remove":
+            return
+
+        state = hass.states.get(event.data["entity_id"])
+
+        if state is None or not state.attributes.get(ATTR_RESTORED):
+            return
+
+        hass.states.async_remove(event.data["entity_id"])
+
+    hass.bus.async_listen(EVENT_ENTITY_REGISTRY_UPDATED, cleanup_restored_states)
+
+    if hass.is_running:
+        return
+
+    @callback
+    def _write_unavailable_states(_: Event) -> None:
+        """Make sure state machine contains entry for each registered entity."""
+        states = hass.states
+        existing = set(states.async_entity_ids())
+
+        for entry in registry.entities.values():
+            if entry.entity_id in existing or entry.disabled:
+                continue
+
+            attrs: Dict[str, Any] = {ATTR_RESTORED: True}
+
+            if entry.capabilities:
+                attrs.update(entry.capabilities)
+
+            if entry.supported_features:
+                attrs[ATTR_SUPPORTED_FEATURES] = entry.supported_features
+
+            if entry.device_class:
+                attrs[ATTR_DEVICE_CLASS] = entry.device_class
+
+            states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)
+
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)

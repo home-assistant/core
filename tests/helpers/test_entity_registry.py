@@ -525,3 +525,13 @@ async def test_restore_states(hass):
         "device_class": "mock-device-class",
         "restored": True,
     }
+
+    registry.async_remove("light.disabled")
+    registry.async_remove("light.simple")
+    registry.async_remove("light.all_info_set")
+
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.simple") is None
+    assert hass.states.get("light.disabled") is None
+    assert hass.states.get("light.all_info_set") is None
