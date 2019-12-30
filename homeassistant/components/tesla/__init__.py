@@ -186,7 +186,7 @@ class TeslaDevice(Entity):
         self._name = self.tesla_device.name
         self.tesla_id = slugify(self.tesla_device.uniq_name)
         self._attributes = {}
-        self._icon = ICONS.get(self.tesla_device.type, None)
+        self._icon = ICONS.get(self.tesla_device.type)
 
     @property
     def name(self):
