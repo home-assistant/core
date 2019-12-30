@@ -77,5 +77,6 @@ class VelbusLight(VelbusEntity, Light):
             self._module.set_dimmer_state(
                 self._channel, 0, transitiontime,
             )
+            self._module.set_dimmer_state(self._channel, 0, transitiontime)
         except VelbusException as err:
             _LOGGER.error("A Velbus error occurred: %s", err)
