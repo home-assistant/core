@@ -60,14 +60,10 @@ class VelbusLight(VelbusEntity, Light):
         try:
             if ATTR_BRIGHTNESS in kwargs:
                 self._module.set_dimmer_state(
-                    self._channel,
-                    int(kwargs[ATTR_BRIGHTNESS]),
-                    transitiontime,
+                    self._channel, int(kwargs[ATTR_BRIGHTNESS]), transitiontime,
                 )
             else:
-                self._module.restore_dimmer_state(
-                    self._channel, transitiontime
-                )
+                self._module.restore_dimmer_state(self._channel, transitiontime)
         except VelbusException as err:
             _LOGGER.error("A Velbus error occurred: %s", err)
 
@@ -83,10 +79,7 @@ class VelbusLight(VelbusEntity, Light):
             transitiontime = 0
         try:
             self._module.set_dimmer_state(
-                self._channel,
-                brightness,
-                transitiontime,
-                self.async_schedule_update_ha_state(False),
+                self._channel, brightness, transitiontime,
             )
         except VelbusException as err:
             _LOGGER.error("A Velbus error occurred: %s", err)
