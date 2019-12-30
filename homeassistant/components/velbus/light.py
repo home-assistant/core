@@ -54,13 +54,13 @@ class VelbusLight(VelbusEntity, Light):
     def turn_on(self, **kwargs):
         """Instruct the Velbus light to turn on."""
         if ATTR_TRANSITION in kwargs:
-            transitiontime = int(kwargs[ATTR_TRANSITION])
+            transitiontime = kwargs[ATTR_TRANSITION]
         else:
             transitiontime = 0
         try:
             if ATTR_BRIGHTNESS in kwargs:
                 self._module.set_dimmer_state(
-                    self._channel, int(kwargs[ATTR_BRIGHTNESS]), transitiontime,
+                    self._channel, kwargs[ATTR_BRIGHTNESS], transitiontime,
                 )
             else:
                 self._module.restore_dimmer_state(self._channel, transitiontime)
@@ -70,13 +70,10 @@ class VelbusLight(VelbusEntity, Light):
     def turn_off(self, **kwargs):
         """Instruct the velbus light to turn off."""
         if ATTR_TRANSITION in kwargs:
-            transitiontime = int(kwargs[ATTR_TRANSITION])
+            transitiontime = kwargs[ATTR_TRANSITION]
         else:
             transitiontime = 0
         try:
-            self._module.set_dimmer_state(
-                self._channel, 0, transitiontime,
-            )
             self._module.set_dimmer_state(self._channel, 0, transitiontime)
         except VelbusException as err:
             _LOGGER.error("A Velbus error occurred: %s", err)
