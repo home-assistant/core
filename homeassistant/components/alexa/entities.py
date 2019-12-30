@@ -63,7 +63,7 @@ from .capabilities import (
     AlexaThermostatController,
     AlexaToggleController,
 )
-from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES, CONF_LOCALE
+from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
 
 ENTITY_ADAPTERS = Registry()
 
