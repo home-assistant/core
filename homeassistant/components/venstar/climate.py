@@ -87,7 +87,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         proto = "http"
 
     client = VenstarColorTouch(
-        addr=host, timeout=timeout, user=username, password=password, pin=pin, proto=proto
+        addr=host,
+        timeout=timeout,
+        user=username,
+        password=password,
+        pin=pin,
+        proto=proto,
     )
 
     add_entities([VenstarThermostat(client, humidifier)], True)
