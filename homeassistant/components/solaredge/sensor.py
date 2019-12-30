@@ -41,7 +41,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             return
         _LOGGER.debug("Credentials correct and site is active")
     except KeyError:
-        _LOGGER.error("Missing details data in solaredge response")
+        _LOGGER.error("Missing details data in SolarEdge response")
         return
     except (ConnectTimeout, HTTPError):
         _LOGGER.error("Could not retrieve details from SolarEdge API")
@@ -351,7 +351,7 @@ class SolarEdgePowerFlowDataService(SolarEdgeDataService):
 
         if "connections" not in power_flow:
             _LOGGER.debug(
-                "Missing connections in power flow data; assuming site does not have any"
+                "Missing connections in power flow data. Assuming site does not have any"
             )
             return
 
