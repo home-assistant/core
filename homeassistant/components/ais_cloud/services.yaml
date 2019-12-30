@@ -73,3 +73,27 @@ select_rss_help_item:
     rss_help_topic:
       description: Strona pomocy.
       example: '2. Co nowego'
+
+get_backup_info:
+  description: Pobiera informacje o stanie kopii zapasowej ustawień w portalu integratora i zapisuje je do sensora aisbackupinfo
+
+set_backup_step:
+  description: Ustawia status kopi zapasowej
+  fields:
+    step:
+      description: Numer kroku w procesie backup
+      example: '1'
+
+do_backup:
+  description: Wykonuje kopie ustawień, szyfruje je podanym hasłem i przesyła do portalu integratora
+  fields:
+    password:
+      description: Hasło do zabezpieczenia kopii ustawień
+      example: 'sekret123'
+
+restore_backup:
+  description: Pobiera kopie ustawień z portalu integratora i rozpakowuje je na bramce używając podanego hasła
+  fields:
+    password:
+      description: Hasło do rozpakowania kopii ustawień
+      example: 'sekret123'
