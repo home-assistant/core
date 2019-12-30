@@ -65,18 +65,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     host = discovery_info.get(CONF_HOST)
-    name = discovery_info.get(CONF_NAME)
-    customize = discovery_info.get(CONF_CUSTOMIZE)
+    name = discovery_info[CONF_NAME]
+    customize = discovery_info[CONF_CUSTOMIZE]
     turn_on_action = discovery_info.get(CONF_ON_ACTION)
 
     client = hass.data[DOMAIN][host]["client"]
     on_script = Script(hass, turn_on_action) if turn_on_action else None
 
-    device = LgWebOSMediaPlayerEntity(client, name, customize, on_script)
+    entity = LgWebOSMediaPlayerEntity(client, name, customize, on_script)
 
-    hass.data[DOMAIN][host]["media_player"] = device
+    hass.data[DOMAIN][host]["media_player"] = entity
 
-    async_add_entities([device], update_before_add=False)
+    async_add_entities([entity], update_before_add=False)
 
 
 def cmd(func):
@@ -94,11 +94,15 @@ def cmd(func):
         ) as exc:
             # If TV is off, we expect calls to fail.
             if obj.state == STATE_OFF:
-                log_function = _LOGGER.info
+                level = logging.INFO
             else:
-                log_function = _LOGGER.error
-            log_function(
-                "Error calling %s on entity %s: %r", func.__name__, obj.entity_id, exc
+                level = logging.ERROR
+            _LOGGER.log(
+                level,
+                "Error calling %s on entity %s: %r",
+                func.__name__,
+                obj.entity_id,
+                exc,
             )
 
     return wrapper
@@ -163,7 +167,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     def update_sources(self):
         """Update list of sources from current source, apps, inputs and configured list."""
         self._source_list = {}
-        conf_sources = self._customize.get(CONF_SOURCES, [])
+        conf_sources = self._customize[CONF_SOURCES]
 
         for app in self._app_list.values():
             if app["id"] == self._current_source_id:

@@ -9,7 +9,6 @@ from websockets.exceptions import ConnectionClosed
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
-    CONF_FILENAME,
     CONF_HOST,
     CONF_ICON,
     CONF_NAME,
@@ -24,7 +23,6 @@ CONF_SOURCES = "sources"
 CONF_ON_ACTION = "turn_on_action"
 CONF_STANDBY_CONNECTION = "standby_connection"
 DEFAULT_NAME = "LG webOS Smart TV"
-WEBOSTV_CONFIG_FILE = "webostv.conf"
 
 SERVICE_BUTTON = "button"
 ATTR_BUTTON = "button"
@@ -33,7 +31,7 @@ SERVICE_COMMAND = "command"
 ATTR_COMMAND = "command"
 
 CUSTOMIZE_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_SOURCES): vol.All(cv.ensure_list, [cv.string])}
+    {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -44,9 +42,6 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
-                        vol.Optional(
-                            CONF_FILENAME, default=WEBOSTV_CONFIG_FILE
-                        ): cv.string,
                         vol.Optional(CONF_HOST): cv.string,
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
@@ -80,7 +75,7 @@ async def async_setup(hass, config):
     """Set up the LG WebOS TV platform."""
     hass.data[DOMAIN] = {}
 
-    tasks = [async_setup_tv(hass, config, conf) for conf in config.get(DOMAIN, [])]
+    tasks = [async_setup_tv(hass, config, conf) for conf in config[DOMAIN]]
     if tasks:
         await asyncio.gather(*tasks)
 
@@ -116,10 +111,9 @@ async def async_setup_tv(hass, config, conf):
     """Set up a LG WebOS TV based on host parameter."""
 
     host = conf.get(CONF_HOST)
-    standby_connection = conf.get(CONF_STANDBY_CONNECTION)
-    config_file = hass.config.path(conf.get(CONF_FILENAME))
+    standby_connection = conf[CONF_STANDBY_CONNECTION]
 
-    client = WebOsClient(host, config_file, standby_connection=standby_connection)
+    client = WebOsClient(host, standby_connection=standby_connection)
 
     hass.data[DOMAIN][host] = {"client": client}
 
@@ -131,10 +125,14 @@ async def async_setup_tv(hass, config, conf):
 
     async def async_on_stop(event):
         """Unregister callbacks and disconnect."""
+        disconnect = []
         for conf in hass.data[DOMAIN].values():
             client = conf["client"]
             client.clear_state_update_callbacks()
-            hass.async_create_task(client.disconnect())
+            disconnect.append(client.disconnect())
+
+        if disconnect:
+            await asyncio.gather(*disconnect)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
 
@@ -157,7 +155,7 @@ async def async_connect(client):
 
 async def async_setup_tv_finalize(hass, config, conf, client):
     """Make initial connection attempt and call platform setup."""
-    hass.async_create_task(async_connect(client))
+    await async_connect(client)
     hass.async_create_task(
         hass.helpers.discovery.async_load_platform("media_player", DOMAIN, conf, config)
     )
@@ -171,8 +169,6 @@ async def async_request_configuration(hass, config, conf, client):
     host = conf.get(CONF_HOST)
     name = conf.get(CONF_NAME)
     configurator = hass.components.configurator
-
-    _LOGGER.warning("request configuration")
 
     async def lgtv_configuration_callback(data):
         """Handle actions when configuration callback is called."""
@@ -195,7 +191,6 @@ async def async_request_configuration(hass, config, conf, client):
         await async_setup_tv_finalize(hass, config, conf, client)
         configurator.async_request_done(request_id)
 
-    _LOGGER.warning("adding host to configuring")
     request_id = configurator.async_request_config(
         name,
         lgtv_configuration_callback,
