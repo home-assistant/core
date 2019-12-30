@@ -1,11 +1,12 @@
 """Decorators for the Websocket API."""
 from functools import wraps
 import logging
+from typing import Callable
 
 from homeassistant.core import callback
 from homeassistant.exceptions import Unauthorized
 
-from . import messages
+from . import const, messages
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -104,7 +105,9 @@ def ws_require_user(
     return validator
 
 
-def websocket_command(schema):
+def websocket_command(
+    schema: dict,
+) -> Callable[[const.WebSocketCommandHandler], const.WebSocketCommandHandler]:
     """Tag a function as a websocket command."""
     command = schema["type"]
 
