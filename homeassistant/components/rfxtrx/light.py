@@ -85,8 +85,10 @@ class RfxtrxLight(RfxtrxDevice, Light, RestoreEntity):
             self._state = old_state.state == STATE_ON
 
         # Restore the brightness of dimmables devices
-        if old_state is not None and \
-                old_state.attributes.get(ATTR_BRIGHTNESS) is not None:
+        if (
+            old_state is not None
+            and old_state.attributes.get(ATTR_BRIGHTNESS) is not None
+        ):
             self._brightness = int(old_state.attributes[ATTR_BRIGHTNESS])
 
     @property
