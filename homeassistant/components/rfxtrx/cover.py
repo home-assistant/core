@@ -1,6 +1,4 @@
 """Support for RFXtrx covers."""
-import logging
-
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
@@ -21,9 +19,6 @@ from . import (
     get_devices_from_config,
     get_new_device,
 )
-
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
