@@ -1,1 +1,1 @@
-"""platform for iammeter devices."""
+"""Support for IamMeter Devices"""
