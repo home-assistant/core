@@ -428,6 +428,24 @@ class AisCloudWS:
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp
 
+    def post_backup(self, file):
+        self.setCloudToken()
+        rest_url = self.url + "backup"
+        with open(file, "rb") as payload:
+            ws_resp = requests.post(
+                rest_url, headers=CLOUD_WS_HEADER, data=payload, timeout=60
+            )
+        return ws_resp
+
+    def download_backup(self, file):
+        self.setCloudToken()
+        rest_url = self.url + "backup"
+        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=60)
+        with open(file, "wb") as f:
+            for chunk in ws_resp.iter_content(1024):
+                f.write(chunk)
+        return ws_resp
+
 
 class AisCacheData:
     def __init__(self, hass):
@@ -1596,20 +1614,18 @@ class AisColudData:
             password = call.data["password"]
         if password != "":
             info_text += " i szyfruje"
-            password = "-p=" + password
+            password = "-p" + password
+
+        # 1. zip files
         self.get_backup_info(
             call, 1, None, info_text + " bieżącą konfigurację", None, None
         )
-
-        # 1. zip files
         try:
             ret = subprocess.check_output("cd " + config_dir, shell=True)
-            _LOGGER.error("cd ret " + str(ret.decode("utf-8")))
             try:
                 ret = subprocess.check_output(
                     "rm " + config_dir + "backup.zip", shell=True
                 )
-                _LOGGER.error("rm backup.zip " + str(ret.decode("utf-8")))
             except Exception as e:
                 _LOGGER.error("rm backup.zip " + str(e))
             ret = subprocess.check_output(
@@ -1619,17 +1635,13 @@ class AisColudData:
                 + config_dir
                 + "backup.zip "
                 + config_dir
-                + "*",
+                + ".",
                 shell=True,
             )
-            _LOGGER.error("7za ret " + str(ret))
         except Exception as e:
             self.get_backup_info(call, 0, str(e))
             return
         # 2. upload
-        import time
-
-        time.sleep(5)
         self.get_backup_info(
             call,
             1,
@@ -1638,39 +1650,66 @@ class AisColudData:
             None,
             None,
         )
+        try:
+            ws_resp = self.cloud.post_backup(config_dir + "backup.zip")
+        except Exception as e:
+            self.get_backup_info(call, 0, str(e))
+            return
+
         # refresh
         self.get_backup_info(call, 0, "", "Kopia zapasowa konfiguracji wykonana")
 
     def restore_backup(self, call):
         import subprocess
 
-        config_dir = "/data/data/pl.sviete.dom/files/home/AIS/"
+        home_dir = "/data/data/pl.sviete.dom/files/home/"
         password = ""
         info_text = ""
         if "password" in call.data:
             password = call.data["password"]
         if password != "":
             info_text = " i deszyfruje"
-            password = "-p=" + password
+        # we need to use password even if it's empty - to prevent the prompt
+        password = "-p" + password
         # 1. download
         self.get_backup_info(call, 1, None, None, None, "Pobieram kopie konfiguracji")
-        import time
-
-        time.sleep(5)
-        self.get_backup_info(call, 1, None, None, None, "Rozpakowuje" + info_text)
-        # 2. extract
         try:
-            ret = subprocess.check_output("cd " + config_dir, shell=True)
-            _LOGGER.error("cd ret " + str(ret.decode("utf-8")))
+            ws_resp = self.cloud.download_backup(home_dir + "backup.zip")
+        except Exception as e:
+            self.get_backup_info(call, 0, str(e))
+            return
+        # 2. extract
+        self.get_backup_info(call, 1, None, None, None, "Rozpakowuje" + info_text)
+        try:
             ret = subprocess.check_output(
-                "7z x -mmt=2 " + password + " " + config_dir + "backup.zip -y",
+                "7z x -mmt=2 "
+                + password
+                + " -o"
+                + home_dir
+                + "AIS_BACKUP "
+                + home_dir
+                + "backup.zip "
+                + "-y",
                 shell=True,
             )
-            _LOGGER.error("7z x ret " + str(ret))
         except Exception as e:
             self.get_backup_info(call, 0, None, None, str(e), None)
             return
-        time.sleep(5)
+        # 3. copy files to AIS
+        self.get_backup_info(call, 1, None, None, None, "Podmieniam konfigurację ")
+        try:
+            ret = subprocess.check_output(
+                "cp -fR " + home_dir + "AIS_BACKUP/* " + home_dir + "AIS", shell=True,
+            )
+            ret = subprocess.check_output("rm " + home_dir + "backup.zip", shell=True,)
+            ret = subprocess.check_output(
+                "rm -rf " + home_dir + "AIS_BACKUP", shell=True,
+            )
+
+        except Exception as e:
+            self.get_backup_info(call, 0, None, None, str(e), None)
+            return
+
         # refresh
         self.get_backup_info(
             call, 0, None, None, None, "OK, przywrucono konfigurację z  kopii"
