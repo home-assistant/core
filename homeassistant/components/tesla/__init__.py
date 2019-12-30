@@ -26,7 +26,7 @@ from .config_flow import (
     configured_instances,
     validate_input,
 )
-from .const import DATA_LISTENER, DOMAIN, TESLA_COMPONENTS
+from .const import DATA_LISTENER, DOMAIN, SENSOR_ICONS, TESLA_COMPONENTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,6 +186,11 @@ class TeslaDevice(Entity):
         self._name = self.tesla_device.name
         self.tesla_id = slugify(self.tesla_device.uniq_name)
         self._attributes = {}
+        self._icon = (
+            SENSOR_ICONS[self.tesla_device.type]
+            if self.tesla_device.type and self.tesla_device.type in SENSOR_ICONS.keys()
+            else None
+        )
 
     @property
     def name(self):
@@ -196,6 +201,11 @@ class TeslaDevice(Entity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self.tesla_id
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return self._icon
 
     @property
     def should_poll(self):
