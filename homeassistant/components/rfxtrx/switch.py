@@ -45,6 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the RFXtrx platform."""
+    # Add switch from config file
     switches = get_devices_from_config(config, RfxtrxSwitch)
     add_entities_callback(switches)
 
