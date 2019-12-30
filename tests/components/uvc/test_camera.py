@@ -222,8 +222,10 @@ class TestUVC(unittest.TestCase):
         assert "UVC Fake" == self.uvc.model
         assert SUPPORT_STREAM == self.uvc.supported_features
 
-    async def test_stream(self):
-        assert "rtsp://host-a:7447/uuid_rtspchannel_0" == await self.uvc.stream_source()
+    def test_stream(self):
+        """Test the RTSP stream URI."""
+        stream_source = yield from self.uvc.stream_source()
+        assert stream_source == "rtsp://host-a:7447/uuid_rtspchannel_0"
 
     @mock.patch("uvcclient.store.get_info_store")
     @mock.patch("uvcclient.camera.UVCCameraClientV320")
