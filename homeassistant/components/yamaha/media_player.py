@@ -79,8 +79,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
         vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
-        vol.Optional(CONF_VOLUME_MIN, default=DEFAULT_VOLUME_MIN): vol.Number(),
-        vol.Optional(CONF_VOLUME_MAX, default=DEFAULT_VOLUME_MAX): vol.Number(),
+        vol.Optional(CONF_VOLUME_MIN, default=DEFAULT_VOLUME_MIN): float,
+        vol.Optional(CONF_VOLUME_MAX, default=DEFAULT_VOLUME_MAX): float,
     }
 )
 
