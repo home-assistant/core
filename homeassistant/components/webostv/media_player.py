@@ -303,24 +303,24 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         await self._client.volume_down()
 
     @cmd
-    def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         tv_volume = volume * 100
-        return self._client.set_volume(tv_volume)
+        await self._client.set_volume(tv_volume)
 
     @cmd
-    def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Send mute command."""
         self._muted = mute
-        return self._client.set_mute(mute)
+        await self._client.set_mute(mute)
 
     @cmd
-    def async_media_play_pause(self):
+    async def async_media_play_pause(self):
         """Simulate play pause media player."""
         if self._playing:
-            return self.media_pause()
-
-        return self.media_play()
+            await self.media_pause()
+        else:
+            await self.media_play()
 
     @cmd
     async def async_select_source(self, source):
@@ -373,48 +373,48 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
                 await self._client.set_channel(partial_match_channel_id)
 
     @cmd
-    def async_media_play(self):
+    async def async_media_play(self):
         """Send play command."""
         self._playing = True
         self._state = STATE_PLAYING
-        return self._client.play()
+        await self._client.play()
 
     @cmd
-    def async_media_pause(self):
+    async def async_media_pause(self):
         """Send media pause command to media player."""
         self._playing = False
         self._state = STATE_PAUSED
-        return self._client.pause()
+        await self._client.pause()
 
     @cmd
-    def async_media_stop(self):
+    async def async_media_stop(self):
         """Send stop command to media player."""
-        return self._client.stop()
+        await self._client.stop()
 
     @cmd
-    def async_media_next_track(self):
+    async def async_media_next_track(self):
         """Send next track command."""
         current_input = self._client.get_input()
         if current_input == LIVETV_APP_ID:
-            return self._client.channel_up()
-
-        return self._client.fast_forward()
+            await self._client.channel_up()
+        else:
+            await self._client.fast_forward()
 
     @cmd
-    def async_media_previous_track(self):
+    async def async_media_previous_track(self):
         """Send the previous track command."""
         current_input = self._client.get_input()
         if current_input == LIVETV_APP_ID:
             return self._client.channel_down()
 
-        return self._client.rewind()
+        await self._client.rewind()
 
     @cmd
-    def async_button(self, button):
+    async def async_button(self, button):
         """Send a button press."""
-        return self._client.button(button)
+        await self._client.button(button)
 
     @cmd
-    def async_command(self, command):
+    async def async_command(self, command):
         """Send a command."""
-        return self._client.request(command)
+        await self._client.request(command)
