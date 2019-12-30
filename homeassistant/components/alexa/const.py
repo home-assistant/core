@@ -43,6 +43,20 @@ API_CHANGE = "change"
 
 CONF_DESCRIPTION = "description"
 CONF_DISPLAY_CATEGORIES = "display_categories"
+CONF_SUPPORTED_LOCALES = (
+    "de-DE",
+    "en-AU",
+    "en-CA",
+    "en-GB",
+    "en-IN",
+    "en-US",
+    "es-ES",
+    "es-MX",
+    "fr-CA",
+    "fr-FR",
+    "it-IT",
+    "ja-JP",
+)
 
 API_TEMP_UNITS = {TEMP_FAHRENHEIT: "FAHRENHEIT", TEMP_CELSIUS: "CELSIUS"}
 
