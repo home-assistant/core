@@ -12,7 +12,7 @@ from homeassistant.components.uvc import camera as uvc
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
 
-from tests.common import async_mock_service, get_test_home_assistant
+from tests.common import get_test_home_assistant
 
 
 class TestUVCSetup(unittest.TestCase):
