@@ -1017,6 +1017,7 @@ class LocalData:
         self._browse_path(files[l_idx]["path"], True)
 
     def get_item_name(self, path):
+        path = path.rstrip("/")
         path = path.rstrip(":")
         if path.count("/") > 0:
             name = path.split("/").pop()
