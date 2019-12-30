@@ -59,6 +59,7 @@ async def setup_unifi_integration(
     clients_response,
     devices_response,
     clients_all_response,
+    known_wireless_clients=None,
 ):
     """Create the UniFi controller."""
     if UNIFI_CONFIG not in hass.data:
@@ -75,6 +76,11 @@ async def setup_unifi_integration(
         options=options,
         entry_id=1,
     )
+
+    if known_wireless_clients:
+        hass.data[UNIFI_WIRELESS_CLIENTS].update_data(
+            known_wireless_clients, config_entry
+        )
 
     mock_client_responses = deque()
     mock_client_responses.append(clients_response)
