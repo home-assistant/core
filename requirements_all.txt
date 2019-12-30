@@ -202,7 +202,7 @@ airly==0.0.2
 aladdin_connect==0.3
 
 # homeassistant.components.alarmdecoder
-alarmdecoder==1.13.2
+alarmdecoder==1.13.9
 
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.1.2
