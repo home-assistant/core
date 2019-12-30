@@ -782,8 +782,7 @@ class BaseTelegramBotEntity:
             if event_data is None:
                 return message_ok
 
-            query_data = data[ATTR_DATA]
-            event_data[ATTR_DATA] = query_data
+            query_data = event_data[ATTR_DATA] = data[ATTR_DATA]
 
             if query_data[0] == "/":
                 pieces = query_data.split(" ")
