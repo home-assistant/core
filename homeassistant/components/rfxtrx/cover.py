@@ -1,10 +1,13 @@
 """Support for RFXtrx covers."""
+import logging
+
 import RFXtrx as rfxtrxmod
 import voluptuous as vol
 
 from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, STATE_OPEN
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import (
     CONF_AUTOMATIC_ADD,
@@ -18,6 +21,9 @@ from . import (
     get_devices_from_config,
     get_new_device,
 )
+
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -62,8 +68,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         RECEIVED_EVT_SUBSCRIBERS.append(cover_update)
 
 
-class RfxtrxCover(RfxtrxDevice, CoverDevice):
+class RfxtrxCover(RfxtrxDevice, CoverDevice, RestoreEntity):
     """Representation of a RFXtrx cover."""
+
+    async def async_added_to_hass(self):
+        """Restore RFXtrx cover device state (OPEN/CLOSE)."""
+        await super().async_added_to_hass()
+
+        old_state = await self.async_get_last_state()
+        if old_state is not None:
+            self._state = old_state.state == STATE_OPEN
 
     @property
     def should_poll(self):
