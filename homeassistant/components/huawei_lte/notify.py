@@ -44,6 +44,12 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
         if not targets or not message:
             return
 
+        if self.router.suspended:
+            _LOGGER.debug(
+                "Integration suspended, not sending notification to %s", targets
+            )
+            return
+
         try:
             resp = self.router.client.sms.send_sms(
                 phone_numbers=targets, message=message

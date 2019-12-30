@@ -5,7 +5,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
 import collections
+from typing import Callable, Set
 
+import attr
 import bellows.ezsp
 import bellows.zigbee.application
 import zigpy.profiles.zha
@@ -28,27 +30,10 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 
 # importing channels updates registries
 from . import channels  # noqa: F401 pylint: disable=unused-import
-from .const import (
-    CONTROLLER,
-    SENSOR_ACCELERATION,
-    SENSOR_BATTERY,
-    SENSOR_ELECTRICAL_MEASUREMENT,
-    SENSOR_HUMIDITY,
-    SENSOR_ILLUMINANCE,
-    SENSOR_METERING,
-    SENSOR_OCCUPANCY,
-    SENSOR_OPENING,
-    SENSOR_PRESSURE,
-    SENSOR_TEMPERATURE,
-    ZHA_GW_RADIO,
-    ZHA_GW_RADIO_DESCRIPTION,
-    ZONE,
-    RadioType,
-)
-from .decorators import DictRegistry, SetRegistry
+from .const import CONTROLLER, ZHA_GW_RADIO, ZHA_GW_RADIO_DESCRIPTION, RadioType
+from .decorators import CALLABLE_T, DictRegistry, SetRegistry
 
 BINARY_SENSOR_CLUSTERS = SetRegistry()
-BINARY_SENSOR_TYPES = {}
 BINDABLE_CLUSTERS = SetRegistry()
 CHANNEL_ONLY_CLUSTERS = SetRegistry()
 CLUSTER_REPORT_CONFIGS = {}
@@ -60,7 +45,6 @@ LIGHT_CLUSTERS = SetRegistry()
 OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 RADIO_TYPES = {}
 REMOTE_DEVICE_TYPES = collections.defaultdict(list)
-SENSOR_TYPES = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
 SWITCH_CLUSTERS = SetRegistry()
@@ -109,15 +93,6 @@ def establish_device_mappings():
     }
 
     BINARY_SENSOR_CLUSTERS.add(SMARTTHINGS_ACCELERATION_CLUSTER)
-
-    BINARY_SENSOR_TYPES.update(
-        {
-            SMARTTHINGS_ACCELERATION_CLUSTER: SENSOR_ACCELERATION,
-            zcl.clusters.general.OnOff.cluster_id: SENSOR_OPENING,
-            zcl.clusters.measurement.OccupancySensing.cluster_id: SENSOR_OCCUPANCY,
-            zcl.clusters.security.IasZone.cluster_id: ZONE,
-        }
-    )
 
     DEVICE_CLASS[zigpy.profiles.zha.PROFILE_ID].update(
         {
@@ -176,19 +151,6 @@ def establish_device_mappings():
         {zcl.clusters.general.OnOff: BINARY_SENSOR}
     )
 
-    SENSOR_TYPES.update(
-        {
-            SMARTTHINGS_HUMIDITY_CLUSTER: SENSOR_HUMIDITY,
-            zcl.clusters.general.PowerConfiguration.cluster_id: SENSOR_BATTERY,
-            zcl.clusters.homeautomation.ElectricalMeasurement.cluster_id: SENSOR_ELECTRICAL_MEASUREMENT,
-            zcl.clusters.measurement.IlluminanceMeasurement.cluster_id: SENSOR_ILLUMINANCE,
-            zcl.clusters.measurement.PressureMeasurement.cluster_id: SENSOR_PRESSURE,
-            zcl.clusters.measurement.RelativeHumidity.cluster_id: SENSOR_HUMIDITY,
-            zcl.clusters.measurement.TemperatureMeasurement.cluster_id: SENSOR_TEMPERATURE,
-            zcl.clusters.smartenergy.Metering.cluster_id: SENSOR_METERING,
-        }
-    )
-
     zha = zigpy.profiles.zha
     REMOTE_DEVICE_TYPES[zha.PROFILE_ID].append(zha.DeviceType.COLOR_CONTROLLER)
     REMOTE_DEVICE_TYPES[zha.PROFILE_ID].append(zha.DeviceType.COLOR_DIMMER_SWITCH)
@@ -207,3 +169,96 @@ def establish_device_mappings():
     REMOTE_DEVICE_TYPES[zll.PROFILE_ID].append(zll.DeviceType.CONTROL_BRIDGE)
     REMOTE_DEVICE_TYPES[zll.PROFILE_ID].append(zll.DeviceType.CONTROLLER)
     REMOTE_DEVICE_TYPES[zll.PROFILE_ID].append(zll.DeviceType.SCENE_CONTROLLER)
+
+
+@attr.s(frozen=True)
+class MatchRule:
+    """Match a ZHA Entity to a channel name or generic id."""
+
+    channel_names: Set[str] = attr.ib(factory=frozenset, converter=frozenset)
+    generic_ids: Set[str] = attr.ib(factory=frozenset, converter=frozenset)
+    manufacturer: str = attr.ib(default=None)
+    model: str = attr.ib(default=None)
+
+
+class ZHAEntityRegistry:
+    """Channel to ZHA Entity mapping."""
+
+    def __init__(self):
+        """Initialize Registry instance."""
+        self._strict_registry = collections.defaultdict(dict)
+        self._loose_registry = collections.defaultdict(dict)
+
+    def get_entity(
+        self, component: str, zha_device, chnls: list, default: CALLABLE_T = None
+    ) -> CALLABLE_T:
+        """Match a ZHA Channels to a ZHA Entity class."""
+        for match in self._strict_registry[component]:
+            if self._strict_matched(zha_device, chnls, match):
+                return self._strict_registry[component][match]
+
+        return default
+
+    def strict_match(
+        self, component: str, rule: MatchRule
+    ) -> Callable[[CALLABLE_T], CALLABLE_T]:
+        """Decorate a strict match rule."""
+
+        def decorator(zha_ent: CALLABLE_T) -> CALLABLE_T:
+            """Register a strict match rule.
+
+            All non empty fields of a match rule must match.
+            """
+            self._strict_registry[component][rule] = zha_ent
+            return zha_ent
+
+        return decorator
+
+    def loose_match(
+        self, component: str, rule: MatchRule
+    ) -> Callable[[CALLABLE_T], CALLABLE_T]:
+        """Decorate a loose match rule."""
+
+        def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
+            """Register a loose match rule.
+
+            All non empty fields of a match rule must match.
+            """
+            self._loose_registry[component][rule] = zha_entity
+            return zha_entity
+
+        return decorator
+
+    def _strict_matched(self, zha_device, chnls: dict, rule: MatchRule) -> bool:
+        """Return True if this device matches the criteria."""
+        return all(self._matched(zha_device, chnls, rule))
+
+    def _loose_matched(self, zha_device, chnls: dict, rule: MatchRule) -> bool:
+        """Return True if this device matches the criteria."""
+        return any(self._matched(zha_device, chnls, rule))
+
+    @staticmethod
+    def _matched(zha_device, chnls: list, rule: MatchRule) -> bool:
+        """Return a list of field matches."""
+        if not any(attr.asdict(rule).values()):
+            return [False]
+
+        matches = []
+        if rule.channel_names:
+            channel_names = {ch.name for ch in chnls}
+            matches.append(rule.channel_names.issubset(channel_names))
+
+        if rule.generic_ids:
+            all_generic_ids = {ch.generic_id for ch in chnls}
+            matches.append(rule.generic_ids.issubset(all_generic_ids))
+
+        if rule.manufacturer:
+            matches.append(zha_device.manufacturer == rule.manufacturer)
+
+        if rule.model:
+            matches.append(zha_device.model == rule.model)
+
+        return matches
+
+
+ZHA_ENTITIES = ZHAEntityRegistry()

@@ -3,9 +3,9 @@
         "abort": {
             "client_id": "Klient-id'et fra konfigurationen er ugyldigt.",
             "client_secret": "Klientens hemmelighed fra konfigurationen er ugyldig.",
-            "no_agreements": "Denne konto har ingen Toon sk\u00e6rme.",
+            "no_agreements": "Denne konto har ingen Toon-sk\u00e6rme.",
             "no_app": "Du skal konfigurere Toon f\u00f8r du kan godkende med det. [L\u00e6s venligst vejledningen](https://www.home-assistant.io/components/toon/).",
-            "unknown_auth_fail": "Der opstod en uventet fejl under autentificering."
+            "unknown_auth_fail": "Der opstod en uventet fejl under godkendelse."
         },
         "error": {
             "credentials": "De angivne legitimationsoplysninger er ugyldige.",
@@ -18,8 +18,8 @@
                     "tenant": "Tenant",
                     "username": "Brugernavn"
                 },
-                "description": "Godkend med din Eneco Toon konto (ikke udviklerkontoen).",
-                "title": "Link din Toon konto"
+                "description": "Godkend med din Eneco Toon-konto (ikke udviklerkontoen).",
+                "title": "Forbind din Toon-konto"
             },
             "display": {
                 "data": {

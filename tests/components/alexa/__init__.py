@@ -17,6 +17,7 @@ class MockConfig(config.AbstractConfig):
         "binary_sensor.test_doorbell": {"display_categories": "DOORBELL"},
         "binary_sensor.test_contact_forced": {"display_categories": "CONTACT_SENSOR"},
         "binary_sensor.test_motion_forced": {"display_categories": "MOTION_SENSOR"},
+        "binary_sensor.test_motion_camera_event": {"display_categories": "CAMERA"},
     }
 
     @property

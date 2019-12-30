@@ -25,9 +25,17 @@ repos:
 -   repo: https://github.com/PyCQA/bandit
     rev: 1.6.2
     hooks:
-      - id: bandit
+    -   id: bandit
         args:
           - --quiet
           - --format=custom
           - --configfile=tests/bandit.yaml
         files: ^(homeassistant|script|tests)/.+\.py$
+-   repo: https://github.com/pre-commit/mirrors-isort
+    rev: v4.3.21
+    hooks:
+    -   id: isort
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
+    hooks:
+    -   id: check-json

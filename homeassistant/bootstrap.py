@@ -11,7 +11,11 @@ from typing import Any, Dict, Optional, Set
 import voluptuous as vol
 
 from homeassistant import config as conf_util, config_entries, core, loader
-from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_CLOSE,
+    REQUIRED_NEXT_PYTHON_DATE,
+    REQUIRED_NEXT_PYTHON_VER,
+)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.logging import AsyncHandler
@@ -95,11 +99,14 @@ async def async_from_config_dict(
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
 
-    if sys.version_info[:3] < (3, 7, 0):
+    if REQUIRED_NEXT_PYTHON_DATE and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER:
         msg = (
-            "Python 3.6 support is deprecated and will "
-            "be removed in the first release after December 15, 2019. Please "
-            "upgrade Python to 3.7.0 or higher."
+            "Support for the running Python version "
+            f"{'.'.join(str(x) for x in sys.version_info[:3])} is deprecated and will "
+            f"be removed in the first release after {REQUIRED_NEXT_PYTHON_DATE}. "
+            "Please upgrade Python to "
+            f"{'.'.join(str(x) for x in REQUIRED_NEXT_PYTHON_VER)} or "
+            "higher."
         )
         _LOGGER.warning(msg)
         hass.components.persistent_notification.async_create(

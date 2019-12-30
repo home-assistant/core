@@ -70,8 +70,6 @@ ATTR_IEEE_ADDRESS = "ieee_address"
 ATTR_IEEE = "ieee"
 ATTR_SOURCE_IEEE = "source_ieee"
 ATTR_TARGET_IEEE = "target_ieee"
-BIND_REQUEST = 0x0021
-UNBIND_REQUEST = 0x0022
 
 SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
@@ -451,7 +449,11 @@ async def remove_group(group, zha_gateway):
                         group.group_id
                     )
                 )
-        await asyncio.gather(*tasks)
+        if tasks:
+            await asyncio.gather(*tasks)
+        else:
+            # we have members but none are tracked by ZHA for whatever reason
+            zha_gateway.application_controller.groups.pop(group.group_id)
     else:
         zha_gateway.application_controller.groups.pop(group.group_id)
 
@@ -567,11 +569,15 @@ async def websocket_device_cluster_attributes(hass, connection, msg):
                     {ID: attr_id, ATTR_NAME: attributes[attr_id][0]}
                 )
     _LOGGER.debug(
-        "Requested attributes for: %s %s %s %s",
-        f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
-        f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
-        f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
-        f"{RESPONSE}: [{cluster_attributes}]",
+        "Requested attributes for: %s: %s, %s: '%s', %s: %s, %s: %s",
+        ATTR_CLUSTER_ID,
+        cluster_id,
+        ATTR_CLUSTER_TYPE,
+        cluster_type,
+        ATTR_ENDPOINT_ID,
+        endpoint_id,
+        RESPONSE,
+        cluster_attributes,
     )
 
     connection.send_result(msg[ID], cluster_attributes)
@@ -621,11 +627,15 @@ async def websocket_device_cluster_commands(hass, connection, msg):
                     }
                 )
     _LOGGER.debug(
-        "Requested commands for: %s %s %s %s",
-        f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
-        f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
-        f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
-        f"{RESPONSE}: [{cluster_commands}]",
+        "Requested commands for: %s: %s, %s: '%s', %s: %s, %s: %s",
+        ATTR_CLUSTER_ID,
+        cluster_id,
+        ATTR_CLUSTER_TYPE,
+        cluster_type,
+        ATTR_ENDPOINT_ID,
+        endpoint_id,
+        RESPONSE,
+        cluster_commands,
     )
 
     connection.send_result(msg[ID], cluster_commands)
@@ -665,14 +675,21 @@ async def websocket_read_zigbee_cluster_attributes(hass, connection, msg):
             [attribute], allow_cache=False, only_cache=False, manufacturer=manufacturer
         )
     _LOGGER.debug(
-        "Read attribute for: %s %s %s %s %s %s %s",
-        f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
-        f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
-        f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
-        f"{ATTR_ATTRIBUTE}: [{attribute}]",
-        f"{ATTR_MANUFACTURER}: [{manufacturer}]",
-        "{}: [{}]".format(RESPONSE, str(success.get(attribute))),
-        "{}: [{}]".format("failure", failure),
+        "Read attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s],",
+        ATTR_CLUSTER_ID,
+        cluster_id,
+        ATTR_CLUSTER_TYPE,
+        cluster_type,
+        ATTR_ENDPOINT_ID,
+        endpoint_id,
+        ATTR_ATTRIBUTE,
+        attribute,
+        ATTR_MANUFACTURER,
+        manufacturer,
+        RESPONSE,
+        str(success.get(attribute)),
+        "failure",
+        failure,
     )
     connection.send_result(msg[ID], str(success.get(attribute)))
 
@@ -695,9 +712,11 @@ async def websocket_get_bindable_devices(hass, connection, msg):
     ]
 
     _LOGGER.debug(
-        "Get bindable devices: %s %s",
-        f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
-        "{}: [{}]".format("bindable devices:", devices),
+        "Get bindable devices: %s: [%s], %s: [%s]",
+        ATTR_SOURCE_IEEE,
+        source_ieee,
+        "bindable devices",
+        devices,
     )
 
     connection.send_message(websocket_api.result_message(msg[ID], devices))
@@ -717,11 +736,15 @@ async def websocket_bind_devices(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_SOURCE_IEEE]
     target_ieee = msg[ATTR_TARGET_IEEE]
-    await async_binding_operation(zha_gateway, source_ieee, target_ieee, BIND_REQUEST)
+    await async_binding_operation(
+        zha_gateway, source_ieee, target_ieee, zdo_types.ZDOCmd.Bind_req
+    )
     _LOGGER.info(
-        "Issue bind devices: %s %s",
-        f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
-        f"{ATTR_TARGET_IEEE}: [{target_ieee}]",
+        "Devices bound: %s: [%s] %s: [%s]",
+        ATTR_SOURCE_IEEE,
+        source_ieee,
+        ATTR_TARGET_IEEE,
+        target_ieee,
     )
 
 
@@ -739,11 +762,15 @@ async def websocket_unbind_devices(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_SOURCE_IEEE]
     target_ieee = msg[ATTR_TARGET_IEEE]
-    await async_binding_operation(zha_gateway, source_ieee, target_ieee, UNBIND_REQUEST)
+    await async_binding_operation(
+        zha_gateway, source_ieee, target_ieee, zdo_types.ZDOCmd.Unbind_req
+    )
     _LOGGER.info(
-        "Issue unbind devices: %s %s",
-        f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
-        f"{ATTR_TARGET_IEEE}: [{target_ieee}]",
+        "Devices un-bound: %s: [%s] %s: [%s]",
+        ATTR_SOURCE_IEEE,
+        source_ieee,
+        ATTR_TARGET_IEEE,
+        target_ieee,
     )
 
 
@@ -764,22 +791,34 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
 
         zdo = cluster_pair.source_cluster.endpoint.device.zdo
 
-        _LOGGER.debug(
-            "processing binding operation for: %s %s %s",
-            f"{ATTR_SOURCE_IEEE}: [{source_ieee}]",
-            f"{ATTR_TARGET_IEEE}: [{target_ieee}]",
-            "{}: {}".format("cluster", cluster_pair.source_cluster.cluster_id),
+        op_msg = "cluster: %s %s --> [%s]"
+        op_params = (
+            cluster_pair.source_cluster.cluster_id,
+            operation.name,
+            target_ieee,
         )
+        zdo.debug("processing " + op_msg, *op_params)
+
         bind_tasks.append(
-            zdo.request(
-                operation,
-                source_device.ieee,
-                cluster_pair.source_cluster.endpoint.endpoint_id,
-                cluster_pair.source_cluster.cluster_id,
-                destination_address,
+            (
+                zdo.request(
+                    operation,
+                    source_device.ieee,
+                    cluster_pair.source_cluster.endpoint.endpoint_id,
+                    cluster_pair.source_cluster.cluster_id,
+                    destination_address,
+                ),
+                op_msg,
+                op_params,
             )
         )
-    await asyncio.gather(*bind_tasks)
+    res = await asyncio.gather(*(t[0] for t in bind_tasks), return_exceptions=True)
+    for outcome, log_msg in zip(res, bind_tasks):
+        if isinstance(outcome, Exception):
+            fmt = log_msg[1] + " failed: %s"
+        else:
+            fmt = log_msg[1] + " completed: %s"
+        zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
 
 def async_load_api(hass):
@@ -834,14 +873,21 @@ def async_load_api(hass):
                 manufacturer=manufacturer,
             )
         _LOGGER.debug(
-            "Set attribute for: %s %s %s %s %s %s %s",
-            f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
-            f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
-            f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
-            f"{ATTR_ATTRIBUTE}: [{attribute}]",
-            f"{ATTR_VALUE}: [{value}]",
-            f"{ATTR_MANUFACTURER}: [{manufacturer}]",
-            f"{RESPONSE}: [{response}]",
+            "Set attribute for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
+            ATTR_CLUSTER_ID,
+            cluster_id,
+            ATTR_CLUSTER_TYPE,
+            cluster_type,
+            ATTR_ENDPOINT_ID,
+            endpoint_id,
+            ATTR_ATTRIBUTE,
+            attribute,
+            ATTR_VALUE,
+            value,
+            ATTR_MANUFACTURER,
+            manufacturer,
+            RESPONSE,
+            response,
         )
 
     hass.helpers.service.async_register_admin_service(
@@ -876,15 +922,23 @@ def async_load_api(hass):
                 manufacturer=manufacturer,
             )
         _LOGGER.debug(
-            "Issue command for: %s %s %s %s %s %s %s %s",
-            f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
-            f"{ATTR_CLUSTER_TYPE}: [{cluster_type}]",
-            f"{ATTR_ENDPOINT_ID}: [{endpoint_id}]",
-            f"{ATTR_COMMAND}: [{command}]",
-            f"{ATTR_COMMAND_TYPE}: [{command_type}]",
-            f"{ATTR_ARGS}: [{args}]",
-            f"{ATTR_MANUFACTURER}: [{manufacturer}]",
-            f"{RESPONSE}: [{response}]",
+            "Issued command for: %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: [%s] %s: %s %s: [%s] %s: %s",
+            ATTR_CLUSTER_ID,
+            cluster_id,
+            ATTR_CLUSTER_TYPE,
+            cluster_type,
+            ATTR_ENDPOINT_ID,
+            endpoint_id,
+            ATTR_COMMAND,
+            command,
+            ATTR_COMMAND_TYPE,
+            command_type,
+            ATTR_ARGS,
+            args,
+            ATTR_MANUFACTURER,
+            manufacturer,
+            RESPONSE,
+            response,
         )
 
     hass.helpers.service.async_register_admin_service(
@@ -911,12 +965,17 @@ def async_load_api(hass):
                 command, *args, manufacturer=manufacturer, expect_reply=True
             )
         _LOGGER.debug(
-            "Issue group command for: %s %s %s %s %s",
-            f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
-            f"{ATTR_COMMAND}: [{command}]",
-            f"{ATTR_ARGS}: [{args}]",
-            f"{ATTR_MANUFACTURER}: [{manufacturer}]",
-            f"{RESPONSE}: [{response}]",
+            "Issued group command for: %s: [%s] %s: [%s] %s: %s %s: [%s] %s: %s",
+            ATTR_CLUSTER_ID,
+            cluster_id,
+            ATTR_COMMAND,
+            command,
+            ATTR_ARGS,
+            args,
+            ATTR_MANUFACTURER,
+            manufacturer,
+            RESPONSE,
+            response,
         )
 
     hass.helpers.service.async_register_admin_service(
@@ -940,20 +999,24 @@ def async_load_api(hass):
                 await channel.squawk(mode, strobe, level)
             else:
                 _LOGGER.error(
-                    "Squawking IASWD: %s is missing the required IASWD channel!",
-                    "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                    "Squawking IASWD: %s: [%s] is missing the required IASWD channel!",
+                    ATTR_IEEE,
+                    str(ieee),
                 )
         else:
             _LOGGER.error(
-                "Squawking IASWD: %s could not be found!",
-                "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                "Squawking IASWD: %s: [%s] could not be found!", ATTR_IEEE, str(ieee)
             )
         _LOGGER.debug(
-            "Squawking IASWD: %s %s %s %s",
-            "{}: [{}]".format(ATTR_IEEE, str(ieee)),
-            "{}: [{}]".format(ATTR_WARNING_DEVICE_MODE, mode),
-            "{}: [{}]".format(ATTR_WARNING_DEVICE_STROBE, strobe),
-            "{}: [{}]".format(ATTR_LEVEL, level),
+            "Squawking IASWD: %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
+            ATTR_IEEE,
+            str(ieee),
+            ATTR_WARNING_DEVICE_MODE,
+            mode,
+            ATTR_WARNING_DEVICE_STROBE,
+            strobe,
+            ATTR_LEVEL,
+            level,
         )
 
     hass.helpers.service.async_register_admin_service(
@@ -982,20 +1045,24 @@ def async_load_api(hass):
                 )
             else:
                 _LOGGER.error(
-                    "Warning IASWD: %s is missing the required IASWD channel!",
-                    "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                    "Warning IASWD: %s: [%s] is missing the required IASWD channel!",
+                    ATTR_IEEE,
+                    str(ieee),
                 )
         else:
             _LOGGER.error(
-                "Warning IASWD: %s could not be found!",
-                "{}: [{}]".format(ATTR_IEEE, str(ieee)),
+                "Warning IASWD: %s: [%s] could not be found!", ATTR_IEEE, str(ieee)
             )
         _LOGGER.debug(
-            "Warning IASWD: %s %s %s %s",
-            "{}: [{}]".format(ATTR_IEEE, str(ieee)),
-            "{}: [{}]".format(ATTR_WARNING_DEVICE_MODE, mode),
-            "{}: [{}]".format(ATTR_WARNING_DEVICE_STROBE, strobe),
-            "{}: [{}]".format(ATTR_LEVEL, level),
+            "Warning IASWD: %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
+            ATTR_IEEE,
+            str(ieee),
+            ATTR_WARNING_DEVICE_MODE,
+            mode,
+            ATTR_WARNING_DEVICE_STROBE,
+            strobe,
+            ATTR_LEVEL,
+            level,
         )
 
     hass.helpers.service.async_register_admin_service(
