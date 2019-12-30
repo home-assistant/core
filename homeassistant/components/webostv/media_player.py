@@ -74,8 +74,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     entity = LgWebOSMediaPlayerEntity(client, name, customize, on_script)
 
-    hass.data[DOMAIN][host]["media_player"] = entity
-
     async_add_entities([entity], update_before_add=False)
 
 
@@ -408,13 +406,3 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
             return self._client.channel_down()
 
         await self._client.rewind()
-
-    @cmd
-    async def async_button(self, button):
-        """Send a button press."""
-        await self._client.button(button)
-
-    @cmd
-    async def async_command(self, command):
-        """Send a command."""
-        await self._client.request(command)

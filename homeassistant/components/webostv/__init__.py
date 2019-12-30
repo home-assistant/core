@@ -7,12 +7,10 @@ import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
     CONF_HOST,
     CONF_ICON,
     CONF_NAME,
-    ENTITY_MATCH_ALL,
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
@@ -23,12 +21,6 @@ CONF_SOURCES = "sources"
 CONF_ON_ACTION = "turn_on_action"
 CONF_STANDBY_CONNECTION = "standby_connection"
 DEFAULT_NAME = "LG webOS Smart TV"
-
-SERVICE_BUTTON = "button"
-ATTR_BUTTON = "button"
-
-SERVICE_COMMAND = "command"
-ATTR_COMMAND = "command"
 
 CUSTOMIZE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}
@@ -57,17 +49,6 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
-BUTTON_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_BUTTON): cv.string})
-
-COMMAND_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_COMMAND): cv.string})
-
-SERVICE_TO_METHOD = {
-    SERVICE_BUTTON: {"method": "async_button", "schema": BUTTON_SCHEMA},
-    SERVICE_COMMAND: {"method": "async_commmand", "schema": COMMAND_SCHEMA},
-}
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -79,31 +60,6 @@ async def async_setup(hass, config):
     if tasks:
         await asyncio.gather(*tasks)
 
-    async def async_service_handler(service):
-        method = SERVICE_TO_METHOD.get(service.service)
-        params = {
-            key: value for key, value in service.data.items() if key != "entity_id"
-        }
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        target_players = []
-        for entry in hass.data[DOMAIN].values():
-            player = entry["media_player"]
-            if entity_ids == ENTITY_MATCH_ALL or player.entity_id in entity_ids:
-                target_players.append(player)
-
-        calls = []
-        for player in target_players:
-            calls.append(getattr(player, method["method"])(**params))
-
-        if calls:
-            await asyncio.gather(*calls)
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service]["schema"]
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler, schema=schema
-        )
-
     return True
 
 
@@ -114,7 +70,6 @@ async def async_setup_tv(hass, config, conf):
     standby_connection = conf[CONF_STANDBY_CONNECTION]
 
     client = WebOsClient(host, standby_connection=standby_connection)
-
     hass.data[DOMAIN][host] = {"client": client}
 
     if client.is_registered():
@@ -122,19 +77,6 @@ async def async_setup_tv(hass, config, conf):
     else:
         _LOGGER.warning("LG webOS TV %s needs to be paired", host)
         await async_request_configuration(hass, config, conf, client)
-
-    async def async_on_stop(event):
-        """Unregister callbacks and disconnect."""
-        disconnect = []
-        for conf in hass.data[DOMAIN].values():
-            client = conf["client"]
-            client.clear_state_update_callbacks()
-            disconnect.append(client.disconnect())
-
-        if disconnect:
-            await asyncio.gather(*disconnect)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
 
 
 async def async_connect(client):
@@ -155,6 +97,14 @@ async def async_connect(client):
 
 async def async_setup_tv_finalize(hass, config, conf, client):
     """Make initial connection attempt and call platform setup."""
+
+    async def async_on_stop(event):
+        """Unregister callbacks and disconnect."""
+        client.clear_state_update_callbacks()
+        await client.disconnect()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
+
     await async_connect(client)
     hass.async_create_task(
         hass.helpers.discovery.async_load_platform("media_player", DOMAIN, conf, config)
