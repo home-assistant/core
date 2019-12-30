@@ -3,30 +3,31 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ENTITY_ID_FORMAT,
-    Light,
     SUPPORT_BRIGHTNESS,
+    Light,
 )
 from homeassistant.const import (
-    CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE,
-    CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_ENTITY_ID,
+    CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
-    STATE_ON,
-    STATE_OFF,
-    EVENT_HOMEASSISTANT_START,
+    CONF_ICON_TEMPLATE,
     CONF_LIGHTS,
+    CONF_VALUE_TEMPLATE,
+    EVENT_HOMEASSISTANT_START,
+    STATE_OFF,
+    STATE_ON,
 )
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+
 from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 

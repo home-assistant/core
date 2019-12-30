@@ -5,18 +5,19 @@ import concurrent.futures
 from datetime import datetime, timedelta
 import logging
 import queue
+from sqlite3 import Connection
 import threading
 import time
 from typing import Any, Dict, Optional
-from sqlite3 import Connection
 
-import voluptuous as vol
-from sqlalchemy import exc, create_engine
+from sqlalchemy import create_engine, exc
 from sqlalchemy.engine import Engine
 from sqlalchemy.event import listens_for
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.pool import StaticPool
+import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DOMAINS,
@@ -29,7 +30,6 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED,
     MATCH_ALL,
 )
-from homeassistant.components import persistent_notification
 from homeassistant.core import CoreState, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import generate_filter

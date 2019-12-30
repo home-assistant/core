@@ -1,11 +1,11 @@
 """Test the python_script component."""
 import asyncio
 import logging
-from unittest.mock import patch, mock_open
+from unittest.mock import mock_open, patch
 
+from homeassistant.components.python_script import DOMAIN, FOLDER, execute
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.setup import async_setup_component
-from homeassistant.components.python_script import DOMAIN, execute, FOLDER
 
 from tests.common import patch_yaml_files
 
@@ -254,6 +254,29 @@ hass.states.set('module.datetime',
     assert hass.states.is_state("module.time_strptime", "12:34")
     assert hass.states.is_state("module.datetime", "60.0")
 
+    # No errors logged = good
+    assert caplog.text == ""
+
+
+@asyncio.coroutine
+def test_execute_functions(hass, caplog):
+    """Test functions defined in script can call one another."""
+    caplog.set_level(logging.ERROR)
+    source = """
+def a():
+    hass.states.set('hello.a', 'one')
+
+def b():
+    a()
+    hass.states.set('hello.b', 'two')
+
+b()
+"""
+    hass.async_add_job(execute, hass, "test.py", source, {})
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state("hello.a", "one")
+    assert hass.states.is_state("hello.b", "two")
     # No errors logged = good
     assert caplog.text == ""
 

@@ -1,26 +1,25 @@
 """Interface implementation for cloud client."""
 import asyncio
+import logging
 from pathlib import Path
 from typing import Any, Dict
-import logging
 
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface
 
-from homeassistant.core import callback, Context
-from homeassistant.components.google_assistant import smart_home as ga
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.util.aiohttp import MockRequest
 from homeassistant.components.alexa import (
-    smart_home as alexa_sh,
     errors as alexa_errors,
+    smart_home as alexa_sh,
 )
+from homeassistant.components.google_assistant import smart_home as ga
+from homeassistant.core import Context, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util.aiohttp import MockRequest
 
-from . import utils, alexa_config, google_config
+from . import alexa_config, google_config, utils
 from .const import DISPATCHER_REMOTE_UPDATE
 from .prefs import CloudPreferences
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,6 +100,7 @@ class CloudClient(Interface):
             self._google_config = google_config.CloudGoogleConfig(
                 self._hass, self.google_user_config, cloud_user, self._prefs, self.cloud
             )
+            await self._google_config.async_initialize()
 
         return self._google_config
 

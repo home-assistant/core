@@ -3,15 +3,15 @@ import socket
 import unittest
 from unittest import mock
 
+import pytest
 import requests
-from uvcclient import camera
-from uvcclient import nvr
+from uvcclient import camera, nvr
 
+from homeassistant.components.uvc import camera as uvc
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
-from homeassistant.components.uvc import camera as uvc
+
 from tests.common import get_test_home_assistant
-import pytest
 
 
 class TestUVCSetup(unittest.TestCase):

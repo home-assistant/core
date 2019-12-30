@@ -2,66 +2,68 @@
 import logging
 
 from homeassistant.components import (
+    alarm_control_panel,
     binary_sensor,
     camera,
     cover,
-    group,
     fan,
+    group,
     input_boolean,
-    media_player,
     light,
     lock,
+    media_player,
     scene,
     script,
     sensor,
     switch,
     vacuum,
-    alarm_control_panel,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
+    ATTR_ASSUMED_STATE,
+    ATTR_CODE,
     ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    ATTR_SUPPORTED_FEATURES,
+    ATTR_TEMPERATURE,
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_ARM_NIGHT,
+    SERVICE_ALARM_DISARM,
+    SERVICE_ALARM_TRIGGER,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_PENDING,
+    STATE_ALARM_TRIGGERED,
     STATE_LOCKED,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_TEMPERATURE,
-    ATTR_ASSUMED_STATE,
-    SERVICE_ALARM_DISARM,
-    SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_NIGHT,
-    SERVICE_ALARM_ARM_CUSTOM_BYPASS,
-    SERVICE_ALARM_TRIGGER,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-    STATE_ALARM_PENDING,
-    ATTR_CODE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util, temperature as temp_util
+
 from .const import (
-    ERR_VALUE_OUT_OF_RANGE,
-    ERR_NOT_SUPPORTED,
-    ERR_FUNCTION_NOT_SUPPORTED,
-    ERR_CHALLENGE_NOT_SETUP,
     CHALLENGE_ACK_NEEDED,
-    CHALLENGE_PIN_NEEDED,
     CHALLENGE_FAILED_PIN_NEEDED,
-    ERR_ALREADY_DISARMED,
+    CHALLENGE_PIN_NEEDED,
     ERR_ALREADY_ARMED,
+    ERR_ALREADY_DISARMED,
+    ERR_CHALLENGE_NOT_SETUP,
+    ERR_FUNCTION_NOT_SUPPORTED,
+    ERR_NOT_SUPPORTED,
+    ERR_VALUE_OUT_OF_RANGE,
 )
-from .error import SmartHomeError, ChallengeNeeded
+from .error import ChallengeNeeded, SmartHomeError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -665,7 +667,7 @@ class TemperatureSettingTrait(_Trait):
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.DEVICE_CLASS_TEMPERATURE:
                 current_temp = self.state.state
-                if current_temp is not None:
+                if current_temp not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["thermostatTemperatureAmbient"] = round(
                         temp_util.convert(float(current_temp), unit, TEMP_CELSIUS), 1
                     )
@@ -886,7 +888,7 @@ class HumiditySettingTrait(_Trait):
             device_class = attrs.get(ATTR_DEVICE_CLASS)
             if device_class == sensor.DEVICE_CLASS_HUMIDITY:
                 current_humidity = self.state.state
-                if current_humidity is not None:
+                if current_humidity not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
                     response["humidityAmbientPercent"] = round(float(current_humidity))
 
         return response

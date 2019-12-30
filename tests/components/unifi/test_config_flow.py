@@ -1,10 +1,10 @@
 """Test UniFi config flow."""
+import aiounifi
 from asynctest import patch
 
 from homeassistant.components import unifi
 from homeassistant.components.unifi import config_flow
 from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
-
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -14,8 +14,6 @@ from homeassistant.const import (
 )
 
 from tests.common import MockConfigEntry
-
-import aiounifi
 
 
 async def test_flow_works(hass, aioclient_mock):

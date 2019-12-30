@@ -62,7 +62,7 @@ NODE_FILTERS = {
     "binary_sensor": {
         "uom": [],
         "states": [],
-        "node_def_id": ["BinaryAlarm"],
+        "node_def_id": ["BinaryAlarm", "BinaryAlarm_ADV"],
         "insteon_type": ["16."],  # Does a startswith() match; include the dot
     },
     "sensor": {
@@ -112,6 +112,8 @@ NODE_FILTERS = {
             "BallastRelayLampSwitch_ADV",
             "RemoteLinc2",
             "RemoteLinc2_ADV",
+            "KeypadDimmer",
+            "KeypadDimmer_ADV",
         ],
         "insteon_type": ["1."],
     },

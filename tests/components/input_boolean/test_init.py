@@ -2,20 +2,22 @@
 # pylint: disable=protected-access
 import asyncio
 import logging
+from unittest.mock import patch
 
-from homeassistant.core import CoreState, State, Context
-from homeassistant.setup import async_setup_component
-from homeassistant.components.input_boolean import is_on, CONF_INITIAL, DOMAIN
+from homeassistant.components.input_boolean import CONF_INITIAL, DOMAIN, is_on
 from homeassistant.const import (
-    STATE_ON,
-    STATE_OFF,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
+    SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
 )
+from homeassistant.core import Context, CoreState, State
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_component, mock_restore_cache
 
@@ -165,3 +167,71 @@ async def test_input_boolean_context(hass, hass_admin_user):
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
+
+
+async def test_reload(hass, hass_admin_user):
+    """Test reload service."""
+    count_start = len(hass.states.async_entity_ids())
+
+    _LOGGER.debug("ENTITIES @ start: %s", hass.states.async_entity_ids())
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": None,
+                "test_2": {"name": "Hello World", "icon": "mdi:work", "initial": True},
+            }
+        },
+    )
+
+    _LOGGER.debug("ENTITIES: %s", hass.states.async_entity_ids())
+
+    assert count_start + 2 == len(hass.states.async_entity_ids())
+
+    state_1 = hass.states.get("input_boolean.test_1")
+    state_2 = hass.states.get("input_boolean.test_2")
+    state_3 = hass.states.get("input_boolean.test_3")
+
+    assert state_1 is not None
+    assert state_2 is not None
+    assert state_3 is None
+    assert STATE_ON == state_2.state
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            DOMAIN: {
+                "test_2": {
+                    "name": "Hello World reloaded",
+                    "icon": "mdi:work_reloaded",
+                    "initial": False,
+                },
+                "test_3": None,
+            }
+        },
+    ):
+        with patch("homeassistant.config.find_config_file", return_value=""):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_RELOAD,
+                blocking=True,
+                context=Context(user_id=hass_admin_user.id),
+            )
+            await hass.async_block_till_done()
+
+    assert count_start + 2 == len(hass.states.async_entity_ids())
+
+    state_1 = hass.states.get("input_boolean.test_1")
+    state_2 = hass.states.get("input_boolean.test_2")
+    state_3 = hass.states.get("input_boolean.test_3")
+
+    assert state_1 is None
+    assert state_2 is not None
+    assert state_3 is not None
+
+    assert STATE_OFF == state_2.state
+    assert "Hello World reloaded" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
+    assert "mdi:work_reloaded" == state_2.attributes.get(ATTR_ICON)

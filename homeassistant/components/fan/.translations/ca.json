@@ -4,7 +4,7 @@
             "turn_off": "Apaga {entity_name}",
             "turn_on": "Enc\u00e9n {entity_name}"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_off": "{entity_name} est\u00e0 apagat",
             "is_on": "{entity_name} est\u00e0 enc\u00e8s"
         },

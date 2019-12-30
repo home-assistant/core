@@ -1,5 +1,5 @@
 """Test the Emulated Hue component."""
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from homeassistant.components.emulated_hue import Config
 

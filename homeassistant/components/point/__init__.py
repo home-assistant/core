@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from pypoint import PointSession
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -71,7 +72,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Point from a config entry."""
-    from pypoint import PointSession
 
     def token_saver(token):
         _LOGGER.debug("Saving updated token")

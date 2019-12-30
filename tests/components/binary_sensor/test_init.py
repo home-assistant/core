@@ -3,7 +3,7 @@ import unittest
 from unittest import mock
 
 from homeassistant.components import binary_sensor
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
 
 
 class TestBinarySensor(unittest.TestCase):

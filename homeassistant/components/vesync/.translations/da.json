@@ -10,7 +10,7 @@
             "user": {
                 "data": {
                     "password": "Adgangskode",
-                    "username": "Email adresse"
+                    "username": "Emailadresse"
                 },
                 "title": "Indtast brugernavn og adgangskode"
             }

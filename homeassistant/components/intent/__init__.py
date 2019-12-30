@@ -1,20 +1,33 @@
 """The Intent integration."""
+import logging
+
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
 from homeassistant.components import http
 from homeassistant.components.http.data_validator import RequestDataValidator
-from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv, integration_platform, intent
 
 from .const import DOMAIN
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Intent component."""
     hass.http.register_view(IntentHandleView())
+
+    await integration_platform.async_process_integration_platforms(
+        hass, DOMAIN, _async_process_intent
+    )
+
     return True
+
+
+async def _async_process_intent(hass: HomeAssistant, domain: str, platform):
+    """Process the intents of an integration."""
+    await platform.async_setup_intents(hass)
 
 
 class IntentHandleView(http.HomeAssistantView):

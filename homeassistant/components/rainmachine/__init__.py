@@ -1,8 +1,10 @@
 """Support for RainMachine devices."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
+from regenmaschine import login
+from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -10,12 +12,12 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_BINARY_SENSORS,
     CONF_IP_ADDRESS,
+    CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SSL,
-    CONF_MONITORED_CONDITIONS,
     CONF_SWITCHES,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -211,8 +213,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up RainMachine as config entry."""
-    from regenmaschine import login
-    from regenmaschine.errors import RainMachineError
 
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
@@ -377,7 +377,6 @@ class RainMachine:
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-        from regenmaschine.errors import RainMachineError
 
         tasks = {}
 

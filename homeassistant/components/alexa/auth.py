@@ -1,8 +1,9 @@
 """Support for Alexa skill auth."""
 import asyncio
+from datetime import timedelta
 import json
 import logging
-from datetime import timedelta
+
 import aiohttp
 import async_timeout
 

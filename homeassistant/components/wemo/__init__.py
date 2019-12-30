@@ -7,10 +7,9 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.discovery import SERVICE_WEMO
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
-
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.helpers import config_validation as cv, discovery
+
 from .const import DOMAIN
 
 # Mapping from Wemo model_name to component.

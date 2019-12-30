@@ -1,14 +1,13 @@
 """Support for Automation Device Specification (ADS)."""
-import threading
-import struct
-import logging
-import ctypes
-from collections import namedtuple
 import asyncio
+from collections import namedtuple
+import ctypes
+import logging
+import struct
+import threading
+
 import async_timeout
-
 import pyads
-
 import voluptuous as vol
 
 from homeassistant.const import (

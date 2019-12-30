@@ -4,8 +4,8 @@ from datetime import timedelta
 
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import no_ip
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed

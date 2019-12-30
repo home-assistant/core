@@ -1,15 +1,17 @@
 """Support for the Tuya climate devices."""
 from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
 from homeassistant.components.climate.const import (
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
+    HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    HVAC_MODE_OFF,
 )
-from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_WHOLE,
@@ -30,7 +32,7 @@ HA_STATE_TO_TUYA = {
 
 TUYA_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_TUYA.items()}
 
-FAN_MODES = {SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH}
+FAN_MODES = {FAN_LOW, FAN_MEDIUM, FAN_HIGH}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

@@ -1,21 +1,20 @@
 """Manage config entries in Home Assistant."""
 import asyncio
-import logging
 import functools
+import logging
+from typing import Any, Callable, Dict, List, Optional, Set, Union, cast
 import uuid
-from typing import Any, Callable, Dict, List, Optional, Set, cast
 import weakref
 
 import attr
 
 from homeassistant import data_entry_flow, loader
-from homeassistant.core import callback, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ConfigEntryNotReady
-from homeassistant.setup import async_setup_component, async_process_deps_reqs
-from homeassistant.util.decorator import Registry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import Event
-
+from homeassistant.setup import async_process_deps_reqs, async_setup_component
+from homeassistant.util.decorator import Registry
 
 _LOGGER = logging.getLogger(__name__)
 _UNDEF: dict = {}
@@ -25,6 +24,16 @@ SOURCE_IMPORT = "import"
 SOURCE_SSDP = "ssdp"
 SOURCE_USER = "user"
 SOURCE_ZEROCONF = "zeroconf"
+
+# If a user wants to hide a discovery from the UI they can "Ignore" it. The config_entries/ignore_flow
+# websocket command creates a config entry with this source and while it exists normal discoveries
+# with the same unique id are ignored.
+SOURCE_IGNORE = "ignore"
+
+# This is used when a user uses the "Stop Ignoring" button in the UI (the
+# config_entries/ignore_flow websocket command). It's triggered after the "ignore" config entry has
+# been removed and unloaded.
+SOURCE_UNIGNORE = "unignore"
 
 HANDLERS = Registry()
 
@@ -86,6 +95,7 @@ class ConfigEntry:
         "title",
         "data",
         "options",
+        "unique_id",
         "system_options",
         "source",
         "connection_class",
@@ -105,6 +115,7 @@ class ConfigEntry:
         connection_class: str,
         system_options: dict,
         options: Optional[dict] = None,
+        unique_id: Optional[str] = None,
         entry_id: Optional[str] = None,
         state: str = ENTRY_STATE_NOT_LOADED,
     ) -> None:
@@ -139,6 +150,9 @@ class ConfigEntry:
         # State of the entry (LOADED, NOT_LOADED)
         self.state = state
 
+        # Unique ID of this entry.
+        self.unique_id = unique_id
+
         # Listeners to call on update
         self.update_listeners: List = []
 
@@ -153,6 +167,9 @@ class ConfigEntry:
         tries: int = 0,
     ) -> None:
         """Set up an entry."""
+        if self.source == SOURCE_IGNORE:
+            return
+
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
 
@@ -238,6 +255,10 @@ class ConfigEntry:
 
         Returns if unload is possible and was successful.
         """
+        if self.source == SOURCE_IGNORE:
+            self.state = ENTRY_STATE_NOT_LOADED
+            return True
+
         if integration is None:
             integration = await loader.async_get_integration(hass, self.domain)
 
@@ -284,6 +305,9 @@ class ConfigEntry:
 
     async def async_remove(self, hass: HomeAssistant) -> None:
         """Invoke remove callback on component."""
+        if self.source == SOURCE_IGNORE:
+            return
+
         integration = await loader.async_get_integration(hass, self.domain)
         component = integration.get_component()
         if not hasattr(component, "async_remove_entry"):
@@ -371,6 +395,7 @@ class ConfigEntry:
             "system_options": self.system_options.as_dict(),
             "source": self.source,
             "connection_class": self.connection_class,
+            "unique_id": self.unique_id,
         }
 
 
@@ -445,6 +470,19 @@ class ConfigEntries:
         dev_reg.async_clear_config_entry(entry_id)
         ent_reg.async_clear_config_entry(entry_id)
 
+        # After we have fully removed an "ignore" config entry we can try and rediscover it so that a
+        # user is able to immediately start configuring it. We do this by starting a new flow with
+        # the 'unignore' step. If the integration doesn't implement async_step_unignore then
+        # this will be a no-op.
+        if entry.source == SOURCE_IGNORE:
+            self.hass.async_create_task(
+                self.hass.config_entries.flow.async_init(
+                    entry.domain,
+                    context={"source": SOURCE_UNIGNORE},
+                    data={"unique_id": entry.unique_id},
+                )
+            )
+
         return {"require_restart": not unload_success}
 
     async def async_initialize(self) -> None:
@@ -474,6 +512,8 @@ class ConfigEntries:
                 options=entry.get("options"),
                 # New in 0.98
                 system_options=entry.get("system_options", {}),
+                # New in 0.104
+                unique_id=entry.get("unique_id"),
             )
             for entry in config["entries"]
         ]
@@ -534,11 +574,15 @@ class ConfigEntries:
         self,
         entry: ConfigEntry,
         *,
+        unique_id: Union[str, dict, None] = _UNDEF,
         data: dict = _UNDEF,
         options: dict = _UNDEF,
         system_options: dict = _UNDEF,
     ) -> None:
         """Update a config entry."""
+        if unique_id is not _UNDEF:
+            entry.unique_id = cast(Optional[str], unique_id)
+
         if data is not _UNDEF:
             entry.data = data
 
@@ -603,6 +647,34 @@ class ConfigEntries:
         if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return result
 
+        # Check if config entry exists with unique ID. Unload it.
+        existing_entry = None
+
+        if flow.unique_id is not None:
+            # Abort all flows in progress with same unique ID.
+            for progress_flow in self.flow.async_progress():
+                if (
+                    progress_flow["handler"] == flow.handler
+                    and progress_flow["flow_id"] != flow.flow_id
+                    and progress_flow["context"].get("unique_id") == flow.unique_id
+                ):
+                    self.flow.async_abort(progress_flow["flow_id"])
+
+            # Find existing entry.
+            for check_entry in self.async_entries(result["handler"]):
+                if check_entry.unique_id == flow.unique_id:
+                    existing_entry = check_entry
+                    break
+
+        # Unload the entry before setting up the new one.
+        # We will remove it only after the other one is set up,
+        # so that device customizations are not getting lost.
+        if (
+            existing_entry is not None
+            and existing_entry.state not in UNRECOVERABLE_STATES
+        ):
+            await self.async_unload(existing_entry.entry_id)
+
         entry = ConfigEntry(
             version=result["version"],
             domain=result["handler"],
@@ -612,11 +684,16 @@ class ConfigEntries:
             system_options={},
             source=flow.context["source"],
             connection_class=flow.CONNECTION_CLASS,
+            unique_id=flow.unique_id,
         )
         self._entries.append(entry)
-        self._async_schedule_save()
 
         await self.async_setup(entry.entry_id)
+
+        if existing_entry is not None:
+            await self.async_remove(existing_entry.entry_id)
+
+        self._async_schedule_save()
 
         result["result"] = entry
         return result
@@ -696,6 +773,15 @@ class ConfigFlow(data_entry_flow.FlowHandler):
 
     CONNECTION_CLASS = CONN_CLASS_UNKNOWN
 
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return unique ID if available."""
+        # pylint: disable=no-member
+        if not self.context:
+            return None
+
+        return cast(Optional[str], self.context.get("unique_id"))
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> "OptionsFlow":
@@ -703,10 +789,50 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         raise data_entry_flow.UnknownHandler
 
     @callback
+    def _abort_if_unique_id_configured(self) -> None:
+        """Abort if the unique ID is already configured."""
+        if self.unique_id is None:
+            return
+
+        if self.unique_id in self._async_current_ids():
+            raise data_entry_flow.AbortFlow("already_configured")
+
+    async def async_set_unique_id(
+        self, unique_id: str, *, raise_on_progress: bool = True
+    ) -> Optional[ConfigEntry]:
+        """Set a unique ID for the config flow.
+
+        Returns optionally existing config entry with same ID.
+        """
+        if raise_on_progress:
+            for progress in self._async_in_progress():
+                if progress["context"].get("unique_id") == unique_id:
+                    raise data_entry_flow.AbortFlow("already_in_progress")
+
+        # pylint: disable=no-member
+        self.context["unique_id"] = unique_id
+
+        for entry in self._async_current_entries():
+            if entry.unique_id == unique_id:
+                return entry
+
+        return None
+
+    @callback
     def _async_current_entries(self) -> List[ConfigEntry]:
         """Return current entries."""
         assert self.hass is not None
         return self.hass.config_entries.async_entries(self.handler)
+
+    @callback
+    def _async_current_ids(self, include_ignore: bool = True) -> Set[Optional[str]]:
+        """Return current unique IDs."""
+        assert self.hass is not None
+        return set(
+            entry.unique_id
+            for entry in self.hass.config_entries.async_entries(self.handler)
+            if include_ignore or entry.source != SOURCE_IGNORE
+        )
 
     @callback
     def _async_in_progress(self) -> List[Dict]:
@@ -717,6 +843,15 @@ class ConfigFlow(data_entry_flow.FlowHandler):
             for flw in self.hass.config_entries.flow.async_progress()
             if flw["handler"] == self.handler and flw["flow_id"] != self.flow_id
         ]
+
+    async def async_step_ignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
+        """Ignore this config flow."""
+        await self.async_set_unique_id(user_input["unique_id"], raise_on_progress=False)
+        return self.async_create_entry(title="Ignored", data={})
+
+    async def async_step_unignore(self, user_input: Dict[str, Any]) -> Dict[str, Any]:
+        """Rediscover a config entry by it's unique_id."""
+        return self.async_abort(reason="not_implemented")
 
 
 class OptionsFlowManager:

@@ -1,5 +1,17 @@
 """Tests for the Google Assistant integration."""
+from asynctest.mock import MagicMock
+
 from homeassistant.components.google_assistant import helpers
+
+
+def mock_google_config_store(agent_user_ids=None):
+    """Fake a storage for google assistant."""
+    store = MagicMock(spec=helpers.GoogleConfigStore)
+    if agent_user_ids is not None:
+        store.agent_user_ids = agent_user_ids
+    else:
+        store.agent_user_ids = {}
+    return store
 
 
 class MockConfig(helpers.AbstractConfig):
@@ -15,6 +27,7 @@ class MockConfig(helpers.AbstractConfig):
         local_sdk_webhook_id=None,
         local_sdk_user_id=None,
         enabled=True,
+        agent_user_ids=None,
     ):
         """Initialize config."""
         super().__init__(hass)
@@ -24,6 +37,7 @@ class MockConfig(helpers.AbstractConfig):
         self._local_sdk_webhook_id = local_sdk_webhook_id
         self._local_sdk_user_id = local_sdk_user_id
         self._enabled = enabled
+        self._store = mock_google_config_store(agent_user_ids)
 
     @property
     def enabled(self):

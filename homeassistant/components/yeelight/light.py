@@ -4,60 +4,61 @@ import logging
 import voluptuous as vol
 import yeelight
 from yeelight import (
+    BulbException,
+    Flow,
     RGBTransition,
     SleepTransition,
-    Flow,
-    BulbException,
     transitions as yee_transitions,
 )
-from yeelight.enums import PowerMode, LightType, BulbType, SceneClass
+from yeelight.enums import BulbType, LightType, PowerMode, SceneClass
 
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.service import extract_entity_ids
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin as mired_to_kelvin,
-    color_temperature_kelvin_to_mired as kelvin_to_mired,
-)
-from homeassistant.const import CONF_HOST, ATTR_ENTITY_ID, ATTR_MODE, CONF_NAME
-from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ATTR_TRANSITION,
     ATTR_COLOR_TEMP,
-    ATTR_FLASH,
-    FLASH_SHORT,
-    FLASH_LONG,
     ATTR_EFFECT,
+    ATTR_FLASH,
+    ATTR_HS_COLOR,
+    ATTR_KELVIN,
+    ATTR_RGB_COLOR,
+    ATTR_TRANSITION,
+    FLASH_LONG,
+    FLASH_SHORT,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
-    SUPPORT_TRANSITION,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_FLASH,
     SUPPORT_EFFECT,
+    SUPPORT_FLASH,
+    SUPPORT_TRANSITION,
     Light,
-    ATTR_RGB_COLOR,
-    ATTR_KELVIN,
 )
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, CONF_HOST, CONF_NAME
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.util.color as color_util
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired as kelvin_to_mired,
+    color_temperature_mired_to_kelvin as mired_to_kelvin,
+)
+
 from . import (
-    CONF_TRANSITION,
-    DATA_YEELIGHT,
-    CONF_MODE_MUSIC,
-    CONF_SAVE_ON_CHANGE,
-    CONF_CUSTOM_EFFECTS,
-    DATA_UPDATED,
-    YEELIGHT_SERVICE_SCHEMA,
-    DOMAIN,
-    ATTR_TRANSITIONS,
-    YEELIGHT_FLOW_TRANSITION_SCHEMA,
     ACTION_RECOVER,
-    CONF_FLOW_PARAMS,
     ATTR_ACTION,
     ATTR_COUNT,
-    NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    ATTR_TRANSITIONS,
+    CONF_CUSTOM_EFFECTS,
+    CONF_FLOW_PARAMS,
+    CONF_MODE_MUSIC,
     CONF_NIGHTLIGHT_SWITCH_TYPE,
+    CONF_SAVE_ON_CHANGE,
+    CONF_TRANSITION,
+    DATA_UPDATED,
+    DATA_YEELIGHT,
+    DOMAIN,
+    NIGHTLIGHT_SWITCH_TYPE_LIGHT,
+    YEELIGHT_FLOW_TRANSITION_SCHEMA,
+    YEELIGHT_SERVICE_SCHEMA,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,6 +140,21 @@ MODEL_TO_DEVICE_TYPE = {
     "ceiling2": BulbType.WhiteTemp,
     "ceiling3": BulbType.WhiteTemp,
     "ceiling4": BulbType.WhiteTempMood,
+}
+
+EFFECTS_MAP = {
+    EFFECT_DISCO: yee_transitions.disco,
+    EFFECT_TEMP: yee_transitions.temp,
+    EFFECT_STROBE: yee_transitions.strobe,
+    EFFECT_STROBE_COLOR: yee_transitions.strobe_color,
+    EFFECT_ALARM: yee_transitions.alarm,
+    EFFECT_POLICE: yee_transitions.police,
+    EFFECT_POLICE2: yee_transitions.police2,
+    EFFECT_CHRISTMAS: yee_transitions.christmas,
+    EFFECT_RGB: yee_transitions.rgb,
+    EFFECT_RANDOM_LOOP: yee_transitions.randomloop,
+    EFFECT_LSD: yee_transitions.lsd,
+    EFFECT_SLOWDOWN: yee_transitions.slowdown,
 }
 
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Range(min=1, max=100))
@@ -415,6 +431,7 @@ class YeelightGenericLight(Light):
         self._brightness = None
         self._color_temp = None
         self._hs = None
+        self._effect = None
 
         model_specs = self._bulb.get_model_specs()
         self._min_mireds = kelvin_to_mired(model_specs["color_temp"]["max"])
@@ -515,6 +532,11 @@ class YeelightGenericLight(Light):
         """Return the color property."""
         return self._hs
 
+    @property
+    def effect(self):
+        """Return the current effect."""
+        return self._effect
+
     # F821: https://github.com/PyCQA/pyflakes/issues/373
     @property
     def _bulb(self) -> "Bulb":  # noqa: F821
@@ -546,6 +568,16 @@ class YeelightGenericLight(Light):
         return YEELIGHT_MONO_EFFECT_LIST
 
     @property
+    def device_state_attributes(self):
+        """Return the device specific state attributes."""
+
+        attributes = {"flowing": self.device.is_color_flow_enabled}
+        if self.device.is_nightlight_supported:
+            attributes["night_light"] = self.device.is_nightlight_enabled
+
+        return attributes
+
+    @property
     def device(self):
         """Return yeelight device."""
         return self._device
@@ -553,6 +585,8 @@ class YeelightGenericLight(Light):
     def update(self):
         """Update light properties."""
         self._hs = self._get_hs_from_properties()
+        if not self.device.is_color_flow_enabled:
+            self._effect = None
 
     def _get_hs_from_properties(self):
         rgb = self._get_property("rgb")
@@ -657,45 +691,33 @@ class YeelightGenericLight(Light):
     @_cmd
     def set_effect(self, effect) -> None:
         """Activate effect."""
-        if effect:
-            if effect == EFFECT_STOP:
-                self._bulb.stop_flow(light_type=self.light_type)
-                return
+        if not effect:
+            return
 
-            effects_map = {
-                EFFECT_DISCO: yee_transitions.disco,
-                EFFECT_TEMP: yee_transitions.temp,
-                EFFECT_STROBE: yee_transitions.strobe,
-                EFFECT_STROBE_COLOR: yee_transitions.strobe_color,
-                EFFECT_ALARM: yee_transitions.alarm,
-                EFFECT_POLICE: yee_transitions.police,
-                EFFECT_POLICE2: yee_transitions.police2,
-                EFFECT_CHRISTMAS: yee_transitions.christmas,
-                EFFECT_RGB: yee_transitions.rgb,
-                EFFECT_RANDOM_LOOP: yee_transitions.randomloop,
-                EFFECT_LSD: yee_transitions.lsd,
-                EFFECT_SLOWDOWN: yee_transitions.slowdown,
-            }
+        if effect == EFFECT_STOP:
+            self._bulb.stop_flow(light_type=self.light_type)
+            return
 
-            if effect in self.custom_effects_names:
-                flow = Flow(**self.custom_effects[effect])
-            elif effect in effects_map:
-                flow = Flow(count=0, transitions=effects_map[effect]())
-            elif effect == EFFECT_FAST_RANDOM_LOOP:
-                flow = Flow(
-                    count=0, transitions=yee_transitions.randomloop(duration=250)
-                )
-            elif effect == EFFECT_WHATSAPP:
-                flow = Flow(count=2, transitions=yee_transitions.pulse(37, 211, 102))
-            elif effect == EFFECT_FACEBOOK:
-                flow = Flow(count=2, transitions=yee_transitions.pulse(59, 89, 152))
-            elif effect == EFFECT_TWITTER:
-                flow = Flow(count=2, transitions=yee_transitions.pulse(0, 172, 237))
+        if effect in self.custom_effects_names:
+            flow = Flow(**self.custom_effects[effect])
+        elif effect in EFFECTS_MAP:
+            flow = Flow(count=0, transitions=EFFECTS_MAP[effect]())
+        elif effect == EFFECT_FAST_RANDOM_LOOP:
+            flow = Flow(count=0, transitions=yee_transitions.randomloop(duration=250))
+        elif effect == EFFECT_WHATSAPP:
+            flow = Flow(count=2, transitions=yee_transitions.pulse(37, 211, 102))
+        elif effect == EFFECT_FACEBOOK:
+            flow = Flow(count=2, transitions=yee_transitions.pulse(59, 89, 152))
+        elif effect == EFFECT_TWITTER:
+            flow = Flow(count=2, transitions=yee_transitions.pulse(0, 172, 237))
+        else:
+            return
 
-            try:
-                self._bulb.start_flow(flow, light_type=self.light_type)
-            except BulbException as ex:
-                _LOGGER.error("Unable to set effect: %s", ex)
+        try:
+            self._bulb.start_flow(flow, light_type=self.light_type)
+            self._effect = effect
+        except BulbException as ex:
+            _LOGGER.error("Unable to set effect: %s", ex)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""

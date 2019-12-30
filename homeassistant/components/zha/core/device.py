@@ -11,8 +11,9 @@ import logging
 import time
 
 import zigpy.exceptions
-import zigpy.quirks
 from zigpy.profiles import zha, zll
+import zigpy.quirks
+from zigpy.zcl.clusters.general import Groups
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -178,6 +179,17 @@ class ZHADevice(LogMixin):
     def is_end_device(self):
         """Return true if this device is an end device."""
         return self._zigpy_device.node_desc.is_end_device
+
+    @property
+    def is_groupable(self):
+        """Return true if this device has a group cluster."""
+        if not self.available:
+            return False
+        clusters = self.async_get_clusters()
+        for cluster_map in clusters.values():
+            for clusters in cluster_map.values():
+                if Groups.cluster_id in clusters:
+                    return True
 
     @property
     def gateway(self):
@@ -505,6 +517,14 @@ class ZHADevice(LogMixin):
             f"{ATTR_ENDPOINT_ID}: {endpoint_id}",
         )
         return response
+
+    async def async_add_to_group(self, group_id):
+        """Add this device to the provided zigbee group."""
+        await self._zigpy_device.add_to_group(group_id)
+
+    async def async_remove_from_group(self, group_id):
+        """Remove this device from the provided zigbee group."""
+        await self._zigpy_device.remove_from_group(group_id)
 
     def log(self, level, msg, *args):
         """Log a message."""

@@ -46,6 +46,7 @@ TAHOMA_TYPES = {
     "io:SomfyBasicContactIOSystemSensor": "sensor",
     "io:SomfyContactIOSystemSensor": "sensor",
     "io:VerticalExteriorAwningIOComponent": "cover",
+    "io:VerticalInteriorBlindVeluxIOComponent": "cover",
     "io:WindowOpenerVeluxIOComponent": "cover",
     "io:GarageOpenerIOComponent": "cover",
     "io:DiscreteGarageOpenerIOComponent": "cover",

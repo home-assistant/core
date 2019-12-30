@@ -1,11 +1,13 @@
 """Support for SCSGate switches."""
 import logging
 
+from scsgate.messages import ScenarioTriggeredMessage, StateMessage
+from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
 
 from homeassistant.components import scsgate
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_NAME, CONF_DEVICES
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 ATTR_SCENARIO_ID = "scenario_id"
@@ -105,7 +107,6 @@ class SCSGateSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        from scsgate.tasks import ToggleStatusTask
 
         scsgate.SCSGATE.append_task(ToggleStatusTask(target=self._scs_id, toggled=True))
 
@@ -114,7 +115,6 @@ class SCSGateSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        from scsgate.tasks import ToggleStatusTask
 
         scsgate.SCSGATE.append_task(
             ToggleStatusTask(target=self._scs_id, toggled=False)
@@ -172,7 +172,6 @@ class SCSGateScenarioSwitch:
 
     def process_event(self, message):
         """Handle a SCSGate message related with this switch."""
-        from scsgate.messages import StateMessage, ScenarioTriggeredMessage
 
         if isinstance(message, StateMessage):
             scenario_id = message.bytes[4]

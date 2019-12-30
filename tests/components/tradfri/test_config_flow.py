@@ -6,7 +6,7 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components.tradfri import config_flow
 
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 @pytest.fixture

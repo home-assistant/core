@@ -7,10 +7,9 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
-
 from homeassistant.components.zwave import DATA_NETWORK, const
-from tests.mock.zwave import MockNode, MockValue, MockEntityValues
 
+from tests.mock.zwave import MockEntityValues, MockNode, MockValue
 
 VIEW_NAME = "api:config:zwave:device_config"
 

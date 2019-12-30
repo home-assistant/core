@@ -8,12 +8,12 @@ from plexauth import PlexAuth
 import requests.exceptions
 import voluptuous as vol
 
-from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant import config_entries
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.const import CONF_URL, CONF_TOKEN, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_SSL, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.json import load_json
 
 from .const import (  # pylint: disable=unused-import
@@ -22,16 +22,16 @@ from .const import (  # pylint: disable=unused-import
     CONF_CLIENT_IDENTIFIER,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
-    CONF_USE_EPISODE_ART,
     CONF_SHOW_ALL_CONTROLS,
+    CONF_USE_EPISODE_ART,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLEX_CONFIG_FILE,
     PLEX_SERVER_CONFIG,
     X_PLEX_DEVICE_NAME,
-    X_PLEX_VERSION,
-    X_PLEX_PRODUCT,
     X_PLEX_PLATFORM,
+    X_PLEX_PRODUCT,
+    X_PLEX_VERSION,
 )
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
@@ -80,12 +80,17 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Validate a provided configuration."""
         errors = {}
         self.current_login = server_config
+        is_importing = (
+            self.context["source"]  # pylint: disable=no-member
+            == config_entries.SOURCE_IMPORT
+        )
 
         plex_server = PlexServer(self.hass, server_config)
         try:
             await self.hass.async_add_executor_job(plex_server.connect)
 
         except NoServersFound:
+            _LOGGER.error("No servers linked to Plex account")
             errors["base"] = "no_servers"
         except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized):
             _LOGGER.error("Invalid credentials provided, config not created")
@@ -98,6 +103,11 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "not_found"
 
         except ServerNotSpecified as available_servers:
+            if is_importing:
+                _LOGGER.warning(
+                    "Imported configuration has multiple available Plex servers. Specify server in configuration or add a new Integration."
+                )
+                return self.async_abort(reason="non-interactive")
             self.available_servers = available_servers.args[0]
             return await self.async_step_select_server()
 
@@ -106,12 +116,17 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         if errors:
+            if is_importing:
+                return self.async_abort(reason="non-interactive")
             return self.async_show_form(step_id="start_website_auth", errors=errors)
 
         server_id = plex_server.machine_identifier
 
         for entry in self._async_current_entries():
             if entry.data[CONF_SERVER_IDENTIFIER] == server_id:
+                _LOGGER.debug(
+                    "Plex server already configured: %s", entry.data[CONF_SERVER]
+                )
                 return self.async_abort(reason="already_configured")
 
         url = plex_server.url_in_use

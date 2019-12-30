@@ -2,7 +2,12 @@
 import logging
 from typing import Optional
 
-from homematicip.aio.device import AsyncFullFlushBlind, AsyncFullFlushShutter
+from homematicip.aio.device import (
+    AsyncFullFlushBlind,
+    AsyncFullFlushShutter,
+    AsyncGarageDoorModuleTormatic,
+)
+from homematicip.base.enums import DoorCommand, DoorState
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -40,6 +45,8 @@ async def async_setup_entry(
             entities.append(HomematicipCoverSlats(hap, device))
         elif isinstance(device, AsyncFullFlushShutter):
             entities.append(HomematicipCoverShutter(hap, device))
+        elif isinstance(device, AsyncGarageDoorModuleTormatic):
+            entities.append(HomematicipGarageDoorModuleTormatic(hap, device))
 
     if entities:
         async_add_entities(entities)
@@ -106,3 +113,35 @@ class HomematicipCoverSlats(HomematicipCoverShutter, CoverDevice):
     async def async_stop_cover_tilt(self, **kwargs) -> None:
         """Stop the device if in motion."""
         await self._device.set_shutter_stop()
+
+
+class HomematicipGarageDoorModuleTormatic(HomematicipGenericDevice, CoverDevice):
+    """Representation of a HomematicIP Garage Door Module for Tormatic."""
+
+    @property
+    def current_cover_position(self) -> int:
+        """Return current position of cover."""
+        door_state_to_position = {
+            DoorState.CLOSED: 0,
+            DoorState.OPEN: 100,
+            DoorState.VENTILATION_POSITION: 10,
+            DoorState.POSITION_UNKNOWN: None,
+        }
+        return door_state_to_position.get(self._device.doorState)
+
+    @property
+    def is_closed(self) -> Optional[bool]:
+        """Return if the cover is closed."""
+        return self._device.doorState == DoorState.CLOSED
+
+    async def async_open_cover(self, **kwargs) -> None:
+        """Open the cover."""
+        await self._device.send_door_command(DoorCommand.OPEN)
+
+    async def async_close_cover(self, **kwargs) -> None:
+        """Close the cover."""
+        await self._device.send_door_command(DoorCommand.CLOSE)
+
+    async def async_stop_cover(self, **kwargs) -> None:
+        """Stop the cover."""
+        await self._device.send_door_command(DoorCommand.STOP)

@@ -1,12 +1,12 @@
 """Template helper methods for rendering strings with Home Assistant data."""
 import base64
+from datetime import datetime
+from functools import wraps
 import json
 import logging
 import math
 import random
 import re
-from datetime import datetime
-from functools import wraps
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 import jinja2
@@ -29,7 +29,6 @@ from homeassistant.helpers.typing import HomeAssistantType, TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util import convert, dt as dt_util, location as loc_util
 from homeassistant.util.async_ import run_callback_threadsafe
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -69,7 +68,9 @@ def render_complex(value, variables=None):
         return [render_complex(item, variables) for item in value]
     if isinstance(value, dict):
         return {key: render_complex(item, variables) for key, item in value.items()}
-    return value.async_render(variables)
+    if isinstance(value, Template):
+        return value.async_render(variables)
+    return value
 
 
 def extract_entities(

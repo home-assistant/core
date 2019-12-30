@@ -15,11 +15,11 @@ from homeassistant.components.weather import (
 from homeassistant.const import TEMP_FAHRENHEIT
 
 from .const import (
+    _LOGGER,
     DOMAIN,
     ECOBEE_MODEL_TO_NAME,
     ECOBEE_WEATHER_SYMBOL_TO_HASS,
     MANUFACTURER,
-    _LOGGER,
 )
 
 

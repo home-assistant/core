@@ -126,23 +126,27 @@ class TPLinkSmartBulb(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
+        self._state = True
         self.smartbulb.state = SmartBulb.BULB_STATE_ON
 
         if ATTR_COLOR_TEMP in kwargs:
-            self.smartbulb.color_temp = mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
+            self._color_temp = kwargs.get(ATTR_COLOR_TEMP)
+            self.smartbulb.color_temp = mired_to_kelvin(self._color_temp)
 
-        brightness = brightness_to_percentage(
-            kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
-        )
+        brightness_value = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
+        brightness_pct = brightness_to_percentage(brightness_value)
         if ATTR_HS_COLOR in kwargs:
-            hue, sat = kwargs.get(ATTR_HS_COLOR)
-            hsv = (int(hue), int(sat), brightness)
+            self._hs = kwargs.get(ATTR_HS_COLOR)
+            hue, sat = self._hs
+            hsv = (int(hue), int(sat), brightness_pct)
             self.smartbulb.hsv = hsv
         elif ATTR_BRIGHTNESS in kwargs:
-            self.smartbulb.brightness = brightness
+            self._brightness = brightness_value
+            self.smartbulb.brightness = brightness_pct
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
+        self._state = False
         self.smartbulb.state = SmartBulb.BULB_STATE_OFF
 
     @property
@@ -177,6 +181,15 @@ class TPLinkSmartBulb(Light):
 
     def update(self):
         """Update the TP-Link Bulb's state."""
+        if self._supported_features is None:
+            # First run, update by blocking.
+            self.do_update()
+        else:
+            # Not first run, update in the background.
+            self.hass.add_job(self.do_update)
+
+    def do_update(self):
+        """Update states."""
         try:
             if self._supported_features is None:
                 self.get_features()

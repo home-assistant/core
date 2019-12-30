@@ -21,7 +21,6 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_ENTITY_ID,
     ATTR_HS_COLOR,
-    DOMAIN,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
@@ -32,6 +31,18 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color, dt
+
+from .const import (
+    DOMAIN,
+    SERVICE_EYECARE_MODE_OFF,
+    SERVICE_EYECARE_MODE_ON,
+    SERVICE_NIGHT_LIGHT_MODE_OFF,
+    SERVICE_NIGHT_LIGHT_MODE_ON,
+    SERVICE_REMINDER_OFF,
+    SERVICE_REMINDER_ON,
+    SERVICE_SET_DELAYED_TURN_OFF,
+    SERVICE_SET_SCENE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,15 +95,6 @@ ATTR_SLEEP_OFF_TIME = "sleep_off_time"
 ATTR_TOTAL_ASSISTANT_SLEEP_TIME = "total_assistant_sleep_time"
 ATTR_BRAND_SLEEP = "brand_sleep"
 ATTR_BRAND = "brand"
-
-SERVICE_SET_SCENE = "xiaomi_miio_set_scene"
-SERVICE_SET_DELAYED_TURN_OFF = "xiaomi_miio_set_delayed_turn_off"
-SERVICE_REMINDER_ON = "xiaomi_miio_reminder_on"
-SERVICE_REMINDER_OFF = "xiaomi_miio_reminder_off"
-SERVICE_NIGHT_LIGHT_MODE_ON = "xiaomi_miio_night_light_mode_on"
-SERVICE_NIGHT_LIGHT_MODE_OFF = "xiaomi_miio_night_light_mode_off"
-SERVICE_EYECARE_MODE_ON = "xiaomi_miio_eyecare_mode_on"
-SERVICE_EYECARE_MODE_OFF = "xiaomi_miio_eyecare_mode_off"
 
 XIAOMI_MIIO_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 

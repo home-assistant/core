@@ -2,16 +2,20 @@
 from abc import ABC
 import asyncio
 from datetime import datetime, timedelta
-import logging
 import functools as ft
+import logging
 from timeit import default_timer as timer
 from typing import Any, Dict, Iterable, List, Optional, Union
 
+from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
     ATTR_ICON,
+    ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
     STATE_OFF,
@@ -20,22 +24,16 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    ATTR_ENTITY_PICTURE,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_DEVICE_CLASS,
 )
+from homeassistant.core import CALLBACK_TYPE, Context, HomeAssistant, callback
+from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.entity_registry import (
     EVENT_ENTITY_REGISTRY_UPDATED,
     RegistryEntry,
 )
-from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE, Context
-from homeassistant.config import DATA_CUSTOMIZE
-from homeassistant.exceptions import NoEntitySpecifiedError
-from homeassistant.util import ensure_unique_string, slugify
+from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.util import dt as dt_util
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs, no-warn-return-any
 
@@ -143,6 +141,17 @@ class Entity(ABC):
     def state(self) -> Union[None, str, int, float]:
         """Return the state of the entity."""
         return STATE_UNKNOWN
+
+    @property
+    def capability_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the capability attributes.
+
+        Attributes that explain the capabilities of an entity.
+
+        Implemented by component base class. Convention for attribute names
+        is lowercase snake_case.
+        """
+        return None
 
     @property
     def state_attributes(self) -> Optional[Dict[str, Any]]:
@@ -302,7 +311,7 @@ class Entity(ABC):
 
         start = timer()
 
-        attr = {}
+        attr = self.capability_attributes or {}
         if not self.available:
             state = STATE_UNAVAILABLE
         else:

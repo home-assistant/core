@@ -3,9 +3,10 @@ import asyncio
 
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import owntracks
-from tests.common import mock_component, MockConfigEntry
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry, mock_component
 
 MINIMAL_LOCATION_MESSAGE = {
     "_type": "location",

@@ -1,8 +1,8 @@
 """Axis network device abstraction."""
 
 import asyncio
-import async_timeout
 
+import async_timeout
 import axis
 from axis.streammanager import SIGNAL_PLAYING
 
@@ -21,7 +21,6 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_CAMERA, CONF_EVENTS, CONF_MODEL, DOMAIN, LOGGER
-
 from .errors import AuthenticationRequired, CannotConnect
 
 

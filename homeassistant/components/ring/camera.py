@@ -3,16 +3,18 @@ import asyncio
 from datetime import timedelta
 import logging
 
+from haffmpeg.camera import CameraMjpeg
+from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.util import dt as dt_util
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.core import callback
+from homeassistant.util import dt as dt_util
 
 from . import (
     ATTRIBUTION,
@@ -122,7 +124,6 @@ class RingCam(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
 
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
 
@@ -140,7 +141,6 @@ class RingCam(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        from haffmpeg.camera import CameraMjpeg
 
         if self._video_url is None:
             return

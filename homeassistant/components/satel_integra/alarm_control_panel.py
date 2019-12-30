@@ -3,6 +3,8 @@ import asyncio
 from collections import OrderedDict
 import logging
 
+from satel_integra.satel_integra import AlarmState
+
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -82,7 +84,6 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
 
     def _read_alarm_state(self):
         """Read current status of the alarm and translate it into HA status."""
-        from satel_integra.satel_integra import AlarmState
 
         # Default - disarmed:
         hass_alarm_status = STATE_ALARM_DISARMED

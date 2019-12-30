@@ -1,7 +1,7 @@
 """Constants for the SolarEdge Monitoring API."""
 from datetime import timedelta
 
-from homeassistant.const import POWER_WATT, ENERGY_WATT_HOUR
+from homeassistant.const import ENERGY_WATT_HOUR, POWER_WATT
 
 DOMAIN = "solaredge"
 

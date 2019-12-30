@@ -1,14 +1,15 @@
 """Support for Ring Doorbell/Chimes."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
 from requests.exceptions import ConnectTimeout, HTTPError
+from ring_doorbell import Ring
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_SCAN_INTERVAL
-from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,8 +51,6 @@ def setup(hass, config):
     scan_interval = conf[CONF_SCAN_INTERVAL]
 
     try:
-        from ring_doorbell import Ring
-
         cache = hass.config.path(DEFAULT_CACHEDB)
         ring = Ring(username=username, password=password, cache_file=cache)
         if not ring.is_connected:

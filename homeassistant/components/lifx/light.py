@@ -35,7 +35,12 @@ from homeassistant.components.light import (
     Light,
     preprocess_turn_on_alternatives,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    ENTITY_MATCH_ALL,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -66,8 +71,9 @@ ATTR_INFRARED = "infrared"
 ATTR_ZONES = "zones"
 ATTR_POWER = "power"
 
-LIFX_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend(
+LIFX_SET_STATE_SCHEMA = cv.make_entity_service_schema(
     {
+        **LIGHT_TURN_ON_SCHEMA,
         ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
         ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
         ATTR_POWER: cv.boolean,
@@ -368,17 +374,15 @@ class LIFXManager:
 
     async def async_service_to_entities(self, service):
         """Return the known entities that a service call mentions."""
-        entity_ids = await async_extract_entity_ids(self.hass, service)
-        if entity_ids:
-            entities = [
-                entity
-                for entity in self.entities.values()
-                if entity.entity_id in entity_ids
-            ]
-        else:
-            entities = list(self.entities.values())
+        if service.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL:
+            return self.entities.values()
 
-        return entities
+        entity_ids = await async_extract_entity_ids(self.hass, service)
+        return [
+            entity
+            for entity in self.entities.values()
+            if entity.entity_id in entity_ids
+        ]
 
     @callback
     def register(self, bulb):

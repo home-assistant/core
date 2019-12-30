@@ -87,8 +87,6 @@ async def _async_setup_entities(
 class ZhaFan(ZhaEntity, FanEntity):
     """Representation of a ZHA fan."""
 
-    _domain = DOMAIN
-
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)

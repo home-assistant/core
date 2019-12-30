@@ -2,8 +2,8 @@
 from unittest.mock import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.core import callback
 from homeassistant.components import ifttt
+from homeassistant.core import callback
 
 
 async def test_config_flow_registers_webhook(hass, aiohttp_client):

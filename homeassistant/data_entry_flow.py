@@ -1,9 +1,11 @@
 """Classes to help gather user submissions."""
 import logging
-from typing import Dict, Any, Callable, List, Optional
+from typing import Any, Callable, Dict, List, Optional, cast
 import uuid
+
 import voluptuous as vol
-from .core import callback, HomeAssistant
+
+from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +34,16 @@ class UnknownFlow(FlowError):
 
 class UnknownStep(FlowError):
     """Unknown step specified."""
+
+
+class AbortFlow(FlowError):
+    """Exception to indicate a flow needs to be aborted."""
+
+    def __init__(self, reason: str, description_placeholders: Optional[Dict] = None):
+        """Initialize an abort flow exception."""
+        super().__init__(f"Flow aborted: {reason}")
+        self.reason = reason
+        self.description_placeholders = description_placeholders
 
 
 class FlowManager:
@@ -129,7 +141,12 @@ class FlowManager:
                 )
             )
 
-        result: Dict = await getattr(flow, method)(user_input)
+        try:
+            result: Dict = await getattr(flow, method)(user_input)
+        except AbortFlow as err:
+            result = _create_abort_data(
+                flow.flow_id, flow.handler, err.reason, err.description_placeholders
+            )
 
         if result["type"] not in (
             RESULT_TYPE_FORM,
@@ -226,13 +243,9 @@ class FlowHandler:
         self, *, reason: str, description_placeholders: Optional[Dict] = None
     ) -> Dict[str, Any]:
         """Abort the config flow."""
-        return {
-            "type": RESULT_TYPE_ABORT,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "reason": reason,
-            "description_placeholders": description_placeholders,
-        }
+        return _create_abort_data(
+            self.flow_id, cast(str, self.handler), reason, description_placeholders
+        )
 
     @callback
     def async_external_step(
@@ -257,3 +270,20 @@ class FlowHandler:
             "handler": self.handler,
             "step_id": next_step_id,
         }
+
+
+@callback
+def _create_abort_data(
+    flow_id: str,
+    handler: str,
+    reason: str,
+    description_placeholders: Optional[Dict] = None,
+) -> Dict[str, Any]:
+    """Return the definition of an external step for the user to take."""
+    return {
+        "type": RESULT_TYPE_ABORT,
+        "flow_id": flow_id,
+        "handler": handler,
+        "reason": reason,
+        "description_placeholders": description_placeholders,
+    }

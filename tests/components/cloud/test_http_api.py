@@ -1,25 +1,25 @@
 """Tests for the HTTP API for the cloud component."""
 import asyncio
-from unittest.mock import patch, MagicMock
 from ipaddress import ip_network
+from unittest.mock import MagicMock, patch
 
-import pytest
-from jose import jwt
+from hass_nabucasa import thingtalk
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
-from hass_nabucasa import thingtalk
+from jose import jwt
+import pytest
 
-from homeassistant.core import State
 from homeassistant.auth.providers import trusted_networks as tn_auth
+from homeassistant.components.alexa import errors as alexa_errors
+from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.cloud.const import DOMAIN, RequireRelink
 from homeassistant.components.google_assistant.helpers import GoogleEntity
-from homeassistant.components.alexa.entities import LightCapabilities
-from homeassistant.components.alexa import errors as alexa_errors
+from homeassistant.core import State
+
+from . import mock_cloud, mock_cloud_prefs
 
 from tests.common import mock_coro
 from tests.components.google_assistant import MockConfig
-
-from . import mock_cloud, mock_cloud_prefs
 
 GOOGLE_ACTIONS_SYNC_URL = "https://api-test.hass.io/google_actions_sync"
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"

@@ -94,7 +94,7 @@ async def test_configure_two_steps(manager):
 
 
 async def test_show_form(manager):
-    """Test that abort removes the flow from progress."""
+    """Test that we can show a form."""
     schema = vol.Schema({vol.Required("username"): str, vol.Required("password"): str})
 
     @manager.mock_reg_handler("test")
@@ -271,3 +271,17 @@ async def test_external_step(hass, manager):
     result = await manager.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Hello"
+
+
+async def test_abort_flow_exception(manager):
+    """Test that the AbortFlow exception works."""
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        async def async_step_init(self, user_input=None):
+            raise data_entry_flow.AbortFlow("mock-reason", {"placeholder": "yo"})
+
+    form = await manager.async_init("test")
+    assert form["type"] == "abort"
+    assert form["reason"] == "mock-reason"
+    assert form["description_placeholders"] == {"placeholder": "yo"}
