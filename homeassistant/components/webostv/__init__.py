@@ -42,7 +42,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
-                        vol.Optional(CONF_HOST): cv.string,
+                        vol.Required(CONF_HOST): cv.string,
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                         vol.Optional(
@@ -110,7 +110,7 @@ async def async_setup(hass, config):
 async def async_setup_tv(hass, config, conf):
     """Set up a LG WebOS TV based on host parameter."""
 
-    host = conf.get(CONF_HOST)
+    host = conf[CONF_HOST]
     standby_connection = conf[CONF_STANDBY_CONNECTION]
 
     client = WebOsClient(host, standby_connection=standby_connection)

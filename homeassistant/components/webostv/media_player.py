@@ -64,7 +64,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if discovery_info is None:
         return
 
-    host = discovery_info.get(CONF_HOST)
+    host = discovery_info[CONF_HOST]
     name = discovery_info[CONF_NAME]
     customize = discovery_info[CONF_CUSTOMIZE]
     turn_on_action = discovery_info.get(CONF_ON_ACTION)
