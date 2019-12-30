@@ -41,11 +41,15 @@ ATTR_PORT = "port"
 
 CONF_SOURCE_IGNORE = "source_ignore"
 CONF_SOURCE_NAMES = "source_names"
+CONF_VOLUME_MAX = "volume_max"
+CONF_VOLUME_MIN = "volume_min"
 CONF_ZONE_IGNORE = "zone_ignore"
 CONF_ZONE_NAMES = "zone_names"
 
 DATA_YAMAHA = "yamaha_known_receivers"
 DEFAULT_NAME = "Yamaha Receiver"
+DEFAULT_VOLUME_MAX = 0.0
+DEFAULT_VOLUME_MIN = -100.0
 
 MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 
@@ -75,13 +79,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_SOURCE_NAMES, default={}): {cv.string: cv.string},
         vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
+        vol.Optional(CONF_VOLUME_MIN, default=DEFAULT_VOLUME_MIN): vol.Number(),
+        vol.Optional(CONF_VOLUME_MAX, default=DEFAULT_VOLUME_MAX): vol.Number(),
     }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yamaha platform."""
-
     # Keep track of configured receivers so that we don't end up
     # discovering a receiver dynamically that we have static config
     # for. Map each device from its zone_id to an instance since
@@ -95,6 +100,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     source_names = config.get(CONF_SOURCE_NAMES)
     zone_ignore = config.get(CONF_ZONE_IGNORE)
     zone_names = config.get(CONF_ZONE_NAMES)
+    volume_min = config.get(CONF_VOLUME_MIN)
+    volume_max = config.get(CONF_VOLUME_MAX)
 
     if discovery_info is not None:
         name = discovery_info.get("name")
@@ -120,7 +127,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if receiver.zone in zone_ignore:
             continue
 
-        device = YamahaDevice(name, receiver, source_ignore, source_names, zone_names)
+        device = YamahaDevice(
+            name,
+            receiver,
+            source_ignore,
+            source_names,
+            zone_names,
+            volume_min,
+            volume_max,
+        )
 
         # Only add device if it's not already added
         if device.zone_id not in hass.data[DATA_YAMAHA]:
@@ -156,11 +171,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class YamahaDevice(MediaPlayerDevice):
     """Representation of a Yamaha device."""
 
-    def __init__(self, name, receiver, source_ignore, source_names, zone_names):
+    def __init__(
+        self,
+        name,
+        receiver,
+        source_ignore,
+        source_names,
+        zone_names,
+        volume_min,
+        volume_max,
+    ):
         """Initialize the Yamaha Receiver."""
         self.receiver = receiver
         self._muted = False
         self._volume = 0
+        self._volume_min = volume_min
+        self._volume_max = volume_max
         self._pwstate = STATE_OFF
         self._current_source = None
         self._sound_mode = None
@@ -195,7 +221,7 @@ class YamahaDevice(MediaPlayerDevice):
             self._pwstate = STATE_OFF
 
         self._muted = self.receiver.mute
-        self._volume = (self.receiver.volume / 100) + 1
+        self._volume = self._decibel_to_ratio(self.receiver.volume)
 
         if self.source_list is None:
             self.build_source_list()
@@ -300,9 +326,7 @@ class YamahaDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        receiver_vol = 100 - (volume * 100)
-        negative_receiver_vol = -receiver_vol
-        self.receiver.volume = negative_receiver_vol
+        self.receiver.volume = self._ratio_to_decibel(volume)
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
@@ -311,7 +335,7 @@ class YamahaDevice(MediaPlayerDevice):
     def turn_on(self):
         """Turn the media player on."""
         self.receiver.on = True
-        self._volume = (self.receiver.volume / 100) + 1
+        self._volume = self._decibel_to_ratio(self.receiver.volume)
 
     def media_play(self):
         """Send play command."""
@@ -409,3 +433,11 @@ class YamahaDevice(MediaPlayerDevice):
                 return f"{station}: {song}"
 
             return song or station
+
+    def _decibel_to_ratio(self, decibel):
+        """Convert dB linearly to (0..1) scale."""
+        return (decibel - self._volume_min) / (self._volume_max - self._volume_min)
+
+    def _ratio_to_decibel(self, ratio):
+        """Convert (0..1) scale linearly to dB."""
+        return ratio * (self._volume_max - self._volume_min) + self._volume_min
