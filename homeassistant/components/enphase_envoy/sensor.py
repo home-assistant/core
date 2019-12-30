@@ -193,6 +193,7 @@ class EnvoyData:
             else:
                 _LOGGER.debug(
                     "Sensor %s isInstance(int) was %s.  Returning None for state.",
+                    envoy_data._type,
                     isinstance(self.data.get(envoy_data._type), int),
                 )
         elif envoy_data._type == "inverters":
