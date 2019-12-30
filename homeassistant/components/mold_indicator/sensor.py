@@ -6,19 +6,18 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
     EVENT_HOMEASSISTANT_START,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    CONF_NAME,
 )
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
-
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 

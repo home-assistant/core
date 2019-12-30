@@ -4,27 +4,27 @@ import logging
 from venstarcolortouch import VenstarColorTouch
 import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
+    FAN_AUTO,
+    FAN_ON,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    SUPPORT_FAN_MODE,
-    FAN_ON,
-    FAN_AUTO,
-    SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     PRESET_AWAY,
     PRESET_NONE,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.const import (
@@ -34,7 +34,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_TIMEOUT,
     CONF_USERNAME,
-    PRECISION_WHOLE,
+    PRECISION_HALVES,
     STATE_ON,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
@@ -134,9 +134,9 @@ class VenstarThermostat(ClimateDevice):
         """Return the precision of the system.
 
         Venstar temperature values are passed back and forth in the
-        API as whole degrees C or F.
+        API in C or F, with half-degree accuracy.
         """
-        return PRECISION_WHOLE
+        return PRECISION_HALVES
 
     @property
     def temperature_unit(self):

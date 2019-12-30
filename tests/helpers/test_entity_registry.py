@@ -5,11 +5,10 @@ from unittest.mock import patch
 import asynctest
 import pytest
 
-from homeassistant.core import valid_entity_id, callback
+from homeassistant.core import callback, valid_entity_id
 from homeassistant.helpers import entity_registry
 
-from tests.common import MockConfigEntry, mock_registry, flush_store
-
+from tests.common import MockConfigEntry, flush_store, mock_registry
 
 YAML__OPEN_PATH = "homeassistant.util.yaml.loader.open"
 

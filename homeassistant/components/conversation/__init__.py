@@ -11,7 +11,7 @@ from homeassistant.helpers import config_validation as cv, intent
 from homeassistant.loader import bind_hass
 
 from .agent import AbstractConversationAgent
-from .default_agent import async_register, DefaultAgent
+from .default_agent import DefaultAgent, async_register
 
 _LOGGER = logging.getLogger(__name__)
 

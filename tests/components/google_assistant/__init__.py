@@ -1,5 +1,6 @@
 """Tests for the Google Assistant integration."""
 from asynctest.mock import MagicMock
+
 from homeassistant.components.google_assistant import helpers
 
 

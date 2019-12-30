@@ -1,8 +1,8 @@
 """Support to send and receive Telegram messages."""
-import io
-from ipaddress import ip_network
 from functools import partial
 import importlib
+import io
+from ipaddress import ip_network
 import logging
 
 import requests
@@ -26,11 +26,11 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_PLATFORM,
     CONF_TIMEOUT,
-    HTTP_DIGEST_AUTHENTICATION,
     CONF_URL,
+    HTTP_DIGEST_AUTHENTICATION,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 

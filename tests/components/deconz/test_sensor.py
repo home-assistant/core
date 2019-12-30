@@ -2,11 +2,10 @@
 from copy import deepcopy
 
 from homeassistant.components import deconz
+import homeassistant.components.sensor as sensor
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.sensor as sensor
-
-from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
 
 SENSORS = {
     "1": {

@@ -1,8 +1,8 @@
 """Support for TekSavvy Bandwidth Monitor."""
 from datetime import timedelta
 import logging
-import async_timeout
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA

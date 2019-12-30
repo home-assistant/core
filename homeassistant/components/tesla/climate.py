@@ -16,21 +16,34 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_HVAC = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Tesla climate platform."""
-    devices = [
-        TeslaThermostat(device, hass.data[TESLA_DOMAIN]["controller"])
-        for device in hass.data[TESLA_DOMAIN]["devices"]["climate"]
-    ]
-    add_entities(devices, True)
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Tesla binary_sensors by config_entry."""
+    async_add_entities(
+        [
+            TeslaThermostat(
+                device,
+                hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"],
+                config_entry,
+            )
+            for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"][
+                "climate"
+            ]
+        ],
+        True,
+    )
 
 
 class TeslaThermostat(TeslaDevice, ClimateDevice):
     """Representation of a Tesla climate."""
 
-    def __init__(self, tesla_device, controller):
+    def __init__(self, tesla_device, controller, config_entry):
         """Initialize the Tesla device."""
-        super().__init__(tesla_device, controller)
+        super().__init__(tesla_device, controller, config_entry)
         self._target_temperature = None
         self._temperature = None
 

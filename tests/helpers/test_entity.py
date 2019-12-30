@@ -1,16 +1,16 @@
 """Test the entity helper."""
 # pylint: disable=protected-access
 import asyncio
-import threading
 from datetime import timedelta
-from unittest.mock import MagicMock, patch, PropertyMock
+import threading
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.helpers import entity, entity_registry
-from homeassistant.core import Context
-from homeassistant.const import ATTR_HIDDEN, ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
 from homeassistant.config import DATA_CUSTOMIZE
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_HIDDEN, STATE_UNAVAILABLE
+from homeassistant.core import Context
+from homeassistant.helpers import entity, entity_registry
 from homeassistant.helpers.entity_values import EntityValues
 
 from tests.common import get_test_home_assistant, mock_registry

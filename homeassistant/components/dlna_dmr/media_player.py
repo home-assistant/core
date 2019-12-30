@@ -198,7 +198,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
     """Representation of a DLNA DMR device."""
 
     def __init__(self, dmr_device, name=None):
-        """Initializer."""
+        """Initialize DLNA DMR device."""
         self._device = dmr_device
         self._name = name
 

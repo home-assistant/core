@@ -165,7 +165,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         _LOGGER.debug("Running Neato Vacuums update")
         try:
             if self._robot_stats is None:
-                self._robot_stats = self.robot.get_robot_info().json()
+                self._robot_stats = self.robot.get_general_info().json().get("data")
         except NeatoRobotException:
             _LOGGER.warning("Couldn't fetch robot information of %s", self._name)
 
@@ -319,10 +319,9 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         """Device info for neato robot."""
         info = {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}, "name": self._name}
         if self._robot_stats:
-            info["manufacturer"] = self._robot_stats["data"]["mfg_name"]
-            info["model"] = self._robot_stats["data"]["modelName"]
-        if self._state:
-            info["sw_version"] = self._state["meta"]["firmware"]
+            info["manufacturer"] = self._robot_stats["battery"]["vendor"]
+            info["model"] = self._robot_stats["model"]
+            info["sw_version"] = self._robot_stats["firmware"]
 
     def start(self):
         """Start cleaning or resume cleaning."""

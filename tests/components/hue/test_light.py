@@ -5,8 +5,8 @@ import logging
 from unittest.mock import Mock
 
 import aiohue
-from aiohue.lights import Lights
 from aiohue.groups import Groups
+from aiohue.lights import Lights
 import pytest
 
 from homeassistant import config_entries

@@ -46,6 +46,11 @@ def load_old_pairings(hass):
     return old_pairings
 
 
+def normalize_hkid(hkid):
+    """Normalize a hkid so that it is safe to compare with other normalized hkids."""
+    return hkid.lower()
+
+
 @callback
 def find_existing_host(hass, serial):
     """Return a set of the configured hosts."""
@@ -77,6 +82,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             key = user_input["device"]
             self.hkid = self.devices[key]["id"]
             self.model = self.devices[key]["md"]
+            await self.async_set_unique_id(
+                normalize_hkid(self.hkid), raise_on_progress=False
+            )
             return await self.async_step_pair()
 
         all_hosts = await self.hass.async_add_executor_job(self.controller.discover, 5)
@@ -100,6 +108,38 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             ),
         )
 
+    async def async_step_unignore(self, user_input):
+        """Rediscover a previously ignored discover."""
+        unique_id = user_input["unique_id"]
+        await self.async_set_unique_id(unique_id)
+
+        records = await self.hass.async_add_executor_job(self.controller.discover, 5)
+        for record in records:
+            if normalize_hkid(record["id"]) != unique_id:
+                continue
+            return await self.async_step_zeroconf(
+                {
+                    "host": record["address"],
+                    "port": record["port"],
+                    "hostname": record["name"],
+                    "type": "_hap._tcp.local.",
+                    "name": record["name"],
+                    "properties": {
+                        "md": record["md"],
+                        "pv": record["pv"],
+                        "id": unique_id,
+                        "c#": record["c#"],
+                        "s#": record["s#"],
+                        "ff": record["ff"],
+                        "ci": record["ci"],
+                        "sf": record["sf"],
+                        "sh": "",
+                    },
+                }
+            )
+
+        return self.async_abort(reason="no_devices")
+
     async def async_step_zeroconf(self, discovery_info):
         """Handle a discovered HomeKit accessory.
 
@@ -120,18 +160,6 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         status_flags = int(properties["sf"])
         paired = not status_flags & 0x01
 
-        _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
-
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context["hkid"] = hkid
-        self.context["title_placeholders"] = {"name": name}
-
-        # If multiple HomekitControllerFlowHandler end up getting created
-        # for the same accessory dont  let duplicates hang around
-        active_flows = self._async_in_progress()
-        if any(hkid == flow["context"]["hkid"] for flow in active_flows):
-            return self.async_abort(reason="already_in_progress")
-
         # The configuration number increases every time the characteristic map
         # needs updating. Some devices use a slightly off-spec name so handle
         # both cases.
@@ -143,21 +171,27 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
             )
             config_num = None
 
-        if paired:
-            if hkid in self.hass.data.get(KNOWN_DEVICES, {}):
-                # The device is already paired and known to us
-                # According to spec we should monitor c# (config_num) for
-                # changes. If it changes, we check for new entities
-                conn = self.hass.data[KNOWN_DEVICES][hkid]
-                if conn.config_num != config_num:
-                    _LOGGER.debug(
-                        "HomeKit info %s: c# incremented, refreshing entities", hkid
-                    )
-                    self.hass.async_create_task(
-                        conn.async_refresh_entity_map(config_num)
-                    )
-                return self.async_abort(reason="already_configured")
+        # If the device is already paired and known to us we should monitor c#
+        # (config_num) for changes. If it changes, we check for new entities
+        if paired and hkid in self.hass.data.get(KNOWN_DEVICES, {}):
+            conn = self.hass.data[KNOWN_DEVICES][hkid]
+            if conn.config_num != config_num:
+                _LOGGER.debug(
+                    "HomeKit info %s: c# incremented, refreshing entities", hkid
+                )
+                self.hass.async_create_task(conn.async_refresh_entity_map(config_num))
+            return self.async_abort(reason="already_configured")
 
+        _LOGGER.debug("Discovered device %s (%s - %s)", name, model, hkid)
+
+        await self.async_set_unique_id(normalize_hkid(hkid))
+        self._abort_if_unique_id_configured()
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+        self.context["hkid"] = hkid
+        self.context["title_placeholders"] = {"name": name}
+
+        if paired:
             old_pairings = await self.hass.async_add_executor_job(
                 load_old_pairings, self.hass
             )

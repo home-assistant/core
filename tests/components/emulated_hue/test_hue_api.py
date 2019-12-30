@@ -1,43 +1,42 @@
 """The tests for the emulated Hue component."""
 import asyncio
-import json
+from datetime import timedelta
 from ipaddress import ip_address
+import json
 from unittest.mock import patch
 
 from aiohttp.hdrs import CONTENT_TYPE
 import pytest
-from tests.common import get_test_instance_port
 
 from homeassistant import const, setup
 from homeassistant.components import (
+    climate,
+    cover,
+    emulated_hue,
     fan,
     http,
     light,
-    script,
-    emulated_hue,
     media_player,
-    cover,
-    climate,
+    script,
 )
 from homeassistant.components.emulated_hue import Config
 from homeassistant.components.emulated_hue.hue_api import (
-    HUE_API_STATE_ON,
     HUE_API_STATE_BRI,
     HUE_API_STATE_HUE,
+    HUE_API_STATE_ON,
     HUE_API_STATE_SAT,
     HUE_API_USERNAME,
-    HueUsernameView,
-    HueOneLightStateView,
-    HueAllLightsStateView,
-    HueOneLightChangeView,
     HueAllGroupsStateView,
+    HueAllLightsStateView,
     HueFullStateView,
+    HueOneLightChangeView,
+    HueOneLightStateView,
+    HueUsernameView,
 )
-from homeassistant.const import STATE_ON, STATE_OFF
-
+from homeassistant.const import STATE_OFF, STATE_ON
 import homeassistant.util.dt as dt_util
-from datetime import timedelta
-from tests.common import async_fire_time_changed
+
+from tests.common import async_fire_time_changed, get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()

@@ -1,13 +1,12 @@
 """Test Home Assistant template helper methods."""
+from datetime import datetime
 import math
 import random
-from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 import pytz
 
-import homeassistant.util.dt as dt_util
 from homeassistant.components import group
 from homeassistant.const import (
     LENGTH_METERS,
@@ -19,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
+import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
 
 

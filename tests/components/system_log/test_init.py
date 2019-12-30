@@ -2,9 +2,9 @@
 import logging
 from unittest.mock import MagicMock, patch
 
-from homeassistant.core import callback
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import system_log
+from homeassistant.core import callback
 
 _LOGGER = logging.getLogger("test_logger")
 BASIC_CONFIG = {"system_log": {"max_entries": 2}}

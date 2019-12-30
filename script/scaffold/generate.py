@@ -92,7 +92,7 @@ def _custom_tasks(template, info) -> None:
         info.update_strings(
             device_automation={
                 **info.strings().get("device_automation", {}),
-                "condtion_type": {
+                "condition_type": {
                     "is_on": "{entity_name} is on",
                     "is_off": "{entity_name} is off",
                 },

@@ -1,6 +1,6 @@
 """Network helpers."""
-from typing import Optional, cast
 from ipaddress import ip_address
+from typing import Optional, cast
 
 import yarl
 

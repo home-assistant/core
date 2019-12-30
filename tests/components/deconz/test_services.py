@@ -2,7 +2,6 @@
 from copy import deepcopy
 
 from asynctest import Mock, patch
-
 import pytest
 import voluptuous as vol
 
@@ -10,8 +9,8 @@ from homeassistant.components import deconz
 
 from .test_gateway import (
     BRIDGEID,
-    ENTRY_CONFIG,
     DECONZ_WEB_REQUEST,
+    ENTRY_CONFIG,
     setup_deconz_integration,
 )
 

@@ -1,27 +1,27 @@
 """The tests for the feedreader component."""
-import time
 from datetime import timedelta
-
-import unittest
-from genericpath import exists
 from logging import getLogger
 from os import remove
+from os.path import exists
+import time
+import unittest
 from unittest import mock
 from unittest.mock import patch
 
 from homeassistant.components import feedreader
 from homeassistant.components.feedreader import (
+    CONF_MAX_ENTRIES,
     CONF_URLS,
+    DEFAULT_MAX_ENTRIES,
+    DEFAULT_SCAN_INTERVAL,
+    EVENT_FEEDREADER,
     FeedManager,
     StoredData,
-    EVENT_FEEDREADER,
-    DEFAULT_SCAN_INTERVAL,
-    CONF_MAX_ENTRIES,
-    DEFAULT_MAX_ENTRIES,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant, load_fixture
 
 _LOGGER = getLogger(__name__)

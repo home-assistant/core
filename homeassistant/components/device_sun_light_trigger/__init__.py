@@ -1,11 +1,9 @@
 """Support to turn on lights based on the states."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.util.dt as dt_util
 from homeassistant.components.light import (
     ATTR_PROFILE,
     ATTR_TRANSITION,
@@ -20,12 +18,14 @@ from homeassistant.const import (
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
 )
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_state_change,
 )
-from homeassistant.helpers.sun import is_up, get_astral_event_next
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.sun import get_astral_event_next, is_up
+import homeassistant.util.dt as dt_util
 
 DOMAIN = "device_sun_light_trigger"
 CONF_DEVICE_GROUP = "device_group"

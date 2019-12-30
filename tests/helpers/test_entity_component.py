@@ -1,30 +1,29 @@
 """The tests for the Entity component helper."""
 # pylint: disable=protected-access
 from collections import OrderedDict
-import logging
-from unittest.mock import patch, Mock
 from datetime import timedelta
+import logging
+from unittest.mock import Mock, patch
 
 import asynctest
 import pytest
 
-import homeassistant.core as ha
-from homeassistant.const import ENTITY_MATCH_ALL
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components import group
+from homeassistant.const import ENTITY_MATCH_ALL
+import homeassistant.core as ha
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
-
-from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    MockPlatform,
-    MockModule,
-    mock_coro,
-    async_fire_time_changed,
-    MockEntity,
     MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    async_fire_time_changed,
+    mock_coro,
     mock_entity_platform,
     mock_integration,
 )

@@ -38,9 +38,9 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, SERVICE_CALL_METHOD

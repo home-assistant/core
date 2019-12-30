@@ -97,7 +97,6 @@ from .const import (
     SUPPORT_VOLUME_STEP,
 )
 
-
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)

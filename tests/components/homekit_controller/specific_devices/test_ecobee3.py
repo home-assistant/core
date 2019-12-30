@@ -8,19 +8,18 @@ from unittest import mock
 
 from homekit import AccessoryDisconnectedError
 
-from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 from homeassistant.components.climate.const import (
-    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_TARGET_HUMIDITY,
+    SUPPORT_TARGET_TEMPERATURE,
 )
-
+from homeassistant.config_entries import ENTRY_STATE_SETUP_RETRY
 
 from tests.components.homekit_controller.common import (
     FakePairing,
+    Helper,
     device_config_changed,
     setup_accessories_from_file,
     setup_test_accessories,
-    Helper,
     time_changed,
 )
 

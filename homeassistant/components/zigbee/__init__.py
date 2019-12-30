@@ -1,24 +1,24 @@
 """Support for Zigbee devices."""
-import logging
 from binascii import hexlify, unhexlify
+import logging
 
-import xbee_helper.const as xb_const
-from xbee_helper import ZigBee
-from xbee_helper.device import convert_adc
-from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
 from serial import Serial, SerialException
 import voluptuous as vol
+from xbee_helper import ZigBee
+import xbee_helper.const as xb_const
+from xbee_helper.device import convert_adc
+from xbee_helper.exceptions import ZigBeeException, ZigBeeTxFailure
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
+    CONF_ADDRESS,
     CONF_DEVICE,
     CONF_NAME,
     CONF_PIN,
-    CONF_ADDRESS,
+    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 

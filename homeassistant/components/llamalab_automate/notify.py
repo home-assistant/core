@@ -4,10 +4,9 @@ import logging
 import requests
 import voluptuous as vol
 
+from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 from homeassistant.const import CONF_API_KEY, CONF_DEVICE
 from homeassistant.helpers import config_validation as cv
-
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://llamalab.com/automate/cloud/message"
