@@ -109,7 +109,7 @@ av==6.1.2
 axis==25
 
 # homeassistant.components.zha
-bellows-homeassistant==0.11.0
+bellows-homeassistant==0.12.0
 
 # homeassistant.components.bom
 bomradarloop==0.1.3
@@ -228,7 +228,7 @@ herepy==2.0.0
 hole==0.5.0
 
 # homeassistant.components.workday
-holidays==0.9.11
+holidays==0.9.12
 
 # homeassistant.components.frontend
 home-assistant-frontend==20191204.1
@@ -240,7 +240,7 @@ homeassistant-pyozw==0.1.7
 homekit[IP]==0.15.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.13
+homematicip==0.10.14
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
@@ -265,7 +265,7 @@ keyring==20.0.0
 keyrings.alt==3.4.0
 
 # homeassistant.components.dyson
-libpurecool==0.5.0
+libpurecool==0.6.0
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.7.2
@@ -496,7 +496,7 @@ pysma==0.3.4
 pysmartapp==0.3.2
 
 # homeassistant.components.smartthings
-pysmartthings==0.6.9
+pysmartthings==0.7.0
 
 # homeassistant.components.soma
 pysoma==0.0.10
@@ -523,7 +523,7 @@ python-miio==0.4.8
 python-nest==4.1.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.30
+python-velbus==2.0.32
 
 # homeassistant.components.awair
 python_awair==0.0.4
@@ -550,10 +550,10 @@ regenmaschine==1.5.1
 restrictedpython==5.0
 
 # homeassistant.components.rflink
-rflink==0.0.46
+rflink==0.0.50
 
 # homeassistant.components.ring
-ring_doorbell==0.2.5
+ring_doorbell==0.2.8
 
 # homeassistant.components.yamaha
 rxv==0.6.0
@@ -597,6 +597,9 @@ sunwatcher==0.2.1
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.10
+
+# homeassistant.components.tesla
+teslajsonpy==0.2.1
 
 # homeassistant.components.toon
 toonapilib==3.2.4
@@ -653,19 +656,19 @@ ya_ma==0.3.8
 yahooweather==0.10
 
 # homeassistant.components.zeroconf
-zeroconf==0.24.2
+zeroconf==0.24.3
 
 # homeassistant.components.zha
-zha-quirks==0.0.28
+zha-quirks==0.0.30
 
 # homeassistant.components.zha
 zigpy-deconz==0.7.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.11.0
+zigpy-homeassistant==0.12.0
 
 # homeassistant.components.zha
-zigpy-xbee-homeassistant==0.7.0
+zigpy-xbee-homeassistant==0.8.0
 
 # homeassistant.components.zha
 zigpy-zigate==0.5.0

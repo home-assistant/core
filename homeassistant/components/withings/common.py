@@ -259,8 +259,8 @@ class WithingsDataManager:
 
     async def update_sleep(self) -> SleepGetResponse:
         """Update the sleep data."""
-        end_date = int(time.time())
-        start_date = end_date - (6 * 60 * 60)
+        end_date = dt.now()
+        start_date = end_date - datetime.timedelta(hours=2)
 
         def function():
             return self._api.sleep_get(startdate=start_date, enddate=end_date)

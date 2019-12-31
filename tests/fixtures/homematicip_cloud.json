@@ -14,6 +14,68 @@
         }
     },
     "devices": {
+        "3014F7110000ABCDABCD0033": {
+            "availableFirmwareVersion": "1.0.6",
+            "firmwareVersion": "1.0.6",
+            "firmwareVersionInteger": 65542,
+            "functionalChannels": {
+                "0": {
+                    "badBatteryHealth": true,
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F7110000ABCDABCD0033",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_RECHARGEABLE_WITH_SABOTAGE",
+                    "groupIndex": 0,
+                    "groups": [],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": false,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -51,
+                    "rssiPeerValue": null,
+                    "sabotage": false,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F7110000ABCDABCD0033",
+                    "functionalChannelType": "ALARM_SIREN_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [],
+                    "index": 1,
+                    "label": ""
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F7110000ABCDABCD0033",
+            "label": "Alarmsirene \u2013 au\u00dfen",
+            "lastStatusUpdate": 1573078567665,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 385,
+            "modelType": "HmIP-ASIR-O",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F7110000ABCDABCD0033",
+            "type": "ALARM_SIREN_OUTDOOR",
+            "updateState": "UP_TO_DATE"
+        },
         "3014F7110000000000000031": {
             "availableFirmwareVersion": "1.2.1",
             "firmwareVersion": "1.2.1",
@@ -685,14 +747,14 @@
             "firmwareVersionInteger": 65542,
             "functionalChannels": {
                 "0": {
-                    "coProFaulty": false,
-                    "coProRestartNeeded": false,
-                    "coProUpdateFailure": false,
+                    "coProFaulty": true,
+                    "coProRestartNeeded": true,
+                    "coProUpdateFailure": true,
                     "configPending": false,
                     "deviceId": "3014F7110000000000000064",
                     "deviceOverheated": true,
-                    "deviceOverloaded": false,
-                    "deviceUndervoltage": false,
+                    "deviceOverloaded": true,
+                    "deviceUndervoltage": true,
                     "dutyCycle": false,
                     "functionalChannelType": "DEVICE_SABOTAGE",
                     "groupIndex": 0,
@@ -709,15 +771,15 @@
                     "rssiPeerValue": null,
                     "sabotage": false,
                     "supportedOptionalFeatures": {
-                        "IFeatureDeviceCoProError": false,
-                        "IFeatureDeviceCoProRestart": false,
-                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceCoProError": true,
+                        "IFeatureDeviceCoProRestart": true,
+                        "IFeatureDeviceCoProUpdate": true,
                         "IFeatureDeviceOverheated": true,
-                        "IFeatureDeviceOverloaded": false,
-                        "IFeatureDeviceTemperatureOutOfRange": false,
-                        "IFeatureDeviceUndervoltage": false
+                        "IFeatureDeviceOverloaded": true,
+                        "IFeatureDeviceTemperatureOutOfRange": true,
+                        "IFeatureDeviceUndervoltage": true
                     },
-                    "temperatureOutOfRange": false,
+                    "temperatureOutOfRange": true,
                     "unreach": false
                 },
                 "1": {
@@ -4031,6 +4093,74 @@
             "serializedGlobalTradeItemNumber": "3014F711BBBBBBBBBBBBB18",
             "type": "OPEN_COLLECTOR_8_MODULE",
             "updateState": "UP_TO_DATE"
+        },
+        "3014F0000000000000FAF9B4": {
+            "availableFirmwareVersion": "1.0.0",
+            "firmwareVersion": "1.0.0",
+            "firmwareVersionInteger": 65536,
+            "functionalChannels": {
+                "0": {
+                    "coProFaulty": false,
+                    "coProRestartNeeded": false,
+                    "coProUpdateFailure": false,
+                    "configPending": false,
+                    "deviceId": "3014F0000000000000FAF9B4",
+                    "deviceOverheated": false,
+                    "deviceOverloaded": false,
+                    "deviceUndervoltage": false,
+                    "dutyCycle": false,
+                    "functionalChannelType": "DEVICE_BASE",
+                    "groupIndex": 0,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000004"
+                    ],
+                    "index": 0,
+                    "label": "",
+                    "lowBat": null,
+                    "routerModuleEnabled": false,
+                    "routerModuleSupported": false,
+                    "rssiDeviceValue": -52,
+                    "rssiPeerValue": -54,
+                    "supportedOptionalFeatures": {
+                        "IFeatureDeviceCoProError": false,
+                        "IFeatureDeviceCoProRestart": false,
+                        "IFeatureDeviceCoProUpdate": false,
+                        "IFeatureDeviceOverheated": false,
+                        "IFeatureDeviceOverloaded": false,
+                        "IFeatureDeviceTemperatureOutOfRange": false,
+                        "IFeatureDeviceUndervoltage": false
+                    },
+                    "temperatureOutOfRange": false,
+                    "unreach": false
+                },
+                "1": {
+                    "deviceId": "3014F0000000000000FAF9B4",
+                    "doorState": "CLOSED",
+                    "functionalChannelType": "DOOR_CHANNEL",
+                    "groupIndex": 1,
+                    "groups": [
+                        "00000000-0000-0000-0000-000000000005"
+                    ],
+                    "index": 1,
+                    "label": "",
+                    "on": false,
+                    "processing": false,
+                    "ventilationPositionSupported": true
+                }
+            },
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "3014F0000000000000FAF9B4",
+            "label": "Garage Door Module",
+            "lastStatusUpdate": 1574878451970,
+            "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+            "manufacturerCode": 1,
+            "modelId": 376,
+            "modelType": "HmIP-MOD-TM",
+            "oem": "eQ-3",
+            "permanentlyReachable": true,
+            "serializedGlobalTradeItemNumber": "3014F0000000000000FAF9B4",
+            "type": "TORMATIC_MODULE",
+            "updateState": "UP_TO_DATE"
         }
     },
     "groups": {
@@ -4406,7 +4536,11 @@
             "lowBat": null,
             "metaGroupId": "00000000-0000-0000-0000-000000000017",
             "on": true,
-            "processing": null,
+            "primaryShadingLevel": 1.0,
+            "primaryShadingStateType": "POSITION_USED",
+            "processing": false,
+            "secondaryShadingLevel": null,
+            "secondaryShadingStateType": "NOT_EXISTENT",
             "shutterLevel": null,
             "slatsLevel": null,
             "type": "SWITCHING",
@@ -5394,6 +5528,47 @@
             "type": "HUMIDITY_WARNING_RULE_GROUP",
             "unreach": false,
             "ventilationRecommended": false
+        },
+        "00000000-0000-0000-0000-000000000050": {
+            "bottomShutterLevel": 1.0,
+            "bottomSlatsLevel": 1.0,
+            "channels": [],
+            "dutyCycle": false,
+            "groupVisibility": "VISIBLE",
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "00000000-0000-0000-0000-000000000050",
+            "label": "Rollos",
+            "lastStatusUpdate": 1573078054795,
+            "lowBat": null,
+            "metaGroupId": null,
+            "primaryShadingLevel": 1.0,
+            "primaryShadingStateType": "POSITION_USED",
+            "processing": false,
+            "secondaryShadingLevel": null,
+            "secondaryShadingStateType": "NOT_EXISTENT",
+            "sensorSpecificParameters": {},
+            "shutterLevel": 1.0,
+            "slatsLevel": null,
+            "topShutterLevel": 0.0,
+            "topSlatsLevel": 0.0,
+            "type": "EXTENDED_LINKED_SHUTTER",
+            "unreach": false
+        },
+        "00000000-0000-0000-0000-000000000067": {
+            "channels": [],
+            "dutyCycle": null,
+            "homeId": "00000000-0000-0000-0000-000000000001",
+            "id": "00000000-0000-0000-0000-000000000067",
+            "label": "HOT_WATER",
+            "lastStatusUpdate": 0,
+            "lowBat": null,
+            "metaGroupId": null,
+            "on": null,
+            "onTime": 900.0,
+            "profileId": "00000000-0000-0000-0000-000000000068",
+            "profileMode": null,
+            "type": "HOT_WATER",
+            "unreach": null
         }
     },
     "home": {

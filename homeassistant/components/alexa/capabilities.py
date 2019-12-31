@@ -1,7 +1,7 @@
 """Alexa capabilities."""
 import logging
 
-from homeassistant.components import cover, fan, image_processing, light
+from homeassistant.components import cover, fan, image_processing, input_number, light
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
 import homeassistant.components.climate.const as climate
 import homeassistant.components.media_player.const as media_player
@@ -120,7 +120,20 @@ class AlexaCapability:
 
     @staticmethod
     def configuration():
-        """Return the configuration object."""
+        """Return the configuration object.
+
+        Applicable to the ThermostatController, SecurityControlPanel, ModeController, RangeController,
+        and EventDetectionSensor.
+        """
+        return []
+
+    @staticmethod
+    def configurations():
+        """Return the configurations object.
+
+        The plural configurations object is different that the singular configuration object.
+        Applicable to EqualizerController interface.
+        """
         return []
 
     @staticmethod
@@ -176,6 +189,11 @@ class AlexaCapability:
         configuration = self.configuration()
         if configuration:
             result["configuration"] = configuration
+
+        # The plural configurations object is different than the singular configuration object above.
+        configurations = self.configurations()
+        if configurations:
+            result["configurations"] = configurations
 
         semantics = self.semantics()
         if semantics:
@@ -1054,6 +1072,10 @@ class AlexaRangeController(AlexaCapability):
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
             return self.entity.attributes.get(cover.ATTR_CURRENT_TILT_POSITION)
 
+        # Input Number Value
+        if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
+            return float(self.entity.state)
+
         return None
 
     def configuration(self):
@@ -1107,6 +1129,28 @@ class AlexaRangeController(AlexaCapability):
                 max_value=100,
                 precision=1,
                 unit=AlexaGlobalCatalog.UNIT_PERCENT,
+            )
+            return self._resource.serialize_capability_resources()
+
+        # Input Number Value
+        if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
+            min_value = float(self.entity.attributes[input_number.ATTR_MIN])
+            max_value = float(self.entity.attributes[input_number.ATTR_MAX])
+            precision = float(self.entity.attributes.get(input_number.ATTR_STEP, 1))
+            unit = self.entity.attributes.get(input_number.ATTR_UNIT_OF_MEASUREMENT)
+
+            self._resource = AlexaPresetResource(
+                ["Value"],
+                min_value=min_value,
+                max_value=max_value,
+                precision=precision,
+                unit=unit,
+            )
+            self._resource.add_preset(
+                value=min_value, labels=[AlexaGlobalCatalog.VALUE_MINIMUM]
+            )
+            self._resource.add_preset(
+                value=max_value, labels=[AlexaGlobalCatalog.VALUE_MAXIMUM]
             )
             return self._resource.serialize_capability_resources()
 
@@ -1330,3 +1374,55 @@ class AlexaEventDetectionSensor(AlexaCapability):
                 }
             },
         }
+
+
+class AlexaEqualizerController(AlexaCapability):
+    """Implements Alexa.EqualizerController.
+
+    https://developer.amazon.com/en-US/docs/alexa/device-apis/alexa-equalizercontroller.html
+    """
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.EqualizerController"
+
+    def properties_supported(self):
+        """Return what properties this entity supports.
+
+        Either bands, mode or both can be specified. Only mode is supported at this time.
+        """
+        return [{"name": "mode"}]
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name != "mode":
+            raise UnsupportedProperty(name)
+
+        sound_mode = self.entity.attributes.get(media_player.ATTR_SOUND_MODE)
+        if sound_mode and sound_mode.upper() in (
+            "MOVIE",
+            "MUSIC",
+            "NIGHT",
+            "SPORT",
+            "TV",
+        ):
+            return sound_mode.upper()
+
+        return None
+
+    def configurations(self):
+        """Return the sound modes supported in the configurations object.
+
+        Valid Values for modes are: MOVIE, MUSIC, NIGHT, SPORT, TV.
+        """
+        configurations = None
+        sound_mode_list = self.entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST)
+        if sound_mode_list:
+            supported_sound_modes = []
+            for sound_mode in sound_mode_list:
+                if sound_mode.upper() in ("MOVIE", "MUSIC", "NIGHT", "SPORT", "TV"):
+                    supported_sound_modes.append({"name": sound_mode.upper()})
+
+            configurations = {"modes": {"supported": supported_sound_modes}}
+
+        return configurations

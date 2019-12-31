@@ -11,6 +11,7 @@ from homeassistant.components import (
     group,
     image_processing,
     input_boolean,
+    input_number,
     light,
     lock,
     media_player,
@@ -41,6 +42,7 @@ from .capabilities import (
     AlexaContactSensor,
     AlexaDoorbellEventSource,
     AlexaEndpointHealth,
+    AlexaEqualizerController,
     AlexaEventDetectionSensor,
     AlexaInputController,
     AlexaLockController,
@@ -521,6 +523,9 @@ class MediaPlayerCapabilities(AlexaEntity):
         if supported & media_player.const.SUPPORT_PLAY_MEDIA:
             yield AlexaChannelController(self.entity)
 
+        if supported & media_player.const.SUPPORT_SELECT_SOUND_MODE:
+            yield AlexaEqualizerController(self.entity)
+
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
 
@@ -672,5 +677,23 @@ class ImageProcessingCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         yield AlexaEventDetectionSensor(self.hass, self.entity)
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
+
+@ENTITY_ADAPTERS.register(input_number.DOMAIN)
+class InputNumberCapabilities(AlexaEntity):
+    """Class to represent input_number capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+
+        yield AlexaRangeController(
+            self.entity, instance=f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}"
+        )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
