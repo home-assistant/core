@@ -66,7 +66,7 @@
             },
             "homeId": "00000000-0000-0000-0000-000000000001",
             "id": "3014F7110000000000ABCD50",
-            "label": "Netzausfall\u00fcberwachung",
+            "label": "Netzausfall",
             "lastStatusUpdate": 1577487207542,
             "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
             "manufacturerCode": 1,
