@@ -6,7 +6,8 @@ from typing import Awaitable, Callable
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 
-from . import connection, const, messages
+from . import const, messages
+from .connection import ActiveConnection
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -22,7 +23,7 @@ async def _handle_async_response(func, hass, connection, msg):
 
 
 def async_response(
-    func: Callable[[HomeAssistant, connection.ActiveConnection, dict], Awaitable[None]]
+    func: Callable[[HomeAssistant, ActiveConnection, dict], Awaitable[None]]
 ) -> const.WebSocketCommandHandler:
     """Decorate an async function to handle WebSocket API messages."""
 
