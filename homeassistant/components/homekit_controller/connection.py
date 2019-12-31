@@ -135,19 +135,32 @@ class HKDevice:
         self.accessories = cache["accessories"]
         self.config_num = cache["config_num"]
 
-        # Ensure the Pairing object has access to the latest version of the
-        # entity map.
+        self._polling_interval_remover = async_track_time_interval(
+            self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
+        )
+
+        self.hass.async_create_task(self.async_process_entity_map())
+
+        return True
+
+    async def async_process_entity_map(self):
+        """
+        Process the entity map and load any platforms or entities that need adding.
+
+        This is idempotent and will be called at startup and when we detect metadata changes
+        via the c# counter on the zeroconf record.
+        """
+        # Ensure the Pairing object has access to the latest version of the entity map. This
+        # is especially important for BLE, as the Pairing instance relies on the entity map
+        # to map aid/iid to GATT characteristics. So push it to there as well.
+
         self.pairing.pairing_data["accessories"] = self.accessories
 
-        self.async_load_platforms()
+        await self.async_load_platforms()
 
         self.add_entities()
 
         await self.async_update()
-
-        self._polling_interval_remover = async_track_time_interval(
-            self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
-        )
 
         return True
 
@@ -186,16 +199,7 @@ class HKDevice:
 
         self.config_num = config_num
 
-        # For BLE, the Pairing instance relies on the entity map to map
-        # aid/iid to GATT characteristics. So push it to there as well.
-        self.pairing.pairing_data["accessories"] = self.accessories
-
-        self.async_load_platforms()
-
-        # Register and add new entities that are available
-        self.add_entities()
-
-        await self.async_update()
+        self.hass.async_create_task(self.async_process_entity_map())
 
         return True
 
@@ -225,7 +229,7 @@ class HKDevice:
                         self.entities.append((aid, iid))
                         break
 
-    def async_load_platforms(self):
+    async def async_load_platforms(self):
         """Load any platforms needed by this HomeKit device."""
         for accessory in self.accessories:
             for service in accessory["services"]:
@@ -237,10 +241,8 @@ class HKDevice:
                 if platform in self.platforms:
                     continue
 
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_forward_entry_setup(
-                        self.config_entry, platform
-                    )
+                await self.hass.config_entries.async_forward_entry_setup(
+                    self.config_entry, platform
                 )
                 self.platforms.add(platform)
 
