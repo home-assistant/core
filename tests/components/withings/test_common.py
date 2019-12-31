@@ -19,7 +19,7 @@ DEFAULT_TIME_ZONE = dt.DEFAULT_TIME_ZONE
 
 
 def teardown():
-    """Ensure the time zone is revered after tests finish."""
+    """Ensure the time zone is reverted after tests finish."""
     dt.set_default_time_zone(DEFAULT_TIME_ZONE)
 
 
