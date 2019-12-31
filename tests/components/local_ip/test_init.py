@@ -16,7 +16,7 @@ async def test_basic_setup(hass, config):
     """Test component setup creates entry from config."""
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
-    local_ip = get_local_ip()
+    local_ip = await hass.async_add_executor_job(get_local_ip)
     state = hass.states.get("sensor.test")
     assert state
     assert state.state == local_ip
