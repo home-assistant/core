@@ -1,5 +1,6 @@
 """Tests for the Withings component."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from asynctest import MagicMock
 import pytest
@@ -10,17 +11,9 @@ from homeassistant.components.withings.common import (
     NotAuthenticatedError,
     WithingsDataManager,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import dt
-
-DEFAULT_TIME_ZONE = dt.DEFAULT_TIME_ZONE
-
-
-def teardown():
-    """Ensure the time zone is reverted after tests finish."""
-    dt.set_default_time_zone(DEFAULT_TIME_ZONE)
 
 
 @pytest.fixture(name="withings_api")
@@ -121,21 +114,21 @@ async def test_data_manager_update_sleep_date_range(
     hass: HomeAssistant, data_manager: WithingsDataManager,
 ) -> None:
     """Test method."""
-    await async_process_ha_core_config(
-        hass=hass, config={"time_zone": "America/Los_Angeles"}
-    )
+    with patch(
+        "homeassistant.util.dt.DEFAULT_TIME_ZONE",
+        new=dt.get_time_zone("America/Los_Angeles"),
+    ):
+        update_start_time = dt.now()
+        await data_manager.update_sleep()
 
-    update_start_time = dt.now()
-    await data_manager.update_sleep()
+        call_args = data_manager.api.sleep_get.call_args_list[0][1]
+        startdate = call_args.get("startdate")
+        enddate = call_args.get("enddate")
 
-    call_args = data_manager.api.sleep_get.call_args_list[0][1]
-    startdate = call_args.get("startdate")
-    enddate = call_args.get("enddate")
+        assert startdate.tzname() == "PST"
 
-    assert startdate.tzname() == "PST"
-
-    assert enddate.tzname() == "PST"
-    assert startdate.tzname() == "PST"
-    assert update_start_time < enddate
-    assert enddate < update_start_time + timedelta(seconds=1)
-    assert enddate > startdate
+        assert enddate.tzname() == "PST"
+        assert startdate.tzname() == "PST"
+        assert update_start_time < enddate
+        assert enddate < update_start_time + timedelta(seconds=1)
+        assert enddate > startdate
