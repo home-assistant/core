@@ -21,6 +21,7 @@ CONF_SOURCES = "sources"
 CONF_ON_ACTION = "turn_on_action"
 CONF_STANDBY_CONNECTION = "standby_connection"
 DEFAULT_NAME = "LG webOS Smart TV"
+WEBOSTV_CONFIG_FILE = "webostv.conf"
 
 CUSTOMIZE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}
@@ -67,9 +68,10 @@ async def async_setup_tv(hass, config, conf):
     """Set up a LG WebOS TV based on host parameter."""
 
     host = conf[CONF_HOST]
+    config_file = hass.config.path(WEBOSTV_CONFIG_FILE)
     standby_connection = conf[CONF_STANDBY_CONNECTION]
 
-    client = WebOsClient(host, standby_connection=standby_connection)
+    client = WebOsClient(host, config_file, standby_connection=standby_connection)
     hass.data[DOMAIN][host] = {"client": client}
 
     if client.is_registered():
