@@ -1,34 +1,43 @@
 """The tests for the LG webOS media player platform."""
-from unittest import mock
+from unittest.mock import patch
 
-from homeassistant.components.webostv import media_player as webostv
-
-
-async def test_select_source_with_empty_source_list():
-    """Ensure we don't call client methods when we don't have sources."""
-    device = webostv.LgWebOSMediaPlayerEntity(mock.AsyncMock(), "fake_device", {})
-    await device.async_select_source("nonexistent")
-    assert 0 == device._client.launch_app.call_count
-    assert 0 == device._client.set_input.call_count
-
-
-async def test_select_source_with_titled_entry():
-    """Test that a titled source is treated as an app."""
-    device = webostv.LgWebOSMediaPlayerEntity(mock.AsyncMock(), "fake_device", {})
-    device._source_list = {"existent": {"id": "existent_id", "title": "existent_title"}}
-
-    await device.async_select_source("existent")
-
-    assert "existent_title" == device._current_source
-    assert [mock.call("existent_id")] == (device._client.launch_app.call_args_list)
+from homeassistant.components import media_player
+from homeassistant.components.media_player.const import (
+    ATTR_INPUT_SOURCE,
+    SERVICE_SELECT_SOURCE,
+)
+from homeassistant.components.webostv import DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_NAME,
+)
+from homeassistant.setup import async_setup_component
 
 
-async def test_select_source_with_labelled_entry():
-    """Test that a labelled source is treated as an input source."""
-    device = webostv.LgWebOSMediaPlayerEntity(mock.AsyncMock(), "fake_device", {})
-    device._source_list = {"existent": {"id": "existent_id", "label": "existent_label"}}
+async def test_select_source_with_empty_source_list(hass):
+    """Test with dummy source."""
+    with patch(
+        "homeassistant.components.webostv.WebOsClient", autospec=True,
+    ):
 
-    await device.async_select_source("existent")
+        assert await async_setup_component(
+            hass, media_player.DOMAIN, {media_player.DOMAIN: {}},
+        )
 
-    assert "existent_label" == device._current_source
-    assert [mock.call("existent_id")] == (device._client.set_input.call_args_list)
+        name = "fake"
+
+        assert await async_setup_component(
+            hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake", CONF_NAME: name}},
+        )
+        await hass.async_block_till_done()
+
+        entity_id = f"{media_player.DOMAIN}.{name}"
+
+        data = {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_INPUT_SOURCE: "nonexistent",
+        }
+        await hass.services.async_call(media_player.DOMAIN, SERVICE_SELECT_SOURCE, data)
+
+        assert hass.states.is_state(entity_id, "playing")
