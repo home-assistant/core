@@ -26,6 +26,7 @@ FLOWS = [
     "geofency",
     "geonetnz_quakes",
     "geonetnz_volcano",
+    "gios",
     "glances",
     "gpslogger",
     "hangouts",
