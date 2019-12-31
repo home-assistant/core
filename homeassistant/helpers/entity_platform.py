@@ -347,6 +347,9 @@ class EntityPlatform:
                 device_id=device_id,
                 known_object_ids=self.entities.keys(),
                 disabled_by=disabled_by,
+                capabilities=entity.capability_attributes,
+                supported_features=entity.supported_features,
+                device_class=entity.device_class,
             )
 
             entity.registry_entry = entry
@@ -387,10 +390,16 @@ class EntityPlatform:
         # Make sure it is valid in case an entity set the value themselves
         if not valid_entity_id(entity.entity_id):
             raise HomeAssistantError(f"Invalid entity id: {entity.entity_id}")
-        if (
-            entity.entity_id in self.entities
-            or entity.entity_id in self.hass.states.async_entity_ids(self.domain)
-        ):
+
+        already_exists = entity.entity_id in self.entities
+
+        if not already_exists:
+            existing = self.hass.states.get(entity.entity_id)
+
+            if existing and not existing.attributes.get("restored"):
+                already_exists = True
+
+        if already_exists:
             msg = f"Entity id already exists: {entity.entity_id}"
             if entity.unique_id is not None:
                 msg += ". Platform {} does not generate unique IDs".format(
