@@ -186,6 +186,9 @@ aionotion==1.1.0
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
 
+# homeassistant.components.webostv
+aiopylgtv==0.2.4
+
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
 
@@ -1325,9 +1328,6 @@ pylaunches==0.2.0
 # homeassistant.components.lg_netcast
 pylgnetcast-homeassistant==0.2.0.dev0
 
-# homeassistant.components.webostv
-pylgtv==0.1.9
-
 # homeassistant.components.linky
 pylinky==0.4.0
 
@@ -2034,9 +2034,6 @@ webexteamssdk==1.1.1
 
 # homeassistant.components.gpmdp
 websocket-client==0.54.0
-
-# homeassistant.components.webostv
-websockets==6.0
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.4.0

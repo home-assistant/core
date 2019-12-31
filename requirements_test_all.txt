@@ -68,6 +68,9 @@ aiohue==1.10.1
 # homeassistant.components.notion
 aionotion==1.1.0
 
+# homeassistant.components.webostv
+aiopylgtv==0.2.4
+
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
 
@@ -442,9 +445,6 @@ pyiqvia==0.2.1
 # homeassistant.components.kira
 pykira==0.1.1
 
-# homeassistant.components.webostv
-pylgtv==0.1.9
-
 # homeassistant.components.linky
 pylinky==0.4.0
 
@@ -635,9 +635,6 @@ wakeonlan==1.1.6
 
 # homeassistant.components.folder_watcher
 watchdog==0.8.3
-
-# homeassistant.components.webostv
-websockets==6.0
 
 # homeassistant.components.withings
 withings-api==2.1.3
