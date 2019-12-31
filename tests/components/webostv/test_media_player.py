@@ -14,7 +14,7 @@ from homeassistant.setup import async_setup_component
 async def test_select_source_with_empty_source_list(hass):
     """Test with dummy source."""
     with patch(
-        "homeassistant.components.webostv.WebOsClient", autospec=True,
+        "homeassistant.components.webostv.WebOsClient", spec=True,
     ):
 
         assert await async_setup_component(
