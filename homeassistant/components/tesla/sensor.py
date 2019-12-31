@@ -24,10 +24,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     controller = hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"]
     entities = []
     for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["sensor"]:
-        if device.bin_type == 0x4:
+        if device.type == "temperature sensor":
             entities.append(TeslaSensor(device, controller, config_entry, "inside"))
             entities.append(TeslaSensor(device, controller, config_entry, "outside"))
-        elif device.bin_type in [0xA, 0xB, 0x5]:
+        else:
             entities.append(TeslaSensor(device, controller, config_entry))
     async_add_entities(entities, True)
 
@@ -69,7 +69,7 @@ class TeslaSensor(TeslaDevice, Entity):
         await super().async_update()
         units = self.tesla_device.measurement
 
-        if self.tesla_device.bin_type == 0x4:
+        if self.tesla_device.type == "temperature sensor":
             if self.type == "outside":
                 self.current_value = self.tesla_device.get_outside_temp()
             else:
@@ -78,7 +78,7 @@ class TeslaSensor(TeslaDevice, Entity):
                 self._unit = TEMP_FAHRENHEIT
             else:
                 self._unit = TEMP_CELSIUS
-        elif self.tesla_device.bin_type == 0xA or self.tesla_device.bin_type == 0xB:
+        elif self.tesla_device.type in ["range sensor", "mileage sensor"]:
             self.current_value = self.tesla_device.get_value()
             tesla_dist_unit = self.tesla_device.measurement
             if tesla_dist_unit == "LENGTH_MILES":
@@ -89,12 +89,4 @@ class TeslaSensor(TeslaDevice, Entity):
                 self.current_value = round(self.current_value, 2)
         else:
             self.current_value = self.tesla_device.get_value()
-            if self.tesla_device.bin_type == 0x5:
-                self._unit = units
-            elif self.tesla_device.bin_type in (0xA, 0xB):
-                if units == "LENGTH_MILES":
-                    self._unit = LENGTH_MILES
-                else:
-                    self._unit = LENGTH_KILOMETERS
-                    self.current_value /= 0.621371
-                    self.current_value = round(self.current_value, 2)
+            self._unit = units
