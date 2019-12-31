@@ -7,11 +7,7 @@ from homeassistant.components.media_player.const import (
     SERVICE_SELECT_SOURCE,
 )
 from homeassistant.components.webostv import DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_NAME,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
 from homeassistant.setup import async_setup_component
 
 
