@@ -1,5 +1,5 @@
 """Sensor for Steam account status."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from time import mktime
 
@@ -12,6 +12,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,9 +72,12 @@ class SteamSensor(Entity):
         self._steamod = steamod
         self._account = account
         self._profile = None
-        self._game = (
-            self._state
-        ) = self._name = self._avatar = self._last_online = self._level = None
+        self._game = None
+        self._state = None
+        self._name = None
+        self._avatar = None
+        self._last_online = None
+        self._level = None
 
     @property
     def name(self):
@@ -111,14 +115,18 @@ class SteamSensor(Entity):
             self._name = self._profile.persona
             self._avatar = self._profile.avatar_medium
             self._last_online = self._get_last_online()
-            self._level = self._get_level()
+            self._level = self._profile.level
         except self._steamod.api.HTTPTimeoutError as error:
             _LOGGER.warning(error)
-            self._game = (
-                self._state
-            ) = self._name = self._avatar = self._last_online = self._level = None
+            self._game = None
+            self._state = None
+            self._name = None
+            self._avatar = None
+            self._last_online = None
+            self._level = None
 
     def _get_current_game(self):
+        """Gather current game name from APP ID."""
         game_id = self._profile.current_game[0]
         game_extra_info = self._profile.current_game[2]
 
@@ -148,27 +156,22 @@ class SteamSensor(Entity):
         return repr(game_id)
 
     def _get_last_online(self):
-        last_online = datetime.fromtimestamp(
-            mktime(self._profile.last_online)
-        ).isoformat()
+        """Convert last_online from the steam module into timestamp UTC."""
+        last_online = utc_from_timestamp(mktime(self._profile.last_online))
 
         if last_online:
             return last_online
 
-    def _get_level(self):
-        level = self._profile.level
-
-        if level:
-            return level
+        return None
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return (
-            {"game": self._game, "last_online": self._last_online, "level": self._level}
-            if self._game or self._last_online or self._level
-            else None
-        )
+        return {
+            "game": self._game if self._game else None,
+            "last_online": self._last_online if self._last_online else None,
+            "level": self._level if self._level else None,
+        }
 
     @property
     def entity_picture(self):
