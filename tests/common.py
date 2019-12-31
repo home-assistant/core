@@ -907,6 +907,11 @@ class MockEntity(entity.Entity):
         return self._handle("unique_id")
 
     @property
+    def state(self):
+        """Return the state of the entity."""
+        return self._handle("state")
+
+    @property
     def available(self):
         """Return True if entity is available."""
         return self._handle("available")
@@ -915,6 +920,21 @@ class MockEntity(entity.Entity):
     def device_info(self):
         """Info how it links to a device."""
         return self._handle("device_info")
+
+    @property
+    def device_class(self):
+        """Info how device should be classified."""
+        return self._handle("device_class")
+
+    @property
+    def capability_attributes(self):
+        """Info about capabilities."""
+        return self._handle("capability_attributes")
+
+    @property
+    def supported_features(self):
+        """Info about supported features."""
+        return self._handle("supported_features")
 
     @property
     def entity_registry_enabled_default(self):

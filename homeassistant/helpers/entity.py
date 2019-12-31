@@ -311,7 +311,9 @@ class Entity(ABC):
 
         start = timer()
 
-        attr = self.capability_attributes or {}
+        attr = self.capability_attributes
+        attr = dict(attr) if attr else {}
+
         if not self.available:
             state = STATE_UNAVAILABLE
         else:
