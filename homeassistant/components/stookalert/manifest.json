@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/stookalert",
   "dependencies": [],
   "codeowners": ["@fwestenberg"],
-  "requirements": ["stookalert==0.1.1"]
+  "requirements": ["stookalert==0.1.2"]
 }
