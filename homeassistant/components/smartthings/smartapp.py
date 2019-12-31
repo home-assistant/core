@@ -339,7 +339,7 @@ async def smartapp_sync_subscriptions(
             )
         except Exception as error:  # pylint:disable=broad-except
             _LOGGER.error(
-                "Failed to remove subscription for '%s' under app " "'%s': %s",
+                "Failed to remove subscription for '%s' under app '%s': %s",
                 sub.capability,
                 installed_app_id,
                 error,

@@ -13,7 +13,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric " "Administration"
+ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric Administration"
 CONF_THRESHOLD = "forecast_threshold"
 
 DEFAULT_DEVICE_CLASS = "visible"

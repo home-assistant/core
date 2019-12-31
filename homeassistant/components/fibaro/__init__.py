@@ -134,11 +134,11 @@ class FibaroController:
             info = self._client.info.get()
             self.hub_serial = slugify(info.serialNumber)
         except AssertionError:
-            _LOGGER.error("Can't connect to Fibaro HC. " "Please check URL.")
+            _LOGGER.error("Can't connect to Fibaro HC. Please check URL.")
             return False
         if login is None or login.status is False:
             _LOGGER.error(
-                "Invalid login for Fibaro HC. " "Please check username and password"
+                "Invalid login for Fibaro HC. Please check username and password"
             )
             return False
 
@@ -380,7 +380,7 @@ class FibaroDevice(Entity):
     def dont_know_message(self, action):
         """Make a warning in case we don't know how to perform an action."""
         _LOGGER.warning(
-            "Not sure how to setValue: %s " "(available actions: %s)",
+            "Not sure how to setValue: %s (available actions: %s)",
             str(self.ha_id),
             str(self.fibaro_device.actions),
         )

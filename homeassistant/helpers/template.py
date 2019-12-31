@@ -615,7 +615,7 @@ def distance(hass, *args):
 
             if latitude is None or longitude is None:
                 _LOGGER.warning(
-                    "Distance:Unable to process latitude and " "longitude: %s, %s",
+                    "Distance:Unable to process latitude and longitude: %s, %s",
                     value,
                     value_2,
                 )

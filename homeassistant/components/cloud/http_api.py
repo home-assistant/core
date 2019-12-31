@@ -583,7 +583,7 @@ async def alexa_sync(hass, connection, msg):
             connection.send_error(
                 msg["id"],
                 "alexa_relink",
-                "Please go to the Alexa app and re-link the Home Assistant " "skill.",
+                "Please go to the Alexa app and re-link the Home Assistant skill.",
             )
             return
 

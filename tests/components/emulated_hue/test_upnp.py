@@ -32,7 +32,7 @@ class TestEmulatedHue(unittest.TestCase):
             hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}
         )
 
-        with patch("homeassistant.components" ".emulated_hue.UPNPResponderThread"):
+        with patch("homeassistant.components.emulated_hue.UPNPResponderThread"):
             setup.setup_component(
                 hass,
                 emulated_hue.DOMAIN,

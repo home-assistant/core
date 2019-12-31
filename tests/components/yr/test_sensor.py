@@ -15,7 +15,7 @@ NOW = datetime(2016, 6, 9, 1, tzinfo=dt_util.UTC)
 def test_default_setup(hass, aioclient_mock):
     """Test the default setup."""
     aioclient_mock.get(
-        "https://aa015h6buqvih86i1.api.met.no/" "weatherapi/locationforecast/1.9/",
+        "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/",
         text=load_fixture("yr.no.xml"),
     )
     config = {"platform": "yr", "elevation": 0}
@@ -35,7 +35,7 @@ def test_default_setup(hass, aioclient_mock):
 def test_custom_setup(hass, aioclient_mock):
     """Test a custom setup."""
     aioclient_mock.get(
-        "https://aa015h6buqvih86i1.api.met.no/" "weatherapi/locationforecast/1.9/",
+        "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/",
         text=load_fixture("yr.no.xml"),
     )
 
@@ -81,7 +81,7 @@ def test_custom_setup(hass, aioclient_mock):
 def test_forecast_setup(hass, aioclient_mock):
     """Test a custom setup with 24h forecast."""
     aioclient_mock.get(
-        "https://aa015h6buqvih86i1.api.met.no/" "weatherapi/locationforecast/1.9/",
+        "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/",
         text=load_fixture("yr.no.xml"),
     )
 

@@ -253,7 +253,7 @@ def find_next_time_expression_time(
     including daylight saving time.
     """
     if not seconds or not minutes or not hours:
-        raise ValueError("Cannot find a next time: Time expression never " "matches!")
+        raise ValueError("Cannot find a next time: Time expression never matches!")
 
     def _lower_bound(arr: List[int], cmp: int) -> Optional[int]:
         """Return the first value in arr greater or equal to cmp.
