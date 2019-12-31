@@ -114,7 +114,10 @@ async def test_set_cover_position(hass, device_factory):
     await setup_platform(hass, COVER_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 50}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_POSITION: 50, "entity_id": "all"},
+        blocking=True,
     )
 
     state = hass.states.get("cover.shade")
@@ -136,7 +139,10 @@ async def test_set_cover_position_unsupported(hass, device_factory):
     await setup_platform(hass, COVER_DOMAIN, devices=[device])
     # Act
     await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 50}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {"entity_id": "all", ATTR_POSITION: 50},
+        blocking=True,
     )
 
     state = hass.states.get("cover.shade")

@@ -3,41 +3,42 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.cover import (
-    ENTITY_ID_FORMAT,
-    CoverDevice,
-    PLATFORM_SCHEMA,
-    DEVICE_CLASSES_SCHEMA,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_STOP_TILT,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
-    SUPPORT_STOP,
-    SUPPORT_SET_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    DEVICE_CLASSES_SCHEMA,
+    ENTITY_ID_FORMAT,
+    PLATFORM_SCHEMA,
+    SUPPORT_CLOSE,
+    SUPPORT_CLOSE_TILT,
+    SUPPORT_OPEN,
+    SUPPORT_OPEN_TILT,
+    SUPPORT_SET_POSITION,
+    SUPPORT_SET_TILT_POSITION,
+    SUPPORT_STOP,
+    SUPPORT_STOP_TILT,
+    CoverDevice,
 )
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME,
-    CONF_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
-    CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_FRIENDLY_NAME,
+    CONF_ICON_TEMPLATE,
     CONF_OPTIMISTIC,
-    STATE_OPEN,
+    CONF_VALUE_TEMPLATE,
+    EVENT_HOMEASSISTANT_START,
     STATE_CLOSED,
+    STATE_OPEN,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+
+from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,13 +101,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     covers = []
 
     for device, device_config in config[CONF_COVERS].items():
-        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
         state_template = device_config.get(CONF_VALUE_TEMPLATE)
         position_template = device_config.get(CONF_POSITION_TEMPLATE)
         tilt_template = device_config.get(CONF_TILT_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
+
+        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
         device_class = device_config.get(CONF_DEVICE_CLASS)
         open_action = device_config.get(OPEN_ACTION)
         close_action = device_config.get(CLOSE_ACTION)
@@ -121,41 +123,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 "Must specify at least one of %s" or "%s", OPEN_ACTION, POSITION_ACTION
             )
             continue
-        template_entity_ids = set()
-        if state_template is not None:
-            temp_ids = state_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
 
-        if position_template is not None:
-            temp_ids = position_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
+        templates = {
+            CONF_VALUE_TEMPLATE: state_template,
+            CONF_POSITION_TEMPLATE: position_template,
+            CONF_TILT_TEMPLATE: tilt_template,
+            CONF_ICON_TEMPLATE: icon_template,
+            CONF_AVAILABILITY_TEMPLATE: availability_template,
+            CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
+        }
 
-        if tilt_template is not None:
-            temp_ids = tilt_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if icon_template is not None:
-            temp_ids = icon_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if entity_picture_template is not None:
-            temp_ids = entity_picture_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if availability_template is not None:
-            temp_ids = availability_template.extract_entities()
-            if str(temp_ids) != MATCH_ALL:
-                template_entity_ids |= set(temp_ids)
-
-        if not template_entity_ids:
-            template_entity_ids = MATCH_ALL
-
-        entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
+        initialise_templates(hass, templates)
+        entity_ids = extract_entities(device, "cover", None, templates)
 
         covers.append(
             CoverTemplate(

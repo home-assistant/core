@@ -1,8 +1,8 @@
 """Support UPNP discovery method that mimics Hue hubs."""
-import threading
-import socket
 import logging
 import select
+import socket
+import threading
 
 from aiohttp import web
 

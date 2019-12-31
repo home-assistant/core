@@ -3,13 +3,13 @@ from unittest.mock import Mock, patch
 
 from smhi.smhi_lib import Smhi as SmhiApi, SmhiForecastException
 
+from homeassistant.components.smhi import config_flow
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+
 from tests.common import mock_coro
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.components.smhi import config_flow
 
-
-# pylint: disable=W0212
+# pylint: disable=protected-access
 async def test_homeassistant_location_exists() -> None:
     """Test if homeassistant location exists it should return True."""
     hass = Mock()

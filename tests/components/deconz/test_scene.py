@@ -4,11 +4,10 @@ from copy import deepcopy
 from asynctest import patch
 
 from homeassistant.components import deconz
+import homeassistant.components.scene as scene
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.scene as scene
-
-from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
 
 GROUPS = {
     "1": {
@@ -60,14 +59,12 @@ async def test_scenes(hass):
 
     group_scene = gateway.api.groups["1"].scenes["1"]
 
-    with patch.object(
-        group_scene, "_async_set_state_callback", return_value=True
-    ) as set_callback:
+    with patch.object(group_scene, "_request", return_value=True) as set_callback:
         await hass.services.async_call(
             "scene", "turn_on", {"entity_id": "scene.light_group_scene"}, blocking=True
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("/groups/1/scenes/1/recall", {})
+        set_callback.assert_called_with("put", "/groups/1/scenes/1/recall", json={})
 
     await gateway.async_reset()
 

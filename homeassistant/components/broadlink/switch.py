@@ -5,7 +5,6 @@ import logging
 import socket
 
 import broadlink
-
 import voluptuous as vol
 
 from homeassistant.components.switch import (
@@ -25,8 +24,8 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle, slugify
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import Throttle, slugify
 
 from . import async_setup_service, data_packet
 

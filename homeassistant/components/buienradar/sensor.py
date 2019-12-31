@@ -33,10 +33,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
-
 from .const import DEFAULT_TIMEFRAME
 from .util import BrData
-
 
 _LOGGER = logging.getLogger(__name__)
 

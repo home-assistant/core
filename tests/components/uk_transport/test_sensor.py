@@ -1,23 +1,24 @@
 """The tests for the uk_transport platform."""
 import re
-
-import requests_mock
 import unittest
 
+import requests_mock
+
 from homeassistant.components.uk_transport.sensor import (
-    UkTransportSensor,
     ATTR_ATCOCODE,
-    ATTR_LOCALITY,
-    ATTR_STOP_NAME,
-    ATTR_NEXT_BUSES,
-    ATTR_STATION_CODE,
     ATTR_CALLING_AT,
+    ATTR_LOCALITY,
+    ATTR_NEXT_BUSES,
     ATTR_NEXT_TRAINS,
-    CONF_API_APP_KEY,
+    ATTR_STATION_CODE,
+    ATTR_STOP_NAME,
     CONF_API_APP_ID,
+    CONF_API_APP_KEY,
+    UkTransportSensor,
 )
 from homeassistant.setup import setup_component
-from tests.common import load_fixture, get_test_home_assistant
+
+from tests.common import get_test_home_assistant, load_fixture
 
 BUS_ATCOCODE = "340000368SHE"
 BUS_DIRECTION = "Wantage"

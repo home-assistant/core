@@ -1,14 +1,17 @@
 """Support for AlarmDecoder devices."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
+from alarmdecoder import AlarmDecoder
+from alarmdecoder.devices import SerialDevice, SocketDevice, USBDevice
+from alarmdecoder.util import NoDeviceError
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_HOST
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import dt as dt_util
-from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,9 +112,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up for the AlarmDecoder devices."""
-    from alarmdecoder import AlarmDecoder
-    from alarmdecoder.devices import SocketDevice, SerialDevice, USBDevice
-
     conf = config.get(DOMAIN)
 
     restart = False
@@ -134,8 +134,6 @@ def setup(hass, config):
 
     def open_connection(now=None):
         """Open a connection to AlarmDecoder."""
-        from alarmdecoder.util import NoDeviceError
-
         nonlocal restart
         try:
             controller.open(baud)

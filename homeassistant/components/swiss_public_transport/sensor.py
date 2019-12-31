@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from opendata_transport import OpendataTransport
+from opendata_transport.exceptions import OpendataTransportError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -45,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Swiss public transport sensor."""
-    from opendata_transport import OpendataTransport, exceptions
 
     name = config.get(CONF_NAME)
     start = config.get(CONF_START)
@@ -56,7 +57,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     try:
         await opendata.async_get_data()
-    except exceptions.OpendataTransportError:
+    except OpendataTransportError:
         _LOGGER.error(
             "Check at http://transport.opendata.ch/examples/stationboard.html "
             "if your station names are valid"
@@ -122,7 +123,6 @@ class SwissPublicTransportSensor(Entity):
 
     async def async_update(self):
         """Get the latest data from opendata.ch and update the states."""
-        from opendata_transport.exceptions import OpendataTransportError
 
         try:
             if self._remaining_time.total_seconds() < 0:

@@ -2,8 +2,11 @@
 from copy import copy
 from datetime import timedelta
 
+from asynctest import patch
+
 from homeassistant import config_entries
 from homeassistant.components import unifi
+import homeassistant.components.device_tracker as device_tracker
 from homeassistant.components.unifi.const import (
     CONF_SSID_FILTER,
     CONF_TRACK_DEVICES,
@@ -12,13 +15,9 @@ from homeassistant.components.unifi.const import (
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
-
-import homeassistant.components.device_tracker as device_tracker
 import homeassistant.util.dt as dt_util
 
 from .test_controller import ENTRY_CONFIG, SITES, setup_unifi_integration
-
-DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
 CLIENT_1 = {
     "essid": "ssid",
@@ -43,6 +42,14 @@ CLIENT_3 = {
     "is_wired": False,
     "last_seen": 1562600145,
     "mac": "00:00:00:00:00:03",
+}
+CLIENT_4 = {
+    "essid": "ssid",
+    "hostname": "client_4",
+    "ip": "10.0.0.4",
+    "is_wired": True,
+    "last_seen": 1562600145,
+    "mac": "00:00:00:00:00:04",
 }
 
 DEVICE_1 = {
@@ -103,16 +110,20 @@ async def test_no_clients(hass):
 
 async def test_tracked_devices(hass):
     """Test the update_items function with some clients."""
+    client_4_copy = copy(CLIENT_4)
+    client_4_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+
     controller = await setup_unifi_integration(
         hass,
         ENTRY_CONFIG,
         options={CONF_SSID_FILTER: ["ssid"]},
         sites=SITES,
-        clients_response=[CLIENT_1, CLIENT_2, CLIENT_3],
+        clients_response=[CLIENT_1, CLIENT_2, CLIENT_3, client_4_copy],
         devices_response=[DEVICE_1, DEVICE_2],
         clients_all_response={},
+        known_wireless_clients=(CLIENT_4["mac"],),
     )
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 6
 
     client_1 = hass.states.get("device_tracker.client_1")
     assert client_1 is not None
@@ -124,6 +135,11 @@ async def test_tracked_devices(hass):
 
     client_3 = hass.states.get("device_tracker.client_3")
     assert client_3 is None
+
+    # Wireless client with wired bug, if bug active on restart mark device away
+    client_4 = hass.states.get("device_tracker.client_4")
+    assert client_4 is not None
+    assert client_4.state == "not_home"
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1 is not None
@@ -203,7 +219,20 @@ async def test_wireless_client_go_wired_issue(hass):
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
-    assert client_1.state == "not_home"
+    assert client_1.state == "home"
+
+    with patch.object(
+        unifi.device_tracker.dt_util,
+        "utcnow",
+        return_value=(dt_util.utcnow() + timedelta(minutes=5)),
+    ):
+        controller.mock_client_responses.append([client_1_client])
+        controller.mock_device_responses.append({})
+        await controller.async_update()
+        await hass.async_block_till_done()
+
+        client_1 = hass.states.get("device_tracker.client_1")
+        assert client_1.state == "not_home"
 
     client_1_client["is_wired"] = False
     client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())

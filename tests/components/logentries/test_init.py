@@ -3,9 +3,9 @@
 import unittest
 from unittest import mock
 
-from homeassistant.setup import setup_component
 import homeassistant.components.logentries as logentries
-from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
+from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 

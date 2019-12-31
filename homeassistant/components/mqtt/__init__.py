@@ -1,6 +1,5 @@
 """Support for MQTT message handling."""
 import asyncio
-import sys
 from functools import partial, wraps
 import inspect
 from itertools import groupby
@@ -10,14 +9,13 @@ from operator import attrgetter
 import os
 import socket
 import ssl
+import sys
 import time
 from typing import Any, Callable, List, Optional, Union
 
 import attr
 import requests.certs
 import voluptuous as vol
-import paho.mqtt.client as mqtt
-from paho.mqtt.matcher import MQTTMatcher
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
@@ -34,9 +32,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import (
+    ConfigEntryNotReady,
     HomeAssistantError,
     Unauthorized,
-    ConfigEntryNotReady,
 )
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -47,18 +45,18 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
 
 # Loading the config flow file will register the flow
-from . import config_flow, discovery, server  # noqa pylint: disable=unused-import
+from . import config_flow, discovery, server  # noqa: F401 pylint: disable=unused-import
 from .const import (
+    ATTR_DISCOVERY_HASH,
     CONF_BROKER,
     CONF_DISCOVERY,
-    DEFAULT_DISCOVERY,
     CONF_STATE_TOPIC,
-    ATTR_DISCOVERY_HASH,
-    PROTOCOL_311,
+    DEFAULT_DISCOVERY,
     DEFAULT_QOS,
+    PROTOCOL_311,
 )
 from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
-from .models import PublishPayloadType, Message, MessageCallbackType
+from .models import Message, MessageCallbackType, PublishPayloadType
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
 
 _LOGGER = logging.getLogger(__name__)
@@ -335,7 +333,6 @@ MQTT_PUBLISH_SCHEMA = vol.Schema(
 )
 
 
-# pylint: disable=invalid-name
 SubscribePayloadType = Union[str, bytes]  # Only bytes if encoding is None
 
 
@@ -726,6 +723,11 @@ class MQTT:
         tls_version: Optional[int],
     ) -> None:
         """Initialize Home Assistant MQTT client."""
+        # We don't import them on the top because some integrations
+        # should be able to optionally rely on MQTT.
+        # pylint: disable=import-outside-toplevel
+        import paho.mqtt.client as mqtt
+
         self.hass = hass
         self.broker = broker
         self.port = port
@@ -787,6 +789,9 @@ class MQTT:
 
         This method is a coroutine.
         """
+        # pylint: disable=import-outside-toplevel
+        import paho.mqtt.client as mqtt
+
         result: int = None
         try:
             result = await self.hass.async_add_job(
@@ -878,6 +883,9 @@ class MQTT:
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
+        # pylint: disable=import-outside-toplevel
+        import paho.mqtt.client as mqtt
+
         if result_code != mqtt.CONNACK_ACCEPTED:
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",
@@ -969,6 +977,9 @@ class MQTT:
 
 def _raise_on_error(result_code: int) -> None:
     """Raise error if error result."""
+    # pylint: disable=import-outside-toplevel
+    import paho.mqtt.client as mqtt
+
     if result_code != 0:
         raise HomeAssistantError(
             "Error talking to MQTT: {}".format(mqtt.error_string(result_code))
@@ -977,6 +988,9 @@ def _raise_on_error(result_code: int) -> None:
 
 def _match_topic(subscription: str, topic: str) -> bool:
     """Test if topic matches subscription."""
+    # pylint: disable=import-outside-toplevel
+    from paho.mqtt.matcher import MQTTMatcher
+
     matcher = MQTTMatcher()
     matcher[subscription] = True
     try:

@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
-    DOMAIN,
     STATE_CLEANING,
     STATE_DOCKED,
     STATE_ERROR,
@@ -40,6 +39,7 @@ from .const import (
     NEATO_PERSISTENT_MAPS,
     NEATO_ROBOTS,
     SCAN_INTERVAL_MINUTES,
+    SERVICE_NEATO_CUSTOM_CLEANING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -72,8 +72,6 @@ ATTR_LAUNCHED_FROM = "launched_from"
 ATTR_NAVIGATION = "navigation"
 ATTR_CATEGORY = "category"
 ATTR_ZONE = "zone"
-
-SERVICE_NEATO_CUSTOM_CLEANING = "neato_custom_cleaning"
 
 SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = vol.Schema(
     {
@@ -126,7 +124,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     hass.services.async_register(
-        DOMAIN,
+        NEATO_DOMAIN,
         SERVICE_NEATO_CUSTOM_CLEANING,
         neato_custom_cleaning_service,
         schema=SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA,
@@ -139,8 +137,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
     def __init__(self, neato, robot, mapdata, persistent_maps):
         """Initialize the Neato Connected Vacuum."""
         self.robot = robot
-        self.neato = neato
-        self._available = self.neato.logged_in if self.neato is not None else False
+        self._available = neato.logged_in if neato is not None else False
         self._mapdata = mapdata
         self._name = f"{self.robot.name}"
         self._robot_has_map = self.robot.has_persistent_maps
@@ -165,17 +162,14 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
     def update(self):
         """Update the states of Neato Vacuums."""
-        if self.neato is None:
-            _LOGGER.error("Error while updating vacuum")
-            self._state = None
-            self._available = False
-            return
-
         _LOGGER.debug("Running Neato Vacuums update")
         try:
             if self._robot_stats is None:
-                self._robot_stats = self.robot.get_robot_info().json()
-            self.neato.update_robots()
+                self._robot_stats = self.robot.get_general_info().json().get("data")
+        except NeatoRobotException:
+            _LOGGER.warning("Couldn't fetch robot information of %s", self._name)
+
+        try:
             self._state = self.robot.state
         except NeatoRobotException as ex:
             if self._available:  # print only once when available
@@ -323,13 +317,11 @@ class NeatoConnectedVacuum(StateVacuumDevice):
     @property
     def device_info(self):
         """Device info for neato robot."""
-        return {
-            "identifiers": {(NEATO_DOMAIN, self._robot_serial)},
-            "name": self._name,
-            "manufacturer": self._robot_stats["data"]["mfg_name"],
-            "model": self._robot_stats["data"]["modelName"],
-            "sw_version": self._state["meta"]["firmware"],
-        }
+        info = {"identifiers": {(NEATO_DOMAIN, self._robot_serial)}, "name": self._name}
+        if self._robot_stats:
+            info["manufacturer"] = self._robot_stats["battery"]["vendor"]
+            info["model"] = self._robot_stats["model"]
+            info["sw_version"] = self._robot_stats["firmware"]
 
     def start(self):
         """Start cleaning or resume cleaning."""

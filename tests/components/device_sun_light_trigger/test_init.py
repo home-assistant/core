@@ -1,20 +1,21 @@
 """The tests device sun light trigger component."""
 # pylint: disable=protected-access
 from datetime import datetime
+
 from asynctest import patch
 import pytest
 
-from homeassistant.setup import async_setup_component
-from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.components import (
-    device_tracker,
-    light,
     device_sun_light_trigger,
+    device_tracker,
     group,
+    light,
 )
 from homeassistant.components.device_tracker.const import (
     ENTITY_ID_FORMAT as DT_ENTITY_ID_FORMAT,
 )
+from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed

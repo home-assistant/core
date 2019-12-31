@@ -2,13 +2,12 @@
 import unittest
 from unittest.mock import patch
 
-from homeassistant.setup import setup_component
-from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.components.switch as switch
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, mock_service
 from tests.components.switch import common
-
 
 TEST_STATE = None
 
@@ -30,7 +29,7 @@ def system():
     return "Windows"
 
 
-class TestWOLSwitch(unittest.TestCase):
+class TestWolSwitch(unittest.TestCase):
     """Test the wol switch."""
 
     def setUp(self):
@@ -53,7 +52,7 @@ class TestWOLSwitch(unittest.TestCase):
             {
                 "switch": {
                     "platform": "wake_on_lan",
-                    "mac_address": "00-01-02-03-04-05",
+                    "mac": "00-01-02-03-04-05",
                     "host": "validhostname",
                 }
             },
@@ -89,7 +88,7 @@ class TestWOLSwitch(unittest.TestCase):
             {
                 "switch": {
                     "platform": "wake_on_lan",
-                    "mac_address": "00-01-02-03-04-05",
+                    "mac": "00-01-02-03-04-05",
                     "host": "validhostname",
                 }
             },
@@ -113,7 +112,7 @@ class TestWOLSwitch(unittest.TestCase):
         assert setup_component(
             self.hass,
             switch.DOMAIN,
-            {"switch": {"platform": "wake_on_lan", "mac_address": "00-01-02-03-04-05"}},
+            {"switch": {"platform": "wake_on_lan", "mac": "00-01-02-03-04-05"}},
         )
 
     @patch("wakeonlan.send_magic_packet", new=send_magic_packet)
@@ -126,7 +125,7 @@ class TestWOLSwitch(unittest.TestCase):
             {
                 "switch": {
                     "platform": "wake_on_lan",
-                    "mac_address": "00-01-02-03-04-05",
+                    "mac": "00-01-02-03-04-05",
                     "broadcast_address": "255.255.255.255",
                 }
             },
@@ -150,7 +149,7 @@ class TestWOLSwitch(unittest.TestCase):
             {
                 "switch": {
                     "platform": "wake_on_lan",
-                    "mac_address": "00-01-02-03-04-05",
+                    "mac": "00-01-02-03-04-05",
                     "host": "validhostname",
                     "turn_off": {"service": "shell_command.turn_off_target"},
                 }
@@ -192,7 +191,7 @@ class TestWOLSwitch(unittest.TestCase):
             {
                 "switch": {
                     "platform": "wake_on_lan",
-                    "mac_address": "00-01-02-03-04-05",
+                    "mac": "00-01-02-03-04-05",
                     "host": "invalidhostname",
                 }
             },

@@ -1,29 +1,28 @@
 """The tests for the Entity component helper."""
 # pylint: disable=protected-access
 from collections import OrderedDict
-import logging
-from unittest.mock import patch, Mock
 from datetime import timedelta
+import logging
+from unittest.mock import Mock, patch
 
 import asynctest
 import pytest
 
+from homeassistant.const import ENTITY_MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.components import group
+from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
-
-from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    MockPlatform,
-    MockModule,
-    mock_coro,
-    async_fire_time_changed,
-    MockEntity,
     MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    async_fire_time_changed,
+    mock_coro,
     mock_entity_platform,
     mock_integration,
 )
@@ -194,7 +193,7 @@ async def test_extract_from_service_available_device(hass):
         ]
     )
 
-    call_1 = ha.ServiceCall("test", "service")
+    call_1 = ha.ServiceCall("test", "service", data={"entity_id": ENTITY_MATCH_ALL})
 
     assert ["test_domain.test_1", "test_domain.test_3"] == sorted(
         ent.entity_id for ent in (await component.async_extract_from_service(call_1))
@@ -250,7 +249,7 @@ async def test_platform_not_ready(hass):
         assert "test_domain.mod1" in hass.config.components
 
 
-async def test_extract_from_service_returns_all_if_no_entity_id(hass):
+async def test_extract_from_service_fails_if_no_entity_id(hass):
     """Test the extraction of everything from service."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_add_entities(
@@ -259,7 +258,7 @@ async def test_extract_from_service_returns_all_if_no_entity_id(hass):
 
     call = ha.ServiceCall("test", "service")
 
-    assert ["test_domain.test_1", "test_domain.test_2"] == sorted(
+    assert [] == sorted(
         ent.entity_id for ent in (await component.async_extract_from_service(call))
     )
 
@@ -285,15 +284,13 @@ async def test_extract_from_service_filter_out_non_existing_entities(hass):
 async def test_extract_from_service_no_group_expand(hass):
     """Test not expanding a group."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    test_group = await group.Group.async_create_group(
-        hass, "test_group", ["light.Ceiling", "light.Kitchen"]
-    )
-    await component.async_add_entities([test_group])
+    await component.async_add_entities([MockEntity(entity_id="group.test_group")])
 
     call = ha.ServiceCall("test", "service", {"entity_id": ["group.test_group"]})
 
     extracted = await component.async_extract_from_service(call, expand_group=False)
-    assert extracted == [test_group]
+    assert len(extracted) == 1
+    assert extracted[0].entity_id == "group.test_group"
 
 
 async def test_setup_dependencies_platform(hass):
@@ -445,12 +442,9 @@ async def test_extract_all_omit_entity_id(hass, caplog):
 
     call = ha.ServiceCall("test", "service")
 
-    assert ["test_domain.test_1", "test_domain.test_2"] == sorted(
+    assert [] == sorted(
         ent.entity_id for ent in await component.async_extract_from_service(call)
     )
-    assert (
-        "Not passing an entity ID to a service to target all entities is " "deprecated"
-    ) in caplog.text
 
 
 async def test_extract_all_use_match_all(hass, caplog):

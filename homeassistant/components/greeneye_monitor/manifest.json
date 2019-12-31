@@ -3,7 +3,7 @@
   "name": "Greeneye monitor",
   "documentation": "https://www.home-assistant.io/integrations/greeneye_monitor",
   "requirements": [
-    "greeneye_monitor==1.0"
+    "greeneye_monitor==1.0.1"
   ],
   "dependencies": [],
   "codeowners": []

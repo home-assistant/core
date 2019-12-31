@@ -1,12 +1,13 @@
 """Support to control a Salda Smarty XP/XV ventilation unit."""
 
 from datetime import timedelta
-
 import ipaddress
 import logging
+
+from pysmarty import Smarty
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
@@ -36,7 +37,6 @@ SIGNAL_UPDATE_SMARTY = "smarty_update"
 
 def setup(hass, config):
     """Set up the smarty environment."""
-    from pysmarty import Smarty
 
     conf = config[DOMAIN]
 

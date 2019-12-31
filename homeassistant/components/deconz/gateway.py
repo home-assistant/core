@@ -1,12 +1,12 @@
 """Representation of a deCONZ gateway."""
 import asyncio
-import async_timeout
 
+import async_timeout
 from pydeconz import DeconzSession, errors
 
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import (
@@ -14,8 +14,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_registry import (
-    async_get_registry,
     DISABLED_CONFIG_ENTRY,
+    async_get_registry,
 )
 
 from .const import (
@@ -30,7 +30,6 @@ from .const import (
     NEW_DEVICE,
     SUPPORTED_PLATFORMS,
 )
-
 from .errors import AuthenticationRequired, CannotConnect
 
 
@@ -43,13 +42,13 @@ def get_gateway_from_config_entry(hass, config_entry):
 class DeconzGateway:
     """Manages a single deCONZ gateway."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass, config_entry) -> None:
         """Initialize the system."""
         self.hass = hass
         self.config_entry = config_entry
+
         self.available = True
         self.api = None
-
         self.deconz_ids = {}
         self.events = []
         self.listeners = []
@@ -78,7 +77,7 @@ class DeconzGateway:
             CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
         )
 
-    async def async_update_device_registry(self):
+    async def async_update_device_registry(self) -> None:
         """Update device registry."""
         device_registry = await self.hass.helpers.device_registry.async_get_registry()
         device_registry.async_get_or_create(
@@ -91,7 +90,7 @@ class DeconzGateway:
             sw_version=self.api.config.swversion,
         )
 
-    async def async_setup(self):
+    async def async_setup(self) -> bool:
         """Set up a deCONZ gateway."""
         hass = self.hass
 
@@ -106,8 +105,8 @@ class DeconzGateway:
         except CannotConnect:
             raise ConfigEntryNotReady
 
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.error("Error connecting with deCONZ gateway")
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error("Error connecting with deCONZ gateway: %s", err)
             return False
 
         for component in SUPPORTED_PLATFORMS:
@@ -125,7 +124,7 @@ class DeconzGateway:
         return True
 
     @staticmethod
-    async def async_new_address(hass, entry):
+    async def async_new_address(hass, entry) -> None:
         """Handle signals of gateway getting new address.
 
         This is a static method because a class method (bound method),
@@ -138,23 +137,23 @@ class DeconzGateway:
             gateway.api.start()
 
     @property
-    def signal_reachable(self):
+    def signal_reachable(self) -> str:
         """Gateway specific event to signal a change in connection status."""
         return f"deconz-reachable-{self.bridgeid}"
 
     @callback
-    def async_connection_status_callback(self, available):
+    def async_connection_status_callback(self, available) -> None:
         """Handle signals of gateway connection status."""
         self.available = available
         async_dispatcher_send(self.hass, self.signal_reachable, True)
 
     @property
-    def signal_options_update(self):
+    def signal_options_update(self) -> str:
         """Event specific per deCONZ entry to signal new options."""
         return f"deconz-options-{self.bridgeid}"
 
     @staticmethod
-    async def async_options_updated(hass, entry):
+    async def async_options_updated(hass, entry) -> None:
         """Triggered by config entry options updates."""
         gateway = get_gateway_from_config_entry(hass, entry)
 
@@ -162,12 +161,12 @@ class DeconzGateway:
         async_dispatcher_send(hass, gateway.signal_options_update, registry)
 
     @callback
-    def async_signal_new_device(self, device_type):
+    def async_signal_new_device(self, device_type) -> str:
         """Gateway specific event to signal new device."""
         return NEW_DEVICE[device_type].format(self.bridgeid)
 
     @callback
-    def async_add_device_callback(self, device_type, device):
+    def async_add_device_callback(self, device_type, device) -> None:
         """Handle event of new device creation in deCONZ."""
         if not isinstance(device, list):
             device = [device]
@@ -176,7 +175,7 @@ class DeconzGateway:
         )
 
     @callback
-    def shutdown(self, event):
+    def shutdown(self, event) -> None:
         """Wrap the call to deconz.close.
 
         Used as an argument to EventBus.async_listen_once.
@@ -207,20 +206,21 @@ class DeconzGateway:
 
 async def get_gateway(
     hass, config, async_add_device_callback, async_connection_status_callback
-):
+) -> DeconzSession:
     """Create a gateway object and verify configuration."""
     session = aiohttp_client.async_get_clientsession(hass)
 
     deconz = DeconzSession(
-        hass.loop,
         session,
-        **config,
+        config[CONF_HOST],
+        config[CONF_PORT],
+        config[CONF_API_KEY],
         async_add_device=async_add_device_callback,
         connection_status=async_connection_status_callback,
     )
     try:
         with async_timeout.timeout(10):
-            await deconz.async_load_parameters()
+            await deconz.initialize()
         return deconz
 
     except errors.Unauthorized:
@@ -235,7 +235,7 @@ async def get_gateway(
 class DeconzEntityHandler:
     """Platform entity handler to help with updating disabled by."""
 
-    def __init__(self, gateway):
+    def __init__(self, gateway) -> None:
         """Create an entity handler."""
         self.gateway = gateway
         self._entities = []
@@ -247,12 +247,12 @@ class DeconzEntityHandler:
         )
 
     @callback
-    def add_entity(self, entity):
+    def add_entity(self, entity) -> None:
         """Add a new entity to handler."""
         self._entities.append(entity)
 
     @callback
-    def update_entity_registry(self, entity_registry):
+    def update_entity_registry(self, entity_registry) -> None:
         """Update entity registry disabled by status."""
         for entity in self._entities:
 

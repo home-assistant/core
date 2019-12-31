@@ -1,7 +1,7 @@
 """Support for the Amazon Polly text to speech service."""
 import logging
-import boto3
 
+import boto3
 import voluptuous as vol
 
 from homeassistant.components.tts import PLATFORM_SCHEMA, Provider
@@ -145,7 +145,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up Amazon Polly speech component."""
     output_format = config.get(CONF_OUTPUT_FORMAT)
     sample_rate = config.get(CONF_SAMPLE_RATE, DEFAULT_SAMPLE_RATES[output_format])

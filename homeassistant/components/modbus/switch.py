@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,

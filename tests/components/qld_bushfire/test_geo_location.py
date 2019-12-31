@@ -1,6 +1,6 @@
 """The tests for the Queensland Bushfire Alert Feed platform."""
 import datetime
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -25,8 +25,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.setup import async_setup_component
-from tests.common import assert_setup_component, async_fire_time_changed
 import homeassistant.util.dt as dt_util
+
+from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {geo_location.DOMAIN: [{"platform": "qld_bushfire", CONF_RADIUS: 200}]}
 

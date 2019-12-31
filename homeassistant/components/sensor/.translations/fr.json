@@ -1,9 +1,9 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_battery_level": "Le niveau de la batterie de {entity_name}",
-            "is_humidity": "L'humidit\u00e9 de {entity_name}",
-            "is_illuminance": "L'\u00e9clairement de {entity_name}",
+            "is_battery_level": "Niveau de la batterie de {entity_name}",
+            "is_humidity": "Humidit\u00e9 de {entity_name}",
+            "is_illuminance": "\u00c9clairement de {entity_name}",
             "is_power": "{entity_name} puissance",
             "is_pressure": "{entity_name} pression",
             "is_signal_strength": "{entity_name} force du signal",

@@ -3,7 +3,7 @@
   "name": "Apprise",
   "documentation": "https://www.home-assistant.io/components/apprise",
   "requirements": [
-    "apprise==0.8.1"
+    "apprise==0.8.2"
   ],
   "dependencies": [],
   "codeowners": [

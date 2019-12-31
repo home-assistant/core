@@ -1,16 +1,16 @@
 """Support for X10 lights."""
 import logging
-from subprocess import check_output, CalledProcessError, STDOUT
+from subprocess import STDOUT, CalledProcessError, check_output
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_ID, CONF_DEVICES
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     Light,
-    PLATFORM_SCHEMA,
 )
+from homeassistant.const import CONF_DEVICES, CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

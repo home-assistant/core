@@ -30,8 +30,6 @@ RESTART_GRACE_PERIOD = 7200  # 2 hours
 class ZhaEntity(RestoreEntity, LogMixin, entity.Entity):
     """A base class for ZHA entities."""
 
-    _domain = None  # Must be overridden by subclasses
-
     def __init__(self, unique_id, zha_device, channels, skip_entity_id=False, **kwargs):
         """Init ZHA entity."""
         self._force_update = False

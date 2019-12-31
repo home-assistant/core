@@ -3,29 +3,30 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.switch import (
     ENTITY_ID_FORMAT,
-    SwitchDevice,
     PLATFORM_SCHEMA,
+    SwitchDevice,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
-    CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE,
     CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_ICON_TEMPLATE,
+    CONF_SWITCHES,
+    CONF_VALUE_TEMPLATE,
+    EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
-    ATTR_ENTITY_ID,
-    CONF_SWITCHES,
-    EVENT_HOMEASSISTANT_START,
-    MATCH_ALL,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+
+from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,8 +65,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         on_action = device_config[ON_ACTION]
         off_action = device_config[OFF_ACTION]
-        manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
-        entity_ids = set()
 
         templates = {
             CONF_VALUE_TEMPLATE: state_template,
@@ -73,35 +72,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             CONF_ENTITY_PICTURE_TEMPLATE: entity_picture_template,
             CONF_AVAILABILITY_TEMPLATE: availability_template,
         }
-        invalid_templates = []
 
-        for template_name, template in templates.items():
-            if template is not None:
-                template.hass = hass
-
-                if manual_entity_ids is not None:
-                    continue
-
-                template_entity_ids = template.extract_entities()
-                if template_entity_ids == MATCH_ALL:
-                    invalid_templates.append(template_name.replace("_template", ""))
-                    entity_ids = MATCH_ALL
-                elif entity_ids != MATCH_ALL:
-                    entity_ids |= set(template_entity_ids)
-        if invalid_templates:
-            _LOGGER.warning(
-                "Template sensor %s has no entity ids configured to track nor"
-                " were we able to extract the entities to track from the %s "
-                "template(s). This entity will only be able to be updated "
-                "manually.",
-                device,
-                ", ".join(invalid_templates),
-            )
-        else:
-            if manual_entity_ids is None:
-                entity_ids = list(entity_ids)
-            else:
-                entity_ids = manual_entity_ids
+        initialise_templates(hass, templates)
+        entity_ids = extract_entities(
+            device, "switch", device_config.get(ATTR_ENTITY_ID), templates
+        )
 
         switches.append(
             SwitchTemplate(
@@ -117,6 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 entity_ids,
             )
         )
+
     if not switches:
         _LOGGER.error("No switches added")
         return False

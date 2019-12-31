@@ -6,14 +6,14 @@ import asynctest
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_state_v2 import DysonEnvironmentalSensorV2State
 
-import homeassistant.components.dyson.air_quality as dyson
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.air_quality import (
-    DOMAIN as AIQ_DOMAIN,
+    ATTR_NO2,
     ATTR_PM_2_5,
     ATTR_PM_10,
-    ATTR_NO2,
+    DOMAIN as AIQ_DOMAIN,
 )
+import homeassistant.components.dyson.air_quality as dyson
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 

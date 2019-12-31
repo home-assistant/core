@@ -10,7 +10,6 @@ import async_timeout
 
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import Config, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 
@@ -31,6 +30,8 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
     """Set up configured Airly."""
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_CLIENT] = {}
     return True
 
 
@@ -46,11 +47,6 @@ async def async_setup_entry(hass, config_entry):
 
     await airly.async_update()
 
-    if not airly.data:
-        raise ConfigEntryNotReady()
-
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLIENT] = {}
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = airly
 
     hass.async_create_task(

@@ -1,13 +1,13 @@
 """NextBus sensor."""
-import logging
 from itertools import chain
+import logging
 
+from py_nextbus import NextBusClient
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_TIMESTAMP
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -94,8 +94,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     stop = config[CONF_STOP]
     name = config.get(CONF_NAME)
 
-    from py_nextbus import NextBusClient
-
     client = NextBusClient(output_format="json")
 
     # Ensures that the tags provided are valid, also logs out valid values
@@ -173,7 +171,7 @@ class NextBusDepartureSensor(Entity):
         """Update sensor with new departures times."""
         # Note: using Multi because there is a bug with the single stop impl
         results = self._client.get_predictions_for_multi_stops(
-            [{"stop_tag": int(self.stop), "route_tag": self.route}], self.agency
+            [{"stop_tag": self.stop, "route_tag": self.route}], self.agency
         )
 
         self._log_debug("Predictions results: %s", results)
@@ -227,7 +225,9 @@ class NextBusDepartureSensor(Entity):
             return
 
         # Generate list of upcoming times
-        self._attributes["upcoming"] = ", ".join(p["minutes"] for p in predictions)
+        self._attributes["upcoming"] = ", ".join(
+            sorted(p["minutes"] for p in predictions)
+        )
 
         latest_prediction = maybe_first(predictions)
         self._state = utc_from_timestamp(

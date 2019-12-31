@@ -5,18 +5,19 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER,
     DeviceScanner,
 )
-from homeassistant.util import slugify
 from homeassistant.const import CONF_METHOD
+from homeassistant.util import slugify
+
 from .const import (
-    HOSTS,
-    MIKROTIK,
-    CONF_ARP_PING,
-    MIKROTIK_SERVICES,
-    CAPSMAN,
-    WIRELESS,
-    DHCP,
     ARP,
     ATTR_DEVICE_TRACKER,
+    CAPSMAN,
+    CONF_ARP_PING,
+    DHCP,
+    HOSTS,
+    MIKROTIK,
+    MIKROTIK_SERVICES,
+    WIRELESS,
 )
 
 _LOGGER = logging.getLogger(__name__)

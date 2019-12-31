@@ -1,31 +1,40 @@
 """The tests for the timer component."""
 # pylint: disable=protected-access
 import asyncio
-import logging
 from datetime import timedelta
+import logging
+from unittest.mock import patch
 
-from homeassistant.core import CoreState
-from homeassistant.setup import async_setup_component
+import pytest
+
 from homeassistant.components.timer import (
-    DOMAIN,
+    ATTR_DURATION,
     CONF_DURATION,
+    CONF_ICON,
     CONF_NAME,
+    DOMAIN,
+    EVENT_TIMER_CANCELLED,
+    EVENT_TIMER_FINISHED,
+    EVENT_TIMER_PAUSED,
+    EVENT_TIMER_RESTARTED,
+    EVENT_TIMER_STARTED,
+    SERVICE_CANCEL,
+    SERVICE_FINISH,
+    SERVICE_PAUSE,
+    SERVICE_START,
     STATUS_ACTIVE,
     STATUS_IDLE,
     STATUS_PAUSED,
-    CONF_ICON,
-    ATTR_DURATION,
-    EVENT_TIMER_FINISHED,
-    EVENT_TIMER_CANCELLED,
-    EVENT_TIMER_STARTED,
-    EVENT_TIMER_RESTARTED,
-    EVENT_TIMER_PAUSED,
-    SERVICE_START,
-    SERVICE_PAUSE,
-    SERVICE_CANCEL,
-    SERVICE_FINISH,
 )
-from homeassistant.const import ATTR_ICON, ATTR_FRIENDLY_NAME, CONF_ENTITY_ID
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    CONF_ENTITY_ID,
+    SERVICE_RELOAD,
+)
+from homeassistant.core import Context, CoreState
+from homeassistant.exceptions import Unauthorized
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
@@ -195,3 +204,93 @@ def test_no_initial_state_and_no_restore_state(hass):
     state = hass.states.get("timer.test1")
     assert state
     assert state.state == STATUS_IDLE
+
+
+async def test_config_reload(hass, hass_admin_user, hass_read_only_user):
+    """Test reload service."""
+    count_start = len(hass.states.async_entity_ids())
+
+    _LOGGER.debug("ENTITIES @ start: %s", hass.states.async_entity_ids())
+
+    config = {
+        DOMAIN: {
+            "test_1": {},
+            "test_2": {
+                CONF_NAME: "Hello World",
+                CONF_ICON: "mdi:work",
+                CONF_DURATION: 10,
+            },
+        }
+    }
+
+    assert await async_setup_component(hass, "timer", config)
+    await hass.async_block_till_done()
+
+    assert count_start + 2 == len(hass.states.async_entity_ids())
+    await hass.async_block_till_done()
+
+    state_1 = hass.states.get("timer.test_1")
+    state_2 = hass.states.get("timer.test_2")
+    state_3 = hass.states.get("timer.test_3")
+
+    assert state_1 is not None
+    assert state_2 is not None
+    assert state_3 is None
+
+    assert STATUS_IDLE == state_1.state
+    assert ATTR_ICON not in state_1.attributes
+    assert ATTR_FRIENDLY_NAME not in state_1.attributes
+
+    assert STATUS_IDLE == state_2.state
+    assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
+    assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
+    assert "0:00:10" == state_2.attributes.get(ATTR_DURATION)
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            DOMAIN: {
+                "test_2": {
+                    CONF_NAME: "Hello World reloaded",
+                    CONF_ICON: "mdi:work-reloaded",
+                    CONF_DURATION: 20,
+                },
+                "test_3": {},
+            }
+        },
+    ):
+        with patch("homeassistant.config.find_config_file", return_value=""):
+            with pytest.raises(Unauthorized):
+                await hass.services.async_call(
+                    DOMAIN,
+                    SERVICE_RELOAD,
+                    blocking=True,
+                    context=Context(user_id=hass_read_only_user.id),
+                )
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_RELOAD,
+                blocking=True,
+                context=Context(user_id=hass_admin_user.id),
+            )
+            await hass.async_block_till_done()
+
+    assert count_start + 2 == len(hass.states.async_entity_ids())
+
+    state_1 = hass.states.get("timer.test_1")
+    state_2 = hass.states.get("timer.test_2")
+    state_3 = hass.states.get("timer.test_3")
+
+    assert state_1 is None
+    assert state_2 is not None
+    assert state_3 is not None
+
+    assert STATUS_IDLE == state_2.state
+    assert "Hello World reloaded" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
+    assert "mdi:work-reloaded" == state_2.attributes.get(ATTR_ICON)
+    assert "0:00:20" == state_2.attributes.get(ATTR_DURATION)
+
+    assert STATUS_IDLE == state_3.state
+    assert ATTR_ICON not in state_3.attributes
+    assert ATTR_FRIENDLY_NAME not in state_3.attributes

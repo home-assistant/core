@@ -5,15 +5,13 @@ import homekit
 from homekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity import Entity
 
-# We need an import from .config_flow, without it .config_flow is never loaded.
-from .config_flow import HomekitControllerFlowHandler  # noqa: F401
-from .connection import get_accessory_information, HKDevice
-from .const import CONTROLLER, ENTITY_MAP, KNOWN_DEVICES
-from .const import DOMAIN  # noqa: pylint: disable=unused-import
+from .config_flow import normalize_hkid
+from .connection import HKDevice, get_accessory_information
+from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES
 from .storage import EntityMapStorage
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +107,6 @@ class HomeKitEntity(Entity):
         setup_fn = getattr(self, f"_setup_{setup_fn_name}", None)
         if not setup_fn:
             return
-        # pylint: disable=not-callable
         setup_fn(char)
 
     @callback
@@ -132,7 +129,6 @@ class HomeKitEntity(Entity):
             if not update_fn:
                 continue
 
-            # pylint: disable=not-callable
             update_fn(result["value"])
 
         self.async_write_ha_state()
@@ -183,6 +179,12 @@ async def async_setup_entry(hass, entry):
     """Set up a HomeKit connection on a config entry."""
     conn = HKDevice(hass, entry, entry.data)
     hass.data[KNOWN_DEVICES][conn.unique_id] = conn
+
+    # For backwards compat
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=normalize_hkid(conn.unique_id)
+        )
 
     if not await conn.async_setup():
         del hass.data[KNOWN_DEVICES][conn.unique_id]

@@ -3,9 +3,9 @@ from miio import AirQualityMonitor, Device, DeviceException
 import voluptuous as vol
 
 from homeassistant.components.air_quality import (
-    AirQualityEntity,
-    PLATFORM_SCHEMA,
     _LOGGER,
+    PLATFORM_SCHEMA,
+    AirQualityEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
@@ -54,7 +54,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         device_info.firmware_version,
         device_info.hardware_version,
     )
-    device = AirMonitorB1(name, AirQualityMonitor(host, token, model), unique_id)
+    device = AirMonitorB1(name, AirQualityMonitor(host, token, model=model), unique_id)
 
     async_add_entities([device], update_before_add=True)
 

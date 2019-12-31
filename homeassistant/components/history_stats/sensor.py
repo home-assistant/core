@@ -5,21 +5,21 @@ import math
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components import history
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
     CONF_ENTITY_ID,
+    CONF_NAME,
     CONF_STATE,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 

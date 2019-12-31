@@ -1,13 +1,13 @@
 """Test check_config helper."""
 import logging
-import os  # noqa: F401 pylint: disable=unused-import
 from unittest.mock import patch
 
-from homeassistant.helpers.check_config import (
-    async_check_ha_config_file,
-    CheckConfigError,
-)
 from homeassistant.config import YAML_CONFIG_FILE
+from homeassistant.helpers.check_config import (
+    CheckConfigError,
+    async_check_ha_config_file,
+)
+
 from tests.common import patch_yaml_files
 
 _LOGGER = logging.getLogger(__name__)

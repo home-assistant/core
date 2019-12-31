@@ -5,23 +5,22 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (
-    STATE_ON,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-    SERVICE_TOGGLE,
-)
 from homeassistant.components import group
-from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA,
+from homeassistant.const import (
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
+)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
+    make_entity_service_schema,
 )
-
+from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -56,27 +55,8 @@ DEFAULT_HOLD_SECS = 0
 
 SUPPORT_LEARN_COMMAND = 1
 
-REMOTE_SERVICE_ACTIVITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
     {vol.Optional(ATTR_ACTIVITY): cv.string}
-)
-
-REMOTE_SERVICE_SEND_COMMAND_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_DEVICE): cv.string,
-        vol.Optional(ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.positive_int,
-        vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
-        vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS): vol.Coerce(float),
-    }
-)
-
-REMOTE_SERVICE_LEARN_COMMAND_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {
-        vol.Optional(ATTR_DEVICE): cv.string,
-        vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
-        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
-    }
 )
 
 
@@ -107,12 +87,27 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
-        SERVICE_SEND_COMMAND, REMOTE_SERVICE_SEND_COMMAND_SCHEMA, "async_send_command"
+        SERVICE_SEND_COMMAND,
+        {
+            vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_DEVICE): cv.string,
+            vol.Optional(
+                ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS
+            ): cv.positive_int,
+            vol.Optional(ATTR_DELAY_SECS): vol.Coerce(float),
+            vol.Optional(ATTR_HOLD_SECS, default=DEFAULT_HOLD_SECS): vol.Coerce(float),
+        },
+        "async_send_command",
     )
 
     component.async_register_entity_service(
         SERVICE_LEARN_COMMAND,
-        REMOTE_SERVICE_LEARN_COMMAND_SCHEMA,
+        {
+            vol.Optional(ATTR_DEVICE): cv.string,
+            vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
+            vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        },
         "async_learn_command",
     )
 

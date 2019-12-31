@@ -3,8 +3,8 @@
   "name": "Workday",
   "documentation": "https://www.home-assistant.io/integrations/workday",
   "requirements": [
-    "holidays==0.9.11"
+    "holidays==0.9.12"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@fabaff"]
 }

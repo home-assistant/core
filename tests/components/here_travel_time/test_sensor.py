@@ -38,7 +38,7 @@ from homeassistant.components.here_travel_time.sensor import (
     TRAVEL_MODE_TRUCK,
     UNIT_OF_MEASUREMENT,
 )
-from homeassistant.const import ATTR_ICON
+from homeassistant.const import ATTR_ICON, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -48,8 +48,7 @@ DOMAIN = "sensor"
 
 PLATFORM = "here_travel_time"
 
-APP_ID = "test"
-APP_CODE = "test"
+API_KEY = "test"
 
 TRUCK_ORIGIN_LATITUDE = "41.9798"
 TRUCK_ORIGIN_LONGITUDE = "-87.8801"
@@ -67,15 +66,14 @@ CAR_DESTINATION_LATITUDE = "39.0"
 CAR_DESTINATION_LONGITUDE = "-77.1"
 
 
-def _build_mock_url(origin, destination, modes, app_id, app_code, departure):
+def _build_mock_url(origin, destination, modes, api_key, departure):
     """Construct a url for HERE."""
-    base_url = "https://route.cit.api.here.com/routing/7.2/calculateroute.json?"
+    base_url = "https://route.ls.hereapi.com/routing/7.2/calculateroute.json?"
     parameters = {
-        "waypoint0": origin,
-        "waypoint1": destination,
+        "waypoint0": f"geo!{origin}",
+        "waypoint1": f"geo!{destination}",
         "mode": ";".join(str(herepy.RouteMode[mode]) for mode in modes),
-        "app_id": app_id,
-        "app_code": app_code,
+        "apikey": api_key,
         "departure": departure,
     }
     url = base_url + urllib.parse.urlencode(parameters)
@@ -118,8 +116,7 @@ def requests_mock_credentials_check(requests_mock):
         ",".join([CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]),
         ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
         modes,
-        APP_ID,
-        APP_CODE,
+        API_KEY,
         "now",
     )
     requests_mock.get(
@@ -136,8 +133,7 @@ def requests_mock_truck_response(requests_mock_credentials_check):
         ",".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE]),
         ",".join([TRUCK_DESTINATION_LATITUDE, TRUCK_DESTINATION_LONGITUDE]),
         modes,
-        APP_ID,
-        APP_CODE,
+        API_KEY,
         "now",
     )
     requests_mock_credentials_check.get(
@@ -153,8 +149,7 @@ def requests_mock_car_disabled_response(requests_mock_credentials_check):
         ",".join([CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]),
         ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
         modes,
-        APP_ID,
-        APP_CODE,
+        API_KEY,
         "now",
     )
     requests_mock_credentials_check.get(
@@ -172,17 +167,17 @@ async def test_car(hass, requests_mock_car_disabled_response):
             "origin_longitude": CAR_ORIGIN_LONGITUDE,
             "destination_latitude": CAR_DESTINATION_LATITUDE,
             "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
         }
     }
-
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "30"
     assert sensor.attributes.get("unit_of_measurement") == UNIT_OF_MEASUREMENT
-
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
     assert sensor.attributes.get(ATTR_DURATION) == 30.05
     assert sensor.attributes.get(ATTR_DISTANCE) == 23.903
@@ -218,8 +213,7 @@ async def test_traffic_mode_enabled(hass, requests_mock_credentials_check):
         ",".join([CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]),
         ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
         modes,
-        APP_ID,
-        APP_CODE,
+        API_KEY,
         "now",
     )
     requests_mock_credentials_check.get(
@@ -234,15 +228,16 @@ async def test_traffic_mode_enabled(hass, requests_mock_credentials_check):
             "origin_longitude": CAR_ORIGIN_LONGITUDE,
             "destination_latitude": CAR_DESTINATION_LATITUDE,
             "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
             "traffic_mode": True,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
 
-    sensor = hass.states.get("sensor.test")
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
+    sensor = hass.states.get("sensor.test")
     # Test traffic mode enabled
     assert sensor.attributes.get(ATTR_DURATION) != sensor.attributes.get(
         ATTR_DURATION_IN_TRAFFIC
@@ -259,12 +254,14 @@ async def test_imperial(hass, requests_mock_car_disabled_response):
             "origin_longitude": CAR_ORIGIN_LONGITUDE,
             "destination_latitude": CAR_DESTINATION_LATITUDE,
             "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
             "unit_system": "imperial",
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 14.852635608048994
@@ -275,7 +272,7 @@ async def test_route_mode_shortest(hass, requests_mock_credentials_check):
     origin = "38.902981,-77.048338"
     destination = "39.042158,-77.119116"
     modes = [ROUTE_MODE_SHORTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/car_shortest_response.json")
     )
@@ -288,12 +285,14 @@ async def test_route_mode_shortest(hass, requests_mock_credentials_check):
             "origin_longitude": origin.split(",")[1],
             "destination_latitude": destination.split(",")[0],
             "destination_longitude": destination.split(",")[1],
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
             "route_mode": ROUTE_MODE_SHORTEST,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 18.388
@@ -304,7 +303,7 @@ async def test_route_mode_fastest(hass, requests_mock_credentials_check):
     origin = "38.902981,-77.048338"
     destination = "39.042158,-77.119116"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_ENABLED]
-    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/car_enabled_response.json")
     )
@@ -317,12 +316,14 @@ async def test_route_mode_fastest(hass, requests_mock_credentials_check):
             "origin_longitude": origin.split(",")[1],
             "destination_latitude": destination.split(",")[0],
             "destination_longitude": destination.split(",")[1],
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
             "traffic_mode": True,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 23.381
@@ -338,12 +339,15 @@ async def test_truck(hass, requests_mock_truck_response):
             "origin_longitude": TRUCK_ORIGIN_LONGITUDE,
             "destination_latitude": TRUCK_DESTINATION_LATITUDE,
             "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
             "mode": TRAVEL_MODE_TRUCK,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     _assert_truck_sensor(sensor)
 
@@ -353,7 +357,7 @@ async def test_public_transport(hass, requests_mock_credentials_check):
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/public_response.json")
     )
@@ -366,12 +370,14 @@ async def test_public_transport(hass, requests_mock_credentials_check):
             "origin_longitude": origin.split(",")[1],
             "destination_latitude": destination.split(",")[0],
             "destination_longitude": destination.split(",")[1],
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
             "mode": TRAVEL_MODE_PUBLIC,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "89"
@@ -400,7 +406,7 @@ async def test_public_transport_time_table(hass, requests_mock_credentials_check
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
     requests_mock_credentials_check.get(
         response_url,
         text=load_fixture("here_travel_time/public_time_table_response.json"),
@@ -414,12 +420,14 @@ async def test_public_transport_time_table(hass, requests_mock_credentials_check
             "origin_longitude": origin.split(",")[1],
             "destination_latitude": destination.split(",")[0],
             "destination_longitude": destination.split(",")[1],
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
             "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "80"
@@ -448,7 +456,7 @@ async def test_pedestrian(hass, requests_mock_credentials_check):
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_PEDESTRIAN, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/pedestrian_response.json")
     )
@@ -461,12 +469,15 @@ async def test_pedestrian(hass, requests_mock_credentials_check):
             "origin_longitude": origin.split(",")[1],
             "destination_latitude": destination.split(",")[0],
             "destination_longitude": destination.split(",")[1],
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
             "mode": TRAVEL_MODE_PEDESTRIAN,
         }
     }
+
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "211"
@@ -497,7 +508,7 @@ async def test_bicycle(hass, requests_mock_credentials_check):
     origin = "41.9798,-87.8801"
     destination = "41.9043,-87.9216"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_BICYCLE, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/bike_response.json")
     )
@@ -510,12 +521,14 @@ async def test_bicycle(hass, requests_mock_credentials_check):
             "origin_longitude": origin.split(",")[1],
             "destination_latitude": destination.split(",")[0],
             "destination_longitude": destination.split(",")[1],
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
             "mode": TRAVEL_MODE_BICYCLE,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     assert sensor.state == "55"
@@ -564,20 +577,21 @@ async def test_location_zone(hass, requests_mock_truck_response):
                 },
             ]
         }
-        assert await async_setup_component(hass, "zone", zone_config)
-
         config = {
             DOMAIN: {
                 "platform": PLATFORM,
                 "name": "test",
                 "origin_entity_id": "zone.origin",
                 "destination_entity_id": "zone.destination",
-                "app_id": APP_ID,
-                "app_code": APP_CODE,
+                "api_key": API_KEY,
                 "mode": TRAVEL_MODE_TRUCK,
             }
         }
+        assert await async_setup_component(hass, "zone", zone_config)
         assert await async_setup_component(hass, DOMAIN, config)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
@@ -609,12 +623,14 @@ async def test_location_sensor(hass, requests_mock_truck_response):
                 "name": "test",
                 "origin_entity_id": "sensor.origin",
                 "destination_entity_id": "sensor.destination",
-                "app_id": APP_ID,
-                "app_code": APP_CODE,
+                "api_key": API_KEY,
                 "mode": TRAVEL_MODE_TRUCK,
             }
         }
         assert await async_setup_component(hass, DOMAIN, config)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
@@ -655,12 +671,14 @@ async def test_location_person(hass, requests_mock_truck_response):
                 "name": "test",
                 "origin_entity_id": "person.origin",
                 "destination_entity_id": "person.destination",
-                "app_id": APP_ID,
-                "app_code": APP_CODE,
+                "api_key": API_KEY,
                 "mode": TRAVEL_MODE_TRUCK,
             }
         }
         assert await async_setup_component(hass, DOMAIN, config)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
@@ -701,12 +719,14 @@ async def test_location_device_tracker(hass, requests_mock_truck_response):
                 "name": "test",
                 "origin_entity_id": "device_tracker.origin",
                 "destination_entity_id": "device_tracker.destination",
-                "app_id": APP_ID,
-                "app_code": APP_CODE,
+                "api_key": API_KEY,
                 "mode": TRAVEL_MODE_TRUCK,
             }
         }
         assert await async_setup_component(hass, DOMAIN, config)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
@@ -733,12 +753,14 @@ async def test_location_device_tracker_added_after_update(
                 "name": "test",
                 "origin_entity_id": "device_tracker.origin",
                 "destination_entity_id": "device_tracker.destination",
-                "app_id": APP_ID,
-                "app_code": APP_CODE,
+                "api_key": API_KEY,
                 "mode": TRAVEL_MODE_TRUCK,
             }
         }
         assert await async_setup_component(hass, DOMAIN, config)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
         sensor = hass.states.get("sensor.test")
         assert len(caplog.records) == 2
@@ -799,12 +821,14 @@ async def test_location_device_tracker_in_zone(
             "origin_entity_id": "device_tracker.origin",
             "destination_latitude": TRUCK_DESTINATION_LATITUDE,
             "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
             "mode": TRAVEL_MODE_TRUCK,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     sensor = hass.states.get("sensor.test")
     _assert_truck_sensor(sensor)
@@ -817,7 +841,7 @@ async def test_route_not_found(hass, requests_mock_credentials_check, caplog):
     origin = "52.516,13.3779"
     destination = "47.013399,-10.171986"
     modes = [ROUTE_MODE_FASTEST, TRAVEL_MODE_CAR, TRAFFIC_MODE_DISABLED]
-    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
     requests_mock_credentials_check.get(
         response_url,
         text=load_fixture("here_travel_time/routing_error_no_route_found.json"),
@@ -831,11 +855,14 @@ async def test_route_not_found(hass, requests_mock_credentials_check, caplog):
             "origin_longitude": origin.split(",")[1],
             "destination_latitude": destination.split(",")[0],
             "destination_longitude": destination.split(",")[1],
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     assert len(caplog.records) == 1
     assert NO_ROUTE_ERROR_MESSAGE in caplog.text
 
@@ -851,8 +878,7 @@ async def test_pattern_origin(hass, caplog):
             "origin_longitude": "-77.04833",
             "destination_latitude": CAR_DESTINATION_LATITUDE,
             "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
@@ -871,8 +897,7 @@ async def test_pattern_destination(hass, caplog):
             "origin_longitude": CAR_ORIGIN_LONGITUDE,
             "destination_latitude": "139.0",
             "destination_longitude": "-77.1",
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
@@ -888,8 +913,7 @@ async def test_invalid_credentials(hass, requests_mock, caplog):
         ",".join([CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]),
         ",".join([CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]),
         modes,
-        APP_ID,
-        APP_CODE,
+        API_KEY,
         "now",
     )
     requests_mock.get(
@@ -905,8 +929,7 @@ async def test_invalid_credentials(hass, requests_mock, caplog):
             "origin_longitude": CAR_ORIGIN_LONGITUDE,
             "destination_latitude": CAR_DESTINATION_LATITUDE,
             "destination_longitude": CAR_DESTINATION_LONGITUDE,
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
@@ -919,7 +942,7 @@ async def test_attribution(hass, requests_mock_credentials_check):
     origin = "50.037751372637686,14.39233448220898"
     destination = "50.07993838201255,14.42582157361062"
     modes = [ROUTE_MODE_SHORTEST, TRAVEL_MODE_PUBLIC_TIME_TABLE, TRAFFIC_MODE_ENABLED]
-    response_url = _build_mock_url(origin, destination, modes, APP_ID, APP_CODE, "now")
+    response_url = _build_mock_url(origin, destination, modes, API_KEY, "now")
     requests_mock_credentials_check.get(
         response_url, text=load_fixture("here_travel_time/attribution_response.json")
     )
@@ -932,16 +955,99 @@ async def test_attribution(hass, requests_mock_credentials_check):
             "origin_longitude": origin.split(",")[1],
             "destination_latitude": destination.split(",")[0],
             "destination_longitude": destination.split(",")[1],
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
+            "api_key": API_KEY,
             "traffic_mode": True,
             "route_mode": ROUTE_MODE_SHORTEST,
             "mode": TRAVEL_MODE_PUBLIC_TIME_TABLE,
         }
     }
     assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
     sensor = hass.states.get("sensor.test")
     assert (
         sensor.attributes.get(ATTR_ATTRIBUTION)
         == "With the support of HERE Technologies. All information is provided without warranty of any kind."
     )
+
+
+async def test_pattern_entity_state(hass, requests_mock_truck_response, caplog):
+    """Test that pattern matching the state of an entity works."""
+    caplog.set_level(logging.ERROR)
+    hass.states.async_set("sensor.origin", "invalid")
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "sensor.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "api_key": API_KEY,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert len(caplog.records) == 1
+    assert "is not a valid set of coordinates" in caplog.text
+
+
+async def test_pattern_entity_state_with_space(hass, requests_mock_truck_response):
+    """Test that pattern matching the state including a space of an entity works."""
+    hass.states.async_set(
+        "sensor.origin", ", ".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE])
+    )
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "sensor.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "api_key": API_KEY,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+
+
+async def test_delayed_update(hass, requests_mock_truck_response, caplog):
+    """Test that delayed update does not complain about missing entities."""
+    caplog.set_level(logging.WARNING)
+
+    config = {
+        DOMAIN: {
+            "platform": PLATFORM,
+            "name": "test",
+            "origin_entity_id": "sensor.origin",
+            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
+            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
+            "api_key": API_KEY,
+            "mode": TRAVEL_MODE_TRUCK,
+        }
+    }
+    sensor_config = {
+        "sensor": {
+            "platform": "template",
+            "sensors": [
+                {"template_sensor": {"value_template": "{{states('sensor.origin')}}"}}
+            ],
+        }
+    }
+    assert await async_setup_component(hass, DOMAIN, config)
+    assert await async_setup_component(hass, "sensor", sensor_config)
+    hass.states.async_set(
+        "sensor.origin", ",".join([TRUCK_ORIGIN_LATITUDE, TRUCK_ORIGIN_LONGITUDE])
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    assert "Unable to find entity" not in caplog.text

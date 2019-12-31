@@ -1,6 +1,15 @@
 """Support for switches that can be controlled using the RaspyRFM rc module."""
 import logging
 
+from raspyrfm_client import RaspyRFMClient
+from raspyrfm_client.device_implementations.controlunit.actions import Action
+from raspyrfm_client.device_implementations.controlunit.controlunit_constants import (
+    ControlUnitModel,
+)
+from raspyrfm_client.device_implementations.gateway.manufacturer.gateway_constants import (
+    GatewayModel,
+)
+from raspyrfm_client.device_implementations.manufacturer_constants import Manufacturer
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
@@ -46,16 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RaspyRFM switch."""
-    from raspyrfm_client import RaspyRFMClient
-    from raspyrfm_client.device_implementations.controlunit.controlunit_constants import (
-        ControlUnitModel,
-    )
-    from raspyrfm_client.device_implementations.gateway.manufacturer.gateway_constants import (
-        GatewayModel,
-    )
-    from raspyrfm_client.device_implementations.manufacturer_constants import (
-        Manufacturer,
-    )
 
     gateway_manufacturer = config.get(
         CONF_GATEWAY_MANUFACTURER, Manufacturer.SEEGEL_SYSTEME.value
@@ -123,7 +122,6 @@ class RaspyRFMSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        from raspyrfm_client.device_implementations.controlunit.actions import Action
 
         self._raspyrfm_client.send(self._gateway, self._controlunit, Action.ON)
         self._state = True
@@ -131,7 +129,6 @@ class RaspyRFMSwitch(SwitchDevice):
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        from raspyrfm_client.device_implementations.controlunit.actions import Action
 
         if Action.OFF in self._controlunit.get_supported_actions():
             self._raspyrfm_client.send(self._gateway, self._controlunit, Action.OFF)

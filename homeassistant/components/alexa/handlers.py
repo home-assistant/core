@@ -3,13 +3,19 @@ import logging
 import math
 
 from homeassistant import core as ha
-from homeassistant.components import cover, fan, group, light, media_player
+from homeassistant.components import (
+    cover,
+    fan,
+    group,
+    input_number,
+    light,
+    media_player,
+)
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
-    STATE_ALARM_DISARMED,
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_ARM_NIGHT,
@@ -21,6 +27,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK,
     SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     SERVICE_UNLOCK,
@@ -28,23 +35,25 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_ALARM_DISARMED,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
 import homeassistant.util.color as color_util
-import homeassistant.util.dt as dt_util
 from homeassistant.util.decorator import Registry
+import homeassistant.util.dt as dt_util
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import (
     API_TEMP_UNITS,
-    API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_MODES,
+    API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
-    Cause,
     PERCENTAGE_FAN_MAP,
     RANGE_FAN_MAP,
     SPEED_FAN_MAP,
+    Cause,
+    Inputs,
 )
 from .entities import async_get_entities
 from .errors import (
@@ -110,9 +119,7 @@ async def async_api_turn_on(hass, config, directive, context):
         domain = ha.DOMAIN
 
     service = SERVICE_TURN_ON
-    if domain == cover.DOMAIN:
-        service = cover.SERVICE_OPEN_COVER
-    elif domain == media_player.DOMAIN:
+    if domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
         if not supported & power_features:
@@ -138,9 +145,7 @@ async def async_api_turn_off(hass, config, directive, context):
         domain = ha.DOMAIN
 
     service = SERVICE_TURN_OFF
-    if entity.domain == cover.DOMAIN:
-        service = cover.SERVICE_CLOSE_COVER
-    elif domain == media_player.DOMAIN:
+    if domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
         if not supported & power_features:
@@ -345,10 +350,6 @@ async def async_api_set_percentage(hass, config, directive, context):
             speed = "high"
         data[fan.ATTR_SPEED] = speed
 
-    elif entity.domain == cover.DOMAIN:
-        service = SERVICE_SET_COVER_POSITION
-        data[cover.ATTR_POSITION] = percentage
-
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
     )
@@ -381,13 +382,6 @@ async def async_api_adjust_percentage(hass, config, directive, context):
             speed = "high"
 
         data[fan.ATTR_SPEED] = speed
-
-    elif entity.domain == cover.DOMAIN:
-        service = SERVICE_SET_COVER_POSITION
-
-        current = entity.attributes.get(cover.ATTR_POSITION)
-
-        data[cover.ATTR_POSITION] = max(0, percentage_delta + current)
 
     await hass.services.async_call(
         entity.domain, service, data, blocking=False, context=context
@@ -459,13 +453,20 @@ async def async_api_select_input(hass, config, directive, context):
     media_input = directive.payload["input"]
     entity = directive.entity
 
-    # attempt to map the ALL UPPERCASE payload name to a source
-    source_list = entity.attributes[media_player.const.ATTR_INPUT_SOURCE_LIST] or []
+    # Attempt to map the ALL UPPERCASE payload name to a source.
+    # Strips trailing 1 to match single input devices.
+    source_list = entity.attributes.get(media_player.const.ATTR_INPUT_SOURCE_LIST, [])
     for source in source_list:
-        # response will always be space separated, so format the source in the
-        # most likely way to find a match
-        formatted_source = source.lower().replace("-", " ").replace("_", " ")
-        if formatted_source in media_input.lower():
+        formatted_source = (
+            source.lower().replace("-", "").replace("_", "").replace(" ", "")
+        )
+        media_input = media_input.lower().replace(" ", "")
+        if (
+            formatted_source in Inputs.VALID_SOURCE_NAME_MAP.keys()
+            and formatted_source == media_input
+        ) or (
+            media_input.endswith("1") and formatted_source == media_input.rstrip("1")
+        ):
             media_input = source
             break
     else:
@@ -950,7 +951,7 @@ async def async_api_disarm(hass, config, directive, context):
 
 @HANDLERS.register(("Alexa.ModeController", "SetMode"))
 async def async_api_set_mode(hass, config, directive, context):
-    """Process a next request."""
+    """Process a SetMode directive."""
     entity = directive.entity
     instance = directive.instance
     domain = entity.domain
@@ -958,45 +959,56 @@ async def async_api_set_mode(hass, config, directive, context):
     data = {ATTR_ENTITY_ID: entity.entity_id}
     mode = directive.payload["mode"]
 
-    if domain != fan.DOMAIN:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
-
+    # Fan Direction
     if instance == f"{fan.DOMAIN}.{fan.ATTR_DIRECTION}":
-        mode, direction = mode.split(".")
-        if direction in [fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD]:
+        _, direction = mode.split(".")
+        if direction in (fan.DIRECTION_REVERSE, fan.DIRECTION_FORWARD):
             service = fan.SERVICE_SET_DIRECTION
             data[fan.ATTR_DIRECTION] = direction
+
+    # Cover Position
+    elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        _, position = mode.split(".")
+
+        if position == cover.STATE_CLOSED:
+            service = cover.SERVICE_CLOSE_COVER
+        elif position == cover.STATE_OPEN:
+            service = cover.SERVICE_OPEN_COVER
+        elif position == "custom":
+            service = cover.SERVICE_STOP_COVER
+
+    else:
+        msg = "Entity does not support directive"
+        raise AlexaInvalidDirectiveError(msg)
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
     )
 
-    return directive.response()
+    response = directive.response()
+    response.add_context_property(
+        {
+            "namespace": "Alexa.ModeController",
+            "instance": instance,
+            "name": "mode",
+            "value": mode,
+        }
+    )
+
+    return response
 
 
 @HANDLERS.register(("Alexa.ModeController", "AdjustMode"))
 async def async_api_adjust_mode(hass, config, directive, context):
     """Process a AdjustMode request.
 
-    Requires modeResources to be ordered.
-    Only modes that are ordered support the adjustMode directive.
+    Requires capabilityResources supportedModes to be ordered.
+    Only supportedModes with ordered=True support the adjustMode directive.
     """
-    entity = directive.entity
-    instance = directive.instance
-    domain = entity.domain
 
-    if domain != fan.DOMAIN:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
-
-    if instance is None:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
-
-    # No modeResources are currently ordered to support this request.
-
-    return directive.response()
+    # Currently no supportedModes are configured with ordered=True to support this request.
+    msg = "Entity does not support directive"
+    raise AlexaInvalidDirectiveError(msg)
 
 
 @HANDLERS.register(("Alexa.ToggleController", "TurnOn"))
@@ -1008,19 +1020,29 @@ async def async_api_toggle_on(hass, config, directive, context):
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if domain != fan.DOMAIN:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
-
+    # Fan Oscillating
     if instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
         service = fan.SERVICE_OSCILLATE
         data[fan.ATTR_OSCILLATING] = True
+    else:
+        msg = "Entity does not support directive"
+        raise AlexaInvalidDirectiveError(msg)
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
     )
 
-    return directive.response()
+    response = directive.response()
+    response.add_context_property(
+        {
+            "namespace": "Alexa.ToggleController",
+            "instance": instance,
+            "name": "toggleState",
+            "value": "ON",
+        }
+    )
+
+    return response
 
 
 @HANDLERS.register(("Alexa.ToggleController", "TurnOff"))
@@ -1032,19 +1054,29 @@ async def async_api_toggle_off(hass, config, directive, context):
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
-    if domain != fan.DOMAIN:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
-
+    # Fan Oscillating
     if instance == f"{fan.DOMAIN}.{fan.ATTR_OSCILLATING}":
         service = fan.SERVICE_OSCILLATE
         data[fan.ATTR_OSCILLATING] = False
+    else:
+        msg = "Entity does not support directive"
+        raise AlexaInvalidDirectiveError(msg)
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
     )
 
-    return directive.response()
+    response = directive.response()
+    response.add_context_property(
+        {
+            "namespace": "Alexa.ToggleController",
+            "instance": instance,
+            "name": "toggleState",
+            "value": "OFF",
+        }
+    )
+
+    return response
 
 
 @HANDLERS.register(("Alexa.RangeController", "SetRangeValue"))
@@ -1055,15 +1087,12 @@ async def async_api_set_range(hass, config, directive, context):
     domain = entity.domain
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
-    range_value = int(directive.payload["rangeValue"])
+    range_value = directive.payload["rangeValue"]
 
-    if domain != fan.DOMAIN:
-        msg = "Entity does not support directive"
-        raise AlexaInvalidDirectiveError(msg)
-
+    # Fan Speed
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
         service = fan.SERVICE_SET_SPEED
-        speed = SPEED_FAN_MAP.get(range_value, None)
+        speed = SPEED_FAN_MAP.get(int(range_value))
 
         if not speed:
             msg = "Entity does not support value"
@@ -1074,11 +1103,55 @@ async def async_api_set_range(hass, config, directive, context):
 
         data[fan.ATTR_SPEED] = speed
 
+    # Cover Position
+    elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        range_value = int(range_value)
+        if range_value == 0:
+            service = cover.SERVICE_CLOSE_COVER
+        elif range_value == 100:
+            service = cover.SERVICE_OPEN_COVER
+        else:
+            service = cover.SERVICE_SET_COVER_POSITION
+            data[cover.ATTR_POSITION] = range_value
+
+    # Cover Tilt Position
+    elif instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
+        range_value = int(range_value)
+        if range_value == 0:
+            service = cover.SERVICE_CLOSE_COVER_TILT
+        elif range_value == 100:
+            service = cover.SERVICE_OPEN_COVER_TILT
+        else:
+            service = cover.SERVICE_SET_COVER_TILT_POSITION
+            data[cover.ATTR_POSITION] = range_value
+
+    # Input Number Value
+    elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
+        range_value = float(range_value)
+        service = input_number.SERVICE_SET_VALUE
+        min_value = float(entity.attributes[input_number.ATTR_MIN])
+        max_value = float(entity.attributes[input_number.ATTR_MAX])
+        data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
+
+    else:
+        msg = "Entity does not support directive"
+        raise AlexaInvalidDirectiveError(msg)
+
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
     )
 
-    return directive.response()
+    response = directive.response()
+    response.add_context_property(
+        {
+            "namespace": "Alexa.RangeController",
+            "instance": instance,
+            "name": "rangeValue",
+            "value": range_value,
+        }
+    )
+
+    return response
 
 
 @HANDLERS.register(("Alexa.RangeController", "AdjustRangeValue"))
@@ -1089,25 +1162,71 @@ async def async_api_adjust_range(hass, config, directive, context):
     domain = entity.domain
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
-    range_delta = int(directive.payload["rangeValueDelta"])
+    range_delta = directive.payload["rangeValueDelta"]
+    response_value = 0
 
+    # Fan Speed
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
+        range_delta = int(range_delta)
         service = fan.SERVICE_SET_SPEED
-
-        # adjust range
         current_range = RANGE_FAN_MAP.get(entity.attributes.get(fan.ATTR_SPEED), 0)
-        speed = SPEED_FAN_MAP.get(max(0, range_delta + current_range), fan.SPEED_OFF)
+        speed = SPEED_FAN_MAP.get(
+            min(3, max(0, range_delta + current_range)), fan.SPEED_OFF
+        )
 
         if speed == fan.SPEED_OFF:
             service = fan.SERVICE_TURN_OFF
 
-        data[fan.ATTR_SPEED] = speed
+        data[fan.ATTR_SPEED] = response_value = speed
+
+    # Cover Position
+    elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+        range_delta = int(range_delta)
+        service = SERVICE_SET_COVER_POSITION
+        current = entity.attributes.get(cover.ATTR_POSITION)
+        data[cover.ATTR_POSITION] = response_value = min(
+            100, max(0, range_delta + current)
+        )
+
+    # Cover Tilt Position
+    elif instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
+        range_delta = int(range_delta)
+        service = SERVICE_SET_COVER_TILT_POSITION
+        current = entity.attributes.get(cover.ATTR_TILT_POSITION)
+        data[cover.ATTR_TILT_POSITION] = response_value = min(
+            100, max(0, range_delta + current)
+        )
+
+    # Input Number Value
+    elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
+        range_delta = float(range_delta)
+        service = input_number.SERVICE_SET_VALUE
+        min_value = float(entity.attributes[input_number.ATTR_MIN])
+        max_value = float(entity.attributes[input_number.ATTR_MAX])
+        current = float(entity.state)
+        data[input_number.ATTR_VALUE] = response_value = min(
+            max_value, max(min_value, range_delta + current)
+        )
+
+    else:
+        msg = "Entity does not support directive"
+        raise AlexaInvalidDirectiveError(msg)
 
     await hass.services.async_call(
         domain, service, data, blocking=False, context=context
     )
 
-    return directive.response()
+    response = directive.response()
+    response.add_context_property(
+        {
+            "namespace": "Alexa.RangeController",
+            "instance": instance,
+            "name": "rangeValue",
+            "value": response_value,
+        }
+    )
+
+    return response
 
 
 @HANDLERS.register(("Alexa.ChannelController", "ChangeChannel"))
@@ -1115,21 +1234,25 @@ async def async_api_changechannel(hass, config, directive, context):
     """Process a change channel request."""
     channel = "0"
     entity = directive.entity
-    payload = directive.payload["channel"]
+    channel_payload = directive.payload["channel"]
+    metadata_payload = directive.payload["channelMetadata"]
     payload_name = "number"
 
-    if "number" in payload:
-        channel = payload["number"]
+    if "number" in channel_payload:
+        channel = channel_payload["number"]
         payload_name = "number"
-    elif "callSign" in payload:
-        channel = payload["callSign"]
+    elif "callSign" in channel_payload:
+        channel = channel_payload["callSign"]
         payload_name = "callSign"
-    elif "affiliateCallSign" in payload:
-        channel = payload["affiliateCallSign"]
+    elif "affiliateCallSign" in channel_payload:
+        channel = channel_payload["affiliateCallSign"]
         payload_name = "affiliateCallSign"
-    elif "uri" in payload:
-        channel = payload["uri"]
+    elif "uri" in channel_payload:
+        channel = channel_payload["uri"]
         payload_name = "uri"
+    elif "name" in metadata_payload:
+        channel = metadata_payload["name"]
+        payload_name = "callSign"
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
@@ -1229,3 +1352,43 @@ async def async_api_seek(hass, config, directive, context):
     return directive.response(
         name="StateReport", namespace="Alexa.SeekController", payload=payload
     )
+
+
+@HANDLERS.register(("Alexa.EqualizerController", "SetMode"))
+async def async_api_set_eq_mode(hass, config, directive, context):
+    """Process a SetMode request for EqualizerController."""
+    mode = directive.payload["mode"]
+    entity = directive.entity
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    sound_mode_list = entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST)
+    if sound_mode_list and mode.lower() in sound_mode_list:
+        data[media_player.const.ATTR_SOUND_MODE] = mode.lower()
+    else:
+        msg = "failed to map sound mode {} to a mode on {}".format(
+            mode, entity.entity_id
+        )
+        raise AlexaInvalidValueError(msg)
+
+    await hass.services.async_call(
+        entity.domain,
+        media_player.SERVICE_SELECT_SOUND_MODE,
+        data,
+        blocking=False,
+        context=context,
+    )
+
+    return directive.response()
+
+
+@HANDLERS.register(("Alexa.EqualizerController", "AdjustBands"))
+@HANDLERS.register(("Alexa.EqualizerController", "ResetBands"))
+@HANDLERS.register(("Alexa.EqualizerController", "SetBands"))
+async def async_api_bands_directive(hass, config, directive, context):
+    """Handle an AdjustBands, ResetBands, SetBands request.
+
+    Only mode directives are currently supported for the EqualizerController.
+    """
+    # Currently bands directives are not supported.
+    msg = "Entity does not support directive"
+    raise AlexaInvalidDirectiveError(msg)

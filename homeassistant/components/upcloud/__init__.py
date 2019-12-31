@@ -18,6 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,6 +83,7 @@ def setup(hass, config):
         dispatcher_send(hass, SIGNAL_UPDATE_UPCLOUD)
 
     # Call the UpCloud API to refresh data
+    upcloud_update(dt.utcnow())
     track_time_interval(hass, upcloud_update, scan_interval)
 
     return True
@@ -108,6 +110,7 @@ class UpCloudServerEntity(Entity):
         self._upcloud = upcloud
         self.uuid = uuid
         self.data = None
+        self._unsub_handlers = []
 
     @property
     def unique_id(self) -> str:
@@ -124,9 +127,17 @@ class UpCloudServerEntity(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_UPCLOUD, self._update_callback
+        self._unsub_handlers.append(
+            async_dispatcher_connect(
+                self.hass, SIGNAL_UPDATE_UPCLOUD, self._update_callback
+            )
         )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Invoke unsubscription handlers."""
+        for unsub in self._unsub_handlers:
+            unsub()
+        self._unsub_handlers.clear()
 
     @callback
     def _update_callback(self):

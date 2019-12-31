@@ -6,43 +6,46 @@ components. Instead call the service directly.
 from homeassistant.components.automation import DOMAIN, SERVICE_TRIGGER
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_ON,
-    SERVICE_TURN_OFF,
-    SERVICE_TOGGLE,
+    ENTITY_MATCH_ALL,
     SERVICE_RELOAD,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
 from homeassistant.loader import bind_hass
 
 
 @bind_hass
-async def async_turn_on(hass, entity_id=None):
+async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL):
     """Turn on specified automation or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 @bind_hass
-async def async_turn_off(hass, entity_id=None):
+async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL):
     """Turn off specified automation or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
 @bind_hass
-async def async_toggle(hass, entity_id=None):
+async def async_toggle(hass, entity_id=ENTITY_MATCH_ALL):
     """Toggle specified automation or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     await hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data)
 
 
 @bind_hass
-async def async_trigger(hass, entity_id=None):
+async def async_trigger(hass, entity_id=ENTITY_MATCH_ALL):
     """Trigger specified automation or all."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     await hass.services.async_call(DOMAIN, SERVICE_TRIGGER, data)
 
 
 @bind_hass
-async def async_reload(hass):
+async def async_reload(hass, context=None):
     """Reload the automation from config."""
-    await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
+    await hass.services.async_call(
+        DOMAIN, SERVICE_RELOAD, blocking=True, context=context
+    )

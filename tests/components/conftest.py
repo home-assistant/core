@@ -3,13 +3,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.setup import async_setup_component
-from homeassistant.components.websocket_api.http import URL
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+from homeassistant.components.websocket_api.http import URL
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
 

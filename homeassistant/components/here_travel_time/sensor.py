@@ -17,8 +17,9 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
+    EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -31,8 +32,7 @@ CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
 CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
-CONF_APP_ID = "app_id"
-CONF_APP_CODE = "app_code"
+CONF_API_KEY = "api_key"
 CONF_TRAFFIC_MODE = "traffic_mode"
 CONF_ROUTE_MODE = "route_mode"
 
@@ -89,8 +89,6 @@ UNIT_OF_MEASUREMENT = "min"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-TRACKABLE_DOMAINS = ["device_tracker", "sensor", "zone", "person"]
-
 NO_ROUTE_ERROR_MESSAGE = "HERE could not find a route based on the input"
 
 PLATFORM_SCHEMA = vol.All(
@@ -98,8 +96,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_ORIGIN_LATITUDE, CONF_ORIGIN_ENTITY_ID),
     PLATFORM_SCHEMA.extend(
         {
-            vol.Required(CONF_APP_ID): cv.string,
-            vol.Required(CONF_APP_CODE): cv.string,
+            vol.Required(CONF_API_KEY): cv.string,
             vol.Inclusive(
                 CONF_DESTINATION_LATITUDE, "destination_coordinates"
             ): cv.latitude,
@@ -132,9 +129,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up the HERE travel time platform."""
 
-    app_id = config[CONF_APP_ID]
-    app_code = config[CONF_APP_CODE]
-    here_client = herepy.RoutingApi(app_id, app_code)
+    api_key = config[CONF_API_KEY]
+    here_client = herepy.RoutingApi(api_key)
 
     if not await hass.async_add_executor_job(
         _are_valid_client_credentials, here_client
@@ -146,15 +142,19 @@ async def async_setup_platform(
 
     if config.get(CONF_ORIGIN_LATITUDE) is not None:
         origin = f"{config[CONF_ORIGIN_LATITUDE]},{config[CONF_ORIGIN_LONGITUDE]}"
+        origin_entity_id = None
     else:
-        origin = config[CONF_ORIGIN_ENTITY_ID]
+        origin = None
+        origin_entity_id = config[CONF_ORIGIN_ENTITY_ID]
 
     if config.get(CONF_DESTINATION_LATITUDE) is not None:
         destination = (
             f"{config[CONF_DESTINATION_LATITUDE]},{config[CONF_DESTINATION_LONGITUDE]}"
         )
+        destination_entity_id = None
     else:
-        destination = config[CONF_DESTINATION_ENTITY_ID]
+        destination = None
+        destination_entity_id = config[CONF_DESTINATION_ENTITY_ID]
 
     travel_mode = config[CONF_MODE]
     traffic_mode = config[CONF_TRAFFIC_MODE]
@@ -166,9 +166,11 @@ async def async_setup_platform(
         here_client, travel_mode, traffic_mode, route_mode, units
     )
 
-    sensor = HERETravelTimeSensor(name, origin, destination, here_data)
+    sensor = HERETravelTimeSensor(
+        name, origin, destination, origin_entity_id, destination_entity_id, here_data
+    )
 
-    async_add_entities([sensor], True)
+    async_add_entities([sensor])
 
 
 def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
@@ -194,30 +196,42 @@ class HERETravelTimeSensor(Entity):
     """Representation of a HERE travel time sensor."""
 
     def __init__(
-        self, name: str, origin: str, destination: str, here_data: "HERETravelTimeData"
+        self,
+        name: str,
+        origin: str,
+        destination: str,
+        origin_entity_id: str,
+        destination_entity_id: str,
+        here_data: "HERETravelTimeData",
     ) -> None:
         """Initialize the sensor."""
         self._name = name
+        self._origin_entity_id = origin_entity_id
+        self._destination_entity_id = destination_entity_id
         self._here_data = here_data
         self._unit_of_measurement = UNIT_OF_MEASUREMENT
-        self._origin_entity_id = None
-        self._destination_entity_id = None
         self._attrs = {
             ATTR_UNIT_SYSTEM: self._here_data.units,
             ATTR_MODE: self._here_data.travel_mode,
             ATTR_TRAFFIC_MODE: self._here_data.traffic_mode,
         }
-
-        # Check if location is a trackable entity
-        if origin.split(".", 1)[0] in TRACKABLE_DOMAINS:
-            self._origin_entity_id = origin
-        else:
+        if self._origin_entity_id is None:
             self._here_data.origin = origin
 
-        if destination.split(".", 1)[0] in TRACKABLE_DOMAINS:
-            self._destination_entity_id = destination
-        else:
+        if self._destination_entity_id is None:
             self._here_data.destination = destination
+
+    async def async_added_to_hass(self) -> None:
+        """Delay the sensor update to avoid entity not found warnings."""
+
+        @callback
+        def delayed_sensor_update(event):
+            """Update sensor after homeassistant started."""
+            self.async_schedule_update_ha_state(True)
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, delayed_sensor_update
+        )
 
     @property
     def state(self) -> Optional[str]:
@@ -309,9 +323,27 @@ class HERETravelTimeSensor(Entity):
             )
             return self._get_location_from_attributes(zone_entity)
 
-        # If zone was not found in state then use the state as the location
-        if entity_id.startswith("sensor."):
+        # Check if state is valid coordinate set
+        if self._entity_state_is_valid_coordinate_set(entity.state):
             return entity.state
+
+        _LOGGER.error(
+            "The state of %s is not a valid set of coordinates: %s",
+            entity_id,
+            entity.state,
+        )
+        return None
+
+    @staticmethod
+    def _entity_state_is_valid_coordinate_set(state: str) -> bool:
+        """Check that the given string is a valid set of coordinates."""
+        schema = vol.Schema(cv.gps)
+        try:
+            coordinates = state.split(",")
+            schema(coordinates)
+            return True
+        except (vol.MultipleInvalid):
+            return False
 
     @staticmethod
     def _get_location_from_attributes(entity: State) -> str:

@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import json
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -11,7 +11,6 @@ from homeassistant.helpers import storage
 from homeassistant.util import dt
 
 from tests.common import async_fire_time_changed, mock_coro
-
 
 MOCK_VERSION = 1
 MOCK_KEY = "storage-test"

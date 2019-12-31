@@ -2,26 +2,26 @@
 import asyncio
 import base64
 import io
-from unittest.mock import patch, mock_open, PropertyMock
+from unittest.mock import PropertyMock, mock_open, patch
 
 import pytest
 
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.components import camera, http
+from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
+from homeassistant.components.camera.prefs import CameraEntityPreferences
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_ENTITY_PICTURE,
     EVENT_HOMEASSISTANT_START,
 )
-from homeassistant.components import camera, http
-from homeassistant.components.camera.const import DOMAIN, PREF_PRELOAD_STREAM
-from homeassistant.components.camera.prefs import CameraEntityPreferences
-from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import (
+    assert_setup_component,
     get_test_home_assistant,
     get_test_instance_port,
-    assert_setup_component,
     mock_coro,
 )
 from tests.components.camera import common

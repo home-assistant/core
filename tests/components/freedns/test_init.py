@@ -1,9 +1,10 @@
 """Test the FreeDNS component."""
 import asyncio
+
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import freedns
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed

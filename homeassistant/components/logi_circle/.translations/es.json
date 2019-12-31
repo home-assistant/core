@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_setup": "Solo puedes configurar una cuenta de Logi Circle.",
-            "external_error": "La excepci\u00f3n se produjo a partir de otro flujo.",
+            "external_error": "Se produjo una excepci\u00f3n de otro flujo.",
             "external_setup": "Logi Circle se ha configurado correctamente a partir de otro flujo.",
             "no_flows": "Es necesario configurar Logi Circle antes de poder autenticarse con \u00e9l. [Echa un vistazo a las instrucciones] (https://www.home-assistant.io/components/logi_circle/)."
         },

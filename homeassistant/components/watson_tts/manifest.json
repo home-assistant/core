@@ -3,7 +3,7 @@
   "name": "IBM Watson TTS",
   "documentation": "https://www.home-assistant.io/integrations/watson_tts",
   "requirements": [
-    "ibm-watson==3.0.3"
+    "ibm-watson==4.0.1"
   ],
   "dependencies": [],
   "codeowners": [

@@ -1,31 +1,32 @@
 """Support for exposing a templated binary sensor."""
 import logging
-from itertools import chain
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
+    DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    DEVICE_CLASSES_SCHEMA,
+    BinarySensorDevice,
 )
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
     ATTR_ENTITY_ID,
-    CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE,
-    CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_SENSORS,
+    ATTR_FRIENDLY_NAME,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_ICON_TEMPLATE,
+    CONF_SENSORS,
+    CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change, async_track_same_state
+from homeassistant.helpers.event import async_track_same_state, async_track_state_change
+
+from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,11 +64,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
-        entity_ids = set()
-        manual_entity_ids = device_config.get(ATTR_ENTITY_ID)
         attribute_templates = device_config.get(CONF_ATTRIBUTE_TEMPLATES, {})
 
-        invalid_templates = []
+        friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
+        device_class = device_config.get(CONF_DEVICE_CLASS)
+        delay_on = device_config.get(CONF_DELAY_ON)
+        delay_off = device_config.get(CONF_DELAY_OFF)
 
         templates = {
             CONF_VALUE_TEMPLATE: value_template,
@@ -76,41 +78,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             CONF_AVAILABILITY_TEMPLATE: availability_template,
         }
 
-        for tpl_name, template in chain(templates.items(), attribute_templates.items()):
-            if template is None:
-                continue
-            template.hass = hass
-
-            if manual_entity_ids is not None:
-                continue
-
-            template_entity_ids = template.extract_entities()
-            if template_entity_ids == MATCH_ALL:
-                entity_ids = MATCH_ALL
-                # Cut off _template from name
-                invalid_templates.append(tpl_name.replace("_template", ""))
-            elif entity_ids != MATCH_ALL:
-                entity_ids |= set(template_entity_ids)
-
-        if manual_entity_ids is not None:
-            entity_ids = manual_entity_ids
-        elif entity_ids != MATCH_ALL:
-            entity_ids = list(entity_ids)
-
-        if invalid_templates:
-            _LOGGER.warning(
-                "Template binary sensor %s has no entity ids configured to"
-                " track nor were we able to extract the entities to track"
-                " from the %s template(s). This entity will only be able"
-                " to be updated manually.",
-                device,
-                ", ".join(invalid_templates),
-            )
-
-        friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        device_class = device_config.get(CONF_DEVICE_CLASS)
-        delay_on = device_config.get(CONF_DELAY_ON)
-        delay_off = device_config.get(CONF_DELAY_OFF)
+        initialise_templates(hass, templates, attribute_templates)
+        entity_ids = extract_entities(
+            device,
+            "binary sensor",
+            device_config.get(ATTR_ENTITY_ID),
+            templates,
+            attribute_templates,
+        )
 
         sensors.append(
             BinarySensorTemplate(

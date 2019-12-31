@@ -1,8 +1,9 @@
 """Support for HomeMatic devices."""
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 from functools import partial
 import logging
 
+from pyhomematic import HMConnection
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -297,6 +298,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_HOSTS, default={}): {
                     cv.match_all: {
                         vol.Required(CONF_HOST): cv.string,
+                        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                         vol.Optional(
                             CONF_USERNAME, default=DEFAULT_USERNAME
                         ): cv.string,
@@ -366,7 +368,6 @@ SCHEMA_SERVICE_PUT_PARAMSET = vol.Schema(
 
 def setup(hass, config):
     """Set up the Homematic component."""
-    from pyhomematic import HMConnection
 
     conf = config[DOMAIN]
     hass.data[DATA_CONF] = remotes = {}
@@ -392,7 +393,7 @@ def setup(hass, config):
     for sname, sconfig in conf[CONF_HOSTS].items():
         remotes[sname] = {
             "ip": sconfig.get(CONF_HOST),
-            "port": DEFAULT_PORT,
+            "port": sconfig[CONF_PORT],
             "username": sconfig.get(CONF_USERNAME),
             "password": sconfig.get(CONF_PASSWORD),
             "connect": False,

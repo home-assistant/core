@@ -1,10 +1,15 @@
 """Support for SCSGate covers."""
 import logging
 
+from scsgate.tasks import (
+    HaltRollerShutterTask,
+    LowerRollerShutterTask,
+    RaiseRollerShutterTask,
+)
 import voluptuous as vol
 
 from homeassistant.components import scsgate
-from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -69,20 +74,14 @@ class SCSGateCover(CoverDevice):
 
     def open_cover(self, **kwargs):
         """Move the cover."""
-        from scsgate.tasks import RaiseRollerShutterTask
-
         scsgate.SCSGATE.append_task(RaiseRollerShutterTask(target=self._scs_id))
 
     def close_cover(self, **kwargs):
         """Move the cover down."""
-        from scsgate.tasks import LowerRollerShutterTask
-
         scsgate.SCSGATE.append_task(LowerRollerShutterTask(target=self._scs_id))
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        from scsgate.tasks import HaltRollerShutterTask
-
         scsgate.SCSGATE.append_task(HaltRollerShutterTask(target=self._scs_id))
 
     def process_event(self, message):

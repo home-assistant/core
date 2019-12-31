@@ -15,12 +15,17 @@ from homeassistant.components.remote import (
     SERVICE_LEARN_COMMAND,
     SERVICE_SEND_COMMAND,
 )
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.loader import bind_hass
 
 
 @bind_hass
-def turn_on(hass, activity=None, entity_id=None):
+def turn_on(hass, activity=None, entity_id=ENTITY_MATCH_ALL):
     """Turn all or specified remote on."""
     data = {
         key: value
@@ -31,7 +36,7 @@ def turn_on(hass, activity=None, entity_id=None):
 
 
 @bind_hass
-def turn_off(hass, activity=None, entity_id=None):
+def turn_off(hass, activity=None, entity_id=ENTITY_MATCH_ALL):
     """Turn all or specified remote off."""
     data = {}
     if activity:
@@ -45,7 +50,12 @@ def turn_off(hass, activity=None, entity_id=None):
 
 @bind_hass
 def send_command(
-    hass, command, entity_id=None, device=None, num_repeats=None, delay_secs=None
+    hass,
+    command,
+    entity_id=ENTITY_MATCH_ALL,
+    device=None,
+    num_repeats=None,
+    delay_secs=None,
 ):
     """Send a command to a device."""
     data = {ATTR_COMMAND: command}
@@ -66,7 +76,12 @@ def send_command(
 
 @bind_hass
 def learn_command(
-    hass, entity_id=None, device=None, command=None, alternative=None, timeout=None
+    hass,
+    entity_id=ENTITY_MATCH_ALL,
+    device=None,
+    command=None,
+    alternative=None,
+    timeout=None,
 ):
     """Learn a command from a device."""
     data = {}

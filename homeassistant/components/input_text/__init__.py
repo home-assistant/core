@@ -3,17 +3,18 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     ATTR_MODE,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ICON,
-    CONF_NAME,
     CONF_MODE,
+    CONF_NAME,
+    SERVICE_RELOAD,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.helpers.service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +23,9 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 CONF_INITIAL = "initial"
 CONF_MIN = "min"
+CONF_MIN_VALUE = 0
 CONF_MAX = "max"
+CONF_MAX_VALUE = 100
 
 MODE_TEXT = "text"
 MODE_PASSWORD = "password"
@@ -33,10 +36,6 @@ ATTR_MAX = "max"
 ATTR_PATTERN = "pattern"
 
 SERVICE_SET_VALUE = "set_value"
-
-SERVICE_SET_VALUE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_VALUE): cv.string}
-)
 
 
 def _cv_input_text(cfg):
@@ -62,8 +61,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.All(
                     {
                         vol.Optional(CONF_NAME): cv.string,
-                        vol.Optional(CONF_MIN, default=0): vol.Coerce(int),
-                        vol.Optional(CONF_MAX, default=100): vol.Coerce(int),
+                        vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
+                        vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
                         vol.Optional(CONF_INITIAL, ""): cv.string,
                         vol.Optional(CONF_ICON): cv.icon,
                         vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
@@ -81,20 +80,51 @@ CONFIG_SCHEMA = vol.Schema(
     required=True,
     extra=vol.ALLOW_EXTRA,
 )
+RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 async def async_setup(hass, config):
     """Set up an input text box."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
+    entities = await _async_process_config(config)
+
+    async def reload_service_handler(service_call):
+        """Remove all entities and load new ones from config."""
+        conf = await component.async_prepare_reload()
+        if conf is None:
+            return
+        new_entities = await _async_process_config(conf)
+        if new_entities:
+            await component.async_add_entities(new_entities)
+
+    homeassistant.helpers.service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_service_handler,
+        schema=RELOAD_SERVICE_SCHEMA,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SET_VALUE, {vol.Required(ATTR_VALUE): cv.string}, "async_set_value"
+    )
+
+    if entities:
+        await component.async_add_entities(entities)
+    return True
+
+
+async def _async_process_config(config):
+    """Process config and create list of entities."""
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
         if cfg is None:
             cfg = {}
         name = cfg.get(CONF_NAME)
-        minimum = cfg.get(CONF_MIN)
-        maximum = cfg.get(CONF_MAX)
+        minimum = cfg.get(CONF_MIN, CONF_MIN_VALUE)
+        maximum = cfg.get(CONF_MAX, CONF_MAX_VALUE)
         initial = cfg.get(CONF_INITIAL)
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -107,15 +137,7 @@ async def async_setup(hass, config):
             )
         )
 
-    if not entities:
-        return False
-
-    component.async_register_entity_service(
-        SERVICE_SET_VALUE, SERVICE_SET_VALUE_SCHEMA, "async_set_value"
-    )
-
-    await component.async_add_entities(entities)
-    return True
+    return entities
 
 
 class InputText(RestoreEntity):

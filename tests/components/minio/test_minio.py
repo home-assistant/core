@@ -3,19 +3,19 @@ import asyncio
 import json
 from unittest.mock import MagicMock
 
+from asynctest import call, patch
 import pytest
-from asynctest import patch, call
 
 from homeassistant.components.minio import (
-    QueueListener,
-    DOMAIN,
-    CONF_HOST,
-    CONF_PORT,
     CONF_ACCESS_KEY,
-    CONF_SECRET_KEY,
-    CONF_SECURE,
+    CONF_HOST,
     CONF_LISTEN,
     CONF_LISTEN_BUCKET,
+    CONF_PORT,
+    CONF_SECRET_KEY,
+    CONF_SECURE,
+    DOMAIN,
+    QueueListener,
 )
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component

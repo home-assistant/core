@@ -3,14 +3,14 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.auth.models import Credentials
+from homeassistant.components import auth
 from homeassistant.components.auth import RESULT_TYPE_USER
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
-from homeassistant.components import auth
-
-from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
 
 from . import async_setup_auth
+
+from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
 
 
 async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):

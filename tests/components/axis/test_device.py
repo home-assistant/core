@@ -3,10 +3,10 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from tests.common import mock_coro, MockConfigEntry
-
 from homeassistant.components.axis import device, errors
 from homeassistant.components.axis.camera import AxisCamera
+
+from tests.common import MockConfigEntry, mock_coro
 
 DEVICE_DATA = {
     device.CONF_HOST: "1.2.3.4",

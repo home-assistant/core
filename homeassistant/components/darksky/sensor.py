@@ -1,12 +1,11 @@
 """Support for Dark Sky weather service."""
-import logging
 from datetime import timedelta
+import logging
 
 import forecastio
-import voluptuous as vol
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -15,9 +14,10 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
-    UNIT_UV_INDEX,
     CONF_SCAN_INTERVAL,
+    UNIT_UV_INDEX,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -385,7 +385,7 @@ CONDITION_PICTURES = {
     ],
     "partly-cloudy-night": [
         "/static/images/darksky/weather-cloudy.svg",
-        "mdi:weather-partly-cloudy",
+        "mdi:weather-night-partly-cloudy",
     ],
 }
 

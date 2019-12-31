@@ -7,27 +7,27 @@ import uuid
 
 import voluptuous as vol
 
+from homeassistant.auth import EVENT_USER_REMOVED
 from homeassistant.components import websocket_api
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
     ATTR_SOURCE_TYPE,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
     SOURCE_TYPE_GPS,
 )
 from homeassistant.const import (
+    ATTR_GPS_ACCURACY,
     ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_GPS_ACCURACY,
     CONF_ID,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
-    STATE_UNKNOWN,
-    STATE_UNAVAILABLE,
     STATE_HOME,
     STATE_NOT_HOME,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import callback, Event, State
-from homeassistant.auth import EVENT_USER_REMOVED
+from homeassistant.core import Event, State, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change

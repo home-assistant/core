@@ -2,98 +2,50 @@
 from datetime import datetime, timedelta
 import logging
 
+from todoist.api import TodoistAPI
 import voluptuous as vol
 
-from homeassistant.components.calendar import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    CalendarEventDevice,
-)
+from homeassistant.components.calendar import PLATFORM_SCHEMA, CalendarEventDevice
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import Throttle, dt
 
+from .const import (
+    ALL_DAY,
+    ALL_TASKS,
+    CHECKED,
+    COMPLETED,
+    CONF_EXTRA_PROJECTS,
+    CONF_PROJECT_DUE_DATE,
+    CONF_PROJECT_LABEL_WHITELIST,
+    CONF_PROJECT_WHITELIST,
+    CONTENT,
+    DATETIME,
+    DESCRIPTION,
+    DOMAIN,
+    DUE,
+    DUE_DATE,
+    DUE_DATE_LANG,
+    DUE_DATE_STRING,
+    DUE_DATE_VALID_LANGS,
+    DUE_TODAY,
+    END,
+    ID,
+    LABELS,
+    NAME,
+    OVERDUE,
+    PRIORITY,
+    PROJECT_ID,
+    PROJECT_NAME,
+    PROJECTS,
+    SERVICE_NEW_TASK,
+    START,
+    SUMMARY,
+    TASKS,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_EXTRA_PROJECTS = "custom_projects"
-CONF_PROJECT_DUE_DATE = "due_date_days"
-CONF_PROJECT_LABEL_WHITELIST = "labels"
-CONF_PROJECT_WHITELIST = "include_projects"
-
-# Calendar Platform: Does this calendar event last all day?
-ALL_DAY = "all_day"
-# Attribute: All tasks in this project
-ALL_TASKS = "all_tasks"
-# Todoist API: "Completed" flag -- 1 if complete, else 0
-CHECKED = "checked"
-# Attribute: Is this task complete?
-COMPLETED = "completed"
-# Todoist API: What is this task about?
-# Service Call: What is this task about?
-CONTENT = "content"
-# Calendar Platform: Get a calendar event's description
-DESCRIPTION = "description"
-# Calendar Platform: Used in the '_get_date()' method
-DATETIME = "dateTime"
-DUE = "due"
-# Service Call: When is this task due (in natural language)?
-DUE_DATE_STRING = "due_date_string"
-# Service Call: The language of DUE_DATE_STRING
-DUE_DATE_LANG = "due_date_lang"
-# Service Call: The available options of DUE_DATE_LANG
-DUE_DATE_VALID_LANGS = [
-    "en",
-    "da",
-    "pl",
-    "zh",
-    "ko",
-    "de",
-    "pt",
-    "ja",
-    "it",
-    "fr",
-    "sv",
-    "ru",
-    "es",
-    "nl",
-]
-# Attribute: When is this task due?
-# Service Call: When is this task due?
-DUE_DATE = "due_date"
-# Todoist API: Look up a task's due date
-DUE_DATE_UTC = "due_date_utc"
-# Attribute: Is this task due today?
-DUE_TODAY = "due_today"
-# Calendar Platform: When a calendar event ends
-END = "end"
-# Todoist API: Look up a Project/Label/Task ID
-ID = "id"
-# Todoist API: Fetch all labels
-# Service Call: What are the labels attached to this task?
-LABELS = "labels"
-# Todoist API: "Name" value
-NAME = "name"
-# Attribute: Is this task overdue?
-OVERDUE = "overdue"
-# Attribute: What is this task's priority?
-# Todoist API: Get a task's priority
-# Service Call: What is this task's priority?
-PRIORITY = "priority"
-# Todoist API: Look up the Project ID a Task belongs to
-PROJECT_ID = "project_id"
-# Service Call: What Project do you want a Task added to?
-PROJECT_NAME = "project"
-# Todoist API: Fetch all Projects
-PROJECTS = "projects"
-# Calendar Platform: When does a calendar event start?
-START = "start"
-# Calendar Platform: What is the next calendar event about?
-SUMMARY = "summary"
-# Todoist API: Fetch all Tasks
-TASKS = "items"
-
-SERVICE_NEW_TASK = "todoist_new_task"
 
 NEW_TASK_SERVICE_SCHEMA = vol.Schema(
     {
@@ -142,8 +94,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
     label_id_lookup = {}
-
-    from todoist.api import TodoistAPI
 
     api = TodoistAPI(token)
     api.sync()
