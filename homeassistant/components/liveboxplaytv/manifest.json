@@ -3,8 +3,8 @@
   "name": "Liveboxplaytv",
   "documentation": "https://www.home-assistant.io/integrations/liveboxplaytv",
   "requirements": [
-    "liveboxplaytv==2.0.2",
-    "pyteleloisirs==3.5"
+    "liveboxplaytv==2.0.3",
+    "pyteleloisirs==3.6"
   ],
   "dependencies": [],
   "codeowners": [
