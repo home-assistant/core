@@ -157,6 +157,11 @@ class MonopriceZone(MediaPlayerDevice):
         return True
 
     @property
+    def unique_id(self):
+        """Return unique ID for this device."""
+        return self._zone_id
+
+    @property
     def name(self):
         """Return the name of the zone."""
         return self._name
