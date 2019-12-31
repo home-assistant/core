@@ -1,5 +1,6 @@
 """Tests for the Withings component."""
 from datetime import timedelta
+from unittest.mock import patch
 
 from asynctest import MagicMock
 import pytest
@@ -10,17 +11,9 @@ from homeassistant.components.withings.common import (
     NotAuthenticatedError,
     WithingsDataManager,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import dt
-
-DEFAULT_TIME_ZONE = dt.DEFAULT_TIME_ZONE
-
-
-def teardown():
-    """Ensure the time zone is reverted after tests finish."""
-    dt.set_default_time_zone(DEFAULT_TIME_ZONE)
 
 
 @pytest.fixture(name="withings_api")
@@ -32,6 +25,17 @@ def withings_api_fixture() -> WithingsApi:
     withings_api.sleep_get = MagicMock()
     withings_api.sleep_get_summary = MagicMock()
     return withings_api
+
+
+@pytest.fixture
+def mock_time_zone():
+    """Provide an alternative time zone."""
+    patch_time_zone = patch(
+        "homeassistant.util.dt.DEFAULT_TIME_ZONE",
+        new=dt.get_time_zone("America/Los_Angeles"),
+    )
+    with patch_time_zone:
+        yield
 
 
 @pytest.fixture(name="data_manager")
@@ -118,13 +122,9 @@ async def test_data_manager_call_throttle_disabled(
 
 
 async def test_data_manager_update_sleep_date_range(
-    hass: HomeAssistant, data_manager: WithingsDataManager,
+    hass: HomeAssistant, data_manager: WithingsDataManager, mock_time_zone
 ) -> None:
     """Test method."""
-    await async_process_ha_core_config(
-        hass=hass, config={"time_zone": "America/Los_Angeles"}
-    )
-
     update_start_time = dt.now()
     await data_manager.update_sleep()
 
