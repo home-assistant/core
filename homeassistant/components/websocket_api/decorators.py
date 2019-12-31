@@ -1,12 +1,12 @@
 """Decorators for the Websocket API."""
 from functools import wraps
 import logging
-from typing import Callable
+from typing import Awaitable, Callable
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import Unauthorized
 
-from . import const, messages
+from . import connection, const, messages
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -21,7 +21,9 @@ async def _handle_async_response(func, hass, connection, msg):
         connection.async_handle_exception(msg, err)
 
 
-def async_response(func):
+def async_response(
+    func: Callable[[HomeAssistant, connection.ActiveConnection, dict], Awaitable[None]]
+) -> const.WebSocketCommandHandler:
     """Decorate an async function to handle WebSocket API messages."""
 
     @callback
@@ -33,7 +35,7 @@ def async_response(func):
     return schedule_handler
 
 
-def require_admin(func):
+def require_admin(func: const.WebSocketCommandHandler) -> const.WebSocketCommandHandler:
     """Websocket decorator to require user to be an admin."""
 
     @wraps(func)
