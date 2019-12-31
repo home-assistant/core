@@ -9,9 +9,6 @@
         }
       }
     },
-    "error": {
-      "unknown": "Unexpected error"
-    },
     "abort": {
       "already_configured": "Integration is already configured"
     }
