@@ -17,8 +17,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up local_ip from configuration.yaml."""
-    hass.data[DOMAIN] = {}
-
     conf = config.get(DOMAIN)
     if conf:
         hass.async_create_task(
