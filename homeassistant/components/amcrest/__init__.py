@@ -11,7 +11,6 @@ from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
 from homeassistant.components.camera import DOMAIN as CAMERA
 from homeassistant.components.sensor import DOMAIN as SENSOR
-from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_AUTHENTICATION,
@@ -22,7 +21,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
-    CONF_SWITCHES,
     CONF_USERNAME,
     ENTITY_MATCH_ALL,
     HTTP_BASIC_AUTHENTICATION,
@@ -34,12 +32,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_s
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.service import async_extract_entity_ids
 
-from .binary_sensor import BINARY_SENSOR_MOTION_DETECTED, BINARY_SENSORS
+from .binary_sensor import BINARY_SENSORS
 from .camera import CAMERA_SERVICES, STREAM_SOURCE_LIST
 from .const import CAMERAS, DATA_AMCREST, DEVICES, DOMAIN, SERVICE_UPDATE
 from .helpers import service_signal
-from .sensor import SENSOR_MOTION_DETECTOR, SENSORS
-from .switch import SWITCHES
+from .sensor import SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,68 +62,36 @@ SCAN_INTERVAL = timedelta(seconds=10)
 AUTHENTICATION_LIST = {"basic": "basic"}
 
 
-def _deprecated_sensor_values(sensors):
-    if SENSOR_MOTION_DETECTOR in sensors:
-        _LOGGER.warning(
-            "The '%s' option value '%s' is deprecated, "
-            "please remove it from your configuration and use "
-            "the '%s' option with value '%s' instead",
-            CONF_SENSORS,
-            SENSOR_MOTION_DETECTOR,
-            CONF_BINARY_SENSORS,
-            BINARY_SENSOR_MOTION_DETECTED,
-        )
-    return sensors
-
-
-def _deprecated_switches(config):
-    if CONF_SWITCHES in config:
-        _LOGGER.warning(
-            "The '%s' option (with value %s) is deprecated, "
-            "please remove it from your configuration and use "
-            "services and attributes instead",
-            CONF_SWITCHES,
-            config[CONF_SWITCHES],
-        )
-    return config
-
-
 def _has_unique_names(devices):
     names = [device[CONF_NAME] for device in devices]
     vol.Schema(vol.Unique())(names)
     return devices
 
 
-AMCREST_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Required(CONF_USERNAME): cv.string,
-            vol.Required(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(
-                CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION
-            ): vol.All(vol.In(AUTHENTICATION_LIST)),
-            vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION): vol.All(
-                vol.In(RESOLUTION_LIST)
-            ),
-            vol.Optional(CONF_STREAM_SOURCE, default=STREAM_SOURCE_LIST[0]): vol.All(
-                vol.In(STREAM_SOURCE_LIST)
-            ),
-            vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
-            vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
-            vol.Optional(CONF_BINARY_SENSORS): vol.All(
-                cv.ensure_list, [vol.In(BINARY_SENSORS)]
-            ),
-            vol.Optional(CONF_SENSORS): vol.All(
-                cv.ensure_list, [vol.In(SENSORS)], _deprecated_sensor_values
-            ),
-            vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-            vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
-        }
-    ),
-    _deprecated_switches,
+AMCREST_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION): vol.All(
+            vol.In(AUTHENTICATION_LIST)
+        ),
+        vol.Optional(CONF_RESOLUTION, default=DEFAULT_RESOLUTION): vol.All(
+            vol.In(RESOLUTION_LIST)
+        ),
+        vol.Optional(CONF_STREAM_SOURCE, default=STREAM_SOURCE_LIST[0]): vol.All(
+            vol.In(STREAM_SOURCE_LIST)
+        ),
+        vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+        vol.Optional(CONF_BINARY_SENSORS): vol.All(
+            cv.ensure_list, [vol.In(BINARY_SENSORS)]
+        ),
+        vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [vol.In(SENSORS)]),
+        vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
+    }
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -216,7 +181,6 @@ def setup(hass, config):
         resolution = RESOLUTION_LIST[device[CONF_RESOLUTION]]
         binary_sensors = device.get(CONF_BINARY_SENSORS)
         sensors = device.get(CONF_SENSORS)
-        switches = device.get(CONF_SWITCHES)
         stream_source = device[CONF_STREAM_SOURCE]
         control_light = device.get(CONF_CONTROL_LIGHT)
 
@@ -250,11 +214,6 @@ def setup(hass, config):
         if sensors:
             discovery.load_platform(
                 hass, SENSOR, DOMAIN, {CONF_NAME: name, CONF_SENSORS: sensors}, config
-            )
-
-        if switches:
-            discovery.load_platform(
-                hass, SWITCH, DOMAIN, {CONF_NAME: name, CONF_SWITCHES: switches}, config
             )
 
     if not hass.data[DATA_AMCREST][DEVICES]:
