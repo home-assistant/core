@@ -1,39 +1,81 @@
 """The tests for the LG webOS media player platform."""
-from unittest.mock import patch
+import sys
+
+import pytest
 
 from homeassistant.components import media_player
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_VOLUME_MUTED,
     SERVICE_SELECT_SOURCE,
 )
 from homeassistant.components.webostv import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_NAME,
+    SERVICE_VOLUME_MUTE,
+)
 from homeassistant.setup import async_setup_component
 
+if sys.version_info >= (3, 8, 0):
+    from unittest.mock import patch
+else:
+    from asynctest import patch
 
-async def test_select_source_with_empty_source_list(hass):
-    """Test with dummy source."""
+
+NAME = "fake"
+ENTITY_ID = f"{media_player.DOMAIN}.{NAME}"
+
+
+@pytest.fixture(name="client")
+def client_fixture():
+    """Patch of client library for tests."""
     with patch(
-        "homeassistant.components.webostv.WebOsClient", spec=True,
-    ):
+        "homeassistant.components.webostv.WebOsClient", autospec=True
+    ) as mock_client_class:
+        yield mock_client_class.return_value
 
-        assert await async_setup_component(
-            hass, media_player.DOMAIN, {media_player.DOMAIN: {}},
-        )
 
-        name = "fake"
+async def setup_webostv(hass):
+    """Initialize webostv and media_player for tests."""
+    assert await async_setup_component(
+        hass, media_player.DOMAIN, {media_player.DOMAIN: {}},
+    )
 
-        assert await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake", CONF_NAME: name}},
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake", CONF_NAME: NAME}},
+    )
+    await hass.async_block_till_done()
 
-        entity_id = f"{media_player.DOMAIN}.{name}"
 
-        data = {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_INPUT_SOURCE: "nonexistent",
-        }
-        await hass.services.async_call(media_player.DOMAIN, SERVICE_SELECT_SOURCE, data)
+async def test_mute(hass, client):
+    """Test simple service call."""
 
-        assert hass.states.is_state(entity_id, "playing")
+    await setup_webostv(hass)
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_MEDIA_VOLUME_MUTED: True,
+    }
+    await hass.services.async_call(media_player.DOMAIN, SERVICE_VOLUME_MUTE, data)
+    await hass.async_block_till_done()
+
+    client.set_mute.assert_called_once()
+
+
+async def test_select_source_with_empty_source_list(hass, client):
+    """Ensure we don't call client methods when we don't have sources."""
+
+    await setup_webostv(hass)
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_INPUT_SOURCE: "nonexistent",
+    }
+    await hass.services.async_call(media_player.DOMAIN, SERVICE_SELECT_SOURCE, data)
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(ENTITY_ID, "playing")
+    client.launch_app.assert_not_called()
+    client.set_input.assert_not_called()
