@@ -193,6 +193,9 @@ class MatchRule:
     models: Union[Callable, Set[str], str] = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
+    aux_channels: Union[Callable, Set[str], str] = attr.ib(
+        factory=frozenset, converter=set_or_callable
+    )
 
 
 class ZHAEntityRegistry:
@@ -220,10 +223,13 @@ class ZHAEntityRegistry:
         generic_ids: Union[Callable, Set[str], str] = None,
         manufacturers: Union[Callable, Set[str], str] = None,
         models: Union[Callable, Set[str], str] = None,
+        aux_channels: Union[Callable, Set[str], str] = None,
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a strict match rule."""
 
-        rule = MatchRule(channel_names, generic_ids, manufacturers, models)
+        rule = MatchRule(
+            channel_names, generic_ids, manufacturers, models, aux_channels
+        )
 
         def decorator(zha_ent: CALLABLE_T) -> CALLABLE_T:
             """Register a strict match rule.
@@ -242,10 +248,13 @@ class ZHAEntityRegistry:
         generic_ids: Union[Callable, Set[str], str] = None,
         manufacturers: Union[Callable, Set[str], str] = None,
         models: Union[Callable, Set[str], str] = None,
+        aux_channels: Union[Callable, Set[str], str] = None,
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a loose match rule."""
 
-        rule = MatchRule(channel_names, generic_ids, manufacturers, models)
+        rule = MatchRule(
+            channel_names, generic_ids, manufacturers, models, aux_channels
+        )
 
         def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
             """Register a loose match rule.

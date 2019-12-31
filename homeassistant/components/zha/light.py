@@ -80,7 +80,7 @@ async def _async_setup_entities(
         async_add_entities(entities, update_before_add=True)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
+@STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})
 class Light(ZhaEntity, light.Light):
     """Representation of a ZHA or ZLL light."""
 

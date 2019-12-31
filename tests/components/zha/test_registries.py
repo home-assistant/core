@@ -55,8 +55,20 @@ def channels(channel):
         # manufacturer matching
         (registries.MatchRule(manufacturers="no match"), False),
         (registries.MatchRule(manufacturers=MANUFACTURER), True),
+        (
+            registries.MatchRule(manufacturers="no match", aux_channels="aux_channel"),
+            False,
+        ),
+        (
+            registries.MatchRule(
+                manufacturers=MANUFACTURER, aux_channels="aux_channel"
+            ),
+            True,
+        ),
         (registries.MatchRule(models=MODEL), True),
         (registries.MatchRule(models="no match"), False),
+        (registries.MatchRule(models=MODEL, aux_channels="aux_channel"), True),
+        (registries.MatchRule(models="no match", aux_channels="aux_channel"), False),
         # match everything
         (
             registries.MatchRule(
@@ -201,3 +213,14 @@ def test_registry_loose_matching(rule, matched, zha_device, channels):
     """Test loose rule matching."""
     reg = registries.ZHAEntityRegistry()
     assert reg._loose_matched(zha_device, channels, rule) is matched
+
+
+def test_match_rule_claim_channels_color(channel):
+    """Test channel claiming."""
+    ch_color = channel("color", 0x300)
+    ch_level = channel("level", 8)
+    ch_onoff = channel("on_off", 6)
+
+    rule = registries.MatchRule(channel_names="on_off", aux_channels={"color", "level"})
+    claimed = rule.claim_channels([ch_color, ch_level, ch_onoff])
+    assert {"color", "level", "on_off"} == set([ch.name for ch in claimed])
