@@ -31,9 +31,4 @@ class SimpleConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Handle import from config file."""
-        if any(
-            import_info["name"] == entry.data["name"]
-            for entry in self._async_current_entries()
-        ):
-            return self.async_abort(reason="already_configured")
-        return self.async_create_entry(title=import_info["name"], data=import_info)
+        return await self.async_step_user(import_info)

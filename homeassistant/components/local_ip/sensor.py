@@ -8,7 +8,7 @@ from homeassistant.util import get_local_ip
 async def async_setup_entry(hass: HomeAssistant, config_entry, async_add_entities):
     """Set up the platform from config_entry."""
     name = config_entry.data["name"]
-    return async_add_entities([IPSensor(name)], True)
+    async_add_entities([IPSensor(name)], True)
 
 
 class IPSensor(Entity):
