@@ -27,10 +27,12 @@ SCAN_INTERVAL = timedelta(hours=12)
 
 # Supported sensor types:
 # Key: [json_key, name, icon]
+#31-12-19: added support for plastic/metal/drinkcartons (pmd) 
 SENSOR_TYPES = {
     "bio": ["gft", "Biowaste", "mdi:recycle"],
     "paper": ["papier", "Paper", "mdi:recycle"],
     "plastic": ["plasticplus", "PET", "mdi:recycle"],
+    "pmd": ["pmd", "pmd", "mdi:recycle"],
     "residual": ["rest", "Residual", "mdi:recycle"],
 }
 
