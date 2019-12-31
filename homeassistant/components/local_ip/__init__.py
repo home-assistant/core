@@ -1,11 +1,10 @@
 """Get the local IP address of the Home Assistant instance."""
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant import config_entries
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 
 DOMAIN = "local_ip"
 PLATFORM = "sensor"
@@ -22,16 +21,17 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
     conf = config.get(DOMAIN)
     if conf:
-        hass.data[DOMAIN][CONF_NAME] = config.get(DOMAIN)[CONF_NAME]
-        hass.async_create_task(async_load_platform(hass, PLATFORM, DOMAIN, {}, config))
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, data=conf, context={"source": config_entries.SOURCE_IMPORT}
+            )
+        )
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Set up local_ip from a config entry."""
-    hass.data[DOMAIN] = {CONF_NAME: entry.data["name"]}
-
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, PLATFORM)
     )
@@ -39,6 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Unload a config entry."""
     return await hass.config_entries.async_forward_entry_unload(entry, PLATFORM)
