@@ -29,7 +29,7 @@ def withings_api_fixture() -> WithingsApi:
 
 @pytest.fixture
 def mock_time_zone():
-    """Provide a alternative time zone."""
+    """Provide an alternative time zone."""
     patch_time_zone = patch(
         "homeassistant.util.dt.DEFAULT_TIME_ZONE",
         new=dt.get_time_zone("America/Los_Angeles"),
