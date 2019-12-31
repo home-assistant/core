@@ -88,9 +88,9 @@ class TeslaSensor(TeslaDevice, Entity):
                 self.current_value = round(
                     convert(self.current_value, LENGTH_MILES, LENGTH_KILOMETERS), 2
                 )
-        elif self.tesla_device.bin_type == 0xC:
+        elif self.tesla_device.type == "charging rate sensor":
             self.current_value = self.tesla_device.charging_rate
-            self._unit = self.tesla_device.measurement
+            self.units = units
             self._attributes = {
                 "time_left": self.tesla_device.time_left,
                 "added_range": self.tesla_device.added_range,
