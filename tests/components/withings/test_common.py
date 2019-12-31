@@ -27,6 +27,17 @@ def withings_api_fixture() -> WithingsApi:
     return withings_api
 
 
+@pytest.fixture
+def mock_time_zone():
+    """Provide a alternative time zone."""
+    patch_time_zone = patch(
+        "homeassistant.util.dt.DEFAULT_TIME_ZONE",
+        new=dt.get_time_zone("America/Los_Angeles"),
+    )
+    with patch_time_zone:
+        yield
+
+
 @pytest.fixture(name="data_manager")
 def data_manager_fixture(hass, withings_api: WithingsApi) -> WithingsDataManager:
     """Provide data manager."""
@@ -111,24 +122,20 @@ async def test_data_manager_call_throttle_disabled(
 
 
 async def test_data_manager_update_sleep_date_range(
-    hass: HomeAssistant, data_manager: WithingsDataManager,
+    hass: HomeAssistant, data_manager: WithingsDataManager, mock_time_zone
 ) -> None:
     """Test method."""
-    with patch(
-        "homeassistant.util.dt.DEFAULT_TIME_ZONE",
-        new=dt.get_time_zone("America/Los_Angeles"),
-    ):
-        update_start_time = dt.now()
-        await data_manager.update_sleep()
+    update_start_time = dt.now()
+    await data_manager.update_sleep()
 
-        call_args = data_manager.api.sleep_get.call_args_list[0][1]
-        startdate = call_args.get("startdate")
-        enddate = call_args.get("enddate")
+    call_args = data_manager.api.sleep_get.call_args_list[0][1]
+    startdate = call_args.get("startdate")
+    enddate = call_args.get("enddate")
 
-        assert startdate.tzname() == "PST"
+    assert startdate.tzname() == "PST"
 
-        assert enddate.tzname() == "PST"
-        assert startdate.tzname() == "PST"
-        assert update_start_time < enddate
-        assert enddate < update_start_time + timedelta(seconds=1)
-        assert enddate > startdate
+    assert enddate.tzname() == "PST"
+    assert startdate.tzname() == "PST"
+    assert update_start_time < enddate
+    assert enddate < update_start_time + timedelta(seconds=1)
+    assert enddate > startdate
