@@ -8,7 +8,6 @@ from unittest.mock import Mock, patch
 import asynctest
 import pytest
 
-from homeassistant.components import group
 from homeassistant.const import ENTITY_MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.exceptions import PlatformNotReady
@@ -285,15 +284,13 @@ async def test_extract_from_service_filter_out_non_existing_entities(hass):
 async def test_extract_from_service_no_group_expand(hass):
     """Test not expanding a group."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    test_group = await group.Group.async_create_group(
-        hass, "test_group", ["light.Ceiling", "light.Kitchen"]
-    )
-    await component.async_add_entities([test_group])
+    await component.async_add_entities([MockEntity(entity_id="group.test_group")])
 
     call = ha.ServiceCall("test", "service", {"entity_id": ["group.test_group"]})
 
     extracted = await component.async_extract_from_service(call, expand_group=False)
-    assert extracted == [test_group]
+    assert len(extracted) == 1
+    assert extracted[0].entity_id == "group.test_group"
 
 
 async def test_setup_dependencies_platform(hass):
