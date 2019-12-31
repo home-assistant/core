@@ -1,17 +1,23 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
 
-from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
+from aiofreepybox import Freepybox
+
 from homeassistant.helpers.entity import Entity
 
-from . import DATA_FREEBOX
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Old way of setting up the platform."""
+    pass
+
+
+async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up the sensors."""
-    fbx = hass.data[DATA_FREEBOX]
+    fbx = hass.data[DOMAIN]
     async_add_entities([FbxRXSensor(fbx), FbxTXSensor(fbx)], True)
 
 
@@ -22,11 +28,17 @@ class FbxSensor(Entity):
     _unit = None
     _icon = None
 
-    def __init__(self, fbx):
+    def __init__(self, fbx: Freepybox):
         """Initialize the sensor."""
         self._fbx = fbx
         self._state = None
         self._datas = None
+        self._unique_id = f"{fbx._access.base_url} {self._name}"
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self):

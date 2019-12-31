@@ -1,0 +1,20 @@
+{
+    "config": {
+        "title": "Freebox",
+        "step": {
+            "user": {
+                "title": "Freebox",
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        },
+        "error":{
+            "already_configured": "Host already configured"
+        },
+        "abort":{
+            "already_configured": "Host already configured"
+        }
+    }
+}
