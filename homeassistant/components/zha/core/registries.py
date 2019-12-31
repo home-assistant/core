@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
 import collections
-from typing import Callable, Set
+from typing import Callable, Set, Union
 
 import attr
 import bellows.ezsp
@@ -171,14 +171,33 @@ def establish_device_mappings():
     REMOTE_DEVICE_TYPES[zll.PROFILE_ID].append(zll.DeviceType.SCENE_CONTROLLER)
 
 
+def set_or_callable(value):
+    """Convert single str or None to a set. Pass through callables and sets."""
+    if value is None:
+        return frozenset()
+    if callable(value):
+        return value
+    if isinstance(value, (frozenset, set, list)):
+        return frozenset(value)
+    return frozenset([str(value)])
+
+
 @attr.s(frozen=True)
 class MatchRule:
     """Match a ZHA Entity to a channel name or generic id."""
 
-    channel_names: Set[str] = attr.ib(factory=frozenset, converter=frozenset)
-    generic_ids: Set[str] = attr.ib(factory=frozenset, converter=frozenset)
-    manufacturer: str = attr.ib(default=None)
-    model: str = attr.ib(default=None)
+    channel_names: Union[Callable, Set[str], str] = attr.ib(
+        factory=frozenset, converter=set_or_callable
+    )
+    generic_ids: Union[Callable, Set[str], str] = attr.ib(
+        factory=frozenset, converter=set_or_callable
+    )
+    manufacturers: Union[Callable, Set[str], str] = attr.ib(
+        factory=frozenset, converter=set_or_callable
+    )
+    models: Union[Callable, Set[str], str] = attr.ib(
+        factory=frozenset, converter=set_or_callable
+    )
 
 
 class ZHAEntityRegistry:
@@ -190,7 +209,7 @@ class ZHAEntityRegistry:
         self._loose_registry = collections.defaultdict(dict)
 
     def get_entity(
-        self, component: str, zha_device, chnls: list, default: CALLABLE_T = None
+        self, component: str, zha_device, chnls: dict, default: CALLABLE_T = None
     ) -> CALLABLE_T:
         """Match a ZHA Channels to a ZHA Entity class."""
         for match in self._strict_registry[component]:
@@ -200,9 +219,16 @@ class ZHAEntityRegistry:
         return default
 
     def strict_match(
-        self, component: str, rule: MatchRule
+        self,
+        component: str,
+        channel_names: Union[Callable, Set[str], str] = None,
+        generic_ids: Union[Callable, Set[str], str] = None,
+        manufacturers: Union[Callable, Set[str], str] = None,
+        models: Union[Callable, Set[str], str] = None,
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a strict match rule."""
+
+        rule = MatchRule(channel_names, generic_ids, manufacturers, models)
 
         def decorator(zha_ent: CALLABLE_T) -> CALLABLE_T:
             """Register a strict match rule.
@@ -215,9 +241,16 @@ class ZHAEntityRegistry:
         return decorator
 
     def loose_match(
-        self, component: str, rule: MatchRule
+        self,
+        component: str,
+        channel_names: Union[Callable, Set[str], str] = None,
+        generic_ids: Union[Callable, Set[str], str] = None,
+        manufacturers: Union[Callable, Set[str], str] = None,
+        models: Union[Callable, Set[str], str] = None,
     ) -> Callable[[CALLABLE_T], CALLABLE_T]:
         """Decorate a loose match rule."""
+
+        rule = MatchRule(channel_names, generic_ids, manufacturers, models)
 
         def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
             """Register a loose match rule.
@@ -238,7 +271,7 @@ class ZHAEntityRegistry:
         return any(self._matched(zha_device, chnls, rule))
 
     @staticmethod
-    def _matched(zha_device, chnls: list, rule: MatchRule) -> bool:
+    def _matched(zha_device, chnls: dict, rule: MatchRule) -> list:
         """Return a list of field matches."""
         if not any(attr.asdict(rule).values()):
             return [False]
@@ -252,11 +285,17 @@ class ZHAEntityRegistry:
             all_generic_ids = {ch.generic_id for ch in chnls}
             matches.append(rule.generic_ids.issubset(all_generic_ids))
 
-        if rule.manufacturer:
-            matches.append(zha_device.manufacturer == rule.manufacturer)
+        if rule.manufacturers:
+            if callable(rule.manufacturers):
+                matches.append(rule.manufacturers(zha_device.manufacturer))
+            else:
+                matches.append(zha_device.manufacturer in rule.manufacturers)
 
-        if rule.model:
-            matches.append(zha_device.model == rule.model)
+        if rule.models:
+            if callable(rule.models):
+                matches.append(rule.models(zha_device.model))
+            else:
+                matches.append(zha_device.model in rule.models)
 
         return matches
 

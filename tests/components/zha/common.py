@@ -36,10 +36,10 @@ APPLICATION = FakeApplication()
 class FakeEndpoint:
     """Fake endpoint for moking zigpy."""
 
-    def __init__(self, manufacturer, model):
+    def __init__(self, manufacturer, model, epid=1):
         """Init fake endpoint."""
         self.device = None
-        self.endpoint_id = 1
+        self.endpoint_id = epid
         self.in_clusters = {}
         self.out_clusters = {}
         self._cluster_attr = {}
@@ -97,21 +97,23 @@ class FakeDevice:
         self.remove_from_group = CoroutineMock()
 
 
-def make_device(
-    in_cluster_ids, out_cluster_ids, device_type, ieee, manufacturer, model
-):
+def make_device(endpoints, ieee, manufacturer, model):
     """Make a fake device using the specified cluster classes."""
     device = FakeDevice(ieee, manufacturer, model)
-    endpoint = FakeEndpoint(manufacturer, model)
-    endpoint.device = device
-    device.endpoints[endpoint.endpoint_id] = endpoint
-    endpoint.device_type = device_type
+    for epid, ep in endpoints.items():
+        endpoint = FakeEndpoint(manufacturer, model, epid)
+        endpoint.device = device
+        device.endpoints[epid] = endpoint
+        endpoint.device_type = ep["device_type"]
+        profile_id = ep.get("profile_id")
+        if profile_id:
+            endpoint.profile_id = profile_id
 
-    for cluster_id in in_cluster_ids:
-        endpoint.add_input_cluster(cluster_id)
+        for cluster_id in ep.get("in_clusters", []):
+            endpoint.add_input_cluster(cluster_id)
 
-    for cluster_id in out_cluster_ids:
-        endpoint.add_output_cluster(cluster_id)
+        for cluster_id in ep.get("out_clusters", []):
+            endpoint.add_output_cluster(cluster_id)
 
     return device
 
@@ -136,7 +138,16 @@ async def async_init_zigpy_device(
     happens when the device is paired to the network for the first time.
     """
     device = make_device(
-        in_cluster_ids, out_cluster_ids, device_type, ieee, manufacturer, model
+        {
+            1: {
+                "in_clusters": in_cluster_ids,
+                "out_clusters": out_cluster_ids,
+                "device_type": device_type,
+            }
+        },
+        ieee,
+        manufacturer,
+        model,
     )
     if is_new_join:
         await gateway.async_device_initialized(device)
