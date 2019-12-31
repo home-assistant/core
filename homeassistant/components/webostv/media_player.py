@@ -403,6 +403,6 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         """Send the previous track command."""
         current_input = self._client.get_input()
         if current_input == LIVETV_APP_ID:
-            return self._client.channel_down()
-
-        await self._client.rewind()
+            await self._client.channel_down()
+        else:
+            await self._client.rewind()
