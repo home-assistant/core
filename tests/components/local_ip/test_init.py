@@ -20,20 +20,3 @@ async def test_basic_setup(hass, config):
     state = hass.states.get("sensor.test")
     assert state
     assert state.state == local_ip
-
-
-async def test_config_flow(hass):
-    """Test we can finish a config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
-    )
-    assert result["type"] == "form"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"name": "test"}
-    )
-    assert result["type"] == "create_entry"
-
-    await hass.async_block_till_done()
-    state = hass.states.get("sensor.test")
-    assert state
