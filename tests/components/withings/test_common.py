@@ -15,6 +15,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import dt
 
+DEFAULT_TIME_ZONE = dt.DEFAULT_TIME_ZONE
+
+
+def teardown():
+    """Ensure the time zone is reverted after tests finish."""
+    dt.set_default_time_zone(DEFAULT_TIME_ZONE)
+
 
 @pytest.fixture(name="withings_api")
 def withings_api_fixture() -> WithingsApi:
