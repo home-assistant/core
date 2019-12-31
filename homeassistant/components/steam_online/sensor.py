@@ -1,6 +1,7 @@
 """Sensor for Steam account status."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+from time import mktime
 
 import steam
 import voluptuous as vol
@@ -70,7 +71,9 @@ class SteamSensor(Entity):
         self._steamod = steamod
         self._account = account
         self._profile = None
-        self._game = self._state = self._name = self._avatar = None
+        self._game = (
+            self._state
+        ) = self._name = self._avatar = self._last_online = self._level = None
 
     @property
     def name(self):
@@ -107,9 +110,13 @@ class SteamSensor(Entity):
             }.get(self._profile.status, STATE_OFFLINE)
             self._name = self._profile.persona
             self._avatar = self._profile.avatar_medium
+            self._last_online = self._get_last_online()
+            self._level = self._get_level()
         except self._steamod.api.HTTPTimeoutError as error:
             _LOGGER.warning(error)
-            self._game = self._state = self._name = self._avatar = None
+            self._game = (
+                self._state
+            ) = self._name = self._avatar = self._last_online = self._level = None
 
     def _get_current_game(self):
         game_id = self._profile.current_game[0]
@@ -140,10 +147,28 @@ class SteamSensor(Entity):
         _LOGGER.error("Unable to find name of app with ID=%s", game_id)
         return repr(game_id)
 
+    def _get_last_online(self):
+        last_online = datetime.fromtimestamp(
+            mktime(self._profile.last_online)
+        ).isoformat()
+
+        if last_online:
+            return last_online
+
+    def _get_level(self):
+        level = self._profile.level
+
+        if level:
+            return level
+
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {"game": self._game} if self._game else None
+        return (
+            {"game": self._game, "last_online": self._last_online, "level": self._level}
+            if self._game or self._last_online or self._level
+            else None
+        )
 
     @property
     def entity_picture(self):
