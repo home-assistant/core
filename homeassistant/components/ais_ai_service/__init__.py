@@ -460,6 +460,14 @@ def translate_state(state):
         info_data = "powyżej horyzontu"
     elif info_data == "below_horizon":
         info_data = "poniżej horyzontu"
+    elif info_data == "heat":
+        info_data = "grzanie"
+    elif info_data == "cleaning":
+        info_data = "sprzątanie"
+    elif info_data == "docked":
+        info_data = "w stacji dokującej"
+    elif info_data == "returning":
+        info_data = "powrót do stacji dokującej"
 
     return info_data
 

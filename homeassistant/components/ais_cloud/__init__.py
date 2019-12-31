@@ -1609,7 +1609,7 @@ class AisColudData:
 
         password = ""
         info_text = "kompresuje"
-        config_dir = "/data/data/pl.sviete.dom/files/home/AIS/"
+        home_dir = "/data/data/pl.sviete.dom/files/home/"
         if "password" in call.data:
             password = call.data["password"]
         if password != "":
@@ -1621,26 +1621,42 @@ class AisColudData:
             call, 1, None, info_text + " bieżącą konfigurację", None, None
         )
         try:
-            ret = subprocess.check_output("cd " + config_dir, shell=True)
-            try:
-                ret = subprocess.check_output(
-                    "rm " + config_dir + "backup.zip", shell=True
-                )
-            except Exception as e:
-                _LOGGER.error("rm backup.zip " + str(e))
+            ret = subprocess.check_output("rm " + home_dir + "backup.zip", shell=True)
+        except Exception as e:
+            pass
+        try:
             ret = subprocess.check_output(
                 "7za a -mmt=2 "
                 + password
-                + " -xr\!deps -xr\!*.log -xr\!*.db "
-                + config_dir
+                + " -xr\!deps"
+                + " -xr\!*.log"
+                + " -xr\!*.db"
+                + " -xr\!home-assistant* "
+                + home_dir
                 + "backup.zip "
-                + config_dir
-                + ".",
+                + home_dir
+                + "AIS/.",
                 shell=True,
             )
         except Exception as e:
-            self.get_backup_info(call, 0, str(e))
-            return
+            # try again - sqllite problems
+            try:
+                ret = subprocess.check_output(
+                    "7za a -mmt=2 "
+                    + password
+                    + " -xr\!deps"
+                    + " -xr\!*.log"
+                    + " -xr\!*.db"
+                    + " -xr\!home-assistant* "
+                    + home_dir
+                    + "backup.zip "
+                    + home_dir
+                    + "AIS/.",
+                    shell=True,
+                )
+            except Exception as e:
+                self.get_backup_info(call, 0, str(e))
+                return
         # 2. upload
         self.get_backup_info(
             call,
@@ -1651,7 +1667,7 @@ class AisColudData:
             None,
         )
         try:
-            ws_resp = self.cloud.post_backup(config_dir + "backup.zip")
+            ws_resp = self.cloud.post_backup(home_dir + "backup.zip")
         except Exception as e:
             self.get_backup_info(call, 0, str(e))
             return
@@ -1699,7 +1715,7 @@ class AisColudData:
         self.get_backup_info(call, 1, None, None, None, "Podmieniam konfigurację ")
         try:
             ret = subprocess.check_output(
-                "cp -fR " + home_dir + "AIS_BACKUP/* " + home_dir + "AIS", shell=True,
+                "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS", shell=True,
             )
             ret = subprocess.check_output("rm " + home_dir + "backup.zip", shell=True,)
             ret = subprocess.check_output(
