@@ -152,5 +152,6 @@ class FlapBattery(Entity):
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
+        # pylint: disable=using-constant-test
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()

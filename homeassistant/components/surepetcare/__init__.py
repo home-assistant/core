@@ -37,11 +37,11 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
 
 FLAP_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string}
+    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string},
 )
 
 PET_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string}
+    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string},
 )
 
 CONFIG_SCHEMA = vol.Schema(
