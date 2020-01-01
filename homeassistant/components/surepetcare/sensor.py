@@ -35,7 +35,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             hass.data[DATA_SURE_PETCARE][
                 sure_type][sure_id] = sure_data
 
-        entities.append(FlapBattery(sure_id, thing[CONF_NAME], hass=hass))
+        entities.append(FlapBattery(sure_id, thing[CONF_NAME]))
 
     async_add_entities(entities, True)
 
@@ -43,18 +43,13 @@ async def async_setup_platform(hass, config, async_add_entities,
 class FlapBattery(Entity):
     """Sure Petcare Flap."""
 
-    def __init__(self, _id: int, name: str, data: dict = None, hass=None):
+    def __init__(self, _id: int, name: str, data: dict = None):
         """Initialize a Sure Petcare Flap battery sensor."""
         self._id = _id
-        self._hass = hass
         self._name = f"Flap {name.capitalize()} Battery Level"
         self._unit_of_measurement = "%"
         self._icon = BATTERY_ICON
-
-        self._household_id = hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
-
         self._state = {}
-        self._data = hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name]
 
     @property
     def should_poll(self):
@@ -124,6 +119,11 @@ class FlapBattery(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+
+        # pylint: disable=attribute-defined-outside-init
+        self._household_id = self.hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
+        self._data = self.hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name]
+
         @callback
         def update():
             """Update the state."""
@@ -131,7 +131,7 @@ class FlapBattery(Entity):
 
         # pylint: disable=attribute-defined-outside-init
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self._hass, TOPIC_UPDATE, update)
+            self.hass, TOPIC_UPDATE, update)
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
