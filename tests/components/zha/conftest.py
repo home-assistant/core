@@ -2,6 +2,7 @@
 from unittest import mock
 from unittest.mock import patch
 
+import asynctest
 import pytest
 import zigpy
 from zigpy.application import ControllerApplication
@@ -70,3 +71,19 @@ async def setup_zha(hass, config_entry):
         # init ZHA
         await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
         await hass.async_block_till_done()
+
+
+@pytest.fixture
+def channel():
+    """Channel mock factory fixture."""
+
+    def channel(name: str, cluster_id: int, endpoint_id: int = 1):
+        ch = mock.MagicMock()
+        ch.name = name
+        ch.generic_id = f"channel_0x{cluster_id:04x}"
+        ch.id = f"{endpoint_id}:0x{cluster_id:04x}"
+        ch.async_configure = asynctest.CoroutineMock()
+        ch.async_initialize = asynctest.CoroutineMock()
+        return ch
+
+    return channel
