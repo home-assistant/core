@@ -14,7 +14,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util.json import load_json
 
 from .const import CONF_MODEL, DOMAIN
 from .device import get_device
@@ -107,16 +106,12 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             except CannotConnect:
                 errors["base"] = "device_unavailable"
 
-        data = (
-            self.import_schema
-            or self.discovery_schema
-            or {
-                vol.Required(CONF_HOST): str,
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-            }
-        )
+        data = self.discovery_schema or {
+            vol.Required(CONF_HOST): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        }
 
         return self.async_show_form(
             step_id="user",
@@ -130,18 +125,17 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         Generate a name to be used as a prefix for device entities.
         """
-        if self.name is None:
-            same_model = [
-                entry.data[CONF_NAME]
-                for entry in self.hass.config_entries.async_entries(DOMAIN)
-                if entry.data[CONF_MODEL] == self.model
-            ]
+        same_model = [
+            entry.data[CONF_NAME]
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.data[CONF_MODEL] == self.model
+        ]
 
-            self.name = f"{self.model}"
-            for idx in range(len(same_model) + 1):
-                self.name = f"{self.model} {idx}"
-                if self.name not in same_model:
-                    break
+        self.name = f"{self.model}"
+        for idx in range(len(same_model) + 1):
+            self.name = f"{self.model} {idx}"
+            if self.name not in same_model:
+                break
 
         data = {
             CONF_DEVICE: self.device_config,
@@ -187,53 +181,17 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self._update_entry(entry, discovery_info[CONF_HOST])
             return self.async_abort(reason="already_configured")
 
-        config_file = await self.hass.async_add_executor_job(
-            load_json, self.hass.config.path(CONFIG_FILE)
-        )
-
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             "name": discovery_info["hostname"][:-7],
             "host": discovery_info[CONF_HOST],
         }
 
-        if serialnumber not in config_file:
-            self.discovery_schema = {
-                vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): str,
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_PORT, default=discovery_info[CONF_PORT]): int,
-            }
-
-            return await self.async_step_user()
-
-        try:
-            device_config = DEVICE_SCHEMA(config_file[serialnumber])
-            device_config[CONF_HOST] = discovery_info[CONF_HOST]
-
-            if CONF_NAME not in device_config:
-                device_config[CONF_NAME] = discovery_info["hostname"]
-
-        except vol.Invalid:
-            return self.async_abort(reason="bad_config_file")
-
-        return await self.async_step_import(device_config)
-
-    async def async_step_import(self, import_config):
-        """Import a Axis device as a config entry.
-
-        This flow is triggered by `async_setup` for configured devices.
-        This flow is also triggered by `async_step_discovery`.
-
-        This will execute for any Axis device that contains a complete
-        configuration.
-        """
-        self.name = import_config[CONF_NAME]
-
-        self.import_schema = {
-            vol.Required(CONF_HOST, default=import_config[CONF_HOST]): str,
-            vol.Required(CONF_USERNAME, default=import_config[CONF_USERNAME]): str,
-            vol.Required(CONF_PASSWORD, default=import_config[CONF_PASSWORD]): str,
-            vol.Required(CONF_PORT, default=import_config[CONF_PORT]): int,
+        self.discovery_schema = {
+            vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PORT, default=discovery_info[CONF_PORT]): int,
         }
-        return await self.async_step_user(user_input=import_config)
+
+        return await self.async_step_user()

@@ -7,26 +7,6 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, mock_coro
 
 
-async def test_setup(hass):
-    """Test configured options for a device are loaded via config entry."""
-    with patch.object(hass.config_entries, "flow") as mock_config_flow:
-
-        assert await async_setup_component(
-            hass,
-            axis.DOMAIN,
-            {
-                axis.DOMAIN: {
-                    "device_name": {
-                        axis.config_flow.CONF_HOST: "1.2.3.4",
-                        axis.config_flow.CONF_PORT: 80,
-                    }
-                }
-            },
-        )
-
-    assert len(mock_config_flow.mock_calls) == 1
-
-
 async def test_setup_device_already_configured(hass):
     """Test already configured device does not configure a second."""
     with patch.object(hass, "config_entries") as mock_config_entries:

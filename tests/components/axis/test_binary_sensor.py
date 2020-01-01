@@ -1,6 +1,7 @@
 """Axis binary sensor platform tests."""
 
 from homeassistant.components import axis
+from homeassistant.components.axis import config_flow
 import homeassistant.components.binary_sensor as binary_sensor
 from homeassistant.setup import async_setup_component
 
