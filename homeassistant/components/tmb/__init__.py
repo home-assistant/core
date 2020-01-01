@@ -1,1 +1,1 @@
-"""The tmb component."""
+"""Support for Transports Metropolitans de Barcelona."""

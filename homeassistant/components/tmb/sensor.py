@@ -1,7 +1,7 @@
 """Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
 from datetime import timedelta
 import logging
-import requests
+from requests import HTTPError
 
 from tmb import IBus
 import voluptuous as vol
@@ -117,7 +117,7 @@ class TMBSensor(Entity):
         """Get the next bus information."""
         try:
             self._state = self._ibus_client.get_stop_forecast(self._stop, self._line)
-        except requests.HTTPError:
+        except HTTPError:
             _LOGGER.exception(
                 "Unable to fetch data from TMB API. Please check your API keys are valid."
             )
