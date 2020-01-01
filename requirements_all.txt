@@ -335,7 +335,7 @@ braviarc-homeassistant==0.3.7.dev0
 broadlink==0.12.0
 
 # homeassistant.components.brother
-brother==0.1.1
+brother==0.1.4
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
