@@ -79,6 +79,14 @@ class FritzBoxScanner(DeviceScanner):
             return None
         return ret
 
+    def get_extra_attributes(self, device):
+        """Return the attributes (ip, mac) of the given device or None if is not known."""
+        ip_device = self.fritz_box.get_specific_host_entry(device).get("NewIPAddress")
+
+        if not ip_device:
+            return None
+        return {"ip": ip_device, "mac": device}
+
     def _update_info(self):
         """Retrieve latest information from the FRITZ!Box."""
         if not self.success_init:
