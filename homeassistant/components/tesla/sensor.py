@@ -38,7 +38,7 @@ class TeslaSensor(TeslaDevice, Entity):
     def __init__(self, tesla_device, controller, config_entry, sensor_type=None):
         """Initialize of the sensor."""
         self.current_value = None
-        self._unit = None
+        self.units = None
         self.last_changed_time = None
         self.type = sensor_type
         super().__init__(tesla_device, controller, config_entry)
@@ -61,7 +61,7 @@ class TeslaSensor(TeslaDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return self._unit
+        return self.units
 
     async def async_update(self):
         """Update the state from the sensor."""
@@ -75,18 +75,18 @@ class TeslaSensor(TeslaDevice, Entity):
             else:
                 self.current_value = self.tesla_device.get_inside_temp()
             if units == "F":
-                self._unit = TEMP_FAHRENHEIT
+                self.units = TEMP_FAHRENHEIT
             else:
-                self._unit = TEMP_CELSIUS
+                self.units = TEMP_CELSIUS
         elif self.tesla_device.type in ["range sensor", "mileage sensor"]:
             self.current_value = self.tesla_device.get_value()
-            tesla_dist_unit = self.tesla_device.measurement
-            if tesla_dist_unit == "LENGTH_MILES":
-                self._unit = LENGTH_MILES
+            tesla_distunits = self.tesla_device.measurement
+            if tesla_distunits == "LENGTH_MILES":
+                self.units = LENGTH_MILES
             else:
-                self._unit = LENGTH_KILOMETERS
+                self.units = LENGTH_KILOMETERS
                 self.current_value /= 0.621371
                 self.current_value = round(self.current_value, 2)
         else:
             self.current_value = self.tesla_device.get_value()
-            self._unit = units
+            self.units = units
