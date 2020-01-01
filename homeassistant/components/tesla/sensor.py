@@ -8,6 +8,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.distance import convert
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
@@ -84,8 +85,9 @@ class TeslaSensor(TeslaDevice, Entity):
                 self.units = LENGTH_MILES
             else:
                 self.units = LENGTH_KILOMETERS
-                self.current_value /= 0.621371
-                self.current_value = round(self.current_value, 2)
+                self.current_value = round(
+                    convert(self.current_value, LENGTH_MILES, LENGTH_KILOMETERS), 2
+                )
         else:
             self.current_value = self.tesla_device.get_value()
             self.units = units
