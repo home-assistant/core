@@ -80,8 +80,7 @@ class TeslaSensor(TeslaDevice, Entity):
                 self.units = TEMP_CELSIUS
         elif self.tesla_device.type in ["range sensor", "mileage sensor"]:
             self.current_value = self.tesla_device.get_value()
-            tesla_distunits = self.tesla_device.measurement
-            if tesla_distunits == "LENGTH_MILES":
+            if units == "LENGTH_MILES":
                 self.units = LENGTH_MILES
             else:
                 self.units = LENGTH_KILOMETERS
