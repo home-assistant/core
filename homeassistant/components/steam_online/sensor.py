@@ -167,11 +167,14 @@ class SteamSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
-            "game": self._game if self._game else None,
-            "last_online": self._last_online if self._last_online else None,
-            "level": self._level if self._level else None,
-        }
+        attr = {}
+        if self._game is not None:
+            attr["game"] = self._game
+        if self._last_online is not None:
+            attr["last_online"] = self._last_online
+        if self._level is not None:
+            attr["level"] = self._level
+        return attr
 
     @property
     def entity_picture(self):
