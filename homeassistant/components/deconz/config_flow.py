@@ -179,7 +179,10 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
-        if discovery_info[ssdp.ATTR_UPNP_MANUFACTURER_URL] != DECONZ_MANUFACTURERURL:
+        if (
+            discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
+            != DECONZ_MANUFACTURERURL
+        ):
             return self.async_abort(reason="not_deconz_bridge")
 
         uuid = discovery_info[ssdp.ATTR_UPNP_UDN].replace("uuid:", "")
