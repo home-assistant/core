@@ -1,6 +1,5 @@
 """The tests for the input_boolean component."""
 # pylint: disable=protected-access
-import asyncio
 import logging
 from unittest.mock import patch
 
@@ -96,8 +95,7 @@ async def test_config_options(hass):
     assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
 
 
-@asyncio.coroutine
-def test_restore_state(hass):
+async def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -111,7 +109,7 @@ def test_restore_state(hass):
     hass.state = CoreState.starting
     mock_component(hass, "recorder")
 
-    yield from async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": None, "b2": None}})
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": None, "b2": None}})
 
     state = hass.states.get("input_boolean.b1")
     assert state
@@ -122,8 +120,7 @@ def test_restore_state(hass):
     assert state.state == "off"
 
 
-@asyncio.coroutine
-def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("input_boolean.b1", "on"), State("input_boolean.b2", "off"))
@@ -131,7 +128,7 @@ def test_initial_state_overrules_restore_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         DOMAIN,
         {DOMAIN: {"b1": {CONF_INITIAL: False}, "b2": {CONF_INITIAL: True}}},
