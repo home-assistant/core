@@ -8,7 +8,12 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_TYPE
 
-from .const import CONF_SENSORS, DOMAIN, PRINTER_TYPES, SENSOR_TYPES
+from .const import (  # pylint:disable=unused-import
+    CONF_SENSORS,
+    DOMAIN,
+    PRINTER_TYPES,
+    SENSOR_TYPES,
+)
 
 DATA_SCHEMA = vol.Schema(
     {
