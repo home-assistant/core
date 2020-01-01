@@ -339,6 +339,10 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         """Test name property."""
         assert "Zone name" == self.media_player.name
 
+    def test_unique_id(self):
+        """Test unique_id property."""
+        assert 12 == self.media_player.unique_id
+
     def test_state(self):
         """Test state property."""
         assert self.media_player.state is None
