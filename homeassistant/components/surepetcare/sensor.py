@@ -2,21 +2,33 @@
 import logging
 import pprint
 
-from homeassistant.const import (ATTR_VOLTAGE, CONF_ID, CONF_NAME, CONF_TYPE,
-                                 DEVICE_CLASS_BATTERY)
+from homeassistant.const import (
+    ATTR_VOLTAGE,
+    CONF_ID,
+    CONF_NAME,
+    CONF_TYPE,
+    DEVICE_CLASS_BATTERY,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (BATTERY_ICON, CONF_DATA, CONF_HOUSEHOLD_ID,
-                    DATA_SURE_PETCARE, SURE_BATT_VOLTAGE_DIFF,
-                    SURE_BATT_VOLTAGE_LOW, SURE_IDS, TOPIC_UPDATE, SureThingID)
+from .const import (
+    BATTERY_ICON,
+    CONF_DATA,
+    CONF_HOUSEHOLD_ID,
+    DATA_SURE_PETCARE,
+    SURE_BATT_VOLTAGE_DIFF,
+    SURE_BATT_VOLTAGE_LOW,
+    SURE_IDS,
+    TOPIC_UPDATE,
+    SureThingID,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Sure PetCare Flaps sensors based on a config entry."""
     if not discovery_info:
         return
@@ -32,8 +44,7 @@ async def async_setup_platform(hass, config, async_add_entities,
             continue
 
         if sure_id not in hass.data[DATA_SURE_PETCARE][sure_type]:
-            hass.data[DATA_SURE_PETCARE][
-                sure_type][sure_id] = sure_data
+            hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
 
         entities.append(FlapBattery(sure_id, thing[CONF_NAME]))
 
@@ -96,7 +107,10 @@ class FlapBattery(Entity):
             attributes = None
             _LOGGER.debug(
                 "error getting device state attributes from %s: %s\n\n%s",
-                self._name, error, self._state)
+                self._name,
+                error,
+                self._state,
+            )
 
         return attributes
 
@@ -113,7 +127,9 @@ class FlapBattery(Entity):
             else:
                 _LOGGER.debug(
                     "async_update from %s got no new data: %s",
-                    self._name, pprint.pformat(self._data))
+                    self._name,
+                    pprint.pformat(self._data),
+                )
         except (AttributeError, KeyError, TypeError) as error:
             _LOGGER.debug("async_update error from %s: %s", self._name, error)
 
@@ -131,7 +147,8 @@ class FlapBattery(Entity):
 
         # pylint: disable=attribute-defined-outside-init
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update)
+            self.hass, TOPIC_UPDATE, update
+        )
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""

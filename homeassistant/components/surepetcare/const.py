@@ -30,9 +30,9 @@ SURE_BATT_VOLTAGE_DIFF = SURE_BATT_VOLTAGE_FULL - SURE_BATT_VOLTAGE_LOW
 class SureProductID(IntEnum):
     """Sure Petcare API Product IDs."""
 
-    ROUTER = 1      # Sure Hub
-    PET_FLAP = 3    # Pet Door Connect
-    CAT_FLAP = 6    # Cat Door Connect
+    ROUTER = 1  # Sure Hub
+    PET_FLAP = 3  # Pet Door Connect
+    CAT_FLAP = 6  # Cat Door Connect
 
 
 # Thanks to @rcastberg for discovering the IDs used by the Sure Petcare API."""
