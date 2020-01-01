@@ -1,13 +1,13 @@
 """Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
+from requests import HTTPError
 from datetime import timedelta
 import logging
-from requests import HTTPError
 
 from tmb import IBus
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.exceptions import Unauthorized
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
