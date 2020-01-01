@@ -65,18 +65,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         )
         return
 
-    async_add_entities([SwissPublicTransportSensor(opendata, start, destination, name)])
+    async_add_entities([SwissPublicTransportSensor(opendata, name)])
 
 
 class SwissPublicTransportSensor(Entity):
     """Implementation of an Swiss public transport sensor."""
 
-    def __init__(self, opendata, start, destination, name):
+    def __init__(self, opendata, name):
         """Initialize the sensor."""
         self._opendata = opendata
         self._name = name
-        self._from = start
-        self._to = destination
         self._remaining_time = ""
 
     @property
