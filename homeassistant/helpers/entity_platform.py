@@ -1,6 +1,7 @@
 """Class to manage the entities for a single platform."""
 import asyncio
 from contextvars import ContextVar
+from datetime import datetime
 from typing import Optional
 
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -64,14 +65,14 @@ class EntityPlatform:
         # which powers entity_component.add_entities
         if platform is None:
             self.parallel_updates = None
-            self.parallel_updates_semaphore = None
+            self.parallel_updates_semaphore: Optional[asyncio.Semaphore] = None
             return
 
         self.parallel_updates = getattr(platform, "PARALLEL_UPDATES", None)
         # semaphore will be created on demand
         self.parallel_updates_semaphore = None
 
-    def _get_parallel_updates_semaphore(self):
+    def _get_parallel_updates_semaphore(self) -> asyncio.Semaphore:
         """Get or create a semaphore for parallel updates."""
         if self.parallel_updates_semaphore is None:
             self.parallel_updates_semaphore = asyncio.Semaphore(
@@ -406,7 +407,7 @@ class EntityPlatform:
 
         await entity.async_update_ha_state()
 
-    async def async_reset(self):
+    async def async_reset(self) -> None:
         """Remove all entities and reset data.
 
         This method must be run in the event loop.
@@ -426,7 +427,7 @@ class EntityPlatform:
             self._async_unsub_polling()
             self._async_unsub_polling = None
 
-    async def async_remove_entity(self, entity_id):
+    async def async_remove_entity(self, entity_id: str) -> None:
         """Remove entity id from platform."""
         await self.entities[entity_id].async_remove()
 
@@ -437,7 +438,7 @@ class EntityPlatform:
             self._async_unsub_polling()
             self._async_unsub_polling = None
 
-    async def _update_entity_states(self, now):
+    async def _update_entity_states(self, now: datetime) -> None:
         """Update the states of all the polling entities.
 
         To protect from flooding the executor, we will update async entities

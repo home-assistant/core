@@ -1,5 +1,6 @@
 """Support for devices connected to UniFi POE."""
 import logging
+from pprint import pformat
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
@@ -193,6 +194,16 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
 
         if not self.client.sw_port:
             self.client.raw["sw_port"] = state.attributes["port"]
+
+    async def async_update(self):
+        """Log client information after update."""
+        await super().async_update()
+
+        LOGGER.debug(
+            "Updating UniFi POE controlled client %s\n%s",
+            self.entity_id,
+            pformat(self.client.raw),
+        )
 
     @property
     def unique_id(self):

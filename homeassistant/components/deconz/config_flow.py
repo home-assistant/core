@@ -1,5 +1,6 @@
 """Config flow to configure deCONZ component."""
 import asyncio
+from urllib.parse import urlparse
 
 import async_timeout
 from pydeconz.errors import RequestError, ResponseError
@@ -7,7 +8,7 @@ from pydeconz.utils import async_discovery, async_get_api_key, async_get_gateway
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
+from homeassistant.components import ssdp
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -26,7 +27,6 @@ from .const import (
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"
-ATTR_UUID = "udn"
 
 
 @callback
@@ -159,29 +159,42 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title="deCONZ-" + self.deconz_config[CONF_BRIDGEID], data=self.deconz_config
         )
 
-    async def _update_entry(self, entry, host):
+    def _update_entry(self, entry, host, port, api_key=None):
         """Update existing entry."""
-        if entry.data[CONF_HOST] == host:
+        if (
+            entry.data[CONF_HOST] == host
+            and entry.data[CONF_PORT] == port
+            and (api_key is None or entry.data[CONF_API_KEY] == api_key)
+        ):
             return self.async_abort(reason="already_configured")
 
         entry.data[CONF_HOST] = host
+        entry.data[CONF_PORT] = port
+
+        if api_key is not None:
+            entry.data[CONF_API_KEY] = api_key
+
         self.hass.config_entries.async_update_entry(entry)
         return self.async_abort(reason="updated_instance")
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
-        if discovery_info[ATTR_MANUFACTURERURL] != DECONZ_MANUFACTURERURL:
+        if discovery_info[ssdp.ATTR_UPNP_MANUFACTURER_URL] != DECONZ_MANUFACTURERURL:
             return self.async_abort(reason="not_deconz_bridge")
 
-        uuid = discovery_info[ATTR_UUID].replace("uuid:", "")
+        uuid = discovery_info[ssdp.ATTR_UPNP_UDN].replace("uuid:", "")
 
         _LOGGER.debug("deCONZ gateway discovered (%s)", uuid)
 
+        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
+
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if uuid == entry.data.get(CONF_UUID):
-                return await self._update_entry(entry, discovery_info[CONF_HOST])
+                if entry.source == "hassio":
+                    return self.async_abort(reason="already_configured")
+                return self._update_entry(entry, parsed_url.hostname, parsed_url.port)
 
-        bridgeid = discovery_info[ATTR_SERIAL]
+        bridgeid = discovery_info[ssdp.ATTR_UPNP_SERIAL]
         if any(
             bridgeid == flow["context"][CONF_BRIDGEID]
             for flow in self._async_in_progress()
@@ -190,11 +203,11 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context[CONF_BRIDGEID] = bridgeid
-        self.context["title_placeholders"] = {"host": discovery_info[CONF_HOST]}
+        self.context["title_placeholders"] = {"host": parsed_url.hostname}
 
         self.deconz_config = {
-            CONF_HOST: discovery_info[CONF_HOST],
-            CONF_PORT: discovery_info[CONF_PORT],
+            CONF_HOST: parsed_url.hostname,
+            CONF_PORT: parsed_url.port,
         }
 
         return await self.async_step_link()
@@ -209,7 +222,12 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if bridgeid in gateway_entries:
             entry = gateway_entries[bridgeid]
-            return await self._update_entry(entry, user_input[CONF_HOST])
+            return self._update_entry(
+                entry,
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+                user_input[CONF_API_KEY],
+            )
 
         self._hassio_discovery = user_input
 

@@ -1,8 +1,8 @@
 """The tests for the feedreader component."""
 from datetime import timedelta
-from genericpath import exists
 from logging import getLogger
 from os import remove
+from os.path import exists
 import time
 import unittest
 from unittest import mock

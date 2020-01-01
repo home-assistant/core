@@ -1,7 +1,6 @@
 """Support for the Brother service."""
 import logging
 
-from homeassistant.const import CONF_NAME
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import Entity
 
@@ -25,11 +24,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add Brother entities from a config_entry."""
     brother = hass.data[DOMAIN][config_entry.entry_id]
 
-    name = config_entry.data[CONF_NAME]
     sensors = []
     sensors_list = []
 
     if brother.available:
+        name = brother.model
         for sensor in SENSOR_TYPES:
             if sensor in brother.data:
                 sensors_list.append(sensor)
@@ -46,6 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         dev_reg = await device_registry.async_get_registry(hass)
         for device in dev_reg.devices.values():
             if config_entry.entry_id in device.config_entries:
+                name = device.model
                 device_info = {
                     "name": device.name,
                     "model": device.model,

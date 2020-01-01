@@ -561,11 +561,6 @@ class IcloudDevice:
         return self._device_id
 
     @property
-    def dev_id(self) -> str:
-        """Return the device ID."""
-        return self._device_id
-
-    @property
     def name(self) -> str:
         """Return the Apple device name."""
         return self._name

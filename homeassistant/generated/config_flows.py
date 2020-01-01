@@ -74,6 +74,7 @@ FLOWS = [
     "sonos",
     "starline",
     "tellduslive",
+    "tesla",
     "toon",
     "tplink",
     "traccar",

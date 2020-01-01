@@ -6,21 +6,12 @@ from brother import Brother, SnmpError, UnsupportedModel
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
-from homeassistant.core import callback
+from homeassistant.const import CONF_HOST, CONF_TYPE
 
-from .const import (
-    DEFAULT_NAME,
-    DOMAIN,
-    CONF_SENSORS,
-    CONF_SERIAL,
-    PRINTER_TYPES,
-    SENSOR_TYPES,
-)
+from .const import CONF_SENSORS, DOMAIN, PRINTER_TYPES, SENSOR_TYPES
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST, default=""): str,
         vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES),
     }
@@ -37,14 +28,6 @@ def host_valid(host):
         return all(map(lambda x: len(x) and not disallowed.search(x), host.split(".")))
 
 
-@callback
-def configured_instances(hass, condition):
-    """Return a set of configured Brother instances."""
-    return set(
-        entry.data[condition] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
-
 class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Brother Printer."""
 
@@ -57,28 +40,23 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                if user_input[CONF_NAME] in configured_instances(self.hass, CONF_NAME):
-                    raise NameExists()
                 if not host_valid(user_input[CONF_HOST]):
                     raise InvalidHost()
 
                 brother = Brother(user_input[CONF_HOST])
                 await brother.async_update()
 
-                if brother.serial.lower() in configured_instances(
-                    self.hass, CONF_SERIAL
-                ):
-                    raise DeviceExists()
+                await self.async_set_unique_id(
+                    brother.serial.lower(), raise_on_progress=False
+                )
+                self._abort_if_unique_id_configured()
 
                 sensors = []
                 for sensor in SENSOR_TYPES:
                     if sensor in brother.data:
                         sensors.append(sensor)
 
-                device_data = {
-                    CONF_SERIAL: brother.serial.lower(),
-                    CONF_SENSORS: sensors,
-                }
+                device_data = {CONF_SENSORS: sensors}
                 title = f"{brother.model} {brother.serial}"
                 return self.async_create_entry(
                     title=title, data={**user_input, **device_data}
@@ -87,10 +65,6 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors[CONF_HOST] = "wrong_host"
             except ConnectionError:
                 errors["base"] = "connection_error"
-            except NameExists:
-                errors[CONF_NAME] = "name_exists"
-            except DeviceExists:
-                return self.async_abort(reason="device_exists")
             except SnmpError:
                 errors["base"] = "snmp_error"
             except UnsupportedModel:
@@ -103,11 +77,3 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class InvalidHost(exceptions.HomeAssistantError):
     """Error to indicate that hostname/IP address is invalid."""
-
-
-class NameExists(exceptions.HomeAssistantError):
-    """Error to indicate that name is already configured."""
-
-
-class DeviceExists(exceptions.HomeAssistantError):
-    """Error to indicate that device is already configured."""

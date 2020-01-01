@@ -88,8 +88,11 @@ class Fan(HomeAccessory):
             )
 
         if CHAR_ROTATION_SPEED in chars:
+            # Initial value is set to 100 because 0 is a special value (off). 100 is
+            # an arbitrary non-zero value. It is updated immediately by update_state
+            # to set to the correct initial value.
             self.char_speed = serv_fan.configure_char(
-                CHAR_ROTATION_SPEED, value=0, setter_callback=self.set_speed
+                CHAR_ROTATION_SPEED, value=100, setter_callback=self.set_speed
             )
 
         if CHAR_SWING_MODE in chars:
@@ -156,7 +159,22 @@ class Fan(HomeAccessory):
             speed = new_state.attributes.get(ATTR_SPEED)
             hk_speed_value = self.speed_mapping.speed_to_homekit(speed)
             if hk_speed_value is not None and self.char_speed.value != hk_speed_value:
-                self.char_speed.set_value(hk_speed_value)
+                # If the homeassistant component reports its speed as the first entry
+                # in its speed list but is not off, the hk_speed_value is 0. But 0
+                # is a special value in homekit. When you turn on a homekit accessory
+                # it will try to restore the last rotation speed state which will be
+                # the last value saved by char_speed.set_value. But if it is set to
+                # 0, HomeKit will update the rotation speed to 100 as it thinks 0 is
+                # off.
+                #
+                # Therefore, if the hk_speed_value is 0 and the device is still on,
+                # the rotation speed is mapped to 1 otherwise the update is ignored
+                # in order to avoid this incorrect behavior.
+                if hk_speed_value == 0:
+                    if state == STATE_ON:
+                        self.char_speed.set_value(1)
+                else:
+                    self.char_speed.set_value(hk_speed_value)
 
         # Handle Oscillating
         if self.char_swing is not None:

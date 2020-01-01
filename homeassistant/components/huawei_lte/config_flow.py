@@ -3,6 +3,7 @@
 from collections import OrderedDict
 import logging
 from typing import Optional
+from urllib.parse import urlparse
 
 from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
@@ -19,12 +20,18 @@ from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.ssdp import ATTR_HOST, ATTR_NAME, ATTR_PRESENTATIONURL
-from homeassistant.const import CONF_PASSWORD, CONF_RECIPIENT, CONF_URL, CONF_USERNAME
+from homeassistant.components import ssdp
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
+    CONF_URL,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 
 # see https://github.com/PyCQA/pylint/issues/3202 about the DOMAIN's pylint issue
-from .const import CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME
+from .const import CONNECTION_TIMEOUT, DEFAULT_DEVICE_NAME, DEFAULT_NOTIFY_SERVICE_NAME
 from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
@@ -208,13 +215,14 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle SSDP initiated config flow."""
         # Attempt to distinguish from other non-LTE Huawei router devices, at least
         # some ones we are interested in have "Mobile Wi-Fi" friendlyName.
-        if "mobile" not in discovery_info.get(ATTR_NAME, "").lower():
+        if "mobile" not in discovery_info.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "").lower():
             return self.async_abort(reason="not_huawei_lte")
 
         # https://github.com/PyCQA/pylint/issues/3167
         url = self.context[CONF_URL] = url_normalize(  # pylint: disable=no-member
             discovery_info.get(
-                ATTR_PRESENTATIONURL, f"http://{discovery_info[ATTR_HOST]}/"
+                ssdp.ATTR_UPNP_PRESENTATION_URL,
+                f"http://{urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION]).hostname}/",
             )
         )
 
@@ -240,14 +248,22 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            # Preserve existing options, for example *_from_yaml markers
+            data = {**self.config_entry.options, **user_input}
+            return self.async_create_entry(title="", data=data)
 
         data_schema = vol.Schema(
             {
                 vol.Optional(
+                    CONF_NAME,
+                    default=self.config_entry.options.get(
+                        CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME
+                    ),
+                ): str,
+                vol.Optional(
                     CONF_RECIPIENT,
                     default=self.config_entry.options.get(CONF_RECIPIENT, ""),
-                ): str
+                ): str,
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)

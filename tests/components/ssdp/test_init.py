@@ -27,7 +27,9 @@ async def test_scan_match_st(hass):
     assert mock_init.mock_calls[0][2]["context"] == {"source": "ssdp"}
 
 
-@pytest.mark.parametrize("key", ("manufacturer", "deviceType"))
+@pytest.mark.parametrize(
+    "key", (ssdp.ATTR_UPNP_MANUFACTURER, ssdp.ATTR_UPNP_DEVICE_TYPE)
+)
 async def test_scan_match_upnp_devicedesc(hass, aioclient_mock, key):
     """Test matching based on UPnP device description data."""
     aioclient_mock.get(
@@ -74,7 +76,14 @@ async def test_scan_not_all_present(hass, aioclient_mock):
         return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
     ), patch.dict(
         gn_ssdp.SSDP,
-        {"mock-domain": [{"deviceType": "Paulus", "manufacturer": "Paulus"}]},
+        {
+            "mock-domain": [
+                {
+                    ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                    ssdp.ATTR_UPNP_MANUFACTURER: "Paulus",
+                }
+            ]
+        },
     ), patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:
@@ -103,7 +112,14 @@ async def test_scan_not_all_match(hass, aioclient_mock):
         return_value=[Mock(st="mock-st", location="http://1.1.1.1")],
     ), patch.dict(
         gn_ssdp.SSDP,
-        {"mock-domain": [{"deviceType": "Paulus", "manufacturer": "Not-Paulus"}]},
+        {
+            "mock-domain": [
+                {
+                    ssdp.ATTR_UPNP_DEVICE_TYPE: "Paulus",
+                    ssdp.ATTR_UPNP_MANUFACTURER: "Not-Paulus",
+                }
+            ]
+        },
     ), patch.object(
         hass.config_entries.flow, "async_init", return_value=mock_coro()
     ) as mock_init:

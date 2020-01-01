@@ -2,9 +2,10 @@
 import os
 from pathlib import Path
 from unittest.mock import call, patch
+
 import pytest
 
-from homeassistant import setup, loader
+from homeassistant import loader, setup
 from homeassistant.requirements import (
     CONSTRAINT_FILE,
     PROGRESS_FILE,

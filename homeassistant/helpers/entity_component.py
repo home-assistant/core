@@ -5,13 +5,14 @@ from itertools import chain
 import logging
 
 from homeassistant import config as conf_util
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_NAMESPACE,
     CONF_SCAN_INTERVAL,
     ENTITY_MATCH_ALL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.config_validation import make_entity_service_schema
@@ -29,7 +30,7 @@ DATA_INSTANCES = "entity_components"
 
 
 @bind_hass
-async def async_update_entity(hass, entity_id):
+async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Trigger an update for an entity."""
     domain = entity_id.split(".", 1)[0]
     entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
@@ -158,7 +159,7 @@ class EntityComponent:
 
         return await self._platforms[key].async_setup_entry(config_entry)
 
-    async def async_unload_entry(self, config_entry):
+    async def async_unload_entry(self, config_entry: ConfigEntry) -> bool:
         """Unload a config entry."""
         key = config_entry.entry_id
 
@@ -237,7 +238,7 @@ class EntityComponent:
         await self._platforms[key].async_setup(platform_config, discovery_info)
 
     @callback
-    def _async_update_group(self):
+    def _async_update_group(self) -> None:
         """Set up and/or update component group.
 
         This method must be run in the event loop.
@@ -265,7 +266,7 @@ class EntityComponent:
             )
         )
 
-    async def _async_reset(self):
+    async def _async_reset(self) -> None:
         """Remove entities and reset the entity component to initial values.
 
         This method must be run in the event loop.
@@ -283,7 +284,7 @@ class EntityComponent:
                 "group", "remove", dict(object_id=slugify(self.group_name))
             )
 
-    async def async_remove_entity(self, entity_id):
+    async def async_remove_entity(self, entity_id: str) -> None:
         """Remove an entity managed by one of the platforms."""
         for platform in self._platforms.values():
             if entity_id in platform.entities:

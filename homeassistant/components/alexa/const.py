@@ -117,163 +117,6 @@ class Cause:
     VOICE_INTERACTION = "VOICE_INTERACTION"
 
 
-class Catalog:
-    """The Global Alexa catalog.
-
-    https://developer.amazon.com/docs/device-apis/resources-and-assets.html#global-alexa-catalog
-
-    You can use the global Alexa catalog for pre-defined names of devices, settings, values, and units.
-    This catalog is localized into all the languages that Alexa supports.
-
-    You can reference the following catalog of pre-defined friendly names.
-    Each item in the following list is an asset identifier followed by its supported friendly names.
-    The first friendly name for each identifier is the one displayed in the Alexa mobile app.
-    """
-
-    LABEL_ASSET = "asset"
-    LABEL_TEXT = "text"
-
-    # Shower
-    DEVICENAME_SHOWER = "Alexa.DeviceName.Shower"
-
-    # Washer, Washing Machine
-    DEVICENAME_WASHER = "Alexa.DeviceName.Washer"
-
-    # Router, Internet Router, Network Router, Wifi Router, Net Router
-    DEVICENAME_ROUTER = "Alexa.DeviceName.Router"
-
-    # Fan, Blower
-    DEVICENAME_FAN = "Alexa.DeviceName.Fan"
-
-    # Air Purifier, Air Cleaner,Clean Air Machine
-    DEVICENAME_AIRPURIFIER = "Alexa.DeviceName.AirPurifier"
-
-    # Space Heater, Portable Heater
-    DEVICENAME_SPACEHEATER = "Alexa.DeviceName.SpaceHeater"
-
-    # Rain Head, Overhead shower, Rain Shower, Rain Spout, Rain Faucet
-    SHOWER_RAINHEAD = "Alexa.Shower.RainHead"
-
-    # Handheld Shower, Shower Wand, Hand Shower
-    SHOWER_HANDHELD = "Alexa.Shower.HandHeld"
-
-    # Water Temperature, Water Temp, Water Heat
-    SETTING_WATERTEMPERATURE = "Alexa.Setting.WaterTemperature"
-
-    # Temperature, Temp
-    SETTING_TEMPERATURE = "Alexa.Setting.Temperature"
-
-    # Wash Cycle, Wash Preset, Wash setting
-    SETTING_WASHCYCLE = "Alexa.Setting.WashCycle"
-
-    # 2.4G Guest Wi-Fi, 2.4G Guest Network, Guest Network 2.4G, 2G Guest Wifi
-    SETTING_2GGUESTWIFI = "Alexa.Setting.2GGuestWiFi"
-
-    # 5G Guest Wi-Fi, 5G Guest Network, Guest Network 5G, 5G Guest Wifi
-    SETTING_5GGUESTWIFI = "Alexa.Setting.5GGuestWiFi"
-
-    # Guest Wi-fi, Guest Network, Guest Net
-    SETTING_GUESTWIFI = "Alexa.Setting.GuestWiFi"
-
-    # Auto, Automatic, Automatic Mode, Auto Mode
-    SETTING_AUTO = "Alexa.Setting.Auto"
-
-    #     #Night, Night Mode
-    SETTING_NIGHT = "Alexa.Setting.Night"
-
-    # Quiet, Quiet Mode, Noiseless, Silent
-    SETTING_QUIET = "Alexa.Setting.Quiet"
-
-    # Oscillate, Swivel, Oscillation, Spin, Back and forth
-    SETTING_OSCILLATE = "Alexa.Setting.Oscillate"
-
-    # Fan Speed, Airflow speed, Wind Speed, Air speed, Air velocity
-    SETTING_FANSPEED = "Alexa.Setting.FanSpeed"
-
-    # Preset, Setting
-    SETTING_PRESET = "Alexa.Setting.Preset"
-
-    # Mode
-    SETTING_MODE = "Alexa.Setting.Mode"
-
-    # Direction
-    SETTING_DIRECTION = "Alexa.Setting.Direction"
-
-    # Delicates, Delicate
-    VALUE_DELICATE = "Alexa.Value.Delicate"
-
-    # Quick Wash, Fast Wash, Wash Quickly, Speed Wash
-    VALUE_QUICKWASH = "Alexa.Value.QuickWash"
-
-    # Maximum, Max
-    VALUE_MAXIMUM = "Alexa.Value.Maximum"
-
-    # Minimum, Min
-    VALUE_MINIMUM = "Alexa.Value.Minimum"
-
-    # High
-    VALUE_HIGH = "Alexa.Value.High"
-
-    # Low
-    VALUE_LOW = "Alexa.Value.Low"
-
-    # Medium, Mid
-    VALUE_MEDIUM = "Alexa.Value.Medium"
-
-
-class Unit:
-    """Alexa Units of Measure.
-
-    https://developer.amazon.com/docs/device-apis/alexa-property-schemas.html#units-of-measure
-    """
-
-    ANGLE_DEGREES = "Alexa.Unit.Angle.Degrees"
-
-    ANGLE_RADIANS = "Alexa.Unit.Angle.Radians"
-
-    DISTANCE_FEET = "Alexa.Unit.Distance.Feet"
-
-    DISTANCE_INCHES = "Alexa.Unit.Distance.Inches"
-
-    DISTANCE_KILOMETERS = "Alexa.Unit.Distance.Kilometers"
-
-    DISTANCE_METERS = "Alexa.Unit.Distance.Meters"
-
-    DISTANCE_MILES = "Alexa.Unit.Distance.Miles"
-
-    DISTANCE_YARDS = "Alexa.Unit.Distance.Yards"
-
-    MASS_GRAMS = "Alexa.Unit.Mass.Grams"
-
-    MASS_KILOGRAMS = "Alexa.Unit.Mass.Kilograms"
-
-    PERCENT = "Alexa.Unit.Percent"
-
-    TEMPERATURE_CELSIUS = "Alexa.Unit.Temperature.Celsius"
-
-    TEMPERATURE_DEGREES = "Alexa.Unit.Temperature.Degrees"
-
-    TEMPERATURE_FAHRENHEIT = "Alexa.Unit.Temperature.Fahrenheit"
-
-    TEMPERATURE_KELVIN = "Alexa.Unit.Temperature.Kelvin"
-
-    VOLUME_CUBICFEET = "Alexa.Unit.Volume.CubicFeet"
-
-    VOLUME_CUBICMETERS = "Alexa.Unit.Volume.CubicMeters"
-
-    VOLUME_GALLONS = "Alexa.Unit.Volume.Gallons"
-
-    VOLUME_LITERS = "Alexa.Unit.Volume.Liters"
-
-    VOLUME_PINTS = "Alexa.Unit.Volume.Pints"
-
-    VOLUME_QUARTS = "Alexa.Unit.Volume.Quarts"
-
-    WEIGHT_OUNCES = "Alexa.Unit.Weight.Ounces"
-
-    WEIGHT_POUNDS = "Alexa.Unit.Weight.Pounds"
-
-
 class Inputs:
     """Valid names for the InputController.
 
@@ -352,4 +195,12 @@ class Inputs:
         "video2": "VIDEO 2",
         "video3": "VIDEO 3",
         "xbox": "XBOX",
+    }
+
+    VALID_SOUND_MODE_MAP = {
+        "movie": "MOVIE",
+        "music": "MUSIC",
+        "night": "NIGHT",
+        "sport": "SPORT",
+        "tv": "TV",
     }

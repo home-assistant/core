@@ -5,7 +5,6 @@ omit =
     homeassistant/__main__.py
     homeassistant/helpers/signal.py
     homeassistant/helpers/typing.py
-    homeassistant/monkey_patch.py
     homeassistant/scripts/*.py
     homeassistant/util/async.py
 
@@ -324,6 +323,7 @@ omit =
     homeassistant/components/iaqualink/switch.py
     homeassistant/components/icloud/__init__.py
     homeassistant/components/icloud/device_tracker.py
+    homeassistant/components/icloud/sensor.py
     homeassistant/components/izone/climate.py
     homeassistant/components/izone/discovery.py
     homeassistant/components/izone/__init__.py
@@ -679,6 +679,7 @@ omit =
     homeassistant/components/systemmonitor/sensor.py
     homeassistant/components/tado/*
     homeassistant/components/tado/device_tracker.py
+    homeassistant/components/tahoma/*
     homeassistant/components/tank_utility/sensor.py
     homeassistant/components/tapsaff/binary_sensor.py
     homeassistant/components/tautulli/sensor.py
@@ -690,7 +691,14 @@ omit =
     homeassistant/components/telnet/switch.py
     homeassistant/components/temper/sensor.py
     homeassistant/components/tensorflow/image_processing.py
-    homeassistant/components/tesla/*
+    homeassistant/components/tesla/__init__.py
+    homeassistant/components/tesla/binary_sensor.py
+    homeassistant/components/tesla/climate.py
+    homeassistant/components/tesla/const.py
+    homeassistant/components/tesla/device_tracker.py
+    homeassistant/components/tesla/lock.py
+    homeassistant/components/tesla/sensor.py
+    homeassistant/components/tesla/switch.py
     homeassistant/components/tfiac/climate.py
     homeassistant/components/thermoworks_smoke/sensor.py
     homeassistant/components/thethingsnetwork/*
@@ -710,7 +718,6 @@ omit =
     homeassistant/components/totalconnect/*
     homeassistant/components/touchline/climate.py
     homeassistant/components/tplink/device_tracker.py
-    homeassistant/components/tplink/light.py
     homeassistant/components/tplink/switch.py
     homeassistant/components/tplink_lte/*
     homeassistant/components/traccar/device_tracker.py

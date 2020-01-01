@@ -11,15 +11,8 @@ import pytz
 import requests
 import voluptuous as vol
 
-from homeassistant.components.weather import (
-    ATTR_WEATHER_ATTRIBUTION,
-    ATTR_WEATHER_HUMIDITY,
-    ATTR_WEATHER_PRESSURE,
-    ATTR_WEATHER_TEMPERATURE,
-    ATTR_WEATHER_WIND_BEARING,
-    ATTR_WEATHER_WIND_SPEED,
-)
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
@@ -43,15 +36,15 @@ DEFAULT_NAME = "zamg"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SENSOR_TYPES = {
-    ATTR_WEATHER_PRESSURE: ("Pressure", "hPa", "LDstat hPa", float),
+    "pressure": ("Pressure", "hPa", "LDstat hPa", float),
     "pressure_sealevel": ("Pressure at Sea Level", "hPa", "LDred hPa", float),
-    ATTR_WEATHER_HUMIDITY: ("Humidity", "%", "RF %", int),
-    ATTR_WEATHER_WIND_SPEED: ("Wind Speed", "km/h", "WG km/h", float),
-    ATTR_WEATHER_WIND_BEARING: ("Wind Bearing", "°", "WR °", int),
+    "humidity": ("Humidity", "%", "RF %", int),
+    "wind_speed": ("Wind Speed", "km/h", "WG km/h", float),
+    "wind_bearing": ("Wind Bearing", "°", "WR °", int),
     "wind_max_speed": ("Top Wind Speed", "km/h", "WSG km/h", float),
     "wind_max_bearing": ("Top Wind Bearing", "°", "WSR °", int),
     "sun_last_hour": ("Sun Last Hour", "%", "SO %", int),
-    ATTR_WEATHER_TEMPERATURE: ("Temperature", "°C", "T °C", float),
+    "temperature": ("Temperature", "°C", "T °C", float),
     "precipitation": ("Precipitation", "l/m²", "N l/m²", float),
     "dewpoint": ("Dew Point", "°C", "TP °C", float),
     # The following probably not useful for general consumption,
@@ -140,7 +133,7 @@ class ZamgSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_WEATHER_ATTRIBUTION: ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_STATION: self.probe.get_data("station_name"),
             ATTR_UPDATED: self.probe.last_update.isoformat(),
         }

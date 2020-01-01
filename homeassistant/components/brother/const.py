@@ -28,7 +28,6 @@ ATTR_YELLOW_TONER_REMAINING = "yellow_toner_remaining"
 CONF_SENSORS = "sensors"
 CONF_SERIAL = "serial"
 
-DEFAULT_NAME = "Brother Printer"
 DOMAIN = "brother"
 
 UNIT_PAGES = "p"
