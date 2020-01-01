@@ -1,6 +1,5 @@
 """Test config entries API."""
 
-import asyncio
 from collections import OrderedDict
 from unittest.mock import patch
 
@@ -94,16 +93,15 @@ async def test_get_entries(hass, client):
         ]
 
 
-@asyncio.coroutine
-def test_remove_entry(hass, client):
+async def test_remove_entry(hass, client):
     """Test removing an entry via the API."""
     entry = MockConfigEntry(domain="demo", state=core_ce.ENTRY_STATE_LOADED)
     entry.add_to_hass(hass)
-    resp = yield from client.delete(
+    resp = await client.delete(
         "/api/config/config_entries/entry/{}".format(entry.entry_id)
     )
     assert resp.status == 200
-    data = yield from resp.json()
+    data = await resp.json()
     assert data == {"require_restart": True}
     assert len(hass.config_entries.async_entries()) == 0
 
@@ -120,13 +118,12 @@ async def test_remove_entry_unauth(hass, client, hass_admin_user):
     assert len(hass.config_entries.async_entries()) == 1
 
 
-@asyncio.coroutine
-def test_available_flows(hass, client):
+async def test_available_flows(hass, client):
     """Test querying the available flows."""
     with patch.object(config_flows, "FLOWS", ["hello", "world"]):
-        resp = yield from client.get("/api/config/config_entries/flow_handlers")
+        resp = await client.get("/api/config/config_entries/flow_handlers")
         assert resp.status == 200
-        data = yield from resp.json()
+        data = await resp.json()
         assert set(data) == set(["hello", "world"])
 
 
@@ -135,14 +132,12 @@ def test_available_flows(hass, client):
 ############################
 
 
-@asyncio.coroutine
-def test_initialize_flow(hass, client):
+async def test_initialize_flow(hass, client):
     """Test we can initialize a flow."""
     mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             schema = OrderedDict()
             schema[vol.Required("username")] = str
             schema[vol.Required("password")] = str
@@ -155,12 +150,12 @@ def test_initialize_flow(hass, client):
             )
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
-        resp = yield from client.post(
+        resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
     assert resp.status == 200
-    data = yield from resp.json()
+    data = await resp.json()
 
     data.pop("flow_id")
 
@@ -182,8 +177,7 @@ async def test_initialize_flow_unauth(hass, client, hass_admin_user):
     hass_admin_user.groups = []
 
     class TestFlow(core_ce.ConfigFlow):
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             schema = OrderedDict()
             schema[vol.Required("username")] = str
             schema[vol.Required("password")] = str
@@ -203,23 +197,21 @@ async def test_initialize_flow_unauth(hass, client, hass_admin_user):
     assert resp.status == 401
 
 
-@asyncio.coroutine
-def test_abort(hass, client):
+async def test_abort(hass, client):
     """Test a flow that aborts."""
     mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             return self.async_abort(reason="bla")
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
-        resp = yield from client.post(
+        resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
     assert resp.status == 200
-    data = yield from resp.json()
+    data = await resp.json()
     data.pop("flow_id")
     assert data == {
         "description_placeholders": None,
@@ -229,8 +221,7 @@ def test_abort(hass, client):
     }
 
 
-@asyncio.coroutine
-def test_create_account(hass, client):
+async def test_create_account(hass, client):
     """Test a flow that creates an account."""
     mock_entity_platform(hass, "config_flow.test", None)
 
@@ -239,14 +230,13 @@ def test_create_account(hass, client):
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
 
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title="Test Entry", data={"secret": "account_token"}
             )
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
-        resp = yield from client.post(
+        resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
@@ -255,7 +245,7 @@ def test_create_account(hass, client):
     entries = hass.config_entries.async_entries("test")
     assert len(entries) == 1
 
-    data = yield from resp.json()
+    data = await resp.json()
     data.pop("flow_id")
     assert data == {
         "handler": "test",
@@ -268,8 +258,7 @@ def test_create_account(hass, client):
     }
 
 
-@asyncio.coroutine
-def test_two_step_flow(hass, client):
+async def test_two_step_flow(hass, client):
     """Test we can finish a two step flow."""
     mock_integration(hass, MockModule("test", async_setup_entry=mock_coro_func(True)))
     mock_entity_platform(hass, "config_flow.test", None)
@@ -277,24 +266,22 @@ def test_two_step_flow(hass, client):
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
 
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             return self.async_show_form(
                 step_id="account", data_schema=vol.Schema({"user_title": str})
             )
 
-        @asyncio.coroutine
-        def async_step_account(self, user_input=None):
+        async def async_step_account(self, user_input=None):
             return self.async_create_entry(
                 title=user_input["user_title"], data={"secret": "account_token"}
             )
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
-        resp = yield from client.post(
+        resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
         assert resp.status == 200
-        data = yield from resp.json()
+        data = await resp.json()
         flow_id = data.pop("flow_id")
         assert data == {
             "type": "form",
@@ -306,7 +293,7 @@ def test_two_step_flow(hass, client):
         }
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
-        resp = yield from client.post(
+        resp = await client.post(
             "/api/config/config_entries/flow/{}".format(flow_id),
             json={"user_title": "user-title"},
         )
@@ -315,7 +302,7 @@ def test_two_step_flow(hass, client):
         entries = hass.config_entries.async_entries("test")
         assert len(entries) == 1
 
-        data = yield from resp.json()
+        data = await resp.json()
         data.pop("flow_id")
         assert data == {
             "handler": "test",
@@ -336,14 +323,12 @@ async def test_continue_flow_unauth(hass, client, hass_admin_user):
     class TestFlow(core_ce.ConfigFlow):
         VERSION = 1
 
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             return self.async_show_form(
                 step_id="account", data_schema=vol.Schema({"user_title": str})
             )
 
-        @asyncio.coroutine
-        def async_step_account(self, user_input=None):
+        async def async_step_account(self, user_input=None):
             return self.async_create_entry(
                 title=user_input["user_title"], data={"secret": "account_token"}
             )
@@ -415,14 +400,12 @@ async def test_get_progress_index_unauth(hass, hass_ws_client, hass_admin_user):
     assert response["error"]["code"] == "unauthorized"
 
 
-@asyncio.coroutine
-def test_get_progress_flow(hass, client):
+async def test_get_progress_flow(hass, client):
     """Test we can query the API for same result as we get from init a flow."""
     mock_entity_platform(hass, "config_flow.test", None)
 
     class TestFlow(core_ce.ConfigFlow):
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             schema = OrderedDict()
             schema[vol.Required("username")] = str
             schema[vol.Required("password")] = str
@@ -434,19 +417,19 @@ def test_get_progress_flow(hass, client):
             )
 
     with patch.dict(HANDLERS, {"test": TestFlow}):
-        resp = yield from client.post(
+        resp = await client.post(
             "/api/config/config_entries/flow", json={"handler": "test"}
         )
 
     assert resp.status == 200
-    data = yield from resp.json()
+    data = await resp.json()
 
-    resp2 = yield from client.get(
+    resp2 = await client.get(
         "/api/config/config_entries/flow/{}".format(data["flow_id"])
     )
 
     assert resp2.status == 200
-    data2 = yield from resp2.json()
+    data2 = await resp2.json()
 
     assert data == data2
 
