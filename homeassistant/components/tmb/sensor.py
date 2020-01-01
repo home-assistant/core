@@ -1,8 +1,8 @@
 """Support for TMB (Transports Metropolitans de Barcelona) Barcelona public transport."""
-from requests import HTTPError
 from datetime import timedelta
 import logging
 
+from requests import HTTPError
 from tmb import IBus
 import voluptuous as vol
 
