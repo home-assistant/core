@@ -1646,7 +1646,7 @@ python-wink==1.10.5
 python_awair==0.0.4
 
 # homeassistant.components.swiss_public_transport
-python_opendata_transport==0.1.4
+python_opendata_transport==0.2.1
 
 # homeassistant.components.egardia
 pythonegardia==1.0.40
