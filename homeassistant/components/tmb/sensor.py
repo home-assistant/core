@@ -24,6 +24,8 @@ CONF_APP_KEY = "app_key"
 CONF_LINE = "line"
 CONF_BUS_STOP = "stop"
 CONF_BUS_STOPS = "stops"
+ATTR_BUS_STOP = "stop"
+ATTR_LINE = "line"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -55,9 +57,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for line_stop in config.get(CONF_BUS_STOPS):
         line = line_stop[CONF_LINE]
         stop = line_stop[CONF_BUS_STOP]
-        if line_stop[CONF_NAME] is not None:
-            friendly_name = line_stop[CONF_NAME]
-            name = f"{line} - {friendly_name} ({stop})"
+        if line_stop.get(CONF_NAME):
+            name = f"{line} - {line_stop[CONF_NAME]} ({stop})"
         else:
             name = f"{line} - {stop}"
         sensors.append(TMBSensor(ibus_client, stop, line, name))
@@ -106,11 +107,11 @@ class TMBSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the last update."""
-        attrs = {}
-        attrs[ATTR_ATTRIBUTION] = (ATTRIBUTION,)
-        attrs[CONF_BUS_STOP] = (self._stop,)
-        attrs[CONF_LINE] = self._line
-        return attrs
+        return {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            ATTR_BUS_STOP: self._stop,
+            ATTR_LINE: self._line,
+        }
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -118,7 +119,7 @@ class TMBSensor(Entity):
         try:
             self._state = self._ibus_client.get_stop_forecast(self._stop, self._line)
         except HTTPError:
-            _LOGGER.exception(
+            _LOGGER.error(
                 "Unable to fetch data from TMB API. Please check your API keys are valid."
             )
             raise Unauthorized()
