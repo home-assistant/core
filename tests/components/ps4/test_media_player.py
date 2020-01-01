@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 from pyps4_2ndscreen.credential import get_ddp_message
 
 from homeassistant.components import ps4
+from homeassistant.components.media_player import STATE_IDLE, STATE_OFF, STATE_PLAYING
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -28,9 +29,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     CONF_TOKEN,
-    STATE_IDLE,
-    STATE_PLAYING,
-    STATE_STANDBY,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
@@ -183,14 +181,14 @@ async def test_media_player_is_setup_correctly_with_entry(hass):
     assert mock_state == STATE_UNKNOWN
 
 
-async def test_state_standby_is_set(hass):
+async def test_state_off_is_set(hass):
     """Test that state is set to standby."""
     mock_entity_id = await setup_mock_component(hass)
 
     with patch(MOCK_SAVE, side_effect=MagicMock()):
         await mock_ddp_response(hass, MOCK_STATUS_STANDBY)
 
-    assert hass.states.get(mock_entity_id).state == STATE_STANDBY
+    assert hass.states.get(mock_entity_id).state == STATE_OFF
 
 
 async def test_state_playing_is_set(hass):
@@ -306,7 +304,7 @@ async def test_device_info_is_set_from_status_correctly(hass):
     mock_entry = mock_d_registry.async_get_device(
         identifiers={(DOMAIN, MOCK_HOST_ID)}, connections={()}
     )
-    assert mock_state == STATE_STANDBY
+    assert mock_state == STATE_OFF
 
     assert len(mock_d_entries) == 1
     assert mock_entry.name == MOCK_HOST_NAME
