@@ -5,29 +5,29 @@ import logging
 import stookalert
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=60)
 CONF_PROVINCE = "province"
 DEFAULT_NAME = "Stookalert"
+ATTRIBUTION = "Data provided by rivm.nl"
 PROVINCES = [
-    "drenthe",
-    "flevoland",
-    "friesland",
-    "gelderland",
-    "groningen",
-    "limburg",
-    "noord-brabant",
-    "noord-holland",
-    "overijssel",
-    "utrecht",
-    "zeeland",
-    "zuid-holland",
+    "Drenthe",
+    "Flevoland",
+    "Friesland",
+    "Gelderland",
+    "Groningen",
+    "Limburg",
+    "Noord-Brabant",
+    "Noord-Holland",
+    "Overijssel",
+    "Utrecht",
+    "Zeeland",
+    "Zuid-Holland",
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -40,26 +40,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Stookalert binary sensor platform."""
-    add_devices([Stookalert(config)], update_before_add=True)
+    province = config.get(CONF_PROVINCE)
+    name = config.get(CONF_NAME)
+    api_handler = stookalert.stookalert(province)
+
+    if api_handler is not None:
+        add_devices([StookalertBinarySensor(name, api_handler)], update_before_add=True)
 
 
-class Stookalert(Entity):
+class StookalertBinarySensor(BinarySensorDevice):
     """An implementation of RIVM Stookalert."""
 
-    def __init__(self, config):
+    def __init__(self, name, api_handler):
         """Initialize a Stookalert device."""
-        self._province = config.get(CONF_PROVINCE)
-        self._api_handler = stookalert.stookalert(self._province)
-        self._name = config.get(CONF_NAME)
+        self._name = name
+        self._api_handler = api_handler
 
     @property
     def device_state_attributes(self):
         """Return the attribute(s) of the sensor."""
-        state_attr = self._api_handler._alerts.copy()
+        state_attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
+
         if self._api_handler._last_updated is not None:
-            state_attr["last_updated"] = self._api_handler._last_updated.strftime(
-                "%d-%m-%Y %H:%M:%S"
-            )
+            state_attr["last_updated"] = self._api_handler._last_updated.isoformat()
+
         return state_attr
 
     @property
@@ -68,20 +72,16 @@ class Stookalert(Entity):
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        if self._api_handler._state == 0:
-            return STATE_OFF
-        else:
-            return STATE_ON
+    def attribution(self):
+        """Return the attribution."""
+        return ATTRIBUTION
 
     @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        if self.state == STATE_ON:
-            return "mdi:alert"
-        else:
-            return "mdi:check"
+    def is_on(self):
+        """Return True if the Alert is active."""
+        if self._api_handler._state == 1:
+            return True
+        return False
 
     def update(self):
         """Update the data from the Stookalert handler."""
