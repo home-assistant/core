@@ -272,7 +272,7 @@ class AlexaEntity:
         locale = self.config.locale
         capabilities = []
         for i in self.interfaces():
-            if locale in i.SUPPORTED_LOCALES:
+            if locale in i.supported_locales:
                 capabilities.append(i.serialize_discovery())
         result["capabilities"] = capabilities
 
