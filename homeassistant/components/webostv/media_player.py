@@ -24,13 +24,16 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
     CONF_HOST,
     CONF_NAME,
+    ENTITY_MATCH_ALL,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.script import Script
 
 from . import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
@@ -131,7 +134,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         self._last_icon = None
 
     async def async_added_to_hass(self):
-        """Connect and subscribe to state updates."""
+        """Connect and subscribe to dispatcher signals and state updates."""
+        async_dispatcher_connect(self.hass, DOMAIN, self.async_signal_handler)
+
         await self._client.register_state_update_callback(
             self.async_handle_state_update
         )
@@ -143,6 +148,17 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     async def async_will_remove_from_hass(self):
         """Call disconnect on removal."""
         self._client.unregister_state_update_callback(self.async_handle_state_update)
+
+    async def async_signal_handler(self, data):
+        """Handle domain-specific signal by calling appropriate method."""
+        entity_ids = data[ATTR_ENTITY_ID]
+        if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
+            params = {
+                key: value
+                for key, value in data.items()
+                if key not in ["entity_id", "method"]
+            }
+            await getattr(self, data["method"])(**params)
 
     async def async_handle_state_update(self):
         """Update state from WebOsClient."""
@@ -406,3 +422,13 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
             await self._client.channel_down()
         else:
             await self._client.rewind()
+
+    @cmd
+    async def async_button(self, button):
+        """Send a button press."""
+        await self._client.button(button)
+
+    @cmd
+    async def async_command(self, command):
+        """Send a command."""
+        await self._client.request(command)
