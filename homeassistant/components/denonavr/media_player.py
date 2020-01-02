@@ -421,4 +421,4 @@ class DenonDevice(MediaPlayerDevice):
 
     def get_command(self, command, **kwargs):
         """Send generic command."""
-        return self._receiver.send_get_command(command)
+        self._receiver.send_get_command(command)
