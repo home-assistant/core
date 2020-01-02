@@ -18,6 +18,8 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
@@ -97,6 +99,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sources,
     )
 
+    latitude = config.data[CONF_LATITUDE]
+    longitude = config.data[CONF_LONGITUDE]
+    unique_id = f"kef-{latitude}-{longitude}"
+
     media_player = KefMediaPlayer(
         name,
         host,
@@ -107,8 +113,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         inverse_speaker_mode,
         sources,
         ioloop=hass.loop,
+        unique_id=unique_id,
     )
-    unique_id = media_player.unique_id
+
     if unique_id in hass.data[DOMAIN]:
         _LOGGER.debug("%s is already configured", unique_id)
     else:
@@ -130,6 +137,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         inverse_speaker_mode,
         sources,
         ioloop,
+        unique_id,
     ):
         """Initialize the media player."""
         self._name = name
@@ -143,6 +151,7 @@ class KefMediaPlayer(MediaPlayerDevice):
             inverse_speaker_mode,
             ioloop=ioloop,
         )
+        self._unique_id = unique_id
 
         self._state = None
         self._muted = None
@@ -215,7 +224,7 @@ class KefMediaPlayer(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return the device unique id."""
-        return f"{self._speaker.host}:{self._speaker.port}"
+        return self._unique_id
 
     @property
     def icon(self):
