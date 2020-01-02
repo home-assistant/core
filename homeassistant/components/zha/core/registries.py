@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
 import collections
-from typing import Callable, Set, Union
+from typing import Callable, List, Set, Union
 
 import attr
 import bellows.ezsp
@@ -35,6 +35,7 @@ from homeassistant.components.switch import DOMAIN as SWITCH
 from . import channels  # noqa: F401 pylint: disable=unused-import
 from .const import CONTROLLER, ZHA_GW_RADIO, ZHA_GW_RADIO_DESCRIPTION, RadioType
 from .decorators import CALLABLE_T, DictRegistry, SetRegistry
+from .typing import ChannelType, ZDOChannelType
 
 SMARTTHINGS_ACCELERATION_CLUSTER = 0xFC02
 SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE = 0x8000
@@ -196,6 +197,21 @@ class MatchRule:
     aux_channels: Union[Callable, Set[str], str] = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
+
+    def claim_channels(
+        self, channel_pool: List[Union[ChannelType, ZDOChannelType]]
+    ) -> List[Union[ChannelType, ZDOChannelType]]:
+        """Return a list of channels this rule matches + aux channels."""
+        claimed = []
+        if isinstance(self.channel_names, frozenset):
+            claimed.extend([ch for ch in channel_pool if ch.name in self.channel_names])
+        if isinstance(self.generic_ids, frozenset):
+            claimed.extend(
+                [ch for ch in channel_pool if ch.generic_id in self.generic_ids]
+            )
+        if isinstance(self.aux_channels, frozenset):
+            claimed.extend([ch for ch in channel_pool if ch.name in self.aux_channels])
+        return claimed
 
 
 class ZHAEntityRegistry:
