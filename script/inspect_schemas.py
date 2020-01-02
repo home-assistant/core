@@ -39,8 +39,7 @@ def main():
             if hasattr(module, "CONFIG_SCHEMA"):
                 add_msg(
                     "WARNING",
-                    "Module {} contains PLATFORM and CONFIG "
-                    "schemas".format(module_name),
+                    f"Module {module_name} contains PLATFORM and CONFIG schemas",
                 )
             add_msg("PLATFORM SCHEMA", module_name)
             continue

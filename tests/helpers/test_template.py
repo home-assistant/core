@@ -486,9 +486,9 @@ def test_timestamp_custom(hass):
 
     for inp, fmt, local, out in tests:
         if fmt:
-            fil = "timestamp_custom('{}')".format(fmt)
+            fil = f"timestamp_custom('{fmt}')"
         elif fmt and local:
-            fil = "timestamp_custom('{0}', {1})".format(fmt, local)
+            fil = f"timestamp_custom('{fmt}', {local})"
         else:
             fil = "timestamp_custom"
 

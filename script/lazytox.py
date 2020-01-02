@@ -76,8 +76,7 @@ async def async_exec(*args, display=False):
         proc = await asyncio.create_subprocess_exec(*args, **kwargs)
     except FileNotFoundError as err:
         printc(
-            FAIL,
-            "Could not execute {}. Did you install test requirements?".format(args[0]),
+            FAIL, f"Could not execute {args[0]}. Did you install test requirements?",
         )
         raise err
 

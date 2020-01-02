@@ -712,18 +712,14 @@ class State:
 
         if not valid_entity_id(entity_id) and not temp_invalid_id_bypass:
             raise InvalidEntityFormatError(
-                (
-                    "Invalid entity id encountered: {}. "
-                    "Format should be <domain>.<object_id>"
-                ).format(entity_id)
+                f"Invalid entity id encountered: {entity_id}. "
+                "Format should be <domain>.<object_id>"
             )
 
         if not valid_state(state):
             raise InvalidStateError(
-                (
-                    "Invalid state encountered for entity id: {}. "
-                    "State max length is 255 characters."
-                ).format(entity_id)
+                f"Invalid state encountered for entity id: {entity_id}. "
+                "State max length is 255 characters."
             )
 
         self.entity_id = entity_id.lower()
@@ -1034,9 +1030,7 @@ class ServiceCall:
                 self.domain, self.service, self.context.id, util.repr_helper(self.data)
             )
 
-        return "<ServiceCall {}.{} (c:{})>".format(
-            self.domain, self.service, self.context.id
-        )
+        return f"<ServiceCall {self.domain}.{self.service} (c:{self.context.id})>"
 
 
 class ServiceRegistry:
