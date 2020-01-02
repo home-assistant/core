@@ -84,7 +84,7 @@ class FritzBoxScanner(DeviceScanner):
         ip_device = self.fritz_box.get_specific_host_entry(device).get("NewIPAddress")
 
         if not ip_device:
-            return None
+            return {}
         return {"ip": ip_device, "mac": device}
 
     def _update_info(self):
