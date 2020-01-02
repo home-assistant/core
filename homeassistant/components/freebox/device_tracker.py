@@ -77,6 +77,7 @@ class FreeboxTrackerEntity(TrackerEntity):
         return {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
+            "manufacturer": self._device["vendor_name"],
         }
 
     async def async_added_to_hass(self):
