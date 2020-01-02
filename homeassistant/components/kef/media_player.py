@@ -81,11 +81,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     host = config[CONF_HOST]
     speaker_type = config[CONF_TYPE]
-    port = config.get(CONF_PORT)
-    name = config.get(CONF_NAME)
-    maximum_volume = config.get(CONF_MAX_VOLUME)
-    volume_step = config.get(CONF_VOLUME_STEP)
-    inverse_speaker_mode = config.get(CONF_INVERSE_SPEAKER_MODE)
+    port = config[CONF_PORT]
+    name = config[CONF_NAME]
+    maximum_volume = config[CONF_MAX_VOLUME]
+    volume_step = config[CONF_VOLUME_STEP]
+    inverse_speaker_mode = config[CONF_INVERSE_SPEAKER_MODE]
     standby_time = config.get(CONF_STANDBY_TIME)
 
     sources = SOURCES[speaker_type]
