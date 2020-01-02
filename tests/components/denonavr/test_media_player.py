@@ -21,8 +21,8 @@ def client_fixture():
     ) as mock_client_class, patch(
         "homeassistant.components.denonavr.media_player.denonavr.discover"
     ):
-        mock_client_class.name = NAME
-        mock_client_class.return_value.zones = {"Main": mock_client_class}
+        mock_client_class.return_value.name = NAME
+        mock_client_class.return_value.zones = {"Main": mock_client_class.return_value}
         yield mock_client_class.return_value
 
 
@@ -54,4 +54,4 @@ async def test_get_command(hass, client):
     await hass.services.async_call(DOMAIN, SERVICE_GET_COMMAND, data)
     await hass.async_block_till_done()
 
-    client.zones["Main"].send_get_command.assert_called_with("test")
+    client.send_get_command.assert_called_with("test")
