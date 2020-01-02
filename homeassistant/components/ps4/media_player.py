@@ -5,13 +5,7 @@ import logging
 from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
 import pyps4_2ndscreen.ps4 as pyps4
 
-from homeassistant.components.media_player import (
-    ENTITY_IMAGE_URL,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PLAYING,
-    MediaPlayerDevice,
-)
+from homeassistant.components.media_player import ENTITY_IMAGE_URL, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
@@ -30,6 +24,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     CONF_TOKEN,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_PLAYING,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity_registry

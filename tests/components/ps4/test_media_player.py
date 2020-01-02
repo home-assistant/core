@@ -4,7 +4,6 @@ from unittest.mock import MagicMock, patch
 from pyps4_2ndscreen.credential import get_ddp_message
 
 from homeassistant.components import ps4
-from homeassistant.components.media_player import STATE_IDLE, STATE_OFF, STATE_PLAYING
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -29,6 +28,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_REGION,
     CONF_TOKEN,
+    STATE_IDLE,
+    STATE_OFF,
+    STATE_PLAYING,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
