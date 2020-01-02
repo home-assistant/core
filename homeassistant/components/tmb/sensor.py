@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_APP_ID): cv.string,
         vol.Required(CONF_APP_KEY): cv.string,
-        vol.Optional(CONF_BUS_STOPS): vol.All(cv.ensure_list, [LINE_STOP_SCHEMA]),
+        vol.Required(CONF_BUS_STOPS): vol.All(cv.ensure_list, [LINE_STOP_SCHEMA]),
     }
 )
 
