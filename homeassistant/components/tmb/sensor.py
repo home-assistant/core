@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
-from homeassistant.exceptions import Unauthorized
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -119,4 +118,3 @@ class TMBSensor(Entity):
             _LOGGER.error(
                 "Unable to fetch data from TMB API. Please check your API keys are valid."
             )
-            raise Unauthorized()
