@@ -50,7 +50,7 @@ class TestFeedreaderComponent(unittest.TestCase):
     def test_setup_one_feed(self):
         """Test the general setup of this component."""
         with patch(
-            "homeassistant.components.feedreader." "track_time_interval"
+            "homeassistant.components.feedreader.track_time_interval"
         ) as track_method:
             assert setup_component(self.hass, feedreader.DOMAIN, VALID_CONFIG_1)
             track_method.assert_called_once_with(
@@ -60,7 +60,7 @@ class TestFeedreaderComponent(unittest.TestCase):
     def test_setup_scan_interval(self):
         """Test the setup of this component with scan interval."""
         with patch(
-            "homeassistant.components.feedreader." "track_time_interval"
+            "homeassistant.components.feedreader.track_time_interval"
         ) as track_method:
             assert setup_component(self.hass, feedreader.DOMAIN, VALID_CONFIG_2)
             track_method.assert_called_once_with(
@@ -88,7 +88,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         data_file = self.hass.config.path("{}.pickle".format(feedreader.DOMAIN))
         storage = StoredData(data_file)
         with patch(
-            "homeassistant.components.feedreader." "track_time_interval"
+            "homeassistant.components.feedreader.track_time_interval"
         ) as track_method:
             manager = FeedManager(
                 feed_data, DEFAULT_SCAN_INTERVAL, max_entries, self.hass, storage
@@ -131,7 +131,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         # Must patch 'get_timestamp' method because the timestamp is stored
         # with the URL which in these tests is the raw XML data.
         with patch(
-            "homeassistant.components.feedreader.StoredData." "get_timestamp",
+            "homeassistant.components.feedreader.StoredData.get_timestamp",
             return_value=time.struct_time((2018, 4, 30, 5, 10, 0, 0, 120, 0)),
         ):
             manager2, events2 = self.setup_manager(feed_data2)
@@ -139,7 +139,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         # 3. Run
         feed_data3 = load_fixture("feedreader1.xml")
         with patch(
-            "homeassistant.components.feedreader.StoredData." "get_timestamp",
+            "homeassistant.components.feedreader.StoredData.get_timestamp",
             return_value=time.struct_time((2018, 4, 30, 5, 11, 0, 0, 120, 0)),
         ):
             manager3, events3 = self.setup_manager(feed_data3)

@@ -40,7 +40,7 @@ async def test_hassio_discovery_startup(hass, aioclient_mock, hassio_client):
     assert aioclient_mock.call_count == 0
 
     with patch(
-        "homeassistant.components.mqtt." "config_flow.FlowHandler.async_step_hassio",
+        "homeassistant.components.mqtt.config_flow.FlowHandler.async_step_hassio",
         Mock(return_value=mock_coro({"type": "abort"})),
     ) as mock_mqtt:
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -93,10 +93,10 @@ async def test_hassio_discovery_startup_done(hass, aioclient_mock, hassio_client
         "homeassistant.components.hassio.HassIO.update_hass_api",
         Mock(return_value=mock_coro({"result": "ok"})),
     ), patch(
-        "homeassistant.components.hassio.HassIO." "get_homeassistant_info",
+        "homeassistant.components.hassio.HassIO.get_homeassistant_info",
         Mock(side_effect=HassioAPIError()),
     ), patch(
-        "homeassistant.components.mqtt." "config_flow.FlowHandler.async_step_hassio",
+        "homeassistant.components.mqtt.config_flow.FlowHandler.async_step_hassio",
         Mock(return_value=mock_coro({"type": "abort"})),
     ) as mock_mqtt:
         await hass.async_start()
@@ -143,7 +143,7 @@ async def test_hassio_discovery_webhook(hass, aioclient_mock, hassio_client):
     )
 
     with patch(
-        "homeassistant.components.mqtt." "config_flow.FlowHandler.async_step_hassio",
+        "homeassistant.components.mqtt.config_flow.FlowHandler.async_step_hassio",
         Mock(return_value=mock_coro({"type": "abort"})),
     ) as mock_mqtt:
         resp = await hassio_client.post(

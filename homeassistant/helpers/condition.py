@@ -192,7 +192,7 @@ def async_numeric_state(
         fvalue = float(value)
     except ValueError:
         _LOGGER.warning(
-            "Value cannot be processed as a number: %s " "(Offending entity: %s)",
+            "Value cannot be processed as a number: %s (Offending entity: %s)",
             entity,
             value,
         )

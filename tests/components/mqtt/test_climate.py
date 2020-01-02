@@ -113,7 +113,7 @@ async def test_set_operation_bad_attr_and_state(hass, mqtt_mock, caplog):
     assert state.state == "off"
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_hvac_mode(hass, None, ENTITY_CLIMATE)
-    assert ("value is not allowed for dictionary value @ " "data['hvac_mode']") in str(
+    assert ("value is not allowed for dictionary value @ data['hvac_mode']") in str(
         excinfo.value
     )
     state = hass.states.get(ENTITY_CLIMATE)

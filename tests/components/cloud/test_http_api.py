@@ -321,7 +321,7 @@ async def test_websocket_status(
     client = await hass_ws_client(hass)
 
     with patch.dict(
-        "homeassistant.components.google_assistant.const." "DOMAIN_TO_GOOGLE_TYPES",
+        "homeassistant.components.google_assistant.const.DOMAIN_TO_GOOGLE_TYPES",
         {"light": None},
         clear=True,
     ), patch.dict(
@@ -683,7 +683,7 @@ async def test_list_google_entities(hass, hass_ws_client, setup_api, mock_cloud_
         hass, MockConfig(should_expose=lambda *_: False), State("light.kitchen", "on")
     )
     with patch(
-        "homeassistant.components.google_assistant.helpers" ".async_get_entities",
+        "homeassistant.components.google_assistant.helpers.async_get_entities",
         return_value=[entity],
     ):
         await client.send_json({"id": 5, "type": "cloud/google_assistant/entities"})
@@ -779,7 +779,7 @@ async def test_list_alexa_entities(hass, hass_ws_client, setup_api, mock_cloud_l
         hass, MagicMock(entity_config={}), State("light.kitchen", "on")
     )
     with patch(
-        "homeassistant.components.alexa.entities" ".async_get_entities",
+        "homeassistant.components.alexa.entities.async_get_entities",
         return_value=[entity],
     ):
         await client.send_json({"id": 5, "type": "cloud/alexa/entities"})

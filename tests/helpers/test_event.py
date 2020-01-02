@@ -805,7 +805,7 @@ async def test_call_later(hass):
     now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
 
     with patch(
-        "homeassistant.helpers.event" ".async_track_point_in_utc_time"
+        "homeassistant.helpers.event.async_track_point_in_utc_time"
     ) as mock, patch("homeassistant.util.dt.utcnow", return_value=now):
         async_call_later(hass, 3, action)
 
@@ -825,7 +825,7 @@ async def test_async_call_later(hass):
     now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
 
     with patch(
-        "homeassistant.helpers.event" ".async_track_point_in_utc_time"
+        "homeassistant.helpers.event.async_track_point_in_utc_time"
     ) as mock, patch("homeassistant.util.dt.utcnow", return_value=now):
         remove = async_call_later(hass, 3, action)
 

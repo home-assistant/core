@@ -115,7 +115,7 @@ async def test_setup_recovers_when_setup_raises(hass):
 
 
 @asynctest.patch(
-    "homeassistant.helpers.entity_component.EntityComponent" ".async_setup_platform",
+    "homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",
     return_value=mock_coro(),
 )
 @asynctest.patch(
@@ -137,7 +137,7 @@ async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     assert ("platform_test", {}, {"msg": "discovery_info"}) == mock_setup.call_args[0]
 
 
-@asynctest.patch("homeassistant.helpers.entity_platform." "async_track_time_interval")
+@asynctest.patch("homeassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_config(mock_track, hass):
     """Test the setting of the scan interval via configuration."""
 
@@ -460,5 +460,5 @@ async def test_extract_all_use_match_all(hass, caplog):
         ent.entity_id for ent in await component.async_extract_from_service(call)
     )
     assert (
-        "Not passing an entity ID to a service to target all entities is " "deprecated"
+        "Not passing an entity ID to a service to target all entities is deprecated"
     ) not in caplog.text

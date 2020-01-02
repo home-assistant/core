@@ -1012,7 +1012,7 @@ class WUndergroundSensor(Entity):
             val = val(self.rest)
         except (KeyError, IndexError, TypeError, ValueError) as err:
             _LOGGER.warning(
-                "Failed to expand cfg from WU API." " Condition: %s Attr: %s Error: %s",
+                "Failed to expand cfg from WU API. Condition: %s Attr: %s Error: %s",
                 self._condition,
                 what,
                 repr(err),

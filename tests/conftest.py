@@ -60,7 +60,7 @@ def verify_cleanup():
         for inst in INSTANCES:
             inst.stop()
         pytest.exit(
-            "Detected non stopped instances " "({}), aborting test run".format(count)
+            "Detected non stopped instances ({}), aborting test run".format(count)
         )
 
 

@@ -328,7 +328,7 @@ class HomeKit:
             aid = generate_aid(entity_id)
             if aid not in self.bridge.accessories:
                 _LOGGER.warning(
-                    "Could not reset accessory. entity_id " "not found %s", entity_id
+                    "Could not reset accessory. entity_id not found %s", entity_id
                 )
                 continue
             acc = self.remove_bridge_accessory(aid)

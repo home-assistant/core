@@ -298,7 +298,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     else:
         _lights_setup_helper(YeelightGenericLight)
         _LOGGER.warning(
-            "Cannot determine device type for %s, %s. " "Falling back to white only",
+            "Cannot determine device type for %s, %s. Falling back to white only",
             device.ipaddr,
             device.name,
         )
@@ -743,7 +743,7 @@ class YeelightGenericLight(Light):
                 self.set_music_mode(self.config[CONF_MODE_MUSIC])
             except BulbException as ex:
                 _LOGGER.error(
-                    "Unable to turn on music mode," "consider disabling it: %s", ex
+                    "Unable to turn on music mode, consider disabling it: %s", ex
                 )
 
         try:
