@@ -27,8 +27,6 @@ class MockConfig(helpers.AbstractConfig):
         should_2fa=None,
         entity_config=None,
         hass=None,
-        local_sdk_webhook_id=None,
-        local_sdk_user_id=None,
         enabled=True,
         agent_user_ids=None,
     ):
@@ -38,8 +36,6 @@ class MockConfig(helpers.AbstractConfig):
         self._should_2fa = should_2fa
         self._secure_devices_pin = secure_devices_pin
         self._entity_config = entity_config or {}
-        self._local_sdk_webhook_id = local_sdk_webhook_id
-        self._local_sdk_user_id = local_sdk_user_id
         self._enabled = enabled
         self._store = MockConfigStore(agent_user_ids)
 
@@ -57,16 +53,6 @@ class MockConfig(helpers.AbstractConfig):
     def entity_config(self):
         """Return secure devices pin."""
         return self._entity_config
-
-    @property
-    def local_sdk_webhook_id(self):
-        """Return local SDK webhook id."""
-        return self._local_sdk_webhook_id
-
-    @property
-    def local_sdk_user_id(self):
-        """Return local SDK webhook id."""
-        return self._local_sdk_user_id
 
     def get_agent_user_id(self, context):
         """Get agent user ID making request."""

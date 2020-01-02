@@ -60,19 +60,6 @@ class CloudGoogleConfig(AbstractConfig):
         return self._cloud.is_logged_in and self._prefs.google_report_state
 
     @property
-    def local_sdk_webhook_id(self):
-        """Return the local SDK webhook.
-
-        Return None to disable the local SDK.
-        """
-        return self._prefs.google_local_webhook_id
-
-    @property
-    def local_sdk_user_id(self):
-        """Return the user ID to be used for actions received via the local SDK."""
-        return self._user
-
-    @property
     def cloud_user(self):
         """Return Cloud User account."""
         return self._user

@@ -32,9 +32,7 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
 
     hass.http = Mock(server_port=1234)
     config = MockConfig(
-        hass=hass,
-        local_sdk_webhook_id="mock-webhook-id",
-        local_sdk_user_id="mock-user-id",
+        hass=hass, agent_user_ids={"mock-user-id": {"webhook_id": "mock-webhook-id"}}
     )
     entity = helpers.GoogleEntity(hass, config, hass.states.get("light.ceiling_lights"))
 
@@ -44,12 +42,12 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
 
     config.async_enable_local_sdk()
 
-    serialized = await entity.sync_serialize(None)
+    serialized = await entity.sync_serialize("mock-user-id")
     assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
     assert serialized["customData"] == {
         "httpPort": 1234,
         "httpSSL": True,
-        "proxyDeviceId": None,
+        "proxyDeviceId": "mock-user-id",
         "webhookId": "mock-webhook-id",
         "baseUrl": "https://hostname:1234",
     }
@@ -73,9 +71,7 @@ async def test_config_local_sdk(hass, hass_client):
     assert await async_setup_component(hass, "webhook", {})
 
     config = MockConfig(
-        hass=hass,
-        local_sdk_webhook_id="mock-webhook-id",
-        local_sdk_user_id="mock-user-id",
+        hass=hass, agent_user_ids={"mock-user-id": {"webhook_id": "mock-webhook-id"}}
     )
 
     client = await hass_client()
@@ -113,7 +109,7 @@ async def test_config_local_sdk(hass, hass_client):
     assert result["requestId"] == "mock-req-id"
 
     assert len(command_events) == 1
-    assert command_events[0].context.user_id == config.local_sdk_user_id
+    assert command_events[0].context.user_id == "mock-user-id"
 
     assert len(turn_on_calls) == 1
     assert turn_on_calls[0].context is command_events[0].context
@@ -132,9 +128,8 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
 
     config = MockConfig(
         hass=hass,
-        local_sdk_webhook_id="mock-webhook-id",
-        local_sdk_user_id="mock-user-id",
         enabled=False,
+        agent_user_ids={"mock-user-id": {"webhook_id": "mock-webhook-id"}},
     )
 
     client = await hass_client()
