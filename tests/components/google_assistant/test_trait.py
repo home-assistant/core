@@ -1266,25 +1266,29 @@ async def test_modes(hass):
         "availableModes": [
             {
                 "name": "input source",
-                "name_values": [{"name_synonym": ["input source"], "lang": "en"}],
+                "name_values": [
+                    {"name_synonym": ["input source", "input", "source"], "lang": "en"}
+                ],
                 "settings": [
                     {
                         "setting_name": "media",
                         "setting_values": [
-                            {"setting_synonym": ["media", "media mode"], "lang": "en"}
+                            {"setting_synonym": ["media"], "lang": "en"}
                         ],
                     },
                     {
                         "setting_name": "game",
-                        "setting_values": [
-                            {"setting_synonym": ["game", "game mode"], "lang": "en"}
-                        ],
+                        "setting_values": [{"setting_synonym": ["game"], "lang": "en"}],
                     },
                     {
                         "setting_name": "chromecast",
                         "setting_values": [
                             {"setting_synonym": ["chromecast"], "lang": "en"}
                         ],
+                    },
+                    {
+                        "setting_name": "plex",
+                        "setting_values": [{"setting_synonym": ["plex"], "lang": "en"}],
                     },
                 ],
                 "ordered": False,
@@ -1299,12 +1303,7 @@ async def test_modes(hass):
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
-        params={
-            "updateModeSettings": {
-                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): "media"
-            }
-        },
+        trait.COMMAND_MODES, params={"updateModeSettings": {"input source": "media"}},
     )
 
     calls = async_mock_service(
@@ -1313,11 +1312,7 @@ async def test_modes(hass):
     await trt.execute(
         trait.COMMAND_MODES,
         BASIC_DATA,
-        {
-            "updateModeSettings": {
-                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): "media"
-            }
-        },
+        {"updateModeSettings": {"input source": "media"}},
         {},
     )
 

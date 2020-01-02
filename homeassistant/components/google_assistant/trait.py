@@ -1121,100 +1121,6 @@ class ModesTrait(_Trait):
     name = TRAIT_MODES
     commands = [COMMAND_MODES]
 
-    # Google requires specific mode names and settings. Here is the full list.
-    # https://developers.google.com/actions/reference/smarthome/traits/modes
-    # All settings are mapped here as of 2018-11-28 and can be used for other
-    # entity types.
-
-    HA_TO_GOOGLE = {media_player.ATTR_INPUT_SOURCE: "input source"}
-    SUPPORTED_MODE_SETTINGS = {
-        "xsmall": ["xsmall", "extra small", "min", "minimum", "tiny", "xs"],
-        "small": ["small", "half"],
-        "large": ["large", "big", "full"],
-        "xlarge": ["extra large", "xlarge", "xl"],
-        "Cool": ["cool", "rapid cool", "rapid cooling"],
-        "Heat": ["heat"],
-        "Low": ["low"],
-        "Medium": ["medium", "med", "mid", "half"],
-        "High": ["high"],
-        "Auto": ["auto", "automatic"],
-        "Bake": ["bake"],
-        "Roast": ["roast"],
-        "Convection Bake": ["convection bake", "convect bake"],
-        "Convection Roast": ["convection roast", "convect roast"],
-        "Favorite": ["favorite"],
-        "Broil": ["broil"],
-        "Warm": ["warm"],
-        "Off": ["off"],
-        "On": ["on"],
-        "Normal": [
-            "normal",
-            "normal mode",
-            "normal setting",
-            "standard",
-            "schedule",
-            "original",
-            "default",
-            "old settings",
-        ],
-        "None": ["none"],
-        "Tap Cold": ["tap cold"],
-        "Cold Warm": ["cold warm"],
-        "Hot": ["hot"],
-        "Extra Hot": ["extra hot"],
-        "Eco": ["eco"],
-        "Wool": ["wool", "fleece"],
-        "Turbo": ["turbo"],
-        "Rinse": ["rinse", "rinsing", "rinse wash"],
-        "Away": ["away", "holiday"],
-        "maximum": ["maximum"],
-        "media player": ["media player"],
-        "chromecast": ["chromecast"],
-        "tv": [
-            "tv",
-            "television",
-            "tv position",
-            "television position",
-            "watching tv",
-            "watching tv position",
-            "entertainment",
-            "entertainment position",
-        ],
-        "am fm": ["am fm", "am radio", "fm radio"],
-        "internet radio": ["internet radio"],
-        "satellite": ["satellite"],
-        "game console": ["game console"],
-        "antifrost": ["antifrost", "anti-frost"],
-        "boost": ["boost"],
-        "Clock": ["clock"],
-        "Message": ["message"],
-        "Messages": ["messages"],
-        "News": ["news"],
-        "Disco": ["disco"],
-        "antifreeze": ["antifreeze", "anti-freeze", "anti freeze"],
-        "balanced": ["balanced", "normal"],
-        "swing": ["swing"],
-        "media": ["media", "media mode"],
-        "panic": ["panic"],
-        "ring": ["ring"],
-        "frozen": ["frozen", "rapid frozen", "rapid freeze"],
-        "cotton": ["cotton", "cottons"],
-        "blend": ["blend", "mix"],
-        "baby wash": ["baby wash"],
-        "synthetics": ["synthetic", "synthetics", "compose"],
-        "hygiene": ["hygiene", "sterilization"],
-        "smart": ["smart", "intelligent", "intelligence"],
-        "comfortable": ["comfortable", "comfort"],
-        "manual": ["manual"],
-        "energy saving": ["energy saving"],
-        "sleep": ["sleep"],
-        "quick wash": ["quick wash", "fast wash"],
-        "cold": ["cold"],
-        "airsupply": ["airsupply", "air supply"],
-        "dehumidification": ["dehumidication", "dehumidify"],
-        "game": ["game", "game mode"],
-    }
-
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
@@ -1233,26 +1139,18 @@ class ModesTrait(_Trait):
 
         if sources_list:
             sources = {
-                "name": self.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE),
-                "name_values": [{"name_synonym": ["input source"], "lang": "en"}],
+                "name": "input source",
+                "name_values": [
+                    {"name_synonym": ["input source", "input", "source"], "lang": "en"}
+                ],
                 "settings": [],
                 "ordered": False,
             }
             for source in sources_list:
-                if source in self.SUPPORTED_MODE_SETTINGS:
-                    src = source
-                    synonyms = self.SUPPORTED_MODE_SETTINGS.get(src)
-                elif source.lower() in self.SUPPORTED_MODE_SETTINGS:
-                    src = source.lower()
-                    synonyms = self.SUPPORTED_MODE_SETTINGS.get(src)
-
-                else:
-                    continue
-
                 sources["settings"].append(
                     {
-                        "setting_name": src,
-                        "setting_values": [{"setting_synonym": synonyms, "lang": "en"}],
+                        "setting_name": source,
+                        "setting_values": [{"setting_synonym": [source], "lang": "en"}],
                     }
                 )
         if sources:
@@ -1285,25 +1183,19 @@ class ModesTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute an SetModes command."""
         settings = params.get("updateModeSettings")
-        requested_source = settings.get(
-            self.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE)
-        )
+        requested_source = settings.get("input source")
 
         if requested_source:
-            for src in self.state.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST):
-                if src.lower() == requested_source.lower():
-                    source = src
-
-                    await self.hass.services.async_call(
-                        media_player.DOMAIN,
-                        media_player.SERVICE_SELECT_SOURCE,
-                        {
-                            ATTR_ENTITY_ID: self.state.entity_id,
-                            media_player.ATTR_INPUT_SOURCE: source,
-                        },
-                        blocking=True,
-                        context=data.context,
-                    )
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_SELECT_SOURCE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_INPUT_SOURCE: requested_source,
+                },
+                blocking=True,
+                context=data.context,
+            )
 
 
 @register_trait
