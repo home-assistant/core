@@ -7,6 +7,7 @@ import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
     CONF_HOST,
     CONF_ICON,
@@ -14,6 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 DOMAIN = "webostv"
 
@@ -22,6 +24,12 @@ CONF_ON_ACTION = "turn_on_action"
 CONF_STANDBY_CONNECTION = "standby_connection"
 DEFAULT_NAME = "LG webOS Smart TV"
 WEBOSTV_CONFIG_FILE = "webostv.conf"
+
+SERVICE_BUTTON = "button"
+ATTR_BUTTON = "button"
+
+SERVICE_COMMAND = "command"
+ATTR_COMMAND = "command"
 
 CUSTOMIZE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}
@@ -50,12 +58,35 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+CALL_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids})
+
+BUTTON_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_BUTTON): cv.string})
+
+COMMAND_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_COMMAND): cv.string})
+
+SERVICE_TO_METHOD = {
+    SERVICE_BUTTON: {"method": "async_button", "schema": BUTTON_SCHEMA},
+    SERVICE_COMMAND: {"method": "async_command", "schema": COMMAND_SCHEMA},
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass, config):
     """Set up the LG WebOS TV platform."""
     hass.data[DOMAIN] = {}
+
+    async def async_service_handler(service):
+        method = SERVICE_TO_METHOD.get(service.service)
+        data = service.data.copy()
+        data["method"] = method["method"]
+        async_dispatcher_send(hass, DOMAIN, data)
+
+    for service in SERVICE_TO_METHOD:
+        schema = SERVICE_TO_METHOD[service]["schema"]
+        hass.services.async_register(
+            DOMAIN, service, async_service_handler, schema=schema
+        )
 
     tasks = [async_setup_tv(hass, config, conf) for conf in config[DOMAIN]]
     if tasks:

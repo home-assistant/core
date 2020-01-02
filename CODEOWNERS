@@ -365,6 +365,7 @@ homeassistant/components/waqi/* @andrey-git
 homeassistant/components/watson_tts/* @rutkai
 homeassistant/components/weather/* @fabaff
 homeassistant/components/weblink/* @home-assistant/core
+homeassistant/components/webostv/* @bendavid
 homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @sqldiablo
 homeassistant/components/withings/* @vangorra
