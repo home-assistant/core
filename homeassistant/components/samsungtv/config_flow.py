@@ -116,6 +116,10 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    async def async_step_import(self, user_input=None):
+        """Handle configuration by yaml file."""
+        return await self.async_step_user(user_input)
+
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:

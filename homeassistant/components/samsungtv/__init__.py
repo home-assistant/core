@@ -1,6 +1,6 @@
 """The Samsung TV integration."""
-from wakeonlan import BROADCAST_IP
 import voluptuous as vol
+from wakeonlan import BROADCAST_IP
 
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
@@ -13,7 +13,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from .const import DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
-
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -45,7 +44,7 @@ async def async_setup(hass, config):
     if DOMAIN in config:
         for entry_config in config[DOMAIN]:
             await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": "user"}, data=entry_config
+                DOMAIN, context={"source": "import"}, data=entry_config
             )
 
     return True
