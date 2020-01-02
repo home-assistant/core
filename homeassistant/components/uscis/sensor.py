@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if uscis.valid_case_id:
         add_entities([uscis])
     else:
-        _LOGGER.error("Setup USCIS Sensor Fail" " check if your Case ID is Valid")
+        _LOGGER.error("Setup USCIS Sensor Fail check if your Case ID is Valid")
 
 
 class UscisSensor(Entity):

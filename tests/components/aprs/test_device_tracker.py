@@ -302,7 +302,7 @@ def test_aprs_listener_rx_msg_no_position():
 def test_setup_scanner():
     """Test setup_scanner."""
     with patch(
-        "homeassistant.components." "aprs.device_tracker.AprsListenerThread"
+        "homeassistant.components.aprs.device_tracker.AprsListenerThread"
     ) as listener:
         hass = get_test_home_assistant()
         hass.start()

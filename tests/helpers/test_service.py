@@ -459,7 +459,7 @@ async def test_call_with_match_all(
         mock_entities["light.living_room"],
     ]
     assert (
-        "Not passing an entity ID to a service to target " "all entities is deprecated"
+        "Not passing an entity ID to a service to target all entities is deprecated"
     ) not in caplog.text
 
 

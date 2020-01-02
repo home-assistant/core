@@ -122,7 +122,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
         if current != content:
             config.add_error(
                 "zeroconf",
-                "File zeroconf.py is not up to date. " "Run python3 -m script.hassfest",
+                "File zeroconf.py is not up to date. Run python3 -m script.hassfest",
                 fixable=True,
             )
         return

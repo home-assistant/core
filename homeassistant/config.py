@@ -209,7 +209,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
                     {
                         CONF_TYPE: vol.NotIn(
                             ["insecure_example"],
-                            "The insecure_example mfa module" " is for testing only.",
+                            "The insecure_example mfa module is for testing only.",
                         )
                     }
                 )

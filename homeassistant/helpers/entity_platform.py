@@ -459,7 +459,7 @@ class EntityPlatform:
             self._process_updates = asyncio.Lock()
         if self._process_updates.locked():
             self.logger.warning(
-                "Updating %s %s took longer than the scheduled update " "interval %s",
+                "Updating %s %s took longer than the scheduled update interval %s",
                 self.platform_name,
                 self.domain,
                 self.scan_interval,
