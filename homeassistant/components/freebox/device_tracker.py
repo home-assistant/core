@@ -4,6 +4,7 @@ from typing import Dict
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN, TRACKER_UPDATE
@@ -39,7 +40,7 @@ class FreeboxTrackerEntity(TrackerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._device["l2ident"]["id"]  # MAC address
+        return self.mac
 
     @property
     def name(self) -> str:
@@ -75,10 +76,16 @@ class FreeboxTrackerEntity(TrackerEntity):
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         return {
+            "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
             "manufacturer": self._device["vendor_name"],
         }
+
+    @property
+    def mac(self) -> str:
+        """Return the MAC address."""
+        return self._device["l2ident"]["id"]
 
     async def async_added_to_hass(self):
         """Register state update callback."""

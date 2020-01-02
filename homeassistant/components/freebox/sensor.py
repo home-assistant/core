@@ -4,6 +4,7 @@ from typing import Dict
 
 from aiofreepybox import Freepybox
 
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
@@ -33,6 +34,7 @@ class FbxSensor(Entity):
     def __init__(self, fbx: Freepybox, fbx_conf: Dict):
         """Initialize the sensor."""
         self._fbx = fbx
+        self._fbx_mac = fbx_conf["mac"]
         self._fbx_name = fbx_conf["model_info"]["pretty_name"]
         self._fbx_sw_v = fbx_conf["firmware_version"]
         self._state = None
@@ -68,6 +70,7 @@ class FbxSensor(Entity):
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         return {
+            "connections": {(CONNECTION_NETWORK_MAC, self._fbx_mac)},
             "identifiers": {(DOMAIN, self._fbx._access.base_url)},
             "name": self._fbx_name,
             "manufacturer": "Freebox SAS",
