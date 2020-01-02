@@ -27,7 +27,7 @@ _LOG = logging.getLogger(__name__)
 DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
 
 # Multiple choice for available Radar Map URL
-MULTIPLE_CHOICE = vol.All(vol.Coerce(str), vol.In(["NL", "BE"]))
+SUPPORTED_COUNTRY_CODES = vol.All(vol.Coerce(str), vol.In(["NL", "BE"]))
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = vol.All(
                 vol.Coerce(float), vol.Range(min=0)
             ),
             vol.Optional(CONF_NAME, default="Buienradar loop"): cv.string,
-            vol.Optional(CONF_COUNTRY, default="NL"): MULTIPLE_CHOICE,
+            vol.Optional(CONF_COUNTRY, default="NL"): SUPPORTED_COUNTRY_CODES,
         }
     )
 )
