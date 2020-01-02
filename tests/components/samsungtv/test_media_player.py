@@ -1,15 +1,16 @@
 """Tests for samsungtv component."""
 import asyncio
-from unittest.mock import call, patch
 from datetime import timedelta
-
 import logging
+from unittest.mock import call, patch
+
 from asynctest import mock
 import pytest
 from samsungctl import exceptions
-from tests.common import async_fire_time_changed
 import wakeonlan
+from websocket import WebSocketException
 
+from homeassistant.components import samsungtv
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
@@ -17,13 +18,12 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
+    MEDIA_TYPE_CHANNEL,
+    MEDIA_TYPE_URL,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     SUPPORT_TURN_ON,
-    MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_URL,
 )
-from homeassistant.components import samsungtv
 from homeassistant.components.samsungtv.const import DOMAIN as SAMSUNGTV_DOMAIN
 from homeassistant.components.samsungtv.media_player import (
     CONF_TIMEOUT,
@@ -54,6 +54,7 @@ from homeassistant.const import (
 )
 import homeassistant.util.dt as dt_util
 
+from tests.common import async_fire_time_changed
 
 ENTITY_ID = f"{DOMAIN}.fake"
 MOCK_CONFIG = {
@@ -363,6 +364,17 @@ async def test_send_key_unhandled_response(hass, remote):
     """Testing unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     remote.control = mock.Mock(side_effect=exceptions.UnhandledResponse("Boom"))
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
+
+
+async def test_send_key_websocketexception(hass, remote):
+    """Testing unhandled response exception."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+    remote.control = mock.Mock(side_effect=WebSocketException("Boom"))
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )

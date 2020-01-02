@@ -2,8 +2,8 @@
 import io
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.components import light, scene
+from homeassistant.setup import setup_component
 from homeassistant.util.yaml import loader as yaml_loader
 
 from tests.common import get_test_home_assistant

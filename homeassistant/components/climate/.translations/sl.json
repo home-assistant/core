@@ -4,7 +4,7 @@
             "set_hvac_mode": "Spremeni na\u010din HVAC na {entity_name}",
             "set_preset_mode": "Spremenite prednastavitev na {entity_name}"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_hvac_mode": "{entity_name} je nastavljen na dolo\u010den na\u010din HVAC",
             "is_preset_mode": "{entity_name} je nastavljen na dolo\u010den prednastavljeni na\u010din"
         },

@@ -13,8 +13,8 @@ from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
 )
-from .state_report import async_enable_proactive_mode
 from .smart_home import async_handle_message
+from .state_report import async_enable_proactive_mode
 
 _LOGGER = logging.getLogger(__name__)
 SMART_HOME_HTTP_ENDPOINT = "/api/alexa/smart_home"

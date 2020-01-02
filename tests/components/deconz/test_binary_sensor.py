@@ -2,11 +2,10 @@
 from copy import deepcopy
 
 from homeassistant.components import deconz
+import homeassistant.components.binary_sensor as binary_sensor
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.binary_sensor as binary_sensor
-
-from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
 
 SENSORS = {
     "1": {
@@ -95,7 +94,14 @@ async def test_binary_sensors(hass):
     vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
     assert vibration_sensor.state == "on"
 
-    gateway.api.sensors["1"].async_update({"state": {"presence": True}})
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "sensors",
+        "id": "1",
+        "state": {"presence": True},
+    }
+    gateway.api.async_event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
@@ -143,14 +149,14 @@ async def test_add_new_binary_sensor(hass):
     )
     assert len(gateway.deconz_ids) == 0
 
-    state_added = {
+    state_added_event = {
         "t": "event",
         "e": "added",
         "r": "sensors",
         "id": "1",
         "sensor": deepcopy(SENSORS["1"]),
     }
-    gateway.api.async_event_handler(state_added)
+    gateway.api.async_event_handler(state_added_event)
     await hass.async_block_till_done()
 
     assert "binary_sensor.presence_sensor" in gateway.deconz_ids

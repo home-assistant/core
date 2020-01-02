@@ -4,7 +4,7 @@ import logging
 import pypca
 from serial import SerialException
 
-from homeassistant.components.switch import SwitchDevice, ATTR_CURRENT_POWER_W
+from homeassistant.components.switch import ATTR_CURRENT_POWER_W, SwitchDevice
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)

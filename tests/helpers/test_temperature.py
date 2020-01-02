@@ -2,11 +2,11 @@
 import pytest
 
 from homeassistant.const import (
-    TEMP_CELSIUS,
-    PRECISION_WHOLE,
-    TEMP_FAHRENHEIT,
     PRECISION_HALVES,
     PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.temperature import display_temp
 

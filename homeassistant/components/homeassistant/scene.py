@@ -4,6 +4,8 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant import config as conf_util
+from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, STATES, Scene
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
@@ -11,21 +13,19 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     CONF_PLATFORM,
+    SERVICE_RELOAD,
     STATE_OFF,
     STATE_ON,
-    SERVICE_RELOAD,
 )
-from homeassistant.core import State, DOMAIN as HA_DOMAIN
-from homeassistant import config as conf_util
+from homeassistant.core import DOMAIN as HA_DOMAIN, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import async_get_integration
 from homeassistant.helpers import (
     config_per_platform,
     config_validation as cv,
     entity_platform,
 )
 from homeassistant.helpers.state import async_reproduce_state
-from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, STATES, Scene
+from homeassistant.loader import async_get_integration
 
 
 def _convert_states(states):
@@ -55,7 +55,22 @@ def _convert_states(states):
     return result
 
 
+def _ensure_no_intersection(value):
+    """Validate that entities and snapshot_entities do not overlap."""
+    if (
+        CONF_SNAPSHOT not in value
+        or CONF_ENTITIES not in value
+        or not any(
+            entity_id in value[CONF_SNAPSHOT] for entity_id in value[CONF_ENTITIES]
+        )
+    ):
+        return value
+
+    raise vol.Invalid("entities and snapshot_entities must not overlap")
+
+
 CONF_SCENE_ID = "scene_id"
+CONF_SNAPSHOT = "snapshot_entities"
 
 STATES_SCHEMA = vol.All(dict, _convert_states)
 
@@ -75,8 +90,16 @@ PLATFORM_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-CREATE_SCENE_SCHEMA = vol.Schema(
-    {vol.Required(CONF_SCENE_ID): cv.slug, vol.Required(CONF_ENTITIES): STATES_SCHEMA}
+CREATE_SCENE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_ENTITIES, CONF_SNAPSHOT),
+    _ensure_no_intersection,
+    vol.Schema(
+        {
+            vol.Required(CONF_SCENE_ID): cv.slug,
+            vol.Optional(CONF_ENTITIES, default={}): STATES_SCHEMA,
+            vol.Optional(CONF_SNAPSHOT, default=[]): cv.entity_ids,
+        }
+    ),
 )
 
 SERVICE_APPLY = "apply"
@@ -139,7 +162,24 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def create_service(call):
         """Create a scene."""
-        scene_config = SCENECONFIG(call.data[CONF_SCENE_ID], call.data[CONF_ENTITIES])
+        snapshot = call.data[CONF_SNAPSHOT]
+        entities = call.data[CONF_ENTITIES]
+
+        for entity_id in snapshot:
+            state = hass.states.get(entity_id)
+            if state is None:
+                _LOGGER.warning(
+                    "Entity %s does not exist and therefore cannot be snapshotted",
+                    entity_id,
+                )
+                continue
+            entities[entity_id] = State(entity_id, state.state, state.attributes)
+
+        if not entities:
+            _LOGGER.warning("Empty scenes are not allowed")
+            return
+
+        scene_config = SCENECONFIG(call.data[CONF_SCENE_ID], entities)
         entity_id = f"{SCENE_DOMAIN}.{scene_config.name}"
         old = platform.entities.get(entity_id)
         if old is not None:

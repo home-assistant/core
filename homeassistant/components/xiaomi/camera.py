@@ -1,20 +1,23 @@
 """This component provides support for Xiaomi Cameras."""
 import asyncio
+from ftplib import FTP, error_perm
 import logging
 
+from haffmpeg.camera import CameraMjpeg
+from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
-from homeassistant.exceptions import TemplateError
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_PATH,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
@@ -88,7 +91,6 @@ class XiaomiCamera(Camera):
 
     def get_latest_video_url(self, host):
         """Retrieve the latest video file from the Xiaomi Camera FTP server."""
-        from ftplib import FTP, error_perm
 
         ftp = FTP(host)
         try:
@@ -140,7 +142,6 @@ class XiaomiCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
 
         try:
             host = self.host.async_render()
@@ -162,7 +163,6 @@ class XiaomiCamera(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        from haffmpeg.camera import CameraMjpeg
 
         stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
         await stream.open_camera(self._last_url, extra_cmd=self._extra_arguments)

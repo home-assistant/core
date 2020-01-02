@@ -2,6 +2,15 @@
 import unittest
 
 from homeassistant.components import vacuum
+from homeassistant.components.demo.vacuum import (
+    DEMO_VACUUM_BASIC,
+    DEMO_VACUUM_COMPLETE,
+    DEMO_VACUUM_MINIMAL,
+    DEMO_VACUUM_MOST,
+    DEMO_VACUUM_NONE,
+    DEMO_VACUUM_STATE,
+    FAN_SPEEDS,
+)
 from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
@@ -13,20 +22,11 @@ from homeassistant.components.vacuum import (
     ENTITY_ID_ALL_VACUUMS,
     SERVICE_SEND_COMMAND,
     SERVICE_SET_FAN_SPEED,
-    STATE_DOCKED,
     STATE_CLEANING,
-    STATE_PAUSED,
+    STATE_DOCKED,
     STATE_IDLE,
+    STATE_PAUSED,
     STATE_RETURNING,
-)
-from homeassistant.components.demo.vacuum import (
-    DEMO_VACUUM_BASIC,
-    DEMO_VACUUM_COMPLETE,
-    DEMO_VACUUM_MINIMAL,
-    DEMO_VACUUM_MOST,
-    DEMO_VACUUM_NONE,
-    DEMO_VACUUM_STATE,
-    FAN_SPEEDS,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -39,7 +39,6 @@ from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, mock_service
 from tests.components.vacuum import common
-
 
 ENTITY_VACUUM_BASIC = "{}.{}".format(DOMAIN, DEMO_VACUUM_BASIC).lower()
 ENTITY_VACUUM_COMPLETE = "{}.{}".format(DOMAIN, DEMO_VACUUM_COMPLETE).lower()

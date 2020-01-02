@@ -1,6 +1,7 @@
 """Webhook tests for mobile_app."""
 
 import logging
+
 import pytest
 
 from homeassistant.components.mobile_app.const import CONF_SECRET
@@ -9,9 +10,9 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
-
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
+
+from tests.common import async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -216,3 +217,23 @@ async def test_webhook_requires_encryption(webhook_client, create_registrations)
     assert "error" in webhook_json
     assert webhook_json["success"] is False
     assert webhook_json["error"]["code"] == "encryption_required"
+
+
+async def test_webhook_update_location(hass, webhook_client, create_registrations):
+    """Test that encrypted registrations only accept encrypted data."""
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "update_location",
+            "data": {"gps": [1, 2], "gps_accuracy": 10, "altitude": -10},
+        },
+    )
+
+    assert resp.status == 200
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.attributes["latitude"] == 1.0
+    assert state.attributes["longitude"] == 2.0
+    assert state.attributes["gps_accuracy"] == 10
+    assert state.attributes["altitude"] == -10

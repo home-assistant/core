@@ -26,10 +26,10 @@ SUPPORTED_PLATFORMS = [
     "switch",
 ]
 
-NEW_GROUP = "group"
-NEW_LIGHT = "light"
-NEW_SCENE = "scene"
-NEW_SENSOR = "sensor"
+NEW_GROUP = "groups"
+NEW_LIGHT = "lights"
+NEW_SCENE = "scenes"
+NEW_SENSOR = "sensors"
 
 NEW_DEVICE = {
     NEW_GROUP: "deconz_new_group_{}",

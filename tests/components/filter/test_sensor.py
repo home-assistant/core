@@ -6,17 +6,18 @@ from unittest.mock import patch
 from homeassistant.components.filter.sensor import (
     LowPassFilter,
     OutlierFilter,
+    RangeFilter,
     ThrottleFilter,
     TimeSMAFilter,
-    RangeFilter,
     TimeThrottleFilter,
 )
-import homeassistant.util.dt as dt_util
-from homeassistant.setup import setup_component
 import homeassistant.core as ha
+from homeassistant.setup import setup_component
+import homeassistant.util.dt as dt_util
+
 from tests.common import (
-    get_test_home_assistant,
     assert_setup_component,
+    get_test_home_assistant,
     init_recorder_component,
 )
 
@@ -27,6 +28,7 @@ class TestFilterSensor(unittest.TestCase):
     def setup_method(self, method):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config.components.add("history")
         raw_values = [20, 19, 18, 21, 22, 0]
         self.values = []
 
@@ -115,11 +117,11 @@ class TestFilterSensor(unittest.TestCase):
             }
 
         with patch(
-            "homeassistant.components.history." "state_changes_during_period",
+            "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ):
             with patch(
-                "homeassistant.components.history." "get_last_state_changes",
+                "homeassistant.components.history.get_last_state_changes",
                 return_value=fake_states,
             ):
                 with assert_setup_component(1, "sensor"):
@@ -163,11 +165,11 @@ class TestFilterSensor(unittest.TestCase):
             ]
         }
         with patch(
-            "homeassistant.components.history." "state_changes_during_period",
+            "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ):
             with patch(
-                "homeassistant.components.history." "get_last_state_changes",
+                "homeassistant.components.history.get_last_state_changes",
                 return_value=fake_states,
             ):
                 with assert_setup_component(1, "sensor"):

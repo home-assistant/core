@@ -1,7 +1,7 @@
 """Support for Belkin WeMo lights."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import async_timeout
 from pywemo import discovery
@@ -9,15 +9,15 @@ import requests
 
 from homeassistant import util
 from homeassistant.components.light import (
-    Light,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
+    Light,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.util.color as color_util

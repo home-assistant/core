@@ -3,7 +3,7 @@
   "name": "Nsw rural fire service feed",
   "documentation": "https://www.home-assistant.io/integrations/nsw_rural_fire_service_feed",
   "requirements": [
-    "geojson_client==0.4"
+    "aio_geojson_nsw_rfs_incidents==0.1"
   ],
   "dependencies": [],
   "codeowners": [

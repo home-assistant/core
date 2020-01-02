@@ -2,7 +2,7 @@
   "domain": "seven_segments",
   "name": "Seven segments",
   "documentation": "https://www.home-assistant.io/integrations/seven_segments",
-  "requirements": [],
+  "requirements": ["pillow==6.2.1"],
   "dependencies": [],
   "codeowners": []
 }

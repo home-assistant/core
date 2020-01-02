@@ -2,11 +2,12 @@
 import asyncio
 from datetime import timedelta
 
-from samsungctl import exceptions as samsung_exceptions, Remote as SamsungRemote
+from samsungctl import Remote as SamsungRemote, exceptions as samsung_exceptions
 import voluptuous as vol
 import wakeonlan
+from websocket import WebSocketException
 
-from homeassistant.components.media_player import MediaPlayerDevice, DEVICE_CLASS_TV
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -183,8 +184,13 @@ class SamsungTVDevice(MediaPlayerDevice):
                 try:
                     self.get_remote().control(key)
                     break
-                except (samsung_exceptions.ConnectionClosed, BrokenPipeError):
+                except (
+                    samsung_exceptions.ConnectionClosed,
+                    BrokenPipeError,
+                    WebSocketException,
+                ):
                     # BrokenPipe can occur when the commands is sent to fast
+                    # WebSocketException can occur when timed out
                     self._remote = None
             self._state = STATE_ON
         except AttributeError:
@@ -197,6 +203,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return
         except OSError:
+            # Different reasons, e.g. hostname not resolveable
             self._state = STATE_OFF
             self._remote = None
         if self._power_off_in_progress():

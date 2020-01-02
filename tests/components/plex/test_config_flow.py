@@ -9,9 +9,9 @@ from homeassistant.components.plex import config_flow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN, CONF_URL
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
 from .mock_classes import MOCK_SERVERS, MockPlexAccount, MockPlexServer
+
+from tests.common import MockConfigEntry
 
 MOCK_TOKEN = "secret_token"
 MOCK_FILE_CONTENTS = {
@@ -178,9 +178,8 @@ async def test_import_bad_hostname(hass):
                 CONF_URL: f"http://{MOCK_SERVERS[0][CONF_HOST]}:{MOCK_SERVERS[0][CONF_PORT]}",
             },
         )
-        assert result["type"] == "form"
-        assert result["step_id"] == "start_website_auth"
-        assert result["errors"]["base"] == "not_found"
+        assert result["type"] == "abort"
+        assert result["reason"] == "non-interactive"
 
 
 async def test_unknown_exception(hass):
@@ -384,12 +383,14 @@ async def test_already_configured(hass):
     mock_plex_server = MockPlexServer()
 
     flow = init_config_flow(hass)
+    flow.context = {"source": "import"}
     MockConfigEntry(
         domain=config_flow.DOMAIN,
         data={
+            config_flow.CONF_SERVER: MOCK_SERVERS[0][config_flow.CONF_SERVER],
             config_flow.CONF_SERVER_IDENTIFIER: MOCK_SERVERS[0][
                 config_flow.CONF_SERVER_IDENTIFIER
-            ]
+            ],
         },
     ).add_to_hass(hass)
 
@@ -530,3 +531,20 @@ async def test_callback_view(hass, aiohttp_client):
 
         resp = await client.get(forward_url)
         assert resp.status == 200
+
+
+async def test_multiple_servers_with_import(hass):
+    """Test importing a config with multiple servers available."""
+
+    with patch(
+        "plexapi.myplex.MyPlexAccount", return_value=MockPlexAccount(servers=2)
+    ), asynctest.patch("plexauth.PlexAuth.initiate_auth"), asynctest.patch(
+        "plexauth.PlexAuth.token", return_value=MOCK_TOKEN
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN,
+            context={"source": "import"},
+            data={CONF_TOKEN: MOCK_TOKEN},
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "non-interactive"

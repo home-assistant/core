@@ -15,7 +15,6 @@ import xmltodict
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_ENQUEUE,
-    DOMAIN,
     MEDIA_TYPE_MUSIC,
     SUPPORT_CLEAR_PLAYLIST,
     SUPPORT_NEXT_TRACK,
@@ -51,6 +50,14 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
 
+from .const import (
+    DOMAIN,
+    SERVICE_CLEAR_TIMER,
+    SERVICE_JOIN,
+    SERVICE_SET_TIMER,
+    SERVICE_UNJOIN,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BLUESOUND_GROUP = "bluesound_group"
@@ -62,10 +69,6 @@ DEFAULT_PORT = 11000
 NODE_OFFLINE_CHECK_TIMEOUT = 180
 NODE_RETRY_INITIATION = timedelta(minutes=3)
 
-SERVICE_CLEAR_TIMER = "bluesound_clear_sleep_timer"
-SERVICE_JOIN = "bluesound_join"
-SERVICE_SET_TIMER = "bluesound_set_sleep_timer"
-SERVICE_UNJOIN = "bluesound_unjoin"
 STATE_GROUPED = "grouped"
 SYNC_STATUS_INTERVAL = timedelta(minutes=5)
 

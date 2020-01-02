@@ -1,12 +1,12 @@
 """Support for functionality to keep track of the sun."""
-import logging
 from datetime import timedelta
+import logging
 
 from homeassistant.const import (
     CONF_ELEVATION,
+    EVENT_CORE_CONFIG_UPDATE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
-    EVENT_CORE_CONFIG_UPDATE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
@@ -16,7 +16,6 @@ from homeassistant.helpers.sun import (
     get_location_astral_event_next,
 )
 from homeassistant.util import dt as dt_util
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 

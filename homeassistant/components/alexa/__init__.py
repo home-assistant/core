@@ -3,25 +3,24 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entityfilter
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers import config_validation as cv, entityfilter
 
 from . import flash_briefings, intent, smart_home_http
 from .const import (
     CONF_AUDIO,
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
+    CONF_DESCRIPTION,
+    CONF_DISPLAY_CATEGORIES,
     CONF_DISPLAY_URL,
     CONF_ENDPOINT,
+    CONF_ENTITY_CONFIG,
+    CONF_FILTER,
     CONF_TEXT,
     CONF_TITLE,
     CONF_UID,
     DOMAIN,
-    CONF_FILTER,
-    CONF_ENTITY_CONFIG,
-    CONF_DESCRIPTION,
-    CONF_DISPLAY_CATEGORIES,
 )
 
 _LOGGER = logging.getLogger(__name__)

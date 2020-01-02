@@ -5,22 +5,23 @@ from itertools import chain
 import logging
 
 from homeassistant import config as conf_util
-from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_SCAN_INTERVAL,
     CONF_ENTITY_NAMESPACE,
+    CONF_SCAN_INTERVAL,
     ENTITY_MATCH_ALL,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, discovery
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.service import async_extract_entity_ids
-from homeassistant.loader import bind_hass, async_get_integration
+from homeassistant.loader import async_get_integration, bind_hass
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util import slugify
-from .entity_platform import EntityPlatform
 
+from .entity_platform import EntityPlatform
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -29,7 +30,7 @@ DATA_INSTANCES = "entity_components"
 
 
 @bind_hass
-async def async_update_entity(hass, entity_id):
+async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Trigger an update for an entity."""
     domain = entity_id.split(".", 1)[0]
     entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
@@ -158,7 +159,7 @@ class EntityComponent:
 
         return await self._platforms[key].async_setup_entry(config_entry)
 
-    async def async_unload_entry(self, config_entry):
+    async def async_unload_entry(self, config_entry: ConfigEntry) -> bool:
         """Unload a config entry."""
         key = config_entry.entry_id
 
@@ -173,24 +174,16 @@ class EntityComponent:
     async def async_extract_from_service(self, service, expand_group=True):
         """Extract all known and available entities from a service call.
 
-        Will return all entities if no entities specified in call.
         Will return an empty list if entities specified but unknown.
 
         This method must be run in the event loop.
         """
         data_ent_id = service.data.get(ATTR_ENTITY_ID)
 
-        if data_ent_id in (None, ENTITY_MATCH_ALL):
-            if data_ent_id is None:
-                self.logger.warning(
-                    "Not passing an entity ID to a service to target all "
-                    "entities is deprecated. Update your call to %s.%s to be "
-                    "instead: entity_id: %s",
-                    service.domain,
-                    service.service,
-                    ENTITY_MATCH_ALL,
-                )
+        if data_ent_id is None:
+            return []
 
+        if data_ent_id == ENTITY_MATCH_ALL:
             return [entity for entity in self.entities if entity.available]
 
         entity_ids = await async_extract_entity_ids(self.hass, service, expand_group)
@@ -204,7 +197,7 @@ class EntityComponent:
     def async_register_entity_service(self, name, schema, func, required_features=None):
         """Register an entity service."""
         if isinstance(schema, dict):
-            schema = ENTITY_SERVICE_SCHEMA.extend(schema)
+            schema = make_entity_service_schema(schema)
 
         async def handle_service(call):
             """Handle the service."""
@@ -245,7 +238,7 @@ class EntityComponent:
         await self._platforms[key].async_setup(platform_config, discovery_info)
 
     @callback
-    def _async_update_group(self):
+    def _async_update_group(self) -> None:
         """Set up and/or update component group.
 
         This method must be run in the event loop.
@@ -273,7 +266,7 @@ class EntityComponent:
             )
         )
 
-    async def _async_reset(self):
+    async def _async_reset(self) -> None:
         """Remove entities and reset the entity component to initial values.
 
         This method must be run in the event loop.
@@ -291,7 +284,7 @@ class EntityComponent:
                 "group", "remove", dict(object_id=slugify(self.group_name))
             )
 
-    async def async_remove_entity(self, entity_id):
+    async def async_remove_entity(self, entity_id: str) -> None:
         """Remove an entity managed by one of the platforms."""
         for platform in self._platforms.values():
             if entity_id in platform.entities:

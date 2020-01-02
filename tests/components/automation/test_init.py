@@ -1,28 +1,28 @@
 """The tests for the automation component."""
 from datetime import timedelta
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.core import State, CoreState, Context
-from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
 from homeassistant.const import (
-    ATTR_NAME,
     ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
-    EVENT_HOMEASSISTANT_START,
+    ATTR_NAME,
     EVENT_AUTOMATION_TRIGGERED,
+    EVENT_HOMEASSISTANT_START,
+    STATE_OFF,
+    STATE_ON,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import Context, CoreState, State
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
-    mock_restore_cache,
     async_mock_service,
+    mock_restore_cache,
 )
 from tests.components.automation import common
 
@@ -445,7 +445,7 @@ async def test_services(hass, calls):
     assert automation.is_on(hass, entity_id)
 
 
-async def test_reload_config_service(hass, calls):
+async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_only_user):
     """Test the reload config service."""
     assert await async_setup_component(
         hass,
@@ -488,7 +488,10 @@ async def test_reload_config_service(hass, calls):
         },
     ):
         with patch("homeassistant.config.find_config_file", return_value=""):
-            await common.async_reload(hass)
+            with pytest.raises(Unauthorized):
+                await common.async_reload(hass, Context(user_id=hass_read_only_user.id))
+                await hass.async_block_till_done()
+            await common.async_reload(hass, Context(user_id=hass_admin_user.id))
             await hass.async_block_till_done()
             # De-flake ?!
             await hass.async_block_till_done()

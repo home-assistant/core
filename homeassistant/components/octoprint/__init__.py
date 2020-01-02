@@ -2,23 +2,23 @@
 import logging
 import time
 
+from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
-from aiohttp.hdrs import CONTENT_TYPE
 
 from homeassistant.components.discovery import SERVICE_OCTOPRINT
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_BINARY_SENSORS,
     CONF_HOST,
-    CONTENT_TYPE_JSON,
+    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PATH,
     CONF_PORT,
-    CONF_SSL,
-    TEMP_CELSIUS,
-    CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
-    CONF_BINARY_SENSORS,
+    CONF_SSL,
+    CONTENT_TYPE_JSON,
+    TEMP_CELSIUS,
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv

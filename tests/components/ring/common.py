@@ -1,6 +1,6 @@
 """Common methods used across the tests for ring devices."""
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_SCAN_INTERVAL
 from homeassistant.components.ring import DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
 

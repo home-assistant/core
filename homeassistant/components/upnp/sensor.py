@@ -154,7 +154,7 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
     """Abstract representation of a X Sent/Received per second sensor."""
 
     def __init__(self, device, direction):
-        """Initializer."""
+        """Initialize sensor."""
         super().__init__(device)
         self._direction = direction
 
@@ -189,7 +189,7 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
-        return f"{self.unit}/sec"
+        return f"{self.unit}/s"
 
     def _is_overflowed(self, new_value) -> bool:
         """Check if value has overflowed."""
@@ -222,7 +222,7 @@ class KBytePerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
     @property
     def unit(self) -> str:
         """Get unit we are measuring in."""
-        return "kbyte"
+        return "kB"
 
     async def _async_fetch_value(self) -> float:
         """Fetch value from device."""

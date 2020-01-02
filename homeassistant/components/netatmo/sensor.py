@@ -1,7 +1,7 @@
 """Support for the Netatmo Weather Service."""
+from datetime import timedelta
 import logging
 import threading
-from datetime import timedelta
 from time import time
 
 import pyatmo
@@ -9,19 +9,20 @@ import requests
 import urllib3
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
     CONF_MODE,
-    TEMP_CELSIUS,
+    CONF_NAME,
+    DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
-    DEVICE_CLASS_BATTERY,
+    TEMP_CELSIUS,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import call_later
 from homeassistant.util import Throttle
+
 from .const import DATA_NETATMO_AUTH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -155,14 +156,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             for module in all_module_infos.values():
                 if module["module_name"] not in module_names:
                     continue
+                _LOGGER.debug(
+                    "Adding module %s %s", module["module_name"], module["id"]
+                )
                 for condition in data.station_data.monitoredConditions(
                     moduleId=module["id"]
                 ):
-                    _LOGGER.debug(
-                        "Adding %s %s",
-                        module["module_name"],
-                        data.station_data.moduleById(mid=module["id"]),
-                    )
                     entities.append(NetatmoSensor(data, module, condition.lower()))
             return entities
 
@@ -200,18 +199,26 @@ class NetatmoSensor(Entity):
     def __init__(self, netatmo_data, module_info, sensor_type):
         """Initialize the sensor."""
         self.netatmo_data = netatmo_data
-        module = self.netatmo_data.station_data.moduleById(mid=module_info["id"])
-        if module["type"] == "NHC":
+
+        device = self.netatmo_data.station_data.moduleById(mid=module_info["id"])
+        if not device:
+            # Assume it's a station if module can't be found
+            device = self.netatmo_data.station_data.stationById(sid=module_info["id"])
+
+        if device["type"] == "NHC":
             self.module_name = module_info["station_name"]
         else:
-            self.module_name = module_info["module_name"]
+            self.module_name = (
+                f"{module_info['station_name']} {module_info['module_name']}"
+            )
+
         self._name = f"{DOMAIN} {self.module_name} {SENSOR_TYPES[sensor_type][0]}"
         self.type = sensor_type
         self._state = None
         self._device_class = SENSOR_TYPES[self.type][3]
         self._icon = SENSOR_TYPES[self.type][2]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self._module_type = module["type"]
+        self._module_type = device["type"]
         self._module_id = module_info["id"]
         self._unique_id = f"{self._module_id}-{self.type}"
 
@@ -541,13 +548,18 @@ class NetatmoData:
         self.data = {}
         self.station_data = self.data_class(self.auth)
         self.station = station
+        self.station_id = None
+        if station:
+            station_data = self.station_data.stationByName(self.station)
+            if station_data:
+                self.station_id = station_data.get("_id")
         self._next_update = time()
         self._update_in_progress = threading.Lock()
 
     def get_module_infos(self):
         """Return all modules available on the API as a dict."""
-        if self.station is not None:
-            return self.station_data.getModules(station=self.station)
+        if self.station_id is not None:
+            return self.station_data.getModules(station_id=self.station_id)
         return self.station_data.getModules()
 
     def update(self):
@@ -573,7 +585,7 @@ class NetatmoData:
                 return
 
             data = self.station_data.lastData(
-                station=self.station, exclude=3600, byId=True
+                station=self.station_id, exclude=3600, byId=True
             )
             if not data:
                 self._next_update = time() + NETATMO_UPDATE_INTERVAL

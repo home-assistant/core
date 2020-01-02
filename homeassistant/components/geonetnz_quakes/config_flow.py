@@ -17,13 +17,13 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import (
+    CONF_MINIMUM_MAGNITUDE,
     CONF_MMI,
+    DEFAULT_MINIMUM_MAGNITUDE,
     DEFAULT_MMI,
     DEFAULT_RADIUS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    DEFAULT_MINIMUM_MAGNITUDE,
-    CONF_MINIMUM_MAGNITUDE,
 )
 
 _LOGGER = logging.getLogger(__name__)

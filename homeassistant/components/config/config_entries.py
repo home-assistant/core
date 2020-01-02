@@ -33,6 +33,7 @@ async def async_setup(hass):
     hass.components.websocket_api.async_register_command(config_entries_progress)
     hass.components.websocket_api.async_register_command(system_options_list)
     hass.components.websocket_api.async_register_command(system_options_update)
+    hass.components.websocket_api.async_register_command(ignore_config_flow)
 
     return True
 
@@ -284,3 +285,37 @@ async def system_options_update(hass, connection, msg):
 
     hass.config_entries.async_update_entry(entry, system_options=changes)
     connection.send_result(msg["id"], entry.system_options.as_dict())
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command({"type": "config_entries/ignore_flow", "flow_id": str})
+async def ignore_config_flow(hass, connection, msg):
+    """Ignore a config flow."""
+    flow = next(
+        (
+            flw
+            for flw in hass.config_entries.flow.async_progress()
+            if flw["flow_id"] == msg["flow_id"]
+        ),
+        None,
+    )
+
+    if flow is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
+        )
+        return
+
+    if "unique_id" not in flow["context"]:
+        connection.send_error(
+            msg["id"], "no_unique_id", "Specified flow has no unique ID."
+        )
+        return
+
+    await hass.config_entries.flow.async_init(
+        flow["handler"],
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={"unique_id": flow["context"]["unique_id"]},
+    )
+    connection.send_result(msg["id"])

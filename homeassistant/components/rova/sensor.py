@@ -3,6 +3,8 @@
 from datetime import datetime, timedelta
 import logging
 
+from requests.exceptions import ConnectTimeout, HTTPError
+from rova.rova import Rova
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -49,8 +51,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the Rova data service and sensors."""
-    from rova.rova import Rova
-    from requests.exceptions import HTTPError, ConnectTimeout
 
     zip_code = config[CONF_ZIP_CODE]
     house_number = config[CONF_HOUSE_NUMBER]
@@ -132,7 +132,6 @@ class RovaData:
     @Throttle(UPDATE_DELAY)
     def update(self):
         """Update the data from the Rova API."""
-        from requests.exceptions import HTTPError, ConnectTimeout
 
         try:
             items = self.api.get_calendar_items()

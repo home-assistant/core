@@ -1,11 +1,11 @@
 """The tests for the notify smtp platform."""
+import re
 import unittest
 from unittest.mock import patch
 
 from homeassistant.components.smtp.notify import MailNotificationService
 
 from tests.common import get_test_home_assistant
-import re
 
 
 class MockSMTP(MailNotificationService):

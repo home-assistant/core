@@ -33,6 +33,7 @@
         "step": {
             "init": {
                 "data": {
+                    "name": "Nome del servizio di notifica (la modifica richiede il riavvio)",
                     "recipient": "Destinatari della notifica SMS",
                     "track_new_devices": "Traccia nuovi dispositivi"
                 }

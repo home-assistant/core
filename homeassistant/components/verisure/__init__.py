@@ -1,10 +1,10 @@
 """Support for Verisure devices."""
+from datetime import timedelta
 import logging
 import threading
-from datetime import timedelta
+
 from jsonpath import jsonpath
 import verisure
-
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -14,8 +14,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import discovery
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 

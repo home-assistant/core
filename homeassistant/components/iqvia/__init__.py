@@ -4,8 +4,7 @@ from datetime import timedelta
 import logging
 
 from pyiqvia import Client
-from pyiqvia.errors import IQVIAError, InvalidZipError
-
+from pyiqvia.errors import InvalidZipError, IQVIAError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT

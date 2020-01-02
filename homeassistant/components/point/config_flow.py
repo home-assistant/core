@@ -4,6 +4,7 @@ from collections import OrderedDict
 import logging
 
 import async_timeout
+from pypoint import PointSession
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -109,7 +110,6 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
     async def _get_authorization_url(self):
         """Create Minut Point session and get authorization url."""
-        from pypoint import PointSession
 
         flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
         client_id = flow[CLIENT_ID]
@@ -138,7 +138,6 @@ class PointFlowHandler(config_entries.ConfigFlow):
 
     async def _async_create_session(self, code):
         """Create point session and entries."""
-        from pypoint import PointSession
 
         flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
         client_id = flow[CLIENT_ID]

@@ -1,5 +1,6 @@
 """Support for HomematicIP Cloud binary sensor."""
 import logging
+from typing import Any, Dict
 
 from homematicip.aio.device import (
     AsyncAccelerationSensor,
@@ -72,7 +73,9 @@ SAM_DEVICE_ATTRIBUTES = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+) -> None:
     """Set up the HomematicIP Cloud binary sensor devices."""
     pass
 
@@ -82,17 +85,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
-    devices = []
+    entities = []
     for device in hap.home.devices:
         if isinstance(device, AsyncAccelerationSensor):
-            devices.append(HomematicipAccelerationSensor(hap, device))
+            entities.append(HomematicipAccelerationSensor(hap, device))
         if isinstance(device, (AsyncContactInterface, AsyncFullFlushContactInterface)):
-            devices.append(HomematicipContactInterface(hap, device))
+            entities.append(HomematicipContactInterface(hap, device))
         if isinstance(
             device,
             (AsyncShutterContact, AsyncShutterContactMagnetic, AsyncRotaryHandleSensor),
         ):
-            devices.append(HomematicipShutterContact(hap, device))
+            entities.append(HomematicipShutterContact(hap, device))
         if isinstance(
             device,
             (
@@ -101,31 +104,31 @@ async def async_setup_entry(
                 AsyncMotionDetectorPushButton,
             ),
         ):
-            devices.append(HomematicipMotionDetector(hap, device))
+            entities.append(HomematicipMotionDetector(hap, device))
         if isinstance(device, AsyncPresenceDetectorIndoor):
-            devices.append(HomematicipPresenceDetector(hap, device))
+            entities.append(HomematicipPresenceDetector(hap, device))
         if isinstance(device, AsyncSmokeDetector):
-            devices.append(HomematicipSmokeDetector(hap, device))
+            entities.append(HomematicipSmokeDetector(hap, device))
         if isinstance(device, AsyncWaterSensor):
-            devices.append(HomematicipWaterDetector(hap, device))
+            entities.append(HomematicipWaterDetector(hap, device))
         if isinstance(device, (AsyncWeatherSensorPlus, AsyncWeatherSensorPro)):
-            devices.append(HomematicipRainSensor(hap, device))
+            entities.append(HomematicipRainSensor(hap, device))
         if isinstance(
             device, (AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
         ):
-            devices.append(HomematicipStormSensor(hap, device))
-            devices.append(HomematicipSunshineSensor(hap, device))
+            entities.append(HomematicipStormSensor(hap, device))
+            entities.append(HomematicipSunshineSensor(hap, device))
         if isinstance(device, AsyncDevice) and device.lowBat is not None:
-            devices.append(HomematicipBatterySensor(hap, device))
+            entities.append(HomematicipBatterySensor(hap, device))
 
     for group in hap.home.groups:
         if isinstance(group, AsyncSecurityGroup):
-            devices.append(HomematicipSecuritySensorGroup(hap, group))
+            entities.append(HomematicipSecuritySensorGroup(hap, group))
         elif isinstance(group, AsyncSecurityZoneGroup):
-            devices.append(HomematicipSecurityZoneSensorGroup(hap, group))
+            entities.append(HomematicipSecurityZoneSensorGroup(hap, group))
 
-    if devices:
-        async_add_entities(devices)
+    if entities:
+        async_add_entities(entities)
 
 
 class HomematicipAccelerationSensor(HomematicipGenericDevice, BinarySensorDevice):
@@ -142,7 +145,7 @@ class HomematicipAccelerationSensor(HomematicipGenericDevice, BinarySensorDevice
         return self._device.accelerationSensorTriggered
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the acceleration sensor."""
         state_attr = super().device_state_attributes
 
@@ -296,7 +299,7 @@ class HomematicipSunshineSensor(HomematicipGenericDevice, BinarySensorDevice):
         return self._device.sunshine
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the illuminance sensor."""
         state_attr = super().device_state_attributes
 
@@ -346,7 +349,7 @@ class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice, BinarySensorD
         return True
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the security zone group."""
         state_attr = super().device_state_attributes
 
@@ -390,7 +393,7 @@ class HomematicipSecuritySensorGroup(
         super().__init__(hap, device, "Sensors")
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the security group."""
         state_attr = super().device_state_attributes
 

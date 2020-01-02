@@ -4,11 +4,10 @@ from copy import deepcopy
 from asynctest import patch
 
 from homeassistant.components import deconz
+import homeassistant.components.switch as switch
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.switch as switch
-
-from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
 
 SWITCHES = {
     "1": {
@@ -85,11 +84,22 @@ async def test_switches(hass):
     warning_device = hass.states.get("switch.warning_device")
     assert warning_device.state == "on"
 
-    on_off_switch_device = gateway.api.lights["1"]
-    warning_device_device = gateway.api.lights["3"]
-
-    on_off_switch_device.async_update({"state": {"on": False}})
-    warning_device_device.async_update({"state": {"alert": None}})
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "lights",
+        "id": "1",
+        "state": {"on": False},
+    }
+    gateway.api.async_event_handler(state_changed_event)
+    state_changed_event = {
+        "t": "event",
+        "e": "changed",
+        "r": "lights",
+        "id": "3",
+        "state": {"alert": None},
+    }
+    gateway.api.async_event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     on_off_switch = hass.states.get("switch.on_off_switch")
@@ -98,8 +108,10 @@ async def test_switches(hass):
     warning_device = hass.states.get("switch.warning_device")
     assert warning_device.state == "off"
 
+    on_off_switch_device = gateway.api.lights["1"]
+
     with patch.object(
-        on_off_switch_device, "_async_set_callback", return_value=True
+        on_off_switch_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
             switch.DOMAIN,
@@ -108,10 +120,10 @@ async def test_switches(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("/lights/1/state", {"on": True})
+        set_callback.assert_called_with("put", "/lights/1/state", json={"on": True})
 
     with patch.object(
-        on_off_switch_device, "_async_set_callback", return_value=True
+        on_off_switch_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
             switch.DOMAIN,
@@ -120,10 +132,12 @@ async def test_switches(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("/lights/1/state", {"on": False})
+        set_callback.assert_called_with("put", "/lights/1/state", json={"on": False})
+
+    warning_device_device = gateway.api.lights["3"]
 
     with patch.object(
-        warning_device_device, "_async_set_callback", return_value=True
+        warning_device_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
             switch.DOMAIN,
@@ -132,10 +146,12 @@ async def test_switches(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("/lights/3/state", {"alert": "lselect"})
+        set_callback.assert_called_with(
+            "put", "/lights/3/state", json={"alert": "lselect"}
+        )
 
     with patch.object(
-        warning_device_device, "_async_set_callback", return_value=True
+        warning_device_device, "_request", return_value=True
     ) as set_callback:
         await hass.services.async_call(
             switch.DOMAIN,
@@ -144,7 +160,9 @@ async def test_switches(hass):
             blocking=True,
         )
         await hass.async_block_till_done()
-        set_callback.assert_called_with("/lights/3/state", {"alert": "none"})
+        set_callback.assert_called_with(
+            "put", "/lights/3/state", json={"alert": "none"}
+        )
 
     await gateway.async_reset()
 

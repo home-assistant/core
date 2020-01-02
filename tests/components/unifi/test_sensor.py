@@ -2,9 +2,8 @@
 from copy import deepcopy
 
 from homeassistant.components import unifi
-from homeassistant.setup import async_setup_component
-
 import homeassistant.components.sensor as sensor
+from homeassistant.setup import async_setup_component
 
 from .test_controller import ENTRY_CONFIG, SITES, setup_unifi_integration
 

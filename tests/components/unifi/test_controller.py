@@ -2,12 +2,11 @@
 from collections import deque
 from datetime import timedelta
 
+import aiounifi
 from asynctest import Mock, patch
-
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components import unifi
 from homeassistant.components.unifi.const import (
     CONF_CONTROLLER,
@@ -22,7 +21,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-import aiounifi
+from homeassistant.exceptions import ConfigEntryNotReady
 
 CONTROLLER_HOST = {
     "hostname": "controller_host",
@@ -60,6 +59,7 @@ async def setup_unifi_integration(
     clients_response,
     devices_response,
     clients_all_response,
+    known_wireless_clients=None,
 ):
     """Create the UniFi controller."""
     if UNIFI_CONFIG not in hass.data:
@@ -76,6 +76,11 @@ async def setup_unifi_integration(
         options=options,
         entry_id=1,
     )
+
+    if known_wireless_clients:
+        hass.data[UNIFI_WIRELESS_CLIENTS].update_data(
+            known_wireless_clients, config_entry
+        )
 
     mock_client_responses = deque()
     mock_client_responses.append(clients_response)

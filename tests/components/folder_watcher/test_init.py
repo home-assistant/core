@@ -1,9 +1,10 @@
 """The tests for the folder_watcher component."""
-from unittest.mock import Mock, patch
 import os
+from unittest.mock import Mock, patch
 
 from homeassistant.components import folder_watcher
 from homeassistant.setup import async_setup_component
+
 from tests.common import MockDependency
 
 

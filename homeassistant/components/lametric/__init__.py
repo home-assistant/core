@@ -1,6 +1,7 @@
 """Support for LaMetric time."""
 import logging
 
+from lmnotify import LaMetricManager
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -50,7 +51,6 @@ class HassLaMetricManager:
 
     def __init__(self, client_id, client_secret):
         """Initialize HassLaMetricManager and connect to LaMetric."""
-        from lmnotify import LaMetricManager
 
         _LOGGER.debug("Connecting to LaMetric")
         self.manager = LaMetricManager(client_id, client_secret)
