@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_HOST,
-    CONF_NAME,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_ZONE,
@@ -20,8 +19,9 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
+from .config_flow import get_entry_config
 from .const import (
-    DEFAULT_NAME,
+    CONF_UUID,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -41,36 +41,22 @@ def _optional_zone(value):
     return ZONE_SCHEMA({})
 
 
-def _zone_name_validator(config):
-    for zone, zone_config in config[CONF_ZONE].items():
-        if CONF_NAME not in zone_config:
-            zone_config[CONF_NAME] = "{} ({}:{}) - {}".format(
-                DEFAULT_NAME, config[CONF_HOST], config[CONF_PORT], zone
-            )
-    return config
+ZONES = [1, 2]
 
-
-ZONE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(SERVICE_TURN_ON): cv.SERVICE_SCHEMA,
-    }
-)
+ZONE_SCHEMA = vol.Schema({vol.Optional(SERVICE_TURN_ON): cv.SERVICE_SCHEMA})
 
 DEVICE_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
-            vol.Optional(CONF_ZONE, default={1: _optional_zone(None)}): {
-                vol.In([1, 2]): _optional_zone
-            },
-            vol.Optional(
-                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-            ): cv.positive_int,
+    {
+        vol.Required(CONF_UUID): cv.string,
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
+        vol.Optional(CONF_ZONE, default={zone: ZONE_SCHEMA({}) for zone in ZONES}): {
+            vol.In(ZONES): _optional_zone
         },
-        _zone_name_validator,
-    )
+        vol.Optional(
+            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+        ): cv.positive_int,
+    },
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -80,17 +66,15 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the component."""
-    hass.data[DOMAIN_DATA_ENTRIES] = {}
-    hass.data[DOMAIN_DATA_CONFIG] = {}
+    configs = hass.data.setdefault(DOMAIN_DATA_CONFIG, {})
+    if DOMAIN not in config:
+        return True
 
     for device in config[DOMAIN]:
-        hass.data[DOMAIN_DATA_CONFIG][(device[CONF_HOST], device[CONF_PORT])] = device
-
+        configs[device[CONF_UUID]] = device
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={CONF_HOST: device[CONF_HOST], CONF_PORT: device[CONF_PORT]},
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=device,
             )
         )
 
@@ -99,19 +83,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: config_entries.ConfigEntry):
     """Set up an access point from a config entry."""
+    entries = hass.data.setdefault(DOMAIN_DATA_ENTRIES, {})
+
     client = Client(entry.data[CONF_HOST], entry.data[CONF_PORT])
+    entries[entry.entry_id] = client
 
-    config = hass.data[DOMAIN_DATA_CONFIG].get(
-        (entry.data[CONF_HOST], entry.data[CONF_PORT]),
-        DEVICE_SCHEMA(
-            {CONF_HOST: entry.data[CONF_HOST], CONF_PORT: entry.data[CONF_PORT]}
-        ),
-    )
-
-    hass.data[DOMAIN_DATA_ENTRIES][entry.entry_id] = {
-        "client": client,
-        "config": config,
-    }
+    config = get_entry_config(hass, entry)
 
     asyncio.ensure_future(_run_client(hass, client, config[CONF_SCAN_INTERVAL]))
 

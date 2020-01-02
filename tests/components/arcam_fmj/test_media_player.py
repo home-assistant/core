@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.core import HomeAssistant
 
-from .conftest import MOCK_ENTITY_ID, MOCK_HOST, MOCK_NAME, MOCK_PORT
+from .conftest import MOCK_ENTITY_ID, MOCK_NAME, MOCK_UUID
 
 MOCK_TURN_ON = {
     "service": "switch.turn_on",
@@ -24,10 +24,11 @@ async def update(player, force_refresh=False):
 
 async def test_properties(player, state):
     """Test standard properties."""
-    assert player.unique_id is None
+    assert player.unique_id == f"{MOCK_UUID}-1"
     assert player.device_info == {
-        "identifiers": {("arcam_fmj", MOCK_HOST, MOCK_PORT)},
-        "model": "FMJ",
+        "name": f"Arcam FMJ ({MOCK_UUID})",
+        "identifiers": {("arcam_fmj", MOCK_UUID)},
+        "model": "Arcam FMJ AVR",
         "manufacturer": "Arcam",
     }
     assert not player.should_poll
@@ -68,7 +69,7 @@ async def test_supported_features_service(hass, state):
     """Test support when turn on service exist."""
     from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 
-    player = ArcamFmj(state, "dummy", MOCK_TURN_ON)
+    player = ArcamFmj(state, MOCK_TURN_ON, MOCK_UUID)
     player.hass = hass
     player.entity_id = MOCK_ENTITY_ID
 
@@ -96,7 +97,7 @@ async def test_turn_on_with_service(hass, state):
     """Test support when turn on service exist."""
     from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 
-    player = ArcamFmj(state, "dummy", MOCK_TURN_ON)
+    player = ArcamFmj(state, MOCK_TURN_ON, MOCK_UUID)
     player.hass = Mock(HomeAssistant)
     player.entity_id = MOCK_ENTITY_ID
     with patch(
@@ -131,7 +132,7 @@ async def test_mute_volume(player, state, mute):
 
 async def test_name(player):
     """Test name."""
-    assert player.name == MOCK_NAME
+    assert player.name == f"{MOCK_NAME} - 1"
 
 
 async def test_update(player, state):

@@ -12,6 +12,7 @@ FLOWS = [
     "almond",
     "ambiclimate",
     "ambient_station",
+    "arcam_fmj",
     "axis",
     "cast",
     "cert_expiry",

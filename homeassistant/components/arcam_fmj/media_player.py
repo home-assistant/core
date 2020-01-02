@@ -17,20 +17,15 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_ZONE,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_ZONE, SERVICE_TURN_ON, STATE_OFF, STATE_ON
 from homeassistant.core import callback
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
+from .config_flow import get_entry_client, get_entry_config
 from .const import (
+    DEFAULT_NAME,
     DOMAIN,
-    DOMAIN_DATA_ENTRIES,
     SIGNAL_CLIENT_DATA,
     SIGNAL_CLIENT_STARTED,
     SIGNAL_CLIENT_STOPPED,
@@ -45,16 +40,16 @@ async def async_setup_entry(
     async_add_entities,
 ):
     """Set up the configuration entry."""
-    data = hass.data[DOMAIN_DATA_ENTRIES][config_entry.entry_id]
-    client = data["client"]
-    config = data["config"]
+
+    client = get_entry_client(hass, config_entry)
+    config = get_entry_config(hass, config_entry)
 
     async_add_entities(
         [
             ArcamFmj(
                 State(client, zone),
-                zone_config[CONF_NAME],
                 zone_config.get(SERVICE_TURN_ON),
+                config_entry.unique_id,
             )
             for zone, zone_config in config[CONF_ZONE].items()
         ]
@@ -66,10 +61,13 @@ async def async_setup_entry(
 class ArcamFmj(MediaPlayerDevice):
     """Representation of a media device."""
 
-    def __init__(self, state: State, name: str, turn_on: Optional[ConfigType]):
+    def __init__(
+        self, state: State, turn_on: Optional[ConfigType], uuid: str,
+    ):
         """Initialize device."""
         self._state = state
-        self._name = name
+        self._name = f"{DEFAULT_NAME} ({uuid}) - {state.zn}"
+        self._uuid = uuid
         self._turn_on = turn_on
         self._support = (
             SUPPORT_SELECT_SOURCE
@@ -90,11 +88,22 @@ class ArcamFmj(MediaPlayerDevice):
         )
 
     @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._state.zn == 1
+
+    @property
+    def unique_id(self):
+        """Return unique identifier if known."""
+        return f"{self._uuid}-{self._state.zn}"
+
+    @property
     def device_info(self):
         """Return a device description for device registry."""
         return {
-            "identifiers": {(DOMAIN, self._state.client.host, self._state.client.port)},
-            "model": "FMJ",
+            "name": f"{DEFAULT_NAME} ({self._uuid})",
+            "identifiers": {(DOMAIN, self._uuid)},
+            "model": "Arcam FMJ AVR",
             "manufacturer": "Arcam",
         }
 

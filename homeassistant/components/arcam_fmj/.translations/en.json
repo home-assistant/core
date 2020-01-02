@@ -1,5 +1,27 @@
 {
     "config": {
-        "title": "Arcam FMJ"
+        "title": "Arcam FMJ",
+        "flow_title": "Arcam FMJ on {host}",
+        "step": {
+            "user": {
+                "title": "Connect to Arcam FMJ",
+                "description": "Please enter the host name or IP address of device.",
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            },
+            "confirm": {
+                "title": "Discovered Arcam FMJ",
+                "description": "Do you want to add Arcam FMJ on `{host}` to Home Assistant?"
+            }
+        },
+        "error": {
+            "unique_identifier": "Unable to connect to the specified host to get unique identifier."
+        },
+        "abort": {
+            "already_setup": "Device was already setup.",
+            "updated_instance": "Updated instance with new host address."
+        }
     }
 }
