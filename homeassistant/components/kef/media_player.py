@@ -27,9 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
-_CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
-
 
 DEFAULT_NAME = "KEF"
 DEFAULT_PORT = 50001
