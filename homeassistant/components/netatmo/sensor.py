@@ -155,30 +155,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     async_add_entities(await hass.async_add_executor_job(get_devices), True)
 
-    # def setup_public():
-    #     devices = []
-    #     _LOGGER.debug("Adding public weather sensor %s", config_public)
-
-    #     if config_public.get(CONF_AREAS) is not None:
-    #         for area in config_public[CONF_AREAS]:
-    #             _LOGGER.debug("Adding public weather sensor %s", area[CONF_NAME])
-    #             data = NetatmoPublicData(
-    #                 hass.data[DOMAIN][AUTH],
-    #                 lat_ne=area[CONF_LAT_NE],
-    #                 lon_ne=area[CONF_LON_NE],
-    #                 lat_sw=area[CONF_LAT_SW],
-    #                 lon_sw=area[CONF_LON_SW],
-    #             )
-    #             for sensor_type in SUPPORTED_PUBLIC_SENSOR_TYPES:
-    #                 devices.append(
-    #                     NetatmoPublicSensor(
-    #                         area[CONF_NAME], data, sensor_type, area[CONF_MODE]
-    #                     )
-    #                 )
-    #     return devices
-
-    # async_add_entities(await hass.async_add_executor_job(setup_public), True)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the available Netatmo weather sensors."""
