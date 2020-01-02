@@ -1,5 +1,6 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
+from typing import Dict
 
 from aiofreepybox import Freepybox
 
@@ -18,7 +19,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up the sensors."""
     fbx = hass.data[DOMAIN]
-    async_add_entities([FbxRXSensor(fbx), FbxTXSensor(fbx)], True)
+    fbx_conf = await fbx.system.get_config()
+    async_add_entities([FbxRXSensor(fbx, fbx_conf), FbxTXSensor(fbx, fbx_conf)], True)
 
 
 class FbxSensor(Entity):
@@ -28,12 +30,14 @@ class FbxSensor(Entity):
     _unit = None
     _icon = None
 
-    def __init__(self, fbx: Freepybox):
+    def __init__(self, fbx: Freepybox, fbx_conf: Dict):
         """Initialize the sensor."""
         self._fbx = fbx
+        self._fbx_name = fbx_conf["model_info"]["pretty_name"]
+        self._fbx_sw_v = fbx_conf["firmware_version"]
         self._state = None
         self._datas = None
-        self._unique_id = f"{fbx._access.base_url} {self._name}"
+        self._unique_id = f"{self._fbx._access.base_url} {self._name}"
 
     @property
     def unique_id(self) -> str:
@@ -59,6 +63,16 @@ class FbxSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self._fbx._access.base_url)},
+            "name": self._fbx_name,
+            "manufacturer": "Freebox SAS",
+            "sw_version": self._fbx_sw_v,
+        }
 
     async def async_update(self):
         """Fetch status from freebox."""

@@ -1,7 +1,9 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
 import logging
+from typing import Dict
 
 from aiofreepybox import Freepybox
+from aiofreepybox.exceptions import InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchDevice
 
@@ -18,18 +20,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
     """Set up the switch."""
     fbx = hass.data[DOMAIN]
-    async_add_entities([FbxWifiSwitch(fbx)], True)
+    fbx_conf = await fbx.system.get_config()
+    async_add_entities([FbxWifiSwitch(fbx, fbx_conf)], True)
 
 
 class FbxWifiSwitch(SwitchDevice):
     """Representation of a freebox wifi switch."""
 
-    def __init__(self, fbx: Freepybox):
+    def __init__(self, fbx: Freepybox, fbx_conf: Dict):
         """Initialize the Wifi switch."""
         self._name = "Freebox WiFi"
         self._state = None
         self._fbx = fbx
-        self._unique_id = f"{fbx._access.base_url} {self._name}"
+        self._fbx_name = fbx_conf["model_info"]["pretty_name"]
+        self._fbx_sw_v = fbx_conf["firmware_version"]
+        self._unique_id = f"{self._fbx._access.base_url} {self._name}"
 
     @property
     def unique_id(self) -> str:
@@ -46,18 +51,24 @@ class FbxWifiSwitch(SwitchDevice):
         """Return true if device is on."""
         return self._state
 
+    @property
+    def device_info(self) -> Dict[str, any]:
+        """Return the device information."""
+        return {
+            "identifiers": {(DOMAIN, self._fbx._access.base_url)},
+            "name": self._fbx_name,
+            "manufacturer": "Freebox SAS",
+            "sw_version": self._fbx_sw_v,
+        }
+
     async def _async_set_state(self, enabled):
         """Turn the switch on or off."""
-        from aiofreepybox.exceptions import InsufficientPermissionsError
-
         wifi_config = {"enabled": enabled}
         try:
             await self._fbx.wifi.set_global_config(wifi_config)
         except InsufficientPermissionsError:
             _LOGGER.warning(
-                "Home Assistant does not have permissions to"
-                " modify the Freebox settings. Please refer"
-                " to documentation."
+                "Home Assistant does not have permissions to modify the Freebox settings. Please refer to documentation."
             )
 
     async def async_turn_on(self, **kwargs):
