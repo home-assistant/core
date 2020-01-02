@@ -1,6 +1,6 @@
 """Platform for the KEF Wireless Speakers."""
 
-import datetime
+from datetime import timedelta
 import logging
 
 from aiokef.aiokef import AsyncKefSpeaker
@@ -39,7 +39,7 @@ DEFAULT_INVERSE_SPEAKER_MODE = False
 
 DOMAIN = "kef"
 
-SCAN_INTERVAL = datetime.timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=30)
 PARALLEL_UPDATES = 0
 
 SOURCES = {"LSX": ["Wifi", "Bluetooth", "Aux", "Opt"]}
@@ -113,7 +113,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
     unique_id = media_player.unique_id
     if unique_id in hass.data[DOMAIN]:
-        _LOGGER.debug("%s is already configured.", unique_id)
+        _LOGGER.debug("%s is already configured", unique_id)
     else:
         hass.data[DOMAIN][unique_id] = media_player
         async_add_entities([media_player], update_before_add=True)
@@ -224,16 +224,6 @@ class KefMediaPlayer(MediaPlayerDevice):
     def icon(self):
         """Return the device's icon."""
         return "mdi:speaker-wireless"
-
-    @property
-    def should_poll(self):
-        """It's possible that the speaker is controlled manually."""
-        return True
-
-    @property
-    def force_update(self):
-        """Force update."""
-        return False
 
     async def async_turn_off(self):
         """Turn the media player off."""
