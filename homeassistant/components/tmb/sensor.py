@@ -37,13 +37,11 @@ LINE_STOP_SCHEMA = vol.Schema(
     }
 )
 
-ROUTES_SCHEMA = vol.All(cv.ensure_list, [LINE_STOP_SCHEMA])
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_APP_ID): cv.string,
         vol.Required(CONF_APP_KEY): cv.string,
-        vol.Optional(CONF_BUS_STOPS): ROUTES_SCHEMA,
+        vol.Optional(CONF_BUS_STOPS): vol.All(cv.ensure_list, [LINE_STOP_SCHEMA]),
     }
 )
 
@@ -63,8 +61,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             name = f"{line} - {stop}"
         sensors.append(TMBSensor(ibus_client, stop, line, name))
 
-    if sensors:
-        add_entities(sensors, True)
+    add_entities(sensors, True)
 
 
 class TMBSensor(Entity):
