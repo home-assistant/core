@@ -1,5 +1,4 @@
 """Test the automatic device tracker platform."""
-import asyncio
 from datetime import datetime
 import logging
 from unittest.mock import MagicMock, patch
@@ -103,11 +102,6 @@ def test_valid_credentials(
     session.get_vehicles.side_effect = get_vehicles
     session.get_trips.side_effect = get_trips
     session.refresh_token = "mock_refresh_token"
-
-    async def ws_connect():
-        return asyncio.Future()
-
-    mock_ws_connect.side_effect = ws_connect
 
     config = {
         "platform": "automatic",
