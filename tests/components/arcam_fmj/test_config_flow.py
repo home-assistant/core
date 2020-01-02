@@ -4,8 +4,17 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
-from homeassistant.components.arcam_fmj.config_flow import ArcamFmjFlowHandler
-from homeassistant.components.arcam_fmj.const import DOMAIN
+from homeassistant.components.arcam_fmj.config_flow import (
+    ArcamFmjFlowHandler,
+    get_entry_client,
+    get_entry_config,
+)
+from homeassistant.components.arcam_fmj.const import (
+    CONF_UUID,
+    DOMAIN,
+    DOMAIN_DATA_CONFIG,
+    DOMAIN_DATA_ENTRIES,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from .conftest import (
@@ -131,3 +140,30 @@ async def test_user_wrong(hass, flow, aioclient_mock):
     result = await flow.async_step_user(user_input)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"]["base"] == "unique_identifier"
+
+
+async def test_get_entry_config(hass, config_entry):
+    """Test helper for configuration."""
+    configs = {}
+    hass.data[DOMAIN_DATA_CONFIG] = configs
+
+    config = get_entry_config(hass, config_entry)
+    assert config[CONF_HOST] == MOCK_HOST
+    assert config[CONF_PORT] == MOCK_PORT
+    assert config[CONF_UUID] == config_entry.unique_id
+
+    configs[config_entry.unique_id] = {
+        CONF_UUID: config_entry.unique_id,
+        CONF_PORT: 1234,
+        CONF_HOST: "host",
+    }
+
+    config = get_entry_config(hass, config_entry)
+    assert config[CONF_HOST] == "host"
+    assert config[CONF_PORT] == 1234
+
+
+async def test_get_entry_client(hass, config_entry):
+    """Test helper for configuration."""
+    hass.data[DOMAIN_DATA_ENTRIES] = {config_entry.entry_id: "dummy"}
+    assert get_entry_client(hass, config_entry) == "dummy"
