@@ -7,7 +7,13 @@ HOMEKIT_NOTIFY_ID = 4663548
 
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
+ATTR_NITROGEN_DIOXIDE_DENSITY = "nitrogen_dioxide_density"
+ATTR_PM_DENSITY = "pm_density"
+ATTR_PM_SIZE = "pm_size"
+ATTR_PM_2_5_DENSITY = "pm_2_5_density"
+ATTR_PM_10_DENSITY = "pm_10_density"
 ATTR_VALUE = "value"
+ATTR_VOC_DENSITY = "voc_density"
 
 # #### Config ####
 CONF_ADVERTISE_IP = "advertise_ip"
@@ -85,6 +91,7 @@ SERV_WINDOW_COVERING = "WindowCovering"
 CHAR_ACTIVE = "Active"
 CHAR_ACTIVE_IDENTIFIER = "ActiveIdentifier"
 CHAR_AIR_PARTICULATE_DENSITY = "AirParticulateDensity"
+CHAR_AIR_PARTICULATE_SIZE = "AirParticulateSize"
 CHAR_AIR_QUALITY = "AirQuality"
 CHAR_BATTERY_LEVEL = "BatteryLevel"
 CHAR_BRIGHTNESS = "Brightness"
@@ -123,9 +130,12 @@ CHAR_MODEL = "Model"
 CHAR_MOTION_DETECTED = "MotionDetected"
 CHAR_MUTE = "Mute"
 CHAR_NAME = "Name"
+CHAR_NITROGEN_DIOXIDE_DENSITY = "NitrogenDioxideDensity"
 CHAR_OCCUPANCY_DETECTED = "OccupancyDetected"
 CHAR_ON = "On"
 CHAR_OUTLET_IN_USE = "OutletInUse"
+CHAR_PM_2_5_DENSITY = "PM2.5Density"
+CHAR_PM_10_DENSITY = "PM10Density"
 CHAR_POSITION_STATE = "PositionState"
 CHAR_REMOTE_KEY = "RemoteKey"
 CHAR_ROTATION_DIRECTION = "RotationDirection"
@@ -143,10 +153,14 @@ CHAR_TARGET_SECURITY_STATE = "SecuritySystemTargetState"
 CHAR_TARGET_TEMPERATURE = "TargetTemperature"
 CHAR_TEMP_DISPLAY_UNITS = "TemperatureDisplayUnits"
 CHAR_VALVE_TYPE = "ValveType"
+CHAR_VOC_DENSITY = "VOCDensity"
 CHAR_VOLUME = "Volume"
 CHAR_VOLUME_SELECTOR = "VolumeSelector"
 CHAR_VOLUME_CONTROL_TYPE = "VolumeControlType"
 
+# #### Characteristic Values ####
+CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5 = 0
+CHAR_VALUE_AIR_PARTICULATE_SIZE_PM10 = 1
 
 # #### Properties ####
 PROP_MAX_VALUE = "maxValue"
@@ -165,6 +179,7 @@ DEVICE_CLASS_MOTION = "motion"
 DEVICE_CLASS_OCCUPANCY = "occupancy"
 DEVICE_CLASS_OPENING = "opening"
 DEVICE_CLASS_PM25 = "pm25"
+DEVICE_CLASS_AIR_QUALITY = "air_quality"
 DEVICE_CLASS_SMOKE = "smoke"
 DEVICE_CLASS_WINDOW = "window"
 

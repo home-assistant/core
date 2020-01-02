@@ -40,6 +40,7 @@ from .const import (
     DEFAULT_AUTO_START,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
+    DEVICE_CLASS_AIR_QUALITY,
     DEVICE_CLASS_CO,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
@@ -239,6 +240,11 @@ def get_accessory(hass, driver, state, aid, config):
         elif device_class == DEVICE_CLASS_HUMIDITY and unit == "%":
             a_type = "HumiditySensor"
         elif device_class == DEVICE_CLASS_PM25 or DEVICE_CLASS_PM25 in state.entity_id:
+            a_type = "AirQualitySensor"
+        elif (
+            device_class == DEVICE_CLASS_AIR_QUALITY
+            or DEVICE_CLASS_AIR_QUALITY in state.entity_id
+        ):
             a_type = "AirQualitySensor"
         elif device_class == DEVICE_CLASS_CO:
             a_type = "CarbonMonoxideSensor"

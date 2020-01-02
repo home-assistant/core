@@ -14,7 +14,14 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
+    ATTR_NITROGEN_DIOXIDE_DENSITY,
+    ATTR_PM_2_5_DENSITY,
+    ATTR_PM_10_DENSITY,
+    ATTR_PM_DENSITY,
+    ATTR_PM_SIZE,
+    ATTR_VOC_DENSITY,
     CHAR_AIR_PARTICULATE_DENSITY,
+    CHAR_AIR_PARTICULATE_SIZE,
     CHAR_AIR_QUALITY,
     CHAR_CARBON_DIOXIDE_DETECTED,
     CHAR_CARBON_DIOXIDE_LEVEL,
@@ -28,8 +35,14 @@ from .const import (
     CHAR_CURRENT_TEMPERATURE,
     CHAR_LEAK_DETECTED,
     CHAR_MOTION_DETECTED,
+    CHAR_NITROGEN_DIOXIDE_DENSITY,
     CHAR_OCCUPANCY_DETECTED,
+    CHAR_PM_2_5_DENSITY,
+    CHAR_PM_10_DENSITY,
     CHAR_SMOKE_DETECTED,
+    CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5,
+    CHAR_VALUE_AIR_PARTICULATE_SIZE_PM10,
+    CHAR_VOC_DENSITY,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_DOOR,
     DEVICE_CLASS_GARAGE_DOOR,
@@ -38,6 +51,7 @@ from .const import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_OCCUPANCY,
     DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PM25,
     DEVICE_CLASS_SMOKE,
     DEVICE_CLASS_WINDOW,
     PROP_CELSIUS,
@@ -128,21 +142,197 @@ class AirQualitySensor(HomeAccessory):
         """Initialize a AirQualitySensor accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR)
 
-        serv_air_quality = self.add_preload_service(
-            SERV_AIR_QUALITY_SENSOR, [CHAR_AIR_PARTICULATE_DENSITY]
+        # determine the charciteristics of the sensor based on the curent attributes
+        chars = []
+        current_state = self.hass.states.get(self.entity_id)
+        nitrogen_dioxide_density = convert_to_float(
+            current_state.attributes.get(ATTR_NITROGEN_DIOXIDE_DENSITY)
         )
-        self.char_quality = serv_air_quality.configure_char(CHAR_AIR_QUALITY, value=0)
-        self.char_density = serv_air_quality.configure_char(
-            CHAR_AIR_PARTICULATE_DENSITY, value=0
+        voc_density = convert_to_float(current_state.attributes.get(ATTR_VOC_DENSITY))
+        pm_2_5_density = convert_to_float(
+            current_state.attributes.get(ATTR_PM_2_5_DENSITY)
         )
+        pm_10_density = convert_to_float(
+            current_state.attributes.get(ATTR_PM_10_DENSITY)
+        )
+        pm_density = convert_to_float(current_state.attributes.get(ATTR_PM_DENSITY))
+        pm_size = convert_to_float(current_state.attributes.get(ATTR_PM_SIZE))
+        device_class = current_state.attributes.get(ATTR_DEVICE_CLASS)
+
+        if nitrogen_dioxide_density is not None:
+            chars.append(CHAR_NITROGEN_DIOXIDE_DENSITY)
+
+        if voc_density is not None:
+            chars.append(CHAR_VOC_DENSITY)
+
+        if pm_2_5_density is not None:
+            chars.append(CHAR_PM_2_5_DENSITY)
+
+        if pm_10_density is not None:
+            chars.append(CHAR_PM_10_DENSITY)
+
+        if (
+            pm_density is not None
+            or device_class == DEVICE_CLASS_PM25
+            or DEVICE_CLASS_PM25 in self.entity_id
+        ):
+            chars.append(CHAR_AIR_PARTICULATE_DENSITY)
+
+        if (
+            pm_size is not None
+            or device_class == DEVICE_CLASS_PM25
+            or DEVICE_CLASS_PM25 in self.entity_id
+        ):
+            chars.append(CHAR_AIR_PARTICULATE_SIZE)
+
+        _LOGGER.debug("%s: chars: %s", self.entity_id, chars)
+
+        # add the service with the determined characteristics
+        serv_air_quality = self.add_preload_service(SERV_AIR_QUALITY_SENSOR, chars)
+        _LOGGER.debug("%s, service: %s", self.entity_id, serv_air_quality.to_HAP())
+
+        # configure the determined characteristics
+        self.char_air_quality = serv_air_quality.configure_char(
+            CHAR_AIR_QUALITY, value=0
+        )
+
+        if CHAR_NITROGEN_DIOXIDE_DENSITY in chars:
+            self.char_nitrogen_dioxide_density = serv_air_quality.configure_char(
+                CHAR_NITROGEN_DIOXIDE_DENSITY, value=0
+            )
+
+        if CHAR_VOC_DENSITY in chars:
+            self.char_voc_density = serv_air_quality.configure_char(
+                CHAR_VOC_DENSITY, value=0
+            )
+
+        if CHAR_PM_2_5_DENSITY in chars:
+            self.char_pm_2_5_density = serv_air_quality.configure_char(
+                CHAR_PM_2_5_DENSITY, value=0
+            )
+
+        if CHAR_PM_10_DENSITY in chars:
+            self.char_pm_10_density = serv_air_quality.configure_char(
+                CHAR_PM_10_DENSITY, value=0
+            )
+
+        if CHAR_AIR_PARTICULATE_DENSITY in chars:
+            self.char_particulate_density = serv_air_quality.configure_char(
+                CHAR_AIR_PARTICULATE_DENSITY, value=0
+            )
+
+        if CHAR_AIR_PARTICULATE_SIZE in chars:
+            self.char_particulate_size = serv_air_quality.configure_char(
+                CHAR_AIR_PARTICULATE_SIZE, value=CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
+            )
 
     def update_state(self, new_state):
         """Update accessory after state change."""
-        density = convert_to_float(new_state.state)
-        if density:
-            self.char_density.set_value(density)
-            self.char_quality.set_value(density_to_air_quality(density))
-            _LOGGER.debug("%s: Set to %d", self.entity_id, density)
+        nitrogen_dioxide_density = convert_to_float(
+            new_state.attributes.get(ATTR_NITROGEN_DIOXIDE_DENSITY)
+        )
+        voc_density = convert_to_float(new_state.attributes.get(ATTR_VOC_DENSITY))
+        pm_2_5_density = convert_to_float(new_state.attributes.get(ATTR_PM_2_5_DENSITY))
+        pm_10_density = convert_to_float(new_state.attributes.get(ATTR_PM_10_DENSITY))
+        pm_density = convert_to_float(new_state.attributes.get(ATTR_PM_DENSITY))
+        pm_size = convert_to_float(new_state.attributes.get(ATTR_PM_SIZE))
+
+        # if device class or entity ID contain DEVICE_CLASS_PM25 then assume state is a PM25 reading
+        # else assume that state is a HomeKit Air Qaulity Characteristic Value (https://developer.apple.com/documentation/homekit/hmcharacteristicvalueairquality) and use sensory entity attributes
+        device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
+        if (device_class == DEVICE_CLASS_PM25) or (
+            DEVICE_CLASS_PM25 in new_state.entity_id
+        ):
+            pm_density = convert_to_float(new_state.state)
+            air_quality = density_to_air_quality(pm_density)
+
+            self.char_air_quality.set_value(air_quality)
+            self.char_particulate_density.set_value(pm_density)
+            self.char_particulate_size.set_value(CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5)
+            _LOGGER.debug(
+                "%s: Set %s to %d", self.entity_id, CHAR_AIR_QUALITY, air_quality
+            )
+            _LOGGER.debug(
+                "%s: Set %s to %d",
+                self.entity_id,
+                CHAR_AIR_PARTICULATE_DENSITY,
+                pm_density,
+            )
+            _LOGGER.debug(
+                "%s: Set %s to %d", self.entity_id, CHAR_AIR_PARTICULATE_SIZE, pm_size
+            )
+        else:
+            air_quality = convert_to_float(new_state.state)
+            if air_quality is not None:
+                self.char_air_quality.set_value(air_quality)
+                _LOGGER.debug(
+                    "%s: Set %s to %d", self.entity_id, CHAR_AIR_QUALITY, air_quality
+                )
+
+            if nitrogen_dioxide_density is not None:
+                self.char_nitrogen_dioxide_density.set_value(nitrogen_dioxide_density)
+                _LOGGER.debug(
+                    "%s: Set %s to %d",
+                    self.entity_id,
+                    CHAR_NITROGEN_DIOXIDE_DENSITY,
+                    nitrogen_dioxide_density,
+                )
+
+            if voc_density is not None:
+                self.char_voc_density.set_value(voc_density)
+                _LOGGER.debug(
+                    "%s: Set %s to %d", self.entity_id, CHAR_VOC_DENSITY, voc_density
+                )
+
+            if pm_2_5_density is not None:
+                self.char_pm_2_5_density.set_value(pm_2_5_density)
+                _LOGGER.debug(
+                    "%s: Set %s to %d",
+                    self.entity_id,
+                    CHAR_PM_2_5_DENSITY,
+                    pm_2_5_density,
+                )
+
+            if pm_10_density is not None:
+                self.char_pm_10_density.set_value(pm_10_density)
+                _LOGGER.debug(
+                    "%s: Set %s to %d",
+                    self.entity_id,
+                    CHAR_PM_10_DENSITY,
+                    pm_10_density,
+                )
+
+            if pm_density is not None:
+                self.char_particulate_density.set_value(pm_density)
+                _LOGGER.debug(
+                    "%s: Set %s to %d",
+                    self.entity_id,
+                    CHAR_AIR_PARTICULATE_DENSITY,
+                    pm_density,
+                )
+
+            # convert the given PM size to value HomeKit Expects
+            # (https://developer.apple.com/documentation/homekit/hmcharacteristicvalueairparticulatesize)
+            pm_size_char_value = None
+            if pm_size:
+                if pm_size == 2.5:
+                    pm_size_char_value = CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
+                elif pm_size == 10:
+                    pm_size_char_value = CHAR_VALUE_AIR_PARTICULATE_SIZE_PM10
+                else:
+                    _LOGGER.warning(
+                        "%s: Given pm_size is not valid value (2.5, 10), ignoring.",
+                        self.entity_id,
+                    )
+
+            if pm_size_char_value:
+                self.char_particulate_size.set_value(pm_size_char_value)
+                _LOGGER.debug(
+                    "%s: Set %s to %d",
+                    self.entity_id,
+                    CHAR_AIR_PARTICULATE_SIZE,
+                    pm_size_char_value,
+                )
 
 
 @TYPES.register("CarbonMonoxideSensor")
