@@ -97,14 +97,6 @@ class RfxtrxLight(RfxtrxDevice, Light, RestoreEntity):
         return self._brightness
 
     @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        attr = {}
-        if self._brightness is not None:
-            attr[ATTR_BRIGHTNESS] = self._brightness
-        return attr
-
-    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_RFXTRX
