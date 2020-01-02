@@ -372,7 +372,7 @@ class TestLight(unittest.TestCase):
                 return StringIO(profile_data)
             return real_open(path, *args, **kwargs)
 
-        profile_data = "id,x,y,brightness\n" + "group.all_lights.default,.4,.6,99\n"
+        profile_data = "id,x,y,brightness\ngroup.all_lights.default,.4,.6,99\n"
         with mock.patch("os.path.isfile", side_effect=_mock_isfile):
             with mock.patch("builtins.open", side_effect=_mock_open):
                 with mock_storage():

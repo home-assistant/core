@@ -95,8 +95,7 @@ def _parse_skyhub_response(data_str):
     pattmatch = re.search("attach_dev = '(.*)'", data_str)
     if pattmatch is None:
         raise OSError(
-            "Error: Impossible to fetch data from"
-            + " Sky Hub. Try to reboot the router."
+            "Error: Impossible to fetch data from Sky Hub. Try to reboot the router."
         )
     patt = pattmatch.group(1)
 

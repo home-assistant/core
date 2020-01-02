@@ -231,9 +231,7 @@ class OctoPrintAPI:
                 self.printer_error_logged = False
             return response.json()
         except Exception as conn_exc:  # pylint: disable=broad-except
-            log_string = "Failed to update OctoPrint status. " + "  Error: %s" % (
-                conn_exc
-            )
+            log_string = "Failed to update OctoPrint status. Error: %s" % conn_exc
             # Only log the first failure
             if endpoint == "job":
                 log_string = "Endpoint: job " + log_string
