@@ -6,6 +6,13 @@ from samsungctl.exceptions import AccessDenied, UnhandledResponse
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.ssdp import (
+    ATTR_SSDP_LOCATION,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+)
 from homeassistant.const import (
     CONF_BROADCAST_ADDRESS,
     CONF_HOST,
@@ -16,16 +23,8 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TIMEOUT,
 )
-from homeassistant.components.ssdp import (
-    ATTR_HOST,
-    ATTR_NAME,
-    ATTR_MODEL_NAME,
-    ATTR_MANUFACTURER,
-    ATTR_UDN,
-)
 
 from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, METHODS
-
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 
@@ -148,7 +147,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_ssdp(self, user_input=None):
         """Handle a flow initialized by discovery."""
         ip_address = await self.hass.async_add_executor_job(
-            _get_ip, user_input[ATTR_HOST]
+            _get_ip, user_input[ATTR_SSDP_LOCATION]
         )
 
         if any(
@@ -160,15 +159,15 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if _is_already_configured(self.hass, ip_address):
             return self.async_abort(reason="already_configured")
 
-        self._host = user_input[ATTR_HOST]
+        self._host = user_input[ATTR_SSDP_LOCATION]
         self._ip = self.context[CONF_IP_ADDRESS] = ip_address
-        self._manufacturer = user_input[ATTR_MANUFACTURER]
-        self._model = user_input[ATTR_MODEL_NAME]
-        self._name = user_input[ATTR_NAME]
+        self._manufacturer = user_input[ATTR_UPNP_MANUFACTURER]
+        self._model = user_input[ATTR_UPNP_MODEL_NAME]
+        self._name = user_input[ATTR_UPNP_FRIENDLY_NAME]
         if self._name.startswith("[TV]"):
             self._name = self._name[4:]
         self._title = f"{self._name} ({self._model})"
-        self._uuid = user_input[ATTR_UDN]
+        self._uuid = user_input[ATTR_UPNP_UDN]
         if self._uuid.startswith("uuid:"):
             self._uuid = self._uuid[5:]
 

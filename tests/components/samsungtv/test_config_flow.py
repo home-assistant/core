@@ -1,8 +1,9 @@
 """Tests for Samsung TV config flow."""
+from unittest.mock import patch
+
 from asynctest import mock
 import pytest
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
-from unittest.mock import patch
 
 from homeassistant.components.samsungtv.const import (
     CONF_MANUFACTURER,
@@ -10,28 +11,28 @@ from homeassistant.components.samsungtv.const import (
     DOMAIN,
 )
 from homeassistant.components.ssdp import (
-    ATTR_HOST,
-    ATTR_NAME,
-    ATTR_MODEL_NAME,
-    ATTR_MANUFACTURER,
-    ATTR_UDN,
+    ATTR_SSDP_LOCATION,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
 )
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
 
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
 MOCK_SSDP_DATA = {
-    ATTR_HOST: "fake_host",
-    ATTR_NAME: "[TV]fake_name",
-    ATTR_MANUFACTURER: "fake_manufacturer",
-    ATTR_MODEL_NAME: "fake_model",
-    ATTR_UDN: "uuid:fake_uuid",
+    ATTR_SSDP_LOCATION: "fake_host",
+    ATTR_UPNP_FRIENDLY_NAME: "[TV]fake_name",
+    ATTR_UPNP_MANUFACTURER: "fake_manufacturer",
+    ATTR_UPNP_MODEL_NAME: "fake_model",
+    ATTR_UPNP_UDN: "uuid:fake_uuid",
 }
 MOCK_SSDP_DATA_NOPREFIX = {
-    ATTR_HOST: "fake2_host",
-    ATTR_NAME: "fake2_name",
-    ATTR_MANUFACTURER: "fake2_manufacturer",
-    ATTR_MODEL_NAME: "fake2_model",
-    ATTR_UDN: "fake2_uuid",
+    ATTR_SSDP_LOCATION: "fake2_host",
+    ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
+    ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
+    ATTR_UPNP_MODEL_NAME: "fake2_model",
+    ATTR_UPNP_UDN: "fake2_uuid",
 }
 
 
