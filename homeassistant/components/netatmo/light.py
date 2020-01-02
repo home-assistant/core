@@ -2,12 +2,11 @@
 import logging
 
 import pyatmo
-import requests
 
 from homeassistant.components.light import Light
 
 from .camera import CameraData
-from .const import AUTH, CMD_CAMERA_LIGHT_URL, DOMAIN, MANUFACTURER
+from .const import AUTH, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,24 +90,6 @@ class NetatmoLight(Light):
         """Return true if light is on."""
         return self._is_on
 
-    def turn_on(self, **kwargs):
-        """Instruct the light to turn on."""
-        _LOGGER.debug("Set the flood light on for the camera '%s'", self._name)
-        if self._set_light_mode("on"):
-            self._data.camera_data.get_camera(self._camera_id)[
-                "light_mode_status"
-            ] = "on"
-        self.schedule_update_ha_state()
-
-    def turn_off(self, **kwargs):
-        """Instruct the light to turn off."""
-        _LOGGER.debug("Set the flood light off for the camera '%s'", self._name)
-        if self._set_light_mode("off"):
-            self._data.camera_data.get_camera(self._camera_id)[
-                "light_mode_status"
-            ] = "off"
-        self.schedule_update_ha_state()
-
     def update(self):
         """Update the camera data."""
         self._data.update()
@@ -119,23 +100,3 @@ class NetatmoLight(Light):
             self._is_on = True
         else:
             self._is_on = False
-
-    def _set_light_mode(self, mode: str):
-        """Set light mode ('auto', 'on', 'off')."""
-        try:
-            camera_url = self._localurl if self._localurl else self._vpnurl
-            params = {"config": f'{{"mode":"{mode}"}}'}
-
-            resp = requests.get(
-                url=f"{camera_url}{CMD_CAMERA_LIGHT_URL}",
-                params=params,
-                timeout=10,
-                verify=self._verify_ssl,
-            )
-            if resp.ok:
-                return True
-            return False
-        except requests.exceptions.RequestException as error:
-            _LOGGER.error("Welcome/Presence URL changed: %s", error)
-        else:
-            self.async_schedule_update_ha_state(True)

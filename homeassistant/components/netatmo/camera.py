@@ -12,17 +12,11 @@ from homeassistant.components.camera import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
 from homeassistant.util import Throttle
 
 from .const import (
     ATTR_PSEUDO,
     AUTH,
-    CMD_CAMERA_LIGHT_URL,
-    CMD_CAMERA_STATUS_URL,
     DATA_PERSONS,
     DOMAIN,
     MANUFACTURER,
@@ -68,21 +62,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
         return entities
 
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
-
-    async def async_service_handler(call):
-        """Handle service call."""
-        _LOGGER.debug(
-            "Service handler invoked with service=%s and data=%s",
-            call.service,
-            call.data,
-        )
-        service = call.service
-        entity_id = call.data["entity_id"][0]
-        async_dispatcher_send(hass, f"{service}_{entity_id}")
-
-    hass.services.async_register(
-        DOMAIN, "set_light_auto", async_service_handler, SCHEMA_SERVICE_SETLIGHTAUTO
-    )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -263,65 +242,6 @@ class NetatmoCamera(Camera):
         self._is_local = camera.get("is_local")
 
         self.is_streaming = self._alim_status == "on"
-
-    def turn_on(self):
-        """Enable motion detection in the camera."""
-        _LOGGER.debug("Turn the camera '%s' on", self._name)
-        self._toggle_camera_operation(True)
-
-    def turn_off(self):
-        """Disable motion detection in camera."""
-        _LOGGER.debug("Turn the camera '%s' off", self._name)
-        self._toggle_camera_operation(False)
-
-    def _toggle_camera_operation(self, enable):
-        """Enable or disable the camera."""
-        try:
-            camera_url = self._localurl if self._localurl else self._vpnurl
-            params = {"status": _BOOL_TO_STATE.get(enable)}
-
-            requests.get(
-                url=f"{camera_url}{CMD_CAMERA_STATUS_URL}",
-                params=params,
-                timeout=10,
-                verify=self._verify_ssl,
-            )
-        except requests.exceptions.RequestException as error:
-            _LOGGER.error("Welcome/Presence URL changed: %s", error)
-        else:
-            self.async_schedule_update_ha_state(True)
-
-    async def async_added_to_hass(self):
-        """Subscribe to signals and add camera to list."""
-        if self._camera_type == "NOC":
-            _LOGGER.debug("Registering services for entity_id=%s", self.entity_id)
-            async_dispatcher_connect(
-                self.hass, f"set_light_auto_{self.entity_id}", self.set_light_auto
-            )
-
-    def _set_light_mode(self, mode: str):
-        """Set light mode ('auto', 'on', 'off')."""
-        try:
-            camera_url = self._localurl if self._localurl else self._vpnurl
-            params = {"config": f'{{"mode":"{mode}"}}'}
-
-            requests.get(
-                url=f"{camera_url}{CMD_CAMERA_LIGHT_URL}",
-                params=params,
-                timeout=10,
-                verify=self._verify_ssl,
-            )
-        except requests.exceptions.RequestException as error:
-            _LOGGER.error("Welcome/Presence URL changed: %s", error)
-        else:
-            self.async_schedule_update_ha_state(True)
-
-    def set_light_auto(self):
-        """Set flood light in automatic mode."""
-        _LOGGER.debug(
-            "Set the flood light in automatic mode for the camera '%s'", self._name
-        )
-        self._set_light_mode("auto")
 
 
 class CameraData:

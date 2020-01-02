@@ -1,11 +1,4 @@
 # Describes the format for available Netatmo services
-set_light_auto:
-  description: Set the camera (Presence only) light in automatic mode.
-  fields:
-    entity_id:
-      description: Entity id.
-      example: "light.living_room"
-
 set_schedule:
   description: Set the heating schedule.
   fields:

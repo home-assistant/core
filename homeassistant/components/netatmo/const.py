@@ -14,9 +14,6 @@ HOME_DATA = "netatmo_home_data"
 OAUTH2_AUTHORIZE = "https://api.netatmo.com/oauth2/authorize"
 OAUTH2_TOKEN = "https://api.netatmo.com/oauth2/token"
 
-CMD_CAMERA_LIGHT_URL = "/command/floodlight_set_config"
-CMD_CAMERA_STATUS_URL = "/command/changestatus"
-
 DATA_PERSONS = "netatmo_persons"
 
 NETATMO_WEBHOOK_URL = None
