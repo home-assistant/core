@@ -115,7 +115,7 @@ class BrData:
         if raincontent.get(SUCCESS) is not True:
             # unable to get the data
             _LOGGER.warning(
-                "Unable to retrieve raindata from Buienradar." "(Msg: %s, status: %s,)",
+                "Unable to retrieve raindata from Buienradar. (Msg: %s, status: %s)",
                 raincontent.get(MESSAGE),
                 raincontent.get(STATUS_CODE),
             )
@@ -136,7 +136,7 @@ class BrData:
         if result.get(SUCCESS) is not True:
             if int(datetime.now().strftime("%H")) > 0:
                 _LOGGER.warning(
-                    "Unable to parse data from Buienradar." "(Msg: %s)",
+                    "Unable to parse data from Buienradar. (Msg: %s)",
                     result.get(MESSAGE),
                 )
             await self.schedule_update(SCHEDULE_NOK)

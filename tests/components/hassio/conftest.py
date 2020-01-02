@@ -20,7 +20,7 @@ def hassio_env():
         "homeassistant.components.hassio.HassIO.is_connected",
         Mock(return_value=mock_coro({"result": "ok", "data": {}})),
     ), patch.dict(os.environ, {"HASSIO_TOKEN": "123456"}), patch(
-        "homeassistant.components.hassio.HassIO." "get_homeassistant_info",
+        "homeassistant.components.hassio.HassIO.get_homeassistant_info",
         Mock(side_effect=HassioAPIError()),
     ):
         yield

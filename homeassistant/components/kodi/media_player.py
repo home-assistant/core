@@ -811,7 +811,7 @@ class KodiDevice(MediaPlayerDevice):
         except jsonrpc_base.jsonrpc.TransportError:
             result = None
             _LOGGER.warning(
-                "TransportError trying to run API method " "%s.%s(%s)",
+                "TransportError trying to run API method %s.%s(%s)",
                 self.entity_id,
                 method,
                 kwargs,

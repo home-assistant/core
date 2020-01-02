@@ -153,7 +153,7 @@ def test_iterating_all_states(hass):
 
 def test_iterating_domain_states(hass):
     """Test iterating domain states."""
-    tmpl_str = "{% for state in states.sensor %}" "{{ state.state }}{% endfor %}"
+    tmpl_str = "{% for state in states.sensor %}{{ state.state }}{% endfor %}"
 
     info = render_to_info(hass, tmpl_str)
     assert_result_info(info, "", domains=["sensor"])
@@ -818,7 +818,7 @@ def test_states_function(hass):
 
 
 @patch(
-    "homeassistant.helpers.template.TemplateEnvironment." "is_safe_callable",
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
 def test_now(mock_is_safe, hass):
@@ -832,7 +832,7 @@ def test_now(mock_is_safe, hass):
 
 
 @patch(
-    "homeassistant.helpers.template.TemplateEnvironment." "is_safe_callable",
+    "homeassistant.helpers.template.TemplateEnvironment.is_safe_callable",
     return_value=True,
 )
 def test_utcnow(mock_is_safe, hass):
@@ -1260,18 +1260,18 @@ async def test_expand(hass):
     hass.states.async_set("test.object", "happy")
 
     info = render_to_info(
-        hass, "{{ expand('test.object') | map(attribute='entity_id')" " | join(', ') }}"
+        hass, "{{ expand('test.object') | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "test.object", [])
 
     info = render_to_info(
         hass,
-        "{{ expand('group.new_group') | map(attribute='entity_id')" " | join(', ') }}",
+        "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "", ["group.new_group"])
 
     info = render_to_info(
-        hass, "{{ expand(states.group) | map(attribute='entity_id')" " | join(', ') }}"
+        hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "", [], ["group"])
 
@@ -1279,12 +1279,12 @@ async def test_expand(hass):
 
     info = render_to_info(
         hass,
-        "{{ expand('group.new_group') | map(attribute='entity_id')" " | join(', ') }}",
+        "{{ expand('group.new_group') | map(attribute='entity_id') | join(', ') }}",
     )
     assert_result_info(info, "test.object", ["group.new_group"])
 
     info = render_to_info(
-        hass, "{{ expand(states.group) | map(attribute='entity_id')" " | join(', ') }}"
+        hass, "{{ expand(states.group) | map(attribute='entity_id') | join(', ') }}"
     )
     assert_result_info(info, "test.object", ["group.new_group"], ["group"])
 
@@ -1437,7 +1437,7 @@ def test_closest_function_to_state(hass):
 
     assert (
         template.Template(
-            "{{ closest(states.zone.far_away, " "states.test_domain).entity_id }}", hass
+            "{{ closest(states.zone.far_away, states.test_domain).entity_id }}", hass
         ).async_render()
         == "test_domain.closest_zone"
     )
@@ -1471,7 +1471,7 @@ def test_closest_function_state_with_invalid_location(hass):
 
     assert (
         template.Template(
-            "{{ closest(states.test_domain.closest_home, " "states) }}", hass
+            "{{ closest(states.test_domain.closest_home, states) }}", hass
         ).async_render()
         == "None"
     )
@@ -1517,7 +1517,7 @@ def test_extract_entities_none_exclude_stuff(hass):
 
     assert (
         template.extract_entities(
-            "{{ closest(states.zone.far_away, " "states.test_domain).entity_id }}"
+            "{{ closest(states.zone.far_away, states.test_domain).entity_id }}"
         )
         == MATCH_ALL
     )

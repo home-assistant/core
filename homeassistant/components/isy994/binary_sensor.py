@@ -165,7 +165,7 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         """Handle an "On" control event from the "negative" node."""
         if event == "DON":
             _LOGGER.debug(
-                "Sensor %s turning Off via the Negative node " "sending a DON command",
+                "Sensor %s turning Off via the Negative node sending a DON command",
                 self.name,
             )
             self._computed_state = False
@@ -181,7 +181,7 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         """
         if event == "DON":
             _LOGGER.debug(
-                "Sensor %s turning On via the Primary node " "sending a DON command",
+                "Sensor %s turning On via the Primary node sending a DON command",
                 self.name,
             )
             self._computed_state = True
@@ -189,7 +189,7 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
             self._heartbeat()
         if event == "DOF":
             _LOGGER.debug(
-                "Sensor %s turning Off via the Primary node " "sending a DOF command",
+                "Sensor %s turning Off via the Primary node sending a DOF command",
                 self.name,
             )
             self._computed_state = False

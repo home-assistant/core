@@ -178,7 +178,7 @@ class HaveIBeenPwnedData:
 
         else:
             _LOGGER.error(
-                "Failed fetching data for %s" "(HTTP Status_code = %d)",
+                "Failed fetching data for %s (HTTP Status_code = %d)",
                 self._email,
                 req.status_code,
             )

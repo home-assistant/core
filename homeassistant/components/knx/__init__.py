@@ -102,7 +102,7 @@ async def async_setup(hass, config):
     except XKNXException as ex:
         _LOGGER.warning("Can't connect to KNX interface: %s", ex)
         hass.components.persistent_notification.async_create(
-            "Can't connect to KNX interface: <br>" "<b>{0}</b>".format(ex), title="KNX"
+            "Can't connect to KNX interface: <br><b>{0}</b>".format(ex), title="KNX"
         )
 
     for component, discovery_type in (

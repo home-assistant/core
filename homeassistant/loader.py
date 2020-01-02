@@ -407,7 +407,7 @@ def _load_file(
 
             if str(err) not in white_listed_errors:
                 _LOGGER.exception(
-                    ("Error loading %s. Make sure all " "dependencies are installed"),
+                    ("Error loading %s. Make sure all dependencies are installed"),
                     path,
                 )
 

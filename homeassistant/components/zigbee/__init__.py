@@ -335,7 +335,7 @@ class ZigBeeDigitalIn(Entity):
         pin_name = DIGITAL_PINS[self._config.pin]
         if pin_name not in sample:
             _LOGGER.warning(
-                "Pin %s (%s) was not in the sample provided by Zigbee device " "%s.",
+                "Pin %s (%s) was not in the sample provided by Zigbee device %s.",
                 self._config.pin,
                 pin_name,
                 hexlify(self._config.address),

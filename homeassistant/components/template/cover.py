@@ -437,8 +437,7 @@ class CoverTemplate(CoverDevice):
                 if state < 0 or state > 100:
                     self._tilt_value = None
                     _LOGGER.error(
-                        "Tilt value must be between 0 and 100." " Value was: %.2f",
-                        state,
+                        "Tilt value must be between 0 and 100. Value was: %.2f", state,
                     )
                 else:
                     self._tilt_value = state
@@ -466,7 +465,7 @@ class CoverTemplate(CoverDevice):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render %s template %s," " the state is unknown.",
+                        "Could not render %s template %s, the state is unknown.",
                         friendly_property_name,
                         self._name,
                     )

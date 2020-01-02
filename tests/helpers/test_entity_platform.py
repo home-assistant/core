@@ -134,7 +134,7 @@ async def test_update_state_adds_entities_with_update_before_add_false(hass):
     assert not ent.update.called
 
 
-@asynctest.patch("homeassistant.helpers.entity_platform." "async_track_time_interval")
+@asynctest.patch("homeassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_platform(mock_track, hass):
     """Test the setting of the scan interval via platform."""
 

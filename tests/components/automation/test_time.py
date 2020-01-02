@@ -39,7 +39,7 @@ async def test_if_fires_using_at(hass, calls):
                 "action": {
                     "service": "test.automation",
                     "data_template": {
-                        "some": "{{ trigger.platform }} - " "{{ trigger.now.hour }}"
+                        "some": "{{ trigger.platform }} - {{ trigger.now.hour }}"
                     },
                 },
             }

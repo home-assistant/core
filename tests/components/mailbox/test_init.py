@@ -38,7 +38,7 @@ async def test_get_messages_from_mailbox(mock_http_client):
 async def test_get_media_from_mailbox(mock_http_client):
     """Get audio from mailbox."""
     mp3sha = "3f67c4ea33b37d1710f772a26dd3fb43bb159d50"
-    msgtxt = "Message 1. " "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+    msgtxt = "Message 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
     msgsha = sha1(msgtxt.encode("utf-8")).hexdigest()
 
     url = "/api/mailbox/media/DemoMailbox/%s" % (msgsha)
@@ -50,8 +50,8 @@ async def test_get_media_from_mailbox(mock_http_client):
 
 async def test_delete_from_mailbox(mock_http_client):
     """Get audio from mailbox."""
-    msgtxt1 = "Message 1. " "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
-    msgtxt2 = "Message 3. " "Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+    msgtxt1 = "Message 1. Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
+    msgtxt2 = "Message 3. Lorem ipsum dolor sit amet, consectetur adipiscing elit. "
     msgsha1 = sha1(msgtxt1.encode("utf-8")).hexdigest()
     msgsha2 = sha1(msgtxt2.encode("utf-8")).hexdigest()
 

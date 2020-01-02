@@ -98,7 +98,7 @@ async def async_setup(hass, config):
             and not (time or dttm)
         ):
             _LOGGER.error(
-                "Invalid service data for %s " "input_datetime.set_datetime: %s",
+                "Invalid service data for %s input_datetime.set_datetime: %s",
                 entity.entity_id,
                 str(call.data),
             )
