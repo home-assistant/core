@@ -60,7 +60,7 @@ async def test_flow_works(hass):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == "{} - {}".format("prodnbr", "serialnumber")
+    assert result["title"] == f"prodnbr - serialnumber"
     assert result["data"] == {
         axis.CONF_DEVICE: {
             config_flow.CONF_HOST: "1.2.3.4",
