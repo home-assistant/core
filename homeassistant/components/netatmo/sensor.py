@@ -122,8 +122,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     auth = hass.data[DOMAIN][entry.entry_id][AUTH]
     # config_public = hass.data[DOMAIN][CONF_PUBLIC]
 
-    def find_devices(data):
-        """Find all devices."""
+    def find_entities(data):
+        """Find all entities."""
         all_module_infos = data.get_module_infos()
         entities = []
         for module in all_module_infos.values():
@@ -134,9 +134,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 entities.append(NetatmoSensor(data, module, condition.lower()))
         return entities
 
-    def get_devices():
-        """Retrieve Netatmo devices."""
-        devices = []
+    def get_entities():
+        """Retrieve Netatmo entities."""
+        entities = []
 
         for data_class in [pyatmo.WeatherStationData, pyatmo.HomeCoachData]:
             try:
@@ -145,15 +145,15 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 data = NetatmoData(auth, dc_data)
             except pyatmo.NoDevice:
                 _LOGGER.debug(
-                    "No %s devices found", NETATMO_DEVICE_TYPES[data_class.__name__]
+                    "No %s entities found", NETATMO_DEVICE_TYPES[data_class.__name__]
                 )
                 continue
 
-            devices.extend(find_devices(data))
+            entities.extend(find_entities(data))
 
-        return devices
+        return entities
 
-    async_add_entities(await hass.async_add_executor_job(get_devices), True)
+    async_add_entities(await hass.async_add_executor_job(get_entities), True)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

@@ -110,9 +110,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     home_data = HomeData(auth)
 
-    def get_devices():
-        """Retrieve Netatmo devices."""
-        devices = []
+    def get_entities():
+        """Retrieve Netatmo entities."""
+        entities = []
         try:
             home_data.setup()
         except pyatmo.NoDevice:
@@ -128,10 +128,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
             for room_id in room_data.get_room_ids():
                 room_name = room_data.homedata.rooms[home_id][room_id]["name"]
                 _LOGGER.debug("Setting up room %s (%s) ...", room_name, room_id)
-                devices.append(NetatmoThermostat(room_data, room_id))
-        return devices
+                entities.append(NetatmoThermostat(room_data, room_id))
+        return entities
 
-    async_add_entities(await hass.async_add_executor_job(get_devices), True)
+    async_add_entities(await hass.async_add_executor_job(get_entities), True)
 
     def _service_setschedule(service):
         """Service to change current home schedule."""
