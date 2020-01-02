@@ -226,7 +226,7 @@ async def test_belgian_meter(hass, mock_connection_factory):
     telegram_callback(telegram)
 
     # after receiving telegram entities need to have the chance to update
-    yield from asyncio.sleep(0)
+    await asyncio.sleep(0)
 
     # tariff should be translated in human readable and have no unit
     power_tariff = hass.states.get("sensor.power_tariff")
