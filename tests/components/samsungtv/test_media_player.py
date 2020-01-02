@@ -135,16 +135,19 @@ async def test_update_on(hass, remote, mock_now):
 
 async def test_update_off(hass, remote, mock_now):
     """Testing update tv off."""
-    await setup_samsungtv(hass, MOCK_CONFIG)
-    remote.control = mock.Mock(side_effect=OSError("Boom"))
+    with patch(
+        "homeassistant.components.samsungtv.media_player.SamsungRemote",
+        side_effect=[OSError("Boom"), mock.DEFAULT],
+    ), patch("homeassistant.components.samsungtv.media_player.socket"):
+        await setup_samsungtv(hass, MOCK_CONFIG)
 
-    next_update = mock_now + timedelta(minutes=5)
-    with patch("homeassistant.util.dt.utcnow", return_value=next_update):
-        async_fire_time_changed(hass, next_update)
-        await hass.async_block_till_done()
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
 
-    state = hass.states.get(ENTITY_ID)
-    assert state.state == STATE_OFF
+        state = hass.states.get(ENTITY_ID)
+        assert state.state == STATE_OFF
 
 
 async def test_send_key(hass, remote):
@@ -155,8 +158,10 @@ async def test_send_key(hass, remote):
     )
     state = hass.states.get(ENTITY_ID)
     # key and update called
-    assert remote.control.call_count == 2
-    assert remote.control.call_args_list == [call("KEY_VOLUP"), call(None)]
+    assert remote.control.call_count == 1
+    assert remote.control.call_args_list == [call("KEY_VOLUP")]
+    assert remote.close.call_count == 1
+    assert remote.close.call_args_list == [call()]
     assert state.state == STATE_ON
 
 

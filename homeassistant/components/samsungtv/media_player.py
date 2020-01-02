@@ -98,7 +98,29 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
-        self.send_key(None)
+        if self._power_off_in_progress():
+            self._state = STATE_OFF
+        else:
+            if self._remote is not None:
+                # Close the current remote connection
+                self._remote.close()
+                self._remote = None
+
+            try:
+                self.get_remote()
+                self._state = STATE_ON
+            except (
+                samsung_exceptions.UnhandledResponse,
+                samsung_exceptions.AccessDenied,
+            ):
+                # We got a response so it's working.
+                self._state = STATE_ON
+            except OSError:
+                # Different reasons, e.g. hostname not resolveable
+                self._state = STATE_OFF
+            except AttributeError:
+                # Auto-detect could not find working config yet
+                self.state = None
 
     def get_remote(self):
         """Create or return a remote control instance."""
@@ -118,11 +140,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
-                    # if key:
                     self.get_remote().control(key)
-                    # else:
-                    # clean existing connection (used only to test is TV is on)
-                    #   self.get_remote(True)
                     break
                 except (
                     samsung_exceptions.ConnectionClosed,
