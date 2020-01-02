@@ -1,9 +1,12 @@
 """Platform for the KEF Wireless Speakers."""
 
 from datetime import timedelta
+from functools import partial
+import ipaddress
 import logging
 
 from aiokef.aiokef import AsyncKefSpeaker
+from getmac import get_mac_address
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -18,8 +21,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
     CONF_NAME,
     CONF_PORT,
     CONF_TYPE,
@@ -99,9 +100,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sources,
     )
 
-    latitude = config.data[CONF_LATITUDE]
-    longitude = config.data[CONF_LONGITUDE]
-    unique_id = f"kef-{latitude}-{longitude}"
+    try:
+        if ipaddress.ip_address(host).version == 6:
+            mode = "ip6"
+        else:
+            mode = "ip"
+    except ValueError:
+        mode = "hostname"
+    mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
+
+    unique_id = f"kef-{mac}"
 
     media_player = KefMediaPlayer(
         name,
