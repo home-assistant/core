@@ -1,39 +1,57 @@
 """The tests for the denonavr media player platform."""
-from unittest.mock import MagicMock
+from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components import media_player
-from homeassistant.components.demo import media_player as demo
-import homeassistant.components.denonavr as denonavr
 from homeassistant.components.denonavr import ATTR_COMMAND, DOMAIN, SERVICE_GET_COMMAND
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
-
-async def test_setup_demo_platform(hass):
-    """Test setup."""
-    mock = MagicMock()
-    add_entities = mock.MagicMock()
-    await demo.async_setup_platform(hass, {}, add_entities)
-    assert add_entities.call_count == 1
+NAME = "fake"
+ENTITY_ID = f"{media_player.DOMAIN}.{NAME}"
 
 
-async def test_get_command(hass):
-    """Test generic command functionality."""
+@pytest.fixture(name="client")
+def client_fixture():
+    """Patch of client library for tests."""
+    with patch(
+        "homeassistant.components.denonavr.media_player.denonavr.DenonAVR",
+        autospec=True,
+    ) as mock_client_class, patch(
+        "homeassistant.components.denonavr.media_player.denonavr.discover"
+    ):
+        mock_client_class.name = NAME
+        mock_client_class.return_value.zones = {"Main": mock_client_class}
+        yield mock_client_class.return_value
 
-    await hass.async_add_executor_job(denonavr.setup, hass, {})
 
+async def setup_denonavr(hass):
+    """Initialize webostv and media_player for tests."""
     assert await async_setup_component(
         hass,
         media_player.DOMAIN,
-        {"media_player": {"platform": "manual", "name": "test"}},
+        {
+            media_player.DOMAIN: {
+                CONF_PLATFORM: "denonavr",
+                CONF_HOST: "fake",
+                CONF_NAME: NAME,
+            }
+        },
     )
+    await hass.async_block_till_done()
 
-    entity_id = "media_player.test"
-    command = "/goform/formiPhoneAppDirect.xml?RCKSK0410370"
+
+async def test_get_command(hass, client):
+    """Test generic command functionality."""
+
+    await setup_denonavr(hass)
 
     data = {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_COMMAND: command,
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_COMMAND: "test",
     }
+    await hass.services.async_call(DOMAIN, SERVICE_GET_COMMAND, data)
+    await hass.async_block_till_done()
 
-    await hass.services.async_call(DOMAIN, SERVICE_GET_COMMAND, data, blocking=True)
+    client.zones["Main"].send_get_command.assert_called_with("test")
