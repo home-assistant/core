@@ -197,19 +197,19 @@ async def test_agent_user_id_storage(hass, hass_storage):
 async def test_agent_user_id_connect():
     """Test the connection and disconnection of users."""
     config = MockConfig()
-    store = config._store
+    data = config._store._data
 
     await config.async_connect_agent_user("agent_2")
-    assert store.add_agent_user_id.call_args == call("agent_2")
+    assert data[helpers.STORE_AGENT_USER_IDS] == {"agent_2": {}}
 
     await config.async_connect_agent_user("agent_1")
-    assert store.add_agent_user_id.call_args == call("agent_1")
+    assert data[helpers.STORE_AGENT_USER_IDS] == {"agent_1": {}, "agent_2": {}}
 
     await config.async_disconnect_agent_user("agent_2")
-    assert store.pop_agent_user_id.call_args == call("agent_2")
+    assert data[helpers.STORE_AGENT_USER_IDS] == {"agent_1": {}}
 
     await config.async_disconnect_agent_user("agent_1")
-    assert store.pop_agent_user_id.call_args == call("agent_1")
+    assert data[helpers.STORE_AGENT_USER_IDS] == {}
 
 
 @pytest.mark.parametrize("agents", [{}, {"1"}, {"1", "2"}])
