@@ -16,7 +16,7 @@ async def test_user_flow(hass):
     flow.hass = hass
 
     with asynctest.patch(
-        "homeassistant.components.zha.config_flow" ".check_zigpy_connection",
+        "homeassistant.components.zha.config_flow.check_zigpy_connection",
         return_value=False,
     ):
         result = await flow.async_step_user(
@@ -26,7 +26,7 @@ async def test_user_flow(hass):
     assert result["errors"] == {"base": "cannot_connect"}
 
     with asynctest.patch(
-        "homeassistant.components.zha.config_flow" ".check_zigpy_connection",
+        "homeassistant.components.zha.config_flow.check_zigpy_connection",
         return_value=True,
     ):
         result = await flow.async_step_user(

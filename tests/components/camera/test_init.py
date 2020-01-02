@@ -119,7 +119,7 @@ class TestGetImage:
     def test_get_image_without_exists_camera(self):
         """Try to get image without exists camera."""
         with patch(
-            "homeassistant.helpers.entity_component.EntityComponent." "get_entity",
+            "homeassistant.helpers.entity_component.EntityComponent.get_entity",
             return_value=None,
         ), pytest.raises(HomeAssistantError):
             asyncio.run_coroutine_threadsafe(

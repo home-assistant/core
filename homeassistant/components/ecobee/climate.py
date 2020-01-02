@@ -550,7 +550,7 @@ class Thermostat(ClimateDevice):
             self.hold_preference(),
         )
         _LOGGER.debug(
-            "Setting ecobee hold_temp to: heat=%s, is=%s, " "cool=%s, is=%s",
+            "Setting ecobee hold_temp to: heat=%s, is=%s, cool=%s, is=%s",
             heat_temp,
             isinstance(heat_temp, (int, float)),
             cool_temp,

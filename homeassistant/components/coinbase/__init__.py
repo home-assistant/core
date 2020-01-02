@@ -94,5 +94,5 @@ class CoinbaseData:
             self.exchange_rates = self.client.get_exchange_rates()
         except AuthenticationError as coinbase_error:
             _LOGGER.error(
-                "Authentication error connecting" " to coinbase: %s", coinbase_error
+                "Authentication error connecting to coinbase: %s", coinbase_error
             )

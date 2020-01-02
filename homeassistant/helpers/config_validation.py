@@ -544,7 +544,7 @@ def socket_timeout(value: Optional[Any]) -> object:
         float_value = float(value)
         if float_value > 0.0:
             return float_value
-        raise vol.Invalid("Invalid socket timeout value." " float > 0.0 required.")
+        raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
     except Exception as _:
         raise vol.Invalid("Invalid socket timeout: {err}".format(err=_))
 

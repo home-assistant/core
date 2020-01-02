@@ -91,7 +91,7 @@ def setup(hass, hass_config):
     if ecoal_contr.version is None:
         # Wrong credentials nor network config
         _LOGGER.error(
-            "Unable to read controller status from %s@%s" " (wrong host/credentials)",
+            "Unable to read controller status from %s@%s (wrong host/credentials)",
             username,
             host,
         )

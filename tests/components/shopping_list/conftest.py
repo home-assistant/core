@@ -11,7 +11,7 @@ from homeassistant.setup import async_setup_component
 def mock_shopping_list_io():
     """Stub out the persistence."""
     with patch("homeassistant.components.shopping_list.ShoppingData.save"), patch(
-        "homeassistant.components.shopping_list." "ShoppingData.async_load"
+        "homeassistant.components.shopping_list.ShoppingData.async_load"
     ):
         yield
 

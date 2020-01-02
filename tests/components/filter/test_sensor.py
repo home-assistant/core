@@ -117,11 +117,11 @@ class TestFilterSensor(unittest.TestCase):
             }
 
         with patch(
-            "homeassistant.components.history." "state_changes_during_period",
+            "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ):
             with patch(
-                "homeassistant.components.history." "get_last_state_changes",
+                "homeassistant.components.history.get_last_state_changes",
                 return_value=fake_states,
             ):
                 with assert_setup_component(1, "sensor"):
@@ -165,11 +165,11 @@ class TestFilterSensor(unittest.TestCase):
             ]
         }
         with patch(
-            "homeassistant.components.history." "state_changes_during_period",
+            "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ):
             with patch(
-                "homeassistant.components.history." "get_last_state_changes",
+                "homeassistant.components.history.get_last_state_changes",
                 return_value=fake_states,
             ):
                 with assert_setup_component(1, "sensor"):

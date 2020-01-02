@@ -60,7 +60,7 @@ class FritzBoxScanner(DeviceScanner):
             self._update_info()
         else:
             _LOGGER.error(
-                "Failed to establish connection to FRITZ!Box " "with IP: %s", self.host
+                "Failed to establish connection to FRITZ!Box with IP: %s", self.host
             )
 
     def scan_devices(self):
