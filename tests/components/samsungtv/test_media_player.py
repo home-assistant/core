@@ -10,7 +10,6 @@ from samsungctl import exceptions
 import wakeonlan
 from websocket import WebSocketException
 
-from homeassistant.components import samsungtv
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
@@ -24,7 +23,10 @@ from homeassistant.components.media_player.const import (
     SERVICE_SELECT_SOURCE,
     SUPPORT_TURN_ON,
 )
-from homeassistant.components.samsungtv.const import DOMAIN as SAMSUNGTV_DOMAIN
+from homeassistant.components.samsungtv.const import (
+    DEFAULT_TIMEOUT,
+    DOMAIN as SAMSUNGTV_DOMAIN,
+)
 from homeassistant.components.samsungtv.media_player import (
     CONF_TIMEOUT,
     SUPPORT_SAMSUNGTV,
@@ -52,6 +54,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -131,7 +134,7 @@ AUTODETECT_WEBSOCKET = {
     "method": "websocket",
     "port": None,
     "host": "fake_auto",
-    "timeout": None,
+    "timeout": DEFAULT_TIMEOUT,
 }
 AUTODETECT_LEGACY = {
     "name": "HomeAssistant",
@@ -140,7 +143,7 @@ AUTODETECT_LEGACY = {
     "method": "legacy",
     "port": None,
     "host": "fake_auto",
-    "timeout": None,
+    "timeout": DEFAULT_TIMEOUT,
 }
 
 
@@ -175,7 +178,7 @@ def mock_now():
 
 async def setup_samsungtv(hass, config):
     """Set up mock Samsung TV."""
-    await samsungtv.async_setup(hass, config)
+    await async_setup_component(hass, SAMSUNGTV_DOMAIN, config)
     await hass.async_block_till_done()
 
 

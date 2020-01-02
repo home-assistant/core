@@ -34,6 +34,10 @@ RESULT_NOT_FOUND = "not_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 
 
+def _is_already_in_progress(flows, ip_address):
+    return any(ip_address == flow["context"].get(CONF_IP_ADDRESS) for flow in flows)
+
+
 def _is_already_configured(hass, ip_address):
     return any(
         ip_address == entry.data.get(CONF_IP_ADDRESS)
@@ -127,6 +131,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _get_ip, user_input[CONF_HOST]
             )
 
+            if _is_already_in_progress(self._async_in_progress(), ip_address):
+                return self.async_abort(reason="already_in_progress")
+
             if _is_already_configured(self.hass, ip_address):
                 return self.async_abort(reason="already_configured")
 
@@ -154,10 +161,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _get_ip, user_input[ATTR_SSDP_LOCATION]
         )
 
-        if any(
-            ip_address == flow["context"].get(CONF_IP_ADDRESS)
-            for flow in self._async_in_progress()
-        ):
+        if _is_already_in_progress(self._async_in_progress(), ip_address):
             return self.async_abort(reason="already_in_progress")
 
         if _is_already_configured(self.hass, ip_address):
