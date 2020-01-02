@@ -17,7 +17,9 @@ CONF_DIMENSION = "dimension"
 CONF_DELTA = "delta"
 CONF_COUNTRY = "country_code"
 
-RADAR_MAP_URL_TEMPLATE = "https://api.buienradar.nl/image/1.0/" "RadarMap{c}?w={w}&h={h}"
+RADAR_MAP_URL_TEMPLATE = (
+    "https://api.buienradar.nl/image/1.0/" "RadarMap{c}?w={w}&h={h}"
+)
 
 _LOG = logging.getLogger(__name__)
 
@@ -110,7 +112,9 @@ class BuienradarCam(Camera):
         """Retrieve new radar image and return whether this succeeded."""
         session = async_get_clientsession(self.hass)
 
-        url = RADAR_MAP_URL_TEMPLATE.format(c=self._country, w=self._dimension, h=self._dimension)
+        url = RADAR_MAP_URL_TEMPLATE.format(
+            c=self._country, w=self._dimension, h=self._dimension
+        )
 
         if self._last_modified:
             headers = {"If-Modified-Since": self._last_modified}
