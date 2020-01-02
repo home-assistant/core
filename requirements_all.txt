@@ -318,7 +318,7 @@ blockchain==1.4.4
 
 # homeassistant.components.decora
 # homeassistant.components.miflora
-# bluepy==1.1.4
+# bluepy==1.3.0
 
 # homeassistant.components.bme680
 # bme680==1.0.5
@@ -846,7 +846,7 @@ meteofrance==0.3.7
 mficlient==0.3.0
 
 # homeassistant.components.miflora
-miflora==0.4.0
+miflora==0.6.0
 
 # homeassistant.components.mill
 millheater==0.3.4
