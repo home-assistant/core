@@ -23,7 +23,6 @@ from homeassistant.const import (
     CONF_TYPE,
     STATE_OFF,
     STATE_ON,
-    STATE_UNKNOWN,
 )
 from homeassistant.helpers import config_validation as cv
 
@@ -145,7 +144,7 @@ class KefMediaPlayer(MediaPlayerDevice):
             ioloop=ioloop,
         )
 
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._muted = None
         self._source = None
         self._volume = None
@@ -181,7 +180,7 @@ class KefMediaPlayer(MediaPlayerDevice):
                 self._state = STATE_OFF
         except (ConnectionRefusedError, ConnectionError, TimeoutError) as err:
             _LOGGER.debug("Error in `update`: %s", err)
-            self._state = STATE_UNKNOWN
+            self._state = None
 
     @property
     def volume_level(self):
