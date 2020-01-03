@@ -107,6 +107,7 @@ omit =
     homeassistant/components/buienradar/util.py
     homeassistant/components/buienradar/weather.py
     homeassistant/components/caldav/calendar.py
+    homeassistant/components/canada_hydrometric/*
     homeassistant/components/canary/alarm_control_panel.py
     homeassistant/components/canary/camera.py
     homeassistant/components/cast/*
