@@ -20,11 +20,6 @@ LUTRON_DEVICES = "lutron_devices"
 
 # Attribute on events that indicates what action was taken with the button.
 ATTR_ACTION = "action"
-ATTR_AREA_NAME = "area_name"
-ATTR_KEYPAD_NAME = "keypad_name"
-ATTR_BUTTON_NAME = "button_name"
-ATTR_BUTTON_ID = "button_id"
-ATTR_KEYPAD_ID = "keypad_id"
 ATTR_FULL_ID = "full_id"
 
 CONFIG_SCHEMA = vol.Schema(
