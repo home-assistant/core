@@ -7,13 +7,10 @@ HOMEKIT_NOTIFY_ID = 4663548
 
 # #### Attributes ####
 ATTR_DISPLAY_NAME = "display_name"
-ATTR_NITROGEN_DIOXIDE_DENSITY = "nitrogen_dioxide_density"
-ATTR_PM_DENSITY = "pm_density"
-ATTR_PM_SIZE = "pm_size"
-ATTR_PM_2_5_DENSITY = "pm_2_5_density"
-ATTR_PM_10_DENSITY = "pm_10_density"
+ATTR_PM = "particulate_matter"
+ATTR_PM_SIZE = "particulate_matter_size"
 ATTR_VALUE = "value"
-ATTR_VOC_DENSITY = "voc_density"
+ATTR_VOC_DENSITY = "volatile_organic_compounds"
 
 # #### Config ####
 CONF_ADVERTISE_IP = "advertise_ip"

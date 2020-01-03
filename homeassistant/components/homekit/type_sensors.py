@@ -3,6 +3,7 @@ import logging
 
 from pyhap.const import CATEGORY_SENSOR
 
+from homeassistant.components.air_quality import ATTR_NO2, ATTR_PM_2_5, ATTR_PM_10
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -14,10 +15,7 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    ATTR_NITROGEN_DIOXIDE_DENSITY,
-    ATTR_PM_2_5_DENSITY,
-    ATTR_PM_10_DENSITY,
-    ATTR_PM_DENSITY,
+    ATTR_PM,
     ATTR_PM_SIZE,
     ATTR_VOC_DENSITY,
     CHAR_AIR_PARTICULATE_DENSITY,
@@ -150,16 +148,12 @@ class AirQualitySensor(HomeAccessory):
         chars = []
         current_state = self.hass.states.get(self.entity_id)
         nitrogen_dioxide_density = convert_to_float(
-            current_state.attributes.get(ATTR_NITROGEN_DIOXIDE_DENSITY)
+            current_state.attributes.get(ATTR_NO2)
         )
         voc_density = convert_to_float(current_state.attributes.get(ATTR_VOC_DENSITY))
-        pm_2_5_density = convert_to_float(
-            current_state.attributes.get(ATTR_PM_2_5_DENSITY)
-        )
-        pm_10_density = convert_to_float(
-            current_state.attributes.get(ATTR_PM_10_DENSITY)
-        )
-        pm_density = convert_to_float(current_state.attributes.get(ATTR_PM_DENSITY))
+        pm_2_5_density = convert_to_float(current_state.attributes.get(ATTR_PM_2_5))
+        pm_10_density = convert_to_float(current_state.attributes.get(ATTR_PM_10))
+        pm_density = convert_to_float(current_state.attributes.get(ATTR_PM))
         pm_size = convert_to_float(current_state.attributes.get(ATTR_PM_SIZE))
         device_class = current_state.attributes.get(ATTR_DEVICE_CLASS)
 
@@ -232,13 +226,11 @@ class AirQualitySensor(HomeAccessory):
 
     def update_state(self, new_state):
         """Update accessory after state change."""
-        nitrogen_dioxide_density = convert_to_float(
-            new_state.attributes.get(ATTR_NITROGEN_DIOXIDE_DENSITY)
-        )
+        nitrogen_dioxide_density = convert_to_float(new_state.attributes.get(ATTR_NO2))
         voc_density = convert_to_float(new_state.attributes.get(ATTR_VOC_DENSITY))
-        pm_2_5_density = convert_to_float(new_state.attributes.get(ATTR_PM_2_5_DENSITY))
-        pm_10_density = convert_to_float(new_state.attributes.get(ATTR_PM_10_DENSITY))
-        pm_density = convert_to_float(new_state.attributes.get(ATTR_PM_DENSITY))
+        pm_2_5_density = convert_to_float(new_state.attributes.get(ATTR_PM_2_5))
+        pm_10_density = convert_to_float(new_state.attributes.get(ATTR_PM_10))
+        pm_density = convert_to_float(new_state.attributes.get(ATTR_PM))
         pm_size = convert_to_float(new_state.attributes.get(ATTR_PM_SIZE))
 
         # if device class or entity ID contain DEVICE_CLASS_PM25 then assume state is a PM25 reading
