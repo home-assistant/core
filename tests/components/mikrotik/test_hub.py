@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.components import mikrotik
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from . import DHCP_DATA, MOCK_DATA, WIRELESS_DATA, ARP_DATA
+from . import ARP_DATA, DHCP_DATA, MOCK_DATA, WIRELESS_DATA
 
 CONFIG_ENTRY = config_entries.ConfigEntry(
     version=1,

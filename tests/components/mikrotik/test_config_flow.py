@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+
 from tests.common import MockConfigEntry
 
 DEMO_USER_INPUT = {
