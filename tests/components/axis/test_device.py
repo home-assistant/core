@@ -8,6 +8,8 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components import axis
 
+from tests.common import MockConfigEntry
+
 MAC = "00408C12345"
 MODEL = "model"
 NAME = "name"
@@ -68,17 +70,14 @@ async def setup_axis_integration(
     properties=DEFAULT_PROPERTIES,
 ):
     """Create the Axis device."""
-    config_entry = config_entries.ConfigEntry(
-        version=1,
+    config_entry = MockConfigEntry(
         domain=axis.DOMAIN,
-        title="Mock Title",
         data=deepcopy(config),
-        source="test",
         connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
-        system_options={},
         options=deepcopy(options),
         entry_id="1",
     )
+    config_entry.add_to_hass(hass)
 
     def mock_request(self, method, path, json=None):
         if method == "get":
@@ -98,10 +97,8 @@ async def setup_axis_integration(
     with patch("axis.vapix.Vapix.request", new=mock_request), patch(
         "axis.AxisDevice.start", return_value=True
     ):
-        await axis.async_setup_entry(hass, config_entry)
-    await hass.async_block_till_done()
-
-    hass.config_entries._entries.append(config_entry)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return hass.data[axis.DOMAIN].get(config[axis.CONF_MAC])
 
@@ -163,9 +160,7 @@ async def test_device_reset(hass):
 
 async def test_device_not_accessible(hass):
     """Failed setup schedules a retry of setup."""
-    with patch.object(
-        axis.device, "get_device", side_effect=axis.errors.CannotConnect
-    ), pytest.raises(axis.device.ConfigEntryNotReady):
+    with patch.object(axis.device, "get_device", side_effect=axis.errors.CannotConnect):
         await setup_axis_integration(hass)
     assert hass.data[axis.DOMAIN] == {}
 
