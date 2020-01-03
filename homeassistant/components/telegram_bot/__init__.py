@@ -782,7 +782,13 @@ class BaseTelegramBotEntity:
             if event_data is None:
                 return message_ok
 
-            event_data[ATTR_DATA] = data[ATTR_DATA]
+            query_data = event_data[ATTR_DATA] = data[ATTR_DATA]
+
+            if query_data[0] == "/":
+                pieces = query_data.split(" ")
+                event_data[ATTR_COMMAND] = pieces[0]
+                event_data[ATTR_ARGS] = pieces[1:]
+
             event_data[ATTR_MSG] = data[ATTR_MSG]
             event_data[ATTR_CHAT_INSTANCE] = data[ATTR_CHAT_INSTANCE]
             event_data[ATTR_MSGID] = data[ATTR_MSGID]
