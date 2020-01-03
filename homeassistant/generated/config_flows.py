@@ -65,6 +65,7 @@ FLOWS = [
     "point",
     "ps4",
     "rainmachine",
+    "sentry",
     "simplisafe",
     "smartthings",
     "smhi",
