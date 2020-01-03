@@ -123,10 +123,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         unique_id=unique_id,
     )
 
-    if unique_id in hass.data[DOMAIN]:
-        _LOGGER.debug("%s is already configured", unique_id)
+    if host in hass.data[DOMAIN]:
+        _LOGGER.debug("%s is already configured", host)
     else:
-        hass.data[DOMAIN][unique_id] = media_player
+        hass.data[DOMAIN][host] = media_player
         async_add_entities([media_player], update_before_add=True)
 
 
