@@ -208,6 +208,13 @@ class TestFilterSensor(unittest.TestCase):
             filtered = filt.filter_state(state)
         assert 21 == filtered.state
 
+    def test_precision_zero(self):
+        """Test if precision of zero returns an integer."""
+        filt = LowPassFilter(window_size=10, precision=0, entity=None, time_constant=10)
+        for state in self.values:
+            filtered = filt.filter_state(state)
+        assert isinstance(filtered.state, int)
+
     def test_lowpass(self):
         """Test if lowpass filter works."""
         filt = LowPassFilter(window_size=10, precision=2, entity=None, time_constant=10)
