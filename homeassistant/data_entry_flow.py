@@ -153,9 +153,7 @@ class FlowManager(abc.ABC):
         if not hasattr(flow, method):
             self._progress.pop(flow.flow_id)
             raise UnknownStep(
-                "Handler {} doesn't support step {}".format(
-                    flow.__class__.__name__, step_id
-                )
+                f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
             )
 
         try:

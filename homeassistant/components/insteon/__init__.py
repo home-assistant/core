@@ -614,7 +614,7 @@ class InsteonEntity(Entity):
         # Get an extension label if there is one
         extension = self._get_label()
         if extension:
-            extension = " " + extension
+            extension = f" {extension}"
         name = "{:s} {:s}{:s}".format(
             description, self._insteon_device.address.human, extension
         )

@@ -65,7 +65,7 @@ def assert_result_info(info, result, entities=None, domains=None, all_states=Fal
 def test_template_equality():
     """Test template comparison and hashing."""
     template_one = template.Template("{{ template_one }}")
-    template_one_1 = template.Template("{{ template_" + "one }}")
+    template_one_1 = template.Template("{{ template_one }}")
     template_two = template.Template("{{ template_two }}")
 
     assert template_one == template_one_1
@@ -486,9 +486,9 @@ def test_timestamp_custom(hass):
 
     for inp, fmt, local, out in tests:
         if fmt:
-            fil = "timestamp_custom('{}')".format(fmt)
+            fil = f"timestamp_custom('{fmt}')"
         elif fmt and local:
-            fil = "timestamp_custom('{0}', {1})".format(fmt, local)
+            fil = f"timestamp_custom('{fmt}', {local})"
         else:
             fil = "timestamp_custom"
 

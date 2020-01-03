@@ -162,7 +162,7 @@ class Life360Scanner:
             msg = f"{key}: {err_msg}"
             if _errs >= self._error_threshold:
                 if _errs == self._max_errs:
-                    msg = "Suppressing further errors until OK: " + msg
+                    msg = f"Suppressing further errors until OK: {msg}"
                 _LOGGER.error(msg)
             elif _errs >= self._warning_threshold:
                 _LOGGER.warning(msg)

@@ -18,9 +18,7 @@ def mock_zeroconf():
 
 def service_update_mock(zeroconf, service, handlers):
     """Call service update handler."""
-    handlers[0](
-        zeroconf, service, "{}.{}".format("name", service), ServiceStateChange.Added
-    )
+    handlers[0](zeroconf, service, f"name.{service}", ServiceStateChange.Added)
 
 
 def get_service_info_mock(service_type, name):

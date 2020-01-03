@@ -114,7 +114,7 @@ def save_yaml(fname: str, data: JSON_TYPE) -> None:
     """Save a YAML file."""
     yaml = YAML(typ="rt")
     yaml.indent(sequence=4, offset=2)
-    tmp_fname = fname + "__TEMP__"
+    tmp_fname = f"{fname}__TEMP__"
     try:
         try:
             file_stat = os.stat(fname)

@@ -663,13 +663,12 @@ class TestStateMachine(unittest.TestCase):
 def test_service_call_repr():
     """Test ServiceCall repr."""
     call = ha.ServiceCall("homeassistant", "start")
-    assert str(call) == "<ServiceCall homeassistant.start (c:{})>".format(
-        call.context.id
-    )
+    assert str(call) == f"<ServiceCall homeassistant.start (c:{call.context.id})>"
 
     call2 = ha.ServiceCall("homeassistant", "start", {"fast": "yes"})
-    assert str(call2) == "<ServiceCall homeassistant.start (c:{}): fast=yes>".format(
-        call2.context.id
+    assert (
+        str(call2)
+        == f"<ServiceCall homeassistant.start (c:{call2.context.id}): fast=yes>"
     )
 
 

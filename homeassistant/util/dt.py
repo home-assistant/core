@@ -232,8 +232,8 @@ def parse_time_expression(parameter: Any, min_value: int, max_value: int) -> Lis
     for val in res:
         if val < min_value or val > max_value:
             raise ValueError(
-                "Time expression '{}': parameter {} out of range ({} to {})"
-                "".format(parameter, val, min_value, max_value)
+                f"Time expression '{parameter}': parameter {val} out of range "
+                f"({min_value} to {max_value})"
             )
 
     return res

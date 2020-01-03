@@ -37,7 +37,7 @@ def _to_hex_str(id_in_bytes):
 
     Example: 0x1234 --> '0x1234'
     """
-    return "0x{:04x}".format(id_in_bytes)
+    return f"0x{id_in_bytes:04x}"
 
 
 # For some reason node.manufacturer_id is of type string. So we need to convert
