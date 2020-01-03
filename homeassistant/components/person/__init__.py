@@ -174,6 +174,7 @@ class PersonStorageCollection(collection.StorageCollection):
 async def filter_yaml_data(hass: HomeAssistantType, persons: List[dict]) -> List[dict]:
     """Validate YAML data that we can't validate via schema."""
     filtered = []
+    person_invalid_user = []
 
     for person_conf in persons:
         user_id = person_conf.get(CONF_USER_ID)
@@ -184,9 +185,23 @@ async def filter_yaml_data(hass: HomeAssistantType, persons: List[dict]) -> List
                     "Invalid user_id detected for person %s",
                     person_conf[collection.CONF_ID],
                 )
+                person_invalid_user.append(
+                    f"- Person {person_conf[CONF_NAME]} (id: {person_conf[collection.CONF_ID]}) points at invalid user {user_id}"
+                )
                 continue
 
         filtered.append(person_conf)
+
+    if person_invalid_user:
+        hass.components.persistent_notification.async_create(
+            f"""
+The following persons point at invalid users:
+
+{"- ".join(person_invalid_user)}
+            """,
+            "Invalid Person Configuration",
+            DOMAIN,
+        )
 
     return filtered
 
