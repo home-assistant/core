@@ -77,30 +77,6 @@ MOCK_CONFIG_AUTO = {
     SAMSUNGTV_DOMAIN: [{CONF_HOST: "fake_auto", CONF_NAME: "fake_auto"}]
 }
 
-ENTITY_ID_DISCOVERY = f"{DOMAIN}.fake_discovery_fake_model"
-MOCK_CONFIG_DISCOVERY = {
-    SAMSUNGTV_DOMAIN: [
-        {
-            "name": "fake_discovery",
-            "model_name": "fake_model",
-            "host": "fake_host",
-            "udn": "fake_uuid",
-        }
-    ]
-}
-
-ENTITY_ID_DISCOVERY_PREFIX = f"{DOMAIN}.fake_discovery_prefix_fake_model_prefix"
-MOCK_CONFIG_DISCOVERY_PREFIX = {
-    DOMAIN: [
-        {
-            "name": "[TV]fake_discovery_prefix",
-            "model_name": "fake_model_prefix",
-            "host": "fake_host_prefix",
-            "udn": "uuid:fake_uuid_prefix",
-        }
-    ]
-}
-
 AUTODETECT_WEBSOCKET = {
     "name": "HomeAssistant",
     "description": "fake_auto",
