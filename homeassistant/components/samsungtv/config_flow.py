@@ -123,8 +123,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _get_ip, user_input[CONF_HOST]
             )
 
-            self.async_set_unique_id(ip_address);
-            self._abort_if_unique_id_configured();
+            self.async_set_unique_id(ip_address)
+            self._abort_if_unique_id_configured()
 
             self._host = user_input.get(CONF_HOST)
             self._ip = self.context[CONF_IP_ADDRESS] = ip_address
@@ -146,8 +146,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _get_ip, user_input[ATTR_SSDP_LOCATION]
         )
 
-        self.async_set_unique_id(ip_address);
-        self._abort_if_unique_id_configured();
+        self.async_set_unique_id(ip_address)
+        self._abort_if_unique_id_configured()
 
         self._host = user_input[ATTR_SSDP_LOCATION]
         self._ip = self.context[CONF_IP_ADDRESS] = ip_address
