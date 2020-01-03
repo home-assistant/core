@@ -2016,6 +2016,9 @@ tesla-powerwall==0.1.3
 # homeassistant.components.tesla
 teslajsonpy==0.6.0
 
+# homeassistant.components.openerz
+testfixtures==6.10.3
+
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
 

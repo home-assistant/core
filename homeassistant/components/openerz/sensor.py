@@ -10,11 +10,12 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
+SCAN_INTERVAL = timedelta(hours=12)
 
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required("postcode"): cv.slugify,
+        vol.Required("zip"): cv.string,
         vol.Required("waste_type", default="waste"): cv.string,
         vol.Optional("name"): cv.string,
     }
@@ -24,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     openerz_config = {
-        "postcode": config["postcode"],
+        "zip": config["zip"],
         "waste_type": config["waste_type"],
         "name": config.get("name"),
     }
@@ -38,7 +39,7 @@ class OpenERZSensor(Entity):
         """Initialize the sensor."""
         self._state = None
         self.openerz_config = openerz_config
-        self.postcode = self.openerz_config["postcode"]
+        self.zip = self.openerz_config["zip"]
         self.waste_type = self.openerz_config["waste_type"]
         self.friendly_name = self.openerz_config.get("name")
         self.start_date = datetime.now()
@@ -70,7 +71,7 @@ class OpenERZSensor(Entity):
         end_date = self.end_date.strftime("%Y-%m-%d")
 
         payload = {
-            "zip": self.postcode,
+            "zip": self.zip,
             "start": start_date,
             "end": end_date,
             "offset": 0,
@@ -91,7 +92,7 @@ class OpenERZSensor(Entity):
         if not self.last_api_response.ok:
             _LOGGER.warning(
                 "Last request to OpenERZ was not succesful. Status code: %d",
-                self.last_api_response.status.code,
+                self.last_api_response.status_code,
             )
             return None
 
@@ -102,7 +103,7 @@ class OpenERZSensor(Entity):
         result_list = response_json.get("result")
         first_scheduled_pickup = result_list[0]
         if (
-            str(first_scheduled_pickup["zip"]) == self.postcode
+            first_scheduled_pickup["zip"] == self.zip
             and first_scheduled_pickup["type"] == self.waste_type
         ):
             return first_scheduled_pickup["date"]
@@ -117,7 +118,7 @@ class OpenERZSensor(Entity):
         """Return the name of the sensor."""
 
         return (
-            f"ERZ - {self.friendly_name} ({self.postcode})"
+            f"ERZ - {self.friendly_name} ({self.zip})"
             if self.friendly_name
             else "Zürich Entsorgungs-Kalender"
         )
