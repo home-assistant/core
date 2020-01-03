@@ -123,8 +123,7 @@ class MaxCubeClimate(ClimateDevice):
             return (
                 CURRENT_HVAC_IDLE if self.valve_position() == 0 else CURRENT_HVAC_HEAT
             )
-        else:
-            return None
+        return None
 
     @property
     def target_temperature(self):
@@ -155,14 +154,13 @@ class MaxCubeClimate(ClimateDevice):
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
         if self.map_mode_max_hass(device.mode) == PRESET_BOOST:
             return PRESET_BOOST
-        elif self.map_mode_max_hass(device.mode) == PRESET_AWAY:
+        if self.map_mode_max_hass(device.mode) == PRESET_AWAY:
             return PRESET_AWAY
-        elif self.target_temperature == self.comfort_temperature():
+        if self.target_temperature == self.comfort_temperature():
             return PRESET_COMFORT
-        elif self.target_temperature == self.eco_temperature():
+        if self.target_temperature == self.eco_temperature():
             return PRESET_ECO
-        else:
-            return None
+        return None
 
     @property
     def preset_modes(self):
