@@ -86,4 +86,10 @@ class AppriseNotificationService(BaseNotificationService):
             attach = apprise.AppriseAttachment()
             attach.add(attachments)
 
+            # Iterate over detected attachments to verify that they have been
+            # whitelisted.
+            attach.attachments = [
+                a for a in attach if a and self.hass.config.is_allowed_path(a.path)
+            ]
+
         self.apprise.notify(body=message, title=title, tag=targets, attach=attach)
