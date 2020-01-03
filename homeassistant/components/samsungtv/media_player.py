@@ -4,7 +4,6 @@ from datetime import timedelta
 
 from samsungctl import Remote as SamsungRemote, exceptions as samsung_exceptions
 import voluptuous as vol
-import wakeonlan
 from websocket import WebSocketException
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
@@ -21,19 +20,19 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    CONF_BROADCAST_ADDRESS,
-    CONF_HOST,
-    CONF_ID,
-    CONF_MAC,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, METHODS
+from .const import (
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_ON_ACTION,
+    DOMAIN,
+    LOGGER,
+    METHODS,
+)
 
 KEY_PRESS_TIMEOUT = 1.2
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -61,20 +60,16 @@ async def async_setup_platform(
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
     host = config_entry.data[CONF_HOST]
-    mac = config_entry.data.get(CONF_MAC)
-    broadcast = config_entry.data.get(CONF_BROADCAST_ADDRESS) or wakeonlan.BROADCAST_IP
     manufacturer = config_entry.data.get(CONF_MANUFACTURER)
     model = config_entry.data.get(CONF_MODEL)
     name = config_entry.title
     port = config_entry.data.get(CONF_PORT)
     uuid = config_entry.data.get(CONF_ID)
+    turn_on_action = config_entry.data.get(CONF_ON_ACTION)
+    on_script = Script(hass, turn_on_action) if turn_on_action else None
 
     async_add_entities(
-        [
-            SamsungTVDevice(
-                host, port, name, mac, broadcast, uuid, manufacturer, model
-            )
-        ]
+        [SamsungTVDevice(host, port, name, uuid, manufacturer, model, on_script)]
     )
 
 
@@ -82,24 +77,15 @@ class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
     def __init__(
-        self,
-        host,
-        port,
-        name,
-        mac,
-        broadcast,
-        uuid,
-        manufacturer=None,
-        model=None,
+        self, host, port, name, uuid, manufacturer=None, model=None, on_script=None,
     ):
         """Initialize the Samsung device."""
 
         self._name = name
-        self._mac = mac
-        self._broadcast = broadcast
         self._uuid = uuid
         self._manufacturer = manufacturer
         self._model = model
+        self._on_script = on_script
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -250,7 +236,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._mac:
+        if self._on_script:
             return SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
         return SUPPORT_SAMSUNGTV
 
@@ -329,10 +315,10 @@ class SamsungTVDevice(MediaPlayerDevice):
             await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
         await self.hass.async_add_job(self.send_key, "KEY_ENTER")
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn the media player on."""
-        if self._mac:
-            wakeonlan.send_magic_packet(self._mac, ip_address=self._broadcast)
+        if self._on_script:
+            await self.hass.async_add_job(self._on_script.async_run())
         else:
             self.send_key("KEY_POWERON")
 

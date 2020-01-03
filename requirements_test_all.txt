@@ -629,7 +629,6 @@ vsure==1.5.4
 vultr==0.1.2
 
 # homeassistant.components.panasonic_viera
-# homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
 wakeonlan==1.1.6
 

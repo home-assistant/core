@@ -7,7 +7,6 @@ from unittest.mock import call, patch
 from asynctest import mock
 import pytest
 from samsungctl import exceptions
-import wakeonlan
 from websocket import WebSocketException
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
@@ -23,16 +22,17 @@ from homeassistant.components.media_player.const import (
     SERVICE_SELECT_SOURCE,
     SUPPORT_TURN_ON,
 )
-from homeassistant.components.samsungtv.const import DOMAIN as SAMSUNGTV_DOMAIN
+from homeassistant.components.samsungtv.const import (
+    CONF_ON_ACTION,
+    DOMAIN as SAMSUNGTV_DOMAIN,
+)
 from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
-    CONF_BROADCAST_ADDRESS,
     CONF_HOST,
-    CONF_MAC,
     CONF_NAME,
     CONF_PORT,
     SERVICE_MEDIA_NEXT_TRACK,
@@ -60,32 +60,15 @@ MOCK_CONFIG = {
             CONF_HOST: "fake",
             CONF_NAME: "fake",
             CONF_PORT: 8001,
-            CONF_MAC: "38:f9:d3:82:b4:f1",
+            CONF_ON_ACTION: [{"delay": "00:00:01"}],
         }
     ]
 }
 
-ENTITY_ID_BROADCAST = f"{DOMAIN}.fake_broadcast"
-MOCK_CONFIG_BROADCAST = {
+ENTITY_ID_NOTURNON = f"{DOMAIN}.fake_noturnon"
+MOCK_CONFIG_NOTURNON = {
     SAMSUNGTV_DOMAIN: [
-        {
-            CONF_HOST: "fake_broadcast",
-            CONF_NAME: "fake_broadcast",
-            CONF_PORT: 8001,
-            CONF_MAC: "38:f9:d3:82:b4:f1",
-            CONF_BROADCAST_ADDRESS: "192.168.5.255",
-        }
-    ]
-}
-
-ENTITY_ID_NOMAC = f"{DOMAIN}.fake_nomac"
-MOCK_CONFIG_NOMAC = {
-    SAMSUNGTV_DOMAIN: [
-        {
-            CONF_HOST: "fake_nomac",
-            CONF_NAME: "fake_nomac",
-            CONF_PORT: 55000,
-        }
+        {CONF_HOST: "fake_noturnon", CONF_NAME: "fake_noturnon", CONF_PORT: 55000}
     ]
 }
 
@@ -151,16 +134,6 @@ def remote_fixture():
         yield remote
 
 
-@pytest.fixture(name="wakeonlan")
-def wakeonlan_fixture():
-    """Patch the wakeonlan Remote."""
-    with patch(
-        "homeassistant.components.samsungtv.media_player.wakeonlan"
-    ) as wakeonlan_module:
-        wakeonlan_module.BROADCAST_IP = wakeonlan.BROADCAST_IP
-        yield wakeonlan_module
-
-
 @pytest.fixture
 def mock_now():
     """Fixture for dtutil.now."""
@@ -173,7 +146,7 @@ async def setup_samsungtv(hass, config):
     await hass.async_block_till_done()
 
 
-async def test_setup_with_mac(hass, remote):
+async def test_setup_with_turnon(hass, remote):
     """Test setup of platform."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert hass.states.get(ENTITY_ID)
@@ -192,10 +165,10 @@ async def test_setup_duplicate(hass, remote, caplog):
     assert len(hass.states.async_all()) == 1
 
 
-async def test_setup_without_mac(hass, remote):
+async def test_setup_without_turnon(hass, remote):
     """Test setup of platform."""
-    await setup_samsungtv(hass, MOCK_CONFIG_NOMAC)
-    assert hass.states.get(ENTITY_ID_NOMAC)
+    await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
+    assert hass.states.get(ENTITY_ID_NOTURNON)
 
 
 async def test_update_on(hass, remote, mock_now):
@@ -225,7 +198,7 @@ async def test_update_off(hass, remote, mock_now):
     assert state.state == STATE_OFF
 
 
-async def test_send_key(hass, remote, wakeonlan):
+async def test_send_key(hass, remote):
     """Test for send key."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -394,7 +367,7 @@ async def test_name(hass, remote):
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake"
 
 
-async def test_state_with_mac(hass, remote, wakeonlan):
+async def test_state_with_turnon(hass, remote):
     """Test for state property."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -409,22 +382,22 @@ async def test_state_with_mac(hass, remote, wakeonlan):
     assert state.state == STATE_OFF
 
 
-async def test_state_without_mac(hass, remote):
+async def test_state_without_turnon(hass, remote):
     """Test for state property."""
-    await setup_samsungtv(hass, MOCK_CONFIG_NOMAC)
+    await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
     assert await hass.services.async_call(
-        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_NOMAC}, True
+        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
     )
-    state = hass.states.get(ENTITY_ID_NOMAC)
+    state = hass.states.get(ENTITY_ID_NOTURNON)
     assert state.state == STATE_ON
     assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOMAC}, True
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
     )
-    state = hass.states.get(ENTITY_ID_NOMAC)
+    state = hass.states.get(ENTITY_ID_NOTURNON)
     assert state.state == STATE_OFF
 
 
-async def test_supported_features_with_mac(hass, remote):
+async def test_supported_features_with_turnon(hass, remote):
     """Test for supported_features property."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     state = hass.states.get(ENTITY_ID)
@@ -433,10 +406,10 @@ async def test_supported_features_with_mac(hass, remote):
     )
 
 
-async def test_supported_features_without_mac(hass, remote):
+async def test_supported_features_without_turnon(hass, remote):
     """Test for supported_features property."""
-    await setup_samsungtv(hass, MOCK_CONFIG_NOMAC)
-    state = hass.states.get(ENTITY_ID_NOMAC)
+    await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
+    state = hass.states.get(ENTITY_ID_NOTURNON)
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV
 
 
@@ -460,9 +433,9 @@ async def test_turn_off_websocket(hass, remote):
 
 async def test_turn_off_legacy(hass, remote):
     """Test for turn_off."""
-    await setup_samsungtv(hass, MOCK_CONFIG_NOMAC)
+    await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
     assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOMAC}, True
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
     )
     # key called
     assert remote.control.call_count == 1
@@ -560,37 +533,21 @@ async def test_media_previous_track(hass, remote):
     assert remote.control.call_args_list == [call("KEY_CHDOWN"), call("KEY")]
 
 
-async def test_turn_on_with_mac(hass, remote, wakeonlan):
+async def test_turn_on_with_turnon(hass, remote):
     """Test turn on."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     # key and update called
-    assert wakeonlan.send_magic_packet.call_count == 1
-    assert wakeonlan.send_magic_packet.call_args_list == [
-        call("38:f9:d3:82:b4:f1", ip_address="255.255.255.255")
-    ]
+    assert False  # TODO
 
 
-async def test_turn_on_with_mac_and_broadcast(hass, remote, wakeonlan):
+async def test_turn_on_without_turnon(hass, remote):
     """Test turn on."""
-    await setup_samsungtv(hass, MOCK_CONFIG_BROADCAST)
+    await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
     assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID_BROADCAST}, True
-    )
-    # key and update called
-    assert wakeonlan.send_magic_packet.call_count == 1
-    assert wakeonlan.send_magic_packet.call_args_list == [
-        call("38:f9:d3:82:b4:f1", ip_address="192.168.5.255")
-    ]
-
-
-async def test_turn_on_without_mac(hass, remote):
-    """Test turn on."""
-    await setup_samsungtv(hass, MOCK_CONFIG_NOMAC)
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID_NOMAC}, True
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
     )
     # nothing called as not supported feature
     assert remote.control.call_count == 0

@@ -1,17 +1,10 @@
 """The Samsung TV integration."""
 import voluptuous as vol
-from wakeonlan import BROADCAST_IP
 
-from homeassistant.const import (
-    CONF_BROADCAST_ADDRESS,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    CONF_PORT,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -22,10 +15,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Required(CONF_HOST): cv.string,
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_PORT): cv.port,
-                        vol.Optional(CONF_MAC): cv.string,
-                        vol.Optional(
-                            CONF_BROADCAST_ADDRESS, default=BROADCAST_IP
-                        ): cv.string,
+                        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                     }
                 )
             ]

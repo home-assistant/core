@@ -14,16 +14,21 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
 )
 from homeassistant.const import (
-    CONF_BROADCAST_ADDRESS,
     CONF_HOST,
     CONF_ID,
     CONF_IP_ADDRESS,
-    CONF_MAC,
     CONF_NAME,
     CONF_PORT,
 )
 
-from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, METHODS
+from .const import (
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_ON_ACTION,
+    DOMAIN,
+    LOGGER,
+    METHODS,
+)
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 
@@ -90,13 +95,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize flow."""
-        self._broadcast = None
         self._host = None
         self._ip = None
-        self._mac = None
         self._manufacturer = None
         self._model = None
         self._name = None
+        self._on_script = None
         self._port = None
         self._title = None
         self._uuid = None
@@ -105,14 +109,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=self._title,
             data={
-                CONF_BROADCAST_ADDRESS: self._broadcast,
                 CONF_HOST: self._host,
                 CONF_ID: self._uuid,
                 CONF_IP_ADDRESS: self._ip,
-                CONF_MAC: self._mac,
                 CONF_MANUFACTURER: self._manufacturer,
                 CONF_MODEL: self._model,
                 CONF_NAME: self._name,
+                CONF_ON_ACTION: self._on_script,
                 CONF_PORT: self._port,
             },
         )
@@ -134,10 +137,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if _is_already_configured(self.hass, ip_address):
                 return self.async_abort(reason="already_configured")
 
-            self._broadcast = user_input.get(CONF_BROADCAST_ADDRESS)
             self._host = user_input.get(CONF_HOST)
             self._ip = self.context[CONF_IP_ADDRESS] = ip_address
-            self._mac = user_input.get(CONF_MAC)
+            self._on_script = user_input.get(CONF_ON_ACTION)
             self._port = user_input.get(CONF_PORT)
             self._title = user_input.get(CONF_NAME)
 

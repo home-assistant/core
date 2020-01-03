@@ -5,14 +5,15 @@ import pytest
 
 from homeassistant.components import samsungtv
 from homeassistant.components.media_player.const import DOMAIN, SUPPORT_TURN_ON
-from homeassistant.components.samsungtv.const import DOMAIN as SAMSUNGTV_DOMAIN
+from homeassistant.components.samsungtv.const import (
+    CONF_ON_ACTION,
+    DOMAIN as SAMSUNGTV_DOMAIN,
+)
 from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    CONF_BROADCAST_ADDRESS,
     CONF_HOST,
-    CONF_MAC,
     CONF_NAME,
     CONF_PORT,
     SERVICE_VOLUME_UP,
@@ -22,11 +23,10 @@ ENTITY_ID = f"{DOMAIN}.fake_name"
 MOCK_CONFIG = {
     SAMSUNGTV_DOMAIN: [
         {
-            CONF_BROADCAST_ADDRESS: "fake_broadcast",
             CONF_HOST: "fake_host",
-            CONF_MAC: "fake_mac",
             CONF_NAME: "fake_name",
             CONF_PORT: 1234,
+            CONF_ON_ACTION: None,
         }
     ]
 }
@@ -56,7 +56,7 @@ async def test_setup(hass, remote):
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
 
-    # test name and mac
+    # test name and turn_on
     assert state
     assert state.name == "fake_name"
     assert (
