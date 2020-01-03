@@ -94,7 +94,6 @@ NewHost = namedtuple("NewHost", ["host", "name"])
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Denon platform."""
-
     # Initialize list with receivers to be started
     receivers = []
 
@@ -365,8 +364,16 @@ class DenonDevice(MediaPlayerDevice):
         return attributes
 
     def media_play_pause(self):
-        """Simulate play pause media player."""
+        """Play or pause the media player."""
         return self._receiver.toggle_play_pause()
+
+    def media_play(self):
+        """Send play command."""
+        return self._receiver.play()
+
+    def media_pause(self):
+        """Send pause command."""
+        return self._receiver.pause()
 
     def media_previous_track(self):
         """Send previous track command."""
