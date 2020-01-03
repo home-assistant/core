@@ -5,7 +5,7 @@ from homeassistant.components import unifi
 import homeassistant.components.sensor as sensor
 from homeassistant.setup import async_setup_component
 
-from .test_controller import ENTRY_CONFIG, SITES, setup_unifi_integration
+from .test_controller import setup_unifi_integration
 
 CLIENTS = [
     {
@@ -51,13 +51,7 @@ async def test_platform_manually_configured(hass):
 async def test_no_clients(hass):
     """Test the update_clients function when no clients are found."""
     controller = await setup_unifi_integration(
-        hass,
-        ENTRY_CONFIG,
-        options={unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: True},
-        sites=SITES,
-        clients_response=[],
-        devices_response=[],
-        clients_all_response=[],
+        hass, options={unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: True},
     )
 
     assert len(controller.mock_requests) == 3
@@ -68,16 +62,12 @@ async def test_sensors(hass):
     """Test the update_items function with some clients."""
     controller = await setup_unifi_integration(
         hass,
-        ENTRY_CONFIG,
         options={
             unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: True,
             unifi.const.CONF_TRACK_CLIENTS: False,
             unifi.const.CONF_TRACK_DEVICES: False,
         },
-        sites=SITES,
         clients_response=CLIENTS,
-        devices_response=[],
-        clients_all_response=[],
     )
 
     assert len(controller.mock_requests) == 3
