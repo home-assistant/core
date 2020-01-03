@@ -46,8 +46,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
         """Mark a device as seen."""
         if new_device:
             if address in new_devices:
-                _LOGGER.debug("Seen %s %s times", address, new_devices[address])
                 new_devices[address] += 1
+                _LOGGER.debug("Seen %s %s times", address, new_devices[address])
                 if new_devices[address] >= MIN_SEEN_NEW:
                     _LOGGER.debug("Adding %s to tracked devices", address)
                     devs_to_track.append(address)
