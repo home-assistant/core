@@ -354,7 +354,10 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        attributes = {}
+        attributes = {
+            'source': self._current_source,
+            'source_list': self._source_list
+        }
         if (
             self._sound_mode_raw is not None
             and self._sound_mode_support
