@@ -45,6 +45,7 @@ class ItemNotFound(CollectionError):
 
     def __init__(self, item_id: str):
         """Initialize item not found error."""
+        super().__init__(f"Item {item_id} not found.")
         self.item_id = item_id
 
 
