@@ -567,6 +567,9 @@ rxv==0.6.0
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
 
+# homeassistant.components.sentry
+sentry-sdk==0.13.5
+
 # homeassistant.components.simplisafe
 simplisafe-python==5.3.6
 
