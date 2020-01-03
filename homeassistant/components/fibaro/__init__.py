@@ -268,7 +268,7 @@ class FibaroController:
                 else:
                     room_name = self._room_map[device.roomID].name
                 device.room_name = room_name
-                device.friendly_name = room_name + " " + device.name
+                device.friendly_name = f"{room_name} {device.name}"
                 device.ha_id = "{}_{}_{}".format(
                     slugify(room_name), slugify(device.name), device.id
                 )

@@ -110,7 +110,7 @@ def setup(hass, config):
                 bound = server.bind()
                 if not bound:
                     raise OSError(
-                        "Binding error occurred while " + "starting EgardiaServer."
+                        "Binding error occurred while starting EgardiaServer."
                     )
                 hass.data[EGARDIA_SERVER] = server
                 server.start()

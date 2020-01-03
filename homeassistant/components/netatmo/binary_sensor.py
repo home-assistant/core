@@ -155,9 +155,9 @@ class NetatmoBinarySensor(BinarySensorDevice):
         else:
             self._name = camera_name
         if module_name:
-            self._name += " / " + module_name
+            self._name += f" / {module_name}"
         self._sensor_name = sensor
-        self._name += " " + sensor
+        self._name += f" {sensor}"
         self._cameratype = camera_type
         self._state = None
 

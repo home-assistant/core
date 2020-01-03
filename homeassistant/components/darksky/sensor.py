@@ -750,7 +750,7 @@ class DarkSkyAlertSensor(Entity):
         for i, alert in enumerate(data):
             for attr in ALERTS_ATTRS:
                 if multiple_alerts:
-                    dkey = attr + "_" + str(i)
+                    dkey = f"{attr}_{i!s}"
                 else:
                     dkey = attr
                 alerts[dkey] = getattr(alert, attr)
