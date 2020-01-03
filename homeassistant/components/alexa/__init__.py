@@ -17,6 +17,8 @@ from .const import (
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
+    CONF_LOCALE,
+    CONF_SUPPORTED_LOCALES,
     CONF_TEXT,
     CONF_TITLE,
     CONF_UID,
@@ -27,6 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FLASH_BRIEFINGS = "flash_briefings"
 CONF_SMART_HOME = "smart_home"
+DEFAULT_LOCALE = "en-US"
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
@@ -41,6 +44,9 @@ SMART_HOME_SCHEMA = vol.Schema(
         vol.Optional(CONF_ENDPOINT): cv.string,
         vol.Optional(CONF_CLIENT_ID): cv.string,
         vol.Optional(CONF_CLIENT_SECRET): cv.string,
+        vol.Optional(CONF_LOCALE, default=DEFAULT_LOCALE): vol.In(
+            CONF_SUPPORTED_LOCALES
+        ),
         vol.Optional(CONF_FILTER, default={}): entityfilter.FILTER_SCHEMA,
         vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ALEXA_ENTITY_SCHEMA},
     }
