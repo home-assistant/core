@@ -1123,6 +1123,7 @@ class ModesTrait(_Trait):
 
     SYNONYMS = {
         "input source": ["input source", "input", "source"],
+        "sound mode": ["sound mode", "effects"],
     }
 
     @staticmethod
@@ -1131,7 +1132,10 @@ class ModesTrait(_Trait):
         if domain != media_player.DOMAIN:
             return False
 
-        return features & media_player.SUPPORT_SELECT_SOURCE
+        return (
+            features & media_player.SUPPORT_SELECT_SOURCE
+            or features & media_player.SUPPORT_SELECT_SOUND_MODE
+        )
 
     def sync_attributes(self):
         """Return mode attributes for a sync request."""
@@ -1168,6 +1172,11 @@ class ModesTrait(_Trait):
                 _generate("input source", attrs[media_player.ATTR_INPUT_SOURCE_LIST])
             )
 
+        if media_player.ATTR_SOUND_MODE_LIST in attrs:
+            modes.append(
+                _generate("sound mode", attrs[media_player.ATTR_SOUND_MODE_LIST])
+            )
+
         payload = {"availableModes": modes}
 
         return payload
@@ -1181,6 +1190,9 @@ class ModesTrait(_Trait):
         if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
             mode_settings["input source"] = attrs.get(media_player.ATTR_INPUT_SOURCE)
 
+        if media_player.ATTR_SOUND_MODE_LIST in attrs:
+            mode_settings["sound mode"] = attrs.get(media_player.ATTR_SOUND_MODE)
+
         if mode_settings:
             response["on"] = self.state.state != STATE_OFF
             response["online"] = True
@@ -1192,6 +1204,7 @@ class ModesTrait(_Trait):
         """Execute an SetModes command."""
         settings = params.get("updateModeSettings")
         requested_source = settings.get("input source")
+        sound_mode = settings.get("sound mode")
 
         if requested_source:
             await self.hass.services.async_call(
@@ -1200,6 +1213,18 @@ class ModesTrait(_Trait):
                 {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     media_player.ATTR_INPUT_SOURCE: requested_source,
+                },
+                blocking=True,
+                context=data.context,
+            )
+
+        if sound_mode:
+            await self.hass.services.async_call(
+                media_player.DOMAIN,
+                media_player.SERVICE_SELECT_SOUND_MODE,
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    media_player.ATTR_SOUND_MODE: sound_mode,
                 },
                 blocking=True,
                 context=data.context,
