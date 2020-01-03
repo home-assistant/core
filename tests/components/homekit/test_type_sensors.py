@@ -83,9 +83,9 @@ async def test_humidity(hass, hk_driver):
     assert acc.char_humidity.value == 20
 
 
-async def test_air_quality(hass, hk_driver):
+async def test_air_quality_pm25(hass, hk_driver):
     """Test if accessory is updated after state change."""
-    entity_id = "sensor.air_quality"
+    entity_id = "sensor.pm25"
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
@@ -95,23 +95,23 @@ async def test_air_quality(hass, hk_driver):
     assert acc.aid == 2
     assert acc.category == 10  # Sensor
 
-    assert acc.char_density.value == 0
-    assert acc.char_quality.value == 0
+    assert acc.char_particulate_density.value == 0
+    assert acc.char_air_quality.value == 0
 
     hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
-    assert acc.char_density.value == 0
-    assert acc.char_quality.value == 0
+    assert acc.char_particulate_density.value == 0
+    assert acc.char_air_quality.value == 0
 
     hass.states.async_set(entity_id, "34")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 34
-    assert acc.char_quality.value == 1
+    assert acc.char_particulate_density.value == 34
+    assert acc.char_air_quality.value == 1
 
     hass.states.async_set(entity_id, "200")
     await hass.async_block_till_done()
-    assert acc.char_density.value == 200
-    assert acc.char_quality.value == 5
+    assert acc.char_particulate_density.value == 200
+    assert acc.char_air_quality.value == 5
 
 
 async def test_co(hass, hk_driver):
