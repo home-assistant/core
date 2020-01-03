@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_PORT,
 )
 
+# pylint:disable=unused-import
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
