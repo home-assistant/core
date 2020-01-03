@@ -5,7 +5,7 @@ from asynctest import Mock
 
 from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
 
-from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 SENSORS = {
     "1": {
@@ -31,9 +31,7 @@ async def test_deconz_events(hass):
     """Test successful creation of deconz events."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass, get_state_response=data)
     assert "sensor.switch_1" not in gateway.deconz_ids
     assert "sensor.switch_1_battery_level" not in gateway.deconz_ids
     assert "sensor.switch_2" not in gateway.deconz_ids

@@ -3,12 +3,10 @@ import asyncio
 from copy import deepcopy
 
 from asynctest import patch
-import pytest
 
 from homeassistant.components import deconz
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 ENTRY1_HOST = "1.2.3.4"
 ENTRY1_PORT = 80
@@ -35,31 +33,21 @@ async def setup_entry(hass, entry):
 
 async def test_setup_entry_fails(hass):
     """Test setup entry fails if deCONZ is not available."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
     with patch("pydeconz.DeconzSession.initialize", side_effect=Exception):
-        await setup_deconz_integration(
-            hass, ENTRY_CONFIG, options={}, get_state_response=data
-        )
+        await setup_deconz_integration(hass)
     assert not hass.data[deconz.DOMAIN]
 
 
 async def test_setup_entry_no_available_bridge(hass):
     """Test setup entry fails if deCONZ is not available."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    with patch(
-        "pydeconz.DeconzSession.initialize", side_effect=asyncio.TimeoutError
-    ), pytest.raises(ConfigEntryNotReady):
-        await setup_deconz_integration(
-            hass, ENTRY_CONFIG, options={}, get_state_response=data
-        )
+    with patch("pydeconz.DeconzSession.initialize", side_effect=asyncio.TimeoutError):
+        await setup_deconz_integration(hass)
+    assert not hass.data[deconz.DOMAIN]
 
 
 async def test_setup_entry_successful(hass):
     """Test setup entry is successful."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
 
     assert hass.data[deconz.DOMAIN]
     assert gateway.bridgeid in hass.data[deconz.DOMAIN]
@@ -68,15 +56,12 @@ async def test_setup_entry_successful(hass):
 
 async def test_setup_entry_multiple_gateways(hass):
     """Test setup entry is successful with multiple gateways."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
 
-    data2 = deepcopy(DECONZ_WEB_REQUEST)
-    data2["config"]["bridgeid"] = "01234E56789B"
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["config"]["bridgeid"] = "01234E56789B"
     gateway2 = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data2
+        hass, get_state_response=data, entry_id="2"
     )
 
     assert len(hass.data[deconz.DOMAIN]) == 2
@@ -86,10 +71,7 @@ async def test_setup_entry_multiple_gateways(hass):
 
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
     assert hass.data[deconz.DOMAIN]
 
     assert await deconz.async_unload_entry(hass, gateway.config_entry)
@@ -98,15 +80,12 @@ async def test_unload_entry(hass):
 
 async def test_unload_entry_multiple_gateways(hass):
     """Test being able to unload an entry and master gateway gets moved."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
 
-    data2 = deepcopy(DECONZ_WEB_REQUEST)
-    data2["config"]["bridgeid"] = "01234E56789B"
+    data = deepcopy(DECONZ_WEB_REQUEST)
+    data["config"]["bridgeid"] = "01234E56789B"
     gateway2 = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data2
+        hass, get_state_response=data, entry_id="2"
     )
 
     assert len(hass.data[deconz.DOMAIN]) == 2
