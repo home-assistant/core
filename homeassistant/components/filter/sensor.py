@@ -324,7 +324,8 @@ class FilterState:
     def set_precision(self, precision):
         """Set precision of Number based states."""
         if isinstance(self.state, Number):
-            self.state = round(float(self.state), precision)
+            value = round(float(self.state), precision)
+            self.state = int(value) if precision == 0 else value
 
     def __str__(self):
         """Return state as the string representation of FilterState."""
