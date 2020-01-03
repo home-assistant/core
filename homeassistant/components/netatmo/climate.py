@@ -193,7 +193,7 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._room_id
+        return self._unique_id
 
     @property
     def supported_features(self):
