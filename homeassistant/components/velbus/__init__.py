@@ -67,9 +67,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.data[DOMAIN][entry.entry_id] = discovery_info
 
         for category in COMPONENT_TYPES:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, category)
-            )
+            hass.add_job(hass.config_entries.async_forward_entry_setup(entry, category))
 
     try:
         controller = velbus.Controller(entry.data[CONF_PORT])
