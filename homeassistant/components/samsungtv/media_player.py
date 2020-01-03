@@ -120,7 +120,7 @@ class SamsungTVDevice(MediaPlayerDevice):
                 self._state = STATE_OFF
             except AttributeError:
                 # Auto-detect could not find working config yet
-                self.state = None
+                self._state = None
 
     def get_remote(self):
         """Create or return a remote control instance."""
