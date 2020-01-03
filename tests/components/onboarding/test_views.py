@@ -98,7 +98,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     assert user.name == "Test Name"
     assert len(user.credentials) == 1
     assert user.credentials[0].data["username"] == "test-user"
-    assert len(hass.data["person"].storage_data) == 1
+    assert len(hass.data["person"][1].async_items()) == 1
 
     # Validate refresh token 1
     resp = await client.post(

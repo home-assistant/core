@@ -473,8 +473,9 @@ class Entity(ABC):
             self._on_remove = []
         self._on_remove.append(func)
 
-    async def async_remove(self):
+    async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
+        assert self.hass is not None
         await self.async_internal_will_remove_from_hass()
         await self.async_will_remove_from_hass()
 
