@@ -9,6 +9,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
@@ -33,6 +34,18 @@ ChangeListener = Callable[
     ],
     Awaitable[None],
 ]  # pylint: disable=invalid-name
+
+
+class CollectionError(HomeAssistantError):
+    """Base class for collection related errors."""
+
+
+class ItemNotFound(CollectionError):
+    """Raised when an item is not found."""
+
+    def __init__(self, item_id: str):
+        """Initialize item not found error."""
+        self.item_id = item_id
 
 
 class IDManager:
@@ -166,19 +179,15 @@ class StorageCollection(ObservableCollection):
 
     async def async_update_item(self, item_id: str, updates: dict) -> dict:
         """Update item."""
-        current = self.data.get(item_id)
-
-        if current is None:
-            raise ValueError("Invalid item specified.")
+        if item_id not in self.data:
+            raise ItemNotFound(item_id)
 
         if CONF_ID in updates:
-            if self.id_manager.has_id(updates[CONF_ID]):
-                raise ValueError("ID already exists")
+            raise ValueError("Cannot update ID")
+
+        current = self.data[item_id]
 
         updated = await self._update_data(current, updates)
-
-        if CONF_ID in updates:
-            self.data.pop(current[CONF_ID])
 
         self.data[item_id] = updated
         self._async_schedule_save()
@@ -190,7 +199,7 @@ class StorageCollection(ObservableCollection):
     async def async_delete_item(self, item_id: str) -> None:
         """Delete item."""
         if item_id not in self.data:
-            raise ValueError("Invalid item specified.")
+            raise ItemNotFound(item_id)
 
         self.data.pop(item_id)
         self._async_schedule_save()
@@ -233,7 +242,7 @@ def attach_entity_component_collection(
             return
 
         # CHANGE_UPDATED
-        await entities[item_id].update_config(config)  # type: ignore
+        await entities[item_id].async_update_config(config)  # type: ignore
 
     collection.async_add_listener(_collection_changed)
 
@@ -339,7 +348,7 @@ class StorageCollectionWebsocket:
             connection.send_error(
                 msg["id"],
                 websocket_api.const.ERR_INVALID_FORMAT,
-                humanize_error(msg, err),
+                humanize_error(data, err),
             )
         except ValueError as err:
             connection.send_error(
@@ -358,6 +367,18 @@ class StorageCollectionWebsocket:
         try:
             item = await self.storage_collection.async_update_item(item_id, data)
             connection.send_result(msg_id, item)
+        except ItemNotFound:
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_NOT_FOUND,
+                f"Unable to find {self.item_id_key} {item_id}",
+            )
+        except vol.Invalid as err:
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_INVALID_FORMAT,
+                humanize_error(data, err),
+            )
         except ValueError as err:
             connection.send_error(
                 msg_id, websocket_api.const.ERR_INVALID_FORMAT, str(err)
@@ -367,5 +388,13 @@ class StorageCollectionWebsocket:
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
         """Delete a item."""
-        await self.storage_collection.async_delete_item(msg[self.item_id_key])
+        try:
+            await self.storage_collection.async_delete_item(msg[self.item_id_key])
+        except ItemNotFound:
+            connection.send_error(
+                msg["id"],
+                websocket_api.const.ERR_NOT_FOUND,
+                f"Unable to find {self.item_id_key} {msg[self.item_id_key]}",
+            )
+
         connection.send_result(msg["id"])

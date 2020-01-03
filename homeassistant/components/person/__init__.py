@@ -302,18 +302,18 @@ class Person(RestoreEntity):
 
         if self.hass.is_running:
             # Update person now if hass is already running.
-            await self.update_config(self._config)
+            await self.async_update_config(self._config)
         else:
             # Wait for hass start to not have race between person
             # and device trackers finishing setup.
             async def person_start_hass(now):
-                await self.update_config(self._config)
+                await self.async_update_config(self._config)
 
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, person_start_hass
             )
 
-    async def update_config(self, config):
+    async def async_update_config(self, config):
         """Handle when the config is updated."""
         self._config = config
 
