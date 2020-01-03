@@ -41,7 +41,6 @@ from .const import (
     CHAR_PM_10_DENSITY,
     CHAR_SMOKE_DETECTED,
     CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5,
-    CHAR_VALUE_AIR_PARTICULATE_SIZE_PM10,
     CHAR_VOC_DENSITY,
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_DOOR,
@@ -69,7 +68,12 @@ from .const import (
     THRESHOLD_CO,
     THRESHOLD_CO2,
 )
-from .util import convert_to_float, density_to_air_quality, temperature_to_homekit
+from .util import (
+    convert_to_float,
+    density_to_air_quality,
+    pm_size_to_homekit,
+    temperature_to_homekit,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -315,13 +319,11 @@ class AirQualitySensor(HomeAccessory):
             # (https://developer.apple.com/documentation/homekit/hmcharacteristicvalueairparticulatesize)
             pm_size_char_value = None
             if pm_size:
-                if pm_size == 2.5:
-                    pm_size_char_value = CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
-                elif pm_size == 10:
-                    pm_size_char_value = CHAR_VALUE_AIR_PARTICULATE_SIZE_PM10
-                else:
+                try:
+                    pm_size_char_value = pm_size_to_homekit(pm_size)
+                except (ValueError):
                     _LOGGER.warning(
-                        "%s: Given pm_size is not valid value (2.5, 10), ignoring.",
+                        "%s: Given pm_size is not valid value, ignoring.",
                         self.entity_id,
                     )
 

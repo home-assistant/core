@@ -17,6 +17,8 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.temperature as temp_util
 
 from .const import (
+    CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5,
+    CHAR_VALUE_AIR_PARTICULATE_SIZE_PM10,
     CONF_FEATURE,
     CONF_FEATURE_LIST,
     CONF_LINKED_BATTERY_SENSOR,
@@ -254,3 +256,16 @@ def density_to_air_quality(density):
     if density <= 150:
         return 4
     return 5
+
+
+def pm_size_to_homekit(pm_size):
+    """Map the given PM size to value HomeKit Expects.
+
+    See https://developer.apple.com/documentation/homekit/hmcharacteristicvalueairparticulatesize for details.
+    """
+    if pm_size == 2.5:
+        return CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
+    elif pm_size == 10:
+        return CHAR_VALUE_AIR_PARTICULATE_SIZE_PM10
+    else:
+        raise ValueError("given PM size not recognized.")

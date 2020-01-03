@@ -1,5 +1,13 @@
 """Test different accessory types: Sensors."""
 from homeassistant.components.homekit.const import (
+    ATTR_NITROGEN_DIOXIDE_DENSITY,
+    ATTR_PM_2_5_DENSITY,
+    ATTR_PM_10_DENSITY,
+    ATTR_PM_DENSITY,
+    ATTR_PM_SIZE,
+    ATTR_VOC_DENSITY,
+    CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5,
+    CHAR_VALUE_AIR_PARTICULATE_SIZE_PM10,
     PROP_CELSIUS,
     THRESHOLD_CO,
     THRESHOLD_CO2,
@@ -84,7 +92,7 @@ async def test_humidity(hass, hk_driver):
 
 
 async def test_air_quality_pm25(hass, hk_driver):
-    """Test if accessory is updated after state change."""
+    """Test origional pm25 air quality sensor logic. Test if accessory is updated after state change."""
     entity_id = "sensor.pm25"
 
     hass.states.async_set(entity_id, None)
@@ -112,6 +120,475 @@ async def test_air_quality_pm25(hass, hk_driver):
     await hass.async_block_till_done()
     assert acc.char_particulate_density.value == 200
     assert acc.char_air_quality.value == 5
+
+
+async def test_air_quality_all_props_update_all_props(hass, hk_driver):
+    """Test air quality sensor with all properties is updated after state change of all properties."""
+    entity_id = "sensor.air_quality"
+
+    hass.states.async_set(
+        entity_id,
+        5,
+        {
+            ATTR_NITROGEN_DIOXIDE_DENSITY: 10,
+            ATTR_PM_2_5_DENSITY: 20,
+            ATTR_PM_10_DENSITY: 30,
+            ATTR_PM_DENSITY: 40,
+            ATTR_PM_SIZE: 2.5,
+            ATTR_VOC_DENSITY: 60,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = AirQualitySensor(hass, hk_driver, "Air Quality", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    # test initial values are all blank
+    assert acc.char_air_quality.value == 0
+    assert acc.char_nitrogen_dioxide_density.value == 0
+    assert acc.char_pm_2_5_density.value == 0
+    assert acc.char_pm_10_density.value == 0
+    assert acc.char_particulate_density.value == 0
+    assert acc.char_particulate_size.value == CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
+    assert acc.char_voc_density.value == 0
+
+    # test initial set of values
+    hass.states.async_set(
+        entity_id,
+        5,
+        {
+            ATTR_NITROGEN_DIOXIDE_DENSITY: 10,
+            ATTR_PM_2_5_DENSITY: 20,
+            ATTR_PM_10_DENSITY: 30,
+            ATTR_PM_DENSITY: 40,
+            ATTR_PM_SIZE: 2.5,
+            ATTR_VOC_DENSITY: 60,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert acc.char_nitrogen_dioxide_density.value == 10
+    assert acc.char_pm_2_5_density.value == 20
+    assert acc.char_pm_10_density.value == 30
+    assert acc.char_particulate_density.value == 40
+    assert acc.char_particulate_size.value == CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
+    assert acc.char_voc_density.value == 60
+
+    # test changing all values
+    hass.states.async_set(
+        entity_id,
+        1,
+        {
+            ATTR_NITROGEN_DIOXIDE_DENSITY: 1,
+            ATTR_PM_2_5_DENSITY: 2,
+            ATTR_PM_10_DENSITY: 3,
+            ATTR_PM_DENSITY: 4,
+            ATTR_PM_SIZE: 10,
+            ATTR_VOC_DENSITY: 6,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 1
+    assert acc.char_nitrogen_dioxide_density.value == 1
+    assert acc.char_pm_2_5_density.value == 2
+    assert acc.char_pm_10_density.value == 3
+    assert acc.char_particulate_density.value == 4
+    assert acc.char_particulate_size.value == CHAR_VALUE_AIR_PARTICULATE_SIZE_PM10
+    assert acc.char_voc_density.value == 6
+
+
+async def test_air_quality_all_props_update_one_prop(hass, hk_driver):
+    """Test air quality sensor with all properties is updated after state change of one propety."""
+    entity_id = "sensor.air_quality"
+
+    hass.states.async_set(
+        entity_id,
+        5,
+        {
+            ATTR_NITROGEN_DIOXIDE_DENSITY: 10,
+            ATTR_PM_2_5_DENSITY: 20,
+            ATTR_PM_10_DENSITY: 30,
+            ATTR_PM_DENSITY: 40,
+            ATTR_PM_SIZE: 2.5,
+            ATTR_VOC_DENSITY: 60,
+        },
+    )
+    await hass.async_block_till_done()
+    acc = AirQualitySensor(hass, hk_driver, "Air Quality", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    # test initial values are all blank
+    assert acc.char_air_quality.value == 0
+    assert acc.char_nitrogen_dioxide_density.value == 0
+    assert acc.char_pm_2_5_density.value == 0
+    assert acc.char_pm_10_density.value == 0
+    assert acc.char_particulate_density.value == 0
+    assert acc.char_particulate_size.value == CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
+    assert acc.char_voc_density.value == 0
+
+    # test initial set of values
+    hass.states.async_set(
+        entity_id,
+        5,
+        {
+            ATTR_NITROGEN_DIOXIDE_DENSITY: 10,
+            ATTR_PM_2_5_DENSITY: 20,
+            ATTR_PM_10_DENSITY: 30,
+            ATTR_PM_DENSITY: 40,
+            ATTR_PM_SIZE: 2.5,
+            ATTR_VOC_DENSITY: 60,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert acc.char_nitrogen_dioxide_density.value == 10
+    assert acc.char_pm_2_5_density.value == 20
+    assert acc.char_pm_10_density.value == 30
+    assert acc.char_particulate_density.value == 40
+    assert acc.char_particulate_size.value == CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
+    assert acc.char_voc_density.value == 60
+
+    # test changing one value
+    hass.states.async_set(entity_id, 5, {ATTR_NITROGEN_DIOXIDE_DENSITY: 1})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert acc.char_nitrogen_dioxide_density.value == 1
+    assert acc.char_pm_2_5_density.value == 20
+    assert acc.char_pm_10_density.value == 30
+    assert acc.char_particulate_density.value == 40
+    assert acc.char_particulate_size.value == CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
+    assert acc.char_voc_density.value == 60
+
+
+async def test_air_quality_state_only(hass, hk_driver):
+    """Test air quality sensor with only state is updated after state change."""
+    entity_id = "sensor.air_quality"
+
+    hass.states.async_set(entity_id, 5, {})
+    await hass.async_block_till_done()
+    acc = AirQualitySensor(hass, hk_driver, "Air Quality", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    # test initial values are all blank
+    assert acc.char_air_quality.value == 0
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+    # test initial set of values
+    hass.states.async_set(entity_id, 5, {})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+    # test changing value
+    hass.states.async_set(entity_id, 4, {})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 4
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+
+async def test_air_quality_state_and_nitrogen_dioxide_density(hass, hk_driver):
+    """Test air quality sensor with only state and nitrogen dioxide density is updated after state change."""
+    entity_id = "sensor.air_quality"
+
+    hass.states.async_set(entity_id, 5, {ATTR_NITROGEN_DIOXIDE_DENSITY: 1})
+    await hass.async_block_till_done()
+    acc = AirQualitySensor(hass, hk_driver, "Air Quality", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    # test initial values are all blank
+    assert acc.char_air_quality.value == 0
+    assert acc.char_nitrogen_dioxide_density.value == 0
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+    # test initial set of values
+    hass.states.async_set(entity_id, 5, {ATTR_NITROGEN_DIOXIDE_DENSITY: 1})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert acc.char_nitrogen_dioxide_density.value == 1
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+    # test changing value
+    hass.states.async_set(entity_id, 5, {ATTR_NITROGEN_DIOXIDE_DENSITY: 10})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert acc.char_nitrogen_dioxide_density.value == 10
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+
+async def test_air_quality_state_and_pm_2_5_density_only(hass, hk_driver):
+    """Test air quality sensor with only state and pm 2.5 density is updated after state change."""
+    entity_id = "sensor.air_quality"
+
+    hass.states.async_set(entity_id, 5, {ATTR_PM_2_5_DENSITY: 2})
+    await hass.async_block_till_done()
+    acc = AirQualitySensor(hass, hk_driver, "Air Quality", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    # test initial values are all blank
+    assert acc.char_air_quality.value == 0
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert acc.char_pm_2_5_density.value == 0
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+    # test initial set of values
+    hass.states.async_set(entity_id, 5, {ATTR_PM_2_5_DENSITY: 2})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert acc.char_pm_2_5_density.value == 2
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+    # test changing value
+    hass.states.async_set(entity_id, 5, {ATTR_PM_2_5_DENSITY: 20})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert acc.char_pm_2_5_density.value == 20
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+
+async def test_air_quality_state_and_pm_10_density_only(hass, hk_driver):
+    """Test air quality sensor with only state and pm 10 density is updated after state change."""
+    entity_id = "sensor.air_quality"
+
+    hass.states.async_set(entity_id, 5, {ATTR_PM_10_DENSITY: 3})
+    await hass.async_block_till_done()
+    acc = AirQualitySensor(hass, hk_driver, "Air Quality", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    # test initial values are all blank
+    assert acc.char_air_quality.value == 0
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert acc.char_pm_10_density.value == 0
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+    # test initial set of values
+    hass.states.async_set(entity_id, 5, {ATTR_PM_10_DENSITY: 3})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert acc.char_pm_10_density.value == 3
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+    # test changing value
+    hass.states.async_set(entity_id, 5, {ATTR_PM_10_DENSITY: 30})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert acc.char_pm_10_density.value == 30
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+
+async def test_air_quality_state_and_particulate_density_only(hass, hk_driver):
+    """Test air quality sensor with only state and particulate density is updated after state change."""
+    entity_id = "sensor.air_quality"
+
+    hass.states.async_set(entity_id, 5, {ATTR_PM_DENSITY: 4})
+    await hass.async_block_till_done()
+    acc = AirQualitySensor(hass, hk_driver, "Air Quality", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    # test initial values are all blank
+    assert acc.char_air_quality.value == 0
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert acc.char_particulate_density.value == 0
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+    # test initial set of values
+    hass.states.async_set(entity_id, 5, {ATTR_PM_DENSITY: 4})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert acc.char_particulate_density.value == 4
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+    # test changing value
+    hass.states.async_set(entity_id, 5, {ATTR_PM_DENSITY: 40})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert acc.char_particulate_density.value == 40
+    assert not hasattr(acc, "char_particulate_size")
+    assert not hasattr(acc, "char_voc_density")
+
+
+async def test_air_quality_state_and_particulate_size_only(hass, hk_driver):
+    """Test air quality sensor with only state and particulate size is updated after state change."""
+    entity_id = "sensor.air_quality"
+
+    hass.states.async_set(entity_id, 5, {ATTR_PM_SIZE: 2.5})
+    await hass.async_block_till_done()
+    acc = AirQualitySensor(hass, hk_driver, "Air Quality", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    # test initial values are all blank
+    assert acc.char_air_quality.value == 0
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert acc.char_particulate_size.value == CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
+    assert not hasattr(acc, "char_voc_density")
+
+    # test initial set of values
+    hass.states.async_set(entity_id, 5, {ATTR_PM_SIZE: 2.5})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert acc.char_particulate_size.value == CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
+    assert not hasattr(acc, "char_voc_density")
+
+    # test changing value
+    hass.states.async_set(entity_id, 5, {ATTR_PM_SIZE: 10})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert acc.char_particulate_size.value == CHAR_VALUE_AIR_PARTICULATE_SIZE_PM10
+    assert not hasattr(acc, "char_voc_density")
+
+
+async def test_air_quality_state_and_voc_density_only(hass, hk_driver):
+    """Test air quality sensor with only state and voc density is updated after state change."""
+    entity_id = "sensor.air_quality"
+
+    hass.states.async_set(entity_id, 5, {ATTR_VOC_DENSITY: 6})
+    await hass.async_block_till_done()
+    acc = AirQualitySensor(hass, hk_driver, "Air Quality", entity_id, 2, None)
+    await hass.async_add_job(acc.run)
+
+    assert acc.aid == 2
+    assert acc.category == 10  # Sensor
+
+    # test initial values are all blank
+    assert acc.char_air_quality.value == 0
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert acc.char_voc_density.value == 0
+
+    # test initial set of values
+    hass.states.async_set(entity_id, 5, {ATTR_VOC_DENSITY: 6})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert acc.char_voc_density.value == 6
+
+    # test changing value
+    hass.states.async_set(entity_id, 5, {ATTR_VOC_DENSITY: 60})
+    await hass.async_block_till_done()
+
+    assert acc.char_air_quality.value == 5
+    assert not hasattr(acc, "char_nitrogen_dioxide_density")
+    assert not hasattr(acc, "char_pm_2_5_density")
+    assert not hasattr(acc, "char_pm_10_density")
+    assert not hasattr(acc, "char_particulate_density")
+    assert not hasattr(acc, "char_particulate_size")
+    assert acc.char_voc_density.value == 60
 
 
 async def test_co(hass, hk_driver):
