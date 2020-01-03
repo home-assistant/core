@@ -57,7 +57,7 @@ root.Properties.Image.Format=jpeg,mjpeg,h264
 root.Properties.Image.NbrOfViews=2
 root.Properties.Image.Resolution=1920x1080,1280x960,1280x720,1024x768,1024x576,800x600,640x480,640x360,352x240,320x240
 root.Properties.Image.Rotation=0,180
-root.Properties.System.SerialNumber=ACCC12345678
+root.Properties.System.SerialNumber=00408C12345
 """
 
 
@@ -79,26 +79,24 @@ async def setup_axis_integration(
     )
     config_entry.add_to_hass(hass)
 
-    def mock_request(self, method, path, json=None):
-        if method == "get":
-            if path == "/axis-cgi/param.cgi?action=list&group=root.Brand":
-                return brand
-            if path in [
-                "/axis-cgi/param.cgi?action=list&group=root.Input",
-                "/axis-cgi/param.cgi?action=list&group=root.IOPort",
-                "/axis-cgi/param.cgi?action=list&group=root.Output",
-            ]:
-                return ports
-            if path == "/axis-cgi/param.cgi?action=list&group=root.Properties":
-                return properties
+    def mock_update_brand(self):
+        self.process_raw(brand)
 
-        return None
+    def mock_update_ports(self):
+        self.process_raw(ports)
 
-    with patch("axis.vapix.Vapix.request", new=mock_request), patch(
+    def mock_update_properties(self):
+        self.process_raw(properties)
+
+    with patch("axis.param_cgi.Brand.update_brand", new=mock_update_brand), patch(
+        "axis.param_cgi.Ports.update_ports", new=mock_update_ports
+    ), patch(
+        "axis.param_cgi.Properties.update_properties", new=mock_update_properties
+    ), patch(
         "axis.AxisDevice.start", return_value=True
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     return hass.data[axis.DOMAIN].get(config[axis.CONF_MAC])
 
