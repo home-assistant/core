@@ -116,7 +116,7 @@ class NetgearDeviceScanner(DeviceScanner):
                     self.tracked_accesspoints
                     and dev.conn_ap_mac in self.tracked_accesspoints
                 ):
-                    devices.append(dev.mac + "_" + dev.conn_ap_mac)
+                    devices.append(f"{dev.mac}_{dev.conn_ap_mac}")
 
         return devices
 
@@ -144,7 +144,7 @@ class NetgearDeviceScanner(DeviceScanner):
                     ap_name = dev.name
                     break
 
-            return name + " on " + ap_name
+            return f"{name} on {ap_name}"
 
         return name
 

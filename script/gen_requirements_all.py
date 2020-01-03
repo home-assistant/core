@@ -182,7 +182,7 @@ def gather_requirements_from_modules(errors, reqs):
         try:
             module = importlib.import_module(package)
         except ImportError as err:
-            print("{}: {}".format(package.replace(".", "/") + ".py", err))
+            print("{}.py: {}".format(package.replace(".", "/"), err))
             errors.append(package)
             continue
 
@@ -288,8 +288,8 @@ def diff_file(filename, content):
     """Diff a file."""
     return list(
         difflib.context_diff(
-            [line + "\n" for line in Path(filename).read_text().split("\n")],
-            [line + "\n" for line in content.split("\n")],
+            [f"{line}\n" for line in Path(filename).read_text().split("\n")],
+            [f"{line}\n" for line in content.split("\n")],
             filename,
             "generated",
         )

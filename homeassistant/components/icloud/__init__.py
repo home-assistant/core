@@ -216,7 +216,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
         if icloud_account is None:
             raise Exception(
-                "No iCloud account with username or name " + account_identifier
+                f"No iCloud account with username or name {account_identifier}"
             )
         return icloud_account
 
@@ -430,7 +430,7 @@ class IcloudAccount:
             if slugify(device.name.replace(" ", "", 99)) == name_slug:
                 result.append(device)
         if not result:
-            raise Exception("No device with name " + name)
+            raise Exception(f"No device with name {name}")
         return result
 
     @property

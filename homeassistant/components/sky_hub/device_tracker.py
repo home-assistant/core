@@ -106,8 +106,6 @@ def _parse_skyhub_response(data_str):
         if _MAC_REGEX.match(dvc[1]):
             devices[dvc[1]] = dvc[0]
         else:
-            raise RuntimeError(
-                "Error: MAC address " + dvc[1] + " not in correct format."
-            )
+            raise RuntimeError(f"Error: MAC address {dvc[1]} not in correct format.")
 
     return devices

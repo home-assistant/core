@@ -51,7 +51,7 @@ def main():
         schema_type, schema = _identify_config_schema(module)
 
         add_msg(
-            "CONFIG_SCHEMA " + str(schema_type),
+            f"CONFIG_SCHEMA {schema_type}",
             module_name + " " + color("cyan", str(schema)[:60]),
         )
 

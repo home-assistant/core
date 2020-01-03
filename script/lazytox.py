@@ -201,7 +201,7 @@ async def main():
             elif parts[-1] == "__main__.py":
                 parts[-1] = "test_main.py"
             else:
-                parts[-1] = "test_" + parts[-1]
+                parts[-1] = f"test_{parts[-1]}"
             fname = "/".join(parts)
             if os.path.isfile(fname):
                 test_files.add(fname)
