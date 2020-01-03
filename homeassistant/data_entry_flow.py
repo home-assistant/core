@@ -76,7 +76,9 @@ class FlowManager(abc.ABC):
         """Finish a config flow and add an entry."""
         pass
 
-    async def async_post_init(self, flow: "FlowHandler", result: Dict[str, Any]) -> None:
+    async def async_post_init(
+        self, flow: "FlowHandler", result: Dict[str, Any]
+    ) -> None:
         """Entry has finished executing its first step asynchronously."""
         pass
 
