@@ -120,7 +120,6 @@ NETATMO_DEVICE_TYPES = {
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Netatmo weather and homecoach platform."""
     auth = hass.data[DOMAIN][entry.entry_id][AUTH]
-    # config_public = hass.data[DOMAIN][CONF_PUBLIC]
 
     def find_entities(data):
         """Find all entities."""
