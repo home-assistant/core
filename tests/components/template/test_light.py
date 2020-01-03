@@ -11,6 +11,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import callback
+
 from tests.common import assert_setup_component, get_test_home_assistant
 from tests.components.light import common
 
