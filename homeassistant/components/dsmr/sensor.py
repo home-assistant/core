@@ -1,6 +1,5 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 import asyncio
-from datetime import timedelta
 from functools import partial
 import logging
 
@@ -46,19 +45,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-# Smart meter sends telegram every 10 seconds or every second for DSMR 5
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the DSMR sensor."""
     # Suppress logging
     logging.getLogger("dsmr_parser").setLevel(logging.ERROR)
 
-    global MIN_TIME_BETWEEN_UPDATES
     dsmr_version = config[CONF_DSMR_VERSION]
-    if dsmr_version != "5B" or dsmr_version != "5":
-        MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
     # Define list of name,obis mappings to generate entities
     obis_mapping = [
