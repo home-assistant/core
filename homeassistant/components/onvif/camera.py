@@ -383,7 +383,7 @@ class ONVIFHassCamera(Camera):
             )
             speed_val = speed
             _LOGGER.debug(
-                "Calling %s PTZ | Pan = %d | Tilt = %d | Zoom = %d | Speed = %d",
+                "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed = %4.2f",
                 move_mode,
                 pan_val,
                 tilt_val,
