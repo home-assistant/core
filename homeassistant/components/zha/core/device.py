@@ -24,6 +24,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 
+from . import typing as zha_typing
 from .channels import EventRelayChannel
 from .const import (
     ATTR_ARGS,
@@ -115,6 +116,11 @@ class ZHADevice(LogMixin):
     def set_device_id(self, device_id):
         """Set the HA device registry device id."""
         self._ha_device_id = device_id
+
+    @property
+    def device(self) -> zha_typing.ZigpyDeviceType:
+        """Return underlying Zigpy device."""
+        return self._zigpy_device
 
     @property
     def name(self):
