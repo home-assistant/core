@@ -19,6 +19,7 @@ CONF_ENTITY_CONFIG = "entity_config"
 CONF_ENDPOINT = "endpoint"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
+CONF_LOCALE = "locale"
 
 ATTR_UID = "uid"
 ATTR_UPDATE_DATE = "updateDate"
@@ -42,6 +43,20 @@ API_CHANGE = "change"
 
 CONF_DESCRIPTION = "description"
 CONF_DISPLAY_CATEGORIES = "display_categories"
+CONF_SUPPORTED_LOCALES = (
+    "de-DE",
+    "en-AU",
+    "en-CA",
+    "en-GB",
+    "en-IN",
+    "en-US",
+    "es-ES",
+    "es-MX",
+    "fr-CA",
+    "fr-FR",
+    "it-IT",
+    "ja-JP",
+)
 
 API_TEMP_UNITS = {TEMP_FAHRENHEIT: "FAHRENHEIT", TEMP_CELSIUS: "CELSIUS"}
 
