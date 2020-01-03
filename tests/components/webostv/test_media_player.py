@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     SERVICE_VOLUME_MUTE,
+    STATE_ON,
 )
 from homeassistant.setup import async_setup_component
 
@@ -78,7 +79,7 @@ async def test_select_source_with_empty_source_list(hass, client):
     await hass.services.async_call(media_player.DOMAIN, SERVICE_SELECT_SOURCE, data)
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(ENTITY_ID, "playing")
+    assert hass.states.is_state(ENTITY_ID, STATE_ON)
     client.launch_app.assert_not_called()
     client.set_input.assert_not_called()
 
