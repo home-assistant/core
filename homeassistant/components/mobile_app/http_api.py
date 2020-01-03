@@ -56,7 +56,7 @@ class RegistrationsView(HomeAssistantView):
                 vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
             },
             # To allow future apps to send more data
-            extra=vol.ALLOW_EXTRA,
+            extra=vol.REMOVE_EXTRA,
         )
     )
     async def post(self, request: Request, data: Dict) -> Response:
