@@ -170,7 +170,7 @@ async def async_unload_entry(hass, config_entry):
 
 
 def setup_hass_services(hass):
-    """Home assistant services."""
+    """Home Assistant services."""
 
     def change_setting(call):
         """Change an Abode system setting."""

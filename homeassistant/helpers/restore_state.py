@@ -168,7 +168,7 @@ class RestoreStateData:
             self.hass.async_create_task(self.async_dump_states())
 
         # Dump the initial states now. This helps minimize the risk of having
-        # old states loaded by overwritting the last states once home assistant
+        # old states loaded by overwriting the last states once Home Assistant
         # has started and the old states have been read.
         _async_dump_states()
 

@@ -76,7 +76,7 @@ class RingLight(Light):
         return self._light_on
 
     def _set_light(self, new_state):
-        """Update light state, and causes HASS to correctly update."""
+        """Update light state, and causes Home Assistant to correctly update."""
         self._device.lights = new_state
         self._light_on = new_state == ON_STATE
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
