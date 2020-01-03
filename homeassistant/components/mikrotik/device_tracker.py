@@ -12,7 +12,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, ATTR_MANUFACTURER
+from .const import ATTR_MANUFACTURER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

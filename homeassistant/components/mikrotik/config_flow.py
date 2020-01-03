@@ -14,12 +14,12 @@ from homeassistant.core import callback
 
 from .const import (
     CONF_ARP_PING,
-    CONF_FORCE_DHCP,
     CONF_DETECTION_TIME,
+    CONF_FORCE_DHCP,
     CONF_TRACK_DEVICES,
     DEFAULT_API_PORT,
-    DEFAULT_NAME,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_NAME,
     DOMAIN,
 )
 from .errors import CannotConnect, LoginError
