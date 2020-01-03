@@ -6,6 +6,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components import deconz
+from homeassistant.components.deconz.const import CONF_BRIDGEID
 
 from .test_gateway import (
     BRIDGEID,
@@ -99,7 +100,7 @@ async def test_configure_service_with_field(hass):
 
     data = {
         deconz.services.SERVICE_FIELD: "/light/2",
-        deconz.CONF_BRIDGEID: BRIDGEID,
+        CONF_BRIDGEID: BRIDGEID,
         deconz.services.SERVICE_DATA: {"on": True, "attr1": 10, "attr2": 20},
     }
 
@@ -203,7 +204,7 @@ async def test_service_refresh_devices(hass):
         hass, ENTRY_CONFIG, options={}, get_state_response=data
     )
 
-    data = {deconz.CONF_BRIDGEID: BRIDGEID}
+    data = {CONF_BRIDGEID: BRIDGEID}
 
     with patch(
         "pydeconz.DeconzSession.request",
