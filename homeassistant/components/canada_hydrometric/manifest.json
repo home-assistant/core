@@ -1,0 +1,12 @@
+{
+  "domain": "canada_hydrometric",
+  "name": "Canada Hydrometric",
+  "documentation": "https://www.home-assistant.io/integrations/canada_hydrometric",
+  "requirements": [
+    "env_canada==0.0.33"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@michaeldavie"
+  ]
+}

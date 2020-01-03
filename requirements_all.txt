@@ -485,8 +485,9 @@ enocean==0.50
 # homeassistant.components.entur_public_transport
 enturclient==0.2.1
 
+# homeassistant.components.canada_hydrometric
 # homeassistant.components.environment_canada
-env_canada==0.0.31
+env_canada==0.0.33
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
