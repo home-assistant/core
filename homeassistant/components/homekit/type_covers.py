@@ -17,9 +17,9 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_CLOSING,
 )
 
 from . import TYPES
