@@ -108,8 +108,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     except ValueError:
         mode = "hostname"
     mac = await hass.async_add_executor_job(partial(get_mac_address, **{mode: host}))
-
-    unique_id = f"kef-{mac}"
+    unique_id = f"kef-{mac}" if mac is not None else None
 
     media_player = KefMediaPlayer(
         name,
