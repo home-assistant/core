@@ -1,6 +1,7 @@
 """Classes to help gather user submissions."""
+import abc
 import logging
-from typing import Any, Callable, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 import uuid
 
 import voluptuous as vol
@@ -46,20 +47,34 @@ class AbortFlow(FlowError):
         self.description_placeholders = description_placeholders
 
 
-class FlowManager:
+class FlowManager(abc.ABC):
     """Manage all the flows that are in progress."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        async_create_flow: Callable,
-        async_finish_flow: Callable,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant,) -> None:
         """Initialize the flow manager."""
         self.hass = hass
         self._progress: Dict[str, Any] = {}
-        self._async_create_flow = async_create_flow
-        self._async_finish_flow = async_finish_flow
+
+    @abc.abstractmethod
+    async def async_create_flow(
+        self,
+        handler_key: Any,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
+    ) -> "FlowHandler":
+        """Create a flow for specified handler.
+
+        Handler key is the domain of the component that we want to set up.
+        """
+        pass
+
+    @abc.abstractmethod
+    async def async_finish_flow(
+        self, flow: "FlowHandler", result: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Finish a config flow and add an entry."""
+        pass
 
     @callback
     def async_progress(self) -> List[Dict]:
@@ -75,7 +90,9 @@ class FlowManager:
         """Start a configuration flow."""
         if context is None:
             context = {}
-        flow = await self._async_create_flow(handler, context=context, data=data)
+        flow = await self.async_create_flow(handler, context=context, data=data)
+        if not flow:
+            raise UnknownFlow("Flow was not created")
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
@@ -168,7 +185,7 @@ class FlowManager:
             return result
 
         # We pass a copy of the result because we're mutating our version
-        result = await self._async_finish_flow(flow, dict(result))
+        result = await self.async_finish_flow(flow, dict(result))
 
         # _async_finish_flow may change result type, check it again
         if result["type"] == RESULT_TYPE_FORM:
