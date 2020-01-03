@@ -21,6 +21,7 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_OS_NAME,
     ATTR_OS_VERSION,
     ATTR_SUPPORTS_ENCRYPTION,
@@ -40,18 +41,23 @@ class RegistrationsView(HomeAssistantView):
     name = "api:mobile_app:register"
 
     @RequestDataValidator(
-        {
-            vol.Optional(ATTR_APP_DATA, default={}): dict,
-            vol.Required(ATTR_APP_ID): cv.string,
-            vol.Required(ATTR_APP_NAME): cv.string,
-            vol.Required(ATTR_APP_VERSION): cv.string,
-            vol.Required(ATTR_DEVICE_NAME): cv.string,
-            vol.Required(ATTR_MANUFACTURER): cv.string,
-            vol.Required(ATTR_MODEL): cv.string,
-            vol.Required(ATTR_OS_NAME): cv.string,
-            vol.Optional(ATTR_OS_VERSION): cv.string,
-            vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
-        }
+        vol.Schema(
+            {
+                vol.Optional(ATTR_APP_DATA, default={}): dict,
+                vol.Required(ATTR_APP_ID): cv.string,
+                vol.Required(ATTR_APP_NAME): cv.string,
+                vol.Required(ATTR_APP_VERSION): cv.string,
+                vol.Required(ATTR_DEVICE_NAME): cv.string,
+                vol.Required(ATTR_MANUFACTURER): cv.string,
+                vol.Required(ATTR_MODEL): cv.string,
+                vol.Optional(ATTR_MODEL_ID): cv.string,  # Added in 0.104
+                vol.Required(ATTR_OS_NAME): cv.string,
+                vol.Optional(ATTR_OS_VERSION): cv.string,
+                vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
+            },
+            # To allow future apps to send more data
+            extra=vol.ALLOW_EXTRA,
+        )
     )
     async def post(self, request: Request, data: Dict) -> Response:
         """Handle the POST request for registration."""
@@ -73,9 +79,10 @@ class RegistrationsView(HomeAssistantView):
 
         data[CONF_USER_ID] = request["hass_user"].id
 
-        ctx = {"source": "registration"}
         await hass.async_create_task(
-            hass.config_entries.flow.async_init(DOMAIN, context=ctx, data=data)
+            hass.config_entries.flow.async_init(
+                DOMAIN, data=data, context={"source": "registration"}
+            )
         )
 
         remote_ui_url = None

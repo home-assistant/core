@@ -33,6 +33,7 @@ async def test_registration(hass, hass_client):
 
     entries = hass.config_entries.async_entries(DOMAIN)
 
+    assert entries[0].unique_id == "io.homeassistant.mobile_app_test-mock-model-id"
     assert entries[0].data["app_data"] == REGISTER["app_data"]
     assert entries[0].data["app_id"] == REGISTER["app_id"]
     assert entries[0].data["app_name"] == REGISTER["app_name"]
