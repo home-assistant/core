@@ -692,13 +692,13 @@ async def test_entry_options(hass, manager):
             return OptionsFlowHandler()
 
     config_entries.HANDLERS["test"] = TestFlow()
-    flow = await manager.options._async_create_flow(
+    flow = await manager.options.async_create_flow(
         entry.entry_id, context={"source": "test"}, data=None
     )
 
     flow.handler = entry.entry_id  # Used to keep reference to config entry
 
-    await manager.options._async_finish_flow(flow, {"data": {"second": True}})
+    await manager.options.async_finish_flow(flow, {"data": {"second": True}})
 
     assert entry.data == {"first": True}
 
