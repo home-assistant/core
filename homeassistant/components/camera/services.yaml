@@ -96,6 +96,6 @@ onvif_ptz:
       default: 0.5
       example: 0.5
     move_mode:
-      description: "PTZ moving mode. One of ContinuousMode, RelativeMode or AbsoluteMode"
-      default: "RelativeMode"
-      example: "ContinuousMode"
+      description: "PTZ moving mode. One of ContinuousMove, RelativeMove or AbsoluteMove"
+      default: "RelativeMove"
+      example: "ContinuousMove"
