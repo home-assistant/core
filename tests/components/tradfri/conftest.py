@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import mock_coro
 
 
 @pytest.fixture
