@@ -38,24 +38,13 @@ RESULT_NOT_FOUND = "not_found"
 RESULT_NOT_SUPPORTED = "not_supported"
 
 
-def _is_already_in_progress(flows, ip_address):
-    return any(ip_address == flow["context"].get(CONF_IP_ADDRESS) for flow in flows)
-
-
-def _is_already_configured(hass, ip_address):
-    return any(
-        ip_address == entry.data.get(CONF_IP_ADDRESS)
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    )
-
-
 def _get_ip(host):
     if host is None:
         return None
     return socket.gethostbyname(host)
 
 
-def _try_connect(host, name):
+def _try_connect(host, name, port=None):
     """Try to connect and check auth."""
     for method in METHODS:
         config = {
@@ -64,7 +53,7 @@ def _try_connect(host, name):
             "id": "ha.component.samsung",
             "host": host,
             "method": method,
-            "port": None,
+            "port": port,
             "timeout": None,
         }
         try:
@@ -122,6 +111,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
+        self._on_script = user_input.get(CONF_ON_ACTION)
+        self._port = user_input.get(CONF_PORT)
+
         return await self.async_step_user(user_input)
 
     async def async_step_user(self, user_input=None):
@@ -131,20 +123,15 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _get_ip, user_input[CONF_HOST]
             )
 
-            if _is_already_in_progress(self._async_in_progress(), ip_address):
-                return self.async_abort(reason="already_in_progress")
-
-            if _is_already_configured(self.hass, ip_address):
-                return self.async_abort(reason="already_configured")
+            self.async_set_unique_id(ip_address);
+            self._abort_if_unique_id_configured();
 
             self._host = user_input.get(CONF_HOST)
             self._ip = self.context[CONF_IP_ADDRESS] = ip_address
-            self._on_script = user_input.get(CONF_ON_ACTION)
-            self._port = user_input.get(CONF_PORT)
             self._title = user_input.get(CONF_NAME)
 
             result = await self.hass.async_add_executor_job(
-                _try_connect, self._host, self._title
+                _try_connect, self._host, self._title, self._port
             )
 
             if result != RESULT_SUCCESS:
@@ -159,11 +146,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _get_ip, user_input[ATTR_SSDP_LOCATION]
         )
 
-        if _is_already_in_progress(self._async_in_progress(), ip_address):
-            return self.async_abort(reason="already_in_progress")
-
-        if _is_already_configured(self.hass, ip_address):
-            return self.async_abort(reason="already_configured")
+        self.async_set_unique_id(ip_address);
+        self._abort_if_unique_id_configured();
 
         self._host = user_input[ATTR_SSDP_LOCATION]
         self._ip = self.context[CONF_IP_ADDRESS] = ip_address
