@@ -45,24 +45,21 @@ class VelbusLight(VelbusEntity, Light):
         """Return the display name of this entity."""
         if self._module.light_is_buttonled(self._channel):
             return "LED " + self._module.get_name(self._channel)
-        else:
-            return self._module.get_name(self._channel)
+        return self._module.get_name(self._channel)
 
     @property
     def supported_features(self):
         """Flag supported features."""
         if self._module.light_is_buttonled(self._channel):
             return SUPPORT_FLASH
-        else:
-            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+        return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
     @property
     def entity_registry_enabled_default(self):
         """Disable Button LEDs by default."""
         if self._module.light_is_buttonled(self._channel):
             return False
-        else:
-            return True
+        return True
 
     @property
     def is_on(self):
