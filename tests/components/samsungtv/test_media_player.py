@@ -23,14 +23,8 @@ from homeassistant.components.media_player.const import (
     SERVICE_SELECT_SOURCE,
     SUPPORT_TURN_ON,
 )
-from homeassistant.components.samsungtv.const import (
-    DEFAULT_TIMEOUT,
-    DOMAIN as SAMSUNGTV_DOMAIN,
-)
-from homeassistant.components.samsungtv.media_player import (
-    CONF_TIMEOUT,
-    SUPPORT_SAMSUNGTV,
-)
+from homeassistant.components.samsungtv.const import DOMAIN as SAMSUNGTV_DOMAIN
+from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
@@ -66,7 +60,6 @@ MOCK_CONFIG = {
             CONF_HOST: "fake",
             CONF_NAME: "fake",
             CONF_PORT: 8001,
-            CONF_TIMEOUT: 10,
             CONF_MAC: "38:f9:d3:82:b4:f1",
         }
     ]
@@ -79,7 +72,6 @@ MOCK_CONFIG_BROADCAST = {
             CONF_HOST: "fake_broadcast",
             CONF_NAME: "fake_broadcast",
             CONF_PORT: 8001,
-            CONF_TIMEOUT: 10,
             CONF_MAC: "38:f9:d3:82:b4:f1",
             CONF_BROADCAST_ADDRESS: "192.168.5.255",
         }
@@ -93,7 +85,6 @@ MOCK_CONFIG_NOMAC = {
             CONF_HOST: "fake_nomac",
             CONF_NAME: "fake_nomac",
             CONF_PORT: 55000,
-            CONF_TIMEOUT: 10,
         }
     ]
 }
@@ -134,7 +125,7 @@ AUTODETECT_WEBSOCKET = {
     "method": "websocket",
     "port": None,
     "host": "fake_auto",
-    "timeout": DEFAULT_TIMEOUT,
+    "timeout": None,
 }
 AUTODETECT_LEGACY = {
     "name": "HomeAssistant",
@@ -143,7 +134,7 @@ AUTODETECT_LEGACY = {
     "method": "legacy",
     "port": None,
     "host": "fake_auto",
-    "timeout": DEFAULT_TIMEOUT,
+    "timeout": None,
 }
 
 

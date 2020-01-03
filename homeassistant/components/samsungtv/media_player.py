@@ -27,7 +27,6 @@ from homeassistant.const import (
     CONF_ID,
     CONF_MAC,
     CONF_PORT,
-    CONF_TIMEOUT,
     STATE_OFF,
     STATE_ON,
 )
@@ -68,13 +67,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     model = config_entry.data.get(CONF_MODEL)
     name = config_entry.title
     port = config_entry.data.get(CONF_PORT)
-    timeout = config_entry.data.get(CONF_TIMEOUT)
     uuid = config_entry.data.get(CONF_ID)
 
     async_add_entities(
         [
             SamsungTVDevice(
-                host, port, name, timeout, mac, broadcast, uuid, manufacturer, model
+                host, port, name, mac, broadcast, uuid, manufacturer, model
             )
         ]
     )
@@ -88,7 +86,6 @@ class SamsungTVDevice(MediaPlayerDevice):
         host,
         port,
         name,
-        timeout,
         mac,
         broadcast,
         uuid,
@@ -120,7 +117,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             "method": None,
             "port": port,
             "host": host,
-            "timeout": timeout,
+            "timeout": None,
         }
 
         # Select method by port number, mainly for fallback

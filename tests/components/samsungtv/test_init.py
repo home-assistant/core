@@ -15,7 +15,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     CONF_PORT,
-    CONF_TIMEOUT,
     SERVICE_VOLUME_UP,
 )
 
@@ -28,7 +27,6 @@ MOCK_CONFIG = {
             CONF_MAC: "fake_mac",
             CONF_NAME: "fake_name",
             CONF_PORT: 1234,
-            CONF_TIMEOUT: 999,
         }
     ]
 }
@@ -39,7 +37,7 @@ REMOTE_CALL = {
     "method": "websocket",
     "port": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_PORT],
     "host": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_HOST],
-    "timeout": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_TIMEOUT],
+    "timeout": None,
 }
 
 
@@ -65,7 +63,7 @@ async def test_setup(hass, remote):
         state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
     )
 
-    # test host, port and timeout
+    # test host and port
     assert await hass.services.async_call(
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )

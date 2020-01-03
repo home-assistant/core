@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     CONF_PORT,
-    CONF_TIMEOUT,
 )
 
 from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, METHODS
@@ -99,7 +98,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._model = None
         self._name = None
         self._port = None
-        self._timeout = None
         self._title = None
         self._uuid = None
 
@@ -116,7 +114,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_MODEL: self._model,
                 CONF_NAME: self._name,
                 CONF_PORT: self._port,
-                CONF_TIMEOUT: self._timeout,
             },
         )
 
@@ -142,7 +139,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._ip = self.context[CONF_IP_ADDRESS] = ip_address
             self._mac = user_input.get(CONF_MAC)
             self._port = user_input.get(CONF_PORT)
-            self._timeout = user_input.get(CONF_TIMEOUT)
             self._title = user_input.get(CONF_NAME)
 
             result = await self.hass.async_add_executor_job(

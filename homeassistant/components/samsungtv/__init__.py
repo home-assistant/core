@@ -8,11 +8,10 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
     CONF_PORT,
-    CONF_TIMEOUT,
 )
 import homeassistant.helpers.config_validation as cv
 
-from .const import DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
+from .const import DEFAULT_NAME, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -24,9 +23,6 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_PORT): cv.port,
                         vol.Optional(CONF_MAC): cv.string,
-                        vol.Optional(
-                            CONF_TIMEOUT, default=DEFAULT_TIMEOUT
-                        ): cv.positive_int,
                         vol.Optional(
                             CONF_BROADCAST_ADDRESS, default=BROADCAST_IP
                         ): cv.string,
