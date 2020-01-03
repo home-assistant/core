@@ -393,7 +393,7 @@ class ONVIFHassCamera(Camera):
             try:
                 req = self._ptz_service.create_type(move_mode)
                 req.ProfileToken = await self.async_obtain_profile_token()
-                if move_mode == "ContinuousMove":
+                if move_mode == CONTINUOUS_MOVE:
                     req.Velocity = {
                         "PanTilt": {"x": pan_val, "y": tilt_val},
                         "Zoom": {"x": zoom_val},
@@ -404,7 +404,7 @@ class ONVIFHassCamera(Camera):
                     req = self._ptz_service.create_type("Stop")
                     req.ProfileToken = await self.async_obtain_profile_token()
                     await self._ptz_service.Stop({"ProfileToken": req.ProfileToken})
-                elif move_mode == "RelativeMove":
+                elif move_mode == RELATIVE_MOVE:
                     req.Translation = {
                         "PanTilt": {"x": pan_val, "y": tilt_val},
                         "Zoom": {"x": zoom_val},
@@ -414,7 +414,7 @@ class ONVIFHassCamera(Camera):
                         "Zoom": {"x": speed_val},
                     }
                     await self._ptz_service.RelativeMove(req)
-                elif move_mode == "AbsoluteMove":
+                elif move_mode == ABSOLUTE_MOVE:
                     req.Position = {
                         "PanTilt": {"x": pan_val, "y": tilt_val},
                         "Zoom": {"x": zoom_val},
