@@ -70,7 +70,13 @@ class RegistrationsView(HomeAssistantView):
                 CONF_CLOUDHOOK_URL
             ] = await hass.components.cloud.async_create_cloudhook(webhook_id)
 
-        data[ATTR_DEVICE_ID] = str(uuid.uuid4()).replace("-", "")
+        model_id = data.get(ATTR_MODEL_ID)
+
+        if model_id is None:
+            data[ATTR_DEVICE_ID] = str(uuid.uuid4()).replace("-", "")
+
+        else:
+            data[ATTR_DEVICE_ID] = f"{data[ATTR_APP_ID]}-{model_id}"
 
         data[CONF_WEBHOOK_ID] = webhook_id
 
