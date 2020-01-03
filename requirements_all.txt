@@ -171,6 +171,9 @@ aioimaplib==0.7.15
 # homeassistant.components.apache_kafka
 aiokafka==0.5.1
 
+# homeassistant.components.kef
+aiokef==0.2.2
+
 # homeassistant.components.lifx
 aiolifx==0.6.7
 
@@ -578,6 +581,7 @@ georss_qld_bushfire_alert_client==0.3
 
 # homeassistant.components.braviatv
 # homeassistant.components.huawei_lte
+# homeassistant.components.kef
 # homeassistant.components.nmap_tracker
 getmac==0.8.1
 
