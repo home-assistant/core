@@ -103,7 +103,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             "method": None,
             "port": port,
             "host": host,
-            "timeout": None,
+            "timeout": 1,
         }
 
         # Select method by port number, mainly for fallback
@@ -114,7 +114,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
-        self.send_key("KEY")
+        self.hass.async_add_executor_job(self.send_key("KEY"))
 
     def get_remote(self):
         """Create or return a remote control instance."""
@@ -250,9 +250,9 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._end_of_power_off = dt_util.utcnow() + timedelta(seconds=15)
 
         if self._config["method"] == "websocket":
-            self.send_key("KEY_POWER")
+            self.hass.async_add_executor_job(self.send_key("KEY_POWER"))
         else:
-            self.send_key("KEY_POWEROFF")
+            self.hass.async_add_executor_job(self.send_key("KEY_POWEROFF"))
         # Force closing of remote session to provide instant UI feedback
         try:
             self.get_remote().close()
@@ -262,15 +262,15 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def volume_up(self):
         """Volume up the media player."""
-        self.send_key("KEY_VOLUP")
+        self.hass.async_add_executor_job(self.send_key("KEY_VOLUP"))
 
     def volume_down(self):
         """Volume down media player."""
-        self.send_key("KEY_VOLDOWN")
+        self.hass.async_add_executor_job(self.send_key("KEY_VOLDOWN"))
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self.send_key("KEY_MUTE")
+        self.hass.async_add_executor_job(self.send_key("KEY_MUTE"))
 
     def media_play_pause(self):
         """Simulate play pause media player."""
@@ -282,20 +282,20 @@ class SamsungTVDevice(MediaPlayerDevice):
     def media_play(self):
         """Send play command."""
         self._playing = True
-        self.send_key("KEY_PLAY")
+        self.hass.async_add_executor_job(self.send_key("KEY_PLAY"))
 
     def media_pause(self):
         """Send media pause command to media player."""
         self._playing = False
-        self.send_key("KEY_PAUSE")
+        self.hass.async_add_executor_job(self.send_key("KEY_PAUSE"))
 
     def media_next_track(self):
         """Send next track command."""
-        self.send_key("KEY_CHUP")
+        self.hass.async_add_executor_job(self.send_key("KEY_CHUP"))
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self.send_key("KEY_CHDOWN")
+        self.hass.async_add_executor_job(self.send_key("KEY_CHDOWN"))
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Support changing a channel."""
@@ -319,13 +319,11 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Turn the media player on."""
         if self._on_script:
             await self.hass.async_add_job(self._on_script.async_run())
-        else:
-            self.send_key("KEY_POWERON")
 
-    async def async_select_source(self, source):
+    def select_source(self, source):
         """Select input source."""
         if source not in SOURCES:
             LOGGER.error("Unsupported source")
             return
 
-        await self.hass.async_add_job(self.send_key, SOURCES[source])
+        self.hass.async_add_executor_job(self.send_key, SOURCES[source])
