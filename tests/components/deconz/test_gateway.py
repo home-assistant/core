@@ -10,14 +10,12 @@ from homeassistant.components import deconz, ssdp
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-BRIDGEID = "0123456789"
+BRIDGEID = "01234E56789A"
 
 ENTRY_CONFIG = {
     deconz.config_flow.CONF_API_KEY: "ABCDEF",
-    deconz.config_flow.CONF_BRIDGEID: BRIDGEID,
     deconz.config_flow.CONF_HOST: "1.2.3.4",
     deconz.config_flow.CONF_PORT: 80,
-    deconz.config_flow.CONF_UUID: "456DEF",
 }
 
 DECONZ_CONFIG = {
@@ -60,7 +58,8 @@ async def setup_deconz_integration(hass, config, options, get_state_response):
 
     hass.config_entries._entries.append(config_entry)
 
-    return hass.data[deconz.DOMAIN].get(config[deconz.CONF_BRIDGEID])
+    bridgeid = get_state_response["config"]["bridgeid"]
+    return hass.data[deconz.DOMAIN].get(bridgeid)
 
 
 async def test_gateway_setup(hass):
