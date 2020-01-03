@@ -411,7 +411,7 @@ pycoolmasternet==0.0.4
 pydaikin==1.6.1
 
 # homeassistant.components.deconz
-pydeconz==66
+pydeconz==67
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
