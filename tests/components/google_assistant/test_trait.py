@@ -1266,24 +1266,99 @@ async def test_modes(hass):
         "availableModes": [
             {
                 "name": "input source",
-                "name_values": [{"name_synonym": ["input source"], "lang": "en"}],
+                "name_values": [
+                    {"name_synonym": ["input source", "input", "source"], "lang": "en"}
+                ],
                 "settings": [
                     {
                         "setting_name": "media",
                         "setting_values": [
-                            {"setting_synonym": ["media", "media mode"], "lang": "en"}
+                            {"setting_synonym": ["media"], "lang": "en"}
                         ],
                     },
                     {
                         "setting_name": "game",
-                        "setting_values": [
-                            {"setting_synonym": ["game", "game mode"], "lang": "en"}
-                        ],
+                        "setting_values": [{"setting_synonym": ["game"], "lang": "en"}],
                     },
                     {
                         "setting_name": "chromecast",
                         "setting_values": [
                             {"setting_synonym": ["chromecast"], "lang": "en"}
+                        ],
+                    },
+                    {
+                        "setting_name": "plex",
+                        "setting_values": [{"setting_synonym": ["plex"], "lang": "en"}],
+                    },
+                ],
+                "ordered": False,
+            }
+        ]
+    }
+
+    assert trt.query_attributes() == {
+        "currentModeSettings": {"input source": "game"},
+        "on": True,
+        "online": True,
+    }
+
+    assert trt.can_execute(
+        trait.COMMAND_MODES, params={"updateModeSettings": {"input source": "media"}},
+    )
+
+    calls = async_mock_service(
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+    )
+    await trt.execute(
+        trait.COMMAND_MODES,
+        BASIC_DATA,
+        {"updateModeSettings": {"input source": "media"}},
+        {},
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
+
+
+async def test_sound_modes(hass):
+    """Test Mode trait."""
+    assert helpers.get_google_type(media_player.DOMAIN, None) is not None
+    assert trait.ModesTrait.supported(
+        media_player.DOMAIN, media_player.SUPPORT_SELECT_SOUND_MODE, None
+    )
+
+    trt = trait.ModesTrait(
+        hass,
+        State(
+            "media_player.living_room",
+            media_player.STATE_PLAYING,
+            attributes={
+                media_player.ATTR_SOUND_MODE_LIST: ["stereo", "prologic"],
+                media_player.ATTR_SOUND_MODE: "stereo",
+            },
+        ),
+        BASIC_CONFIG,
+    )
+
+    attribs = trt.sync_attributes()
+    assert attribs == {
+        "availableModes": [
+            {
+                "name": "sound mode",
+                "name_values": [
+                    {"name_synonym": ["sound mode", "effects"], "lang": "en"}
+                ],
+                "settings": [
+                    {
+                        "setting_name": "stereo",
+                        "setting_values": [
+                            {"setting_synonym": ["stereo"], "lang": "en"}
+                        ],
+                    },
+                    {
+                        "setting_name": "prologic",
+                        "setting_values": [
+                            {"setting_synonym": ["prologic"], "lang": "en"}
                         ],
                     },
                 ],
@@ -1293,36 +1368,30 @@ async def test_modes(hass):
     }
 
     assert trt.query_attributes() == {
-        "currentModeSettings": {"source": "game"},
+        "currentModeSettings": {"sound mode": "stereo"},
         "on": True,
         "online": True,
     }
 
     assert trt.can_execute(
-        trait.COMMAND_MODES,
-        params={
-            "updateModeSettings": {
-                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): "media"
-            }
-        },
+        trait.COMMAND_MODES, params={"updateModeSettings": {"sound mode": "stereo"}},
     )
 
     calls = async_mock_service(
-        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOURCE
+        hass, media_player.DOMAIN, media_player.SERVICE_SELECT_SOUND_MODE
     )
     await trt.execute(
         trait.COMMAND_MODES,
         BASIC_DATA,
-        {
-            "updateModeSettings": {
-                trt.HA_TO_GOOGLE.get(media_player.ATTR_INPUT_SOURCE): "media"
-            }
-        },
+        {"updateModeSettings": {"sound mode": "stereo"}},
         {},
     )
 
     assert len(calls) == 1
-    assert calls[0].data == {"entity_id": "media_player.living_room", "source": "media"}
+    assert calls[0].data == {
+        "entity_id": "media_player.living_room",
+        "sound_mode": "stereo",
+    }
 
 
 async def test_openclose_cover(hass):
