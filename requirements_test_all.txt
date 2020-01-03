@@ -279,6 +279,9 @@ libpurecool==0.6.0
 # homeassistant.components.mikrotik
 librouteros==2.3.1
 
+# homeassistant.components.mikrotik
+librouteros==2.3.1
+
 # homeassistant.components.soundtouch
 libsoundtouch==0.7.2
 
