@@ -94,7 +94,8 @@ class VelbusLight(VelbusEntity, Light):
             try:
                 if ATTR_BRIGHTNESS in kwargs:
                     self._module.set_dimmer_state(
-                        self._channel, kwargs[ATTR_BRIGHTNESS],
+                        self._channel,
+                        kwargs[ATTR_BRIGHTNESS],
                         kwargs.get(ATTR_TRANSITION, 0),
                     )
                 else:
