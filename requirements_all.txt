@@ -1803,6 +1803,9 @@ sense-hat==2.2.0
 # homeassistant.components.sense
 sense_energy==0.7.0
 
+# homeassistant.components.sentry
+sentry-sdk==0.13.5
+
 # homeassistant.components.aquostv
 sharp_aquos_rc==0.3.2
 
