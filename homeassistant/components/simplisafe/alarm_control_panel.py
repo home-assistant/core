@@ -22,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.util.dt import utc_from_timestamp
 
-from . import SimpliSafeEntity
+from . import SimpliSafeEntity, async_guard_api_call
 from .const import DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,12 +54,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     pass
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a SimpliSafe alarm control panel based on a config entry."""
-    simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
+    simplisafe = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
     async_add_entities(
         [
-            SimpliSafeAlarm(simplisafe, system, entry.data.get(CONF_CODE))
+            SimpliSafeAlarm(
+                hass, config_entry, simplisafe, system, config_entry.data.get(CONF_CODE)
+            )
             for system in simplisafe.systems.values()
         ],
         True,
@@ -69,11 +71,13 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
     """Representation of a SimpliSafe alarm."""
 
-    def __init__(self, simplisafe, system, code):
+    def __init__(self, hass, config_entry, simplisafe, system, code):
         """Initialize the SimpliSafe alarm."""
         super().__init__(system, "Alarm Control Panel")
         self._changed_by = None
         self._code = code
+        self._config_entry = config_entry
+        self._hass = hass
         self._simplisafe = simplisafe
         self._state = None
 
@@ -134,21 +138,27 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
         if not self._validate_code(code, "disarming"):
             return
 
-        await self._system.set_off()
+        await async_guard_api_call(
+            self._hass, self._config_entry, self._simplisafe.api
+        )(self._system.set_off)()
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         if not self._validate_code(code, "arming home"):
             return
 
-        await self._system.set_home()
+        await async_guard_api_call(
+            self._hass, self._config_entry, self._simplisafe.api
+        )(self._system.set_home)()
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         if not self._validate_code(code, "arming away"):
             return
 
-        await self._system.set_away()
+        await async_guard_api_call(
+            self._hass, self._config_entry, self._simplisafe.api
+        )(self._system.set_away)()
 
     async def async_update(self):
         """Update alarm status."""

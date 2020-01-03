@@ -115,10 +115,61 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @callback
+def _async_get_refresh_token(hass, config_entry):
+    """Retrieve a refresh token from the config entry."""
+    entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    return entry.data[CONF_TOKEN]
+
+
+@callback
 def _async_save_refresh_token(hass, config_entry, token):
+    """Save a refresh token to the config entry."""
     hass.config_entries.async_update_entry(
         config_entry, data={**config_entry.data, CONF_TOKEN: token}
     )
+
+
+def async_guard_api_call(hass, config_entry, api):
+    """Guard a call against the SimpliSafe API.
+
+    At times, SimpliSafe can inexplicably invalidate the internal refresh token used by
+    simplisafe-python (thus terminating the refresh logic within the library). In this
+    case, we re-authenticate using the refresh token stored in the config entry (which
+    is consistently shown to be good).
+
+    Note that the API call is not automatically tried again.
+    """
+
+    def decorator(coro):
+        """Decorate."""
+
+        async def wrapper(*args, **kwargs):
+            """Wrap an API call coroutine."""
+            try:
+                await coro(*args, **kwargs)
+            except InvalidCredentialsError:
+                _LOGGER.warning("SimpliSafe expired token; refreshing from storage")
+                refresh_token = _async_get_refresh_token(hass, config_entry)
+                await api.refresh_access_token(refresh_token)
+            except SimplipyError as err:
+                _LOGGER.error(
+                    'SimpliSafe error while calling "%s": %s', coro.__name__, err
+                )
+                return
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.error(
+                    'Unknown error while calling "%s": %s', coro.__name__, err
+                )
+                return
+
+            # If simplisafe-python detects a new refresh token, save it to the config
+            # entry:
+            if api.refresh_token_dirty:
+                _async_save_refresh_token(hass, config_entry, api.refresh_token)
+
+        return wrapper
+
+    return decorator
 
 
 async def async_register_base_station(hass, system, config_entry_id):
@@ -240,11 +291,9 @@ async def async_setup_entry(hass, config_entry):
     async def remove_pin(call):
         """Remove a PIN."""
         system = systems[call.data[ATTR_SYSTEM_ID]]
-        try:
-            await system.remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
-        except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
-            return
+        await async_guard_api_call(hass, config_entry, api)(system.remove_pin)(
+            call.data[ATTR_PIN_LABEL_OR_VALUE]
+        )
 
     @verify_system_exists
     @v3_only
@@ -252,11 +301,9 @@ async def async_setup_entry(hass, config_entry):
     async def set_alarm_duration(call):
         """Set the duration of a running alarm."""
         system = systems[call.data[ATTR_SYSTEM_ID]]
-        try:
-            await system.set_alarm_duration(call.data[ATTR_SECONDS])
-        except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
-            return
+        await async_guard_api_call(hass, config_entry, api)(system.set_alarm_duration)(
+            call.data[ATTR_SECONDS]
+        )
 
     @verify_system_exists
     @v3_only
@@ -269,11 +316,9 @@ async def async_setup_entry(hass, config_entry):
             f"set_{call.data[ATTR_TRANSITION]}_delay_{call.data[ATTR_ARRIVAL_STATE]}",
         )
 
-        try:
-            await coro(call.data[ATTR_SECONDS])
-        except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
-            return
+        await async_guard_api_call(hass, config_entry, api)(coro)(
+            call.data[ATTR_SECONDS]
+        )
 
     @verify_system_exists
     @v3_only
@@ -281,22 +326,18 @@ async def async_setup_entry(hass, config_entry):
     async def set_armed_light(call):
         """Turn the base station light on/off."""
         system = systems[call.data[ATTR_SYSTEM_ID]]
-        try:
-            await system.set_light(call.data[ATTR_ARMED_LIGHT_STATE])
-        except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
-            return
+        await async_guard_api_call(hass, config_entry, api)(system.set_light)(
+            call.data[ATTR_ARMED_LIGHT_STATE]
+        )
 
     @verify_system_exists
     @_verify_domain_control
     async def set_pin(call):
         """Set a PIN."""
         system = systems[call.data[ATTR_SYSTEM_ID]]
-        try:
-            await system.set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
-        except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
-            return
+        await async_guard_api_call(hass, config_entry, api)(system.set_pin)(
+            call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE]
+        )
 
     @verify_system_exists
     @v3_only
@@ -314,7 +355,7 @@ async def async_setup_entry(hass, config_entry):
             return
         else:
             coro = getattr(system, f"set_{call.data[ATTR_VOLUME_PROPERTY]}_volume")
-            await coro(volume)
+            await async_guard_api_call(hass, config_entry, api)(coro)(volume)
 
     for service, method, schema in [
         ("remove_pin", remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
@@ -350,36 +391,26 @@ class SimpliSafe:
 
     def __init__(self, hass, api, systems, config_entry):
         """Initialize."""
-        self._api = api
         self._config_entry = config_entry
         self._hass = hass
+        self.api = api
         self.last_event_data = {}
         self.systems = systems
 
     async def _update_system(self, system):
         """Update a system."""
-        try:
-            await system.update()
-            latest_event = await system.get_latest_event()
-        except SimplipyError as err:
-            _LOGGER.error(
-                'SimpliSafe error while updating "%s": %s', system.address, err
-            )
-            return
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error('Unknown error while updating "%s": %s', system.address, err)
-            return
-
+        await system.update()
+        latest_event = await system.get_latest_event()
         self.last_event_data[system.system_id] = latest_event
-
-        if self._api.refresh_token_dirty:
-            _async_save_refresh_token(
-                self._hass, self._config_entry, self._api.refresh_token
-            )
 
     async def async_update(self):
         """Get updated data from SimpliSafe."""
-        tasks = [self._update_system(system) for system in self.systems.values()]
+        tasks = [
+            async_guard_api_call(self._hass, self._config_entry, self.api)(
+                self._update_system
+            )(system)
+            for system in self.systems.values()
+        ]
 
         await asyncio.gather(*tasks)
 
