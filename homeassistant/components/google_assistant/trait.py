@@ -1121,6 +1121,10 @@ class ModesTrait(_Trait):
     name = TRAIT_MODES
     commands = [COMMAND_MODES]
 
+    SYNONYMS = {
+        "input source": ["input source", "input", "source"],
+    }
+
     @staticmethod
     def supported(domain, features, device_class):
         """Test if state is supported."""
@@ -1131,30 +1135,39 @@ class ModesTrait(_Trait):
 
     def sync_attributes(self):
         """Return mode attributes for a sync request."""
-        sources_list = self.state.attributes.get(
-            media_player.ATTR_INPUT_SOURCE_LIST, []
-        )
-        modes = []
-        sources = {}
 
-        if sources_list:
-            sources = {
-                "name": "input source",
+        def _generate(name, settings):
+            mode = {
+                "name": name,
                 "name_values": [
-                    {"name_synonym": ["input source", "input", "source"], "lang": "en"}
+                    {"name_synonym": self.SYNONYMS.get(name, [name]), "lang": "en"}
                 ],
                 "settings": [],
                 "ordered": False,
             }
-            for source in sources_list:
-                sources["settings"].append(
+            for setting in settings:
+                mode["settings"].append(
                     {
-                        "setting_name": source,
-                        "setting_values": [{"setting_synonym": [source], "lang": "en"}],
+                        "setting_name": setting,
+                        "setting_values": [
+                            {
+                                "setting_synonym": self.SYNONYMS.get(
+                                    setting, [setting]
+                                ),
+                                "lang": "en",
+                            }
+                        ],
                     }
                 )
-        if sources:
-            modes.append(sources)
+            return mode
+
+        attrs = self.state.attributes
+        modes = []
+        if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
+            modes.append(
+                _generate("input source", attrs[media_player.ATTR_INPUT_SOURCE_LIST])
+            )
+
         payload = {"availableModes": modes}
 
         return payload
@@ -1165,10 +1178,9 @@ class ModesTrait(_Trait):
         response = {}
         mode_settings = {}
 
-        if attrs.get(media_player.ATTR_INPUT_SOURCE_LIST):
-            mode_settings.update(
-                {"input source": attrs.get(media_player.ATTR_INPUT_SOURCE)}
-            )
+        if media_player.ATTR_INPUT_SOURCE_LIST in attrs:
+            mode_settings["input source"] = attrs.get(media_player.ATTR_INPUT_SOURCE)
+
         if mode_settings:
             response["on"] = self.state.state != STATE_OFF
             response["online"] = True
