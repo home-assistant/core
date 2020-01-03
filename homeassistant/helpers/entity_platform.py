@@ -304,9 +304,7 @@ class EntityPlatform:
                 suggested_object_id = entity.name
 
             if self.entity_namespace is not None:
-                suggested_object_id = "{} {}".format(
-                    self.entity_namespace, suggested_object_id
-                )
+                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
 
             if self.config_entry is not None:
                 config_entry_id = self.config_entry.entry_id
@@ -380,9 +378,7 @@ class EntityPlatform:
             )
 
             if self.entity_namespace is not None:
-                suggested_object_id = "{} {}".format(
-                    self.entity_namespace, suggested_object_id
-                )
+                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
             entity.entity_id = entity_registry.async_generate_entity_id(
                 self.domain, suggested_object_id, self.entities.keys()
             )
@@ -402,9 +398,7 @@ class EntityPlatform:
         if already_exists:
             msg = f"Entity id already exists: {entity.entity_id}"
             if entity.unique_id is not None:
-                msg += ". Platform {} does not generate unique IDs".format(
-                    self.platform_name
-                )
+                msg += f". Platform {self.platform_name} does not generate unique IDs"
             raise HomeAssistantError(msg)
 
         entity_id = entity.entity_id

@@ -191,8 +191,8 @@ async def _async_setup_component(
         return False
     if result is not True:
         log_error(
-            "Integration {!r} did not return boolean if setup was "
-            "successful. Disabling component.".format(domain)
+            f"Integration {domain!r} did not return boolean if setup was "
+            "successful. Disabling component."
         )
         return False
 

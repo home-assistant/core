@@ -562,7 +562,7 @@ class Entity(ABC):
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return "<Entity {}: {}>".format(self.name, self.state)
+        return f"<Entity {self.name}: {self.state}>"
 
     # call an requests
     async def async_request_call(self, coro):

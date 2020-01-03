@@ -797,7 +797,7 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
             operation.name,
             target_ieee,
         )
-        zdo.debug("processing " + op_msg, *op_params)
+        zdo.debug(f"processing {op_msg}", *op_params)
 
         bind_tasks.append(
             (

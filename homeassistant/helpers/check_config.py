@@ -69,9 +69,7 @@ async def async_check_ha_config_file(hass: HomeAssistant) -> HomeAssistantConfig
         package: str, component: str, config: ConfigType, message: str
     ) -> None:
         """Handle errors from packages: _log_pkg_error."""
-        message = "Package {} setup failed. Component {} {}".format(
-            package, component, message
-        )
+        message = f"Package {package} setup failed. Component {component} {message}"
         domain = f"homeassistant.packages.{package}.{component}"
         pack_config = core_config[CONF_PACKAGES].get(package, config)
         result.add_error(message, domain, pack_config)

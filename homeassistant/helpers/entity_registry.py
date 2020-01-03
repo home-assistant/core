@@ -323,9 +323,8 @@ class EntityRegistry:
             )
             if conflict:
                 raise ValueError(
-                    "Unique id '{}' is already in use by '{}'".format(
-                        new_unique_id, conflict.entity_id
-                    )
+                    f"Unique id '{new_unique_id}' is already in use by "
+                    f"'{conflict.entity_id}'"
                 )
             changes["unique_id"] = new_unique_id
 

@@ -174,7 +174,7 @@ async def test_xiaomi_exceptions(hass, caplog, mock_mirobo_errors):
 async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_1"
-    entity_id = "{}.{}".format(DOMAIN, entity_name)
+    entity_id = f"{DOMAIN}.{entity_name}"
 
     await async_setup_component(
         hass,
@@ -319,7 +319,7 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
 async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_2"
-    entity_id = "{}.{}".format(DOMAIN, entity_name)
+    entity_id = f"{DOMAIN}.{entity_name}"
 
     await async_setup_component(
         hass,

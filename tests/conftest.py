@@ -59,9 +59,7 @@ def verify_cleanup():
         count = len(INSTANCES)
         for inst in INSTANCES:
             inst.stop()
-        pytest.exit(
-            "Detected non stopped instances ({}), aborting test run".format(count)
-        )
+        pytest.exit(f"Detected non stopped instances ({count}), aborting test run")
 
 
 @pytest.fixture
@@ -185,8 +183,7 @@ def hass_client(hass, aiohttp_client, hass_access_token):
     async def auth_client():
         """Return an authenticated client."""
         return await aiohttp_client(
-            hass.http.app,
-            headers={"Authorization": "Bearer {}".format(hass_access_token)},
+            hass.http.app, headers={"Authorization": f"Bearer {hass_access_token}"},
         )
 
     return auth_client

@@ -998,7 +998,7 @@ class WUndergroundSensor(Entity):
         self.rest.request_feature(SENSOR_TYPES[condition].feature)
         # This is only the suggested entity id, it might get changed by
         # the entity registry later.
-        self.entity_id = sensor.ENTITY_ID_FORMAT.format("pws_" + condition)
+        self.entity_id = sensor.ENTITY_ID_FORMAT.format(f"pws_{condition}")
         self._unique_id = f"{unique_id_base},{condition}"
         self._device_class = self._cfg_expand("device_class")
 
@@ -1122,11 +1122,11 @@ class WUndergroundData:
             self._api_key, "/".join(sorted(self._features)), self._lang
         )
         if self._pws_id:
-            url = url + f"pws:{self._pws_id}"
+            url = f"{url}pws:{self._pws_id}"
         else:
-            url = url + f"{self._latitude},{self._longitude}"
+            url = f"{url}{self._latitude},{self._longitude}"
 
-        return url + ".json"
+        return f"{url}.json"
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
