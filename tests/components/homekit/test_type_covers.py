@@ -14,9 +14,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_CLOSING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
