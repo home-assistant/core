@@ -1,7 +1,6 @@
 """Provides an HTTP API for mobile_app."""
 import secrets
 from typing import Dict
-import uuid
 
 from aiohttp.web import Request, Response
 from nacl.secret import SecretBox
@@ -21,7 +20,6 @@ from .const import (
     ATTR_DEVICE_NAME,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
-    ATTR_MODEL_ID,
     ATTR_OS_NAME,
     ATTR_OS_VERSION,
     ATTR_SUPPORTS_ENCRYPTION,
@@ -50,7 +48,7 @@ class RegistrationsView(HomeAssistantView):
                 vol.Required(ATTR_DEVICE_NAME): cv.string,
                 vol.Required(ATTR_MANUFACTURER): cv.string,
                 vol.Required(ATTR_MODEL): cv.string,
-                vol.Optional(ATTR_MODEL_ID): cv.string,  # Added in 0.104
+                vol.Optional(ATTR_DEVICE_ID): cv.string,  # Added in 0.104
                 vol.Required(ATTR_OS_NAME): cv.string,
                 vol.Optional(ATTR_OS_VERSION): cv.string,
                 vol.Required(ATTR_SUPPORTS_ENCRYPTION, default=False): cv.boolean,
@@ -69,14 +67,6 @@ class RegistrationsView(HomeAssistantView):
             data[
                 CONF_CLOUDHOOK_URL
             ] = await hass.components.cloud.async_create_cloudhook(webhook_id)
-
-        model_id = data.get(ATTR_MODEL_ID)
-
-        if model_id is None:
-            data[ATTR_DEVICE_ID] = str(uuid.uuid4()).replace("-", "")
-
-        else:
-            data[ATTR_DEVICE_ID] = f"{data[ATTR_APP_ID]}-{model_id}"
 
         data[CONF_WEBHOOK_ID] = webhook_id
 
