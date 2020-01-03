@@ -191,15 +191,16 @@ class HKDevice:
         except AccessoryDisconnectedError:
             # If we fail to refresh this data then we will naturally retry
             # later when Bonjour spots c# is still not up to date.
-            return
+            return False
 
         self.hass.data[ENTITY_MAP].async_create_or_update_map(
             self.unique_id, config_num, self.accessories
         )
 
         self.config_num = config_num
-
         self.hass.async_create_task(self.async_process_entity_map())
+
+        return True
 
     def add_listener(self, add_entities_cb):
         """Add a callback to run when discovering new entities."""
@@ -239,10 +240,14 @@ class HKDevice:
                 if platform in self.platforms:
                     continue
 
-                await self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, platform
-                )
                 self.platforms.add(platform)
+                try:
+                    await self.hass.config_entries.async_forward_entry_setup(
+                        self.config_entry, platform
+                    )
+                except Exception:
+                    self.platforms.remove(platform)
+                    raise
 
     async def async_update(self, now=None):
         """Poll state of all entities attached to this bridge/accessory."""
