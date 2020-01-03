@@ -1,6 +1,8 @@
 """The tests for the  Template light platform."""
 import logging
 
+import pytest
+
 from homeassistant import setup
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
@@ -594,7 +596,11 @@ class TestTemplateLight:
         assert state is not None
         assert state.attributes.get("brightness") == 124
 
-    def test_level_template(self):
+    @pytest.mark.parametrize(
+        "expected_level,template",
+        [(255, "{{255}}"), (None, "{{256}}"), (None, "{{x - 12}}")],
+    )
+    def test_level_template(self, expected_level, template):
         """Test the template for the level."""
         with assert_setup_component(1, "light"):
             assert setup.setup_component(
@@ -621,7 +627,7 @@ class TestTemplateLight:
                                         "brightness": "{{brightness}}",
                                     },
                                 },
-                                "level_template": "{{42}}",
+                                "level_template": template,
                             }
                         },
                     }
@@ -633,8 +639,7 @@ class TestTemplateLight:
 
         state = self.hass.states.get("light.test_template_light")
         assert state is not None
-
-        assert state.attributes.get("brightness") == 42
+        assert state.attributes.get("brightness") == expected_level
 
     def test_friendly_name(self):
         """Test the accessibility of the friendly_name attribute."""
