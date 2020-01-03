@@ -740,7 +740,7 @@ class WinkDevice(Entity):
         try:
             if message is None:
                 _LOGGER.error(
-                    "Error on pubnub update for %s " "polling API for current state",
+                    "Error on pubnub update for %s polling API for current state",
                     self.name,
                 )
                 self.schedule_update_ha_state(True)
@@ -749,8 +749,7 @@ class WinkDevice(Entity):
                 self.schedule_update_ha_state()
         except (ValueError, KeyError, AttributeError):
             _LOGGER.error(
-                "Error in pubnub JSON for %s " "polling API for current state",
-                self.name,
+                "Error in pubnub JSON for %s polling API for current state", self.name,
             )
             self.schedule_update_ha_state(True)
 

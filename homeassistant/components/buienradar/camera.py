@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 CONF_DIMENSION = "dimension"
 CONF_DELTA = "delta"
 
-RADAR_MAP_URL_TEMPLATE = "https://api.buienradar.nl/image/1.0/" "RadarMapNL?w={w}&h={h}"
+RADAR_MAP_URL_TEMPLATE = "https://api.buienradar.nl/image/1.0/RadarMapNL?w={w}&h={h}"
 
 _LOG = logging.getLogger(__name__)
 

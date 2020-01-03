@@ -8,7 +8,6 @@ from unittest.mock import Mock, patch
 import asynctest
 import pytest
 
-from homeassistant.components import group
 from homeassistant.const import ENTITY_MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.exceptions import PlatformNotReady
@@ -116,7 +115,7 @@ async def test_setup_recovers_when_setup_raises(hass):
 
 
 @asynctest.patch(
-    "homeassistant.helpers.entity_component.EntityComponent" ".async_setup_platform",
+    "homeassistant.helpers.entity_component.EntityComponent.async_setup_platform",
     return_value=mock_coro(),
 )
 @asynctest.patch(
@@ -138,7 +137,7 @@ async def test_setup_does_discovery(mock_setup_component, mock_setup, hass):
     assert ("platform_test", {}, {"msg": "discovery_info"}) == mock_setup.call_args[0]
 
 
-@asynctest.patch("homeassistant.helpers.entity_platform." "async_track_time_interval")
+@asynctest.patch("homeassistant.helpers.entity_platform.async_track_time_interval")
 async def test_set_scan_interval_via_config(mock_track, hass):
     """Test the setting of the scan interval via configuration."""
 
@@ -285,15 +284,13 @@ async def test_extract_from_service_filter_out_non_existing_entities(hass):
 async def test_extract_from_service_no_group_expand(hass):
     """Test not expanding a group."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    test_group = await group.Group.async_create_group(
-        hass, "test_group", ["light.Ceiling", "light.Kitchen"]
-    )
-    await component.async_add_entities([test_group])
+    await component.async_add_entities([MockEntity(entity_id="group.test_group")])
 
     call = ha.ServiceCall("test", "service", {"entity_id": ["group.test_group"]})
 
     extracted = await component.async_extract_from_service(call, expand_group=False)
-    assert extracted == [test_group]
+    assert len(extracted) == 1
+    assert extracted[0].entity_id == "group.test_group"
 
 
 async def test_setup_dependencies_platform(hass):
@@ -463,5 +460,5 @@ async def test_extract_all_use_match_all(hass, caplog):
         ent.entity_id for ent in await component.async_extract_from_service(call)
     )
     assert (
-        "Not passing an entity ID to a service to target all entities is " "deprecated"
+        "Not passing an entity ID to a service to target all entities is deprecated"
     ) not in caplog.text

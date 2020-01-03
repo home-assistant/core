@@ -68,6 +68,9 @@ aiohue==1.10.1
 # homeassistant.components.notion
 aionotion==1.1.0
 
+# homeassistant.components.webostv
+aiopylgtv==0.2.4
+
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
 
@@ -146,6 +149,9 @@ datadog==0.15.0
 # homeassistant.components.ssdp
 defusedxml==0.6.0
 
+# homeassistant.components.denonavr
+denonavr==0.7.10
+
 # homeassistant.components.directv
 directpy==0.5
 
@@ -197,6 +203,9 @@ georss_qld_bushfire_alert_client==0.3
 # homeassistant.components.nmap_tracker
 getmac==0.8.1
 
+# homeassistant.components.gios
+gios==0.0.3
+
 # homeassistant.components.glances
 glances_api==0.2.0
 
@@ -240,7 +249,7 @@ homeassistant-pyozw==0.1.7
 homekit[IP]==0.15.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.14
+homematicip==0.10.15
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
@@ -439,9 +448,6 @@ pyiqvia==0.2.1
 # homeassistant.components.kira
 pykira==0.1.1
 
-# homeassistant.components.webostv
-pylgtv==0.1.9
-
 # homeassistant.components.linky
 pylinky==0.4.0
 
@@ -484,7 +490,7 @@ pyotp==2.3.0
 pypoint==1.1.2
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.0.3
+pyps4-2ndscreen==1.0.4
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
@@ -633,9 +639,6 @@ wakeonlan==1.1.6
 # homeassistant.components.folder_watcher
 watchdog==0.8.3
 
-# homeassistant.components.webostv
-websockets==6.0
-
 # homeassistant.components.withings
 withings-api==2.1.3
 
@@ -656,7 +659,7 @@ ya_ma==0.3.8
 yahooweather==0.10
 
 # homeassistant.components.zeroconf
-zeroconf==0.24.3
+zeroconf==0.24.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.30

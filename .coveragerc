@@ -258,6 +258,9 @@ omit =
     homeassistant/components/geniushub/*
     homeassistant/components/gearbest/sensor.py
     homeassistant/components/geizhals/sensor.py
+    homeassistant/components/gios/__init__.py
+    homeassistant/components/gios/air_quality.py
+    homeassistant/components/gios/consts.py
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
@@ -755,6 +758,7 @@ omit =
     homeassistant/components/velbus/climate.py
     homeassistant/components/velbus/const.py
     homeassistant/components/velbus/cover.py
+    homeassistant/components/velbus/light.py
     homeassistant/components/velbus/sensor.py
     homeassistant/components/velbus/switch.py
     homeassistant/components/velux/*

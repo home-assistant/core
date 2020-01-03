@@ -1,6 +1,5 @@
 """The tests for the Input text component."""
 # pylint: disable=protected-access
-import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -122,8 +121,7 @@ async def test_restore_state(hass):
     assert str(state.state) == "unknown"
 
 
-@asyncio.coroutine
-def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -132,7 +130,7 @@ def test_initial_state_overrules_restore_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         DOMAIN,
         {
@@ -152,14 +150,11 @@ def test_initial_state_overrules_restore_state(hass):
     assert str(state.state) == "test"
 
 
-@asyncio.coroutine
-def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass):
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"b1": {"min": 0, "max": 100}}}
-    )
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": {"min": 0, "max": 100}}})
 
     state = hass.states.get("input_text.b1")
     assert state

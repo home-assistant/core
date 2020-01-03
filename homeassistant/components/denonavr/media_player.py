@@ -24,16 +24,21 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_TIMEOUT,
     CONF_ZONE,
+    ENTITY_MATCH_ALL,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -189,6 +194,21 @@ class DenonDevice(MediaPlayerDevice):
         self._supported_features_base |= (
             self._sound_mode_support and SUPPORT_SELECT_SOUND_MODE
         )
+
+    async def async_added_to_hass(self):
+        """Register signal handler."""
+        async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
+
+    def signal_handler(self, data):
+        """Handle domain-specific signal by calling appropriate method."""
+        entity_ids = data[ATTR_ENTITY_ID]
+        if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
+            params = {
+                key: value
+                for key, value in data.items()
+                if key not in ["entity_id", "method"]
+            }
+            getattr(self, data["method"])(**params)
 
     def update(self):
         """Get the latest status information from device."""
@@ -398,3 +418,7 @@ class DenonDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Send mute command."""
         return self._receiver.mute(mute)
+
+    def get_command(self, command, **kwargs):
+        """Send generic command."""
+        self._receiver.send_get_command(command)

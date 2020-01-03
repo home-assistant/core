@@ -214,7 +214,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                     else:
                         self._target_temp = self.min_temp
                     _LOGGER.warning(
-                        "Undefined target temperature," "falling back to %s",
+                        "Undefined target temperature, falling back to %s",
                         self._target_temp,
                     )
                 else:

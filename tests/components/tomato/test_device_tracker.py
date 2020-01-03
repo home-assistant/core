@@ -51,7 +51,7 @@ def mock_session_response(*args, **kwargs):
 def mock_exception_logger():
     """Mock pyunifi."""
     with mock.patch(
-        "homeassistant.components.tomato.device_tracker" "._LOGGER.exception"
+        "homeassistant.components.tomato.device_tracker._LOGGER.exception"
     ) as mock_exception_logger:
         yield mock_exception_logger
 
@@ -312,7 +312,7 @@ def test_config_bad_credentials(hass, mock_exception_logger):
 
     assert mock_exception_logger.call_count == 1
     assert mock_exception_logger.mock_calls[0] == mock.call(
-        "Failed to authenticate, " "please check your username and password"
+        "Failed to authenticate, please check your username and password"
     )
 
 
@@ -382,7 +382,7 @@ def test_bad_connection(hass, mock_exception_logger):
         tomato.get_scanner(hass, config)
     assert mock_exception_logger.call_count == 1
     assert mock_exception_logger.mock_calls[0] == mock.call(
-        "Failed to connect to the router " "or invalid http_id supplied"
+        "Failed to connect to the router or invalid http_id supplied"
     )
 
 

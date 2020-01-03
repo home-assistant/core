@@ -78,11 +78,7 @@ def ensure_config_path(config_dir: str) -> None:
         try:
             os.mkdir(lib_dir)
         except OSError:
-            print(
-                ("Fatal Error: Unable to create library " "directory {} ").format(
-                    lib_dir
-                )
-            )
+            print("Fatal Error: Unable to create library directory {}".format(lib_dir))
             sys.exit(1)
 
 
@@ -147,7 +143,7 @@ def get_arguments() -> argparse.Namespace:
         "--log-file",
         type=str,
         default=None,
-        help="Log file to write to.  If not set, CONFIG/home-assistant.log " "is used",
+        help="Log file to write to.  If not set, CONFIG/home-assistant.log is used",
     )
     parser.add_argument(
         "--log-no-color", action="store_true", help="Disable color logs"

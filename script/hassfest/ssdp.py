@@ -68,7 +68,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
         if fp.read().strip() != content:
             config.add_error(
                 "ssdp",
-                "File ssdp.py is not up to date. " "Run python3 -m script.hassfest",
+                "File ssdp.py is not up to date. Run python3 -m script.hassfest",
                 fixable=True,
             )
         return

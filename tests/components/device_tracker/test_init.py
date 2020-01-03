@@ -77,7 +77,7 @@ async def test_reading_broken_yaml_config(hass):
         "badkey.yaml": "@:\n  name: Device",
         "noname.yaml": "my_device:\n",
         "allok.yaml": "My Device:\n  name: Device",
-        "oneok.yaml": ("My Device!:\n  name: Device\n" "bad_device:\n  nme: Device"),
+        "oneok.yaml": ("My Device!:\n  name: Device\nbad_device:\n  nme: Device"),
     }
     args = {"hass": hass, "consider_home": timedelta(seconds=60)}
     with patch_yaml_files(files):
@@ -341,7 +341,7 @@ async def test_group_all_devices(hass, mock_device_tracker_conf):
     assert (entity_id,) == state.attributes.get(ATTR_ENTITY_ID)
 
 
-@patch("homeassistant.components.device_tracker.legacy." "DeviceTracker.async_see")
+@patch("homeassistant.components.device_tracker.legacy.DeviceTracker.async_see")
 async def test_see_service(mock_see, hass):
     """Test the see service with a unicode dev_id and NO MAC."""
     with assert_setup_component(1, device_tracker.DOMAIN):

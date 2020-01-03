@@ -186,6 +186,9 @@ aionotion==1.1.0
 # homeassistant.components.hunterdouglas_powerview
 aiopvapi==1.6.14
 
+# homeassistant.components.webostv
+aiopylgtv==0.2.4
+
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
 
@@ -202,7 +205,7 @@ airly==0.0.2
 aladdin_connect==0.3
 
 # homeassistant.components.alarmdecoder
-alarmdecoder==1.13.2
+alarmdecoder==1.13.9
 
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.1.2
@@ -315,7 +318,7 @@ blockchain==1.4.4
 
 # homeassistant.components.decora
 # homeassistant.components.miflora
-# bluepy==1.1.4
+# bluepy==1.3.0
 
 # homeassistant.components.bme680
 # bme680==1.0.5
@@ -477,7 +480,7 @@ enocean==0.50
 enturclient==0.2.1
 
 # homeassistant.components.environment_canada
-env_canada==0.0.30
+env_canada==0.0.31
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -578,6 +581,9 @@ georss_qld_bushfire_alert_client==0.3
 # homeassistant.components.nmap_tracker
 getmac==0.8.1
 
+# homeassistant.components.gios
+gios==0.0.3
+
 # homeassistant.components.gitter
 gitterpy==0.1.7
 
@@ -675,7 +681,7 @@ homeassistant-pyozw==0.1.7
 homekit[IP]==0.15.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.14
+homematicip==0.10.15
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -789,7 +795,7 @@ limitlessled==1.1.3
 linode-api==4.1.9b1
 
 # homeassistant.components.liveboxplaytv
-liveboxplaytv==2.0.2
+liveboxplaytv==2.0.3
 
 # homeassistant.components.lametric
 lmnotify==0.0.4
@@ -840,7 +846,7 @@ meteofrance==0.3.7
 mficlient==0.3.0
 
 # homeassistant.components.miflora
-miflora==0.4.0
+miflora==0.6.0
 
 # homeassistant.components.mill
 millheater==0.3.4
@@ -1322,9 +1328,6 @@ pylaunches==0.2.0
 # homeassistant.components.lg_netcast
 pylgnetcast-homeassistant==0.2.0.dev0
 
-# homeassistant.components.webostv
-pylgtv==0.1.9
-
 # homeassistant.components.linky
 pylinky==0.4.0
 
@@ -1445,7 +1448,7 @@ pypjlink2==1.2.0
 pypoint==1.1.2
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.0.3
+pyps4-2ndscreen==1.0.4
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
@@ -1529,7 +1532,7 @@ pysyncthru==0.5.0
 pytautulli==0.5.0
 
 # homeassistant.components.liveboxplaytv
-pyteleloisirs==3.5
+pyteleloisirs==3.6
 
 # homeassistant.components.tfiac
 pytfiac==0.4
@@ -1643,7 +1646,7 @@ python-wink==1.10.5
 python_awair==0.0.4
 
 # homeassistant.components.swiss_public_transport
-python_opendata_transport==0.1.4
+python_opendata_transport==0.2.1
 
 # homeassistant.components.egardia
 pythonegardia==1.0.40
@@ -1689,7 +1692,7 @@ pyvesync==1.1.0
 pyvizio==0.0.7
 
 # homeassistant.components.velux
-pyvlx==0.2.11
+pyvlx==0.2.12
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -2032,9 +2035,6 @@ webexteamssdk==1.1.1
 # homeassistant.components.gpmdp
 websocket-client==0.54.0
 
-# homeassistant.components.webostv
-websockets==6.0
-
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.4.0
 
@@ -2085,13 +2085,13 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2019.12.25
+youtube_dl==2020.01.01
 
 # homeassistant.components.zengge
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.24.3
+zeroconf==0.24.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.30

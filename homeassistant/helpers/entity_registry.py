@@ -15,6 +15,12 @@ from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, cast
 
 import attr
 
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_SUPPORTED_FEATURES,
+    EVENT_HOMEASSISTANT_START,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import Event, callback, split_entity_id, valid_entity_id
 from homeassistant.helpers.device_registry import EVENT_DEVICE_REGISTRY_UPDATED
 from homeassistant.loader import bind_hass
@@ -38,6 +44,8 @@ DISABLED_CONFIG_ENTRY = "config_entry"
 DISABLED_HASS = "hass"
 DISABLED_USER = "user"
 DISABLED_INTEGRATION = "integration"
+
+ATTR_RESTORED = "restored"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "core.entity_registry"
@@ -66,6 +74,9 @@ class RegistryEntry:
             )
         ),
     )
+    capabilities: Optional[Dict[str, Any]] = attr.ib(default=None)
+    supported_features: int = attr.ib(default=0)
+    device_class: Optional[str] = attr.ib(default=None)
     domain = attr.ib(type=str, init=False, repr=False)
 
     @domain.default
@@ -142,11 +153,17 @@ class EntityRegistry:
         platform: str,
         unique_id: str,
         *,
+        # To influence entity ID generation
         suggested_object_id: Optional[str] = None,
+        known_object_ids: Optional[Iterable[str]] = None,
+        # To disable an entity if it gets created
+        disabled_by: Optional[str] = None,
+        # Data that we want entry to have
         config_entry: Optional["ConfigEntry"] = None,
         device_id: Optional[str] = None,
-        known_object_ids: Optional[Iterable[str]] = None,
-        disabled_by: Optional[str] = None,
+        capabilities: Optional[Dict[str, Any]] = None,
+        supported_features: Optional[int] = None,
+        device_class: Optional[str] = None,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
         config_entry_id = None
@@ -160,6 +177,9 @@ class EntityRegistry:
                 entity_id,
                 config_entry_id=config_entry_id or _UNDEF,
                 device_id=device_id or _UNDEF,
+                capabilities=capabilities or _UNDEF,
+                supported_features=supported_features or _UNDEF,
+                device_class=device_class or _UNDEF,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
                 # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
@@ -187,6 +207,9 @@ class EntityRegistry:
             unique_id=unique_id,
             platform=platform,
             disabled_by=disabled_by,
+            capabilities=capabilities,
+            supported_features=supported_features or 0,
+            device_class=device_class,
         )
         self.entities[entity_id] = entity
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
@@ -253,6 +276,9 @@ class EntityRegistry:
         device_id=_UNDEF,
         new_unique_id=_UNDEF,
         disabled_by=_UNDEF,
+        capabilities=_UNDEF,
+        supported_features=_UNDEF,
+        device_class=_UNDEF,
     ):
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -264,6 +290,9 @@ class EntityRegistry:
             ("config_entry_id", config_entry_id),
             ("device_id", device_id),
             ("disabled_by", disabled_by),
+            ("capabilities", capabilities),
+            ("supported_features", supported_features),
+            ("device_class", device_class),
         ):
             if value is not _UNDEF and value != getattr(old, attr_name):
                 changes[attr_name] = value
@@ -318,6 +347,8 @@ class EntityRegistry:
 
     async def async_load(self) -> None:
         """Load the entity registry."""
+        async_setup_entity_restore(self.hass, self)
+
         data = await self.hass.helpers.storage.async_migrator(
             self.hass.config.path(PATH_REGISTRY),
             self._store,
@@ -336,6 +367,9 @@ class EntityRegistry:
                     platform=entity["platform"],
                     name=entity.get("name"),
                     disabled_by=entity.get("disabled_by"),
+                    capabilities=entity.get("capabilities") or {},
+                    supported_features=entity.get("supported_features", 0),
+                    device_class=entity.get("device_class"),
                 )
 
         self.entities = entities
@@ -359,6 +393,9 @@ class EntityRegistry:
                 "platform": entry.platform,
                 "name": entry.name,
                 "disabled_by": entry.disabled_by,
+                "capabilities": entry.capabilities,
+                "supported_features": entry.supported_features,
+                "device_class": entry.device_class,
             }
             for entry in self.entities.values()
         ]
@@ -416,3 +453,53 @@ async def _async_migrate(entities: Dict[str, Any]) -> Dict[str, List[Dict[str, A
             {"entity_id": entity_id, **info} for entity_id, info in entities.items()
         ]
     }
+
+
+@callback
+def async_setup_entity_restore(
+    hass: HomeAssistantType, registry: EntityRegistry
+) -> None:
+    """Set up the entity restore mechanism."""
+
+    @callback
+    def cleanup_restored_states(event: Event) -> None:
+        """Clean up restored states."""
+        if event.data["action"] != "remove":
+            return
+
+        state = hass.states.get(event.data["entity_id"])
+
+        if state is None or not state.attributes.get(ATTR_RESTORED):
+            return
+
+        hass.states.async_remove(event.data["entity_id"])
+
+    hass.bus.async_listen(EVENT_ENTITY_REGISTRY_UPDATED, cleanup_restored_states)
+
+    if hass.is_running:
+        return
+
+    @callback
+    def _write_unavailable_states(_: Event) -> None:
+        """Make sure state machine contains entry for each registered entity."""
+        states = hass.states
+        existing = set(states.async_entity_ids())
+
+        for entry in registry.entities.values():
+            if entry.entity_id in existing or entry.disabled:
+                continue
+
+            attrs: Dict[str, Any] = {ATTR_RESTORED: True}
+
+            if entry.capabilities:
+                attrs.update(entry.capabilities)
+
+            if entry.supported_features:
+                attrs[ATTR_SUPPORTED_FEATURES] = entry.supported_features
+
+            if entry.device_class:
+                attrs[ATTR_DEVICE_CLASS] = entry.device_class
+
+            states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)
+
+    hass.bus.async_listen(EVENT_HOMEASSISTANT_START, _write_unavailable_states)

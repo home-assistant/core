@@ -130,6 +130,7 @@ async def test_auto_heal_midnight(hass, mock_openzwave):
     time = utc.localize(datetime(2017, 5, 6, 0, 0, 0))
     async_fire_time_changed(hass, time)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert network.heal.called
     assert len(network.heal.mock_calls) == 1
 

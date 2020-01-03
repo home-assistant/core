@@ -628,7 +628,7 @@ class TelegramNotificationService:
         """Answer a callback originated with a press in an inline keyboard."""
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
-            "Answer callback query with callback ID %s: %s, " "alert: %s.",
+            "Answer callback query with callback ID %s: %s, alert: %s.",
             callback_query_id,
             message,
             show_alert,
