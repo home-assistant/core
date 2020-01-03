@@ -265,7 +265,6 @@ def pm_size_to_homekit(pm_size):
     """
     if pm_size == 2.5:
         return CHAR_VALUE_AIR_PARTICULATE_SIZE_PM2_5
-    elif pm_size == 10:
+    if pm_size == 10:
         return CHAR_VALUE_AIR_PARTICULATE_SIZE_PM10
-    else:
-        raise ValueError("given PM size not recognized.")
+    return None

@@ -319,9 +319,8 @@ class AirQualitySensor(HomeAccessory):
             # (https://developer.apple.com/documentation/homekit/hmcharacteristicvalueairparticulatesize)
             pm_size_char_value = None
             if pm_size:
-                try:
-                    pm_size_char_value = pm_size_to_homekit(pm_size)
-                except (ValueError):
+                pm_size_char_value = pm_size_to_homekit(pm_size)
+                if pm_size_char_value is None:
                     _LOGGER.warning(
                         "%s: Given pm_size is not valid value, ignoring.",
                         self.entity_id,
