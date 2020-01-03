@@ -201,8 +201,6 @@ class HKDevice:
 
         self.hass.async_create_task(self.async_process_entity_map())
 
-        return True
-
     def add_listener(self, add_entities_cb):
         """Add a callback to run when discovering new entities."""
         self.listeners.append(add_entities_cb)
