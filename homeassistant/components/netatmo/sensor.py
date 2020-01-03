@@ -5,18 +5,13 @@ import threading
 from time import time
 
 import pyatmo
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MODE,
-    CONF_NAME,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_TEMPERATURE,
     TEMP_CELSIUS,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -86,24 +81,6 @@ SENSOR_TYPES = {
     "wifi_status_lvl": ["Wifi_lvl", "dBm", "mdi:wifi", None],
     "health_idx": ["Health", "", "mdi:cloud", None],
 }
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_AREAS): vol.All(
-            cv.ensure_list,
-            [
-                {
-                    vol.Required(CONF_LAT_NE): cv.latitude,
-                    vol.Required(CONF_LAT_SW): cv.latitude,
-                    vol.Required(CONF_LON_NE): cv.longitude,
-                    vol.Required(CONF_LON_SW): cv.longitude,
-                    vol.Optional(CONF_MODE, default=DEFAULT_MODE): vol.In(MODE_TYPES),
-                    vol.Optional(CONF_NAME, default=DEFAULT_NAME_PUBLIC): cv.string,
-                }
-            ],
-        )
-    }
-)
 
 MODULE_TYPE_OUTDOOR = "NAModule1"
 MODULE_TYPE_WIND = "NAModule2"
