@@ -1167,11 +1167,7 @@ class ModesTrait(_Trait):
 
         if attrs.get(media_player.ATTR_INPUT_SOURCE_LIST):
             mode_settings.update(
-                {
-                    media_player.ATTR_INPUT_SOURCE: attrs.get(
-                        media_player.ATTR_INPUT_SOURCE
-                    )
-                }
+                {"input source": attrs.get(media_player.ATTR_INPUT_SOURCE)}
             )
         if mode_settings:
             response["on"] = self.state.state != STATE_OFF

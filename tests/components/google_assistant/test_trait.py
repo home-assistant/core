@@ -1297,7 +1297,7 @@ async def test_modes(hass):
     }
 
     assert trt.query_attributes() == {
-        "currentModeSettings": {"source": "game"},
+        "currentModeSettings": {"input source": "game"},
         "on": True,
         "online": True,
     }
