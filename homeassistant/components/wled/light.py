@@ -191,6 +191,11 @@ class WLEDLight(Light, WLEDDeviceEntity):
                 hue, sat = self._color
                 data[ATTR_COLOR_PRIMARY] = color_util.color_hsv_to_RGB(hue, sat, 100)
 
+            # On a RGBW strip, when the color is pure white, disable the RGB LEDs in
+            # WLED by setting RGB to 0,0,0
+            if data[ATTR_COLOR_PRIMARY] == (255, 255, 255):
+                data[ATTR_COLOR_PRIMARY] = (0, 0, 0)
+
             # Add requested or last known white value
             if ATTR_WHITE_VALUE in kwargs:
                 data[ATTR_COLOR_PRIMARY] += (kwargs[ATTR_WHITE_VALUE],)
