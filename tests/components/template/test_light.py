@@ -88,7 +88,11 @@ class TestTemplateLight:
         state = self.hass.states.get("light.test_template_light")
         assert state.state == STATE_OFF
 
-    def test_template_state_boolean_on(self):
+    @pytest.mark.parametrize(
+        "expected_state,template",
+        [(STATE_ON, "{{ 1 == 1 }}"), (STATE_OFF, "{{ 1 == 2 }}")],
+    )
+    def test_template_state_boolean(self, expected_state, template):
         """Test the setting of the state with boolean on."""
         with assert_setup_component(1, "light"):
             assert setup.setup_component(
@@ -99,7 +103,7 @@ class TestTemplateLight:
                         "platform": "template",
                         "lights": {
                             "test_template_light": {
-                                "value_template": "{{ 1 == 1 }}",
+                                "value_template": template,
                                 "turn_on": {
                                     "service": "light.turn_on",
                                     "entity_id": "light.test_state",
@@ -125,46 +129,7 @@ class TestTemplateLight:
         self.hass.block_till_done()
 
         state = self.hass.states.get("light.test_template_light")
-        assert state.state == STATE_ON
-
-    def test_template_state_boolean_off(self):
-        """Test the setting of the state with off."""
-        with assert_setup_component(1, "light"):
-            assert setup.setup_component(
-                self.hass,
-                "light",
-                {
-                    "light": {
-                        "platform": "template",
-                        "lights": {
-                            "test_template_light": {
-                                "value_template": "{{ 1 == 2 }}",
-                                "turn_on": {
-                                    "service": "light.turn_on",
-                                    "entity_id": "light.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "light.turn_off",
-                                    "entity_id": "light.test_state",
-                                },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        state = self.hass.states.get("light.test_template_light")
-        assert state.state == STATE_OFF
+        assert state.state == expected_state
 
     def test_template_syntax_error(self):
         """Test templating syntax error."""
@@ -273,110 +238,47 @@ class TestTemplateLight:
 
         assert self.hass.states.all() == []
 
-    def test_missing_template_does_create(self):
+    @pytest.mark.parametrize(
+        "missing_key, count", [("value_template", 1), ("turn_on", 0), ("turn_off", 0)]
+    )
+    def test_missing_key(self, missing_key, count):
         """Test missing template."""
-        with assert_setup_component(1, "light"):
-            assert setup.setup_component(
-                self.hass,
-                "light",
-                {
-                    "light": {
-                        "platform": "template",
-                        "lights": {
-                            "light_one": {
-                                "turn_on": {
-                                    "service": "light.turn_on",
-                                    "entity_id": "light.test_state",
-                                },
-                                "turn_off": {
-                                    "service": "light.turn_off",
-                                    "entity_id": "light.test_state",
-                                },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
-                            }
+        light = {
+            "light": {
+                "platform": "template",
+                "lights": {
+                    "light_one": {
+                        "value_template": "{{ 1== 1}}",
+                        "turn_on": {
+                            "service": "light.turn_on",
+                            "entity_id": "light.test_state",
+                        },
+                        "turn_off": {
+                            "service": "light.turn_off",
+                            "entity_id": "light.test_state",
+                        },
+                        "set_level": {
+                            "service": "light.turn_on",
+                            "data_template": {
+                                "entity_id": "light.test_state",
+                                "brightness": "{{brightness}}",
+                            },
                         },
                     }
                 },
-            )
+            }
+        }
 
+        del light["light"]["lights"]["light_one"][missing_key]
+        with assert_setup_component(count, "light"):
+            assert setup.setup_component(self.hass, "light", light)
         self.hass.start()
         self.hass.block_till_done()
 
-        assert self.hass.states.all() != []
-
-    def test_missing_on_does_not_create(self):
-        """Test missing on."""
-        with assert_setup_component(0, "light"):
-            assert setup.setup_component(
-                self.hass,
-                "light",
-                {
-                    "light": {
-                        "platform": "template",
-                        "lights": {
-                            "bad name here": {
-                                "value_template": "{{ 1== 1}}",
-                                "turn_off": {
-                                    "service": "light.turn_off",
-                                    "entity_id": "light.test_state",
-                                },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
-
-    def test_missing_off_does_not_create(self):
-        """Test missing off."""
-        with assert_setup_component(0, "light"):
-            assert setup.setup_component(
-                self.hass,
-                "light",
-                {
-                    "light": {
-                        "platform": "template",
-                        "lights": {
-                            "bad name here": {
-                                "value_template": "{{ 1== 1}}",
-                                "turn_on": {
-                                    "service": "light.turn_on",
-                                    "entity_id": "light.test_state",
-                                },
-                                "set_level": {
-                                    "service": "light.turn_on",
-                                    "data_template": {
-                                        "entity_id": "light.test_state",
-                                        "brightness": "{{brightness}}",
-                                    },
-                                },
-                            }
-                        },
-                    }
-                },
-            )
-
-        self.hass.start()
-        self.hass.block_till_done()
-
-        assert self.hass.states.all() == []
+        if count:
+            assert self.hass.states.all() != []
+        else:
+            assert self.hass.states.all() == []
 
     def test_on_action(self):
         """Test on action."""
