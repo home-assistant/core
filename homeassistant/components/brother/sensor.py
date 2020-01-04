@@ -101,12 +101,5 @@ class BrotherPrinterSensor(Entity):
         """Update the data from printer."""
         await self.printer.async_update()
 
-        self._state = self.printer.data.get(self.kind)
         if self.printer.available:
-            self._device_info = {
-                "identifiers": {(DOMAIN, self.printer.serial)},
-                "name": self.printer.model,
-                "manufacturer": ATTR_MANUFACTURER,
-                "model": self.printer.model,
-                "sw_version": self.printer.firmware,
-            }
+            self._state = self.printer.data.get(self.kind)
