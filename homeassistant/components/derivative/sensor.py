@@ -78,7 +78,6 @@ class DerivativeSensor(RestoreEntity):
         unit_of_measurement,
     ):
         """Initialize the derivative sensor."""
-        _LOGGER.warning("unit_of_measurement: %s", unit_of_measurement)
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = 0
@@ -86,9 +85,8 @@ class DerivativeSensor(RestoreEntity):
         self._name = name if name is not None else f"{source_entity} derivative"
 
         if unit_of_measurement is None:
-            self._unit_template = (
-                f"{'' if unit_prefix is None else unit_prefix}{{}}/{unit_time}"
-            )
+            final_unit_prefix = "" if unit_prefix is None else unit_prefix
+            self._unit_template = f"{final_unit_prefix}{{}}/{unit_time}"
             # we postpone the definition of unit_of_measurement to later
             self._unit_of_measurement = None
         else:
@@ -104,7 +102,7 @@ class DerivativeSensor(RestoreEntity):
         if state:
             try:
                 self._state = Decimal(state.state)
-            except ValueError as err:
+            except SyntaxError as err:
                 _LOGGER.warning("Could not restore last state: %s", err)
 
         @callback
