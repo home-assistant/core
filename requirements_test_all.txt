@@ -165,7 +165,7 @@ dsmr_parser==0.12
 eebrightbox==0.0.4
 
 # homeassistant.components.elgato
-elgato==0.1.0
+elgato==0.2.0
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.1.8
