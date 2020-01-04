@@ -76,31 +76,31 @@ class VelbusLight(VelbusEntity, Light):
         if self._module.light_is_buttonled(self._channel):
             if ATTR_FLASH in kwargs:
                 if kwargs[ATTR_FLASH] == FLASH_LONG:
-                    action = "slow"
+                    attr, *args = "set_led_state", self._channel, "slow"
                 elif kwargs[ATTR_FLASH] == FLASH_SHORT:
-                    action = "fast"
+                    attr, *args = "set_led_state", self._channel, "fast"
                 else:
-                    action = "on"
+                    attr, *args = "set_led_state", self._channel, "on"
             else:
-                action = "on"
-            try:
-                self._module.set_led_state(self._channel, action)
-            except VelbusException as err:
-                _LOGGER.error("A Velbus error occurred: %s", err)
+                attr, *args = "set_led_state", self._channel, "on"
         else:
-            try:
-                if ATTR_BRIGHTNESS in kwargs:
-                    self._module.set_dimmer_state(
-                        self._channel,
-                        kwargs[ATTR_BRIGHTNESS],
-                        kwargs.get(ATTR_TRANSITION, 0),
-                    )
-                else:
-                    self._module.restore_dimmer_state(
-                        self._channel, kwargs.get(ATTR_TRANSITION, 0),
-                    )
-            except VelbusException as err:
-                _LOGGER.error("A Velbus error occurred: %s", err)
+            if ATTR_BRIGHTNESS in kwargs:
+                attr, *args = (
+                    "set_dimmer_state",
+                    self._channel,
+                    kwargs[ATTR_BRIGHTNESS],
+                    kwargs.get(ATTR_TRANSITION, 0),
+                )
+            else:
+                attr, *args = (
+                    "restore_dimmer_state",
+                    self._channel,
+                    kwargs.get(ATTR_TRANSITION, 0),
+                )
+        try:
+            getattr(self._module, attr)(*args)
+        except VelbusException as err:
+            _LOGGER.error("A Velbus error occurred: %s", err)
 
     def turn_off(self, **kwargs):
         """Instruct the velbus light to turn off."""
