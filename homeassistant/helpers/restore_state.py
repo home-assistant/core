@@ -124,7 +124,7 @@ class RestoreStateData:
         """
         now = dt_util.utcnow()
         all_states = self.hass.states.async_all()
-        # Entitites currently backed by an entity object
+        # Entities currently backed by an entity object
         current_entity_ids = set(
             state.entity_id
             for state in all_states
