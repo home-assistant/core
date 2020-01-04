@@ -34,7 +34,7 @@ from .const import (
     DOMAIN,
 )
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 WLED_COMPONENTS = (LIGHT_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create WLED instance for this entry
     session = async_get_clientsession(hass)
-    wled = WLED(entry.data[CONF_HOST], loop=hass.loop, session=session)
+    wled = WLED(entry.data[CONF_HOST], session=session)
 
     # Ensure we can connect and talk to it
     try:

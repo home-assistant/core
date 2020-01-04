@@ -75,7 +75,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
 
         errors = {}
         session = async_get_clientsession(self.hass)
-        wled = WLED(user_input[CONF_HOST], loop=self.hass.loop, session=session)
+        wled = WLED(user_input[CONF_HOST], session=session)
 
         try:
             device = await wled.update()
