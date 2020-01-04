@@ -63,6 +63,20 @@ class TestOpenERZSensor(unittest.TestCase):
         "homeassistant.components.openerz.sensor.OpenERZSensor.update",
         return_value=True,
     )
+    def test_sensor_init_no_name(self, patched_update):
+        """Test whether all values initialized properly."""
+        with patch("homeassistant.components.openerz.sensor.datetime") as patched_time:
+            patched_time.now.return_value = self.mock_datetime
+
+            del self.mock_config["name"]
+            test_openerz = OpenERZSensor(self.mock_config)
+
+            self.assertEqual(test_openerz.friendly_name, "glass")
+
+    @patch(
+        "homeassistant.components.openerz.sensor.OpenERZSensor.update",
+        return_value=True,
+    )
     def test_sensor_update_start_date(self, patched_update):
         """Test whether all values initialized properly."""
         with patch("homeassistant.components.openerz.sensor.datetime") as patched_time:

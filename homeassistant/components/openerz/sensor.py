@@ -41,7 +41,7 @@ class OpenERZSensor(Entity):
         self.openerz_config = openerz_config
         self.zip = self.openerz_config["zip"]
         self.waste_type = self.openerz_config["waste_type"]
-        self.friendly_name = self.openerz_config.get("name")
+        self.friendly_name = self.openerz_config.get("name", self.waste_type)
         self.start_date = datetime.now()
         self.end_date = None
         self.last_api_response = None
@@ -83,8 +83,10 @@ class OpenERZSensor(Entity):
 
         try:
             self.last_api_response = requests.get(url, params=payload, headers=headers)
-        except requests.exceptions.ConnectionError as e:
-            _LOGGER.error("ConnectionError while making request to OpenERZ: %s", e)
+        except requests.exceptions.ConnectionError as connection_error:
+            _LOGGER.error(
+                "ConnectionError while making request to OpenERZ: %s", connection_error
+            )
 
     def parse_api_response(self):
         """Parse the JSON response received from the OpenERZ API and return a date of the next pickup."""
@@ -102,16 +104,15 @@ class OpenERZSensor(Entity):
             return None
         result_list = response_json.get("result")
         first_scheduled_pickup = result_list[0]
-        if (
+        if not (
             first_scheduled_pickup["zip"] == self.zip
             and first_scheduled_pickup["type"] == self.waste_type
         ):
-            return first_scheduled_pickup["date"]
-        else:
             _LOGGER.warning(
                 "Either zip or waste type does not match the ones specified in the configuration."
             )
             return None
+        return first_scheduled_pickup["date"]
 
     @property
     def name(self):
