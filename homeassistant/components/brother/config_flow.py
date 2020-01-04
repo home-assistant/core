@@ -46,9 +46,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 brother = Brother(user_input[CONF_HOST])
                 await brother.async_update()
 
-                await self.async_set_unique_id(
-                    brother.serial.lower(), raise_on_progress=True
-                )
+                await self.async_set_unique_id(brother.serial.lower())
                 self._abort_if_unique_id_configured()
 
                 title = f"{brother.model} {brother.serial}"
