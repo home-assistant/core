@@ -963,7 +963,7 @@ class KodiDevice(MediaPlayerDevice):
     @staticmethod
     def _find(key_word, words):
         key_word = key_word.split(" ")
-        patt = [re.compile("(^| )" + k + "( |$)", re.IGNORECASE) for k in key_word]
+        patt = [re.compile(f"(^| ){k}( |$)", re.IGNORECASE) for k in key_word]
 
         out = [[i, 0] for i in range(len(words))]
         for i in range(len(words)):

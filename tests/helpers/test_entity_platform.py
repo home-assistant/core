@@ -541,7 +541,7 @@ async def test_setup_entry(hass):
 
     assert await entity_platform.async_setup_entry(config_entry)
     await hass.async_block_till_done()
-    full_name = "{}.{}".format(entity_platform.domain, config_entry.domain)
+    full_name = f"{entity_platform.domain}.{config_entry.domain}"
     assert full_name in hass.config.components
     assert len(hass.states.async_entity_ids()) == 1
     assert len(registry.entities) == 1
@@ -560,7 +560,7 @@ async def test_setup_entry_platform_not_ready(hass, caplog):
     with patch.object(entity_platform, "async_call_later") as mock_call_later:
         assert not await ent_platform.async_setup_entry(config_entry)
 
-    full_name = "{}.{}".format(ent_platform.domain, config_entry.domain)
+    full_name = f"{ent_platform.domain}.{config_entry.domain}"
     assert full_name not in hass.config.components
     assert len(async_setup_entry.mock_calls) == 1
     assert "Platform test not ready yet" in caplog.text

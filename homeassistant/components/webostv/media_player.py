@@ -24,13 +24,15 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_CUSTOMIZE,
     CONF_HOST,
     CONF_NAME,
+    ENTITY_MATCH_ALL,
     STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
+    STATE_ON,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.script import Script
 
 from . import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
@@ -118,8 +120,6 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
 
         # Assume that the TV is not muted
         self._muted = False
-        # Assume that the TV is in Play mode
-        self._playing = True
         self._volume = 0
         self._current_source = None
         self._current_source_id = None
@@ -131,7 +131,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         self._last_icon = None
 
     async def async_added_to_hass(self):
-        """Connect and subscribe to state updates."""
+        """Connect and subscribe to dispatcher signals and state updates."""
+        async_dispatcher_connect(self.hass, DOMAIN, self.async_signal_handler)
+
         await self._client.register_state_update_callback(
             self.async_handle_state_update
         )
@@ -143,6 +145,17 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     async def async_will_remove_from_hass(self):
         """Call disconnect on removal."""
         self._client.unregister_state_update_callback(self.async_handle_state_update)
+
+    async def async_signal_handler(self, data):
+        """Handle domain-specific signal by calling appropriate method."""
+        entity_ids = data[ATTR_ENTITY_ID]
+        if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
+            params = {
+                key: value
+                for key, value in data.items()
+                if key not in ["entity_id", "method"]
+            }
+            await getattr(self, data["method"])(**params)
 
     async def async_handle_state_update(self):
         """Update state from WebOsClient."""
@@ -156,7 +169,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         if self._current_source_id == "":
             self._state = STATE_OFF
         else:
-            self._state = STATE_PLAYING
+            self._state = STATE_ON
 
         self.update_sources()
 
@@ -309,16 +322,12 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     @cmd
     async def async_mute_volume(self, mute):
         """Send mute command."""
-        self._muted = mute
         await self._client.set_mute(mute)
 
     @cmd
     async def async_media_play_pause(self):
-        """Simulate play pause media player."""
-        if self._playing:
-            await self.media_pause()
-        else:
-            await self.media_play()
+        """Client pause command acts as a play-pause toggle."""
+        await self._client.pause()
 
     @cmd
     async def async_select_source(self, source):
@@ -327,12 +336,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         if source_dict is None:
             _LOGGER.warning("Source %s not found for %s", source, self.name)
             return
-        self._current_source_id = source_dict["id"]
         if source_dict.get("title"):
-            self._current_source = source_dict["title"]
             await self._client.launch_app(source_dict["id"])
         elif source_dict.get("label"):
-            self._current_source = source_dict["label"]
             await self._client.set_input(source_dict["id"])
 
     @cmd
@@ -373,15 +379,11 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     @cmd
     async def async_media_play(self):
         """Send play command."""
-        self._playing = True
-        self._state = STATE_PLAYING
         await self._client.play()
 
     @cmd
     async def async_media_pause(self):
         """Send media pause command to media player."""
-        self._playing = False
-        self._state = STATE_PAUSED
         await self._client.pause()
 
     @cmd
@@ -406,3 +408,13 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
             await self._client.channel_down()
         else:
             await self._client.rewind()
+
+    @cmd
+    async def async_button(self, button):
+        """Send a button press."""
+        await self._client.button(button)
+
+    @cmd
+    async def async_command(self, command):
+        """Send a command."""
+        await self._client.request(command)

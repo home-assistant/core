@@ -32,7 +32,7 @@ abodepy==0.16.7
 adb-shell==0.1.0
 
 # homeassistant.components.adguard
-adguardhome==0.3.0
+adguardhome==0.4.0
 
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.11
@@ -149,6 +149,9 @@ datadog==0.15.0
 # homeassistant.components.ssdp
 defusedxml==0.6.0
 
+# homeassistant.components.denonavr
+denonavr==0.7.11
+
 # homeassistant.components.directv
 directpy==0.5
 
@@ -162,7 +165,7 @@ dsmr_parser==0.12
 eebrightbox==0.0.4
 
 # homeassistant.components.elgato
-elgato==0.1.0
+elgato==0.2.0
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.1.8
@@ -197,6 +200,7 @@ georss_qld_bushfire_alert_client==0.3
 
 # homeassistant.components.braviatv
 # homeassistant.components.huawei_lte
+# homeassistant.components.kef
 # homeassistant.components.nmap_tracker
 getmac==0.8.1
 
@@ -407,7 +411,7 @@ pycoolmasternet==0.0.4
 pydaikin==1.6.1
 
 # homeassistant.components.deconz
-pydeconz==65
+pydeconz==67
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -556,13 +560,16 @@ restrictedpython==5.0
 rflink==0.0.50
 
 # homeassistant.components.ring
-ring_doorbell==0.2.8
+ring_doorbell==0.2.9
 
 # homeassistant.components.yamaha
 rxv==0.6.0
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
+
+# homeassistant.components.sentry
+sentry-sdk==0.13.5
 
 # homeassistant.components.simplisafe
 simplisafe-python==5.3.6
@@ -611,7 +618,7 @@ toonapilib==3.2.4
 transmissionrpc==0.11
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.1.0
+twentemilieu==0.2.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -639,7 +646,7 @@ watchdog==0.8.3
 withings-api==2.1.3
 
 # homeassistant.components.wled
-wled==0.1.0
+wled==0.2.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.startca

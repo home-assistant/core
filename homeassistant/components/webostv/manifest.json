@@ -6,5 +6,5 @@
     "aiopylgtv==0.2.4"
   ],
   "dependencies": ["configurator"],
-  "codeowners": []
+  "codeowners": ["@bendavid"]
 }

@@ -31,7 +31,7 @@ DATA_LOGGING = "logging"
 
 DEBUGGER_INTEGRATIONS = {"ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
-LOGGING_INTEGRATIONS = {"logger", "system_log"}
+LOGGING_INTEGRATIONS = {"logger", "system_log", "sentry"}
 STAGE_1_INTEGRATIONS = {
     # To record data
     "recorder",

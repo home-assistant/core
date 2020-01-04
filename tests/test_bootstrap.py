@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 def test_from_config_file(hass):
     """Test with configuration file."""
     components = set(["browser", "conversation", "script"])
-    files = {"config.yaml": "".join("{}:\n".format(comp) for comp in components)}
+    files = {"config.yaml": "".join(f"{comp}:\n" for comp in components)}
 
     with patch_yaml_files(files, True):
         yield from bootstrap.async_from_config_file("config.yaml", hass)

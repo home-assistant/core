@@ -200,7 +200,11 @@ DEMO_DEVICES = [
     {
         "id": "media_player.walkman",
         "name": {"name": "Walkman"},
-        "traits": ["action.devices.traits.OnOff", "action.devices.traits.Volume"],
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Volume",
+            "action.devices.traits.Modes",
+        ],
         "type": "action.devices.types.SWITCH",
         "willReportState": False,
     },

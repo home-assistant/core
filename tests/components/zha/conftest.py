@@ -9,7 +9,6 @@ from zigpy.application import ControllerApplication
 from homeassistant import config_entries
 from homeassistant.components.zha.core.const import COMPONENTS, DATA_ZHA, DOMAIN
 from homeassistant.components.zha.core.gateway import ZHAGateway
-from homeassistant.components.zha.core.registries import establish_device_mappings
 from homeassistant.components.zha.core.store import async_get_registry
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 
@@ -41,7 +40,6 @@ async def zha_gateway_fixture(hass, config_entry):
     Create a ZHAGateway object that can be used to interact with as if we
     had a real zigbee network running.
     """
-    establish_device_mappings()
     for component in COMPONENTS:
         hass.data[DATA_ZHA][component] = hass.data[DATA_ZHA].get(component, {})
     zha_storage = await async_get_registry(hass)

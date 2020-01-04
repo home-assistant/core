@@ -66,6 +66,7 @@ FLOWS = [
     "ps4",
     "rainmachine",
     "samsungtv",
+    "sentry",
     "simplisafe",
     "smartthings",
     "smhi",

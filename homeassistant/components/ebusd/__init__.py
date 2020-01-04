@@ -34,7 +34,7 @@ def verify_ebusd_config(config):
     circuit = config[CONF_CIRCUIT]
     for condition in config[CONF_MONITORED_CONDITIONS]:
         if condition not in SENSOR_TYPES[circuit]:
-            raise vol.Invalid("Condition '" + condition + "' not in '" + circuit + "'.")
+            raise vol.Invalid(f"Condition '{condition}' not in '{circuit}'.")
     return config
 
 

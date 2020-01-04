@@ -15,9 +15,7 @@ from homeassistant.const import (
 )
 
 from . import DOMAIN
-from .config_flow import configured_gateways
 from .deconz_event import CONF_DECONZ_EVENT, CONF_UNIQUE_ID
-from .gateway import get_gateway_from_config_entry
 
 CONF_SUBTYPE = "subtype"
 
@@ -287,10 +285,8 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 
 def _get_deconz_event_from_device_id(hass, device_id):
     """Resolve deconz event from device id."""
-    deconz_config_entries = configured_gateways(hass)
-    for config_entry in deconz_config_entries.values():
+    for gateway in hass.data.get(DOMAIN):
 
-        gateway = get_gateway_from_config_entry(hass, config_entry)
         for deconz_event in gateway.events:
 
             if device_id == deconz_event.device_id:

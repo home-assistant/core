@@ -732,9 +732,7 @@ async def test_merge_id_schema(hass):
         integration = await async_get_integration(hass, domain)
         module = integration.get_component()
         typ, _ = config_util._identify_config_schema(module)
-        assert typ == expected_type, "{} expected {}, got {}".format(
-            domain, expected_type, typ
-        )
+        assert typ == expected_type, f"{domain} expected {expected_type}, got {typ}"
 
 
 async def test_merge_duplicate_keys(merge_log_err, hass):

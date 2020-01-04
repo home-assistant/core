@@ -5,7 +5,7 @@ from homeassistant.components import deconz
 import homeassistant.components.binary_sensor as binary_sensor
 from homeassistant.setup import async_setup_component
 
-from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 SENSORS = {
     "1": {
@@ -61,10 +61,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_binary_sensors(hass):
     """Test that no sensors in deconz results in no sensor entities."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
@@ -73,9 +70,7 @@ async def test_binary_sensors(hass):
     """Test successful creation of binary sensor entities."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass, get_state_response=data)
     assert "binary_sensor.presence_sensor" in gateway.deconz_ids
     assert "binary_sensor.temperature_sensor" not in gateway.deconz_ids
     assert "binary_sensor.clip_presence_sensor" not in gateway.deconz_ids
@@ -118,7 +113,6 @@ async def test_allow_clip_sensor(hass):
     data["sensors"] = deepcopy(SENSORS)
     gateway = await setup_deconz_integration(
         hass,
-        ENTRY_CONFIG,
         options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True},
         get_state_response=data,
     )
@@ -143,10 +137,7 @@ async def test_allow_clip_sensor(hass):
 
 async def test_add_new_binary_sensor(hass):
     """Test that adding a new binary sensor works."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
 
     state_added_event = {

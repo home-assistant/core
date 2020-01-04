@@ -155,10 +155,13 @@ def async_remote_ui_url(hass) -> str:
     if not async_is_logged_in(hass):
         raise CloudNotAvailable
 
+    if not hass.data[DOMAIN].client.prefs.remote_enabled:
+        raise CloudNotAvailable
+
     if not hass.data[DOMAIN].remote.instance_domain:
         raise CloudNotAvailable
 
-    return "https://" + hass.data[DOMAIN].remote.instance_domain
+    return f"https://{hass.data[DOMAIN].remote.instance_domain}"
 
 
 def is_cloudhook_request(request):

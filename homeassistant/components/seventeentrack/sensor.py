@@ -45,7 +45,7 @@ ENTITY_ID_TEMPLATE = "sensor.seventeentrack_package_{0}"
 NOTIFICATION_DELIVERED_ID = "package_delivered_{0}"
 NOTIFICATION_DELIVERED_TITLE = "Package {0} delivered"
 NOTIFICATION_DELIVERED_MESSAGE = (
-    "Package Delivered: {0}<br />" + "Visit 17.track for more information: "
+    "Package Delivered: {0}<br />Visit 17.track for more information: "
     "https://t.17track.net/track#nums={1}"
 )
 

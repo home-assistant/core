@@ -103,8 +103,8 @@ async def test_setup_recovers_when_setup_raises(hass):
         OrderedDict(
             [
                 (DOMAIN, {"platform": "mod1"}),
-                ("{} 2".format(DOMAIN), {"platform": "non_exist"}),
-                ("{} 3".format(DOMAIN), {"platform": "mod2"}),
+                (f"{DOMAIN} 2", {"platform": "non_exist"}),
+                (f"{DOMAIN} 3", {"platform": "mod2"}),
             ]
         )
     )
