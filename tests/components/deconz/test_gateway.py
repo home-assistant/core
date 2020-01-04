@@ -11,10 +11,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import MockConfigEntry
 
+API_KEY = "1234567890ABCDEF"
 BRIDGEID = "01234E56789A"
 
 ENTRY_CONFIG = {
-    deconz.config_flow.CONF_API_KEY: "ABCDEF",
+    deconz.config_flow.CONF_API_KEY: API_KEY,
     deconz.config_flow.CONF_HOST: "1.2.3.4",
     deconz.config_flow.CONF_PORT: 80,
 }
@@ -46,10 +47,12 @@ async def setup_deconz_integration(
     options=ENTRY_OPTIONS,
     get_state_response=DECONZ_WEB_REQUEST,
     entry_id="1",
+    source="user",
 ):
     """Create the deCONZ gateway."""
     config_entry = MockConfigEntry(
         domain=deconz.DOMAIN,
+        source=source,
         data=deepcopy(config),
         connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         options=deepcopy(options),

@@ -147,8 +147,17 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.bridge_id = await async_get_bridge_id(
                         session, **self.deconz_config
                     )
+
+                    for entry in self.hass.config_entries.async_entries(DOMAIN):
+                        if self.bridge_id == entry.unique_id:
+                            return self._update_entry(
+                                entry,
+                                host=self.deconz_config[CONF_HOST],
+                                port=self.deconz_config[CONF_PORT],
+                                api_key=self.deconz_config[CONF_API_KEY],
+                            )
+
                     await self.async_set_unique_id(self.bridge_id)
-                    self._abort_if_unique_id_configured()
 
             except asyncio.TimeoutError:
                 return self.async_abort(reason="no_bridges")
