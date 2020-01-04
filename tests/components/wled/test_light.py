@@ -90,7 +90,7 @@ async def test_switch_change_state(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light"},
+        {ATTR_ENTITY_ID: "light.wled_rgb_light", ATTR_TRANSITION: 5},
         blocking=True,
     )
     await hass.async_block_till_done()
