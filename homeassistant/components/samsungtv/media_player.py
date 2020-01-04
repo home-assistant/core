@@ -325,4 +325,4 @@ class SamsungTVDevice(MediaPlayerDevice):
             LOGGER.error("Unsupported source")
             return
 
-        self.hass.async_add_job(self.send_key, SOURCES[source])
+        self.send_key(SOURCES[source])
