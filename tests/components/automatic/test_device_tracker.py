@@ -1,9 +1,9 @@
 """Test the automatic device tracker platform."""
 from datetime import datetime
 import logging
-from unittest.mock import MagicMock, patch
 
 import aioautomatic
+from asynctest import MagicMock, patch
 
 from homeassistant.components.automatic.device_tracker import async_setup_scanner
 from homeassistant.setup import async_setup_component
@@ -114,6 +114,9 @@ def test_valid_credentials(
     result = hass.loop.run_until_complete(async_setup_scanner(hass, config, mock_see))
 
     assert result
+
+    assert mock_ws_connect.called
+    assert len(mock_ws_connect.mock_calls) == 2
 
     assert mock_create_session.called
     assert len(mock_create_session.mock_calls) == 1
