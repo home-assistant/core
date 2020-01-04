@@ -25,7 +25,7 @@ def host_valid(host):
             return True
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
-        return all(map(lambda x: len(x) and not disallowed.search(x), host.split(".")))
+        return all(x and not disallowed.search(x) for x in host.split("."))
 
 
 class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
