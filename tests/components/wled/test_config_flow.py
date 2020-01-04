@@ -1,5 +1,6 @@
 """Tests for the WLED config flow."""
 import aiohttp
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.wled import config_flow
@@ -131,10 +132,8 @@ async def test_user_device_exists_abort(
     flow = config_flow.WLEDFlowHandler()
     flow.hass = hass
     flow.context = {"source": SOURCE_USER}
-    result = await flow.async_step_user({CONF_HOST: "example.local"})
-
-    assert result["reason"] == "already_configured"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    with pytest.raises(data_entry_flow.AbortFlow):
+        await flow.async_step_user({CONF_HOST: "example.local"})
 
 
 async def test_zeroconf_device_exists_abort(
@@ -146,10 +145,8 @@ async def test_zeroconf_device_exists_abort(
     flow = config_flow.WLEDFlowHandler()
     flow.hass = hass
     flow.context = {"source": SOURCE_ZEROCONF}
-    result = await flow.async_step_zeroconf({"hostname": "example.local."})
-
-    assert result["reason"] == "already_configured"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    with pytest.raises(data_entry_flow.AbortFlow):
+        await flow.async_step_zeroconf({"hostname": "example.local."})
 
 
 async def test_full_user_flow_implementation(
