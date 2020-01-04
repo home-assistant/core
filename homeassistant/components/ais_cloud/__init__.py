@@ -143,6 +143,10 @@ def async_setup(hass, config):
         _LOGGER.info("send_audio_to_speaker")
         data.send_audio_to_speaker(call)
 
+    def enable_gate_pairing_by_pin(call):
+        _LOGGER.info("enable_gate_pairing_by_pin")
+        data.enable_gate_pairing_by_pin(call)
+
     # register services
     hass.services.async_register(DOMAIN, "get_radio_types", get_radio_types)
     hass.services.async_register(DOMAIN, "get_radio_names", get_radio_names)
@@ -166,6 +170,9 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "set_backup_step", set_backup_step)
     hass.services.async_register(DOMAIN, "do_backup", do_backup)
     hass.services.async_register(DOMAIN, "restore_backup", restore_backup)
+    hass.services.async_register(
+        DOMAIN, "enable_gate_pairing_by_pin", enable_gate_pairing_by_pin
+    )
 
     def device_discovered(service):
         """ Called when a device has been discovered. """
@@ -444,6 +451,12 @@ class AisCloudWS:
         with open(file, "wb") as f:
             for chunk in ws_resp.iter_content(1024):
                 f.write(chunk)
+        return ws_resp
+
+    def get_gate_parring_pin(self):
+        self.setCloudToken()
+        rest_url = self.url + "gate_id_from_pin"
+        ws_resp = requests.post(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp
 
 
@@ -1729,4 +1742,21 @@ class AisColudData:
         # refresh
         self.get_backup_info(
             call, 0, None, None, None, "OK, przywrucono konfigurację z  kopii"
+        )
+
+    def enable_gate_pairing_by_pin(self, call):
+        ws_resp = self.cloud.get_gate_parring_pin()
+        json_ws_resp = ws_resp.json()
+        pin = json_ws_resp["pin"]
+        # set gate_parring_pin
+        self.hass.states.set("sensor.gate_pairing_pin", pin)
+        # run timer
+        self.hass.services.call(
+            "timer", "start", {"entity_id": "timer.ais_dom_pin_join", "duration": "120"}
+        )
+        # voice info
+        self.hass.services.call(
+            "ais_ai_service",
+            "say_it",
+            {"text": "Parowanie z bramką za pomocą PIN włączone"},
         )

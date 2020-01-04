@@ -97,3 +97,6 @@ restore_backup:
     password:
       description: Hasło do rozpakowania kopii ustawień
       example: 'sekret123'
+
+enable_gate_pairing_by_pin:
+  description: Włącza możliwość parowania z bramką za pomocą jednorazowego kodu PIN
