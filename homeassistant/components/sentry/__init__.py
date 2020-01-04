@@ -28,7 +28,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     if conf is not None:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=conf,
             )
         )
 
@@ -37,6 +37,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Sentry from a config entry."""
+
     conf = entry.data
 
     hass.data[DOMAIN] = conf
@@ -48,7 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
 
     sentry_sdk.init(
-        dsn=conf.get(CONF_DSN),
+        dsn=conf[CONF_DSN],
         environment=conf.get(CONF_ENVIRONMENT),
         integrations=[sentry_logging],
     )

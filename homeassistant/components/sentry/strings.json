@@ -4,7 +4,10 @@
     "step": {
       "user": {
         "title": "Sentry",
-        "description": "Enter your Sentry DSN"
+        "description": "Configure Sentry to capture errors",
+        "data": {
+          "dsn": "DSN"
+        }
       }
     },
     "error": {
@@ -13,6 +16,17 @@
     },
     "abort": {
       "already_configured": "Sentry is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Options for Sentry",
+        "data": {
+          "dsn": "DSN",
+          "environment": "Environment"
+        }
+      }
     }
   }
 }
