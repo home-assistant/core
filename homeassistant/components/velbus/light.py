@@ -44,7 +44,7 @@ class VelbusLight(VelbusEntity, Light):
     def name(self):
         """Return the display name of this entity."""
         if self._module.light_is_buttonled(self._channel):
-            return "LED " + self._module.get_name(self._channel)
+            return f"LED {self._module.get_name(self._channel)}"
         return self._module.get_name(self._channel)
 
     @property
@@ -105,14 +105,15 @@ class VelbusLight(VelbusEntity, Light):
     def turn_off(self, **kwargs):
         """Instruct the velbus light to turn off."""
         if self._module.light_is_buttonled(self._channel):
-            try:
-                self._module.set_led_state(self._channel, "off")
-            except VelbusException as err:
-                _LOGGER.error("A Velbus error occurred: %s", err)
+            attr, *args = "set_led_state", self._channel, "off"
         else:
-            try:
-                self._module.set_dimmer_state(
-                    self._channel, 0, kwargs.get(ATTR_TRANSITION, 0),
-                )
-            except VelbusException as err:
-                _LOGGER.error("A Velbus error occurred: %s", err)
+            attr, *args = (
+                "set_dimmer_state",
+                self._channel,
+                0,
+                kwargs.get(ATTR_TRANSITION, 0),
+            )
+        try:
+            getattr(self._module, attr)(*args)
+        except VelbusException as err:
+            _LOGGER.error("A Velbus error occurred: %s", err)
