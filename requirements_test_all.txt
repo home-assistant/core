@@ -501,10 +501,6 @@ pysmartapp==0.3.2
 # homeassistant.components.smartthings
 pysmartthings==0.6.9
 
-# homeassistant.components.brother
-# homeassistant.components.snmp
-pysnmp==4.4.12
-
 # homeassistant.components.soma
 pysoma==0.0.10
 

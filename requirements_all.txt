@@ -1504,7 +1504,6 @@ pysmartthings==0.6.9
 # homeassistant.components.smarty
 pysmarty==0.8
 
-# homeassistant.components.brother
 # homeassistant.components.snmp
 pysnmp==4.4.12
 
