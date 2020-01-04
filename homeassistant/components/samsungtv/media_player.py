@@ -103,7 +103,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             "method": None,
             "port": port,
             "host": host,
-            "timeout": None,
+            "timeout": 1,
         }
 
         # Select method by port number, mainly for fallback
@@ -318,14 +318,12 @@ class SamsungTVDevice(MediaPlayerDevice):
     async def async_turn_on(self):
         """Turn the media player on."""
         if self._on_script:
-            await self.hass.async_add_job(self._on_script.async_run())
-        else:
-            self.send_key("KEY_POWERON")
+            await self._on_script.async_run()
 
-    async def async_select_source(self, source):
+    def select_source(self, source):
         """Select input source."""
         if source not in SOURCES:
             LOGGER.error("Unsupported source")
             return
 
-        await self.hass.async_add_job(self.send_key, SOURCES[source])
+        self.hass.async_add_job(self.send_key, SOURCES[source])
