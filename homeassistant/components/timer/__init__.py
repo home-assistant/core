@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "timer"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-DEFAULT_DURATION = 0
+DEFAULT_DURATION = timedelta(0)
 ATTR_DURATION = "duration"
 ATTR_REMAINING = "remaining"
 CONF_DURATION = "duration"
@@ -37,18 +37,25 @@ SERVICE_PAUSE = "pause"
 SERVICE_CANCEL = "cancel"
 SERVICE_FINISH = "finish"
 
+
+def _none_to_empty_dict(value):
+    if value is None:
+        return {}
+    return value
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.Any(
+            vol.All(
+                _none_to_empty_dict,
                 {
                     vol.Optional(CONF_NAME): cv.string,
                     vol.Optional(CONF_ICON): cv.icon,
                     vol.Optional(
-                        CONF_DURATION, timedelta(DEFAULT_DURATION)
+                        CONF_DURATION, default=DEFAULT_DURATION
                     ): cv.time_period,
                 },
-                None,
             )
         )
     },
@@ -82,11 +89,7 @@ async def async_setup(hass, config):
     )
     component.async_register_entity_service(
         SERVICE_START,
-        {
-            vol.Optional(
-                ATTR_DURATION, default=timedelta(DEFAULT_DURATION)
-            ): cv.time_period
-        },
+        {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
         "async_start",
     )
     component.async_register_entity_service(SERVICE_PAUSE, {}, "async_pause")
@@ -108,7 +111,7 @@ async def _async_process_config(hass, config):
 
         name = cfg.get(CONF_NAME)
         icon = cfg.get(CONF_ICON)
-        duration = cfg.get(CONF_DURATION)
+        duration = cfg[CONF_DURATION]
 
         entities.append(Timer(hass, object_id, name, icon, duration))
 
