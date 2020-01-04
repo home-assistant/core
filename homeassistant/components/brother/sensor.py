@@ -1,7 +1,6 @@
 """Support for the Brother service."""
 import logging
 
-from homeassistant.helpers import device_registry
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -12,7 +11,6 @@ from .const import (
     ATTR_LABEL,
     ATTR_MANUFACTURER,
     ATTR_UNIT,
-    CONF_SENSORS,
     DOMAIN,
     SENSOR_TYPES,
 )
@@ -25,38 +23,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     brother = hass.data[DOMAIN][config_entry.entry_id]
 
     sensors = []
-    sensors_list = []
 
-    if brother.available:
-        name = brother.model
-        for sensor in SENSOR_TYPES:
-            if sensor in brother.data:
-                sensors_list.append(sensor)
-        device_info = {
-            "identifiers": {(DOMAIN, brother.serial)},
-            "name": brother.model,
-            "manufacturer": ATTR_MANUFACTURER,
-            "model": brother.model,
-            "sw_version": brother.firmware,
-        }
-    else:
-        _LOGGER.info("Printer is unavailable, reading device info from registry.")
-        sensors_list = config_entry.data[CONF_SENSORS]
-        dev_reg = await device_registry.async_get_registry(hass)
-        for device in dev_reg.devices.values():
-            if config_entry.entry_id in device.config_entries:
-                name = device.model
-                device_info = {
-                    "name": device.name,
-                    "model": device.model,
-                    "identifiers": device.identifiers,
-                    "manufacturer": device.manufacturer,
-                    "sw_version": device.sw_version,
-                }
-                break
+    name = brother.model
+    device_info = {
+        "identifiers": {(DOMAIN, brother.serial)},
+        "name": brother.model,
+        "manufacturer": ATTR_MANUFACTURER,
+        "model": brother.model,
+        "sw_version": brother.firmware,
+    }
 
-    for sensor in sensors_list:
-        sensors.append(BrotherPrinterSensor(brother, name, sensor, device_info))
+    for sensor in SENSOR_TYPES:
+        if sensor in brother.data:
+            sensors.append(BrotherPrinterSensor(brother, name, sensor, device_info))
     async_add_entities(sensors, True)
 
 
@@ -68,8 +47,7 @@ class BrotherPrinterSensor(Entity):
         self.printer = data
         self._name = name
         self._device_info = device_info
-        self.serial = next(iter(device_info["identifiers"]))[1]
-        self._unique_id = f"{self.serial.lower()}_{kind}"
+        self._unique_id = f"{self.printer.serial.lower()}_{kind}"
         self.kind = kind
         self._state = None
         self._unit_of_measurement = None

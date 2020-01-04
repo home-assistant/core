@@ -25,9 +25,6 @@ ATTR_UPTIME = "uptime"
 ATTR_YELLOW_INK_REMAINING = "yellow_ink_remaining"
 ATTR_YELLOW_TONER_REMAINING = "yellow_toner_remaining"
 
-CONF_SENSORS = "sensors"
-CONF_SERIAL = "serial"
-
 DOMAIN = "brother"
 
 UNIT_PAGES = "p"

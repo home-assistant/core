@@ -8,6 +8,7 @@ from brother import Brother, SnmpError, UnsupportedModel
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_TYPE
 from homeassistant.core import Config, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -33,6 +34,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     brother = BrotherPrinterData(host, kind)
 
     await brother.async_update()
+
+    if not brother.available:
+        raise ConfigEntryNotReady()
 
     hass.data[DOMAIN][entry.entry_id] = brother
 

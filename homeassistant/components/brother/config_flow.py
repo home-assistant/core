@@ -8,12 +8,7 @@ import voluptuous as vol
 from homeassistant import config_entries, exceptions
 from homeassistant.const import CONF_HOST, CONF_TYPE
 
-from .const import (  # pylint:disable=unused-import
-    CONF_SENSORS,
-    DOMAIN,
-    PRINTER_TYPES,
-    SENSOR_TYPES,
-)
+from .const import DOMAIN, PRINTER_TYPES  # pylint:disable=unused-import
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -56,16 +51,8 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 self._abort_if_unique_id_configured()
 
-                sensors = []
-                for sensor in SENSOR_TYPES:
-                    if sensor in brother.data:
-                        sensors.append(sensor)
-
-                device_data = {CONF_SENSORS: sensors}
                 title = f"{brother.model} {brother.serial}"
-                return self.async_create_entry(
-                    title=title, data={**user_input, **device_data}
-                )
+                return self.async_create_entry(title=title, data=user_input)
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
             except ConnectionError:
