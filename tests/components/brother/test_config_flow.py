@@ -6,6 +6,7 @@ from brother import SnmpError, UnsupportedModel
 
 from homeassistant import data_entry_flow
 from homeassistant.components.brother import config_flow
+from homeassistant.components.brother.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TYPE
 
 from tests.common import load_fixture
@@ -22,7 +23,9 @@ async def test_show_form(hass):
     flow = config_flow.BrotherConfigFlow()
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -38,7 +41,9 @@ async def test_create_entry_with_hostname(hass):
         flow.hass = hass
         flow.context = {}
 
-        result = await flow.async_step_user(user_input=CONFIG)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=CONFIG
+        )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "HL-L2340DW 0123456789"
@@ -56,8 +61,10 @@ async def test_create_entry_with_ip_address(hass):
         flow.hass = hass
         flow.context = {}
 
-        result = await flow.async_step_user(
-            user_input={CONF_NAME: "Name", CONF_HOST: "127.0.0.1", CONF_TYPE: "laser"},
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "user"},
+            data={CONF_NAME: "Name", CONF_HOST: "127.0.0.1", CONF_TYPE: "laser"},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -71,12 +78,10 @@ async def test_invalid_hostname(hass):
     flow = config_flow.BrotherConfigFlow()
     flow.hass = hass
 
-    result = await flow.async_step_user(
-        user_input={
-            CONF_NAME: "Name",
-            CONF_HOST: "invalid/hostname",
-            CONF_TYPE: "laser",
-        }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": "user"},
+        data={CONF_NAME: "Name", CONF_HOST: "invalid/hostname", CONF_TYPE: "laser"},
     )
 
     assert result["errors"] == {CONF_HOST: "wrong_host"}
@@ -88,7 +93,9 @@ async def test_connection_error(hass):
         flow = config_flow.BrotherConfigFlow()
         flow.hass = hass
 
-        result = await flow.async_step_user(user_input=CONFIG)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=CONFIG
+        )
 
         assert result["errors"] == {"base": "connection_error"}
 
@@ -99,7 +106,9 @@ async def test_snmp_error(hass):
         flow = config_flow.BrotherConfigFlow()
         flow.hass = hass
 
-        result = await flow.async_step_user(user_input=CONFIG)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=CONFIG
+        )
 
         assert result["errors"] == {"base": "snmp_error"}
 
@@ -110,7 +119,9 @@ async def test_unsupported_model_error(hass):
         flow = config_flow.BrotherConfigFlow()
         flow.hass = hass
 
-        result = await flow.async_step_user(user_input=CONFIG)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=CONFIG
+        )
 
         assert result["type"] == "abort"
         assert result["reason"] == "unsupported_model"
