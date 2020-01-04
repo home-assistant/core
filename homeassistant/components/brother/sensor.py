@@ -50,7 +50,6 @@ class BrotherPrinterSensor(Entity):
         self._unique_id = f"{self.printer.serial.lower()}_{kind}"
         self.kind = kind
         self._state = None
-        self._unit_of_measurement = None
         self._attrs = {}
 
     @property
