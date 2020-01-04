@@ -115,7 +115,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             ):
                 # We got a response so it's working.
                 self._state = STATE_ON
-            except OSError:
+            except (OSError, WebSocketException):
                 # Different reasons, e.g. hostname not resolveable
                 self._state = STATE_OFF
             except AttributeError:
