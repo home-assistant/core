@@ -47,7 +47,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await brother.async_update()
 
                 await self.async_set_unique_id(
-                    brother.serial.lower(), raise_on_progress=False
+                    brother.serial.lower(), raise_on_progress=True
                 )
                 self._abort_if_unique_id_configured()
 
