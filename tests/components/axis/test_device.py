@@ -18,7 +18,7 @@ DEVICE_DATA = {
     axis.device.CONF_HOST: "1.2.3.4",
     axis.device.CONF_USERNAME: "username",
     axis.device.CONF_PASSWORD: "password",
-    axis.device.CONF_PORT: 1234,
+    axis.device.CONF_PORT: 80,
 }
 
 ENTRY_OPTIONS = {axis.device.CONF_CAMERA: True, axis.device.CONF_EVENTS: True}
