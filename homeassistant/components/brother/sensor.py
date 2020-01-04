@@ -61,7 +61,6 @@ class BrotherPrinterSensor(Entity):
     @property
     def state(self):
         """Return the state."""
-        self._state = self.printer.data.get(self.kind)
         return self._state
 
     @property
@@ -103,6 +102,7 @@ class BrotherPrinterSensor(Entity):
         """Update the data from printer."""
         await self.printer.async_update()
 
+        self._state = self.printer.data.get(self.kind)
         if self.printer.available:
             self._device_info = {
                 "identifiers": {(DOMAIN, self.printer.serial)},
