@@ -314,17 +314,16 @@ class LightTemplate(Light):
         if self._level_template is not None:
             try:
                 brightness = self._level_template.async_render()
+                if 0 <= int(brightness) <= 255:
+                    self._brightness = int(brightness)
+                else:
+                    _LOGGER.error(
+                        "Received invalid brightness : %s. Expected: 0-255", brightness
+                    )
+                    self._brightness = None
             except TemplateError as ex:
                 _LOGGER.error(ex)
                 self._state = None
-
-            if 0 <= int(brightness) <= 255:
-                self._brightness = int(brightness)
-            else:
-                _LOGGER.error(
-                    "Received invalid brightness : %s. Expected: 0-255", brightness
-                )
-                self._brightness = None
 
     @callback
     def update_state(self):
@@ -332,16 +331,15 @@ class LightTemplate(Light):
         if self._template is not None:
             try:
                 state = self._template.async_render().lower()
+                if state in _VALID_STATES:
+                    self._state = state in ("true", STATE_ON)
+                else:
+                    _LOGGER.error(
+                        "Received invalid light is_on state: %s. Expected: %s",
+                        state,
+                        ", ".join(_VALID_STATES),
+                    )
+                    self._state = None
             except TemplateError as ex:
                 _LOGGER.error(ex)
-                self._state = None
-
-            if state in _VALID_STATES:
-                self._state = state in ("true", STATE_ON)
-            else:
-                _LOGGER.error(
-                    "Received invalid light is_on state: %s. Expected: %s",
-                    state,
-                    ", ".join(_VALID_STATES),
-                )
                 self._state = None
