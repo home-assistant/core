@@ -63,6 +63,7 @@ REMOTE_DEVICE_TYPES = {
         zigpy.profiles.zll.DeviceType.SCENE_CONTROLLER,
     ],
 }
+REMOTE_DEVICE_TYPES = collections.defaultdict(list, REMOTE_DEVICE_TYPES)
 
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     # this works for now but if we hit conflicts we can break it out to
@@ -122,6 +123,7 @@ DEVICE_CLASS = {
         zigpy.profiles.zll.DeviceType.ON_OFF_PLUGIN_UNIT: SWITCH,
     },
 }
+DEVICE_CLASS = collections.defaultdict(dict, DEVICE_CLASS)
 
 DEVICE_TRACKER_CLUSTERS = SetRegistry()
 EVENT_RELAY_CLUSTERS = SetRegistry()
