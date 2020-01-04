@@ -42,9 +42,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BrotherPrinterSensor(Entity):
     """Define an Brother Printer sensor."""
 
-    def __init__(self, data, name, kind, device_info):
+    def __init__(self, printer, name, kind, device_info):
         """Initialize."""
-        self.printer = data
+        self.printer = printer
         self._name = name
         self._device_info = device_info
         self._unique_id = f"{self.printer.serial.lower()}_{kind}"
