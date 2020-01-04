@@ -511,12 +511,14 @@ async def test_media_previous_track(hass, remote):
 
 async def test_turn_on_with_turnon(hass, remote):
     """Test turn on."""
-    await setup_samsungtv(hass, MOCK_CONFIG)
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    # key and update called
-    assert False  # TODO
+    with patch(
+        "homeassistant.components.samsungtv.media_player.Script.async_run"
+    ) as delay:
+        await setup_samsungtv(hass, MOCK_CONFIG)
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert delay.call_count == 1
 
 
 async def test_turn_on_without_turnon(hass, remote):
