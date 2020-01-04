@@ -16,9 +16,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer binary sensor setup to the shared sensor module."""
     box_id = hass.data[DOMAIN][ID_BOX]
     bridge = hass.data[DOMAIN][DATA_LIVEBOX]
-    status = []
-    status.append(WanStatus(bridge, box_id))
-    async_add_entities(status, True)
+    async_add_entities([WanStatus(bridge, box_id)], True)
 
 
 class WanStatus(BinarySensorDevice):

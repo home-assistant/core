@@ -29,7 +29,7 @@ class BridgeData:
             if self._entry.options.get("lan_tracking", False):
                 return devices_status_wireless + devices_status_wired
             return devices_status_wireless
-        return None
+        return
 
     async def async_get_device(self, unique_id):
         """Get device."""
@@ -39,21 +39,21 @@ class BridgeData:
             device_status = device.get("status", [])
             if len(device_status) == 1:
                 return device_status.pop()
-        return None
+        return
 
     async def async_get_infos(self):
         """Get router infos."""
         infos = await self._session.system.get_deviceinfo()
         if infos is not None:
             return infos.get("status", {})
-        return None
+        return
 
     async def async_get_status(self):
         """Get status."""
         status = await self._session.system.get_WANStatus()
         if status is not None:
             return status.get("data", {})
-        return None
+        return
 
     async def async_get_dsl_status(self):
         """Get dsl status."""
@@ -61,4 +61,4 @@ class BridgeData:
         dsl_status = await self._session.connection.get_data_MIBS(parameters)
         if dsl_status is not None:
             return dsl_status.get("status", {}).get("dsl", {}).get("dsl0", {})
-        return None
+        return
