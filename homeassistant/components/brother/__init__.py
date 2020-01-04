@@ -98,5 +98,5 @@ class BrotherPrinterData:
         self.available = self._brother.available
         self.data = self._brother.data
         if self.available and self.unavailable_logged:
-            _LOGGER.info("Printer %s is available again.", self.host)
+            _LOGGER.info("Printer %s is available again", self.host)
             self.unavailable_logged = False
