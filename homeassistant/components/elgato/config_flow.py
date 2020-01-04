@@ -36,9 +36,8 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form({"base": "connection_error"})
 
         # Check if already configured
-        if await self._device_already_configured(info):
-            # This serial number is already configured
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(info.serial_number)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=info.serial_number,
@@ -64,9 +63,8 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_error")
 
         # Check if already configured
-        if await self._device_already_configured(info):
-            # This serial number is already configured
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(info.serial_number)
+        self._abort_if_unique_id_configured()
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
@@ -97,9 +95,8 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="connection_error")
 
         # Check if already configured
-        if await self._device_already_configured(info):
-            # This serial number is already configured
-            return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(info.serial_number)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=self.context.get(CONF_SERIAL_NUMBER),
@@ -137,10 +134,3 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
         session = async_get_clientsession(self.hass)
         elgato = Elgato(host, port=port, session=session,)
         return await elgato.info()
-
-    async def _device_already_configured(self, info: Info) -> bool:
-        """Return if a Elgato Key Light is already configured."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_SERIAL_NUMBER] == info.serial_number:
-                return True
-        return False
