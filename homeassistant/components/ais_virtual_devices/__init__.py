@@ -46,7 +46,13 @@ async def async_setup(hass, config):
     hass.states.async_set(
         "sensor.local_host_name",
         "",
-        {"friendly_name": "Lokalna nazwa hosta", "icon": "mdi:mdi:dns"},
+        {"friendly_name": "Lokalna nazwa hosta", "icon": "mdi:dns"},
+    )
+
+    hass.states.async_set(
+        "sensor.gate_pairing_pin",
+        "",
+        {"friendly_name": "Kod PIN", "icon": "mdi:textbox-password"},
     )
 
     # create groups for remote
@@ -314,7 +320,7 @@ async def async_setup(hass, config):
             ],
             "order": 3,
             "control": "hidden",
-            "friendly_name": "Wszystkie zakładki",
+            "friendly_name": "Wiadomości",
             "context_key_words": "wiadomości,informacje",
             "context_answer": "OK, wybierz pilotem kategorię, kanał i artykuł który mam przeczytać",
             "remote_group_view": "Audio",
