@@ -64,16 +64,13 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 device = await get_device(self.hass, self.device_config)
 
                 self.serial_number = device.vapix.params.system_serialnumber
-
-                for entry in self.hass.config_entries.async_entries(DOMAIN):
-                    if self.serial_number == entry.unique_id:
-                        return self._update_entry(
-                            entry,
-                            host=user_input[CONF_HOST],
-                            port=user_input[CONF_PORT],
-                        )
-
-                await self.async_set_unique_id(self.serial_number)
+                config_entry = await self.async_set_unique_id(self.serial_number)
+                if config_entry:
+                    return self._update_entry(
+                        config_entry,
+                        host=user_input[CONF_HOST],
+                        port=user_input[CONF_PORT],
+                    )
 
                 self.model = device.vapix.params.prodnbr
 
@@ -150,15 +147,14 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if discovery_info[CONF_HOST].startswith("169.254"):
             return self.async_abort(reason="link_local_address")
 
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if serial_number == entry.unique_id:
-                return self._update_entry(
-                    entry,
-                    host=discovery_info[CONF_HOST],
-                    port=discovery_info[CONF_PORT],
-                )
+        config_entry = await self.async_set_unique_id(serial_number)
+        if config_entry:
+            return self._update_entry(
+                config_entry,
+                host=discovery_info[CONF_HOST],
+                port=discovery_info[CONF_PORT],
+            )
 
-        await self.async_set_unique_id(serial_number)
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {
             "name": discovery_info["hostname"][:-7],
