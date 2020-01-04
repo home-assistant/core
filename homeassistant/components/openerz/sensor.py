@@ -83,9 +83,9 @@ class OpenERZSensor(Entity):
 
         try:
             self.last_api_response = requests.get(url, params=payload, headers=headers)
-        except requests.exceptions.ConnectionError as connection_error:
+        except requests.exceptions.RequestException as connection_error:
             _LOGGER.error(
-                "ConnectionError while making request to OpenERZ: %s", connection_error
+                "RequestException while making request to OpenERZ: %s", connection_error
             )
 
     def parse_api_response(self):
@@ -93,7 +93,7 @@ class OpenERZSensor(Entity):
 
         if not self.last_api_response.ok:
             _LOGGER.warning(
-                "Last request to OpenERZ was not succesful. Status code: %d",
+                "Last request to OpenERZ was not successful. Status code: %d",
                 self.last_api_response.status_code,
             )
             return None
@@ -104,25 +104,21 @@ class OpenERZSensor(Entity):
             return None
         result_list = response_json.get("result")
         first_scheduled_pickup = result_list[0]
-        if not (
-            first_scheduled_pickup["zip"] == self.zip
+        if (
+            str(first_scheduled_pickup["zip"]) == self.zip
             and first_scheduled_pickup["type"] == self.waste_type
         ):
-            _LOGGER.warning(
-                "Either zip or waste type does not match the ones specified in the configuration."
-            )
-            return None
-        return first_scheduled_pickup["date"]
+            return first_scheduled_pickup["date"]
+        _LOGGER.warning(
+            "Either zip or waste type does not match the ones specified in the configuration."
+        )
+        return None
 
     @property
     def name(self):
         """Return the name of the sensor."""
 
-        return (
-            f"ERZ - {self.friendly_name} ({self.zip})"
-            if self.friendly_name
-            else "Zürich Entsorgungs-Kalender"
-        )
+        return f"ERZ - {self.friendly_name} ({self.zip})"
 
     @property
     def state(self):

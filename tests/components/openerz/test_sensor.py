@@ -3,6 +3,7 @@ from datetime import datetime
 import unittest
 from unittest.mock import patch
 
+from requests.exceptions import RequestException
 from testfixtures import LogCapture
 
 from homeassistant.components.openerz.sensor import OpenERZSensor
@@ -57,6 +58,7 @@ class TestOpenERZSensor(unittest.TestCase):
             self.assertEqual(test_openerz.start_date, self.mock_datetime)
             self.assertIsNone(test_openerz.end_date)
             self.assertIsNone(test_openerz.last_api_response)
+            self.assertEqual(test_openerz.name, "ERZ - test_name (1234)")
             patched_update.assert_called_once()
 
     @patch(
@@ -64,7 +66,7 @@ class TestOpenERZSensor(unittest.TestCase):
         return_value=True,
     )
     def test_sensor_init_no_name(self, patched_update):
-        """Test whether all values initialized properly."""
+        """Test whether all values initialized properly when name not provided."""
         with patch("homeassistant.components.openerz.sensor.datetime") as patched_time:
             patched_time.now.return_value = self.mock_datetime
 
@@ -72,13 +74,14 @@ class TestOpenERZSensor(unittest.TestCase):
             test_openerz = OpenERZSensor(self.mock_config)
 
             self.assertEqual(test_openerz.friendly_name, "glass")
+            self.assertEqual(test_openerz.name, "ERZ - glass (1234)")
 
     @patch(
         "homeassistant.components.openerz.sensor.OpenERZSensor.update",
         return_value=True,
     )
     def test_sensor_update_start_date(self, patched_update):
-        """Test whether all values initialized properly."""
+        """Test whether start date is updated correctly."""
         with patch("homeassistant.components.openerz.sensor.datetime") as patched_time:
             patched_time.now.return_value = self.mock_datetime
             test_openerz = OpenERZSensor(self.mock_config)
@@ -96,7 +99,7 @@ class TestOpenERZSensor(unittest.TestCase):
         return_value=True,
     )
     def test_sensor_find_end_date(self, patched_update):
-        """Test whether all values initialized properly."""
+        """Test whether end date is correctly set."""
         with patch("homeassistant.components.openerz.sensor.datetime") as patched_time:
             patched_time.now.return_value = self.mock_datetime
             test_openerz = OpenERZSensor(self.mock_config)
@@ -113,7 +116,7 @@ class TestOpenERZSensor(unittest.TestCase):
         return_value=True,
     )
     def test_sensor_make_api_request(self, patched_update):
-        """Test whether all values initialized properly."""
+        """Test making API requests."""
         with patch(
             "homeassistant.components.openerz.sensor.requests"
         ) as patched_requests:
@@ -140,8 +143,6 @@ class TestOpenERZSensor(unittest.TestCase):
                     "sort": "date",
                 }
                 used_args, used_kwargs = patched_requests.get.call_args_list[0]
-                print(used_args)
-                print(used_kwargs)
                 self.assertEqual(used_args[0], expected_url)
                 self.assertDictEqual(used_kwargs["headers"], expected_headers)
                 self.assertDictEqual(used_kwargs["params"], expected_payload)
@@ -150,8 +151,37 @@ class TestOpenERZSensor(unittest.TestCase):
         "homeassistant.components.openerz.sensor.OpenERZSensor.update",
         return_value=True,
     )
+    def test_sensor_make_api_request_connection_error(self, patched_update):
+        """Test making API requests."""
+        with patch(
+            "homeassistant.components.openerz.sensor.requests.get"
+        ) as patched_get:
+            patched_get.side_effect = RequestException("Connection timed out")
+            with patch(
+                "homeassistant.components.openerz.sensor.datetime"
+            ) as patched_time:
+                patched_time.now.return_value = self.mock_datetime
+                test_openerz = OpenERZSensor(self.mock_config)
+                test_openerz.end_date = self.mock_datetime.replace(
+                    year=2020, month=1, day=10
+                )
+                with LogCapture() as captured_logs:
+                    test_openerz.make_api_request()
+                    captured_logs.check_present(
+                        (
+                            "homeassistant.components.openerz.sensor",
+                            "ERROR",
+                            "RequestException while making request to OpenERZ: Connection timed out",
+                        ),
+                        order_matters=False,
+                    )
+
+    @patch(
+        "homeassistant.components.openerz.sensor.OpenERZSensor.update",
+        return_value=True,
+    )
     def test_sensor_parse_api_response_ok(self, patched_update):
-        """Test whether all values initialized properly."""
+        """Test whether API response is parsed correctly."""
         with patch("homeassistant.components.openerz.sensor.datetime") as patched_time:
             patched_time.now.return_value = self.mock_datetime
             test_openerz = OpenERZSensor(self.mock_config)
@@ -172,8 +202,8 @@ class TestOpenERZSensor(unittest.TestCase):
         "homeassistant.components.openerz.sensor.OpenERZSensor.update",
         return_value=True,
     )
-    def test_sensor_parse_api_response_no_dates(self, patched_update):
-        """Test whether all values initialized properly."""
+    def test_sensor_parse_api_response_no_data(self, patched_update):
+        """Test whether API response is parsed correctly when no data returned."""
         with patch("homeassistant.components.openerz.sensor.datetime") as patched_time:
             patched_time.now.return_value = self.mock_datetime
             test_openerz = OpenERZSensor(self.mock_config)
@@ -203,7 +233,7 @@ class TestOpenERZSensor(unittest.TestCase):
         return_value=True,
     )
     def test_sensor_parse_api_response_wrong_zip(self, patched_update):
-        """Test whether all values initialized properly."""
+        """Test handling unexpected zip in API response."""
         with patch("homeassistant.components.openerz.sensor.datetime") as patched_time:
             patched_time.now.return_value = self.mock_datetime
             test_openerz = OpenERZSensor(self.mock_config)
@@ -236,7 +266,7 @@ class TestOpenERZSensor(unittest.TestCase):
         return_value=True,
     )
     def test_sensor_parse_api_response_wrong_type(self, patched_update):
-        """Test whether all values initialized properly."""
+        """Test handling unexpected waste type in API response."""
         with patch("homeassistant.components.openerz.sensor.datetime") as patched_time:
             patched_time.now.return_value = self.mock_datetime
             test_openerz = OpenERZSensor(self.mock_config)
@@ -269,7 +299,7 @@ class TestOpenERZSensor(unittest.TestCase):
         return_value=True,
     )
     def test_sensor_parse_api_response_not_ok(self, patched_update):
-        """Test whether all values initialized properly."""
+        """Test handling of an erroneous API response."""
         with patch("homeassistant.components.openerz.sensor.datetime") as patched_time:
             patched_time.now.return_value = self.mock_datetime
             test_openerz = OpenERZSensor(self.mock_config)
@@ -290,6 +320,34 @@ class TestOpenERZSensor(unittest.TestCase):
                     (
                         "homeassistant.components.openerz.sensor",
                         "WARNING",
-                        "Last request to OpenERZ was not succesful. Status code: 404",
+                        "Last request to OpenERZ was not successful. Status code: 404",
                     )
                 )
+
+    @patch(
+        "homeassistant.components.openerz.sensor.OpenERZSensor.update_start_date",
+        return_value=True,
+    )
+    @patch(
+        "homeassistant.components.openerz.sensor.OpenERZSensor.make_api_request",
+        return_value=True,
+    )
+    def test_sensor_update(self, patched_request, patched_start_date):
+        """Test whether state gets updated properly."""
+        with patch("homeassistant.components.openerz.sensor.datetime") as patched_time:
+            patched_time.now.return_value = self.mock_datetime
+
+            with patch(
+                "homeassistant.components.openerz.sensor.OpenERZSensor.update",
+                return_value=True,
+            ):
+                test_openerz = OpenERZSensor(self.mock_config)
+
+            response_data = {
+                "_metadata": {"total_count": 1},
+                "result": [{"zip": "1234", "type": "glass", "date": "2020-01-10"}],
+            }
+            test_openerz.last_api_response = MockAPIResponse(True, 200, response_data)
+            test_openerz.update()
+
+            self.assertEqual(test_openerz.state, "2020-01-10")
