@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from unittest.mock import call, patch
+from asynctest.mock import call, patch
 
 from asynctest import mock
 import pytest
