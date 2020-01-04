@@ -1,20 +1,14 @@
 """Tests for deCONZ config flow."""
 import asyncio
-from copy import deepcopy
 
-from asynctest import Mock, patch
+from asynctest import patch
 import pydeconz
 
 from homeassistant.components import ssdp
 from homeassistant.components.deconz import config_flow
 from homeassistant.components.deconz.const import CONF_BRIDGEID
 
-from .test_gateway import (
-    BRIDGEID,
-    DECONZ_WEB_REQUEST,
-    ENTRY_CONFIG,
-    setup_deconz_integration,
-)
+from .test_gateway import API_KEY, BRIDGEID, setup_deconz_integration
 
 from tests.common import MockConfigEntry
 
@@ -245,24 +239,33 @@ async def test_bridge_ssdp_discovery_not_deconz_bridge(hass):
     assert result["reason"] == "not_deconz_bridge"
 
 
-async def test_bridge_discovery_update_existing_entry(hass):
+async def test_bridge_ssdp_discovery_already_configured(hass):
     """Test if a discovered bridge has already been configured."""
-    entry = MockConfigEntry(
-        domain=config_flow.DOMAIN,
-        source="user",
-        data={config_flow.CONF_HOST: "1.2.3.4", config_flow.CONF_PORT: 80},
-        unique_id=BRIDGEID,
-    )
-    entry.add_to_hass(hass)
-
-    gateway = Mock()
-    gateway.config_entry = entry
-    hass.data[config_flow.DOMAIN] = {BRIDGEID: gateway}
+    gateway = await setup_deconz_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
-            ssdp.ATTR_SSDP_LOCATION: "http://mock-deconz/",
+            ssdp.ATTR_SSDP_LOCATION: "http://1.2.3.4:80/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.DECONZ_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: BRIDGEID,
+        },
+        context={"source": "ssdp"},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert gateway.config_entry.data[config_flow.CONF_HOST] == "1.2.3.4"
+
+
+async def test_bridge_ssdp_discovery_update_existing_entry(hass):
+    """Test if a discovered bridge has already been configured."""
+    gateway = await setup_deconz_integration(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://2.3.4.5:80/",
             ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.DECONZ_MANUFACTURERURL,
             ssdp.ATTR_UPNP_SERIAL: BRIDGEID,
         },
@@ -271,46 +274,33 @@ async def test_bridge_discovery_update_existing_entry(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "updated_instance"
-    assert entry.data[config_flow.CONF_HOST] == "mock-deconz"
+    assert gateway.config_entry.data[config_flow.CONF_HOST] == "2.3.4.5"
 
 
 async def test_bridge_discovery_dont_update_existing_hassio_entry(hass):
     """Test to ensure the SSDP discovery does not update an Hass.io entry."""
-    entry = MockConfigEntry(
-        domain=config_flow.DOMAIN,
-        source="hassio",
-        data={
-            config_flow.CONF_HOST: "core-deconz",
-            config_flow.CONF_BRIDGEID: "123ABC",
-        },
-        unique_id="123ABC",
-    )
-    entry.add_to_hass(hass)
-
-    gateway = Mock()
-    gateway.config_entry = entry
-    hass.data[config_flow.DOMAIN] = {"123ABC": gateway}
+    gateway = await setup_deconz_integration(hass, source="hassio")
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
-            ssdp.ATTR_SSDP_LOCATION: "http://mock-deconz/",
+            ssdp.ATTR_SSDP_LOCATION: "http://1.2.3.4:80/",
             ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.DECONZ_MANUFACTURERURL,
-            ssdp.ATTR_UPNP_SERIAL: "123ABC",
+            ssdp.ATTR_UPNP_SERIAL: BRIDGEID,
         },
         context={"source": "ssdp"},
     )
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert entry.data[config_flow.CONF_HOST] == "core-deconz"
+    assert gateway.config_entry.data[config_flow.CONF_HOST] == "1.2.3.4"
 
 
 async def test_create_entry(hass, aioclient_mock):
     """Test that _create_entry work and that bridgeid can be requested."""
     aioclient_mock.get(
-        "http://1.2.3.4:80/api/1234567890ABCDEF/config",
-        json={"bridgeid": BRIDGEID, "uuid": "456DEF"},
+        f"http://1.2.3.4:80/api/{API_KEY}/config",
+        json={"bridgeid": BRIDGEID},
         headers={"content-type": "application/json"},
     )
 
@@ -320,7 +310,7 @@ async def test_create_entry(hass, aioclient_mock):
     flow.deconz_config = {
         config_flow.CONF_HOST: "1.2.3.4",
         config_flow.CONF_PORT: 80,
-        config_flow.CONF_API_KEY: "1234567890ABCDEF",
+        config_flow.CONF_API_KEY: API_KEY,
     }
 
     result = await flow._create_entry()
@@ -330,8 +320,59 @@ async def test_create_entry(hass, aioclient_mock):
     assert result["data"] == {
         config_flow.CONF_HOST: "1.2.3.4",
         config_flow.CONF_PORT: 80,
-        config_flow.CONF_API_KEY: "1234567890ABCDEF",
+        config_flow.CONF_API_KEY: API_KEY,
     }
+
+
+async def test_create_entry_updates_configuration(hass, aioclient_mock):
+    """Test that _create_entry work and that bridgeid can be requested."""
+    gateway = await setup_deconz_integration(hass)
+
+    aioclient_mock.get(
+        f"http://2.3.4.5:80/api/{API_KEY}/config",
+        json={"bridgeid": BRIDGEID},
+        headers={"content-type": "application/json"},
+    )
+
+    flow = config_flow.DeconzFlowHandler()
+    flow.context = {}
+    flow.hass = hass
+    flow.deconz_config = {
+        config_flow.CONF_HOST: "2.3.4.5",
+        config_flow.CONF_PORT: 80,
+        config_flow.CONF_API_KEY: API_KEY,
+    }
+
+    result = await flow._create_entry()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "updated_instance"
+    assert gateway.config_entry.data[config_flow.CONF_HOST] == "2.3.4.5"
+
+
+async def test_create_entry_update_already_configured(hass, aioclient_mock):
+    """Test that _create_entry work and that bridgeid can be requested."""
+    await setup_deconz_integration(hass)
+
+    aioclient_mock.get(
+        f"http://1.2.3.4:80/api/{API_KEY}/config",
+        json={"bridgeid": BRIDGEID},
+        headers={"content-type": "application/json"},
+    )
+
+    flow = config_flow.DeconzFlowHandler()
+    flow.context = {}
+    flow.hass = hass
+    flow.deconz_config = {
+        config_flow.CONF_HOST: "1.2.3.4",
+        config_flow.CONF_PORT: 80,
+        config_flow.CONF_API_KEY: API_KEY,
+    }
+
+    result = await flow._create_entry()
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_create_entry_timeout(hass, aioclient_mock):
@@ -341,7 +382,7 @@ async def test_create_entry_timeout(hass, aioclient_mock):
     flow.deconz_config = {
         config_flow.CONF_HOST: "1.2.3.4",
         config_flow.CONF_PORT: 80,
-        config_flow.CONF_API_KEY: "1234567890ABCDEF",
+        config_flow.CONF_API_KEY: API_KEY,
     }
 
     with patch(
@@ -356,11 +397,7 @@ async def test_create_entry_timeout(hass, aioclient_mock):
 
 async def test_hassio_update_instance(hass):
     """Test we can update an existing config entry."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    entry_config = deepcopy(ENTRY_CONFIG)
-    gateway = await setup_deconz_integration(
-        hass, entry_config, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
@@ -382,17 +419,14 @@ async def test_hassio_update_instance(hass):
 
 async def test_hassio_dont_update_instance(hass):
     """Test we can update an existing config entry."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    await setup_deconz_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         data={
             config_flow.CONF_HOST: "1.2.3.4",
             config_flow.CONF_PORT: 80,
-            config_flow.CONF_API_KEY: "ABCDEF",
+            config_flow.CONF_API_KEY: API_KEY,
             config_flow.CONF_SERIAL: BRIDGEID,
         },
         context={"source": "hassio"},
@@ -411,7 +445,7 @@ async def test_hassio_confirm(hass):
             config_flow.CONF_HOST: "mock-deconz",
             config_flow.CONF_PORT: 80,
             config_flow.CONF_SERIAL: BRIDGEID,
-            config_flow.CONF_API_KEY: "1234567890ABCDEF",
+            config_flow.CONF_API_KEY: API_KEY,
         },
         context={"source": "hassio"},
     )
