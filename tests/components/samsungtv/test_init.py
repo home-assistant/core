@@ -26,7 +26,7 @@ MOCK_CONFIG = {
             CONF_HOST: "fake_host",
             CONF_NAME: "fake_name",
             CONF_PORT: 1234,
-            CONF_ON_ACTION: None,
+            CONF_ON_ACTION: [{"delay": "00:00:01"}],
         }
     ]
 }
@@ -37,7 +37,7 @@ REMOTE_CALL = {
     "method": "websocket",
     "port": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_PORT],
     "host": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_HOST],
-    "timeout": None,
+    "timeout": 1,
 }
 
 

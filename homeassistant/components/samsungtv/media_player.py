@@ -77,10 +77,9 @@ class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
     def __init__(
-        self, host, port, name, uuid, manufacturer=None, model=None, on_script=None,
+        self, host, port, name, uuid, manufacturer=None, model=None, on_script=None
     ):
         """Initialize the Samsung device."""
-
         self._name = name
         self._uuid = uuid
         self._manufacturer = manufacturer
