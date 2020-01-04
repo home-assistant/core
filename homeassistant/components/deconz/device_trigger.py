@@ -10,6 +10,7 @@ from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_DOMAIN,
     CONF_EVENT,
+    CONF_GESTURE,
     CONF_PLATFORM,
     CONF_TYPE,
 )
@@ -34,6 +35,12 @@ CONF_MOVE = "remote_moved"
 CONF_DOUBLE_TAP = "remote_double_tap"
 CONF_SHAKE = "remote_gyro_activated"
 CONF_FREE_FALL = "remote_falling"
+CONF_FLIP_90 = "remote_flip_90_degrees"
+CONF_FLIP_180 = "remote_flip_180_degrees"
+CONF_MOVE_ANY = "remote_moved_any_side"
+CONF_DOUBLE_TAP_ANY = "remote_double_tap_any_side"
+CONF_TURN_CW = "remote_turned_clockwise"
+CONF_TURN_CCW = "remote_turned_counter_clockwise"
 CONF_ROTATE_FROM_SIDE_1 = "remote_rotate_from_side_1"
 CONF_ROTATE_FROM_SIDE_2 = "remote_rotate_from_side_2"
 CONF_ROTATE_FROM_SIDE_3 = "remote_rotate_from_side_3"
@@ -189,9 +196,15 @@ AQARA_CUBE = {
     (CONF_DOUBLE_TAP, CONF_SIDE_4): 4004,
     (CONF_DOUBLE_TAP, CONF_SIDE_5): 1001,
     (CONF_DOUBLE_TAP, CONF_SIDE_6): 5005,
-    (CONF_AWAKE, ""): 7000,
-    (CONF_FREE_FALL, ""): 7008,
-    (CONF_SHAKE, ""): 7007,
+    (CONF_AWAKE, ""): {CONF_GESTURE: 0},
+    (CONF_SHAKE, ""): {CONF_GESTURE: 1},
+    (CONF_FREE_FALL, ""): {CONF_GESTURE: 2},
+    (CONF_FLIP_90, ""): {CONF_GESTURE: 3},
+    (CONF_FLIP_180, ""): {CONF_GESTURE: 4},
+    (CONF_MOVE_ANY, ""): {CONF_GESTURE: 5},
+    (CONF_DOUBLE_TAP_ANY, ""): {CONF_GESTURE: 6},
+    (CONF_TURN_CW, ""): {CONF_GESTURE: 7},
+    (CONF_TURN_CCW, ""): {CONF_GESTURE: 8},
 }
 
 AQARA_DOUBLE_WALL_SWITCH_MODEL = "lumi.remote.b286acn01"
@@ -319,9 +332,12 @@ async def async_attach_trigger(hass, config, action, automation_info):
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device = device_registry.async_get(config[CONF_DEVICE_ID])
 
-    trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
+    triggers = (config[CONF_TYPE], config[CONF_SUBTYPE])
 
-    trigger = REMOTES[device.model][trigger]
+    triggers = REMOTES[device.model][triggers]
+
+    if not isinstance(triggers, dict):
+        triggers = {CONF_EVENT: triggers}
 
     deconz_event = _get_deconz_event_from_device_id(hass, device.id)
     if deconz_event is None:
@@ -329,10 +345,13 @@ async def async_attach_trigger(hass, config, action, automation_info):
 
     event_id = deconz_event.serial
 
+    event_unique_id = {CONF_UNIQUE_ID: event_id}
+    event_data = {**event_unique_id, **triggers}
+
     event_config = {
         event.CONF_PLATFORM: "event",
         event.CONF_EVENT_TYPE: CONF_DECONZ_EVENT,
-        event.CONF_EVENT_DATA: {CONF_UNIQUE_ID: event_id, CONF_EVENT: trigger},
+        event.CONF_EVENT_DATA: event_data,
     }
 
     event_config = event.TRIGGER_SCHEMA(event_config)

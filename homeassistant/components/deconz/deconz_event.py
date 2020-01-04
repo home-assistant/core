@@ -1,5 +1,5 @@
 """Representation of a deCONZ remote."""
-from homeassistant.const import CONF_EVENT, CONF_ID
+from homeassistant.const import CONF_EVENT, CONF_GESTURE, CONF_ID
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
@@ -47,6 +47,8 @@ class DeconzEvent(DeconzBase):
                 CONF_UNIQUE_ID: self.serial,
                 CONF_EVENT: self._device.state,
             }
+            if hasattr(self._device, CONF_GESTURE) and self._device.gesture is not None:
+                data[CONF_GESTURE] = self._device.gesture
             self.gateway.hass.bus.async_fire(CONF_DECONZ_EVENT, data)
 
     async def async_update_device_registry(self):
