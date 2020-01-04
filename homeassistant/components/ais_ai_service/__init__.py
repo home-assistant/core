@@ -23,6 +23,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_OPEN_COVER,
+    SERVICE_CLOSE_COVER,
     STATE_ON,
     STATE_OFF,
     STATE_HOME,
@@ -2589,29 +2590,18 @@ async def async_setup(hass, config):
         hass,
         INTENT_CLIMATE_SET_TEMPERATURE,
         [
-            "Ustaw temperaturę [ogrzewania] [na] {temp} stopni [w] {item} ",
-            "Temperatura ogrzewania {temp} stopni [w] {item}",
-            "Ogrzewanie [w] {item} {temp} stopni",
-            "Ogrzewanie [w] {item} temperatura {temp} stopni",
-            "Ogrzewanie temperatura w {item} {temp} stopni",
+            "Ogrzewanie [w] {item} {temp} stopni[e]",
+            "Ogrzewanie [w] {item} temperatura {temp} stopni[e]",
         ],
     )
     async_register(
-        hass,
-        INTENT_CLIMATE_SET_AWAY,
-        ["Ogrzewanie [na] [w] [tryb] poza domem", "Ogrzewanie włącz [tryb] poza domem"],
+        hass, INTENT_CLIMATE_SET_AWAY, ["Ogrzewanie tryb poza domem"],
     )
     async_register(
-        hass,
-        INTENT_CLIMATE_UNSET_AWAY,
-        ["Ogrzewanie [na] [w] [tryb] w domu", "Ogrzewanie wyłącz [tryb] poza domem"],
+        hass, INTENT_CLIMATE_UNSET_AWAY, ["Ogrzewanie  tryb w domu"],
     )
-    async_register(
-        hass, INTENT_CLIMATE_SET_ALL_OFF, ["Wyłącz całe ogrzewnie", "Wyłącz ogrzewnie"]
-    )
-    async_register(
-        hass, INTENT_CLIMATE_SET_ALL_ON, ["Włącz całe ogrzewnie", "Włącz ogrzewnie"]
-    )
+    async_register(hass, INTENT_CLIMATE_SET_ALL_OFF, ["Wyłącz całe ogrzewnie"])
+    async_register(hass, INTENT_CLIMATE_SET_ALL_ON, ["Włącz całe ogrzewnie"])
     async_register(
         hass,
         INTENT_LAMPS_ON,
@@ -4309,7 +4299,7 @@ class AisCloseCover(intent.IntentHandler):
                 else:
                     yield from hass.services.async_call(
                         "cover",
-                        SERVICE_TURN_OFF,
+                        SERVICE_CLOSE_COVER,
                         {ATTR_ENTITY_ID: entity.entity_id},
                         blocking=True,
                     )
@@ -4520,7 +4510,7 @@ class AisClimateSetTemperature(intent.IntentHandler):
     """Handle AisClimateSetTemperature intents."""
 
     intent_type = INTENT_CLIMATE_SET_TEMPERATURE
-    slot_schema = {"temp": cv.positive_int, "item": cv.string}
+    slot_schema = {"temp": cv.string, "item": cv.string}
 
     @asyncio.coroutine
     def async_handle(self, intent_obj):
@@ -4528,8 +4518,16 @@ class AisClimateSetTemperature(intent.IntentHandler):
         try:
             hass = intent_obj.hass
             slots = self.async_validate_slots(intent_obj.slots)
-            temp = slots["temp"]["value"]
+            test = slots["temp"]["value"]
             name = slots["item"]["value"]
+            # get name from temp
+            m = re.search(r"\d+$", test)
+            if m:
+                temp = m.group()
+                name = name + "" + test.replace(temp, "")
+            else:
+                temp = test
+
             entity = _match_entity(hass, name)
         except Exception:
             text = None
@@ -4542,21 +4540,19 @@ class AisClimateSetTemperature(intent.IntentHandler):
                 # check if the device has already this temperature
                 attr = hass.states.get(entity.entity_id).attributes
                 if attr.get("temperature") == temp:
-                    msg = "{} ma już ustawioną temperaturę {}".format(entity.name, temp)
+                    msg = "{} ma już ustawioną temperaturę {} {}".format(
+                        entity.name, temp, "stopni"
+                    )
                 else:
                     yield from hass.services.async_call(
                         "climate",
                         "set_temperature",
-                        {
-                            ATTR_ENTITY_ID: entity.entity_id,
-                            "temperature": temp,
-                            "target_temp_high": temp + 2,
-                            "target_temp_low": temp - 6,
-                            "operation_mode": "Heat",
-                        },
+                        {ATTR_ENTITY_ID: entity.entity_id, "temperature": temp},
                         blocking=True,
                     )
-                    msg = "OK, ustawiono temperaturę {} w {}".format(temp, entity.name)
+                    msg = "OK, ustawiono temperaturę {} {} w {}".format(
+                        temp, "stopni", entity.name
+                    )
                     success = True
             else:
                 msg = "Na urządzeniu " + name + " nie można zmieniać temperatury."
@@ -4605,9 +4601,7 @@ class AisClimateSetAllOn(intent.IntentHandler):
         """Handle the intent."""
         hass = intent_obj.hass
         yield from hass.services.async_call(
-            "climate",
-            "set_operation_mode",
-            {"entity_id": "all", "operation_mode": "heat"},
+            "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "heat"},
         )
         message = "ok, całe ogrzewanie włączone"
         return message, True
@@ -4623,9 +4617,7 @@ class AisClimateSetAllOff(intent.IntentHandler):
         """Handle the intent."""
         hass = intent_obj.hass
         yield from hass.services.async_call(
-            "climate",
-            "set_operation_mode",
-            {"entity_id": "all", "operation_mode": "off"},
+            "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "off"},
         )
         message = "ok, całe ogrzewanie wyłączone"
         return message, True
