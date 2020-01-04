@@ -1,15 +1,15 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Sentry is already configured"
+            "already_configured": "Sentry er allerede konfigureret"
         },
         "error": {
-            "bad_dsn": "Invalid DSN",
-            "unknown": "Unexpected error"
+            "bad_dsn": "Ugyldigt DSN",
+            "unknown": "Uventet fejl"
         },
         "step": {
             "user": {
-                "description": "Enter your Sentry DSN",
+                "description": "Indtast dit Sentry-DSN",
                 "title": "Sentry"
             }
         },

@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "cannot_connect": "Impossible de se connecter au serveur GIOS",
             "invalid_sensors_data": "Donn\u00e9es des capteurs non valides pour cette station de mesure.",
             "wrong_station_id": "L'identifiant de la station de mesure n'est pas correct."
         },
