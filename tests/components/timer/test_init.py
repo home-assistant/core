@@ -11,6 +11,7 @@ from homeassistant.components.timer import (
     CONF_DURATION,
     CONF_ICON,
     CONF_NAME,
+    DEFAULT_DURATION,
     DOMAIN,
     EVENT_TIMER_CANCELLED,
     EVENT_TIMER_FINISHED,
@@ -63,20 +64,23 @@ async def test_config_options(hass):
                 CONF_ICON: "mdi:work",
                 CONF_DURATION: 10,
             },
+            "test_3": None,
         }
     }
 
     assert await async_setup_component(hass, "timer", config)
     await hass.async_block_till_done()
 
-    assert count_start + 2 == len(hass.states.async_entity_ids())
+    assert count_start + 3 == len(hass.states.async_entity_ids())
     await hass.async_block_till_done()
 
     state_1 = hass.states.get("timer.test_1")
     state_2 = hass.states.get("timer.test_2")
+    state_3 = hass.states.get("timer.test_3")
 
     assert state_1 is not None
     assert state_2 is not None
+    assert state_3 is not None
 
     assert STATUS_IDLE == state_1.state
     assert ATTR_ICON not in state_1.attributes
@@ -86,6 +90,9 @@ async def test_config_options(hass):
     assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
     assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
     assert "0:00:10" == state_2.attributes.get(ATTR_DURATION)
+
+    assert STATUS_IDLE == state_3.state
+    assert str(DEFAULT_DURATION) == state_3.attributes.get(CONF_DURATION)
 
 
 async def test_methods_and_events(hass):
