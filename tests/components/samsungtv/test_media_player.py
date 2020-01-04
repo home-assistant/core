@@ -2,9 +2,9 @@
 import asyncio
 from datetime import timedelta
 import logging
-from asynctest.mock import call, patch
 
 from asynctest import mock
+from asynctest.mock import call, patch
 import pytest
 from samsungctl import exceptions
 from websocket import WebSocketException
