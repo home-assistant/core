@@ -1,6 +1,6 @@
 """Support for tracking people."""
 import logging
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import voluptuous as vol
 
@@ -24,9 +24,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, State, callback
-from homeassistant.helpers import collection, entity_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
+from homeassistant.helpers import collection, config_validation as cv, entity_registry
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -77,6 +76,29 @@ async def async_create_person(hass, name, *, user_id=None, device_trackers=None)
     )
 
 
+@bind_hass
+async def async_add_user_device_tracker(
+    hass: HomeAssistant, user_id: str, device_tracker_entity_id: str
+):
+    """Add a device tracker to a person linked to a user."""
+    coll = cast(PersonStorageCollection, hass.data[DOMAIN][1])
+
+    for person in coll.async_items():
+        if person.get(ATTR_USER_ID) != user_id:
+            continue
+
+        device_trackers = person["device_trackers"]
+
+        if device_tracker_entity_id in device_trackers:
+            return
+
+        await coll.async_update_item(
+            person[collection.CONF_ID],
+            {"device_trackers": device_trackers + [device_tracker_entity_id]},
+        )
+        break
+
+
 CREATE_FIELDS = {
     vol.Required("name"): vol.All(str, vol.Length(min=1)),
     vol.Optional("user_id"): vol.Any(str, None),
@@ -123,6 +145,36 @@ class PersonStorageCollection(collection.StorageCollection):
         super().__init__(store, logger, id_manager)
         self.async_add_listener(self._collection_changed)
         self.yaml_collection = yaml_collection
+
+    async def async_load(self) -> None:
+        """Load the Storage collection."""
+        await super().async_load()
+        self.hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, self._entity_registry_updated
+        )
+
+    async def _entity_registry_updated(self, event) -> None:
+        """Handle entity registry updated."""
+        if event.data["action"] != "remove":
+            return
+
+        entity_id = event.data["entity_id"]
+
+        if split_entity_id(entity_id)[0] != "device_tracker":
+            return
+
+        for person in list(self.data.values()):
+            if entity_id not in person["device_trackers"]:
+                continue
+
+            await self.async_update_item(
+                person[collection.CONF_ID],
+                {
+                    "device_trackers": [
+                        devt for devt in person["device_trackers"] if devt != entity_id
+                    ]
+                },
+            )
 
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
