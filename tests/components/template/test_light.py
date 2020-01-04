@@ -40,6 +40,45 @@ class TestTemplateLight:
         """Stop everything that was started."""
         self.hass.stop()
 
+    def test_template_state_invalid(self):
+        """Test template state with render error."""
+        with assert_setup_component(1, "light"):
+            assert setup.setup_component(
+                self.hass,
+                "light",
+                {
+                    "light": {
+                        "platform": "template",
+                        "lights": {
+                            "test_template_light": {
+                                "value_template": "{{states.test['big.fat...']}}",
+                                "turn_on": {
+                                    "service": "light.turn_on",
+                                    "entity_id": "light.test_state",
+                                },
+                                "turn_off": {
+                                    "service": "light.turn_off",
+                                    "entity_id": "light.test_state",
+                                },
+                                "set_level": {
+                                    "service": "light.turn_on",
+                                    "data_template": {
+                                        "entity_id": "light.test_state",
+                                        "brightness": "{{brightness}}",
+                                    },
+                                },
+                            }
+                        },
+                    }
+                },
+            )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("light.test_template_light")
+        assert state.state == STATE_OFF
+
     def test_template_state_text(self):
         """Test the state text of a template."""
         with assert_setup_component(1, "light"):
