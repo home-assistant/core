@@ -1,9 +1,6 @@
 """Test Axis config flow."""
 from unittest.mock import Mock, patch
 
-import pytest
-
-import homeassistant
 from homeassistant.components import axis
 from homeassistant.components.axis import config_flow
 
@@ -77,8 +74,8 @@ async def test_flow_fails_already_configured(hass):
     with patch(
         "homeassistant.components.axis.config_flow.get_device",
         return_value=mock_coro(mock_device),
-    ), pytest.raises(homeassistant.data_entry_flow.AbortFlow):
-        await flow.async_step_user(
+    ):
+        result = await flow.async_step_user(
             user_input={
                 config_flow.CONF_HOST: "1.2.3.4",
                 config_flow.CONF_USERNAME: "user",
@@ -86,6 +83,35 @@ async def test_flow_fails_already_configured(hass):
                 config_flow.CONF_PORT: 80,
             }
         )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_flow_manual_input_updates_existing_configuration(hass):
+    """Test that config flow fails on already configured device."""
+    await setup_axis_integration(hass)
+
+    flow = config_flow.AxisFlowHandler()
+    flow.hass = hass
+    flow.context = {}
+
+    mock_device = Mock()
+    mock_device.vapix.params.system_serialnumber = MAC
+
+    with patch(
+        "homeassistant.components.axis.config_flow.get_device",
+        return_value=mock_coro(mock_device),
+    ):
+        result = await flow.async_step_user(
+            user_input={
+                config_flow.CONF_HOST: "2.3.4.5",
+                config_flow.CONF_USERNAME: "user",
+                config_flow.CONF_PASSWORD: "pass",
+                config_flow.CONF_PORT: 80,
+            }
+        )
+    assert result["type"] == "abort"
+    assert result["reason"] == "updated_configuration"
 
 
 async def test_flow_fails_faulty_credentials(hass):

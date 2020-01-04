@@ -65,8 +65,15 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 self.serial_number = device.vapix.params.system_serialnumber
 
+                for entry in self.hass.config_entries.async_entries(DOMAIN):
+                    if self.serial_number == entry.unique_id:
+                        return self._update_entry(
+                            entry,
+                            host=user_input[CONF_HOST],
+                            port=user_input[CONF_PORT],
+                        )
+
                 await self.async_set_unique_id(self.serial_number)
-                self._abort_if_unique_id_configured()
 
                 self.model = device.vapix.params.prodnbr
 
