@@ -119,7 +119,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         title = f"{self.model} - {self.serial_number}"
         return self.async_create_entry(title=title, data=data)
 
-    async def _update_entry(self, entry, host, port):
+    def _update_entry(self, entry, host, port):
         """Update existing entry."""
         if (
             entry.data[CONF_DEVICE][CONF_HOST] == host
@@ -145,7 +145,7 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if serial_number == entry.unique_id:
-                return await self._update_entry(
+                return self._update_entry(
                     entry,
                     host=discovery_info[CONF_HOST],
                     port=discovery_info[CONF_PORT],
