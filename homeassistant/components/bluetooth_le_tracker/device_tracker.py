@@ -55,11 +55,10 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 else:
                     name = new_devices[address]["name"]
                 _LOGGER.debug("Seen %s %s times", address, new_devices[address]["seen"])
-                if new_devices[address]["seen"] >= MIN_SEEN_NEW:
-                    _LOGGER.debug("Adding %s to tracked devices", address)
-                    devs_to_track.append(address)
-                else:
+                if new_devices[address]["seen"] < MIN_SEEN_NEW:
                     return
+                _LOGGER.debug("Adding %s to tracked devices", address)
+                devs_to_track.append(address)
             else:
                 _LOGGER.debug("Seen %s for the first time", address)
                 new_devices[address] = {"seen": 1, "name": name}
