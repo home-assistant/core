@@ -219,7 +219,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         return self._available
 
     async def _async_on_hass_stop(self, event):
-        """Event handler on HASS stop."""
+        """Event handler on Home Assistant stop."""
         with await self.hass.data[DLNA_DMR_DATA]["lock"]:
             await self._device.async_unsubscribe_services()
 

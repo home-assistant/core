@@ -165,7 +165,7 @@ def setup(hass, config):
         _LOGGER.debug("August HTTP session closed.")
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_http_session)
-    _LOGGER.debug("Registered for HASS stop event")
+    _LOGGER.debug("Registered for Home Assistant stop event")
 
     return setup_august(hass, config, api, authenticator)
 

@@ -323,7 +323,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         await self.async_update_ha_state()
 
     async def async_will_remove_from_hass(self):
-        """Remove listeners when removing automation from HASS."""
+        """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
         await self.async_disable()
 

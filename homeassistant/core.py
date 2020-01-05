@@ -192,7 +192,7 @@ class HomeAssistant:
         return self.state in (CoreState.starting, CoreState.running)
 
     def start(self) -> int:
-        """Start home assistant.
+        """Start Home Assistant.
 
         Note: This function is only used for testing.
         For regular use, use "await hass.run()".
@@ -217,7 +217,7 @@ class HomeAssistant:
         This method is a coroutine.
         """
         if self.state != CoreState.not_running:
-            raise RuntimeError("HASS is already running")
+            raise RuntimeError("Home Assistant is already running")
 
         # _async_stop will set this instead of stopping the loop
         self._stopped = asyncio.Event()
