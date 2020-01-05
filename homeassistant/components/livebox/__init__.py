@@ -89,7 +89,7 @@ async def async_setup_entry(hass, config_entry):
 
         async def async_livebox_reboot(call):
             """Handle reboot service call."""
-            await bridge.system.reboot()
+            await session.system.reboot()
 
         hass.services.async_register(DOMAIN, "reboot", async_livebox_reboot)
 
