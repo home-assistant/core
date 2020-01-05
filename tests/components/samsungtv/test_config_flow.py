@@ -274,10 +274,18 @@ async def test_ssdp_already_configured(hass, remote):
         DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
     )
     assert result["type"] == "create_entry"
+    assert result["data"][CONF_MANUFACTURER] is None
+    assert result["data"][CONF_MODEL] is None
+    assert result["data"][CONF_ID] is None
 
     # failed as already configured
-    result = await hass.config_entries.flow.async_init(
+    result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "ssdp"}, data=MOCK_SSDP_DATA
     )
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "already_configured"
+
+    # check updated device info
+    assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
+    assert result["data"][CONF_MODEL] == "fake_model"
+    assert result["data"][CONF_ID] == "fake_uuid"
