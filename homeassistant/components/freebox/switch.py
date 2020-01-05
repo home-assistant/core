@@ -6,7 +6,9 @@ from aiofreepybox import Freepybox
 from aiofreepybox.exceptions import InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 
@@ -18,7 +20,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     pass
 
 
-async def async_setup_entry(hass, entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the switch."""
     fbx = hass.data[DOMAIN]
     fbx_conf = await fbx.system.get_config()

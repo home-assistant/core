@@ -4,8 +4,10 @@ from typing import Dict
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN, TRACKER_UPDATE
 
@@ -17,8 +19,10 @@ async def async_get_scanner(hass, config):
     pass
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Validate the configuration and return a Freebox scanner."""
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up the device_tracker."""
     fbx = hass.data[DOMAIN]
     devices = await fbx.lan.get_hosts_list()
 
