@@ -78,7 +78,7 @@ def hass_storage():
 
 @pytest.fixture
 def hass(loop, hass_storage):
-    """Fixture to provide a test instance of HASS."""
+    """Fixture to provide a test instance of Home Assistant."""
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 
     yield hass

@@ -88,7 +88,7 @@ async def validate_installed_app(api, installed_app_id: str):
 
 
 def validate_webhook_requirements(hass: HomeAssistantType) -> bool:
-    """Ensure HASS is setup properly to receive webhooks."""
+    """Ensure Home Assistant is setup properly to receive webhooks."""
     if hass.components.cloud.async_active_subscription():
         return True
     if hass.data[DOMAIN][CONF_CLOUDHOOK_URL] is not None:

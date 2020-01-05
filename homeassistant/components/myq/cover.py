@@ -97,7 +97,7 @@ class MyQDevice(CoverDevice):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._device.device_id
 
     async def async_close_cover(self, **kwargs):
