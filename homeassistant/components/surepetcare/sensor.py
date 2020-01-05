@@ -26,6 +26,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Sure PetCare Flaps sensors."""
+    if discovery_info is None:
+        return
+
     spc = hass.data[DATA_SURE_PETCARE][SPC]
     async_add_entities(
         [
