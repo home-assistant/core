@@ -51,7 +51,7 @@ class PiHoleSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique id of the device."""
-        return f"{self.pi_hole.api.host}-{self._name}"
+        return f"{self.pi_hole.api.host}-{self.name}"
 
     @property
     def icon(self):
