@@ -1,0 +1,1 @@
+"""The Flick Electric integration."""

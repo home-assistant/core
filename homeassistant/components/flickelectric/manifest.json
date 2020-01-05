@@ -1,0 +1,11 @@
+{
+  "domain": "flickelectric",
+  "name": "Flick Electric",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/components/flickelectric",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [
+    "@ZephireNZ"
+  ]
+}
