@@ -1,5 +1,6 @@
 """The tests for the person component."""
 import logging
+from unittest.mock import patch
 
 import pytest
 
@@ -16,9 +17,10 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     EVENT_HOMEASSISTANT_START,
+    SERVICE_RELOAD,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, State
+from homeassistant.core import Context, CoreState, State
 from homeassistant.helpers import collection, entity_registry
 from homeassistant.setup import async_setup_component
 
@@ -703,3 +705,59 @@ async def test_add_user_device_tracker(hass, storage_setup, hass_read_only_user)
         "device_tracker.on_create",
         "device_tracker.added",
     ]
+
+
+async def test_reload(hass, hass_admin_user):
+    """Test reloading the YAML config."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {"name": "Person 1", "id": "id-1"},
+                {"name": "Person 2", "id": "id-2"},
+            ]
+        },
+    )
+
+    assert len(hass.states.async_entity_ids()) == 2
+
+    state_1 = hass.states.get("person.person_1")
+    state_2 = hass.states.get("person.person_2")
+    state_3 = hass.states.get("person.person_3")
+
+    assert state_1 is not None
+    assert state_1.name == "Person 1"
+    assert state_2 is not None
+    assert state_2.name == "Person 2"
+    assert state_3 is None
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            DOMAIN: [
+                {"name": "Person 1-updated", "id": "id-1"},
+                {"name": "Person 3", "id": "id-3"},
+            ]
+        },
+    ), patch("homeassistant.config.find_config_file", return_value=""):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 2
+
+    state_1 = hass.states.get("person.person_1")
+    state_2 = hass.states.get("person.person_2")
+    state_3 = hass.states.get("person.person_3")
+
+    assert state_1 is not None
+    assert state_1.name == "Person 1-updated"
+    assert state_2 is None
+    assert state_3 is not None
+    assert state_3.name == "Person 3"

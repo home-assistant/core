@@ -19,13 +19,26 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
+    SERVICE_RELOAD,
     STATE_HOME,
     STATE_NOT_HOME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
-from homeassistant.helpers import collection, config_validation as cv, entity_registry
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+    split_entity_id,
+)
+from homeassistant.helpers import (
+    collection,
+    config_validation as cv,
+    entity_registry,
+    service,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -302,6 +315,17 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
                 )
 
     hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
+
+    async def async_reload_yaml(call: ServiceCall):
+        """Reload YAML."""
+        conf = await entity_component.async_prepare_reload(skip_reset=True)
+        if conf is None:
+            return
+        await yaml_collection.async_load(await filter_yaml_data(hass, conf[DOMAIN]))
+
+    service.async_register_admin_service(
+        hass, DOMAIN, SERVICE_RELOAD, async_reload_yaml
+    )
 
     return True
 
