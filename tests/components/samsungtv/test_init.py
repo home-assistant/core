@@ -3,7 +3,6 @@ from unittest.mock import call, patch
 
 import pytest
 
-from homeassistant.components import samsungtv
 from homeassistant.components.media_player.const import DOMAIN, SUPPORT_TURN_ON
 from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
@@ -18,6 +17,7 @@ from homeassistant.const import (
     CONF_PORT,
     SERVICE_VOLUME_UP,
 )
+from homeassistant.setup import async_setup_component
 
 ENTITY_ID = f"{DOMAIN}.fake_name"
 MOCK_CONFIG = {
@@ -52,7 +52,7 @@ def remote_fixture():
 
 async def test_setup(hass, remote):
     """Test Samsung TV integration is setup."""
-    await samsungtv.async_setup(hass, MOCK_CONFIG)
+    await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
     await hass.async_block_till_done()
     state = hass.states.get(ENTITY_ID)
 
