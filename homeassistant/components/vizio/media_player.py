@@ -202,7 +202,7 @@ class VizioDevice(MediaPlayerDevice):
         return self._supported_commands
 
     @property
-    def _unique_id(self):
+    def unique_id(self):
         """Return the unique id of the device."""
         return self._unique_id
 
