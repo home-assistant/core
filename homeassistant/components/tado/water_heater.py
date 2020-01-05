@@ -215,7 +215,7 @@ class TadoWaterHeater(WaterHeaterDevice):
 
     def update(self):
         """Handle update callbacks."""
-        _LOGGER.debug("Updating climate platform for zone %d", self.zone_id)
+        _LOGGER.debug("Updating water_heater platform for zone %d", self.zone_id)
         try:
             data = self._tado.data["zone"][self.zone_id]
         except KeyError:
