@@ -157,6 +157,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     address = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
 
+    if address in hass.data[ANDROIDTV_DOMAIN]:
+        _LOGGER.warning("Platform already setup on %s, skipping", address)
+        return
+
     if CONF_ADB_SERVER_IP not in config:
         # Use "adb_shell" (Python ADB implementation)
         if CONF_ADBKEY not in config:
@@ -218,10 +222,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "Could not connect to %s at %s %s", device_name, address, adb_log
         )
         raise PlatformNotReady
-
-    if address in hass.data[ANDROIDTV_DOMAIN]:
-        _LOGGER.warning("Platform already setup on %s, skipping", address)
-        return
 
     device_args = [
         aftv,
