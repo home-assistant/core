@@ -6,6 +6,7 @@ from androidtv.exceptions import LockNotAcquiredException
 
 from homeassistant.components.androidtv.media_player import (
     ANDROIDTV_DOMAIN,
+    ATTR_COMMAND,
     ATTR_DEVICE_PATH,
     ATTR_LOCAL_PATH,
     CONF_ADB_SERVER_IP,
@@ -612,7 +613,7 @@ async def test_adb_command(hass):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
             SERVICE_ADB_COMMAND,
-            {ATTR_ENTITY_ID: entity_id, "command": command},
+            {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
             blocking=True,
         )
 
@@ -640,7 +641,7 @@ async def test_adb_command_key(hass):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
             SERVICE_ADB_COMMAND,
-            {ATTR_ENTITY_ID: entity_id, "command": command},
+            {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
             blocking=True,
         )
 
@@ -668,7 +669,7 @@ async def test_adb_command_get_properties(hass):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
             SERVICE_ADB_COMMAND,
-            {ATTR_ENTITY_ID: entity_id, "command": command},
+            {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
             blocking=True,
         )
 
