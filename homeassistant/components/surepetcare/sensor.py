@@ -32,22 +32,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     spc = hass.data[DATA_SURE_PETCARE][SPC]
     async_add_entities(
         [
-            FlapBattery(thing[CONF_ID], thing[CONF_NAME], spc)
-            for thing in spc.ids
-            if thing[CONF_TYPE] == SureThingID.FLAP.name
-        ]
+            FlapBattery(entity[CONF_ID], entity[CONF_NAME], spc)
+            for entity in spc.ids
+            if entity[CONF_TYPE] == SureThingID.FLAP.name
+        ],
+        True,
     )
 
 
 class FlapBattery(Entity):
     """Sure Petcare Flap."""
 
-    def __init__(self, _id: int, name: str, spc, data: dict = None):
+    def __init__(self, _id: int, name: str, spc):
         """Initialize a Sure Petcare Flap battery sensor."""
         self._id = _id
         self._name = f"Flap {name.capitalize()} Battery Level"
         self._spc = spc
-        self._unit_of_measurement = "%"
         self._state = self._spc.states[SureThingID.FLAP.name][self._id].get("data")
 
     @property
@@ -90,13 +90,13 @@ class FlapBattery(Entity):
             try:
                 voltage_per_battery = float(self._state["battery"]) / 4
                 attributes = {
-                    ATTR_VOLTAGE: f"{float(self._state['battery']):.2f} V",
-                    f"{ATTR_VOLTAGE}_per_battery": f"{voltage_per_battery:.2f} V",
+                    ATTR_VOLTAGE: f"{float(self._state['battery']):.2f}",
+                    f"{ATTR_VOLTAGE}_per_battery": f"{voltage_per_battery:.2f}",
                 }
             except (KeyError, TypeError) as error:
                 attributes = self._state
                 _LOGGER.error(
-                    "error getting device state attributes from %s: %s\n\n%s",
+                    "Error getting device state attributes from %s: %s\n\n%s",
                     self._name,
                     error,
                     self._state,
@@ -107,7 +107,7 @@ class FlapBattery(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._unit_of_measurement
+        return "%"
 
     async def async_update(self):
         """Get the latest data and update the state."""

@@ -37,11 +37,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         sure_type = thing[CONF_TYPE]
 
         if sure_type == SureThingID.FLAP.name:
-            thing = Flap(sure_id, thing[CONF_NAME], spc)
+            entity = Flap(sure_id, thing[CONF_NAME], spc)
         elif sure_type == SureThingID.PET.name:
-            thing = Pet(sure_id, thing[CONF_NAME], spc)
+            entity = Pet(sure_id, thing[CONF_NAME], spc)
 
-        entities.append(thing)
+        entities.append(entity)
 
     async_add_entities(entities, True)
 
@@ -146,7 +146,6 @@ class Flap(SurePetcareBinarySensor):
                     "locking_mode": self._state["locking"]["mode"],
                     "device_rssi": self._state["signal"]["device_rssi"],
                     "hub_rssi": self._state["signal"]["hub_rssi"],
-                    "version": self._state["version"],
                 }
 
             except (KeyError, TypeError) as error:
