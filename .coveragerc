@@ -244,7 +244,10 @@ omit =
     homeassistant/components/foscam/const.py
     homeassistant/components/foursquare/*
     homeassistant/components/free_mobile/notify.py
-    homeassistant/components/freebox/*
+    homeassistant/components/freebox/__init__.py
+    homeassistant/components/freebox/device_tracker.py
+    homeassistant/components/freebox/sensor.py
+    homeassistant/components/freebox/switch.py
     homeassistant/components/fritz/device_tracker.py
     homeassistant/components/fritzbox/*
     homeassistant/components/fritzbox_callmonitor/sensor.py

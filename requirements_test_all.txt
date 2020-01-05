@@ -61,6 +61,9 @@ aiobotocore==0.11.1
 # homeassistant.components.esphome
 aioesphomeapi==2.6.1
 
+# homeassistant.components.freebox
+aiofreepybox==0.0.8
+
 # homeassistant.components.homekit_controller
 aiohomekit[IP]==0.2.25
 
