@@ -13,7 +13,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    BATTERY_ICON,
     CONF_DATA,
     DATA_SURE_PETCARE,
     SPC,
@@ -55,7 +54,6 @@ class FlapBattery(Entity):
         self._name = f"Flap {name.capitalize()} Battery Level"
         self._household_id = household_id
         self._unit_of_measurement = "%"
-        self._icon = BATTERY_ICON
         self._state = {}
 
     @property
