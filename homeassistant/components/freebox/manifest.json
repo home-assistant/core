@@ -6,5 +6,5 @@
   "requirements": ["aiofreepybox==0.0.8"],
   "dependencies": [],
   "after_dependencies": ["discovery"],
-  "codeowners": ["@snoof85"]
+  "codeowners": ["@snoof85", "@Quentame"]
 }
