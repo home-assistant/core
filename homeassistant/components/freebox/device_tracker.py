@@ -26,7 +26,6 @@ async def async_setup_entry(
     fbx = hass.data[DOMAIN]
     devices = await fbx.lan.get_hosts_list()
 
-    _LOGGER.error(devices)
     for device in devices:
         _LOGGER.debug("Adding device_tracker for %s", device["primary_name"])
 
