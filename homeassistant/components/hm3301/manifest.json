@@ -1,0 +1,10 @@
+{
+  "domain": "hm3301",
+  "name": "HM3301",
+  "documentation": "https://www.home-assistant.io/integrations/hm3301",
+  "requirements": [
+      "smbus2"
+    ],
+  "dependencies": [],
+  "codeowners": []
+}
