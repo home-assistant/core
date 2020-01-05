@@ -8,7 +8,8 @@ DEFAULT_ICON = "mdi:cat"
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=3)
 
 DATA_SURE_PETCARE = f"data_{DOMAIN}"
-DATA_SUREPY = "surepy"
+SPC = "spc"
+SUREPY = "surepy"
 
 CONF_HOUSEHOLD_ID = "household_id"
 CONF_FLAPS = "flaps"

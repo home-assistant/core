@@ -1,18 +1,20 @@
-"""Support for Sure PetCare Flaps binary sensors."""
+"""Support for Sure PetCare Flaps/Pets binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import DEVICE_CLASS_LOCK, BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_LOCK,
+    DEVICE_CLASS_PRESENCE,
+    BinarySensorDevice,
+)
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     CONF_DATA,
-    CONF_HOUSEHOLD_ID,
     DATA_SURE_PETCARE,
     DEFAULT_DEVICE_CLASS,
-    DEFAULT_ICON,
-    SURE_IDS,
+    SPC,
     TOPIC_UPDATE,
     SureLocationID,
     SureLockStateID,
@@ -24,23 +26,23 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Sure PetCare Flaps sensors based on a config entry."""
-    if not discovery_info:
-        return
-
     entities = []
 
-    for thing in hass.data[DATA_SURE_PETCARE][SURE_IDS]:
+    spc = hass.data[DATA_SURE_PETCARE][SPC]
+
+    for thing in spc.ids:
         sure_id = thing[CONF_ID]
         sure_type = thing[CONF_TYPE]
         sure_data = thing[CONF_DATA]
 
-        if sure_id not in hass.data[DATA_SURE_PETCARE][sure_type]:
-            if sure_type == SureThingID.FLAP.name:
-                hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
-                entities.append(Flap(sure_id, thing[CONF_NAME]))
-            elif sure_type == SureThingID.PET.name:
-                hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
-                entities.append(Pet(sure_id, thing[CONF_NAME]))
+        if sure_type == SureThingID.FLAP.name:
+            hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
+            thing = Flap(sure_id, thing[CONF_NAME], spc.household_id)
+        elif sure_type == SureThingID.PET.name:
+            hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
+            thing = Pet(sure_id, thing[CONF_NAME], spc.household_id)
+
+        entities.append(thing)
 
     async_add_entities(entities, True)
 
@@ -49,13 +51,17 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Sure Petcare Entities."""
 
     def __init__(
-        self, _id: int, name: str, icon=None, device_class=None, sure_type=None
+        self,
+        _id: int,
+        name: str,
+        household_id: int,
+        device_class: str,
+        sure_type: SureThingID,
     ):
         """Initialize a Sure Petcare binary sensor."""
         self._id = _id
         self._name = name
-        self._unit_of_measurement = "%"
-        self._icon = icon
+        self._household_id = household_id
         self._device_class = device_class
         self._sure_type = sure_type
         self._state = {}
@@ -86,33 +92,16 @@ class SurePetcareBinarySensor(BinarySensorDevice):
         return DEFAULT_DEVICE_CLASS if not self._device_class else self._device_class
 
     @property
-    def icon(self):
-        """Return the device class."""
-        return DEFAULT_ICON if not self._icon else self._icon
-
-    @property
     def unique_id(self):
         """Return an unique ID."""
         return f"{self._household_id}-{self._id}"
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
-
     async def async_update(self):
         """Get the latest data and update the state."""
-        try:
-            self._state = self._hass.data[DATA_SURE_PETCARE][self._sure_type][self._id]
-        except (AttributeError, KeyError, TypeError) as error:
-            _LOGGER.debug("Async_update error: %s", error)
+        self._state = self.hass.data[DATA_SURE_PETCARE][self._sure_type][self._id]
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        # pylint: disable=attribute-defined-outside-init
-        self._household_id = self.hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
-        self._data = self.hass.data[DATA_SURE_PETCARE][self._sure_type]
 
         @callback
         def update():
@@ -134,14 +123,14 @@ class SurePetcareBinarySensor(BinarySensorDevice):
 class Flap(SurePetcareBinarySensor):
     """Sure Petcare Flap."""
 
-    def __init__(self, _id: int, name: str, hass=None):
+    def __init__(self, _id: int, name: str, household_id: int):
         """Initialize a Sure Petcare Flap."""
         super().__init__(
             _id,
             f"Flap {name.capitalize()}",
-            device_class=DEVICE_CLASS_LOCK,
-            sure_type=SureThingID.FLAP.name,
-            hass=hass,
+            household_id,
+            DEVICE_CLASS_LOCK,
+            SureThingID.FLAP.name,
         )
 
     @property
@@ -166,7 +155,7 @@ class Flap(SurePetcareBinarySensor):
             }
 
         except (KeyError, TypeError) as error:
-            _LOGGER.debug(
+            _LOGGER.error(
                 "Error getting device state attributes from %s: %s\n\n%s",
                 self._name,
                 error,
@@ -180,15 +169,14 @@ class Flap(SurePetcareBinarySensor):
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
-    def __init__(self, _id: int, name: str, hass=None):
+    def __init__(self, _id: int, name: str, household_id: int):
         """Initialize a Sure Petcare Pet."""
         super().__init__(
             _id,
             f"Pet {name.capitalize()}",
-            icon="mdi:cat",
-            device_class="presence",
-            sure_type=SureThingID.PET.name,
-            hass=hass,
+            household_id,
+            DEVICE_CLASS_PRESENCE,
+            SureThingID.PET.name,
         )
 
     @property

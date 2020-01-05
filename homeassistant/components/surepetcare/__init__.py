@@ -1,7 +1,12 @@
 """Support for Sure Petcare cat/pet flaps."""
 import logging
 
-from surepy import SurePetcare, SurePetcareError
+from surepy import (
+    SurePetcare,
+    SurePetcareAuthenticationError,
+    SurePetcareConnectionError,
+    SurePetcareError,
+)
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -23,10 +28,9 @@ from .const import (
     CONF_HOUSEHOLD_ID,
     CONF_PETS,
     DATA_SURE_PETCARE,
-    DATA_SUREPY,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    SURE_IDS,
+    SPC,
     TOPIC_UPDATE,
     SureThingID,
 )
@@ -34,14 +38,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-SCAN_INTERVAL = DEFAULT_SCAN_INTERVAL
-
 FLAP_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string},
+    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string}
 )
 
 PET_SCHEMA = vol.Schema(
-    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string},
+    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string}
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -57,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
             }
-        ),
+        )
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -65,64 +67,63 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Initialize the Sure Petcare component."""
-    # config file data
     conf = config[DOMAIN]
 
+    # update interval
+    scan_interval = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+
     # shared data
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][CONF_SCAN_INTERVAL] = conf[CONF_SCAN_INTERVAL]
-    hass.data[DATA_SURE_PETCARE] = {}
-    hass.data[DATA_SURE_PETCARE][CONF_USERNAME] = conf[CONF_USERNAME]
-    hass.data[DATA_SURE_PETCARE][CONF_PASSWORD] = conf[CONF_PASSWORD]
-    hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID] = conf[CONF_HOUSEHOLD_ID]
-    hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name] = {}
-    hass.data[DATA_SURE_PETCARE][SureThingID.PET.name] = {}
+    hass.data[DOMAIN] = hass.data[DATA_SURE_PETCARE] = {}
 
     # sure petcare api connection
-    hass.data[DATA_SURE_PETCARE][DATA_SUREPY] = SurePetcare(
-        conf[CONF_USERNAME],
-        conf[CONF_PASSWORD],
-        conf[CONF_HOUSEHOLD_ID],
-        hass.loop,
-        async_get_clientsession(hass),
-        debug=True,
-    )
-
-    if not hass.data[DATA_SURE_PETCARE][DATA_SUREPY]:
-        _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials?!",)
+    try:
+        surepy = SurePetcare(
+            conf[CONF_USERNAME],
+            conf[CONF_PASSWORD],
+            conf[CONF_HOUSEHOLD_ID],
+            hass.loop,
+            async_get_clientsession(hass),
+            debug=True,
+        )
+    except SurePetcareAuthenticationError:
+        _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
+        return False
+    except (SurePetcareError, SurePetcareConnectionError) as error:
+        _LOGGER.error("Unable to connect to surepetcare.io: Wrong %s!", error)
         return False
 
     # add flaps
-    hass.data[DATA_SURE_PETCARE][SURE_IDS] = [
+    things = [
         {
             CONF_NAME: flap[CONF_NAME],
             CONF_ID: flap[CONF_ID],
             CONF_TYPE: SureThingID.FLAP.name,
-            CONF_DATA: await hass.data[DATA_SURE_PETCARE][DATA_SUREPY].get_flap_data(
-                flap[CONF_ID]
-            ),
+            CONF_DATA: await surepy.get_flap_data(flap[CONF_ID]),
         }
         for flap in conf[CONF_FLAPS]
     ]
 
     # add pets
-    hass.data[DATA_SURE_PETCARE][SURE_IDS].extend(
+    things.extend(
         [
             {
                 CONF_NAME: pet[CONF_NAME],
                 CONF_ID: pet[CONF_ID],
                 CONF_TYPE: SureThingID.PET.name,
-                CONF_DATA: await hass.data[DATA_SURE_PETCARE][DATA_SUREPY].get_pet_data(
-                    pet[CONF_ID]
-                ),
+                CONF_DATA: await surepy.get_pet_data(pet[CONF_ID]),
             }
             for pet in conf[CONF_PETS]
         ]
     )
 
-    spc_api = SurePetcareAPI(hass)
+    spc_api = hass.data[DATA_SURE_PETCARE][SPC] = SurePetcareAPI(
+        hass, surepy, things, conf[CONF_HOUSEHOLD_ID]
+    )
 
-    async_track_time_interval(hass, spc_api.async_update, SCAN_INTERVAL)
+    # initial update
+    await spc_api.async_update()
+
+    async_track_time_interval(hass, spc_api.async_update, scan_interval)
 
     # load platforms
     hass.async_create_task(
@@ -138,34 +139,38 @@ async def async_setup(hass, config):
 class SurePetcareAPI:
     """Define a generic Sure Petcare object."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, surepy, ids, household_id):
         """Initialize the Sure Petcare object."""
-        self._hass = hass
+        self.hass = hass
+        self.surepy = surepy
+        self.household_id = household_id
+        self.ids = ids
+        self.states = {}
 
-    async def async_update(self, args):
+    async def async_update(self, args=None):
         """Refresh Sure Petcare data."""
-        surepy = self._hass.data[DATA_SURE_PETCARE][DATA_SUREPY]
-
-        if SureThingID.FLAP.name not in self._hass.data[DATA_SURE_PETCARE]:
-            self._hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name] = {}
-
-        if SureThingID.PET.name not in self._hass.data[DATA_SURE_PETCARE]:
-            self._hass.data[DATA_SURE_PETCARE][SureThingID.PET.name] = {}
-
-        for thing in self._hass.data[DATA_SURE_PETCARE][SURE_IDS]:
+        for thing in self.ids:
             sure_id = thing[CONF_ID]
             sure_type = thing[CONF_TYPE]
 
             try:
                 if sure_type == SureThingID.FLAP.name:
-                    self._hass.data[DATA_SURE_PETCARE][sure_type][
-                        sure_id
-                    ] = await surepy.get_flap_data(sure_id)
-                elif sure_type == SureThingID.PET.name:
-                    self._hass.data[DATA_SURE_PETCARE][sure_type][
-                        sure_id
-                    ] = await surepy.get_pet_data(sure_id)
-            except SurePetcareError as error:
-                _LOGGER.debug("Unable to retrieve data from surepetcare.io: %s", error)
+                    if SureThingID.FLAP.name not in self.hass.data[DATA_SURE_PETCARE]:
+                        self.hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name] = {}
 
-        async_dispatcher_send(self._hass, TOPIC_UPDATE)
+                    self.hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name][
+                        sure_id
+                    ] = await self.surepy.get_flap_data(sure_id)
+
+                elif sure_type == SureThingID.PET.name:
+                    if SureThingID.PET.name not in self.hass.data[DATA_SURE_PETCARE]:
+                        self.hass.data[DATA_SURE_PETCARE][SureThingID.PET.name] = {}
+
+                    self.hass.data[DATA_SURE_PETCARE][SureThingID.PET.name][
+                        sure_id
+                    ] = await self.surepy.get_pet_data(sure_id)
+
+            except SurePetcareError as error:
+                _LOGGER.error("Unable to retrieve data from surepetcare.io: %s", error)
+
+        async_dispatcher_send(self.hass, TOPIC_UPDATE)

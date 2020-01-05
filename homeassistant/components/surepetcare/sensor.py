@@ -1,6 +1,5 @@
-"""Support for Sure PetCare Flaps binary sensors."""
+"""Support for Sure PetCare Flaps/Pets sensors."""
 import logging
-import pprint
 
 from homeassistant.const import (
     ATTR_VOLTAGE,
@@ -16,11 +15,10 @@ from homeassistant.helpers.entity import Entity
 from .const import (
     BATTERY_ICON,
     CONF_DATA,
-    CONF_HOUSEHOLD_ID,
     DATA_SURE_PETCARE,
+    SPC,
     SURE_BATT_VOLTAGE_DIFF,
     SURE_BATT_VOLTAGE_LOW,
-    SURE_IDS,
     TOPIC_UPDATE,
     SureThingID,
 )
@@ -29,13 +27,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up Sure PetCare Flaps sensors based on a config entry."""
-    if not discovery_info:
-        return
-
+    """Set up Sure PetCare Flaps sensors."""
     entities = []
 
-    for thing in hass.data[DATA_SURE_PETCARE][SURE_IDS]:
+    spc = hass.data[DATA_SURE_PETCARE][SPC]
+
+    for thing in spc.ids:
         sure_id = thing[CONF_ID]
         sure_type = thing[CONF_TYPE]
         sure_data = thing[CONF_DATA]
@@ -43,10 +40,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if sure_type != SureThingID.FLAP.name:
             continue
 
-        if sure_id not in hass.data[DATA_SURE_PETCARE][sure_type]:
-            hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
-
-        entities.append(FlapBattery(sure_id, thing[CONF_NAME]))
+        hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
+        entities.append(FlapBattery(sure_id, thing[CONF_NAME], spc.household_id))
 
     async_add_entities(entities, True)
 
@@ -54,10 +49,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FlapBattery(Entity):
     """Sure Petcare Flap."""
 
-    def __init__(self, _id: int, name: str, data: dict = None):
+    def __init__(self, _id: int, name: str, household_id: int, data: dict = None):
         """Initialize a Sure Petcare Flap battery sensor."""
         self._id = _id
         self._name = f"Flap {name.capitalize()} Battery Level"
+        self._household_id = household_id
         self._unit_of_measurement = "%"
         self._icon = BATTERY_ICON
         self._state = {}
@@ -105,7 +101,7 @@ class FlapBattery(Entity):
             }
         except (KeyError, TypeError) as error:
             attributes = None
-            _LOGGER.debug(
+            _LOGGER.error(
                 "error getting device state attributes from %s: %s\n\n%s",
                 self._name,
                 error,
@@ -121,24 +117,10 @@ class FlapBattery(Entity):
 
     async def async_update(self):
         """Get the latest data and update the state."""
-        try:
-            if self._data[self._id]:
-                self._state = self._data[self._id]
-            else:
-                _LOGGER.debug(
-                    "async_update from %s got no new data: %s",
-                    self._name,
-                    pprint.pformat(self._data),
-                )
-        except (AttributeError, KeyError, TypeError) as error:
-            _LOGGER.debug("async_update error from %s: %s", self._name, error)
+        self._state = self.hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name][self._id]
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        # pylint: disable=attribute-defined-outside-init
-        self._household_id = self.hass.data[DATA_SURE_PETCARE][CONF_HOUSEHOLD_ID]
-        self._data = self.hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name]
 
         @callback
         def update():
