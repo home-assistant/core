@@ -290,7 +290,7 @@ class EntityComponent:
             if entity_id in platform.entities:
                 await platform.async_remove_entity(entity_id)
 
-    async def async_prepare_reload(self):
+    async def async_prepare_reload(self, *, skip_reset=False):
         """Prepare reloading this entity component.
 
         This method must be run in the event loop.
@@ -310,7 +310,8 @@ class EntityComponent:
         if conf is None:
             return None
 
-        await self._async_reset()
+        if not skip_reset:
+            await self._async_reset()
         return conf
 
     def _async_init_entity_platform(

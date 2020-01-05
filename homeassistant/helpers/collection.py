@@ -115,16 +115,27 @@ class YamlCollection(ObservableCollection):
     """Offer a fake CRUD interface on top of static YAML."""
 
     async def async_load(self, data: List[dict]) -> None:
-        """Load the storage Manager."""
+        """Load the YAML collection. Overrides existing data."""
+        old_ids = set(self.data)
+
         for item in data:
             item_id = item[CONF_ID]
 
-            if self.id_manager.has_id(item_id):
+            if item_id in old_ids:
+                old_ids.remove(item_id)
+                event = CHANGE_UPDATED
+            elif self.id_manager.has_id(item_id):
                 self.logger.warning("Duplicate ID '%s' detected, skipping", item_id)
                 continue
+            else:
+                event = CHANGE_ADDED
 
             self.data[item_id] = item
-            await self.notify_change(CHANGE_ADDED, item[CONF_ID], item)
+            await self.notify_change(event, item[CONF_ID], item)
+
+        for item_id in old_ids:
+            self.data.pop(item_id)
+            await self.notify_change(CHANGE_REMOVED, item_id, None)
 
 
 class StorageCollection(ObservableCollection):
