@@ -126,7 +126,7 @@ class Flap(SurePetcareBinarySensor):
 
     @property
     def is_on(self):
-        """Return true if light is on."""
+        """Return true if entity is on/unlocked."""
         try:
             return bool(self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
         except (KeyError, TypeError):
@@ -173,7 +173,7 @@ class Pet(SurePetcareBinarySensor):
 
     @property
     def is_on(self):
-        """Return true if light is on."""
+        """Return true if entity is at home."""
         try:
             return bool(self._state["where"] == SureLocationID.INSIDE)
         except (KeyError, TypeError):

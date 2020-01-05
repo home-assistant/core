@@ -75,7 +75,7 @@ class FlapBattery(Entity):
         return f"{self._spc.household_id}-{self._id}"
 
     @property
-    def device_classe(self):
+    def device_class(self):
         """Return the device class."""
         return DEVICE_CLASS_BATTERY
 
