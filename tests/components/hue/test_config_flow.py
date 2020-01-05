@@ -240,7 +240,7 @@ async def test_bridge_ssdp_emulated_hue(hass):
     result = await flow.async_step_ssdp(
         {
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-            ssdp.ATTR_UPNP_FRIENDLY_NAME: "HASS Bridge",
+            ssdp.ATTR_UPNP_FRIENDLY_NAME: "Home Assistant Bridge",
             ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
             ssdp.ATTR_UPNP_SERIAL: "1234",
         }

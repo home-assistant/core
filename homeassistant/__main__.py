@@ -208,7 +208,7 @@ def check_pid(pid_file: str) -> None:
     except OSError:
         # PID does not exist
         return
-    print("Fatal Error: HomeAssistant is already running.")
+    print("Fatal Error: Home Assistant is already running.")
     sys.exit(1)
 
 
@@ -252,7 +252,7 @@ def cmdline() -> List[str]:
 
 
 async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
-    """Set up HASS and run."""
+    """Set up Home Assistant and run."""
     from homeassistant import bootstrap, core
 
     hass = core.HomeAssistant()
