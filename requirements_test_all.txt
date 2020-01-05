@@ -428,6 +428,10 @@ pyfritzhome==0.4.0
 # homeassistant.components.ifttt
 pyfttt==0.3
 
+# homeassistant.components.bluetooth_le_tracker
+# homeassistant.components.skybeacon
+pygatt[GATTTOOL]==4.0.5
+
 # homeassistant.components.version
 pyhaversion==3.1.0
 
