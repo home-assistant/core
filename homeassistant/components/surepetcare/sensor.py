@@ -13,7 +13,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import (
-    CONF_DATA,
     DATA_SURE_PETCARE,
     SPC,
     SURE_BATT_VOLTAGE_DIFF,
@@ -27,34 +26,26 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Sure PetCare Flaps sensors."""
-    entities = []
-
     spc = hass.data[DATA_SURE_PETCARE][SPC]
-
-    for thing in spc.ids:
-        sure_id = thing[CONF_ID]
-        sure_type = thing[CONF_TYPE]
-        sure_data = thing[CONF_DATA]
-
-        if sure_type != SureThingID.FLAP.name:
-            continue
-
-        hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
-        entities.append(FlapBattery(sure_id, thing[CONF_NAME], spc.household_id))
-
-    async_add_entities(entities, True)
+    async_add_entities(
+        [
+            FlapBattery(thing[CONF_ID], thing[CONF_NAME], spc)
+            for thing in spc.ids
+            if thing[CONF_TYPE] == SureThingID.FLAP.name
+        ]
+    )
 
 
 class FlapBattery(Entity):
     """Sure Petcare Flap."""
 
-    def __init__(self, _id: int, name: str, household_id: int, data: dict = None):
+    def __init__(self, _id: int, name: str, spc, data: dict = None):
         """Initialize a Sure Petcare Flap battery sensor."""
         self._id = _id
         self._name = f"Flap {name.capitalize()} Battery Level"
-        self._household_id = household_id
+        self._spc = spc
         self._unit_of_measurement = "%"
-        self._state = {}
+        self._state = self._spc.states[SureThingID.FLAP.name][self._id].get("data")
 
     @property
     def should_poll(self):
@@ -81,7 +72,7 @@ class FlapBattery(Entity):
     @property
     def unique_id(self):
         """Return an unique ID."""
-        return f"{self._household_id}-{self._id}"
+        return f"{self._spc.household_id}-{self._id}"
 
     @property
     def device_classe(self):
@@ -90,21 +81,23 @@ class FlapBattery(Entity):
 
     @property
     def device_state_attributes(self):
-        """Return an unique ID."""
-        try:
-            voltage_per_battery = float(self._state["battery"]) / 4
-            attributes = {
-                ATTR_VOLTAGE: f"{float(self._state['battery']):.2f} V",
-                f"{ATTR_VOLTAGE}_per_battery": f"{voltage_per_battery:.2f} V",
-            }
-        except (KeyError, TypeError) as error:
-            attributes = None
-            _LOGGER.error(
-                "error getting device state attributes from %s: %s\n\n%s",
-                self._name,
-                error,
-                self._state,
-            )
+        """Return state attributes."""
+        attributes = None
+        if self._state:
+            try:
+                voltage_per_battery = float(self._state["battery"]) / 4
+                attributes = {
+                    ATTR_VOLTAGE: f"{float(self._state['battery']):.2f} V",
+                    f"{ATTR_VOLTAGE}_per_battery": f"{voltage_per_battery:.2f} V",
+                }
+            except (KeyError, TypeError) as error:
+                attributes = self._state
+                _LOGGER.error(
+                    "error getting device state attributes from %s: %s\n\n%s",
+                    self._name,
+                    error,
+                    self._state,
+                )
 
         return attributes
 
@@ -115,7 +108,7 @@ class FlapBattery(Entity):
 
     async def async_update(self):
         """Get the latest data and update the state."""
-        self._state = self.hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name][self._id]
+        self._state = self._spc.states[SureThingID.FLAP.name][self._id].get("data")
 
     async def async_added_to_hass(self):
         """Register callbacks."""

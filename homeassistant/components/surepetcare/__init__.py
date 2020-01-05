@@ -1,12 +1,7 @@
 """Support for Sure Petcare cat/pet flaps."""
 import logging
 
-from surepy import (
-    SurePetcare,
-    SurePetcareAuthenticationError,
-    SurePetcareConnectionError,
-    SurePetcareError,
-)
+from surepy import SurePetcare, SurePetcareAuthenticationError, SurePetcareError
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -70,7 +65,7 @@ async def async_setup(hass, config):
     conf = config[DOMAIN]
 
     # update interval
-    scan_interval = conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    scan_interval = conf[CONF_SCAN_INTERVAL]
 
     # shared data
     hass.data[DOMAIN] = hass.data[DATA_SURE_PETCARE] = {}
@@ -83,12 +78,12 @@ async def async_setup(hass, config):
             conf[CONF_HOUSEHOLD_ID],
             hass.loop,
             async_get_clientsession(hass),
-            debug=True,
         )
+        await surepy.refresh_token()
     except SurePetcareAuthenticationError:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
         return False
-    except (SurePetcareError, SurePetcareConnectionError) as error:
+    except SurePetcareError as error:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong %s!", error)
         return False
 
@@ -98,7 +93,7 @@ async def async_setup(hass, config):
             CONF_NAME: flap[CONF_NAME],
             CONF_ID: flap[CONF_ID],
             CONF_TYPE: SureThingID.FLAP.name,
-            CONF_DATA: await surepy.get_flap_data(flap[CONF_ID]),
+            CONF_DATA: {},
         }
         for flap in conf[CONF_FLAPS]
     ]
@@ -110,20 +105,20 @@ async def async_setup(hass, config):
                 CONF_NAME: pet[CONF_NAME],
                 CONF_ID: pet[CONF_ID],
                 CONF_TYPE: SureThingID.PET.name,
-                CONF_DATA: await surepy.get_pet_data(pet[CONF_ID]),
+                CONF_DATA: {},
             }
             for pet in conf[CONF_PETS]
         ]
     )
 
-    spc_api = hass.data[DATA_SURE_PETCARE][SPC] = SurePetcareAPI(
+    spc = hass.data[DATA_SURE_PETCARE][SPC] = SurePetcareAPI(
         hass, surepy, things, conf[CONF_HOUSEHOLD_ID]
     )
 
     # initial update
-    await spc_api.async_update()
+    await spc.async_update()
 
-    async_track_time_interval(hass, spc_api.async_update, scan_interval)
+    async_track_time_interval(hass, spc.async_update, scan_interval)
 
     # load platforms
     hass.async_create_task(
@@ -155,20 +150,24 @@ class SurePetcareAPI:
 
             try:
                 if sure_type == SureThingID.FLAP.name:
-                    if SureThingID.FLAP.name not in self.hass.data[DATA_SURE_PETCARE]:
-                        self.hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name] = {}
+                    if sure_type not in self.states:
+                        self.states[sure_type] = {}
+                    if sure_id not in self.states[sure_type]:
+                        self.states[sure_type][sure_id] = {}
 
-                    self.hass.data[DATA_SURE_PETCARE][SureThingID.FLAP.name][
+                    self.states[sure_type][sure_id] = await self.surepy.get_flap_data(
                         sure_id
-                    ] = await self.surepy.get_flap_data(sure_id)
+                    )
 
                 elif sure_type == SureThingID.PET.name:
-                    if SureThingID.PET.name not in self.hass.data[DATA_SURE_PETCARE]:
-                        self.hass.data[DATA_SURE_PETCARE][SureThingID.PET.name] = {}
+                    if sure_type not in self.states:
+                        self.states[sure_type] = {}
+                    if sure_id not in self.states[sure_type]:
+                        self.states[sure_type][sure_id] = {}
 
-                    self.hass.data[DATA_SURE_PETCARE][SureThingID.PET.name][
+                    self.states[sure_type][sure_id] = await self.surepy.get_pet_data(
                         sure_id
-                    ] = await self.surepy.get_pet_data(sure_id)
+                    )
 
             except SurePetcareError as error:
                 _LOGGER.error("Unable to retrieve data from surepetcare.io: %s", error)

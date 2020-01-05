@@ -11,7 +11,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
-    CONF_DATA,
     DATA_SURE_PETCARE,
     DEFAULT_DEVICE_CLASS,
     SPC,
@@ -33,14 +32,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for thing in spc.ids:
         sure_id = thing[CONF_ID]
         sure_type = thing[CONF_TYPE]
-        sure_data = thing[CONF_DATA]
 
         if sure_type == SureThingID.FLAP.name:
-            hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
-            thing = Flap(sure_id, thing[CONF_NAME], spc.household_id)
+            thing = Flap(sure_id, thing[CONF_NAME], spc)
         elif sure_type == SureThingID.PET.name:
-            hass.data[DATA_SURE_PETCARE][sure_type][sure_id] = sure_data
-            thing = Pet(sure_id, thing[CONF_NAME], spc.household_id)
+            thing = Pet(sure_id, thing[CONF_NAME], spc)
 
         entities.append(thing)
 
@@ -51,17 +47,12 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Sure Petcare Entities."""
 
     def __init__(
-        self,
-        _id: int,
-        name: str,
-        household_id: int,
-        device_class: str,
-        sure_type: SureThingID,
+        self, _id: int, name: str, spc, device_class: str, sure_type: SureThingID
     ):
         """Initialize a Sure Petcare binary sensor."""
         self._id = _id
         self._name = name
-        self._household_id = household_id
+        self._spc = spc
         self._device_class = device_class
         self._sure_type = sure_type
         self._state = {}
@@ -94,11 +85,11 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return an unique ID."""
-        return f"{self._household_id}-{self._id}"
+        return f"{self._spc.household_id}-{self._id}"
 
     async def async_update(self):
         """Get the latest data and update the state."""
-        self._state = self.hass.data[DATA_SURE_PETCARE][self._sure_type][self._id]
+        self._state = self._spc.states[self._sure_type][self._id].get("data")
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -123,12 +114,12 @@ class SurePetcareBinarySensor(BinarySensorDevice):
 class Flap(SurePetcareBinarySensor):
     """Sure Petcare Flap."""
 
-    def __init__(self, _id: int, name: str, household_id: int):
+    def __init__(self, _id: int, name: str, spc):
         """Initialize a Sure Petcare Flap."""
         super().__init__(
             _id,
             f"Flap {name.capitalize()}",
-            household_id,
+            spc,
             DEVICE_CLASS_LOCK,
             SureThingID.FLAP.name,
         )
@@ -144,24 +135,25 @@ class Flap(SurePetcareBinarySensor):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        try:
-            attributes = {
-                "battery_voltage": self._state["battery"] / 4,
-                "locking_mode": self._state["locking"]["mode"],
-                "device_rssi": self._state["signal"]["device_rssi"],
-                "hub_rssi": self._state["signal"]["hub_rssi"],
-                "mac_address": self._state["mac_address"],
-                "version": self._state["version"],
-            }
+        attributes = None
+        if self._state:
+            try:
+                attributes = {
+                    "battery_voltage": self._state["battery"] / 4,
+                    "locking_mode": self._state["locking"]["mode"],
+                    "device_rssi": self._state["signal"]["device_rssi"],
+                    "hub_rssi": self._state["signal"]["hub_rssi"],
+                    "version": self._state["version"],
+                }
 
-        except (KeyError, TypeError) as error:
-            _LOGGER.error(
-                "Error getting device state attributes from %s: %s\n\n%s",
-                self._name,
-                error,
-                self._state,
-            )
-            attributes = {"error": self._state}
+            except (KeyError, TypeError) as error:
+                _LOGGER.error(
+                    "Error getting device state attributes from %s: %s\n\n%s",
+                    self._name,
+                    error,
+                    self._state,
+                )
+                attributes = self._state
 
         return attributes
 
@@ -169,12 +161,12 @@ class Flap(SurePetcareBinarySensor):
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
-    def __init__(self, _id: int, name: str, household_id: int):
+    def __init__(self, _id: int, name: str, spc):
         """Initialize a Sure Petcare Pet."""
         super().__init__(
             _id,
             f"Pet {name.capitalize()}",
-            household_id,
+            spc,
             DEVICE_CLASS_PRESENCE,
             SureThingID.PET.name,
         )
