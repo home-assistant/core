@@ -43,7 +43,7 @@ class FbxSensor(Entity):
         self._fbx_sw_v = fbx_conf["firmware_version"]
         self._state = None
         self._datas = None
-        self._unique_id = f"{self._fbx._access.base_url} {self._name}"
+        self._unique_id = f"{self._fbx_mac} {self._name}"
 
     @property
     def unique_id(self) -> str:
@@ -75,7 +75,7 @@ class FbxSensor(Entity):
         """Return the device information."""
         return {
             "connections": {(CONNECTION_NETWORK_MAC, self._fbx_mac)},
-            "identifiers": {(DOMAIN, self._fbx._access.base_url)},
+            "identifiers": {(DOMAIN, self._fbx_mac)},
             "name": self._fbx_name,
             "manufacturer": "Freebox SAS",
             "sw_version": self._fbx_sw_v,
