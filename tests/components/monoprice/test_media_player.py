@@ -85,6 +85,7 @@ class TestMonopriceSchema(unittest.TestCase):
         valid_schema = {
             "platform": "monoprice",
             "port": "/dev/ttyUSB0",
+            "entity_namespace": "namespace",
             "zones": {
                 11: {"name": "a"},
                 12: {"name": "a"},
@@ -124,6 +125,14 @@ class TestMonopriceSchema(unittest.TestCase):
             # Missing port
             {
                 "platform": "monoprice",
+                "entity_namespace": "namespace",
+                "name": "Name",
+                "zones": {11: {"name": "a"}},
+                "sources": {1: {"name": "b"}},
+            },
+            # Missing namespace
+            {
+                "platform": "monoprice",
                 "name": "Name",
                 "zones": {11: {"name": "a"}},
                 "sources": {1: {"name": "b"}},
@@ -132,6 +141,7 @@ class TestMonopriceSchema(unittest.TestCase):
             {
                 "platform": "monoprice",
                 "port": "aaa",
+                "entity_namespace": "namespace",
                 "name": "Name",
                 "zones": {10: {"name": "a"}},
                 "sources": {1: {"name": "b"}},
@@ -140,6 +150,7 @@ class TestMonopriceSchema(unittest.TestCase):
             {
                 "platform": "monoprice",
                 "port": "aaa",
+                "entity_namespace": "namespace",
                 "name": "Name",
                 "zones": {11: {"name": "a"}},
                 "sources": {0: {"name": "b"}},
@@ -148,6 +159,7 @@ class TestMonopriceSchema(unittest.TestCase):
             {
                 "platform": "monoprice",
                 "port": "aaa",
+                "entity_namespace": "namespace",
                 "name": "Name",
                 "zones": {11: {}},
                 "sources": {1: {"name": "b"}},
@@ -156,6 +168,7 @@ class TestMonopriceSchema(unittest.TestCase):
             {
                 "platform": "monoprice",
                 "port": "aaa",
+                "entity_namespace": "namespace",
                 "name": "Name",
                 "zones": {11: {"name": "a"}},
                 "sources": {1: {}},
@@ -184,6 +197,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
                 {
                     "platform": "monoprice",
                     "port": "/dev/ttyS0",
+                    "entity_namespace": "namespace",
                     "name": "Name",
                     "zones": {12: {"name": "Zone name"}},
                     "sources": {
@@ -341,7 +355,7 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
 
     def test_unique_id(self):
         """Test unique_id property."""
-        assert 12 == self.media_player.unique_id
+        assert "namespace_12" == self.media_player.unique_id
 
     def test_state(self):
         """Test state property."""

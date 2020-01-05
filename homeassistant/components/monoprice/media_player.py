@@ -16,6 +16,7 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_ENTITY_NAMESPACE,
     CONF_NAME,
     CONF_PORT,
     STATE_OFF,
@@ -61,6 +62,7 @@ MEDIA_PLAYER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.comp_entity_ids})
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PORT): cv.string,
+        vol.Required(CONF_ENTITY_NAMESPACE): cv.string,
         vol.Required(CONF_ZONES): vol.Schema({ZONE_IDS: ZONE_SCHEMA}),
         vol.Required(CONF_SOURCES): vol.Schema({SOURCE_IDS: SOURCE_SCHEMA}),
     }
@@ -81,11 +83,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         source_id: extra[CONF_NAME] for source_id, extra in config[CONF_SOURCES].items()
     }
 
+    namespace = config.get(CONF_ENTITY_NAMESPACE)
     hass.data[DATA_MONOPRICE] = []
     for zone_id, extra in config[CONF_ZONES].items():
-        _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
+        _LOGGER.info("Adding zone %s: %d - %s", namespace, zone_id, extra[CONF_NAME])
         hass.data[DATA_MONOPRICE].append(
-            MonopriceZone(monoprice, sources, zone_id, extra[CONF_NAME])
+            MonopriceZone(monoprice, sources, namespace, zone_id, extra[CONF_NAME])
         )
 
     add_entities(hass.data[DATA_MONOPRICE], True)
@@ -121,7 +124,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class MonopriceZone(MediaPlayerDevice):
     """Representation of a Monoprice amplifier zone."""
 
-    def __init__(self, monoprice, sources, zone_id, zone_name):
+    def __init__(self, monoprice, sources, namespace, zone_id, zone_name):
         """Initialize new zone."""
         self._monoprice = monoprice
         # dict source_id -> source name
@@ -132,7 +135,9 @@ class MonopriceZone(MediaPlayerDevice):
         self._source_names = sorted(
             self._source_name_id.keys(), key=lambda v: self._source_name_id[v]
         )
+        self._namespace = namespace
         self._zone_id = zone_id
+        self._unique_id = f"{self._namespace}_{self._zone_id}"
         self._name = zone_name
 
         self._snapshot = None
@@ -159,7 +164,7 @@ class MonopriceZone(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return unique ID for this device."""
-        return self._zone_id
+        return self._unique_id
 
     @property
     def name(self):
