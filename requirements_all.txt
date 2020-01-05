@@ -546,12 +546,10 @@ fortiosapi==0.10.8
 # homeassistant.components.free_mobile
 freesms==0.1.2
 
-# homeassistant.components.fritzbox_callmonitor
-# fritzconnection==0.8.4
-
 # homeassistant.components.fritz
+# homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
-# fritzconnection==1.0.1
+fritzconnection==1.2.0
 
 # homeassistant.components.fritzdect
 fritzhome==1.0.4
