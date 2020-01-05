@@ -57,7 +57,12 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up Livebox as config entry."""
 
-    session = Sysbus(config_entry.data["username"], config_entry.data["password"])
+    session = Sysbus(
+        username=config_entry.data["username"],
+        password=config_entry.data["password"],
+        host=config_entry.data["host"],
+        port=config_entry.data["port"],
+    )
     perms = await session.async_get_permissions()
     if perms is not None:
         bridge = BridgeData(session, config_entry)
