@@ -9,15 +9,14 @@ from homeassistant.components.device_tracker.const import (
     CONF_TRACK_NEW,
     DOMAIN,
 )
-from homeassistant.components.device_tracker.legacy import YAML_DEVICES
-from homeassistant.const import ATTR_NOW, CONF_PLATFORM, EVENT_TIME_CHANGED
+from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
 
-from tests.common import patch_yaml_files
+from tests.common import async_fire_time_changed
 
 
-async def test_preserve_new_tracked_device_name(hass):
+async def test_preserve_new_tracked_device_name(hass, mock_device_tracker_conf):
     """Test preserving tracked device name across new seens."""
 
     address = "DE:AD:BE:EF:13:37"
@@ -27,13 +26,7 @@ async def test_preserve_new_tracked_device_name(hass):
     with patch(
         "homeassistant.components."
         "bluetooth_le_tracker.device_tracker.pygatt.GATTToolBackend"
-    ) as mock_backend, patch.object(
-        device_tracker, "MIN_SEEN_NEW", 3
-    ), patch_yaml_files(  # Ignore possibly existing known_devices.yaml content
-        {hass.config.path(YAML_DEVICES): ""}
-    ), patch(  # Do not write known_devices.yaml
-        "homeassistant.components.device_tracker.legacy.update_config"
-    ):
+    ) as mock_backend, patch.object(device_tracker, "MIN_SEEN_NEW", 3):
 
         # Return with name when seen first time
         device = {"address": address, "name": name}
@@ -52,13 +45,9 @@ async def test_preserve_new_tracked_device_name(hass):
 
         # Tick until device seen enough times for to be registered for tracking
         for _ in range(device_tracker.MIN_SEEN_NEW - 1):
-            hass.bus.async_fire(
-                EVENT_TIME_CHANGED,
-                {
-                    ATTR_NOW: dt_util.utcnow()
-                    + config[CONF_SCAN_INTERVAL]
-                    + timedelta(seconds=1)
-                },
+            async_fire_time_changed(
+                hass,
+                dt_util.utcnow() + config[CONF_SCAN_INTERVAL] + timedelta(seconds=1),
             )
             await hass.async_block_till_done()
 
