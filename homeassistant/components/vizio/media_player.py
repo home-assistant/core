@@ -27,6 +27,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,6 +137,12 @@ class VizioDevice(MediaPlayerDevice):
         self._device = Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
         self._max_volume = float(self._device.get_max_volume())
 
+        esn = self._device.get_esn()
+        if esn:
+            self._unique_id = f"{self._device_type}-{esn}"
+        else:
+            self._unique_id = f"{self._device_type}-{slugify(host)}"
+
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve latest state of the device."""
@@ -195,6 +202,11 @@ class VizioDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag device features that are supported."""
         return self._supported_commands
+
+    @property
+    def _unique_id(self):
+        """Return the unique id of the device."""
+        return self._unique_id
 
     def turn_on(self):
         """Turn the device on."""
