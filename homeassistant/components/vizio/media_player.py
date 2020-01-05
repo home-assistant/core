@@ -27,7 +27,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,12 +133,7 @@ class VizioDevice(MediaPlayerDevice):
         self._supported_commands = SUPPORTED_COMMANDS[device_type]
         self._device = Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
         self._max_volume = float(self._device.get_max_volume())
-
-        esn = self._device.get_esn()
-        if esn:
-            self._unique_id = f"{device_type}-{esn}"
-        else:
-            self._unique_id = f"{device_type}-{slugify(host)}"
+        self._unique_id = f"{device_type}-{self._device.get_esn()}"
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
