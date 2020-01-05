@@ -108,7 +108,8 @@ class SamsungTVDevice(MediaPlayerDevice):
 
             try:
                 self.get_remote()
-                self._state = STATE_ON
+                if self._remote:
+                    self._state = STATE_ON
             except (
                 samsung_exceptions.UnhandledResponse,
                 samsung_exceptions.AccessDenied,
@@ -118,9 +119,6 @@ class SamsungTVDevice(MediaPlayerDevice):
             except (OSError, WebSocketException):
                 # Different reasons, e.g. hostname not resolveable
                 self._state = STATE_OFF
-            except AttributeError:
-                # Auto-detect could not find working config yet
-                self._state = None
 
     def get_remote(self):
         """Create or return a remote control instance."""
