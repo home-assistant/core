@@ -39,7 +39,7 @@ SPEED_TO_PCNT = {
 class BaseHomeKitFan(HomeKitEntity, FanEntity):
     """Representation of a Homekit fan."""
 
-    # This must be set in subclasses to the name of a boolean characteristic 
+    # This must be set in subclasses to the name of a boolean characteristic
     # that controls whether the fan is on or off.
     on_characteristic = None
 
