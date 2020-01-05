@@ -1,5 +1,6 @@
 """Config flow for Samsung TV."""
 import socket
+from urllib.parse import urlparse
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
@@ -143,14 +144,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_ssdp(self, user_input=None):
         """Handle a flow initialized by discovery."""
-        ip_address = await self.hass.async_add_executor_job(
-            _get_ip, user_input[ATTR_SSDP_LOCATION]
-        )
+        host = urlparse(user_input[ATTR_SSDP_LOCATION]).hostname
+        ip_address = await self.hass.async_add_executor_job(_get_ip, host)
 
         await self.async_set_unique_id(ip_address)
         self._abort_if_unique_id_configured()
 
-        self._host = user_input[ATTR_SSDP_LOCATION]
+        self._host = host
         self._ip = self.context[CONF_IP_ADDRESS] = ip_address
         self._manufacturer = user_input[ATTR_UPNP_MANUFACTURER]
         self._model = user_input[ATTR_UPNP_MODEL_NAME]

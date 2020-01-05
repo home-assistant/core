@@ -29,7 +29,7 @@ SSDP = {
     ],
     "samsungtv": [
         {
-            "device_type": "urn:samsung.com:device:RemoteControlReceiver:1"
+            "deviceType": "urn:samsung.com:device:RemoteControlReceiver:1"
         }
     ],
     "sonos": [

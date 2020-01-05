@@ -21,14 +21,14 @@ from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
 
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
 MOCK_SSDP_DATA = {
-    ATTR_SSDP_LOCATION: "fake_host",
+    ATTR_SSDP_LOCATION: "https://fake_host:12345/test",
     ATTR_UPNP_FRIENDLY_NAME: "[TV]fake_name",
     ATTR_UPNP_MANUFACTURER: "fake_manufacturer",
     ATTR_UPNP_MODEL_NAME: "fake_model",
     ATTR_UPNP_UDN: "uuid:fake_uuid",
 }
 MOCK_SSDP_DATA_NOPREFIX = {
-    ATTR_SSDP_LOCATION: "fake2_host",
+    ATTR_SSDP_LOCATION: "http://fake2_host:12345/test",
     ATTR_UPNP_FRIENDLY_NAME: "fake2_name",
     ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
     ATTR_UPNP_MODEL_NAME: "fake2_model",
