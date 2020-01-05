@@ -1,7 +1,12 @@
 """Support for Sure Petcare cat/pet flaps."""
 import logging
 
-from surepy import SurePetcare, SurePetcareAuthenticationError, SurePetcareError
+from surepy import (
+    SurePetcare,
+    SurePetcareAuthenticationError,
+    SurePetcareError,
+    SureThingID,
+)
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -26,7 +31,6 @@ from .const import (
     DOMAIN,
     SPC,
     TOPIC_UPDATE,
-    SureThingID,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,7 +96,6 @@ async def async_setup(hass, config):
             CONF_NAME: flap[CONF_NAME],
             CONF_ID: flap[CONF_ID],
             CONF_TYPE: SureThingID.FLAP.name,
-            # CONF_DATA: {},
         }
         for flap in conf[CONF_FLAPS]
     ]
@@ -104,7 +107,6 @@ async def async_setup(hass, config):
                 CONF_NAME: pet[CONF_NAME],
                 CONF_ID: pet[CONF_ID],
                 CONF_TYPE: SureThingID.PET.name,
-                # CONF_DATA: {},
             }
             for pet in conf[CONF_PETS]
         ]
@@ -149,31 +151,11 @@ class SurePetcareAPI:
 
             try:
                 type_state = self.states.setdefault(sure_type, {})
-                type_state[sure_id] = await self.surepy.get_flap_data(sure_id)
 
                 if sure_type == SureThingID.FLAP.name:
-                    type_state = self.states.setdefault(sure_type, {})
                     type_state[sure_id] = await self.surepy.get_flap_data(sure_id)
-                    # if sure_type not in self.states:
-                    #     self.states[sure_type] = {}
-                    # if sure_id not in self.states[sure_type]:
-                    #     self.states[sure_type][sure_id] = {}
-
-                    # self.states[sure_type][sure_id] = await self.surepy.get_flap_data(
-                    #     sure_id
-                    # )
-
                 elif sure_type == SureThingID.PET.name:
-                    type_state = self.states.setdefault(sure_type, {})
-                    type_state[sure_id] = await self.surepy.get_flap_data(sure_id)
-                    # if sure_type not in self.states:
-                    #     self.states[sure_type] = {}
-                    # if sure_id not in self.states[sure_type]:
-                    #     self.states[sure_type][sure_id] = {}
-
-                    # self.states[sure_type][sure_id] = await self.surepy.get_pet_data(
-                    #     sure_id
-                    # )
+                    type_state[sure_id] = await self.surepy.get_pet_data(sure_id)
 
             except SurePetcareError as error:
                 _LOGGER.error("Unable to retrieve data from surepetcare.io: %s", error)

@@ -1,6 +1,8 @@
 """Support for Sure PetCare Flaps/Pets binary sensors."""
 import logging
 
+from surepy import SureLocationID, SureLockStateID, SureThingID
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_LOCK,
     DEVICE_CLASS_PRESENCE,
@@ -10,15 +12,7 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import (
-    DATA_SURE_PETCARE,
-    DEFAULT_DEVICE_CLASS,
-    SPC,
-    TOPIC_UPDATE,
-    SureLocationID,
-    SureLockStateID,
-    SureThingID,
-)
+from .const import DATA_SURE_PETCARE, DEFAULT_DEVICE_CLASS, SPC, TOPIC_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,6 +53,8 @@ class SurePetcareBinarySensor(BinarySensorDevice):
         self._device_class = device_class
         self._sure_type = sure_type
         self._state = {}
+
+        self._async_unsub_dispatcher_connect = None
 
     @property
     def is_on(self):
@@ -102,14 +98,12 @@ class SurePetcareBinarySensor(BinarySensorDevice):
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
-        # pylint: disable=attribute-defined-outside-init
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self.hass, TOPIC_UPDATE, update
         )
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
-        # pylint: disable=using-constant-test
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
 

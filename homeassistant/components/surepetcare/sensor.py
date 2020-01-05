@@ -1,6 +1,8 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
 import logging
 
+from surepy import SureThingID
+
 from homeassistant.const import (
     ATTR_VOLTAGE,
     CONF_ID,
@@ -18,7 +20,6 @@ from .const import (
     SURE_BATT_VOLTAGE_DIFF,
     SURE_BATT_VOLTAGE_LOW,
     TOPIC_UPDATE,
-    SureThingID,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +50,8 @@ class FlapBattery(Entity):
         self._name = f"Flap {name.capitalize()} Battery Level"
         self._spc = spc
         self._state = self._spc.states[SureThingID.FLAP.name][self._id].get("data")
+
+        self._async_unsub_dispatcher_connect = None
 
     @property
     def should_poll(self):
@@ -121,13 +124,11 @@ class FlapBattery(Entity):
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
-        # pylint: disable=attribute-defined-outside-init
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self.hass, TOPIC_UPDATE, update
         )
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
-        # pylint: disable=using-constant-test
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
