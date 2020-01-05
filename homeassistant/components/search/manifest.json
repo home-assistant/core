@@ -1,0 +1,11 @@
+{
+  "domain": "search",
+  "name": "Search",
+  "documentation": "https://www.home-assistant.io/integrations/search",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": ["websocket_api"],
+  "codeowners": ["@home-assistant/core"]
+}
