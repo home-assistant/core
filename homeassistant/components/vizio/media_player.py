@@ -139,9 +139,9 @@ class VizioDevice(MediaPlayerDevice):
 
         esn = self._device.get_esn()
         if esn:
-            self._unique_id = f"{self._device_type}-{esn}"
+            self._unique_id = f"{device_type}-{esn}"
         else:
-            self._unique_id = f"{self._device_type}-{slugify(host)}"
+            self._unique_id = f"{device_type}-{slugify(host)}"
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
