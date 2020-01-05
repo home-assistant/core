@@ -310,9 +310,9 @@ class SamsungTVDevice(MediaPlayerDevice):
             return
 
         for digit in media_id:
-            await self.hass.async_add_job(self.send_key, f"KEY_{digit}")
+            await self.hass.async_add_executor_job(self.send_key, f"KEY_{digit}")
             await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
-        await self.hass.async_add_job(self.send_key, "KEY_ENTER")
+        await self.hass.async_add_executor_job(self.send_key, "KEY_ENTER")
 
     async def async_turn_on(self):
         """Turn the media player on."""
