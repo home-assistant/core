@@ -73,7 +73,6 @@ SUPPORT_FIRETV = (
     | SUPPORT_STOP
 )
 
-ATTR_DIRECTION = "direction"
 ATTR_DEVICE_PATH = "device_path"
 ATTR_LOCAL_PATH = "local_path"
 
@@ -244,89 +243,83 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
     hass.data[ANDROIDTV_DOMAIN][address] = device
 
-    if not hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
+    if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
+        return
 
-        def service_adb_command(service):
-            """Dispatch service calls to target entities."""
-            cmd = service.data.get(ATTR_COMMAND)
-            entity_id = service.data.get(ATTR_ENTITY_ID)
-            target_devices = [
-                dev
-                for dev in hass.data[ANDROIDTV_DOMAIN].values()
-                if dev.entity_id in entity_id
-            ]
+    def service_adb_command(service):
+        """Dispatch service calls to target entities."""
+        cmd = service.data[ATTR_COMMAND]
+        entity_id = service.data[ATTR_ENTITY_ID]
+        target_devices = [
+            dev
+            for dev in hass.data[ANDROIDTV_DOMAIN].values()
+            if dev.entity_id in entity_id
+        ]
 
-            for target_device in target_devices:
-                output = target_device.adb_command(cmd)
+        for target_device in target_devices:
+            output = target_device.adb_command(cmd)
 
-                # log the output, if there is any
-                if output:
-                    _LOGGER.info(
-                        "Output of command '%s' from '%s': %s",
-                        cmd,
-                        target_device.entity_id,
-                        output,
-                    )
+            # log the output, if there is any
+            if output:
+                _LOGGER.info(
+                    "Output of command '%s' from '%s': %s",
+                    cmd,
+                    target_device.entity_id,
+                    output,
+                )
 
-        hass.services.register(
-            ANDROIDTV_DOMAIN,
-            SERVICE_ADB_COMMAND,
-            service_adb_command,
-            schema=SERVICE_ADB_COMMAND_SCHEMA,
-        )
+    hass.services.register(
+        ANDROIDTV_DOMAIN,
+        SERVICE_ADB_COMMAND,
+        service_adb_command,
+        schema=SERVICE_ADB_COMMAND_SCHEMA,
+    )
 
-    if not hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_DOWNLOAD):
+    def service_download(service):
+        """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
+        local_path = service.data[ATTR_LOCAL_PATH]
+        if not hass.config.is_allowed_path(local_path):
+            _LOGGER.warning("'%s' is not secure to load data from!", local_path)
+            return
 
-        def service_download(service):
-            """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
-            local_path = service.data.get(ATTR_LOCAL_PATH)
-            if not hass.config.is_allowed_path(local_path):
-                _LOGGER.warning("'%s' is not secure to load data from!", local_path)
-                return
+        device_path = service.data[ATTR_DEVICE_PATH]
+        entity_id = service.data[ATTR_ENTITY_ID]
+        target_device = [
+            dev
+            for dev in hass.data[ANDROIDTV_DOMAIN].values()
+            if dev.entity_id in entity_id
+        ][0]
 
-            device_path = service.data.get(ATTR_DEVICE_PATH)
-            entity_id = service.data.get(ATTR_ENTITY_ID)
-            target_device = [
-                dev
-                for dev in hass.data[ANDROIDTV_DOMAIN].values()
-                if dev.entity_id in entity_id
-            ][0]
+        target_device.adb_pull(local_path, device_path)
 
-            target_device.adb_pull(local_path, device_path)
+    hass.services.register(
+        ANDROIDTV_DOMAIN,
+        SERVICE_DOWNLOAD,
+        service_download,
+        schema=SERVICE_DOWNLOAD_SCHEMA,
+    )
 
-        hass.services.register(
-            ANDROIDTV_DOMAIN,
-            SERVICE_DOWNLOAD,
-            service_download,
-            schema=SERVICE_DOWNLOAD_SCHEMA,
-        )
+    def service_upload(service):
+        """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
+        local_path = service.data[ATTR_LOCAL_PATH]
+        if not hass.config.is_allowed_path(local_path):
+            _LOGGER.warning("'%s' is not secure to load data from!", local_path)
+            return
 
-    if not hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_UPLOAD):
+        device_path = service.data[ATTR_DEVICE_PATH]
+        entity_id = service.data[ATTR_ENTITY_ID]
+        target_devices = [
+            dev
+            for dev in hass.data[ANDROIDTV_DOMAIN].values()
+            if dev.entity_id in entity_id
+        ]
 
-        def service_upload(service):
-            """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
-            local_path = service.data.get(ATTR_LOCAL_PATH)
-            if not hass.config.is_allowed_path(local_path):
-                _LOGGER.warning("'%s' is not secure to load data from!", local_path)
-                return
+        for target_device in target_devices:
+            target_device.adb_push(local_path, device_path)
 
-            device_path = service.data.get(ATTR_DEVICE_PATH)
-            entity_id = service.data.get(ATTR_ENTITY_ID)
-            target_devices = [
-                dev
-                for dev in hass.data[ANDROIDTV_DOMAIN].values()
-                if dev.entity_id in entity_id
-            ]
-
-            for target_device in target_devices:
-                target_device.adb_push(local_path, device_path)
-
-        hass.services.register(
-            ANDROIDTV_DOMAIN,
-            SERVICE_UPLOAD,
-            service_upload,
-            schema=SERVICE_UPLOAD_SCHEMA,
-        )
+    hass.services.register(
+        ANDROIDTV_DOMAIN, SERVICE_UPLOAD, service_upload, schema=SERVICE_UPLOAD_SCHEMA,
+    )
 
 
 def adb_decorator(override_available=False):

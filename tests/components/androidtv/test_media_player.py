@@ -6,10 +6,15 @@ from androidtv.exceptions import LockNotAcquiredException
 
 from homeassistant.components.androidtv.media_player import (
     ANDROIDTV_DOMAIN,
+    ATTR_DEVICE_PATH,
+    ATTR_LOCAL_PATH,
     CONF_ADB_SERVER_IP,
     CONF_ADBKEY,
     CONF_APPS,
     KEYS,
+    SERVICE_ADB_COMMAND,
+    SERVICE_DOWNLOAD,
+    SERVICE_UPLOAD,
 )
 from homeassistant.components.media_player.const import (
     ATTR_INPUT_SOURCE,
@@ -582,6 +587,8 @@ async def test_setup_same_device_twice(hass):
         state = hass.states.get(entity_id)
         assert state is not None
 
+    assert hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND)
+
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
         patch_key
     ], patchers.patch_shell("")[patch_key]:
@@ -604,7 +611,7 @@ async def test_adb_command(hass):
     ) as patch_shell:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            "adb_command",
+            SERVICE_ADB_COMMAND,
             {ATTR_ENTITY_ID: entity_id, "command": command},
             blocking=True,
         )
@@ -632,7 +639,7 @@ async def test_adb_command_key(hass):
     ) as patch_shell:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            "adb_command",
+            SERVICE_ADB_COMMAND,
             {ATTR_ENTITY_ID: entity_id, "command": command},
             blocking=True,
         )
@@ -660,7 +667,7 @@ async def test_adb_command_get_properties(hass):
     ) as patch_get_props:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            "adb_command",
+            SERVICE_ADB_COMMAND,
             {ATTR_ENTITY_ID: entity_id, "command": command},
             blocking=True,
         )
@@ -717,11 +724,11 @@ async def test_download(hass):
     with patch("androidtv.basetv.BaseTV.adb_pull") as patch_pull:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            "download",
+            SERVICE_DOWNLOAD,
             {
                 ATTR_ENTITY_ID: entity_id,
-                "device_path": device_path,
-                "local_path": local_path,
+                ATTR_DEVICE_PATH: device_path,
+                ATTR_LOCAL_PATH: local_path,
             },
             blocking=True,
         )
@@ -733,11 +740,11 @@ async def test_download(hass):
     ):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            "download",
+            SERVICE_DOWNLOAD,
             {
                 ATTR_ENTITY_ID: entity_id,
-                "device_path": device_path,
-                "local_path": local_path,
+                ATTR_DEVICE_PATH: device_path,
+                ATTR_LOCAL_PATH: local_path,
             },
             blocking=True,
         )
@@ -759,11 +766,11 @@ async def test_upload(hass):
     with patch("androidtv.basetv.BaseTV.adb_push") as patch_push:
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            "upload",
+            SERVICE_UPLOAD,
             {
                 ATTR_ENTITY_ID: entity_id,
-                "device_path": device_path,
-                "local_path": local_path,
+                ATTR_DEVICE_PATH: device_path,
+                ATTR_LOCAL_PATH: local_path,
             },
             blocking=True,
         )
@@ -775,11 +782,11 @@ async def test_upload(hass):
     ):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            "upload",
+            SERVICE_UPLOAD,
             {
                 ATTR_ENTITY_ID: entity_id,
-                "device_path": device_path,
-                "local_path": local_path,
+                ATTR_DEVICE_PATH: device_path,
+                ATTR_LOCAL_PATH: local_path,
             },
             blocking=True,
         )
