@@ -36,6 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+# async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
 def setup_platform(hass, config, add_entities, disc_info=None):
     """Set up the Ezviz IP Cameras."""
     conf_cameras = config[CONF_CAMERAS]
@@ -58,6 +59,7 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     # now, let's build the HASS devices
     cameras = {}
     camera_entities = []
+
     for device in devices:
 
         device_serial = device["deviceSerial"]
@@ -100,10 +102,6 @@ def setup_platform(hass, config, add_entities, disc_info=None):
                 camera["local_ip"],
                 camera["local_rtsp_port"],
             )
-            _LOGGER.debug(
-                "Camera %s source stream: %s", camera["serial"], camera_rtsp_stream
-            )
-
         else:
             _LOGGER.info(
                 "I found a camera (%s) but it is not configured. Please configure it if you wish to see the appropriate stream. Conf cameras: %s",
@@ -123,7 +121,8 @@ class EzvizCamera(Camera):
     """An implementation of a Foscam IP camera."""
 
     def __init__(self, **data):
-        """Set up for access to the Ezviz camera images."""
+        """Initialize an Ezviz camera."""
+        super().__init__()
 
         self._username = data["username"]
         self._password = data["password"]
@@ -144,8 +143,11 @@ class EzvizCamera(Camera):
         self._wan_ip = data["wan_ip"]
         self._net_type = data["net_type"]
 
-    # async def async_added_to_hass(self):
-    #     self._ffmpeg = self.hass.data[DATA_FFMPEG]
+        # self._ffmpeg = self.hass.data[DATA_FFMPEG]
+
+    async def async_added_to_hass(self):
+        """Subscribe to ffmpeg and add camera to list."""
+        self._ffmpeg = self.hass.data[DATA_FFMPEG]
 
     @property
     def should_poll(self) -> bool:
@@ -215,10 +217,6 @@ class EzvizCamera(Camera):
             ffmpeg.get_image(self._rtsp_stream, output_format=IMAGE_JPEG,)
         )
         return image
-
-    def is_streaming(self):
-        """Return the status of the stream from the camera."""
-        return self.is_on()
 
     async def stream_source(self):
         """Return the stream source."""
