@@ -103,19 +103,24 @@ class FreeboxTrackerEntity(TrackerEntity):
 
 
 def icon_for_freebox_device(device) -> str:
-    """Return a battery icon valid identifier."""
+    """Return a host icon from his type."""
     switcher = {
-        "freebox_player": "mdi:",
-        "laptop": "mdi:",
-        "multimedia_device": "mdi:",
-        "nas": "mdi:",
-        "networking_device": "mdi:",
-        "other": "mdi:",
-        "printer": "mdi:",
-        "smartphone": "mdi:",
-        "television": "mdi:",
-        "vg_console": "mdi:",
-        "workstation": "mdi:",
+        "freebox_delta": "mdi:television-guide",
+        "freebox_hd": "mdi:television-guide",
+        "freebox_mini": "mdi:television-guide",
+        "freebox_player": "mdi:television-guide",
+        "ip_camera": "mdi:cctv",
+        "ip_phone": "mdi:phone-voip",
+        "laptop": "mdi:laptop",
+        "multimedia_device": "mdi:play-network",
+        "nas": "mdi:nas",
+        "networking_device": "mdi:network",
+        "printer": "mdi:printer",
+        "smartphone": "mdi:cellphone",
+        "tablet": "mdi:tablet",
+        "television": "mdi:television",
+        "vg_console": "mdi:gamepad-variant",
+        "workstation": "mdi:desktop-tower-monitor",
     }
 
-    return switcher.get(device["host_type"], "mdi:")
+    return switcher.get(device["host_type"], "mdi:help-network")
