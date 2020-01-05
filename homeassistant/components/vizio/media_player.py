@@ -64,9 +64,7 @@ def validate_auth(config):
     token = config.get(CONF_ACCESS_TOKEN)
     if config[CONF_DEVICE_CLASS] == "tv" and (token is None or token == ""):
         raise vol.Invalid(
-            "When '{}' is 'tv' then '{}' is required.".format(
-                CONF_DEVICE_CLASS, CONF_ACCESS_TOKEN
-            ),
+            f"When '{CONF_DEVICE_CLASS}' is 'tv' then '{CONF_ACCESS_TOKEN}' is required.",
             path=[CONF_ACCESS_TOKEN],
         )
     return config
@@ -135,6 +133,7 @@ class VizioDevice(MediaPlayerDevice):
         self._supported_commands = SUPPORTED_COMMANDS[device_type]
         self._device = Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
         self._max_volume = float(self._device.get_max_volume())
+        self._unique_id = self._device.get_esn()
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -195,6 +194,11 @@ class VizioDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag device features that are supported."""
         return self._supported_commands
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the device."""
+        return self._unique_id
 
     def turn_on(self):
         """Turn the device on."""
