@@ -9,6 +9,7 @@ from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
+            cv.ensure_list,
             [
                 vol.Schema(
                     {
@@ -18,7 +19,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
                     }
                 )
-            ]
+            ],
         )
     },
     extra=vol.ALLOW_EXTRA,
