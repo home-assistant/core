@@ -623,6 +623,34 @@ async def test_adb_command(hass):
         assert state.attributes["adb_response"] == response
 
 
+async def test_adb_command_unicode_decode_error(hass):
+    """Test sending a command via the `androidtv.adb_command` service that raises a UnicodeDecodeError exception."""
+    patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
+    command = "test command"
+    response = b"test response"
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patch(
+        "androidtv.basetv.BaseTV.adb_shell",
+        side_effect=UnicodeDecodeError("utf-8", response, 0, len(response), "TEST"),
+    ):
+        await hass.services.async_call(
+            ANDROIDTV_DOMAIN,
+            "adb_command",
+            {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
+            blocking=True,
+        )
+
+        # patch_shell.assert_called_with(command)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.attributes["adb_response"] is None
+
+
 async def test_adb_command_key(hass):
     """Test sending a key command via the `androidtv.adb_command` service."""
     patch_key = "server"
