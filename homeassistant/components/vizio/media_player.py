@@ -133,7 +133,11 @@ class VizioDevice(MediaPlayerDevice):
         self._supported_commands = SUPPORTED_COMMANDS[device_type]
         self._device = Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
         self._max_volume = float(self._device.get_max_volume())
-        self._unique_id = f"{device_type}-{self._device.get_esn()}"
+
+        self._unique_id = None
+        esn = self._device.get_esn()
+        if esn:
+            self._unique_id = f"{device_type}-{esn}"
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
