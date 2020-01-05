@@ -198,7 +198,7 @@ class PersonStorageCollection(collection.StorageCollection):
         if user_id is not None:
             await self._validate_user_id(user_id)
 
-        return self.CREATE_SCHEMA(data)
+        return data
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
