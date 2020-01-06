@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     volume_step = config[CONF_VOLUME_STEP]
     device_type = config[CONF_DEVICE_CLASS]
     device = VizioDevice(host, token, name, volume_step, device_type)
-    if device._device.can_connect() is False:
+    if not device._device.can_connect():
         fail_auth_msg = ""
         if token is not None and token != "":
             fail_auth_msg = " and auth token is correct"
