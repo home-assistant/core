@@ -4,7 +4,7 @@ import logging
 
 from pyvizio import Vizio
 from requests.packages import urllib3
-import voluptous as vol
+import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -56,7 +56,11 @@ SUPPORTED_COMMANDS = {
 }
 
 
+<<<<<<< HEAD
 PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA), validate_auth)
+=======
+PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA, validate_auth))
+>>>>>>> update .coveragerc, move validate_auth to __init__, only attempt to get ESN if device setup is validated
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
