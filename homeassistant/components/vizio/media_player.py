@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device = VizioDevice(host, token, name, volume_step, device_type)
     if not device.validate_setup():
         fail_auth_msg = ""
-        if token is not None and token != "":
+        if token:
             fail_auth_msg = " and auth token is correct"
         _LOGGER.error(
             "Failed to set up Vizio platform, please check if host "
