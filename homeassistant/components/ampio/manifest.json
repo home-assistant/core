@@ -2,9 +2,7 @@
   "domain": "ampio",
   "name": "Ampio",
   "documentation": "https://www.home-assistant.io/integrations/ampio",
-  "requirements": [
-    "asmog==0.0.6"
-  ],
+  "requirements": ["asmog==0.0.6"],
   "dependencies": [],
   "codeowners": []
 }

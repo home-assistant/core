@@ -2,11 +2,7 @@
   "domain": "sma",
   "name": "Sma",
   "documentation": "https://www.home-assistant.io/integrations/sma",
-  "requirements": [
-    "pysma==0.3.4"
-  ],
+  "requirements": ["pysma==0.3.4"],
   "dependencies": [],
-  "codeowners": [
-    "@kellerza"
-  ]
+  "codeowners": ["@kellerza"]
 }

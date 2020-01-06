@@ -2,9 +2,7 @@
   "domain": "pjlink",
   "name": "Pjlink",
   "documentation": "https://www.home-assistant.io/integrations/pjlink",
-  "requirements": [
-    "pypjlink2==1.2.0"
-  ],
+  "requirements": ["pypjlink2==1.2.0"],
   "dependencies": [],
   "codeowners": []
 }

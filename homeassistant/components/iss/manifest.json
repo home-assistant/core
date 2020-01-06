@@ -2,9 +2,7 @@
   "domain": "iss",
   "name": "Iss",
   "documentation": "https://www.home-assistant.io/integrations/iss",
-  "requirements": [
-    "pyiss==1.0.1"
-  ],
+  "requirements": ["pyiss==1.0.1"],
   "dependencies": [],
   "codeowners": []
 }

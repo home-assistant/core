@@ -3,8 +3,6 @@
   "name": "Mqtt room",
   "documentation": "https://www.home-assistant.io/integrations/mqtt_room",
   "requirements": [],
-  "dependencies": [
-    "mqtt"
-  ],
+  "dependencies": ["mqtt"],
   "codeowners": []
 }

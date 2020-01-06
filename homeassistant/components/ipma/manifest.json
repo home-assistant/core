@@ -3,11 +3,7 @@
   "name": "Ipma",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ipma",
-  "requirements": [
-    "pyipma==1.2.1"
-  ],
+  "requirements": ["pyipma==1.2.1"],
   "dependencies": [],
-  "codeowners": [
-    "@dgomes"
-  ]
+  "codeowners": ["@dgomes"]
 }

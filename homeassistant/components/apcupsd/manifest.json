@@ -2,9 +2,7 @@
   "domain": "apcupsd",
   "name": "Apcupsd",
   "documentation": "https://www.home-assistant.io/integrations/apcupsd",
-  "requirements": [
-    "apcaccess==0.0.13"
-  ],
+  "requirements": ["apcaccess==0.0.13"],
   "dependencies": [],
   "codeowners": []
 }

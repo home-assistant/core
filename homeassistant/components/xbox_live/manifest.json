@@ -2,11 +2,7 @@
   "domain": "xbox_live",
   "name": "Xbox live",
   "documentation": "https://www.home-assistant.io/integrations/xbox_live",
-  "requirements": [
-    "xboxapi==0.1.1"
-  ],
+  "requirements": ["xboxapi==0.1.1"],
   "dependencies": [],
-  "codeowners": [
-    "@MartinHjelmare"
-  ]
+  "codeowners": ["@MartinHjelmare"]
 }

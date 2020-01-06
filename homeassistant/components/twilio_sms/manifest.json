@@ -3,10 +3,6 @@
   "name": "Twilio sms",
   "documentation": "https://www.home-assistant.io/integrations/twilio_sms",
   "requirements": [],
-  "dependencies": [
-    "twilio"
-  ],
-  "codeowners": [
-    "@robbiet480"
-  ]
+  "dependencies": ["twilio"],
+  "codeowners": ["@robbiet480"]
 }

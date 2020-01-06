@@ -2,9 +2,7 @@
   "domain": "gitlab_ci",
   "name": "Gitlab ci",
   "documentation": "https://www.home-assistant.io/integrations/gitlab_ci",
-  "requirements": [
-    "python-gitlab==1.6.0"
-  ],
+  "requirements": ["python-gitlab==1.6.0"],
   "dependencies": [],
   "codeowners": []
 }

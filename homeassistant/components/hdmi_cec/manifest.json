@@ -2,9 +2,7 @@
   "domain": "hdmi_cec",
   "name": "Hdmi cec",
   "documentation": "https://www.home-assistant.io/integrations/hdmi_cec",
-  "requirements": [
-    "pyCEC==0.4.13"
-  ],
+  "requirements": ["pyCEC==0.4.13"],
   "dependencies": [],
   "codeowners": []
 }
