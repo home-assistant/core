@@ -1,4 +1,5 @@
 """The Samsung TV integration."""
+import socket
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -29,12 +30,16 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the Samsung TV integration."""
     if DOMAIN in config:
+        hosts = []
         for entry_config in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": "import"}, data=entry_config
+            host = socket.gethostbyname(entry_config[CONF_HOST])
+            if host not in hosts:
+                hosts.append(host)
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        DOMAIN, context={"source": "import"}, data=entry_config
+                    )
                 )
-            )
 
     return True
 
