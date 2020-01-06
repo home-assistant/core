@@ -33,22 +33,13 @@ class HomeAirQualitySensor(HomeKitEntity, AirQualityEntity):
     @property
     def particulate_matter_2_5(self):
         """
-        Return the particulate matter 2.5 level.
-
-        This is required on the HA side but optional on the HomeKit side, so we
-        always return a value.
-        """
-        return self.get_hk_char_value(CharacteristicsTypes.DENSITY_PM25) or 0
+        Return the particulate matter 2.5 level."""
+        return self.get_hk_char_value(CharacteristicsTypes.DENSITY_PM25)
 
     @property
     def particulate_matter_10(self):
-        """
-        Return the particulate matter 10 level.
-
-        This is required on the HA side but optional on the HomeKit side, so we
-        always return a value.
-        """
-        return self.get_hk_char_value(CharacteristicsTypes.DENSITY_PM10) or 0
+        """Return the particulate matter 10 level."""
+        return self.get_hk_char_value(CharacteristicsTypes.DENSITY_PM10)
 
     @property
     def ozone(self):
