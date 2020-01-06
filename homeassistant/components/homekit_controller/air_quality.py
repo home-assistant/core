@@ -32,8 +32,7 @@ class HomeAirQualitySensor(HomeKitEntity, AirQualityEntity):
 
     @property
     def particulate_matter_2_5(self):
-        """
-        Return the particulate matter 2.5 level."""
+        """Return the particulate matter 2.5 level."""
         return self.get_hk_char_value(CharacteristicsTypes.DENSITY_PM25)
 
     @property
