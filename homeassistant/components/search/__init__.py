@@ -4,6 +4,7 @@ from collections import defaultdict
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
+from homeassistant.components.homeassistant import scene
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import device_registry, entity_registry
 
@@ -39,7 +40,16 @@ async def websocket_search(hass, connection, msg):
 
 
 class Searcher:
-    """Find related things."""
+    """Find related things.
+
+    Few rules:
+    Scenes, scripts, automations and config entries will only be expanded if they are
+    the entry point. They won't be expanded if we process them. This is because they
+    turn the results into garbage.
+    """
+
+    # These types won't be further explored
+    DONT_RESOLVE = {"scene", "automation", "script", "config_entry"}
 
     def __init__(
         self,
@@ -56,18 +66,21 @@ class Searcher:
 
     async def search(self, item_type, item_id):
         """Find results."""
-        self._add_or_resolve(item_type, item_id)
+        self.results[item_type].add(item_id)
+        self._to_resolve.add((item_type, item_id))
 
         while self._to_resolve:
             search_type, search_id = self._to_resolve.pop()
             await getattr(self, f"_resolve_{search_type}")(search_id)
 
-        # Remove entry into graph from search results.
-        self.results[item_type].remove(item_id)
-        # Clean up entity results with types that are represented as entities
+        # Clean up entity_id items, from the general "entity" type result,
+        # that are also found in the specific entity domain type.
         self.results["entity"] -= self.results["script"]
         self.results["entity"] -= self.results["scene"]
         self.results["entity"] -= self.results["automation"]
+
+        # Remove entry into graph from search results.
+        self.results[item_type].remove(item_id)
 
         # Filter out empty sets.
         return {key: val for key, val in self.results.items() if val}
@@ -78,7 +91,9 @@ class Searcher:
             return
 
         self.results[item_type].add(item_id)
-        self._to_resolve.add((item_type, item_id))
+
+        if item_type not in self.DONT_RESOLVE:
+            self._to_resolve.add((item_type, item_id))
 
     async def _resolve_area(self, area_id) -> None:
         """Resolve an area."""
@@ -93,6 +108,9 @@ class Searcher:
             if device_entry.area_id:
                 self._add_or_resolve("area", device_entry.area_id)
 
+            for config_entry_id in device_entry.config_entries:
+                self._add_or_resolve("config_entry", config_entry_id)
+
             # We do not resolve device_entry.via_device_id because that
             # device is not related data-wise inside HA.
 
@@ -105,7 +123,10 @@ class Searcher:
 
     async def _resolve_entity(self, entity_id) -> None:
         """Resolve an entity."""
-        # Extra: Find automations, scripts, scenes that reference this entity.
+        # Extra: Find automations and scripts that reference this entity.
+
+        for entity in scene.scenes_with_entity(self.hass, entity_id):
+            self._add_or_resolve("entity", entity)
 
         # Find devices
         entity_entry = self._entity_reg.async_get(entity_id)
@@ -113,20 +134,47 @@ class Searcher:
             if entity_entry.device_id:
                 self._add_or_resolve("device", entity_entry.device_id)
 
+            if entity_entry.config_entry_id is not None:
+                self._add_or_resolve("config_entry", entity_entry.config_entry_id)
+
         domain = split_entity_id(entity_id)[0]
 
-        # We can expand these types into more types.
-        if domain in ("scene", "script", "automation"):
+        if domain in ("scene", "automation", "script"):
             self._add_or_resolve(domain, entity_id)
 
-    async def _resolve_automation(self, automation_id) -> None:
-        """Resolve an automation."""
+    async def _resolve_automation(self, automation_entity_id) -> None:
+        """Resolve an automation.
+
+        Will only be called if automation is an entry point.
+        """
         # Extra: Check with automation integration what entities/devices they reference
 
-    async def _resolve_script(self, script_id) -> None:
-        """Resolve a script."""
+    async def _resolve_script(self, script_entity_id) -> None:
+        """Resolve a script.
+
+        Will only be called if script is an entry point.
+        """
         # Extra: Check with script integration what entities/devices they reference
 
-    async def _resolve_scene(self, scene_id) -> None:
-        """Resolve a scene."""
-        # Extra: Check with scene integration what entities they reference
+    async def _resolve_scene(self, scene_entity_id) -> None:
+        """Resolve a scene.
+
+        Will only be called if scene is an entry point.
+        """
+        for entity in scene.entities_in_scene(self.hass, scene_entity_id):
+            self._add_or_resolve("entity", entity)
+
+    async def _resolve_config_entry(self, config_entry_id) -> None:
+        """Resolve a config entry.
+
+        Will only be called if config entry is an entry point.
+        """
+        for device_entry in device_registry.async_entries_for_config_entry(
+            self._device_reg, config_entry_id
+        ):
+            self._add_or_resolve("device", device_entry.id)
+
+        for entity_entry in entity_registry.async_entries_for_config_entry(
+            self._entity_reg, config_entry_id
+        ):
+            self._add_or_resolve("entity", entity_entry.entity_id)

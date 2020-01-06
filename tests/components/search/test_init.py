@@ -25,19 +25,19 @@ async def test_search(hass):
 
     device_reg.async_update_device(wled_device.id, area_id=living_room_area.id)
 
-    wled_segment_1 = entity_reg.async_get_or_create(
+    wled_segment_1_entity = entity_reg.async_get_or_create(
         "light",
         "wled",
         "wled-1-seg-1",
-        suggested_object_id="living room light strip segment 1",
+        suggested_object_id="wled segment 1",
         config_entry=wled_config_entry,
         device_id=wled_device.id,
     )
-    wled_segment_2 = entity_reg.async_get_or_create(
+    wled_segment_2_entity = entity_reg.async_get_or_create(
         "light",
         "wled",
         "wled-1-seg-2",
-        suggested_object_id="living room light strip segment 2",
+        suggested_object_id="wled segment 2",
         config_entry=wled_config_entry,
         device_id=wled_device.id,
     )
@@ -56,43 +56,89 @@ async def test_search(hass):
 
     device_reg.async_update_device(hue_device.id, area_id=kitchen_area.id)
 
-    entity_reg.async_get_or_create(
+    hue_segment_1_entity = entity_reg.async_get_or_create(
         "light",
         "hue",
         "hue-1-seg-1",
-        suggested_object_id="living room light strip segment 1",
+        suggested_object_id="hue segment 1",
         config_entry=hue_config_entry,
         device_id=hue_device.id,
     )
-    entity_reg.async_get_or_create(
+    hue_segment_2_entity = entity_reg.async_get_or_create(
         "light",
         "hue",
         "hue-1-seg-2",
-        suggested_object_id="living room light strip segment 2",
+        suggested_object_id="hue segment 2",
         config_entry=hue_config_entry,
         device_id=hue_device.id,
     )
 
-    expected = {
-        "area": {living_room_area.id},
-        "device": {wled_device.id},
-        "entity": {wled_segment_1.entity_id, wled_segment_2.entity_id},
-    }
+    await async_setup_component(
+        hass,
+        "scene",
+        {
+            "scene": [
+                {
+                    "name": "scene_wled_seg_1",
+                    "entities": {wled_segment_1_entity.entity_id: "on"},
+                },
+                {
+                    "name": "scene_hue_seg_1",
+                    "entities": {hue_segment_1_entity.entity_id: "on"},
+                },
+                {
+                    "name": "scene_wled_hue",
+                    "entities": {
+                        wled_segment_1_entity.entity_id: "on",
+                        wled_segment_2_entity.entity_id: "on",
+                        hue_segment_1_entity.entity_id: "on",
+                        hue_segment_2_entity.entity_id: "on",
+                    },
+                },
+            ]
+        },
+    )
 
     # Explore the graph from every node and make sure we find the same results
+    expected = {
+        "config_entry": {wled_config_entry.entry_id},
+        "area": {living_room_area.id},
+        "device": {wled_device.id},
+        "entity": {wled_segment_1_entity.entity_id, wled_segment_2_entity.entity_id},
+        "scene": {"scene.scene_wled_seg_1", "scene.scene_wled_hue"},
+    }
+
     for search_type, search_id in (
+        ("config_entry", wled_config_entry.entry_id),
         ("area", living_room_area.id),
         ("device", wled_device.id),
-        ("entity", wled_segment_1.entity_id),
-        ("entity", wled_segment_2.entity_id),
+        ("entity", wled_segment_1_entity.entity_id),
+        ("entity", wled_segment_2_entity.entity_id),
+        ("scene", "scene.scene_wled_seg_1"),
     ):
         searcher = search.Searcher(hass, device_reg, entity_reg)
         results = await searcher.search(search_type, search_id)
         # Add the item we searched for, it's omitted from results
         results.setdefault(search_type, set()).add(search_id)
+
         assert (
             results == expected
         ), f"Results for {search_type}/{search_id} do not match up"
+
+    # For combined scene, needs to return everything.
+    searcher = search.Searcher(hass, device_reg, entity_reg)
+    assert await searcher.search("scene", "scene.scene_wled_hue") == {
+        "config_entry": {wled_config_entry.entry_id, hue_config_entry.entry_id},
+        "area": {living_room_area.id, kitchen_area.id},
+        "device": {wled_device.id, hue_device.id},
+        "entity": {
+            wled_segment_1_entity.entity_id,
+            wled_segment_2_entity.entity_id,
+            hue_segment_1_entity.entity_id,
+            hue_segment_2_entity.entity_id,
+        },
+        "scene": {"scene.scene_wled_seg_1", "scene.scene_hue_seg_1"},
+    }
 
 
 async def test_ws_api(hass, hass_ws_client):
@@ -122,4 +168,7 @@ async def test_ws_api(hass, hass_ws_client):
     )
     response = await client.receive_json()
     assert response["success"]
-    assert response["result"] == {"area": [kitchen_area.id]}
+    assert response["result"] == {
+        "config_entry": [hue_config_entry.entry_id],
+        "area": [kitchen_area.id],
+    }
