@@ -1,5 +1,9 @@
 {
     "config": {
+        "error": {
+            "bad_dsn": "Ugyldig datakildenavn (DSN)",
+            "unknown": "Uventet feil"
+        },
         "step": {
             "user": {
                 "title": "Sentry"
