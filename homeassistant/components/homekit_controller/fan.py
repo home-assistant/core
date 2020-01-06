@@ -121,45 +121,42 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
 
     async def async_set_direction(self, direction):
         """Set the direction of the fan."""
-        if self.supported_features & SUPPORT_DIRECTION:
-            await self._accessory.put_characteristics(
-                [
-                    {
-                        "aid": self._aid,
-                        "iid": self._chars["rotation.direction"],
-                        "value": DIRECTION_TO_HK[direction],
-                    }
-                ]
-            )
+        await self._accessory.put_characteristics(
+            [
+                {
+                    "aid": self._aid,
+                    "iid": self._chars["rotation.direction"],
+                    "value": DIRECTION_TO_HK[direction],
+                }
+            ]
+        )
 
     async def async_set_speed(self, speed):
         """Set the speed of the fan."""
         if speed == SPEED_OFF:
             return await self.async_turn_off()
 
-        if self.supported_features & SUPPORT_SET_SPEED:
-            await self._accessory.put_characteristics(
-                [
-                    {
-                        "aid": self._aid,
-                        "iid": self._chars["rotation.speed"],
-                        "value": SPEED_TO_PCNT[speed],
-                    }
-                ]
-            )
+        await self._accessory.put_characteristics(
+            [
+                {
+                    "aid": self._aid,
+                    "iid": self._chars["rotation.speed"],
+                    "value": SPEED_TO_PCNT[speed],
+                }
+            ]
+        )
 
     async def async_oscillate(self, oscillating: bool):
         """Oscillate the fan."""
-        if self.supported_features & SUPPORT_OSCILLATE:
-            await self._accessory.put_characteristics(
-                [
-                    {
-                        "aid": self._aid,
-                        "iid": self._chars["swing-mode"],
-                        "value": 1 if oscillating else 0,
-                    }
-                ]
-            )
+        await self._accessory.put_characteristics(
+            [
+                {
+                    "aid": self._aid,
+                    "iid": self._chars["swing-mode"],
+                    "value": 1 if oscillating else 0,
+                }
+            ]
+        )
 
     async def async_turn_on(self, speed=None, **kwargs):
         """Turn the specified fan on."""
