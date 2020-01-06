@@ -1,6 +1,6 @@
 {
   "domain": "arest",
-  "name": "Arest",
+  "name": "aREST",
   "documentation": "https://www.home-assistant.io/integrations/arest",
   "requirements": [],
   "dependencies": [],
