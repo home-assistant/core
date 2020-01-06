@@ -14,12 +14,14 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.helpers import collection
+from homeassistant.core import callback
+from homeassistant.helpers import collection, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
 from homeassistant.loader import bind_hass
 
@@ -31,23 +33,56 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_INITIAL = "initial"
 
+CREATE_FIELDS = {
+    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Optional(CONF_INITIAL): cv.boolean,
+    vol.Optional(CONF_ICON): cv.icon,
+}
+
+UPDATE_FIELDS = {
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_INITIAL): cv.boolean,
+    vol.Optional(CONF_ICON): cv.icon,
+}
+
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: cv.schema_with_slug_keys(
-            vol.Any(
-                {
-                    vol.Optional(CONF_NAME): cv.string,
-                    vol.Optional(CONF_INITIAL): cv.boolean,
-                    vol.Optional(CONF_ICON): cv.icon,
-                },
-                None,
-            )
-        )
-    },
+    {DOMAIN: cv.schema_with_slug_keys(vol.Any(UPDATE_FIELDS, None))},
     extra=vol.ALLOW_EXTRA,
 )
 
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
+STORAGE_KEY = DOMAIN
+STORAKE_VERSION = 1
+
+
+class InputBooleanStorageCollection(collection.StorageCollection):
+    """Input boolean collection stored in storage."""
+
+    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+
+    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+        """Validate the config is valid."""
+        return self.CREATE_SCHEMA(data)
+
+    @callback
+    def _get_suggested_id(self, info: typing.Dict) -> str:
+        """Suggest an ID based on the config."""
+        return info[CONF_NAME]
+
+    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+        """Return a new updated data object."""
+        return self.UPDATE_SCHEMA(update_data)
+
+    async def _collection_changed(
+        self, change_type: str, item_id: str, config: typing.Optional[typing.Dict]
+    ) -> None:
+        """Handle a collection change."""
+        if change_type != collection.CHANGE_REMOVED:
+            return
+
+        ent_reg = await entity_registry.async_get_registry(self.hass)
+        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
 
 
 @bind_hass
@@ -60,6 +95,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up an input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
+
     yaml_collection = collection.YamlCollection(
         logging.getLogger(f"{__name__}.yaml_collection"), id_manager
     )
@@ -67,7 +103,21 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         component, yaml_collection, lambda conf: InputBoolean(conf, from_yaml=True)
     )
 
+    storage_collection = InputBooleanStorageCollection(
+        Store(hass, STORAKE_VERSION, STORAGE_KEY),
+        logging.getLogger(f"{__name__}_storage_collection"),
+        id_manager,
+    )
+    collection.attach_entity_component_collection(
+        component, storage_collection, lambda conf: InputBoolean(conf)
+    )
+
     await yaml_collection.async_load(_filter_yaml(config))
+    await storage_collection.async_load()
+
+    collection.StorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+    ).async_setup(hass)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Remove all input booleans and load new ones from config."""
