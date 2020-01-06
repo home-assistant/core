@@ -2,11 +2,7 @@
   "domain": "saj",
   "name": "SAJ",
   "documentation": "https://www.home-assistant.io/integrations/saj",
-  "requirements": [
-    "pysaj==0.0.14"
-  ],
+  "requirements": ["pysaj==0.0.14"],
   "dependencies": [],
-  "codeowners": [
-    "@fredericvl"
-  ]
+  "codeowners": ["@fredericvl"]
 }

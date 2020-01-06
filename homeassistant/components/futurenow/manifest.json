@@ -2,9 +2,7 @@
   "domain": "futurenow",
   "name": "Futurenow",
   "documentation": "https://www.home-assistant.io/integrations/futurenow",
-  "requirements": [
-    "pyfnip==0.2"
-  ],
+  "requirements": ["pyfnip==0.2"],
   "dependencies": [],
   "codeowners": []
 }

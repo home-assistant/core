@@ -2,9 +2,7 @@
   "domain": "postnl",
   "name": "Postnl",
   "documentation": "https://www.home-assistant.io/integrations/postnl",
-  "requirements": [
-    "postnl_api==1.2.2"
-  ],
+  "requirements": ["postnl_api==1.2.2"],
   "dependencies": [],
   "codeowners": []
 }

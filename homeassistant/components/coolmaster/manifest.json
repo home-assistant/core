@@ -3,11 +3,7 @@
   "name": "Coolmaster",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/coolmaster",
-  "requirements": [
-    "pycoolmasternet==0.0.4"
-  ],
+  "requirements": ["pycoolmasternet==0.0.4"],
   "dependencies": [],
-  "codeowners": [
-    "@OnFreund"
-  ]
+  "codeowners": ["@OnFreund"]
 }

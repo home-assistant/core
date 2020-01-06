@@ -16,7 +16,5 @@
     }
   ],
   "dependencies": [],
-  "codeowners": [
-    "@scop"
-  ]
+  "codeowners": ["@scop"]
 }

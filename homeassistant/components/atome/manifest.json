@@ -5,4 +5,4 @@
   "dependencies": [],
   "codeowners": ["@baqs"],
   "requirements": ["pyatome==0.1.1"]
-} 
+}

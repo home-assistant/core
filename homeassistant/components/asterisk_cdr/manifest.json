@@ -3,8 +3,6 @@
   "name": "Asterisk cdr",
   "documentation": "https://www.home-assistant.io/integrations/asterisk_cdr",
   "requirements": [],
-  "dependencies": [
-    "asterisk_mbox"
-  ],
+  "dependencies": ["asterisk_mbox"],
   "codeowners": []
 }

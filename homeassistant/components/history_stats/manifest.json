@@ -3,8 +3,6 @@
   "name": "History stats",
   "documentation": "https://www.home-assistant.io/integrations/history_stats",
   "requirements": [],
-  "dependencies": [
-    "history"
-  ],
+  "dependencies": ["history"],
   "codeowners": []
 }

@@ -2,9 +2,7 @@
   "domain": "honeywell",
   "name": "Honeywell",
   "documentation": "https://www.home-assistant.io/integrations/honeywell",
-  "requirements": [
-    "somecomfort==0.5.2"
-  ],
+  "requirements": ["somecomfort==0.5.2"],
   "dependencies": [],
   "codeowners": ["@zxdavb"]
 }

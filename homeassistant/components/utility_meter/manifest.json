@@ -4,7 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/utility_meter",
   "requirements": [],
   "dependencies": [],
-  "codeowners": [
-    "@dgomes"
-  ]
+  "codeowners": ["@dgomes"]
 }
