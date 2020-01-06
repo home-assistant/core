@@ -1,4 +1,5 @@
 """Helper classes for Google Assistant integration."""
+from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Mapping
 import logging
@@ -35,7 +36,7 @@ SYNC_DELAY = 15
 _LOGGER = logging.getLogger(__name__)
 
 
-class AbstractConfig:
+class AbstractConfig(ABC):
     """Hold the configuration for Google Assistant."""
 
     _unsub_report_state = None
@@ -95,9 +96,13 @@ class AbstractConfig:
         """Return the user ID to be used for actions received via the local SDK."""
         raise NotImplementedError
 
+    @abstractmethod
+    def get_agent_user_id(self, context):
+        """Get agent user ID from context."""
+
+    @abstractmethod
     def should_expose(self, state) -> bool:
         """Return if entity should be exposed."""
-        raise NotImplementedError
 
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
