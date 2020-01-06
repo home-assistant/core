@@ -4,8 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/alert",
   "requirements": [],
   "dependencies": [],
-  "after_dependencies": [
-    "notify"
-  ],
+  "after_dependencies": ["notify"],
   "codeowners": []
 }

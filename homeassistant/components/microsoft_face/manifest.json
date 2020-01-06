@@ -3,8 +3,6 @@
   "name": "Microsoft face",
   "documentation": "https://www.home-assistant.io/integrations/microsoft_face",
   "requirements": [],
-  "dependencies": [
-    "camera"
-  ],
+  "dependencies": ["camera"],
   "codeowners": []
 }

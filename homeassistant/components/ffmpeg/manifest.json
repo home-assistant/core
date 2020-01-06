@@ -2,9 +2,7 @@
   "domain": "ffmpeg",
   "name": "Ffmpeg",
   "documentation": "https://www.home-assistant.io/integrations/ffmpeg",
-  "requirements": [
-    "ha-ffmpeg==2.0"
-  ],
+  "requirements": ["ha-ffmpeg==2.0"],
   "dependencies": [],
   "codeowners": []
 }

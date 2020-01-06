@@ -2,9 +2,7 @@
   "domain": "wirelesstag",
   "name": "Wirelesstag",
   "documentation": "https://www.home-assistant.io/integrations/wirelesstag",
-  "requirements": [
-    "wirelesstagpy==0.4.0"
-  ],
+  "requirements": ["wirelesstagpy==0.4.0"],
   "dependencies": [],
   "codeowners": []
 }
