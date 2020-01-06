@@ -76,16 +76,6 @@ class InputBooleanStorageCollection(collection.StorageCollection):
         update_data = self.UPDATE_SCHEMA(update_data)
         return {**data, **update_data}
 
-    async def _collection_changed(
-        self, change_type: str, item_id: str, config: typing.Optional[typing.Dict]
-    ) -> None:
-        """Handle a collection change."""
-        if change_type != collection.CHANGE_REMOVED:
-            return
-
-        ent_reg = await entity_registry.async_get_registry(self.hass)
-        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
-
 
 @bind_hass
 def is_on(hass, entity_id):
@@ -123,13 +113,26 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
+    async def _collection_changed(
+        change_type: str, item_id: str, config: typing.Optional[typing.Dict]
+    ) -> None:
+        """Handle a collection change: clean up entity registry on removals."""
+        if change_type != collection.CHANGE_REMOVED:
+            return
+
+        ent_reg = await entity_registry.async_get_registry(hass)
+        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
+
+    yaml_collection.async_add_listener(_collection_changed)
+    storage_collection.async_add_listener(_collection_changed)
+
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Remove all input booleans and load new ones from config."""
         conf = await component.async_prepare_reload(skip_reset=True)
         if conf is None:
             return
         await yaml_collection.async_load(
-            [{CONF_ID: id_, **(conf or {})} for id_, conf in config[DOMAIN].items()]
+            [{CONF_ID: id_, **(conf or {})} for id_, conf in conf[DOMAIN].items()]
         )
 
     homeassistant.helpers.service.async_register_admin_service(
@@ -214,4 +217,5 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     async def async_update_config(self, config: typing.Dict) -> None:
         """Handle when the config is updated."""
         self._config = config
+        self._state = config.get(CONF_INITIAL, self._state)
         self.async_schedule_update_ha_state()

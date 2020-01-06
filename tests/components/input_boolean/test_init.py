@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import Context, CoreState, State
+from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_component, mock_restore_cache
@@ -169,6 +170,7 @@ async def test_input_boolean_context(hass, hass_admin_user):
 async def test_reload(hass, hass_admin_user):
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
+    ent_reg = await entity_registry.async_get_registry(hass)
 
     _LOGGER.debug("ENTITIES @ start: %s", hass.states.async_entity_ids())
 
@@ -195,6 +197,10 @@ async def test_reload(hass, hass_admin_user):
     assert state_2 is not None
     assert state_3 is None
     assert STATE_ON == state_2.state
+
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -228,6 +234,10 @@ async def test_reload(hass, hass_admin_user):
     assert state_1 is None
     assert state_2 is not None
     assert state_3 is not None
+
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
 
     assert STATE_OFF == state_2.state
     assert "Hello World reloaded" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
