@@ -218,4 +218,4 @@ class InputBoolean(ToggleEntity, RestoreEntity):
         """Handle when the config is updated."""
         self._config = config
         self._state = config.get(CONF_INITIAL, self._state)
-        self.async_schedule_update_ha_state()
+        self.async_write_ha_state()
