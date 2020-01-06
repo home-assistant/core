@@ -1,10 +1,12 @@
 """Support to keep track of user controlled booleans for within automation."""
 import logging
+import typing
 
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ICON,
+    CONF_ID,
     CONF_NAME,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
@@ -89,30 +91,24 @@ async def async_setup(hass, config):
 
 async def _async_process_config(config):
     """Process config and create list of entities."""
-    entities = []
-
-    for object_id, cfg in config[DOMAIN].items():
-        if not cfg:
-            cfg = {}
-
-        name = cfg.get(CONF_NAME)
-        initial = cfg.get(CONF_INITIAL)
-        icon = cfg.get(CONF_ICON)
-
-        entities.append(InputBoolean(object_id, name, initial, icon))
-
-    return entities
+    return [
+        InputBoolean({CONF_ID: id_, **(config or {})}, from_yaml=True)
+        for id_, config in config[DOMAIN].items()
+    ]
 
 
 class InputBoolean(ToggleEntity, RestoreEntity):
     """Representation of a boolean input."""
 
-    def __init__(self, object_id, name, initial, icon):
+    def __init__(self, config: typing.Optional[dict], from_yaml: bool = False):
         """Initialize a boolean input."""
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._name = name
-        self._state = initial
-        self._icon = icon
+        self._unique_id = config[CONF_ID]
+        if from_yaml:
+            # unless we want to make a breaking change
+            self.entity_id = ENTITY_ID_FORMAT.format(self._unique_id)
+        self._name = config.get(CONF_NAME)
+        self._state = config.get(CONF_INITIAL)
+        self._icon = config.get(CONF_ICON)
 
     @property
     def should_poll(self):
@@ -133,6 +129,11 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     def is_on(self):
         """Return true if entity is on."""
         return self._state
+
+    @property
+    def unique_id(self):
+        """Return a unique ID for the person."""
+        return self._unique_id
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
