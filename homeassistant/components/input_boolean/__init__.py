@@ -72,7 +72,8 @@ class InputBooleanStorageCollection(collection.StorageCollection):
 
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
-        return self.UPDATE_SCHEMA(update_data)
+        update_data = self.UPDATE_SCHEMA(update_data)
+        return {**data, **update_data}
 
     async def _collection_changed(
         self, change_type: str, item_id: str, config: typing.Optional[typing.Dict]
@@ -112,7 +113,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         component, storage_collection, InputBoolean
     )
 
-    await yaml_collection.async_load(_filter_yaml(config))
+    await yaml_collection.async_load(
+        [{CONF_ID: id_, **(conf or {})} for id_, conf in config[DOMAIN].items()]
+    )
     await storage_collection.async_load()
 
     collection.StorageCollectionWebsocket(
@@ -124,7 +127,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         conf = await component.async_prepare_reload(skip_reset=True)
         if conf is None:
             return
-        await yaml_collection.async_load(_filter_yaml(conf))
+        await yaml_collection.async_load(
+            [{CONF_ID: id_, **(conf or {})} for id_, conf in config[DOMAIN].items()]
+        )
 
     homeassistant.helpers.service.async_register_admin_service(
         hass,
@@ -143,23 +148,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-def _filter_yaml(config):
-    """Process config and create list suitable for collection consumption."""
-    return [{CONF_ID: id_, **(conf or {})} for id_, conf in config[DOMAIN].items()]
-
-
 class InputBoolean(ToggleEntity, RestoreEntity):
     """Representation of a boolean input."""
 
     def __init__(self, config: typing.Optional[dict], from_yaml: bool = False):
         """Initialize a boolean input."""
-        self._unique_id = config[CONF_ID]
-        self._name = config.get(CONF_NAME)
+        self._config = config
         self._state = config.get(CONF_INITIAL)
-        self._icon = config.get(CONF_ICON)
         if from_yaml:
-            # unless we want to make a breaking change
-            self.entity_id = ENTITY_ID_FORMAT.format(self._unique_id)
+            self.entity_id = ENTITY_ID_FORMAT.format(self.unique_id)
 
     @property
     def should_poll(self):
@@ -169,12 +166,12 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     @property
     def name(self):
         """Return name of the boolean input."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def icon(self):
         """Return the icon to be used for this entity."""
-        return self._icon
+        return self._config.get(CONF_ICON)
 
     @property
     def is_on(self):
@@ -184,7 +181,7 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     @property
     def unique_id(self):
         """Return a unique ID for the person."""
-        return self._unique_id
+        return self._config[CONF_ID]
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
@@ -208,8 +205,5 @@ class InputBoolean(ToggleEntity, RestoreEntity):
 
     async def async_update_config(self, config: typing.Dict) -> None:
         """Handle when the config is updated."""
-        self._unique_id = config[CONF_ID]
-        self._name = config.get(CONF_NAME)
-        self._state = config.get(CONF_INITIAL)
-        self._icon = config.get(CONF_ICON)
+        self._config = config
         self.async_schedule_update_ha_state()
