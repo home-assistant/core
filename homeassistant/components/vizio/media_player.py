@@ -4,10 +4,9 @@ import logging
 
 from pyvizio import Vizio
 from requests.packages import urllib3
-import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -26,20 +25,16 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers import config_validation as cv
+
+from .const import (
+    CONF_SUPPRESS_WARNING,
+    CONF_VOLUME_STEP,
+    DEFAULT_NAME,
+    DEVICE_ID,
+    ICON,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_SUPPRESS_WARNING = "suppress_warning"
-CONF_VOLUME_STEP = "volume_step"
-
-DEFAULT_NAME = "Vizio SmartCast"
-DEFAULT_VOLUME_STEP = 1
-DEFAULT_DEVICE_CLASS = "tv"
-DEVICE_ID = "pyvizio"
-DEVICE_NAME = "Python Vizio"
-
-ICON = "mdi:television"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -59,36 +54,6 @@ SUPPORTED_COMMANDS = {
 }
 
 
-def validate_auth(config):
-    """Validate presence of CONF_ACCESS_TOKEN when CONF_DEVICE_CLASS=tv."""
-    token = config.get(CONF_ACCESS_TOKEN)
-    if config[CONF_DEVICE_CLASS] == "tv" and (token is None or token == ""):
-        raise vol.Invalid(
-            f"When '{CONF_DEVICE_CLASS}' is 'tv' then '{CONF_ACCESS_TOKEN}' is required.",
-            path=[CONF_ACCESS_TOKEN],
-        )
-    return config
-
-
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_ACCESS_TOKEN): cv.string,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_SUPPRESS_WARNING, default=False): cv.boolean,
-            vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.All(
-                cv.string, vol.Lower, vol.In(["tv", "soundbar"])
-            ),
-            vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=10)
-            ),
-        }
-    ),
-    validate_auth,
-)
-
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vizio media player platform."""
     host = config[CONF_HOST]
@@ -97,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     volume_step = config[CONF_VOLUME_STEP]
     device_type = config[CONF_DEVICE_CLASS]
     device = VizioDevice(host, token, name, volume_step, device_type)
-    if device.validate_setup() is False:
+    if device._device.can_connect() is False:
         fail_auth_msg = ""
         if token is not None and token != "":
             fail_auth_msg = " and auth token is correct"
@@ -134,6 +99,7 @@ class VizioDevice(MediaPlayerDevice):
         self._device = Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
         self._max_volume = float(self._device.get_max_volume())
         self._unique_id = self._device.get_esn()
+        self._icon = ICON[device_type]
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -174,6 +140,11 @@ class VizioDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def icon(self):
+        """Return the icon of the device."""
+        return self._icon
 
     @property
     def volume_level(self):
@@ -242,10 +213,6 @@ class VizioDevice(MediaPlayerDevice):
             self._volume_level = max(
                 0.0, self._volume_level - self._volume_step / self._max_volume
             )
-
-    def validate_setup(self):
-        """Validate if host is available and auth token is correct."""
-        return self._device.get_current_volume() is not None
 
     def set_volume_level(self, volume):
         """Set volume level."""
