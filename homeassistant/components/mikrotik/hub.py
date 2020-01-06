@@ -177,9 +177,9 @@ class MikrotikData:
 
         for mac, params in device_list.items():
             if mac not in self.devices:
-                self.devices[mac] = Device(mac, self.all_devices.get(mac))
+                self.devices[mac] = Device(mac, self.all_devices.get(mac, {}))
             else:
-                self.devices[mac].update(params=self.all_devices.get(mac))
+                self.devices[mac].update(params=self.all_devices.get(mac, {}))
 
             if mac in wireless_devices:
                 # if wireless is supported then wireless_params are params

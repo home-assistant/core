@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mikrotik",
   "requirements": [
-    "librouteros==3.0.0"
+    "librouteros==2.3.0"
   ],
   "dependencies": [],
   "codeowners": [
