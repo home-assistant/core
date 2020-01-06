@@ -11,11 +11,13 @@ from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN
 
 def ensure_unique_hosts(value):
     """Validate that all configs have a unique host."""
-    uniques = dict()
+    hosts = list()
     for entry in value:
         host = socket.gethostbyname(entry[CONF_HOST])
-        uniques[host] = entry
-    return list(uniques.values())
+        if host in hosts:
+            raise vol.Invalid("duplicate host entries found")
+        hosts.append(host)
+    return value
 
 
 CONFIG_SCHEMA = vol.Schema(

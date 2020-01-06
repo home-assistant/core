@@ -70,3 +70,28 @@ async def test_setup(hass, remote):
         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert remote.mock_calls[0] == call(REMOTE_CALL)
+
+
+async def test_setup_duplicate_config(hass, remote, caplog):
+    """Test duplicate setup of platform."""
+    DUPLICATE = {
+        SAMSUNGTV_DOMAIN: [
+            MOCK_CONFIG[SAMSUNGTV_DOMAIN][0],
+            MOCK_CONFIG[SAMSUNGTV_DOMAIN][0],
+        ]
+    }
+    await async_setup_component(hass, SAMSUNGTV_DOMAIN, DUPLICATE)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID) is None
+    assert len(hass.states.async_all()) == 0
+    assert "duplicate host entries found" in caplog.text
+
+
+async def test_setup_duplicate_entries(hass, remote, caplog):
+    """Test duplicate setup of platform."""
+    await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
+    await hass.async_block_till_done()
+    assert hass.states.get(ENTITY_ID)
+    assert len(hass.states.async_all()) == 1
+    await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
+    assert len(hass.states.async_all()) == 1

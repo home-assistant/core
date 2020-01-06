@@ -105,23 +105,6 @@ async def test_setup_with_turnon(hass, remote):
     assert hass.states.get(ENTITY_ID)
 
 
-async def test_setup_duplicate(hass, remote, caplog):
-    """Test duplicate setup of platform."""
-    DUPLICATE = {
-        SAMSUNGTV_DOMAIN: [
-            MOCK_CONFIG[SAMSUNGTV_DOMAIN][0],
-            MOCK_CONFIG[SAMSUNGTV_DOMAIN][0],
-        ]
-    }
-    # config_validation duplicate check
-    await setup_samsungtv(hass, DUPLICATE)
-    assert hass.states.get(ENTITY_ID)
-    assert len(hass.states.async_all()) == 1
-    # config_flow duplicate check
-    await setup_samsungtv(hass, MOCK_CONFIG)
-    assert len(hass.states.async_all()) == 1
-
-
 async def test_setup_without_turnon(hass, remote):
     """Test setup of platform."""
     await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
