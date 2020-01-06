@@ -49,3 +49,5 @@ COVER_TYPES = DAMPERS + WINDOW_COVERS
 POWER_PLUGS = ["On/Off plug-in unit", "Smart plug"]
 SIRENS = ["Warning device"]
 SWITCH_TYPES = POWER_PLUGS + SIRENS
+
+CONF_GESTURE = "gesture"
