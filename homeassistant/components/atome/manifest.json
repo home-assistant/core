@@ -1,6 +1,6 @@
 {
   "domain": "atome",
-  "name": "Atome",
+  "name": "Atome Linky",
   "documentation": "https://www.home-assistant.io/integrations/atome",
   "dependencies": [],
   "codeowners": ["@baqs"],
