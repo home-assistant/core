@@ -14,11 +14,13 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
 from homeassistant.loader import bind_hass
 
 DOMAIN = "input_boolean"
@@ -54,20 +56,25 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up an input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    id_manager = collection.IDManager()
+    yaml_collection = collection.YamlCollection(
+        logging.getLogger(f"{__name__}.yaml_collection"), id_manager
+    )
+    collection.attach_entity_component_collection(
+        component, yaml_collection, lambda conf: InputBoolean(conf, from_yaml=True)
+    )
 
-    entities = await _async_process_config(config)
+    await yaml_collection.async_load(_filter_yaml(config))
 
-    async def reload_service_handler(service_call):
+    async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Remove all input booleans and load new ones from config."""
-        conf = await component.async_prepare_reload()
+        conf = await component.async_prepare_reload(skip_reset=True)
         if conf is None:
             return
-        new_entities = await _async_process_config(conf)
-        if new_entities:
-            await component.async_add_entities(new_entities)
+        await yaml_collection.async_load(_filter_yaml(conf))
 
     homeassistant.helpers.service.async_register_admin_service(
         hass,
@@ -83,18 +90,12 @@ async def async_setup(hass, config):
 
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
 
-    if entities:
-        await component.async_add_entities(entities)
-
     return True
 
 
-async def _async_process_config(config):
-    """Process config and create list of entities."""
-    return [
-        InputBoolean({CONF_ID: id_, **(config or {})}, from_yaml=True)
-        for id_, config in config[DOMAIN].items()
-    ]
+def _filter_yaml(config):
+    """Process config and create list suitable for collection consumption."""
+    return [{CONF_ID: id_, **(conf or {})} for id_, conf in config[DOMAIN].items()]
 
 
 class InputBoolean(ToggleEntity, RestoreEntity):
@@ -103,12 +104,12 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     def __init__(self, config: typing.Optional[dict], from_yaml: bool = False):
         """Initialize a boolean input."""
         self._unique_id = config[CONF_ID]
-        if from_yaml:
-            # unless we want to make a breaking change
-            self.entity_id = ENTITY_ID_FORMAT.format(self._unique_id)
         self._name = config.get(CONF_NAME)
         self._state = config.get(CONF_INITIAL)
         self._icon = config.get(CONF_ICON)
+        if from_yaml:
+            # unless we want to make a breaking change
+            self.entity_id = ENTITY_ID_FORMAT.format(self._unique_id)
 
     @property
     def should_poll(self):
@@ -154,3 +155,11 @@ class InputBoolean(ToggleEntity, RestoreEntity):
         """Turn the entity off."""
         self._state = False
         await self.async_update_ha_state()
+
+    async def async_update_config(self, config: typing.Dict) -> None:
+        """Handle when the config is updated."""
+        self._unique_id = config[CONF_ID]
+        self._name = config.get(CONF_NAME)
+        self._state = config.get(CONF_INITIAL)
+        self._icon = config.get(CONF_ICON)
+        self.async_schedule_update_ha_state()
