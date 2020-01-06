@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Es kann keine Verbindung zum GIO\u015a-Server hergestellt werden.",
+            "invalid_sensors_data": "Ung\u00fcltige Sensordaten f\u00fcr diese Messstation.",
+            "wrong_station_id": "ID der Messstation ist nicht korrekt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Name der Integration",
+                    "station_id": "ID der Messstation"
+                }
+            }
+        },
+        "title": "GIO\u015a"
+    }
+}
