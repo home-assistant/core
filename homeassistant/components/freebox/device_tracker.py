@@ -9,6 +9,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
+from . import FreeboxDevice
 from .const import DOMAIN, TRACKER_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,19 +24,15 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the device_tracker."""
-    fbx = hass.data[DOMAIN]
-    devices = await fbx.lan.get_hosts_list()
-
-    for device in devices:
-        _LOGGER.debug("Adding device_tracker for %s", device["primary_name"])
-
+    for device in hass.data[DOMAIN].devices.values():
+        _LOGGER.debug("Adding device_tracker for %s", device.name)
         async_add_entities([FreeboxTrackerEntity(device)])
 
 
 class FreeboxTrackerEntity(TrackerEntity):
     """Represent a tracked device."""
 
-    def __init__(self, device: Dict[str, any]):
+    def __init__(self, device: FreeboxDevice):
         """Set up the Freebox tracker entity."""
         self._device = device
         self._unsub_dispatcher = None
@@ -43,22 +40,26 @@ class FreeboxTrackerEntity(TrackerEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self.mac
+        return self._device.mac
 
     @property
     def name(self) -> str:
         """Return the name of the device."""
-        return self._device["primary_name"]
+        return self._device.name
 
     @property
     def latitude(self):
         """Return latitude value of the device."""
-        return self.hass.config.latitude
+        if self._device.reachable:
+            return self.hass.config.latitude
+        return None
 
     @property
     def longitude(self):
         """Return longitude value of the device."""
-        return self.hass.config.longitude
+        if self._device.reachable:
+            return self.hass.config.longitude
+        return None
 
     @property
     def should_poll(self) -> bool:
@@ -73,22 +74,22 @@ class FreeboxTrackerEntity(TrackerEntity):
     @property
     def icon(self) -> str:
         """Return the icon."""
-        return icon_for_freebox_device(self._device)
+        return self._device.icon
+
+    @property
+    def device_state_attributes(self) -> Dict[str, any]:
+        """Return the device state attributes."""
+        return self._device.state_attributes
 
     @property
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         return {
-            "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
+            "connections": {(CONNECTION_NETWORK_MAC, self._device.mac)},
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self.name,
-            "manufacturer": self._device["vendor_name"],
+            "manufacturer": self._device.manufacturer,
         }
-
-    @property
-    def mac(self) -> str:
-        """Return the MAC address."""
-        return self._device["l2ident"]["id"]
 
     async def async_added_to_hass(self):
         """Register state update callback."""
@@ -99,27 +100,3 @@ class FreeboxTrackerEntity(TrackerEntity):
     async def async_will_remove_from_hass(self):
         """Clean up after entity before removal."""
         self._unsub_dispatcher()
-
-
-def icon_for_freebox_device(device) -> str:
-    """Return a host icon from his type."""
-    switcher = {
-        "freebox_delta": "mdi:television-guide",
-        "freebox_hd": "mdi:television-guide",
-        "freebox_mini": "mdi:television-guide",
-        "freebox_player": "mdi:television-guide",
-        "ip_camera": "mdi:cctv",
-        "ip_phone": "mdi:phone-voip",
-        "laptop": "mdi:laptop",
-        "multimedia_device": "mdi:play-network",
-        "nas": "mdi:nas",
-        "networking_device": "mdi:network",
-        "printer": "mdi:printer",
-        "smartphone": "mdi:cellphone",
-        "tablet": "mdi:tablet",
-        "television": "mdi:television",
-        "vg_console": "mdi:gamepad-variant",
-        "workstation": "mdi:desktop-tower-monitor",
-    }
-
-    return switcher.get(device["host_type"], "mdi:help-network")

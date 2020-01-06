@@ -2,14 +2,13 @@
 import logging
 from typing import Dict
 
-from aiofreepybox import Freepybox
 from aiofreepybox.exceptions import InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import HomeAssistantType
 
+from . import FreeboxRouter
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,22 +24,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switch."""
     fbx = hass.data[DOMAIN]
-    fbx_conf = await fbx.system.get_config()
-    async_add_entities([FbxWifiSwitch(fbx, fbx_conf)], True)
+    async_add_entities([FbxWifiSwitch(fbx)], True)
 
 
 class FbxWifiSwitch(SwitchDevice):
     """Representation of a freebox wifi switch."""
 
-    def __init__(self, fbx: Freepybox, fbx_conf: Dict):
+    def __init__(self, fbx: FreeboxRouter):
         """Initialize the Wifi switch."""
         self._name = "Freebox WiFi"
         self._state = None
         self._fbx = fbx
-        self._fbx_mac = fbx_conf["mac"]
-        self._fbx_name = fbx_conf["model_info"]["pretty_name"]
-        self._fbx_sw_v = fbx_conf["firmware_version"]
-        self._unique_id = f"{self._fbx_mac} {self._name}"
+        self._unique_id = f"{self._fbx.mac} {self._name}"
 
     @property
     def unique_id(self) -> str:
@@ -60,15 +55,9 @@ class FbxWifiSwitch(SwitchDevice):
     @property
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
-        return {
-            "connections": {(CONNECTION_NETWORK_MAC, self._fbx_mac)},
-            "identifiers": {(DOMAIN, self._fbx_mac)},
-            "name": self._fbx_name,
-            "manufacturer": "Freebox SAS",
-            "sw_version": self._fbx_sw_v,
-        }
+        return self._fbx.device_info
 
-    async def _async_set_state(self, enabled):
+    async def _async_set_state(self, enabled: bool):
         """Turn the switch on or off."""
         wifi_config = {"enabled": enabled}
         try:
