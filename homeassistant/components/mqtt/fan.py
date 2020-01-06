@@ -237,10 +237,6 @@ class MqttFan(
         self._supported_features |= (
             self._topic[CONF_SPEED_STATE_TOPIC] is not None and SUPPORT_SET_SPEED
         )
-        print(self._config)
-        print(self._topic)
-        print(self._topic[CONF_SPEED_STATE_TOPIC])
-        print(self._supported_features)
 
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
