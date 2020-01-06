@@ -63,6 +63,10 @@ class MockConfig(helpers.AbstractConfig):
         """Return local SDK webhook id."""
         return self._local_sdk_user_id
 
+    def get_agent_user_id(self, context):
+        """Get agent user ID making request."""
+        return context.user_id
+
     def should_expose(self, state):
         """Expose it all."""
         return self._should_expose is None or self._should_expose(state)
