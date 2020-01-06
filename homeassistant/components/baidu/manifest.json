@@ -1,6 +1,6 @@
 {
   "domain": "baidu",
-  "name": "Baidu TTS",
+  "name": "Baidu",
   "documentation": "https://www.home-assistant.io/integrations/baidu",
   "requirements": ["baidu-aip==1.6.6"],
   "dependencies": [],
