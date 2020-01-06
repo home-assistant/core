@@ -56,7 +56,7 @@ SUPPORTED_COMMANDS = {
 }
 
 
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA, validate_auth))
+PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA), validate_auth)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
