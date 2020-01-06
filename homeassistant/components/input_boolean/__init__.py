@@ -5,6 +5,7 @@ import typing
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_EDITABLE,
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
@@ -154,8 +155,10 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     def __init__(self, config: typing.Optional[dict], from_yaml: bool = False):
         """Initialize a boolean input."""
         self._config = config
+        self._editable = True
         self._state = config.get(CONF_INITIAL)
         if from_yaml:
+            self._editable = False
             self.entity_id = ENTITY_ID_FORMAT.format(self.unique_id)
 
     @property
@@ -167,6 +170,11 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     def name(self):
         """Return name of the boolean input."""
         return self._config.get(CONF_NAME)
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the entity."""
+        return {ATTR_EDITABLE: self._editable}
 
     @property
     def icon(self):
