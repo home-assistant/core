@@ -4,9 +4,10 @@ import logging
 
 from pyvizio import Vizio
 from requests.packages import urllib3
+import voluptous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -26,6 +27,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 
+from . import DATA_SCHEMA
 from .const import (
     CONF_SUPPRESS_WARNING,
     CONF_VOLUME_STEP,
@@ -52,6 +54,22 @@ SUPPORTED_COMMANDS = {
     "soundbar": COMMON_SUPPORTED_COMMANDS,
     "tv": (COMMON_SUPPORTED_COMMANDS | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK),
 }
+
+
+def validate_auth(config):
+    """Validate presence of CONF_ACCESS_TOKEN when CONF_DEVICE_CLASS=tv."""
+    token = config.get(CONF_ACCESS_TOKEN)
+    if config[CONF_DEVICE_CLASS] == "tv" and (token is None or token == ""):
+        raise vol.Invalid(
+            "When '{}' is 'tv' then '{}' is required.".format(
+                CONF_DEVICE_CLASS, CONF_ACCESS_TOKEN
+            ),
+            path=[CONF_ACCESS_TOKEN],
+        )
+    return config
+
+
+PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(DATA_SCHEMA), validate_auth)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
