@@ -16,6 +16,8 @@ CONF_CAMERAS = "cameras"
 CONF_SERIAL = "serial"
 CONF_DEFAULT_CAMERA_USERNAME = "admin"
 
+DEFAULT_RTSP_PORT = "554"
+
 DATA_FFMPEG = "ffmpeg"
 
 CAMERAS_CONFIG = vol.Schema(
@@ -47,60 +49,33 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     try:
         ezviz_client = EzvizClient(account, password)
         ezviz_client.login()
-
-        # Get cameras
-        connections = ezviz_client.get_CONNECTION()
-        devices = ezviz_client.get_DEVICE()
+        cameras = ezviz_client.load_cameras()
 
     except PyEzvizError as exp:
         _LOGGER.error(exp)
-        return
+        return None
 
     # now, let's build the HASS devices
-    cameras = {}
     camera_entities = []
 
-    for device in devices:
-
-        device_serial = device["deviceSerial"]
-
-        # There seem to be a bug related to localRtspPort in Ezviz API...
-        local_rtsp_port = 554
-        if connections[device_serial]["localRtspPort"] != 0:
-            local_rtsp_port = connections[device_serial]["localRtspPort"]
-
-        cameras[device_serial] = {
-            "serial": device_serial,
-            "name": device["name"],
-            "device_type": device["deviceType"],
-            "version": device["version"],
-            "status": device["status"],
-            "create_time": device["userDeviceCreateTime"],
-            "category": device["deviceCategory"],
-            "sub_category": device["deviceSubCategory"],
-            "custom_type": device["customType"],
-            "local_ip": connections[device_serial]["localIp"],
-            "net_ip": connections[device_serial]["netIp"],
-            "local_rtsp_port": local_rtsp_port,
-            "net_type": connections[device_serial]["netType"],
-            "wan_ip": connections[device_serial]["wanIp"],
-        }
-
     # Add the cameras as devices in HASS
-    for camera_serial, camera in cameras.items():
+    for camera in cameras:
 
         camera_username = CONF_DEFAULT_CAMERA_USERNAME
         camera_password = ""
         camera_rtsp_stream = ""
+        camera_serial = camera["serial"]
+
+        # There seem to be a bug related to localRtspPort in Ezviz API...
+        local_rtsp_port = DEFAULT_RTSP_PORT
+        if camera["local_rtsp_port"] and camera["local_rtsp_port"] != 0:
+            local_rtsp_port = camera["local_rtsp_port"]
 
         if camera_serial in conf_cameras:
             camera_username = conf_cameras[camera_serial]["username"]
             camera_password = conf_cameras[camera_serial]["password"]
             camera_rtsp_stream = "rtsp://{}:{}@{}:{}".format(
-                camera_username,
-                camera_password,
-                camera["local_ip"],
-                camera["local_rtsp_port"],
+                camera_username, camera_password, camera["local_ip"], local_rtsp_port,
             )
         else:
             _LOGGER.info(
@@ -130,20 +105,21 @@ class EzvizCamera(Camera):
 
         self._serial = data["serial"]
         self._name = data["name"]
-        self._type = data["device_type"]
-        self._version = data["version"]
         self._status = data["status"]
-        self._create_time = data["create_time"]
-        self._category = data["category"]
-        self._sub_category = data["sub_category"]
-        self._custom_type = data["custom_type"]
+        self._privacy = data["privacy"]
+        self._audio = data["audio"]
+        self._ir_led = data["ir_led"]
+        self._state_led = data["state_led"]
+        self._follow_move = data["follow_move"]
+        self._alarm_notify = data["alarm_notify"]
+        self._alarm_sound_mod = data["alarm_sound_mod"]
+        self._encrypted = data["encrypted"]
         self._local_ip = data["local_ip"]
-        self._net_ip = data["net_ip"]
+        self._detection_sensibility = data["detection_sensibility"]
+        self._device_sub_category = data["device_sub_category"]
         self._local_rtsp_port = data["local_rtsp_port"]
-        self._wan_ip = data["wan_ip"]
-        self._net_type = data["net_type"]
 
-        # self._ffmpeg = self.hass.data[DATA_FFMPEG]
+        self._ffmpeg = None
 
     async def async_added_to_hass(self):
         """Subscribe to ffmpeg and add camera to list."""
@@ -162,19 +138,19 @@ class EzvizCamera(Camera):
         """Return the Ezviz-specific camera state attributes."""
         return {
             "serial": self._serial,
-            "type": self._type,
-            "version": self._version,
-            "create_time": self._create_time,
-            "category": self._category,
-            "sub_category": self._sub_category,
-            "custom_type": self._custom_type,
-            "local_ip": self._local_ip,
-            "net_ip": self._net_ip,
-            "local_rtsp_port": self._local_rtsp_port,
-            "wan_ip": self._wan_ip,
-            "net_type": self._net_type,
-            "rtsp_stream": self._rtsp_stream,
+            "name": self._name,
             "status": self._status,
+            "device_sub_category": self._device_sub_category,
+            "privacy": self._privacy,
+            "audio": self._audio,
+            "ir_led": self._ir_led,
+            "state_led": self._state_led,
+            "follow_move": self._follow_move,
+            "alarm_notify": self._alarm_notify,
+            "alarm_sound_mod": self._alarm_sound_mod,
+            "encrypted": self._encrypted,
+            "local_ip": self._local_ip,
+            "detection_sensibility": self._detection_sensibility,
         }
 
     @property
@@ -197,7 +173,7 @@ class EzvizCamera(Camera):
     @property
     def model(self):
         """Return the camera model."""
-        return self._type
+        return self._device_sub_category
 
     @property
     def is_on(self):
