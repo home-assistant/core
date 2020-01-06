@@ -17,7 +17,7 @@ from .const import (
     DEFAULT_VOLUME_STEP,
 )
 
-DATA_SCHEMA = {
+VIZIO_SCHEMA = {
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_ACCESS_TOKEN): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,

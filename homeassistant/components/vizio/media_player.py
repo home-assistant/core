@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from . import DATA_SCHEMA
+from . import VIZIO_SCHEMA
 from .const import (
     CONF_SUPPRESS_WARNING,
     CONF_VOLUME_STEP,
@@ -67,7 +67,7 @@ def validate_auth(config):
     return config
 
 
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(DATA_SCHEMA), validate_auth)
+PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA), validate_auth)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
