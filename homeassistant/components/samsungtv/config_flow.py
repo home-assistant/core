@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
 )
-from homeassistant.data_entry_flow import AbortFlow
 
 # pylint:disable=unused-import
 from .const import (
@@ -160,20 +159,12 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._uuid.startswith("uuid:"):
             self._uuid = self._uuid[5:]
 
-        await self.async_set_unique_id(ip_address)
-        try:
-            self._abort_if_unique_id_configured()
-        except AbortFlow:
-            config_entries = self.hass.config_entries
-            entry = [
-                entry
-                for entry in config_entries.async_entries(DOMAIN)
-                if entry.unique_id == self.unique_id
-            ][0]
-            entry.data[CONF_MANUFACTURER] = self._manufacturer
-            entry.data[CONF_MODEL] = self._model
-            entry.data[CONF_ID] = self._uuid
-            config_entries.async_update_entry(entry)
+        config_entry = await self.async_set_unique_id(ip_address)
+        if config_entry:
+            config_entry.data[CONF_MANUFACTURER] = self._manufacturer
+            config_entry.data[CONF_MODEL] = self._model
+            config_entry.data[CONF_ID] = self._uuid
+            self.hass.config_entries.async_update_entry(config_entry)
             return self.async_abort(reason="already_configured")
 
         return await self.async_step_confirm()
