@@ -2,9 +2,7 @@
   "domain": "clementine",
   "name": "Clementine",
   "documentation": "https://www.home-assistant.io/integrations/clementine",
-  "requirements": [
-    "python-clementine-remote==1.0.1"
-  ],
+  "requirements": ["python-clementine-remote==1.0.1"],
   "dependencies": [],
   "codeowners": []
 }

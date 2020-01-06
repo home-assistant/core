@@ -3,11 +3,7 @@
   "name": "Ambient station",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ambient_station",
-  "requirements": [
-    "aioambient==1.0.2"
-  ],
+  "requirements": ["aioambient==1.0.2"],
   "dependencies": [],
-  "codeowners": [
-    "@bachya"
-  ]
+  "codeowners": ["@bachya"]
 }

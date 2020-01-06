@@ -3,8 +3,6 @@
   "name": "Manual mqtt",
   "documentation": "https://www.home-assistant.io/integrations/manual_mqtt",
   "requirements": [],
-  "dependencies": [
-    "mqtt"
-  ],
+  "dependencies": ["mqtt"],
   "codeowners": []
 }

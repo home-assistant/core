@@ -3,8 +3,6 @@
   "name": "Rss feed template",
   "documentation": "https://www.home-assistant.io/integrations/rss_feed_template",
   "requirements": [],
-  "dependencies": [
-    "http"
-  ],
+  "dependencies": ["http"],
   "codeowners": []
 }

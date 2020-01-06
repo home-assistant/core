@@ -2,9 +2,7 @@
   "domain": "ialarm",
   "name": "Ialarm",
   "documentation": "https://www.home-assistant.io/integrations/ialarm",
-  "requirements": [
-    "pyialarm==0.3"
-  ],
+  "requirements": ["pyialarm==0.3"],
   "dependencies": [],
   "codeowners": []
 }

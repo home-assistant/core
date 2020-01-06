@@ -3,8 +3,6 @@
   "name": "Switch",
   "documentation": "https://www.home-assistant.io/integrations/switch",
   "requirements": [],
-  "dependencies": [
-    "group"
-  ],
+  "dependencies": ["group"],
   "codeowners": []
 }
