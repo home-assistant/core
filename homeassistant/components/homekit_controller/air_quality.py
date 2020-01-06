@@ -77,11 +77,9 @@ class HomeAirQualitySensor(HomeKitEntity, AirQualityEntity):
         return self.get_hk_char_value(CharacteristicsTypes.DENSITY_VOC)
 
     @property
-    def state_attributes(self):
-        """Return the state attributes."""
-        data = super().state_attributes
-
-        data["air_quality_text"] = self.air_quality_text
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        data = {"air_quality_text": self.air_quality_text}
 
         voc = self.volatile_organic_compounds
         if voc:
