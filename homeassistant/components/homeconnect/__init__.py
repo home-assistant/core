@@ -28,7 +28,7 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -110,5 +110,7 @@ async def update_all_devices(hass, entry):
     hc_api = data[entry.entry_id]
     try:
         await hass.async_add_executor_job(hc_api.get_devices)
+        for device_dict in hc_api.devices:
+            await hass.async_add_executor_job(device_dict["device"].initialize)
     except HTTPError as err:
         _LOGGER.warning("Cannot update devices: %s", err.response.status_code)

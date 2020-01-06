@@ -79,8 +79,12 @@ class HomeConnectDevice:
     power_off_state = "BSH.Common.EnumType.PowerState.Off"
 
     def __init__(self, appliance):
-        """Initialize the device."""
+        """Initialize the device class."""
         self.appliance = appliance
+        self.entities = []
+
+    def initialize(self):
+        """Fetch the info needed to initialize the device."""
         try:
             self.appliance.get_status()
         except (HomeConnectError, ValueError):
@@ -99,7 +103,6 @@ class HomeConnectDevice:
                 "value": program_active["key"]
             }
         self.appliance.listen_events(callback=self.event_callback)
-        self.entities = []
 
     def event_callback(self, appliance):
         """Handle event."""
