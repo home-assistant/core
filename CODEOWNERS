@@ -51,6 +51,7 @@ homeassistant/components/blink/* @fronzbot
 homeassistant/components/bmw_connected_drive/* @gerard33
 homeassistant/components/braviatv/* @robbiet480
 homeassistant/components/broadlink/* @danielhiversen @felipediel
+homeassistant/components/brother/* @bieniu
 homeassistant/components/brunt/* @eavanvalkenburg
 homeassistant/components/bt_smarthub/* @jxwolstenholme
 homeassistant/components/buienradar/* @mjj4791 @ties

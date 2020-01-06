@@ -2,9 +2,7 @@
   "domain": "statsd",
   "name": "Statsd",
   "documentation": "https://www.home-assistant.io/integrations/statsd",
-  "requirements": [
-    "statsd==3.2.1"
-  ],
+  "requirements": ["statsd==3.2.1"],
   "dependencies": [],
   "codeowners": []
 }

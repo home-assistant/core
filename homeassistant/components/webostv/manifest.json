@@ -2,9 +2,7 @@
   "domain": "webostv",
   "name": "Webostv",
   "documentation": "https://www.home-assistant.io/integrations/webostv",
-  "requirements": [
-    "aiopylgtv==0.2.4"
-  ],
+  "requirements": ["aiopylgtv==0.2.4"],
   "dependencies": ["configurator"],
   "codeowners": ["@bendavid"]
 }

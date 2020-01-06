@@ -2,9 +2,7 @@
   "domain": "gstreamer",
   "name": "Gstreamer",
   "documentation": "https://www.home-assistant.io/integrations/gstreamer",
-  "requirements": [
-    "gstreamer-player==1.1.2"
-  ],
+  "requirements": ["gstreamer-player==1.1.2"],
   "dependencies": [],
   "codeowners": []
 }

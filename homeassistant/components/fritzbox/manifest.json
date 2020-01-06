@@ -2,9 +2,7 @@
   "domain": "fritzbox",
   "name": "Fritzbox",
   "documentation": "https://www.home-assistant.io/integrations/fritzbox",
-  "requirements": [
-    "pyfritzhome==0.4.0"
-  ],
+  "requirements": ["pyfritzhome==0.4.0"],
   "dependencies": [],
   "codeowners": []
 }

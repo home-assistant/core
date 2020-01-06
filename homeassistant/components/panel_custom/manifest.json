@@ -3,10 +3,6 @@
   "name": "Panel custom",
   "documentation": "https://www.home-assistant.io/integrations/panel_custom",
   "requirements": [],
-  "dependencies": [
-    "frontend"
-  ],
-  "codeowners": [
-    "@home-assistant/frontend"
-  ]
+  "dependencies": ["frontend"],
+  "codeowners": ["@home-assistant/frontend"]
 }

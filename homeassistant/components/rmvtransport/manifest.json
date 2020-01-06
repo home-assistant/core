@@ -2,11 +2,7 @@
   "domain": "rmvtransport",
   "name": "Rmvtransport",
   "documentation": "https://www.home-assistant.io/integrations/rmvtransport",
-  "requirements": [
-    "PyRMVtransport==0.2.9"
-  ],
+  "requirements": ["PyRMVtransport==0.2.9"],
   "dependencies": [],
-  "codeowners": [
-    "@cgtobi"
-  ]
+  "codeowners": ["@cgtobi"]
 }

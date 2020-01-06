@@ -4,10 +4,6 @@
   "config_flow": true,
   "documentation": "",
   "dependencies": [],
-  "codeowners": [
-    "@ratsept"
-  ],
-  "requirements": [
-    "pysoma==0.0.10"
-  ]
+  "codeowners": ["@ratsept"],
+  "requirements": ["pysoma==0.0.10"]
 }

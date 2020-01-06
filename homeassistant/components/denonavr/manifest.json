@@ -2,9 +2,7 @@
   "domain": "denonavr",
   "name": "Denonavr",
   "documentation": "https://www.home-assistant.io/integrations/denonavr",
-  "requirements": [
-    "denonavr==0.7.11"
-  ],
+  "requirements": ["denonavr==0.7.11"],
   "dependencies": [],
   "codeowners": []
 }
