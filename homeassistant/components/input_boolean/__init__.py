@@ -109,7 +109,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         id_manager,
     )
     collection.attach_entity_component_collection(
-        component, storage_collection, lambda conf: InputBoolean(conf)
+        component, storage_collection, InputBoolean
     )
 
     await yaml_collection.async_load(_filter_yaml(config))
