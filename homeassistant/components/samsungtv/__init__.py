@@ -1,5 +1,6 @@
 """The Samsung TV integration."""
 import socket
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -7,10 +8,24 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN
 
+
+def ensure_unique_hosts(value):
+    """Validate that all configs have a unique host."""
+    hosts = []
+    result = []
+    for entry in value:
+        host = socket.gethostbyname(entry[CONF_HOST])
+        if host not in hosts:
+            hosts.append(host)
+            result.append(entry)
+    return result
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
+            ensure_unique_hosts,
             [
                 vol.Schema(
                     {
@@ -30,16 +45,12 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the Samsung TV integration."""
     if DOMAIN in config:
-        hosts = []
         for entry_config in config[DOMAIN]:
-            host = socket.gethostbyname(entry_config[CONF_HOST])
-            if host not in hosts:
-                hosts.append(host)
-                hass.async_create_task(
-                    hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": "import"}, data=entry_config
-                    )
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": "import"}, data=entry_config
                 )
+            )
 
     return True
 

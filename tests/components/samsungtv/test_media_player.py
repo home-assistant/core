@@ -104,7 +104,9 @@ def remote_fixture():
         "homeassistant.components.samsungtv.config_flow.Remote"
     ), patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote"
-    ) as remote_class:
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.socket"
+    ):
         remote = mock.Mock()
         remote_class.return_value = remote
         yield remote
@@ -136,8 +138,12 @@ async def test_setup_duplicate(hass, remote, caplog):
             MOCK_CONFIG[SAMSUNGTV_DOMAIN][0],
         ]
     }
+    # config_validation duplicate check
     await setup_samsungtv(hass, DUPLICATE)
     assert hass.states.get(ENTITY_ID)
+    assert len(hass.states.async_all()) == 1
+    # config_flow duplicate check
+    await setup_samsungtv(hass, MOCK_CONFIG)
     assert len(hass.states.async_all()) == 1
 
 
@@ -189,9 +195,9 @@ async def test_send_key(hass, remote):
 
 async def test_send_key_autodetect_websocket(hass, remote):
     """Test for send key with autodetection of protocol."""
-    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
-        "homeassistant.components.samsungtv.config_flow.Remote"
-    ), patch("homeassistant.components.samsungtv.media_player.SamsungRemote") as remote:
+    with patch("homeassistant.components.samsungtv.config_flow.Remote"), patch(
+        "homeassistant.components.samsungtv.media_player.SamsungRemote"
+    ) as remote:
         await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
         assert await hass.services.async_call(
             DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
@@ -202,12 +208,10 @@ async def test_send_key_autodetect_websocket(hass, remote):
         assert state.state == STATE_ON
 
 
-async def test_send_key_autodetect_websocket_exception(hass, caplog):
+async def test_send_key_autodetect_websocket_exception(hass, remote, caplog):
     """Test for send key with autodetection of protocol."""
     caplog.set_level(logging.DEBUG)
-    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
-        "homeassistant.components.samsungtv.config_flow.Remote"
-    ), patch(
+    with patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote",
         side_effect=[exceptions.AccessDenied("Boom"), mock.DEFAULT],
     ) as remote:
@@ -229,9 +233,7 @@ async def test_send_key_autodetect_websocket_exception(hass, caplog):
 
 async def test_send_key_autodetect_legacy(hass, remote):
     """Test for send key with autodetection of protocol."""
-    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
-        "homeassistant.components.samsungtv.config_flow.Remote"
-    ), patch(
+    with patch("homeassistant.components.samsungtv.config_flow.Remote"), patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote",
         side_effect=[OSError("Boom"), mock.DEFAULT],
     ) as remote:
@@ -250,9 +252,7 @@ async def test_send_key_autodetect_legacy(hass, remote):
 
 async def test_send_key_autodetect_none(hass, remote):
     """Test for send key with autodetection of protocol."""
-    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
-        "homeassistant.components.samsungtv.config_flow.Remote"
-    ), patch(
+    with patch("homeassistant.components.samsungtv.config_flow.Remote"), patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote",
         side_effect=OSError("Boom"),
     ) as remote:
