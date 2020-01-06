@@ -46,7 +46,6 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_ON,
-    STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -70,30 +69,6 @@ MOCK_CONFIG_NOTURNON = {
     SAMSUNGTV_DOMAIN: [
         {CONF_HOST: "fake_noturnon", CONF_NAME: "fake_noturnon", CONF_PORT: 55000}
     ]
-}
-
-ENTITY_ID_AUTO = f"{DOMAIN}.fake_auto"
-MOCK_CONFIG_AUTO = {
-    SAMSUNGTV_DOMAIN: [{CONF_HOST: "fake_auto", CONF_NAME: "fake_auto"}]
-}
-
-AUTODETECT_WEBSOCKET = {
-    "name": "HomeAssistant",
-    "description": "fake_auto",
-    "id": "ha.component.samsung",
-    "method": "websocket",
-    "port": None,
-    "host": "fake_auto",
-    "timeout": 1,
-}
-AUTODETECT_LEGACY = {
-    "name": "HomeAssistant",
-    "description": "fake_auto",
-    "id": "ha.component.samsung",
-    "method": "legacy",
-    "port": None,
-    "host": "fake_auto",
-    "timeout": 1,
 }
 
 
@@ -191,85 +166,6 @@ async def test_send_key(hass, remote):
     assert remote.control.call_count == 2
     assert remote.control.call_args_list == [call("KEY_VOLUP"), call("KEY")]
     assert state.state == STATE_ON
-
-
-async def test_send_key_autodetect_websocket(hass, remote):
-    """Test for send key with autodetection of protocol."""
-    with patch("homeassistant.components.samsungtv.config_flow.Remote"), patch(
-        "homeassistant.components.samsungtv.media_player.SamsungRemote"
-    ) as remote:
-        await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
-        )
-        state = hass.states.get(ENTITY_ID_AUTO)
-        assert remote.call_count == 1
-        assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
-        assert state.state == STATE_ON
-
-
-async def test_send_key_autodetect_websocket_exception(hass, remote, caplog):
-    """Test for send key with autodetection of protocol."""
-    caplog.set_level(logging.DEBUG)
-    with patch(
-        "homeassistant.components.samsungtv.media_player.SamsungRemote",
-        side_effect=[exceptions.AccessDenied("Boom"), mock.DEFAULT],
-    ) as remote:
-        await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
-        )
-        state = hass.states.get(ENTITY_ID_AUTO)
-        # called 2 times because of the exception and the send key
-        assert remote.call_count == 2
-        assert remote.call_args_list == [
-            call(AUTODETECT_WEBSOCKET),
-            call(AUTODETECT_WEBSOCKET),
-        ]
-        assert state.state == STATE_ON
-        assert "Found working config without connection: " in caplog.text
-        assert "Failing config: " not in caplog.text
-
-
-async def test_send_key_autodetect_legacy(hass, remote):
-    """Test for send key with autodetection of protocol."""
-    with patch("homeassistant.components.samsungtv.config_flow.Remote"), patch(
-        "homeassistant.components.samsungtv.media_player.SamsungRemote",
-        side_effect=[OSError("Boom"), mock.DEFAULT],
-    ) as remote:
-        await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
-        )
-        state = hass.states.get(ENTITY_ID_AUTO)
-        assert remote.call_count == 2
-        assert remote.call_args_list == [
-            call(AUTODETECT_WEBSOCKET),
-            call(AUTODETECT_LEGACY),
-        ]
-        assert state.state == STATE_ON
-
-
-async def test_send_key_autodetect_none(hass, remote):
-    """Test for send key with autodetection of protocol."""
-    with patch("homeassistant.components.samsungtv.config_flow.Remote"), patch(
-        "homeassistant.components.samsungtv.media_player.SamsungRemote",
-        side_effect=OSError("Boom"),
-    ) as remote:
-        await setup_samsungtv(hass, MOCK_CONFIG_AUTO)
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID_AUTO}, True
-        )
-        state = hass.states.get(ENTITY_ID_AUTO)
-        # 4 calls because of retry
-        assert remote.call_count == 4
-        assert remote.call_args_list == [
-            call(AUTODETECT_WEBSOCKET),
-            call(AUTODETECT_LEGACY),
-            call(AUTODETECT_WEBSOCKET),
-            call(AUTODETECT_LEGACY),
-        ]
-        assert state.state == STATE_UNKNOWN
 
 
 async def test_send_key_broken_pipe(hass, remote):
@@ -407,15 +303,25 @@ async def test_turn_off_websocket(hass, remote):
     assert remote.control.call_args_list == [call("KEY_POWER")]
 
 
-async def test_turn_off_legacy(hass, remote):
+async def test_turn_off_legacy(hass):
     """Test for turn_off."""
-    await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
-    )
-    # key called
-    assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_POWEROFF")]
+    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
+        "homeassistant.components.samsungtv.config_flow.Remote",
+        side_effect=[OSError("Boom"), mock.DEFAULT],
+    ), patch(
+        "homeassistant.components.samsungtv.media_player.SamsungRemote"
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.socket"
+    ):
+        remote = mock.Mock()
+        remote_class.return_value = remote
+        await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
+        )
+        # key called
+        assert remote.control.call_count == 1
+        assert remote.control.call_args_list == [call("KEY_POWEROFF")]
 
 
 async def test_turn_off_os_error(hass, remote, caplog):

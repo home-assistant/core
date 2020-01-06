@@ -20,19 +20,19 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_ID,
+    CONF_METHOD,
+    CONF_PORT,
+    STATE_OFF,
+    STATE_ON,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_MANUFACTURER,
-    CONF_MODEL,
-    CONF_ON_ACTION,
-    DOMAIN,
-    LOGGER,
-    METHODS,
-)
+from .const import CONF_MANUFACTURER, CONF_MODEL, CONF_ON_ACTION, DOMAIN, LOGGER
 
 KEY_PRESS_TIMEOUT = 1.2
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -61,6 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
     host = config_entry.data[CONF_HOST]
     manufacturer = config_entry.data.get(CONF_MANUFACTURER)
+    method = config_entry.data.get(CONF_METHOD)
     model = config_entry.data.get(CONF_MODEL)
     name = config_entry.title
     port = config_entry.data.get(CONF_PORT)
@@ -69,7 +70,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     on_script = Script(hass, turn_on_action) if turn_on_action else None
 
     async_add_entities(
-        [SamsungTVDevice(host, port, name, uuid, manufacturer, model, on_script)]
+        [
+            SamsungTVDevice(
+                host, name, method, uuid, port, manufacturer, model, on_script
+            )
+        ]
     )
 
 
@@ -77,7 +82,15 @@ class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
     def __init__(
-        self, host, port, name, uuid, manufacturer=None, model=None, on_script=None
+        self,
+        host,
+        name,
+        method,
+        uuid,
+        port=None,
+        manufacturer=None,
+        model=None,
+        on_script=None,
     ):
         """Initialize the Samsung device."""
         self._name = name
@@ -99,17 +112,11 @@ class SamsungTVDevice(MediaPlayerDevice):
             "name": "HomeAssistant",
             "description": name,
             "id": "ha.component.samsung",
-            "method": None,
+            "method": method,
             "port": port,
             "host": host,
             "timeout": 1,
         }
-
-        # Select method by port number, mainly for fallback
-        if self._config["port"] in (8001, 8002):
-            self._config["method"] = "websocket"
-        elif self._config["port"] == 55000:
-            self._config["method"] = "legacy"
 
     def update(self):
         """Update state of device."""
@@ -117,37 +124,6 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def get_remote(self):
         """Create or return a remote control instance."""
-
-        # Try to find correct method automatically
-        if self._config["method"] not in METHODS:
-            for method in METHODS:
-                try:
-                    self._config["method"] = method
-                    LOGGER.debug("Try config: %s", self._config)
-                    self._remote = SamsungRemote(self._config.copy())
-                    self._state = STATE_ON
-                    LOGGER.debug("Found working config: %s", self._config)
-                    break
-                except (
-                    samsung_exceptions.UnhandledResponse,
-                    samsung_exceptions.AccessDenied,
-                ):
-                    # We got a response so it's working.
-                    self._state = STATE_ON
-                    LOGGER.debug(
-                        "Found working config without connection: %s", self._config
-                    )
-                    break
-                except OSError as err:
-                    LOGGER.debug("Failing config: %s error was: %s", self._config, err)
-                    self._config["method"] = None
-
-            # Unable to find working connection
-            if self._config["method"] is None:
-                self._remote = None
-                self._state = None
-                return None
-
         if self._remote is None:
             # We need to create a new instance to reconnect.
             self._remote = SamsungRemote(self._config.copy())
@@ -175,9 +151,6 @@ class SamsungTVDevice(MediaPlayerDevice):
                     # WebSocketException can occur when timed out
                     self._remote = None
             self._state = STATE_ON
-        except AttributeError:
-            # Auto-detect could not find working config yet
-            pass
         except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
             # We got a response so it's on.
             self._state = STATE_ON

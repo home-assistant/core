@@ -1,5 +1,5 @@
 """Tests for Samsung TV config flow."""
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 from asynctest import mock
 import pytest
@@ -17,7 +17,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_UDN,
 )
-from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_ID, CONF_METHOD, CONF_NAME
 
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
 MOCK_SSDP_DATA = {
@@ -33,6 +33,25 @@ MOCK_SSDP_DATA_NOPREFIX = {
     ATTR_UPNP_MANUFACTURER: "fake2_manufacturer",
     ATTR_UPNP_MODEL_NAME: "fake2_model",
     ATTR_UPNP_UDN: "fake2_uuid",
+}
+
+AUTODETECT_WEBSOCKET = {
+    "name": "HomeAssistant",
+    "description": None,
+    "id": "ha.component.samsung",
+    "method": "websocket",
+    "port": None,
+    "host": "fake_host",
+    "timeout": 1,
+}
+AUTODETECT_LEGACY = {
+    "name": "HomeAssistant",
+    "description": None,
+    "id": "ha.component.samsung",
+    "method": "legacy",
+    "port": None,
+    "host": "fake_host",
+    "timeout": 1,
 }
 
 
@@ -289,3 +308,81 @@ async def test_ssdp_already_configured(hass, remote):
     assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
     assert result["data"][CONF_MODEL] == "fake_model"
     assert result["data"][CONF_ID] == "fake_uuid"
+
+
+async def test_autodetect_websocket(hass, remote):
+    """Test for send key with autodetection of protocol."""
+    with patch("homeassistant.components.samsungtv.config_flow.Remote") as remote:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == "create_entry"
+        assert result["data"][CONF_METHOD] == "websocket"
+        assert remote.call_count == 1
+        assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
+
+
+async def test_autodetect_auth_missing(hass, remote):
+    """Test for send key with autodetection of protocol."""
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.Remote",
+        side_effect=[AccessDenied("Boom")],
+    ) as remote:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "auth_missing"
+        assert remote.call_count == 1
+        assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
+
+
+async def test_autodetect_not_supported(hass, remote):
+    """Test for send key with autodetection of protocol."""
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.Remote",
+        side_effect=[UnhandledResponse("Boom")],
+    ) as remote:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "not_supported"
+        assert remote.call_count == 1
+        assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
+
+
+async def test_autodetect_legacy(hass, remote):
+    """Test for send key with autodetection of protocol."""
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.Remote",
+        side_effect=[OSError("Boom"), mock.DEFAULT],
+    ) as remote:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == "create_entry"
+        assert result["data"][CONF_METHOD] == "legacy"
+        assert remote.call_count == 2
+        assert remote.call_args_list == [
+            call(AUTODETECT_WEBSOCKET),
+            call(AUTODETECT_LEGACY),
+        ]
+
+
+async def test_autodetect_none(hass, remote):
+    """Test for send key with autodetection of protocol."""
+    with patch(
+        "homeassistant.components.samsungtv.config_flow.Remote",
+        side_effect=OSError("Boom"),
+    ) as remote:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
+        )
+        assert result["type"] == "abort"
+        assert result["reason"] == "not_found"
+        assert remote.call_count == 2
+        assert remote.call_args_list == [
+            call(AUTODETECT_WEBSOCKET),
+            call(AUTODETECT_LEGACY),
+        ]
