@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     volume_step = config[CONF_VOLUME_STEP]
     device_type = config[CONF_DEVICE_CLASS]
     device = VizioDevice(host, token, name, volume_step, device_type)
-    if not device._device.can_connect():
+    if not device.validate_setup():
         fail_auth_msg = ""
         if token is not None and token != "":
             fail_auth_msg = " and auth token is correct"
@@ -221,6 +221,10 @@ class VizioDevice(MediaPlayerDevice):
             self._volume_level = max(
                 0.0, self._volume_level - self._volume_step / self._max_volume
             )
+
+    def validate_setup(self):
+        """Validate if host is available and auth token is correct."""
+        return self._device.can_connect()
 
     def set_volume_level(self, volume):
         """Set volume level."""
