@@ -4,7 +4,7 @@ import logging
 
 from pyvizio import Vizio
 from requests.packages import urllib3
-import voluptous as vol
+import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -27,7 +27,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 
-from . import VIZIO_SCHEMA
+from . import VIZIO_SCHEMA, validate_auth
 from .const import (
     CONF_SUPPRESS_WARNING,
     CONF_VOLUME_STEP,
@@ -56,18 +56,7 @@ SUPPORTED_COMMANDS = {
 }
 
 
-def validate_auth(config):
-    """Validate presence of CONF_ACCESS_TOKEN when CONF_DEVICE_CLASS=tv."""
-    token = config.get(CONF_ACCESS_TOKEN)
-    if config[CONF_DEVICE_CLASS] == "tv" and (token is None or token == ""):
-        raise vol.Invalid(
-            f"When '{CONF_DEVICE_CLASS}' is 'tv' then '{CONF_ACCESS_TOKEN}' is required.",
-            path=[CONF_ACCESS_TOKEN],
-        )
-    return config
-
-
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA), validate_auth)
+PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA, validate_auth))
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -114,13 +103,16 @@ class VizioDevice(MediaPlayerDevice):
         self._supported_commands = SUPPORTED_COMMANDS[device_type]
         self._device = Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
         self._max_volume = float(self._device.get_max_volume())
-        self._unique_id = self._device.get_esn()
+        self._unique_id = None
         self._icon = ICON[device_type]
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve latest state of the device."""
         is_on = self._device.get_power_state()
+
+        if not self._unique_id:
+            self._unique_id = self._device.get_esn()
 
         if is_on:
             self._state = STATE_ON

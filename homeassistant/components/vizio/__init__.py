@@ -17,6 +17,18 @@ from .const import (
     DEFAULT_VOLUME_STEP,
 )
 
+
+def validate_auth(config):
+    """Validate presence of CONF_ACCESS_TOKEN when CONF_DEVICE_CLASS=tv."""
+    token = config.get(CONF_ACCESS_TOKEN)
+    if config[CONF_DEVICE_CLASS] == "tv" and (token is None or token == ""):
+        raise vol.Invalid(
+            f"When '{CONF_DEVICE_CLASS}' is 'tv' then '{CONF_ACCESS_TOKEN}' is required.",
+            path=[CONF_ACCESS_TOKEN],
+        )
+    return config
+
+
 VIZIO_SCHEMA = {
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_ACCESS_TOKEN): cv.string,
