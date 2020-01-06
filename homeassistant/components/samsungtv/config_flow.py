@@ -89,7 +89,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for method in METHODS:
             config = {
                 "name": "HomeAssistant",
-                "description": self._name,
+                "description": "HomeAssistant",
                 "id": "ha.component.samsung",
                 "host": self._host,
                 "method": method,

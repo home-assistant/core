@@ -37,7 +37,7 @@ MOCK_SSDP_DATA_NOPREFIX = {
 
 AUTODETECT_WEBSOCKET = {
     "name": "HomeAssistant",
-    "description": None,
+    "description": "HomeAssistant",
     "id": "ha.component.samsung",
     "method": "websocket",
     "port": None,
@@ -46,7 +46,7 @@ AUTODETECT_WEBSOCKET = {
 }
 AUTODETECT_LEGACY = {
     "name": "HomeAssistant",
-    "description": None,
+    "description": "HomeAssistant",
     "id": "ha.component.samsung",
     "method": "legacy",
     "port": None,
