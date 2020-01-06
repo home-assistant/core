@@ -3,10 +3,9 @@ from copy import deepcopy
 
 from homeassistant import config_entries
 from homeassistant.components import unifi
+import homeassistant.components.switch as switch
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
-
-import homeassistant.components.switch as switch
 
 from .test_controller import (
     CONTROLLER_HOST,
@@ -202,15 +201,10 @@ async def test_no_clients(hass):
     """Test the update_clients function when no clients are found."""
     controller = await setup_unifi_integration(
         hass,
-        ENTRY_CONFIG,
         options={
             unifi.const.CONF_TRACK_CLIENTS: False,
             unifi.const.CONF_TRACK_DEVICES: False,
         },
-        sites=SITES,
-        clients_response=[],
-        devices_response=[],
-        clients_all_response=[],
     )
 
     assert len(controller.mock_requests) == 3
@@ -221,15 +215,12 @@ async def test_controller_not_client(hass):
     """Test that the controller doesn't become a switch."""
     controller = await setup_unifi_integration(
         hass,
-        ENTRY_CONFIG,
         options={
             unifi.const.CONF_TRACK_CLIENTS: False,
             unifi.const.CONF_TRACK_DEVICES: False,
         },
-        sites=SITES,
         clients_response=[CONTROLLER_HOST],
         devices_response=[DEVICE_1],
-        clients_all_response=[],
     )
 
     assert len(controller.mock_requests) == 3
@@ -244,7 +235,6 @@ async def test_not_admin(hass):
     sites["Site name"]["role"] = "not admin"
     controller = await setup_unifi_integration(
         hass,
-        ENTRY_CONFIG,
         options={
             unifi.const.CONF_TRACK_CLIENTS: False,
             unifi.const.CONF_TRACK_DEVICES: False,
@@ -252,7 +242,6 @@ async def test_not_admin(hass):
         sites=sites,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
-        clients_all_response=[],
     )
 
     assert len(controller.mock_requests) == 3
@@ -263,13 +252,11 @@ async def test_switches(hass):
     """Test the update_items function with some clients."""
     controller = await setup_unifi_integration(
         hass,
-        ENTRY_CONFIG,
         options={
             unifi.CONF_BLOCK_CLIENT: [BLOCKED["mac"], UNBLOCKED["mac"]],
             unifi.const.CONF_TRACK_CLIENTS: False,
             unifi.const.CONF_TRACK_DEVICES: False,
         },
-        sites=SITES,
         clients_response=[CLIENT_1, CLIENT_4],
         devices_response=[DEVICE_1],
         clients_all_response=[BLOCKED, UNBLOCKED, CLIENT_1],
@@ -302,15 +289,11 @@ async def test_new_client_discovered_on_block_control(hass):
     """Test if 2nd update has a new client."""
     controller = await setup_unifi_integration(
         hass,
-        ENTRY_CONFIG,
         options={
             unifi.CONF_BLOCK_CLIENT: [BLOCKED["mac"]],
             unifi.const.CONF_TRACK_CLIENTS: False,
             unifi.const.CONF_TRACK_DEVICES: False,
         },
-        sites=SITES,
-        clients_response=[],
-        devices_response=[],
         clients_all_response=[BLOCKED],
     )
 
@@ -346,15 +329,12 @@ async def test_new_client_discovered_on_poe_control(hass):
     """Test if 2nd update has a new client."""
     controller = await setup_unifi_integration(
         hass,
-        ENTRY_CONFIG,
         options={
             unifi.const.CONF_TRACK_CLIENTS: False,
             unifi.const.CONF_TRACK_DEVICES: False,
         },
-        sites=SITES,
         clients_response=[CLIENT_1],
         devices_response=[DEVICE_1],
-        clients_all_response=[],
     )
 
     assert len(controller.mock_requests) == 3
@@ -403,13 +383,7 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass):
     clients will be transparently marked as having POE as well.
     """
     controller = await setup_unifi_integration(
-        hass,
-        ENTRY_CONFIG,
-        options={},
-        sites=SITES,
-        clients_response=POE_SWITCH_CLIENTS,
-        devices_response=[DEVICE_1],
-        clients_all_response=[],
+        hass, clients_response=POE_SWITCH_CLIENTS, devices_response=[DEVICE_1],
     )
 
     assert len(controller.mock_requests) == 3
@@ -453,13 +427,11 @@ async def test_restoring_client(hass):
 
     controller = await setup_unifi_integration(
         hass,
-        ENTRY_CONFIG,
         options={
             unifi.CONF_BLOCK_CLIENT: ["random mac"],
             unifi.const.CONF_TRACK_CLIENTS: False,
             unifi.const.CONF_TRACK_DEVICES: False,
         },
-        sites=SITES,
         clients_response=[CLIENT_2],
         devices_response=[DEVICE_1],
         clients_all_response=[CLIENT_1],

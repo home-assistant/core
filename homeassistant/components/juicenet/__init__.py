@@ -18,6 +18,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+JUICENET_COMPONENTS = ["sensor", "switch"]
+
 
 def setup(hass, config):
     """Set up the Juicenet component."""
@@ -26,7 +28,9 @@ def setup(hass, config):
     access_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
     hass.data[DOMAIN]["api"] = pyjuicenet.Api(access_token)
 
-    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
+    for component in JUICENET_COMPONENTS:
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
+
     return True
 
 

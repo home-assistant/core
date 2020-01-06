@@ -12,8 +12,8 @@ from .common import (
     async_enable_traffic,
     async_init_zigpy_device,
     async_test_device_join,
+    find_entity_id,
     make_attribute,
-    make_entity_id,
     make_zcl_header,
 )
 
@@ -85,7 +85,7 @@ async def test_sensor(hass, config_entry, zha_gateway):
 
     # test joining a new temperature sensor to the network
     await async_test_device_join(
-        hass, zha_gateway, measurement.TemperatureMeasurement.cluster_id, DOMAIN
+        hass, zha_gateway, measurement.TemperatureMeasurement.cluster_id, entity_id
     )
 
 
@@ -110,9 +110,9 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
             [],
             None,
             zha_gateway,
-            ieee="{}0:15:8d:00:02:32:4f:32".format(counter),
-            manufacturer="Fake{}".format(cluster_id),
-            model="FakeModel{}".format(cluster_id),
+            ieee=f"00:15:8d:00:02:32:4f:0{counter}",
+            manufacturer=f"Fake{cluster_id}",
+            model=f"FakeModel{cluster_id}",
         )
 
         counter += 1
@@ -126,10 +126,10 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
         device_info = device_infos[cluster_id]
         zigpy_device = device_info["zigpy_device"]
         device_info["cluster"] = zigpy_device.endpoints.get(1).in_clusters[cluster_id]
-        device_info["entity_id"] = make_entity_id(
-            DOMAIN, zigpy_device, device_info["cluster"]
-        )
-        device_info["zha_device"] = zha_gateway.get_device(zigpy_device.ieee)
+        zha_device = zha_gateway.get_device(zigpy_device.ieee)
+        device_info["zha_device"] = zha_device
+        device_info["entity_id"] = await find_entity_id(DOMAIN, zha_device, hass)
+    await hass.async_block_till_done()
     return device_infos
 
 
@@ -166,7 +166,7 @@ async def async_test_metering(hass, device_info):
 async def async_test_electrical_measurement(hass, device_info):
     """Test electrical measurement sensor."""
     await send_attribute_report(hass, device_info["cluster"], 1291, 100)
-    assert_state(hass, device_info, "10.0", "W")
+    assert_state(hass, device_info, "100", "W")
 
 
 async def send_attribute_report(hass, cluster, attrid, value):

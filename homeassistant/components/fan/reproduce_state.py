@@ -6,19 +6,19 @@ from typing import Iterable, Optional
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import Context, State
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import (
-    DOMAIN,
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
     ATTR_SPEED,
+    DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_SPEED,

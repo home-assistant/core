@@ -15,7 +15,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
     CONF_ALIASES,
-    CONF_ALIASSES,
     CONF_AUTOMATIC_ADD,
     CONF_DEVICES,
     DATA_DEVICE_REGISTER,
@@ -27,7 +26,6 @@ from . import (
     SIGNAL_HANDLE_EVENT,
     TMP_ENTITY,
     RflinkDevice,
-    remove_deprecated,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,8 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     vol.Optional(CONF_ALIASES, default=[]): vol.All(
                         cv.ensure_list, [cv.string]
                     ),
-                    # deprecated config options
-                    vol.Optional(CONF_ALIASSES): vol.All(cv.ensure_list, [cv.string]),
                 }
             )
         },
@@ -80,7 +76,6 @@ def devices_from_config(domain_config):
             config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
                 config[CONF_SENSOR_TYPE]
             )
-        remove_deprecated(config)
         device = RflinkSensor(device_id, **config)
         devices.append(device)
 

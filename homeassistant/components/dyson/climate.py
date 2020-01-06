@@ -1,20 +1,20 @@
 """Support for Dyson Pure Hot+Cool link fan."""
 import logging
 
-from libpurecool.const import HeatMode, HeatState, FocusMode, HeatTarget
-from libpurecool.dyson_pure_state import DysonPureHotCoolState
+from libpurecool.const import FocusMode, HeatMode, HeatState, HeatTarget
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
+from libpurecool.dyson_pure_state import DysonPureHotCoolState
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    FAN_DIFFUSE,
+    FAN_FOCUS,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     SUPPORT_FAN_MODE,
-    FAN_FOCUS,
-    FAN_DIFFUSE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS

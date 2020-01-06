@@ -6,5 +6,7 @@
     "pylutron==0.2.5"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@JonGilmore"
+  ]
 }

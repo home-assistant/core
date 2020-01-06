@@ -4,8 +4,6 @@ import logging
 import tempfile
 
 import voluptuous as vol
-from hbmqtt.broker import Broker, BrokerException
-from passlib.apps import custom_app_context
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
@@ -37,6 +35,9 @@ def async_start(hass, password, server_config):
 
     This method is a coroutine.
     """
+    # pylint: disable=import-outside-toplevel
+    from hbmqtt.broker import Broker, BrokerException
+
     passwd = tempfile.NamedTemporaryFile()
 
     gen_server_config, client_config = generate_config(hass, passwd, password)
@@ -65,6 +66,9 @@ def async_start(hass, password, server_config):
 
 def generate_config(hass, passwd, password):
     """Generate a configuration based on current Home Assistant instance."""
+    # pylint: disable=import-outside-toplevel
+    from passlib.apps import custom_app_context
+
     config = {
         "listeners": {
             "default": {

@@ -3,9 +3,9 @@ from copy import deepcopy
 
 from homeassistant.components.deconz import device_trigger
 
-from tests.common import assert_lists_same, async_get_device_automations
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
-from .test_gateway import ENTRY_CONFIG, DECONZ_WEB_REQUEST, setup_deconz_integration
+from tests.common import assert_lists_same, async_get_device_automations
 
 SENSORS = {
     "1": {
@@ -34,9 +34,7 @@ async def test_get_triggers(hass):
     """Test triggers work."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["sensors"] = deepcopy(SENSORS)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass, get_state_response=data)
     device_id = gateway.events[0].device_id
     triggers = await async_get_device_automations(hass, "trigger", device_id)
 

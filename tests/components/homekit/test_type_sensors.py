@@ -5,14 +5,14 @@ from homeassistant.components.homekit.const import (
     THRESHOLD_CO2,
 )
 from homeassistant.components.homekit.type_sensors import (
+    BINARY_SENSOR_SERVICE_MAP,
     AirQualitySensor,
     BinarySensor,
-    CarbonMonoxideSensor,
     CarbonDioxideSensor,
+    CarbonMonoxideSensor,
     HumiditySensor,
     LightSensor,
     TemperatureSensor,
-    BINARY_SENSOR_SERVICE_MAP,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,

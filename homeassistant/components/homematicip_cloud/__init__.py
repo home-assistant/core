@@ -1,7 +1,11 @@
 """Support for HomematicIP Cloud devices."""
 import logging
+from pathlib import Path
+from typing import Optional
 
 from homematicip.aio.group import AsyncHeatingGroup
+from homematicip.aio.home import AsyncHome
+from homematicip.base.helpers import handle_config
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -26,17 +30,23 @@ from .hap import HomematicipAuth, HomematicipHAP  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_ACCESSPOINT_ID = "accesspoint_id"
+ATTR_ANONYMIZE = "anonymize"
 ATTR_CLIMATE_PROFILE_INDEX = "climate_profile_index"
+ATTR_CONFIG_OUTPUT_FILE_PREFIX = "config_output_file_prefix"
+ATTR_CONFIG_OUTPUT_PATH = "config_output_path"
 ATTR_DURATION = "duration"
 ATTR_ENDTIME = "endtime"
 ATTR_TEMPERATURE = "temperature"
-ATTR_ACCESSPOINT_ID = "accesspoint_id"
+
+DEFAULT_CONFIG_FILE_PREFIX = "hmip-config"
 
 SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION = "activate_eco_mode_with_duration"
 SERVICE_ACTIVATE_ECO_MODE_WITH_PERIOD = "activate_eco_mode_with_period"
 SERVICE_ACTIVATE_VACATION = "activate_vacation"
 SERVICE_DEACTIVATE_ECO_MODE = "deactivate_eco_mode"
 SERVICE_DEACTIVATE_VACATION = "deactivate_vacation"
+SERVICE_DUMP_HAP_CONFIG = "dump_hap_config"
 SERVICE_SET_ACTIVE_CLIMATE_PROFILE = "set_active_climate_profile"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -96,6 +106,16 @@ SCHEMA_SET_ACTIVE_CLIMATE_PROFILE = vol.Schema(
     }
 )
 
+SCHEMA_DUMP_HAP_CONFIG = vol.Schema(
+    {
+        vol.Optional(ATTR_CONFIG_OUTPUT_PATH): cv.string,
+        vol.Optional(
+            ATTR_CONFIG_OUTPUT_FILE_PREFIX, default=DEFAULT_CONFIG_FILE_PREFIX
+        ): cv.string,
+        vol.Optional(ATTR_ANONYMIZE, default=True): cv.boolean,
+    }
+)
+
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the HomematicIP Cloud component."""
@@ -117,7 +137,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
                 )
             )
 
-    async def _async_activate_eco_mode_with_duration(service):
+    async def _async_activate_eco_mode_with_duration(service) -> None:
         """Service to activate eco mode with duration."""
         duration = service.data[ATTR_DURATION]
         hapid = service.data.get(ATTR_ACCESSPOINT_ID)
@@ -137,7 +157,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         schema=SCHEMA_ACTIVATE_ECO_MODE_WITH_DURATION,
     )
 
-    async def _async_activate_eco_mode_with_period(service):
+    async def _async_activate_eco_mode_with_period(service) -> None:
         """Service to activate eco mode with period."""
         endtime = service.data[ATTR_ENDTIME]
         hapid = service.data.get(ATTR_ACCESSPOINT_ID)
@@ -157,7 +177,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         schema=SCHEMA_ACTIVATE_ECO_MODE_WITH_PERIOD,
     )
 
-    async def _async_activate_vacation(service):
+    async def _async_activate_vacation(service) -> None:
         """Service to activate vacation."""
         endtime = service.data[ATTR_ENDTIME]
         temperature = service.data[ATTR_TEMPERATURE]
@@ -178,7 +198,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         schema=SCHEMA_ACTIVATE_VACATION,
     )
 
-    async def _async_deactivate_eco_mode(service):
+    async def _async_deactivate_eco_mode(service) -> None:
         """Service to deactivate eco mode."""
         hapid = service.data.get(ATTR_ACCESSPOINT_ID)
 
@@ -197,7 +217,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         schema=SCHEMA_DEACTIVATE_ECO_MODE,
     )
 
-    async def _async_deactivate_vacation(service):
+    async def _async_deactivate_vacation(service) -> None:
         """Service to deactivate vacation."""
         hapid = service.data.get(ATTR_ACCESSPOINT_ID)
 
@@ -216,7 +236,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         schema=SCHEMA_DEACTIVATE_VACATION,
     )
 
-    async def _set_active_climate_profile(service):
+    async def _set_active_climate_profile(service) -> None:
         """Service to set the active climate profile."""
         entity_id_list = service.data[ATTR_ENTITY_ID]
         climate_profile_index = service.data[ATTR_CLIMATE_PROFILE_INDEX] - 1
@@ -239,7 +259,37 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         schema=SCHEMA_SET_ACTIVE_CLIMATE_PROFILE,
     )
 
-    def _get_home(hapid: str):
+    async def _async_dump_hap_config(service) -> None:
+        """Service to dump the configuration of a Homematic IP Access Point."""
+        config_path = (
+            service.data.get(ATTR_CONFIG_OUTPUT_PATH) or hass.config.config_dir
+        )
+        config_file_prefix = service.data[ATTR_CONFIG_OUTPUT_FILE_PREFIX]
+        anonymize = service.data[ATTR_ANONYMIZE]
+
+        for hap in hass.data[DOMAIN].values():
+            hap_sgtin = hap.config_entry.title
+
+            if anonymize:
+                hap_sgtin = hap_sgtin[-4:]
+
+            file_name = f"{config_file_prefix}_{hap_sgtin}.json"
+            path = Path(config_path)
+            config_file = path / file_name
+
+            json_state = await hap.home.download_configuration()
+            json_state = handle_config(json_state, anonymize)
+
+            config_file.write_text(json_state, encoding="utf8")
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DUMP_HAP_CONFIG,
+        _async_dump_hap_config,
+        schema=SCHEMA_DUMP_HAP_CONFIG,
+    )
+
+    def _get_home(hapid: str) -> Optional[AsyncHome]:
         """Return a HmIP home."""
         hap = hass.data[DOMAIN].get(hapid)
         if hap:
@@ -264,7 +314,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     device_registry = await dr.async_get_registry(hass)
     home = hap.home
     # Add the HAP name from configuration if set.
-    hapname = home.label if not home.name else f"{home.label} {home.name}"
+    hapname = home.label if not home.name else f"{home.name} {home.label}"
     device_registry.async_get_or_create(
         config_entry_id=home.id,
         identifiers={(DOMAIN, home.id)},
@@ -276,7 +326,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     hap = hass.data[DOMAIN].pop(entry.data[HMIPC_HAPID])
     return await hap.async_reset()

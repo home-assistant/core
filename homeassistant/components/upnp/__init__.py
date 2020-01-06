@@ -7,11 +7,12 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import dispatcher
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    dispatcher,
+)
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import get_local_ip
 
 from .const import (
@@ -20,10 +21,10 @@ from .const import (
     CONF_HASS,
     CONF_LOCAL_IP,
     CONF_PORTS,
+    DOMAIN,
+    LOGGER as _LOGGER,
     SIGNAL_REMOVE_SENSOR,
 )
-from .const import DOMAIN
-from .const import LOGGER as _LOGGER
 from .device import Device
 
 NOTIFICATION_ID = "upnp_notification"
@@ -162,6 +163,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
         identifiers={(DOMAIN, device.udn)},
         name=device.name,
         manufacturer=device.manufacturer,
+        model=device.model_name,
     )
 
     # set up sensors

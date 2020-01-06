@@ -2,9 +2,9 @@
 from datetime import datetime, timedelta, timezone
 import logging
 
-import voluptuous as vol
-
 from n26 import api as n26_api, config as n26_config
+from requests import HTTPError
+import voluptuous as vol
 
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
@@ -50,8 +50,6 @@ def setup(hass, config):
         password = acc[CONF_PASSWORD]
 
         api = n26_api.Api(n26_config.Config(user, password))
-
-        from requests import HTTPError
 
         try:
             api.get_token()

@@ -6,6 +6,7 @@
             "already_in_progress": "Plex \u5df2\u7d93\u8a2d\u5b9a",
             "discovery_no_file": "\u627e\u4e0d\u5230\u820a\u7248\u8a2d\u5b9a\u6a94\u6848",
             "invalid_import": "\u532f\u5165\u4e4b\u8a2d\u5b9a\u7121\u6548",
+            "non-interactive": "\u7121\u4e92\u52d5\u532f\u5165",
             "token_request_timeout": "\u53d6\u5f97\u5bc6\u9470\u903e\u6642",
             "unknown": "\u672a\u77e5\u539f\u56e0\u5931\u6557"
         },

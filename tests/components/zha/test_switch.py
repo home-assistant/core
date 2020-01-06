@@ -11,8 +11,8 @@ from .common import (
     async_enable_traffic,
     async_init_zigpy_device,
     async_test_device_join,
+    find_entity_id,
     make_attribute,
-    make_entity_id,
     make_zcl_header,
 )
 
@@ -39,8 +39,9 @@ async def test_switch(hass, config_entry, zha_gateway):
     await hass.async_block_till_done()
 
     cluster = zigpy_device.endpoints.get(1).on_off
-    entity_id = make_entity_id(DOMAIN, zigpy_device, cluster)
     zha_device = zha_gateway.get_device(zigpy_device.ieee)
+    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    assert entity_id is not None
 
     # test that the switch was created and that its state is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
@@ -93,4 +94,4 @@ async def test_switch(hass, config_entry, zha_gateway):
         )
 
     # test joining a new switch to the network and HA
-    await async_test_device_join(hass, zha_gateway, general.OnOff.cluster_id, DOMAIN)
+    await async_test_device_join(hass, zha_gateway, general.OnOff.cluster_id, entity_id)

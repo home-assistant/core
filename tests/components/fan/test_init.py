@@ -2,8 +2,9 @@
 
 import unittest
 
-from homeassistant.components.fan import FanEntity
 import pytest
+
+from homeassistant.components.fan import FanEntity
 
 
 class BaseFan(FanEntity):

@@ -6,18 +6,19 @@ Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
 Knows which components handle certain types, will make sure they are
 loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 """
-import json
 from datetime import timedelta
+import json
 import logging
 
+from netdisco.discovery import NetworkDiscovery
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import async_discover, async_load_platform
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
 DOMAIN = "discovery"
@@ -129,7 +130,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Start a discovery service."""
-    from netdisco.discovery import NetworkDiscovery
 
     logger = logging.getLogger(__name__)
     netdisco = NetworkDiscovery()

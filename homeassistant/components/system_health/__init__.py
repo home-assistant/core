@@ -44,7 +44,7 @@ async def _info_wrapper(hass, info_callback):
             return await info_callback(hass)
     except asyncio.TimeoutError:
         return {"error": "Fetching info timed out"}
-    except Exception as err:  # pylint: disable=W0703
+    except Exception as err:  # pylint: disable=broad-except
         _LOGGER.exception("Error fetching info")
         return {"error": str(err)}
 

@@ -2,6 +2,7 @@
 import logging
 
 from homeassistant.core import callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -93,9 +94,11 @@ class UpnpSensor(Entity):
     def device_info(self):
         """Get device info."""
         return {
-            "identifiers": {(DOMAIN_UPNP, self.unique_id)},
-            "name": self.name,
+            "connections": {(dr.CONNECTION_UPNP, self._device.udn)},
+            "identifiers": {(DOMAIN_UPNP, self._device.udn)},
+            "name": self._device.name,
             "manufacturer": self._device.manufacturer,
+            "model": self._device.model_name,
         }
 
 
@@ -151,7 +154,7 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
     """Abstract representation of a X Sent/Received per second sensor."""
 
     def __init__(self, device, direction):
-        """Initializer."""
+        """Initialize sensor."""
         super().__init__(device)
         self._direction = direction
 
@@ -186,7 +189,7 @@ class PerSecondUPnPIGDSensor(UpnpSensor):
     @property
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
-        return f"{self.unit}/sec"
+        return f"{self.unit}/s"
 
     def _is_overflowed(self, new_value) -> bool:
         """Check if value has overflowed."""
@@ -219,7 +222,7 @@ class KBytePerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
     @property
     def unit(self) -> str:
         """Get unit we are measuring in."""
-        return "kbyte"
+        return "kB"
 
     async def _async_fetch_value(self) -> float:
         """Fetch value from device."""

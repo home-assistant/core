@@ -1,10 +1,9 @@
 """Support for Obihai Sensors."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
-import voluptuous as vol
-
 from pyobihai import PyObihai
+import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -13,10 +12,8 @@ from homeassistant.const import (
     CONF_USERNAME,
     DEVICE_CLASS_TIMESTAMP,
 )
-
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 

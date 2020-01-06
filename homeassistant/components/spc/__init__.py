@@ -1,11 +1,14 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
 import logging
 
+from pyspcwebgw import SpcWebGateway
+from pyspcwebgw.area import Area
+from pyspcwebgw.zone import Zone
 import voluptuous as vol
 
-from homeassistant.helpers import discovery, aiohttp_client
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import aiohttp_client, discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,11 +36,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the SPC component."""
-    from pyspcwebgw import SpcWebGateway
 
     async def async_upate_callback(spc_object):
-        from pyspcwebgw.area import Area
-        from pyspcwebgw.zone import Zone
 
         if isinstance(spc_object, Area):
             async_dispatcher_send(hass, SIGNAL_UPDATE_ALARM.format(spc_object.id))

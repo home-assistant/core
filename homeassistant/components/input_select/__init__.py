@@ -3,11 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ICON, CONF_NAME
+from homeassistant.const import CONF_ICON, CONF_NAME, SERVICE_RELOAD
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.helpers.service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,23 +22,12 @@ ATTR_OPTIONS = "options"
 
 SERVICE_SELECT_OPTION = "select_option"
 
-SERVICE_SELECT_OPTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_OPTION): cv.string}
-)
 
 SERVICE_SELECT_NEXT = "select_next"
 
 SERVICE_SELECT_PREVIOUS = "select_previous"
 
 SERVICE_SET_OPTIONS = "set_options"
-
-SERVICE_SET_OPTIONS_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_OPTIONS): vol.All(
-            cv.ensure_list, vol.Length(min=1), [cv.string]
-        )
-    }
-)
 
 
 def _cv_input_select(cfg):
@@ -73,12 +62,63 @@ CONFIG_SCHEMA = vol.Schema(
     required=True,
     extra=vol.ALLOW_EXTRA,
 )
+RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 async def async_setup(hass, config):
     """Set up an input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
+    entities = await _async_process_config(config)
+
+    async def reload_service_handler(service_call):
+        """Remove all entities and load new ones from config."""
+        conf = await component.async_prepare_reload()
+        if conf is None:
+            return
+        new_entities = await _async_process_config(conf)
+        if new_entities:
+            await component.async_add_entities(new_entities)
+
+    homeassistant.helpers.service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_service_handler,
+        schema=RELOAD_SERVICE_SCHEMA,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_OPTION,
+        {vol.Required(ATTR_OPTION): cv.string},
+        "async_select_option",
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_NEXT, {}, lambda entity, call: entity.async_offset_index(1),
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SELECT_PREVIOUS, {}, lambda entity, call: entity.async_offset_index(-1),
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SET_OPTIONS,
+        {
+            vol.Required(ATTR_OPTIONS): vol.All(
+                cv.ensure_list, vol.Length(min=1), [cv.string]
+            )
+        },
+        "async_set_options",
+    )
+
+    if entities:
+        await component.async_add_entities(entities)
+    return True
+
+
+async def _async_process_config(config):
+    """Process config and create list of entities."""
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
@@ -88,31 +128,7 @@ async def async_setup(hass, config):
         icon = cfg.get(CONF_ICON)
         entities.append(InputSelect(object_id, name, initial, options, icon))
 
-    if not entities:
-        return False
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_OPTION, SERVICE_SELECT_OPTION_SCHEMA, "async_select_option"
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_NEXT,
-        ENTITY_SERVICE_SCHEMA,
-        lambda entity, call: entity.async_offset_index(1),
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS,
-        ENTITY_SERVICE_SCHEMA,
-        lambda entity, call: entity.async_offset_index(-1),
-    )
-
-    component.async_register_entity_service(
-        SERVICE_SET_OPTIONS, SERVICE_SET_OPTIONS_SCHEMA, "async_set_options"
-    )
-
-    await component.async_add_entities(entities)
-    return True
+    return entities
 
 
 class InputSelect(RestoreEntity):

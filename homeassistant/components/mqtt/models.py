@@ -1,9 +1,8 @@
 """Modesl used by multiple MQTT modules."""
-from typing import Union, Callable
+from typing import Callable, Union
 
 import attr
 
-# pylint: disable=invalid-name
 PublishPayloadType = Union[str, bytes, int, float, None]
 
 

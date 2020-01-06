@@ -2,11 +2,12 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
 from pyvizio import Vizio
+from requests.packages import urllib3
+import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -63,9 +64,7 @@ def validate_auth(config):
     token = config.get(CONF_ACCESS_TOKEN)
     if config[CONF_DEVICE_CLASS] == "tv" and (token is None or token == ""):
         raise vol.Invalid(
-            "When '{}' is 'tv' then '{}' is required.".format(
-                CONF_DEVICE_CLASS, CONF_ACCESS_TOKEN
-            ),
+            f"When '{CONF_DEVICE_CLASS}' is 'tv' then '{CONF_ACCESS_TOKEN}' is required.",
             path=[CONF_ACCESS_TOKEN],
         )
     return config
@@ -110,8 +109,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     if config[CONF_SUPPRESS_WARNING]:
-        from requests.packages import urllib3
-
         _LOGGER.warning(
             "InsecureRequestWarning is disabled "
             "because of Vizio platform configuration"
@@ -136,6 +133,7 @@ class VizioDevice(MediaPlayerDevice):
         self._supported_commands = SUPPORTED_COMMANDS[device_type]
         self._device = Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
         self._max_volume = float(self._device.get_max_volume())
+        self._unique_id = self._device.get_esn()
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -196,6 +194,11 @@ class VizioDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag device features that are supported."""
         return self._supported_commands
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the device."""
+        return self._unique_id
 
     def turn_on(self):
         """Turn the device on."""

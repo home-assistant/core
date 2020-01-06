@@ -5,26 +5,25 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA,
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components import group
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
+    SERVICE_LOCK,
+    SERVICE_OPEN,
+    SERVICE_UNLOCK,
     STATE_LOCKED,
     STATE_UNLOCKED,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    SERVICE_OPEN,
 )
-from homeassistant.components import group
-
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+    make_entity_service_schema,
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -40,7 +39,7 @@ GROUP_NAME_ALL_LOCKS = "all locks"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-LOCK_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({vol.Optional(ATTR_CODE): cv.string})
+LOCK_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.string})
 
 # Bitfield of features supported by the lock entity
 SUPPORT_OPEN = 1

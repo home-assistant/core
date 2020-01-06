@@ -5,8 +5,8 @@ import logging
 from unittest.mock import Mock
 
 import aiohue
-from aiohue.lights import Lights
 from aiohue.groups import Groups
+from aiohue.lights import Lights
 import pytest
 
 from homeassistant import config_entries
@@ -204,6 +204,10 @@ def mock_bridge(hass):
             return bridge.mock_group_responses.popleft()
         return None
 
+    async def async_request_call(coro):
+        await coro
+
+    bridge.async_request_call = async_request_call
     bridge.api.config.apiversion = "9.9.9"
     bridge.api.lights = Lights({}, mock_request)
     bridge.api.groups = Groups({}, mock_request)

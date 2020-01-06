@@ -5,28 +5,29 @@ from copy import deepcopy
 import unittest
 from unittest.mock import Mock, patch
 
-import voluptuous as vol
 import pytest
+import voluptuous as vol
 
 # To prevent circular import when running just this file
-import homeassistant.components  # noqa
 from homeassistant import core as ha, exceptions
-from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID
-from homeassistant.setup import async_setup_component
-import homeassistant.helpers.config_validation as cv
 from homeassistant.auth.permissions import PolicyPermissions
+import homeassistant.components  # noqa: F401
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, STATE_OFF, STATE_ON
 from homeassistant.helpers import (
-    service,
-    template,
     device_registry as dev_reg,
     entity_registry as ent_reg,
+    service,
+    template,
 )
+import homeassistant.helpers.config_validation as cv
+from homeassistant.setup import async_setup_component
+
 from tests.common import (
     get_test_home_assistant,
-    mock_service,
     mock_coro,
-    mock_registry,
     mock_device_registry,
+    mock_registry,
+    mock_service,
 )
 
 
@@ -334,7 +335,10 @@ async def test_call_context_target_all(hass, mock_service_platform_call, mock_en
             [Mock(entities=mock_entities)],
             Mock(),
             ha.ServiceCall(
-                "test_domain", "test_service", context=ha.Context(user_id="mock-id")
+                "test_domain",
+                "test_service",
+                data={"entity_id": ENTITY_MATCH_ALL},
+                context=ha.Context(user_id="mock-id"),
             ),
         )
 
@@ -407,7 +411,9 @@ async def test_call_no_context_target_all(
         hass,
         [Mock(entities=mock_entities)],
         Mock(),
-        ha.ServiceCall("test_domain", "test_service"),
+        ha.ServiceCall(
+            "test_domain", "test_service", data={"entity_id": ENTITY_MATCH_ALL}
+        ),
     )
 
     assert len(mock_service_platform_call.mock_calls) == 1
@@ -453,14 +459,14 @@ async def test_call_with_match_all(
         mock_entities["light.living_room"],
     ]
     assert (
-        "Not passing an entity ID to a service to target " "all entities is deprecated"
+        "Not passing an entity ID to a service to target all entities is deprecated"
     ) not in caplog.text
 
 
 async def test_call_with_omit_entity_id(
-    hass, mock_service_platform_call, mock_entities, caplog
+    hass, mock_service_platform_call, mock_entities
 ):
-    """Check we only target allowed entities if targetting all."""
+    """Check service call if we do not pass an entity ID."""
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
@@ -470,13 +476,7 @@ async def test_call_with_omit_entity_id(
 
     assert len(mock_service_platform_call.mock_calls) == 1
     entities = mock_service_platform_call.mock_calls[0][1][2]
-    assert entities == [
-        mock_entities["light.kitchen"],
-        mock_entities["light.living_room"],
-    ]
-    assert (
-        "Not passing an entity ID to a service to target " "all entities is deprecated"
-    ) in caplog.text
+    assert entities == []
 
 
 async def test_register_admin_service(hass, hass_read_only_user, hass_admin_user):

@@ -4,6 +4,11 @@ import logging
 from homekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     STATE_ALARM_ARMED_AWAY,
@@ -87,6 +92,11 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

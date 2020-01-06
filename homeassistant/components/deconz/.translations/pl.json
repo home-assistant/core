@@ -55,10 +55,17 @@
             "left": "w lewo",
             "open": "otwarcie",
             "right": "w prawo",
+            "side_1": "strona 1",
+            "side_2": "strona 2",
+            "side_3": "strona 3",
+            "side_4": "strona 4",
+            "side_5": "strona 5",
+            "side_6": "strona 6",
             "turn_off": "nast\u0105pi wy\u0142\u0105czenie",
             "turn_on": "nast\u0105pi w\u0142\u0105czenie"
         },
         "trigger_type": {
+            "remote_awakened": "urz\u0105dzenie si\u0119 obudzi",
             "remote_button_double_press": "przycisk \"{subtype}\" zostanie podw\u00f3jnie naci\u015bni\u0119ty",
             "remote_button_long_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty w spos\u00f3b ci\u0105g\u0142y",
             "remote_button_long_release": "przycisk \"{subtype}\" zostanie zwolniony po d\u0142ugim naci\u015bni\u0119ciu",
@@ -69,7 +76,16 @@
             "remote_button_short_press": "przycisk \"{subtype}\" zostanie naci\u015bni\u0119ty",
             "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
             "remote_button_triple_press": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty",
-            "remote_gyro_activated": "nast\u0105pi potrz\u0105\u015bni\u0119cie urz\u0105dzeniem"
+            "remote_double_tap": "urz\u0105dzenie \"{subtype}\" zostanie dwukrotnie pukni\u0119te",
+            "remote_falling": "urz\u0105dzenie zarejestruje swobodny spadek",
+            "remote_gyro_activated": "nast\u0105pi potrz\u0105\u015bni\u0119cie urz\u0105dzeniem",
+            "remote_moved": "urz\u0105dzenie poruszone z \"{subtype}\" w g\u00f3r\u0119",
+            "remote_rotate_from_side_1": "urz\u0105dzenie obr\u00f3cone ze \"strona 1\" na \"{subtype}\"",
+            "remote_rotate_from_side_2": "urz\u0105dzenie obr\u00f3cone ze \"strona 2\" na \"{subtype}\"",
+            "remote_rotate_from_side_3": "urz\u0105dzenie obr\u00f3cone ze \"strona 3\" na \"{subtype}\"",
+            "remote_rotate_from_side_4": "urz\u0105dzenie obr\u00f3cone ze \"strona 4\" na \"{subtype}\"",
+            "remote_rotate_from_side_5": "urz\u0105dzenie obr\u00f3cone ze \"strona 5\" na \"{subtype}\"",
+            "remote_rotate_from_side_6": "urz\u0105dzenie obr\u00f3cone ze \"strona 6\" na \"{subtype}\""
         }
     },
     "options": {

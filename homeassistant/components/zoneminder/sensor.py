@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+from zoneminder.monitor import TimePeriod
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_MONITORED_CONDITIONS
@@ -95,7 +96,6 @@ class ZMSensorEvents(Entity):
 
     def __init__(self, monitor, include_archived, sensor_type):
         """Initialize event sensor."""
-        from zoneminder.monitor import TimePeriod
 
         self._monitor = monitor
         self._include_archived = include_archived

@@ -36,10 +36,10 @@ APPLICATION = FakeApplication()
 class FakeEndpoint:
     """Fake endpoint for moking zigpy."""
 
-    def __init__(self, manufacturer, model):
+    def __init__(self, manufacturer, model, epid=1):
         """Init fake endpoint."""
         self.device = None
-        self.endpoint_id = 1
+        self.endpoint_id = epid
         self.in_clusters = {}
         self.out_clusters = {}
         self._cluster_attr = {}
@@ -93,23 +93,27 @@ class FakeDevice:
         self.manufacturer = manufacturer
         self.model = model
         self.node_desc = zigpy.zdo.types.NodeDescriptor()
+        self.add_to_group = CoroutineMock()
+        self.remove_from_group = CoroutineMock()
 
 
-def make_device(
-    in_cluster_ids, out_cluster_ids, device_type, ieee, manufacturer, model
-):
+def make_device(endpoints, ieee, manufacturer, model):
     """Make a fake device using the specified cluster classes."""
     device = FakeDevice(ieee, manufacturer, model)
-    endpoint = FakeEndpoint(manufacturer, model)
-    endpoint.device = device
-    device.endpoints[endpoint.endpoint_id] = endpoint
-    endpoint.device_type = device_type
+    for epid, ep in endpoints.items():
+        endpoint = FakeEndpoint(manufacturer, model, epid)
+        endpoint.device = device
+        device.endpoints[epid] = endpoint
+        endpoint.device_type = ep["device_type"]
+        profile_id = ep.get("profile_id")
+        if profile_id:
+            endpoint.profile_id = profile_id
 
-    for cluster_id in in_cluster_ids:
-        endpoint.add_input_cluster(cluster_id)
+        for cluster_id in ep.get("in_clusters", []):
+            endpoint.add_input_cluster(cluster_id)
 
-    for cluster_id in out_cluster_ids:
-        endpoint.add_output_cluster(cluster_id)
+        for cluster_id in ep.get("out_clusters", []):
+            endpoint.add_output_cluster(cluster_id)
 
     return device
 
@@ -134,7 +138,16 @@ async def async_init_zigpy_device(
     happens when the device is paired to the network for the first time.
     """
     device = make_device(
-        in_cluster_ids, out_cluster_ids, device_type, ieee, manufacturer, model
+        {
+            1: {
+                "in_clusters": in_cluster_ids,
+                "out_clusters": out_cluster_ids,
+                "device_type": device_type,
+            }
+        },
+        ieee,
+        manufacturer,
+        model,
     )
     if is_new_join:
         await gateway.async_device_initialized(device)
@@ -161,23 +174,22 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-def make_entity_id(domain, device, cluster, use_suffix=True):
-    """Make the entity id for the entity under testing.
+async def find_entity_id(domain, zha_device, hass):
+    """Find the entity id under the testing.
 
     This is used to get the entity id in order to get the state from the state
     machine so that we can test state changes.
     """
-    ieee = device.ieee
-    ieeetail = "".join([f"{o:02x}" for o in ieee[:4]])
-    entity_id = "{}.{}_{}_{}_{}{}".format(
-        domain,
-        slugify(device.manufacturer),
-        slugify(device.model),
-        ieeetail,
-        cluster.endpoint.endpoint_id,
-        ("", "_{}".format(cluster.cluster_id))[use_suffix],
-    )
-    return entity_id
+    ieeetail = "".join([f"{o:02x}" for o in zha_device.ieee[:4]])
+    head = f"{domain}." + slugify(f"{zha_device.name} {ieeetail}")
+
+    enitiy_ids = hass.states.async_entity_ids(domain)
+    await hass.async_block_till_done()
+
+    for entity_id in enitiy_ids:
+        if entity_id.startswith(head):
+            return entity_id
+    return None
 
 
 async def async_enable_traffic(hass, zha_gateway, zha_devices):
@@ -188,7 +200,7 @@ async def async_enable_traffic(hass, zha_gateway, zha_devices):
 
 
 async def async_test_device_join(
-    hass, zha_gateway, cluster_id, domain, device_type=None
+    hass, zha_gateway, cluster_id, entity_id, device_type=None
 ):
     """Test a newly joining device.
 
@@ -205,20 +217,14 @@ async def async_test_device_join(
             "zigpy.zcl.Cluster.bind",
             return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
         ):
-            zigpy_device = await async_init_zigpy_device(
+            await async_init_zigpy_device(
                 hass,
                 [cluster_id, zigpy.zcl.clusters.general.Basic.cluster_id],
                 [],
                 device_type,
                 zha_gateway,
                 ieee="00:0d:6f:00:0a:90:69:f7",
-                manufacturer="FakeMan{}".format(cluster_id),
-                model="FakeMod{}".format(cluster_id),
                 is_new_join=True,
-            )
-            cluster = zigpy_device.endpoints.get(1).in_clusters[cluster_id]
-            entity_id = make_entity_id(
-                domain, zigpy_device, cluster, use_suffix=device_type is None
             )
             assert hass.states.get(entity_id) is not None
 

@@ -11,8 +11,8 @@ from .common import (
     async_enable_traffic,
     async_init_zigpy_device,
     async_test_device_join,
+    find_entity_id,
     make_attribute,
-    make_entity_id,
     make_zcl_header,
 )
 
@@ -27,6 +27,7 @@ async def test_binary_sensor(hass, config_entry, zha_gateway):
         [],
         None,
         zha_gateway,
+        ieee="00:0d:6f:11:9a:90:69:e6",
     )
 
     zigpy_device_occupancy = await async_init_zigpy_device(
@@ -46,15 +47,15 @@ async def test_binary_sensor(hass, config_entry, zha_gateway):
 
     # on off binary_sensor
     zone_cluster = zigpy_device_zone.endpoints.get(1).ias_zone
-    zone_entity_id = make_entity_id(DOMAIN, zigpy_device_zone, zone_cluster)
     zone_zha_device = zha_gateway.get_device(zigpy_device_zone.ieee)
+    zone_entity_id = await find_entity_id(DOMAIN, zone_zha_device, hass)
+    assert zone_entity_id is not None
 
     # occupancy binary_sensor
     occupancy_cluster = zigpy_device_occupancy.endpoints.get(1).occupancy
-    occupancy_entity_id = make_entity_id(
-        DOMAIN, zigpy_device_occupancy, occupancy_cluster
-    )
     occupancy_zha_device = zha_gateway.get_device(zigpy_device_occupancy.ieee)
+    occupancy_entity_id = await find_entity_id(DOMAIN, occupancy_zha_device, hass)
+    assert occupancy_entity_id is not None
 
     # test that the sensors exist and are in the unavailable state
     assert hass.states.get(zone_entity_id).state == STATE_UNAVAILABLE
@@ -76,7 +77,7 @@ async def test_binary_sensor(hass, config_entry, zha_gateway):
 
     # test new sensor join
     await async_test_device_join(
-        hass, zha_gateway, measurement.OccupancySensing.cluster_id, DOMAIN
+        hass, zha_gateway, measurement.OccupancySensing.cluster_id, occupancy_entity_id
     )
 
 

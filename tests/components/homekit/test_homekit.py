@@ -1,35 +1,34 @@
 """Tests for the HomeKit component."""
-from unittest.mock import patch, ANY, Mock
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 
 from homeassistant import setup
-
 from homeassistant.components.homekit import (
-    generate_aid,
-    HomeKit,
     MAX_DEVICES,
     STATUS_READY,
     STATUS_RUNNING,
     STATUS_STOPPED,
     STATUS_WAIT,
+    HomeKit,
+    generate_aid,
 )
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
+    BRIDGE_NAME,
     CONF_AUTO_START,
     CONF_SAFE_MODE,
-    BRIDGE_NAME,
     DEFAULT_PORT,
     DEFAULT_SAFE_MODE,
     DOMAIN,
     HOMEKIT_FILE,
-    SERVICE_HOMEKIT_START,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
+    SERVICE_HOMEKIT_START,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_NAME,
     CONF_IP_ADDRESS,
+    CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
@@ -38,7 +37,6 @@ from homeassistant.core import State
 from homeassistant.helpers.entityfilter import generate_filter
 
 from tests.components.homekit.common import patch_debounce
-
 
 IP_ADDRESS = "127.0.0.1"
 PATH_HOMEKIT = "homeassistant.components.homekit"

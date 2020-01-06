@@ -1,27 +1,34 @@
 """Support for tracking which astronomical or meteorological season it is."""
-import logging
 from datetime import datetime
+import logging
 
 import ephem
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_TYPE
-from homeassistant.helpers.entity import Entity
 from homeassistant import util
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME, CONF_TYPE
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-NORTHERN = "northern"
-SOUTHERN = "southern"
+DEFAULT_NAME = "Season"
+
 EQUATOR = "equator"
+
+NORTHERN = "northern"
+
+SOUTHERN = "southern"
+STATE_AUTUMN = "autumn"
 STATE_SPRING = "spring"
 STATE_SUMMER = "summer"
-STATE_AUTUMN = "autumn"
 STATE_WINTER = "winter"
+
 TYPE_ASTRONOMICAL = "astronomical"
 TYPE_METEOROLOGICAL = "meteorological"
+
 VALID_TYPES = [TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL]
 
 HEMISPHERE_SEASON_SWAP = {
@@ -40,7 +47,10 @@ SEASON_ICONS = {
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_TYPE, default=TYPE_ASTRONOMICAL): vol.In(VALID_TYPES)}
+    {
+        vol.Optional(CONF_TYPE, default=TYPE_ASTRONOMICAL): vol.In(VALID_TYPES),
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
 )
 
 
@@ -52,6 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     latitude = util.convert(hass.config.latitude, float)
     _type = config.get(CONF_TYPE)
+    name = config.get(CONF_NAME)
 
     if latitude < 0:
         hemisphere = SOUTHERN
@@ -61,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hemisphere = EQUATOR
 
     _LOGGER.debug(_type)
-    add_entities([Season(hass, hemisphere, _type)])
+    add_entities([Season(hass, hemisphere, _type, name)])
 
     return True
 
@@ -101,9 +112,10 @@ def get_season(date, hemisphere, season_tracking_type):
 class Season(Entity):
     """Representation of the current season."""
 
-    def __init__(self, hass, hemisphere, season_tracking_type):
+    def __init__(self, hass, hemisphere, season_tracking_type, name):
         """Initialize the season."""
         self.hass = hass
+        self._name = name
         self.hemisphere = hemisphere
         self.datetime = dt_util.utcnow().replace(tzinfo=None)
         self.type = season_tracking_type
@@ -112,7 +124,7 @@ class Season(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "Season"
+        return self._name
 
     @property
     def state(self):
