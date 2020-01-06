@@ -1914,6 +1914,9 @@ sucks==0.9.4
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
 
+# homeassistant.components.surepetcare
+surepy==0.1.10
+
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.0.3
 
