@@ -61,9 +61,7 @@ def validate_auth(config):
     token = config.get(CONF_ACCESS_TOKEN)
     if config[CONF_DEVICE_CLASS] == "tv" and (token is None or token == ""):
         raise vol.Invalid(
-            "When '{}' is 'tv' then '{}' is required.".format(
-                CONF_DEVICE_CLASS, CONF_ACCESS_TOKEN
-            ),
+            f"When '{CONF_DEVICE_CLASS}' is 'tv' then '{CONF_ACCESS_TOKEN}' is required.",
             path=[CONF_ACCESS_TOKEN],
         )
     return config
