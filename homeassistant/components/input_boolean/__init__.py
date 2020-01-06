@@ -52,7 +52,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 STORAGE_KEY = DOMAIN
-STORAKE_VERSION = 1
+STORAGE_VERSION = 1
 
 
 class InputBooleanStorageCollection(collection.StorageCollection):
@@ -104,7 +104,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
 
     storage_collection = InputBooleanStorageCollection(
-        Store(hass, STORAKE_VERSION, STORAGE_KEY),
+        Store(hass, STORAGE_VERSION, STORAGE_KEY),
         logging.getLogger(f"{__name__}_storage_collection"),
         id_manager,
     )
