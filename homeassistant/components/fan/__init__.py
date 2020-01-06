@@ -79,17 +79,22 @@ async def async_setup(hass, config: dict):
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
     component.async_register_entity_service(
-        SERVICE_SET_SPEED, {vol.Required(ATTR_SPEED): cv.string}, "async_set_speed"
+        SERVICE_SET_SPEED,
+        {vol.Required(ATTR_SPEED): cv.string},
+        "async_set_speed",
+        [SUPPORT_SET_SPEED],
     )
     component.async_register_entity_service(
         SERVICE_OSCILLATE,
         {vol.Required(ATTR_OSCILLATING): cv.boolean},
         "async_oscillate",
+        [SUPPORT_OSCILLATE],
     )
     component.async_register_entity_service(
         SERVICE_SET_DIRECTION,
         {vol.Optional(ATTR_DIRECTION): cv.string},
         "async_set_direction",
+        [SUPPORT_DIRECTION],
     )
 
     return True
