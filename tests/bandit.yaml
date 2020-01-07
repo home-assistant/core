@@ -1,6 +1,7 @@
 # https://bandit.readthedocs.io/en/latest/config.html
 
 tests:
+  - B108
   - B313
   - B314
   - B315
