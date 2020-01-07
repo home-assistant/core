@@ -60,7 +60,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input: Dict[str, Any] = None):
         """Handle a flow initialized by the user."""
 
         errors = {}
@@ -108,7 +108,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=vizio_schema(defaults), errors=errors
         )
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_config: Dict[str, Any]):
         """Import a config entry from configuration.yaml."""
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
