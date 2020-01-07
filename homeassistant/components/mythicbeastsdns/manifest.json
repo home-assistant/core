@@ -1,6 +1,6 @@
 {
   "domain": "mythicbeastsdns",
-  "name": "Mythicbeastsdns",
+  "name": "Mythic Beasts DNS",
   "documentation": "https://www.home-assistant.io/integrations/mythicbeastsdns",
   "requirements": ["mbddns==0.1.2"],
   "dependencies": [],
