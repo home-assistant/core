@@ -1,6 +1,6 @@
 {
   "domain": "trafikverket_train",
-  "name": "Trafikverket train information",
+  "name": "Trafikverket Train",
   "documentation": "https://www.home-assistant.io/integrations/trafikverket_train",
   "requirements": ["pytrafikverket==0.1.5.9"],
   "dependencies": [],
