@@ -175,7 +175,7 @@ class TodSensor(BinarySensorDevice):
         self._time_before = before_event_date
 
         # We are calculating the _time_after value assuming that it will happen today
-        # But it's not always truth. E.g. after 23:00, before 12:00, and now is 10:00
+        # But that is not always true, e.g. after 23:00, before 12:00 and now is 10:00
         # If _time_before and _time_after are ahead of current_datetime:
         # _time_before is set to 12:00 next day
         # _time_after is set to 23:00 today
