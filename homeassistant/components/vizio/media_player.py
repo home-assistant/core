@@ -49,15 +49,7 @@ SUPPORTED_COMMANDS = {
 }
 
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA), validate_auth)
-=======
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA, validate_auth))
->>>>>>> update .coveragerc, move validate_auth to __init__, only attempt to get ESN if device setup is validated
-=======
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA), validate_auth)
->>>>>>> fix schema validation
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
