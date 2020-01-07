@@ -114,10 +114,10 @@ adafruit-blinka==1.2.1
 adafruit-circuitpython-mcp230xx==1.1.2
 
 # homeassistant.components.androidtv
-adb-shell==0.1.0
+adb-shell==0.1.1
 
 # homeassistant.components.adguard
-adguardhome==0.3.0
+adguardhome==0.4.0
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
@@ -220,7 +220,7 @@ ambiclimate==0.2.1
 amcrest==1.5.3
 
 # homeassistant.components.androidtv
-androidtv==0.0.36
+androidtv==0.0.38
 
 # homeassistant.components.anel_pwrctrl
 anel_pwrctrl-homeassistant==0.0.1.dev2
@@ -338,6 +338,9 @@ braviarc-homeassistant==0.3.7.dev0
 
 # homeassistant.components.broadlink
 broadlink==0.12.0
+
+# homeassistant.components.brother
+brother==0.1.4
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -465,7 +468,7 @@ ecoaliface==0.4.0
 eebrightbox==0.0.4
 
 # homeassistant.components.elgato
-elgato==0.1.0
+elgato==0.2.0
 
 # homeassistant.components.eliqonline
 eliqonline==1.2.2
@@ -646,7 +649,7 @@ habitipy==0.2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.30
+hass-nabucasa==0.31
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -1620,7 +1623,7 @@ python-sochain-api==0.0.2
 python-songpal==0.11.2
 
 # homeassistant.components.synologydsm
-python-synology==0.2.0
+python-synology==0.3.0
 
 # homeassistant.components.tado
 python-tado==0.2.9
@@ -1635,7 +1638,7 @@ python-telnet-vlc==1.0.4
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.32
+python-velbus==2.0.35
 
 # homeassistant.components.vlc
 python-vlc==1.1.2
@@ -1693,7 +1696,7 @@ pyversasense==0.0.6
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.0.7
+pyvizio==0.0.12
 
 # homeassistant.components.velux
 pyvlx==0.2.12
@@ -1914,6 +1917,9 @@ sucks==0.9.4
 # homeassistant.components.solarlog
 sunwatcher==0.2.1
 
+# homeassistant.components.surepetcare
+surepy==0.1.10
+
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.0.3
 
@@ -1948,7 +1954,7 @@ temperusb==1.5.3
 # tensorflow==1.13.2
 
 # homeassistant.components.tesla
-teslajsonpy==0.2.1
+teslajsonpy==0.2.2
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
@@ -1958,6 +1964,9 @@ thingspeak==1.0.0
 
 # homeassistant.components.tikteck
 tikteck==0.4
+
+# homeassistant.components.tmb
+tmb==0.0.4
 
 # homeassistant.components.todoist
 todoist-python==8.0.0
@@ -1978,7 +1987,7 @@ transmissionrpc==0.11
 tuyaha==0.0.5
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.1.0
+twentemilieu==0.2.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -2049,7 +2058,7 @@ wirelesstagpy==0.4.0
 withings-api==2.1.3
 
 # homeassistant.components.wled
-wled==0.1.0
+wled==0.2.1
 
 # homeassistant.components.wunderlist
 wunderpy2==0.1.6

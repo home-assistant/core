@@ -196,7 +196,7 @@ class WemoSwitch(SwitchDevice):
         self.wemo.off()
 
     async def async_added_to_hass(self):
-        """Wemo switch added to HASS."""
+        """Wemo switch added to Home Assistant."""
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 

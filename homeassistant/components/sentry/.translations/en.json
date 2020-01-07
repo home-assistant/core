@@ -1,18 +1,18 @@
 {
-  "config": {
-    "title": "Sentry",
-    "step": {
-      "user": {
-        "title": "Sentry",
-        "description": "Enter your Sentry DSN"
-      }
-    },
-    "error": {
-      "unknown": "Unexpected error",
-      "bad_dsn": "Invalid DSN"
-    },
-    "abort": {
-      "already_configured": "Sentry is already configured"
+    "config": {
+        "abort": {
+            "already_configured": "Sentry is already configured"
+        },
+        "error": {
+            "bad_dsn": "Invalid DSN",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "description": "Enter your Sentry DSN",
+                "title": "Sentry"
+            }
+        },
+        "title": "Sentry"
     }
-  }
 }

@@ -122,7 +122,7 @@ class HKDevice:
         self.hass.helpers.dispatcher.async_dispatcher_send(self.signal_state_updated)
 
     async def async_setup(self):
-        """Prepare to use a paired HomeKit device in homeassistant."""
+        """Prepare to use a paired HomeKit device in Home Assistant."""
         cache = self.hass.data[ENTITY_MAP].get_map(self.unique_id)
         if not cache:
             if await self.async_refresh_entity_map(self.config_num):

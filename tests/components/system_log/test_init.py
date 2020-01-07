@@ -241,7 +241,7 @@ def log_error_from_test_path(path):
 
 
 async def test_homeassistant_path(hass, hass_client):
-    """Test error logged from homeassistant path."""
+    """Test error logged from Home Assistant path."""
     await async_setup_component(hass, system_log.DOMAIN, BASIC_CONFIG)
     with patch(
         "homeassistant.components.system_log.HOMEASSISTANT_PATH",

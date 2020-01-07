@@ -47,7 +47,7 @@ def assert_state_equals(
 
 
 async def setup_hass(hass: HomeAssistant) -> dict:
-    """Configure home assistant."""
+    """Configure Home Assistant."""
     profiles = ["Person0", "Person1", "Person2", "Person3", "Person4"]
 
     hass_config = {
