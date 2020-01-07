@@ -26,7 +26,10 @@ from homeassistant.components.samsungtv.const import (
     CONF_ON_ACTION,
     DOMAIN as SAMSUNGTV_DOMAIN,
 )
+<<<<<<< HEAD
 from homeassistant.components.samsungtv.media_player import SUPPORT_SAMSUNGTV
+=======
+>>>>>>> Removed state settings in send_key method
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,

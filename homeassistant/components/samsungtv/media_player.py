@@ -148,20 +148,9 @@ class SamsungTVDevice(MediaPlayerDevice):
                     # BrokenPipe can occur when the commands is sent to fast
                     # WebSocketException can occur when timed out
                     self._remote = None
-            self._state = STATE_ON
         except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
             # We got a response so it's on.
-            self._state = STATE_ON
-            self._remote = None
-            if key:
-                LOGGER.debug("Failed sending command %s", key, exc_info=True)
-            return
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            self._state = STATE_OFF
-            self._remote = None
-        if self._power_off_in_progress():
-            self._state = STATE_OFF
+            LOGGER.debug("Failed sending command %s", key, exc_info=True)
 
     def _power_off_in_progress(self):
         return (
