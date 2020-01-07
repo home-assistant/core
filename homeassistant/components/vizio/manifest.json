@@ -6,6 +6,5 @@
     "pyvizio==0.0.12"
   ],
   "dependencies": [],
-  "config_flow": true,
   "codeowners": ["@raman325"]
 }
