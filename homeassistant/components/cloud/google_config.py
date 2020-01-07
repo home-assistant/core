@@ -2,7 +2,7 @@
 import asyncio
 import logging
 
-import async_timeout
+from hass_nabucasa import cloud_api
 from hass_nabucasa.google_report_state import ErrorResponse
 
 from homeassistant.components.google_assistant.helpers import AbstractConfig
@@ -126,21 +126,9 @@ class CloudGoogleConfig(AbstractConfig):
         if self._sync_entities_lock.locked():
             return 200
 
-        websession = self.hass.helpers.aiohttp_client.async_get_clientsession()
-
         async with self._sync_entities_lock:
-            with async_timeout.timeout(10):
-                await self._cloud.auth.async_check_token()
-
-            _LOGGER.debug("Requesting sync")
-
-            with async_timeout.timeout(30):
-                req = await websession.post(
-                    self._cloud.google_actions_sync_url,
-                    headers={"authorization": self._cloud.id_token},
-                )
-                _LOGGER.debug("Finished requesting syncing: %s", req.status)
-                return req.status
+            resp = await cloud_api.async_google_actions_request_sync(self._cloud)
+            return resp.status
 
     async def _async_prefs_updated(self, prefs):
         """Handle updated preferences."""
