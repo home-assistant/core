@@ -8,11 +8,11 @@
     "step": {
       "user": {
         "title": "Setup Vera controller",
-        "description": "Provide a Vera controller url below. It should look like this: http://192.168.1.161:3480/",
+        "description": "Provide a Vera controller url below. It should look like this: http://192.168.1.161:3480/.\n\nSee the vera documentation for details on optional parameters: https://www.home-assistant.io/integrations/vera/",
         "data": {
           "vera_controller_url": "Controller URL",
-          "lights": "Optional: Delimited list of Vera device ids (ints).",
-          "exclude": "Optional: Delimited list of Vera device ids (ints)."
+          "lights": "Optional: Light ids. Delimited list of Vera device ids (ints).",
+          "exclude": "Optional: Exclude ids. Delimited list of Vera device ids (ints)."
         }
       }
     }
