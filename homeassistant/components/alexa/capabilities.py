@@ -31,7 +31,6 @@ from .const import (
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
     PERCENTAGE_FAN_MAP,
-    RANGE_FAN_MAP,
     Inputs,
 )
 from .errors import UnsupportedProperty
@@ -1261,8 +1260,9 @@ class AlexaRangeController(AlexaCapability):
 
         # Fan Speed
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-            speed = self.entity.attributes.get(fan.ATTR_SPEED)
-            return RANGE_FAN_MAP.get(speed, 0)
+            speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
+            speed = self.entity.attributes[fan.ATTR_SPEED]
+            return speed_list.index(speed)
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
@@ -1299,7 +1299,7 @@ class AlexaRangeController(AlexaCapability):
                 precision=1,
             )
             for speed_value, speed_name in enumerate(speed_list):
-                labels = [speed_name]
+                labels = [speed_name.replace("_", " ")]
                 if speed_value == 1:
                     labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
                 if speed_value == max_value:

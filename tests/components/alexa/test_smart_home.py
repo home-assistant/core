@@ -708,7 +708,6 @@ async def test_fan_range(hass):
     assert supported_range["precision"] == 1
 
     presets = configuration["presets"]
-    print(presets)
     assert {
         "rangeValue": 0,
         "presetResources": {
@@ -741,7 +740,7 @@ async def test_fan_range(hass):
         "rangeValue": 5,
         "presetResources": {
             "friendlyNames": [
-                {"@type": "text", "value": {"text": "warp_speed", "locale": "en-US"}},
+                {"@type": "text", "value": {"text": "warp speed", "locale": "en-US"}},
                 {"@type": "asset", "value": {"assetId": "Alexa.Value.Maximum"}},
             ]
         },
@@ -771,7 +770,7 @@ async def test_fan_range(hass):
 
     await assert_range_changes(
         hass,
-        [("low", "-1"), ("high", "1"), ("medium", "0")],
+        [("low", "-1"), ("high", "1"), ("medium", "0"), ("warp_speed", "99")],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "fan#test_5",
@@ -809,7 +808,7 @@ async def test_fan_range_off(hass):
 
     await assert_range_changes(
         hass,
-        [("off", "-3")],
+        [("off", "-3"), ("off", "-99")],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "fan#test_6",

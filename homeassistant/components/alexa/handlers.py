@@ -50,8 +50,6 @@ from .const import (
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
     PERCENTAGE_FAN_MAP,
-    RANGE_FAN_MAP,
-    SPEED_FAN_MAP,
     Cause,
     Inputs,
 )

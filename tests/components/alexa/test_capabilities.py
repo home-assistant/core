@@ -315,12 +315,22 @@ async def test_report_fan_speed_state(hass):
     hass.states.async_set(
         "fan.off",
         "off",
-        {"friendly_name": "Off fan", "speed": "off", "supported_features": 1},
+        {
+            "friendly_name": "Off fan",
+            "speed": "off",
+            "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
+        },
     )
     hass.states.async_set(
         "fan.low_speed",
         "on",
-        {"friendly_name": "Low speed fan", "speed": "low", "supported_features": 1},
+        {
+            "friendly_name": "Low speed fan",
+            "speed": "low",
+            "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
+        },
     )
     hass.states.async_set(
         "fan.medium_speed",
@@ -329,12 +339,18 @@ async def test_report_fan_speed_state(hass):
             "friendly_name": "Medium speed fan",
             "speed": "medium",
             "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
         },
     )
     hass.states.async_set(
         "fan.high_speed",
         "on",
-        {"friendly_name": "High speed fan", "speed": "high", "supported_features": 1},
+        {
+            "friendly_name": "High speed fan",
+            "speed": "high",
+            "supported_features": 1,
+            "speed_list": ["off", "low", "medium", "high"],
+        },
     )
 
     properties = await reported_properties(hass, "fan.off")
@@ -361,18 +377,15 @@ async def test_report_fan_speed_state(hass):
 async def test_report_fan_oscillating(hass):
     """Test ToggleController reports fan oscillating correctly."""
     hass.states.async_set(
-        "fan.off",
-        "off",
-        {"friendly_name": "Off fan", "speed": "off", "supported_features": 3},
+        "fan.off", "off", {"friendly_name": "Off fan", "supported_features": 2}
     )
     hass.states.async_set(
         "fan.low_speed",
         "on",
         {
             "friendly_name": "Low speed fan",
-            "speed": "low",
             "oscillating": True,
-            "supported_features": 3,
+            "supported_features": 2,
         },
     )
 
