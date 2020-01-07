@@ -22,7 +22,16 @@ async def async_setup(hass: HomeAssistant, config: dict):
     {
         vol.Required("type"): "search/related",
         vol.Required("item_type"): vol.In(
-            ("area", "device", "entity", "script", "scene", "automation", "group")
+            (
+                "area",
+                "automation",
+                "config_entry",
+                "device",
+                "entity",
+                "group",
+                "scene",
+                "script",
+            )
         ),
         vol.Required("item_id"): str,
     }
