@@ -324,7 +324,7 @@ async def test_effect_light(hass):
 
     for effect in device[-1]["effect_list"]:
         assert {
-            "value": "{}".format(effect),
+            "value": "effect.{}".format(effect),
             "modeResources": {
                 "friendlyNames": [
                     {
@@ -341,7 +341,7 @@ async def test_effect_light(hass):
         "light#test_4",
         "light.turn_on",
         hass,
-        payload={"mode": "4"},
+        payload={"mode": "effect.4"},
         instance="light.effect",
     )
     assert call.data["effect"] == "4"

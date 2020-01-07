@@ -1140,7 +1140,7 @@ class AlexaModeController(AlexaCapability):
 
         if self.instance == f"{light.DOMAIN}.effect":
             mode = self.entity.attributes.get(light.ATTR_EFFECT)
-            return f"{mode}"
+            return f"{light.ATTR_EFFECT}.{mode}"
 
         return None
 
@@ -1189,7 +1189,9 @@ class AlexaModeController(AlexaCapability):
             effect_list = self.entity.attributes.get(light.ATTR_EFFECT_LIST, 0)
             if effect_list:
                 for effect in effect_list:
-                    self._resource.add_mode(f"{effect}", [f"{effect}"])
+                    self._resource.add_mode(
+                        f"{light.ATTR_EFFECT}.{effect}", [f"{effect}"]
+                    )
 
             return self._resource.serialize_capability_resources()
 
