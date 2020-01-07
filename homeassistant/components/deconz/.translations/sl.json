@@ -18,7 +18,7 @@
                     "allow_clip_sensor": "Dovoli uvoz virtualnih senzorjev",
                     "allow_deconz_groups": "Dovoli uvoz deCONZ skupin"
                 },
-                "description": "\u017delite konfigurirati Home Assistant-a za povezavo z deCONZ prehodom, ki ga ponuja hass.io dodatek {addon} ?",
+                "description": "Ali \u017eelite konfigurirati Home Assistant za povezavo s prehodom deCONZ, ki ga ponuja dodatek Hass.io {addon} ?",
                 "title": "deCONZ Zigbee prehod preko dodatka Hass.io"
             },
             "init": {
