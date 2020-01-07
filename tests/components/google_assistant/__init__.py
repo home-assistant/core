@@ -124,20 +124,6 @@ DEMO_DEVICES = [
         "willReportState": False,
     },
     {
-        "id": "group.all_lights",
-        "name": {"name": "all lights"},
-        "traits": ["action.devices.traits.OnOff"],
-        "type": "action.devices.types.SWITCH",
-        "willReportState": False,
-    },
-    {
-        "id": "group.all_switches",
-        "name": {"name": "all switches"},
-        "traits": ["action.devices.traits.OnOff"],
-        "type": "action.devices.types.SWITCH",
-        "willReportState": False,
-    },
-    {
         "id": "cover.living_room_window",
         "name": {"name": "Living Room Window"},
         "traits": ["action.devices.traits.OpenClose"],
@@ -163,13 +149,6 @@ DEMO_DEVICES = [
         "name": {"name": "Kitchen Window"},
         "traits": ["action.devices.traits.OpenClose"],
         "type": "action.devices.types.BLINDS",
-        "willReportState": False,
-    },
-    {
-        "id": "group.all_covers",
-        "name": {"name": "all covers"},
-        "traits": ["action.devices.traits.OnOff"],
-        "type": "action.devices.types.SWITCH",
         "willReportState": False,
     },
     {
@@ -224,13 +203,6 @@ DEMO_DEVICES = [
         "name": {"name": "Ceiling Fan"},
         "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
         "type": "action.devices.types.FAN",
-        "willReportState": False,
-    },
-    {
-        "id": "group.all_fans",
-        "name": {"name": "all fans"},
-        "traits": ["action.devices.traits.OnOff"],
-        "type": "action.devices.types.SWITCH",
         "willReportState": False,
     },
     {
