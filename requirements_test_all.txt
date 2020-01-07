@@ -29,7 +29,7 @@ YesssSMS==0.4.1
 abodepy==0.16.7
 
 # homeassistant.components.androidtv
-adb-shell==0.1.0
+adb-shell==0.1.1
 
 # homeassistant.components.adguard
 adguardhome==0.4.0
@@ -87,7 +87,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv==0.0.37
+androidtv==0.0.38
 
 # homeassistant.components.apns
 apns2==0.3.0
