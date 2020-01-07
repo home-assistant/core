@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_STEP,
@@ -17,7 +18,9 @@ DEFAULT_NAME = "Xiaomi TV"
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_XIAOMI_TV = SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+SUPPORT_XIAOMI_TV = (
+    SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+)
 
 # No host is needed for configuration, however it can be set.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -26,7 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Xiaomi TV platform."""
@@ -58,6 +60,9 @@ class XiaomiTV(MediaPlayerDevice):
         # Default name value, only to be overridden by user.
         self._name = name
         self._state = STATE_OFF
+        self._volume_level = None
+        self._source = None
+        self._source_list = ["hdmi1", "hdmi2"]
 
     @property
     def name(self):
@@ -67,7 +72,13 @@ class XiaomiTV(MediaPlayerDevice):
     @property
     def state(self):
         """Return _state variable, containing the appropriate constant."""
-        return self._state
+        if self._tv.assume_state:
+            return self._state
+        if self._tv.is_on:
+            self._state = STATE_ON
+        else:
+            self._state = STATE_OFF
+        self._volume_level = int(self._tv.get_volume()) / 100
 
     @property
     def assumed_state(self):
@@ -78,6 +89,21 @@ class XiaomiTV(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_XIAOMI_TV
+
+    @property
+    def source(self):
+        """Return the current input source."""
+        return self._tv.source
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return self._source_list
+
+    @property
+    def volume_level(self):
+        """Return the volume level."""
+        return int(self._tv.get_volume()) / 100
 
     def turn_off(self):
         """
@@ -106,3 +132,8 @@ class XiaomiTV(MediaPlayerDevice):
     def volume_down(self):
         """Decrease volume by one."""
         self._tv.volume_down()
+
+    def select_source(self, source):
+        """Select source."""
+        self._tv.change_source(source)
+        self._source = source
