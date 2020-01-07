@@ -105,10 +105,10 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         title="configuration.yaml - " + user_input[CONF_NAME],
                         data=user_input,
                     )
-                else:
-                    return self.async_create_entry(
-                        title=user_input[CONF_NAME], data=user_input
-                    )
+
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=vizio_schema(defaults), errors=errors
