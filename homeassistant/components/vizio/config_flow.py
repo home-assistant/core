@@ -102,7 +102,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 if user_input.get("configuration.yaml"):
                     return self.async_create_entry(
-                        title="configuration.yaml - " + user_input[CONF_NAME],
+                        title=f"configuration.yaml - {user_input[CONF_NAME]}",
                         data=user_input,
                     )
 
