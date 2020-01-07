@@ -6,6 +6,7 @@ from requests.exceptions import RequestException
 
 from homeassistant.components.vera import CONF_CONTROLLER
 from homeassistant.components.vera.config_flow import VeraFlowHandler
+from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -27,12 +28,22 @@ async def test_aync_step_user_success(hass: HomeAssistant) -> None:
 
         result = await handler.async_step_user()
         assert result.get("type") == RESULT_TYPE_FORM
-        assert result.get("step_id") == "setup"
+        assert result.get("step_id") == "user"
 
-        result = await handler.async_step_user({CONF_CONTROLLER: base_url})
+        result = await handler.async_step_user(
+            {
+                CONF_CONTROLLER: base_url,
+                CONF_LIGHTS: "1,2;3  4 5_6bb7",
+                CONF_EXCLUDE: "8,9;10  11 12_13bb14",
+            }
+        )
         assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
         assert result.get("title") == base_url
-        assert result.get("data") == {CONF_CONTROLLER: base_url}
+        assert result.get("data") == {
+            CONF_CONTROLLER: base_url,
+            CONF_LIGHTS: [1, 2, 3, 4, 5, 6, 7],
+            CONF_EXCLUDE: [8, 9, 10, 11, 12, 13, 14],
+        }
 
 
 async def test_async_step_user_alredy_setup(hass: HomeAssistant) -> None:

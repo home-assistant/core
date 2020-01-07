@@ -1,12 +1,22 @@
 """Config flow for Vera."""
+import re
+from typing import List
+
 import pyvera as pv
 from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS
 
 from .const import CONF_CONTROLLER, DOMAIN
+
+LIST_REGEX = re.compile("[^0-9]+")
+
+
+def parse_int_list(data: str) -> List[int]:
+    """Parse a string into a list of ints."""
+    return [int(s) for s in LIST_REGEX.split(data) if len(s) > 0]
 
 
 class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -18,11 +28,22 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_setup")
 
         if config:
-            return await self.async_step_finish(config)
+            new_config = {
+                CONF_CONTROLLER: config.get(CONF_CONTROLLER),
+                CONF_LIGHTS: parse_int_list(config.get(CONF_LIGHTS, "")),
+                CONF_EXCLUDE: parse_int_list(config.get(CONF_EXCLUDE, "")),
+            }
+            return await self.async_step_finish(new_config)
 
         return self.async_show_form(
-            step_id="setup",
-            data_schema=vol.Schema({vol.Required(CONF_CONTROLLER): cv.url}),
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CONTROLLER): str,
+                    vol.Optional(CONF_LIGHTS): str,
+                    vol.Optional(CONF_EXCLUDE): str,
+                }
+            ),
         )
 
     async def async_step_import(self, config: dict):
