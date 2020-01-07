@@ -1,6 +1,6 @@
 {
   "domain": "manual_mqtt",
-  "name": "Manual mqtt",
+  "name": "Manual MQTT",
   "documentation": "https://www.home-assistant.io/integrations/manual_mqtt",
   "requirements": [],
   "dependencies": ["mqtt"],
