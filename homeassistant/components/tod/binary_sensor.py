@@ -184,6 +184,7 @@ class TodSensor(BinarySensorDevice):
             self._time_after > self.current_datetime
             and self._time_before > self.current_datetime + timedelta(days=1)
         ):
+            # remove one day from _time_before and _time_after
             self._time_after -= timedelta(days=1)
             self._time_before -= timedelta(days=1)
 
