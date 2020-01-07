@@ -1,5 +1,6 @@
 """Config flow for Vizio."""
 import logging
+from typing import Any, Dict
 
 from pyvizio import Vizio
 import voluptuous as vol
@@ -24,7 +25,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def vizio_schema(self, defaults: dict) -> vol.Schema:
+def vizio_schema(self, defaults: Dict[str, Any]) -> vol.Schema:
     """Return vol schema with expected defaults for blank form or retain what was previously filled in."""
 
     if not defaults:
