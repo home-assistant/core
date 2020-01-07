@@ -1,6 +1,6 @@
 {
   "domain": "signal_messenger",
-  "name": "signal_messenger",
+  "name": "Signal Messenger",
   "documentation": "https://www.home-assistant.io/integrations/signal_messenger",
   "dependencies": [],
   "codeowners": ["@bbernhard"],

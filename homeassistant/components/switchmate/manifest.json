@@ -1,6 +1,6 @@
 {
   "domain": "switchmate",
-  "name": "Switchmate",
+  "name": "Switchmate SimplySmart Home",
   "documentation": "https://www.home-assistant.io/integrations/switchmate",
   "requirements": ["pySwitchmate==0.4.6"],
   "dependencies": [],
