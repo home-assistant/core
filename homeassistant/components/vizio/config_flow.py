@@ -100,9 +100,15 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "tv_needs_token"
 
             if not errors:
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
+                if user_input.get("configuration.yaml"):
+                    return self.async_create_entry(
+                        title="configuration.yaml - " + user_input[CONF_NAME],
+                        data=user_input,
+                    )
+                else:
+                    return self.async_create_entry(
+                        title=user_input[CONF_NAME], data=user_input
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=vizio_schema(defaults), errors=errors
@@ -116,5 +122,8 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="host_exists")
             if entry.data[CONF_NAME] == import_config[CONF_NAME]:
                 return self.async_abort(reason="name_exists")
+
+        # add key to track entities coming from config
+        import_config["configuration.yaml"] = True
 
         return await self.async_step_user(user_input=import_config)
