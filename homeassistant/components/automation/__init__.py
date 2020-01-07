@@ -125,9 +125,7 @@ def is_on(hass, entity_id):
 
 async def async_setup(hass, config):
     """Set up the automation."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_AUTOMATIONS
-    )
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await _async_process_config(hass, config, component)
 

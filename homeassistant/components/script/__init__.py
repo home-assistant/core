@@ -38,8 +38,6 @@ CONF_SEQUENCE = "sequence"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-GROUP_NAME_ALL_SCRIPTS = "all scripts"
-
 SCRIPT_ENTRY_SCHEMA = vol.Schema(
     {
         CONF_ALIAS: cv.string,
@@ -73,9 +71,7 @@ def is_on(hass, entity_id):
 
 async def async_setup(hass, config):
     """Load the scripts from the configuration."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_SCRIPTS
-    )
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await _async_process_config(hass, config, component)
 

@@ -5,7 +5,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import group
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
@@ -32,10 +31,7 @@ ATTR_CHANGED_BY = "changed_by"
 DOMAIN = "lock"
 SCAN_INTERVAL = timedelta(seconds=30)
 
-ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format("all_locks")
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-GROUP_NAME_ALL_LOCKS = "all locks"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -50,16 +46,15 @@ PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
 
 @bind_hass
-def is_locked(hass, entity_id=None):
+def is_locked(hass, entity_id):
     """Return if the lock is locked based on the statemachine."""
-    entity_id = entity_id or ENTITY_ID_ALL_LOCKS
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
 async def async_setup(hass, config):
     """Track states and offer events for locks."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LOCKS
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)

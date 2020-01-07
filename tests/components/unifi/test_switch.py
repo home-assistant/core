@@ -208,7 +208,7 @@ async def test_no_clients(hass):
     )
 
     assert len(controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
 
 
 async def test_controller_not_client(hass):
@@ -224,7 +224,7 @@ async def test_controller_not_client(hass):
     )
 
     assert len(controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
     cloudkey = hass.states.get("switch.cloud_key")
     assert cloudkey is None
 
@@ -245,7 +245,7 @@ async def test_not_admin(hass):
     )
 
     assert len(controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
 
 
 async def test_switches(hass):
@@ -263,7 +263,7 @@ async def test_switches(hass):
     )
 
     assert len(controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 4
 
     switch_1 = hass.states.get("switch.poe_client_1")
     assert switch_1 is not None
@@ -298,7 +298,7 @@ async def test_new_client_discovered_on_block_control(hass):
     )
 
     assert len(controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 2
 
     controller.mock_client_all_responses.append([BLOCKED])
 
@@ -307,7 +307,7 @@ async def test_new_client_discovered_on_block_control(hass):
         "switch", "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
     assert len(controller.mock_requests) == 7
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 2
     assert controller.mock_requests[3] == {
         "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
         "method": "post",
@@ -338,7 +338,7 @@ async def test_new_client_discovered_on_poe_control(hass):
     )
 
     assert len(controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 2
 
     controller.mock_client_responses.append([CLIENT_1, CLIENT_2])
     controller.mock_device_responses.append([DEVICE_1])
@@ -348,7 +348,7 @@ async def test_new_client_discovered_on_poe_control(hass):
         "switch", "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
     assert len(controller.mock_requests) == 6
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 3
     assert controller.mock_requests[3] == {
         "json": {
             "port_overrides": [{"port_idx": 1, "portconf_id": "1a1", "poe_mode": "off"}]
@@ -387,7 +387,7 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass):
     )
 
     assert len(controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 4
 
     switch_1 = hass.states.get("switch.poe_client_1")
     switch_2 = hass.states.get("switch.poe_client_2")
@@ -438,7 +438,7 @@ async def test_restoring_client(hass):
     )
 
     assert len(controller.mock_requests) == 3
-    assert len(hass.states.async_all()) == 5
+    assert len(hass.states.async_all()) == 3
 
     device_1 = hass.states.get("switch.client_1")
     assert device_1 is not None
