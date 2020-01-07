@@ -1,6 +1,6 @@
 {
   "domain": "ciscospark",
-  "name": "Ciscospark",
+  "name": "Cisco Spark",
   "documentation": "https://www.home-assistant.io/integrations/ciscospark",
   "requirements": ["ciscosparkapi==0.4.2"],
   "dependencies": [],
