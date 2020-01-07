@@ -318,6 +318,7 @@ ATTR_GPS_ACCURACY = "gps_accuracy"
 ATTR_ASSUMED_STATE = "assumed_state"
 ATTR_STATE = "state"
 
+ATTR_EDITABLE = "editable"
 ATTR_OPTION = "option"
 
 # Bitfield of supported component features for the entity
