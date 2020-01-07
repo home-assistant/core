@@ -38,14 +38,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Stookalert binary sensor platform."""
-    province = config.get(CONF_PROVINCE)
-    name = config.get(CONF_NAME)
+    province = config[CONF_PROVINCE]
+    name = config[CONF_NAME]
     api_handler = stookalert.stookalert(province)
-
-    if api_handler is not None:
-        add_devices([StookalertBinarySensor(name, api_handler)], update_before_add=True)
+    add_entities([StookalertBinarySensor(name, api_handler)], update_before_add=True)
 
 
 class StookalertBinarySensor(BinarySensorDevice):
@@ -72,16 +70,9 @@ class StookalertBinarySensor(BinarySensorDevice):
         return self._name
 
     @property
-    def attribution(self):
-        """Return the attribution."""
-        return ATTRIBUTION
-
-    @property
     def is_on(self):
         """Return True if the Alert is active."""
-        if self._api_handler.state == 1:
-            return True
-        return False
+        return self._api_handler.state == 1
 
     def update(self):
         """Update the data from the Stookalert handler."""
