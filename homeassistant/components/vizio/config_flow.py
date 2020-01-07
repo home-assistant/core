@@ -24,39 +24,40 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def vizio_schema(self, defaults: dict) -> vol.Schema:
+    """Return vol schema with expected defaults for blank form or retain what was previously filled in."""
+
+    if not defaults:
+        defaults = {
+            CONF_NAME: DEFAULT_NAME,
+            CONF_HOST: "",
+            CONF_DEVICE_CLASS: DEFAULT_DEVICE_CLASS,
+            CONF_ACCESS_TOKEN: "",
+            CONF_VOLUME_STEP: DEFAULT_VOLUME_STEP,
+        }
+
+    return vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=defaults[CONF_NAME]): str,
+            vol.Required(CONF_HOST, default=defaults.get(CONF_HOST)): str,
+            vol.Optional(
+                CONF_DEVICE_CLASS, default=defaults[CONF_DEVICE_CLASS]
+            ): vol.All(str, vol.Lower, vol.In(["tv", "soundbar"])),
+            vol.Optional(
+                CONF_ACCESS_TOKEN, default=defaults.get(CONF_ACCESS_TOKEN)
+            ): str,
+            vol.Optional(CONF_VOLUME_STEP, default=defaults[CONF_VOLUME_STEP]): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=10)
+            ),
+        }
+    )
+
+
 class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Vizio config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    def vizio_schema(self, defaults: dict) -> vol.Schema:
-        """Return vol schema with expected defaults for blank form or retain what was previously filled in."""
-
-        if not defaults:
-            defaults = {
-                CONF_NAME: DEFAULT_NAME,
-                CONF_HOST: "",
-                CONF_DEVICE_CLASS: DEFAULT_DEVICE_CLASS,
-                CONF_ACCESS_TOKEN: "",
-                CONF_VOLUME_STEP: DEFAULT_VOLUME_STEP,
-            }
-
-        return vol.Schema(
-            {
-                vol.Optional(CONF_NAME, default=defaults[CONF_NAME]): str,
-                vol.Required(CONF_HOST, default=defaults.get(CONF_HOST)): str,
-                vol.Optional(
-                    CONF_DEVICE_CLASS, default=defaults[CONF_DEVICE_CLASS]
-                ): vol.All(str, vol.Lower, vol.In(["tv", "soundbar"])),
-                vol.Optional(
-                    CONF_ACCESS_TOKEN, default=defaults.get(CONF_ACCESS_TOKEN)
-                ): str,
-                vol.Optional(
-                    CONF_VOLUME_STEP, default=defaults[CONF_VOLUME_STEP]
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
-            }
-        )
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -103,7 +104,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=self.vizio_schema(defaults), errors=errors
+            step_id="user", data_schema=vizio_schema(defaults), errors=errors
         )
 
     async def async_step_import(self, import_config):
