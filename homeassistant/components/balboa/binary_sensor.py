@@ -49,9 +49,9 @@ class BalboaSpaBinarySensor(BalboaEntity, BinarySensorDevice):
             fmode = self._client.get_filtermode()
             if fmode == self._client.FILTER_OFF:
                 return False
-            if "filter1" in self.bsensor_key and fmode != self._client.FILTER2:
+            if "filter1" in self.bsensor_key and fmode != self._client.FILTER_2:
                 return True
-            if "filter2" in self.bsensor_key and fmode >= self._client.FILTER2:
+            if "filter2" in self.bsensor_key and fmode >= self._client.FILTER_2:
                 return True
             return False
         return False
