@@ -497,11 +497,11 @@ async def test_variable_fan(hass):
 
 
 async def test_oscillating_fan(hass):
-    """Test oscillating fan discovery."""
+    """Test oscillating fan with ToggleController."""
     device = (
         "fan.test_3",
         "off",
-        {"friendly_name": "Test fan 3", "supported_features": 3},
+        {"friendly_name": "Test fan 3", "supported_features": 2},
     )
     appliance = await discovery_test(device, hass)
 
@@ -510,10 +510,7 @@ async def test_oscillating_fan(hass):
     assert appliance["friendlyName"] == "Test fan 3"
     capabilities = assert_endpoint_capabilities(
         appliance,
-        "Alexa.PercentageController",
         "Alexa.PowerController",
-        "Alexa.PowerLevelController",
-        "Alexa.RangeController",
         "Alexa.ToggleController",
         "Alexa.EndpointHealth",
         "Alexa",
@@ -558,13 +555,13 @@ async def test_oscillating_fan(hass):
 
 
 async def test_direction_fan(hass):
-    """Test direction fan discovery."""
+    """Test fan direction with modeController."""
     device = (
         "fan.test_4",
         "on",
         {
             "friendly_name": "Test fan 4",
-            "supported_features": 5,
+            "supported_features": 4,
             "direction": "forward",
         },
     )
@@ -575,10 +572,7 @@ async def test_direction_fan(hass):
     assert appliance["friendlyName"] == "Test fan 4"
     capabilities = assert_endpoint_capabilities(
         appliance,
-        "Alexa.PercentageController",
         "Alexa.PowerController",
-        "Alexa.PowerLevelController",
-        "Alexa.RangeController",
         "Alexa.ModeController",
         "Alexa.EndpointHealth",
         "Alexa",
@@ -667,17 +661,14 @@ async def test_direction_fan(hass):
 
 
 async def test_fan_range(hass):
-    """Test fan discovery with range controller.
-
-    This one has variable speed.
-    """
+    """Test fan speed with rangeController."""
     device = (
         "fan.test_5",
         "off",
         {
             "friendly_name": "Test fan 5",
             "supported_features": 1,
-            "speed_list": ["low", "medium", "high"],
+            "speed_list": ["off", "low", "medium", "high", "turbo", "warp_speed"],
             "speed": "medium",
         },
     )
@@ -712,6 +703,17 @@ async def test_fan_range(hass):
     )
     assert call.data["speed"] == "low"
 
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "fan#test_5",
+        "fan.set_speed",
+        hass,
+        payload={"rangeValue": "5"},
+        instance="fan.speed",
+    )
+    assert call.data["speed"] == "warp_speed"
+
     await assert_range_changes(
         hass,
         [("low", "-1"), ("high", "1"), ("medium", "0")],
@@ -733,7 +735,7 @@ async def test_fan_range_off(hass):
         {
             "friendly_name": "Test fan 6",
             "supported_features": 1,
-            "speed_list": ["low", "medium", "high"],
+            "speed_list": ["off", "low", "medium", "high"],
             "speed": "high",
         },
     )

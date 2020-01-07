@@ -1290,24 +1290,22 @@ class AlexaRangeController(AlexaCapability):
 
         # Fan Speed Resources
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
+            speed_list = self.entity.attributes.get(fan.ATTR_SPEED_LIST)
+            max_value = len(speed_list) - 1
             self._resource = AlexaPresetResource(
                 labels=[AlexaGlobalCatalog.SETTING_FAN_SPEED],
-                min_value=1,
-                max_value=3,
+                min_value=0,
+                max_value=max_value,
                 precision=1,
             )
-            self._resource.add_preset(
-                value=1,
-                labels=[AlexaGlobalCatalog.VALUE_LOW, AlexaGlobalCatalog.VALUE_MINIMUM],
-            )
-            self._resource.add_preset(value=2, labels=[AlexaGlobalCatalog.VALUE_MEDIUM])
-            self._resource.add_preset(
-                value=3,
-                labels=[
-                    AlexaGlobalCatalog.VALUE_HIGH,
-                    AlexaGlobalCatalog.VALUE_MAXIMUM,
-                ],
-            )
+            for speed_value, speed_name in enumerate(speed_list):
+                labels = [speed_name]
+                if speed_value == 1:
+                    labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
+                if speed_value == max_value:
+                    labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
+                self._resource.add_preset(value=speed_value, labels=labels)
+
             return self._resource.serialize_capability_resources()
 
         # Cover Position Resources
