@@ -4572,7 +4572,7 @@ class AisClimateSetPresentMode(intent.IntentHandler):
         elif mode in ["w domu", "domu", "dom"]:
             # Device is in home mode - No preset is active
             present_mode = "none"
-        elif mode in ["eko", "eco", "oszczędzanie"]:
+        elif mode in ["eko", "eco", "oszczędzanie", "oszczędny"]:
             # Device is running an energy-saving mode
             present_mode = "eco"
         elif mode in ["podgrzanie", "podgrzewanie"]:
@@ -4594,7 +4594,7 @@ class AisClimateSetPresentMode(intent.IntentHandler):
                 "set_preset_mode",
                 {"entity_id": "all", "preset_mode": present_mode},
             )
-            message = "ok, tryb " + mode + " włączony"
+            message = "ok, ogrzewanie w trybie " + mode
         else:
             message = "nie znajduje trybu ogrzewania " + mode
         return message, True
