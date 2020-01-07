@@ -2,7 +2,17 @@
   "config": {
     "title": "Vera",
     "abort": {
-      "cannot-connect": "Could not connect to controller with url {base_url}"
+      "already_setup": "A controller is already configured.",
+      "cannot_connect": "Could not connect to controller with url {base_url}"
+    },
+    "step": {
+      "setup": {
+        "title": "Setup Vera controller",
+        "description": "Provide a Vera controller url below. It should look like this: http://192.168.1.161:3480/",
+        "data": {
+          "vera_controller_url": "Controller URL"
+        }
+      }
     }
   }
 }

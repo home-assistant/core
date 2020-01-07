@@ -119,6 +119,7 @@ FLOWS = [
     "unifi",
     "upnp",
     "velbus",
+    "vera",
     "vesync",
     "vilfo",
     "vizio",
