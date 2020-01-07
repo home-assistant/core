@@ -84,20 +84,6 @@ PERCENTAGE_FAN_MAP = {
     fan.SPEED_HIGH: 100,
 }
 
-RANGE_FAN_MAP = {
-    fan.SPEED_OFF: 0,
-    fan.SPEED_LOW: 1,
-    fan.SPEED_MEDIUM: 2,
-    fan.SPEED_HIGH: 3,
-}
-
-SPEED_FAN_MAP = {
-    0: fan.SPEED_OFF,
-    1: fan.SPEED_LOW,
-    2: fan.SPEED_MEDIUM,
-    3: fan.SPEED_HIGH,
-}
-
 
 class Cause:
     """Possible causes for property changes.

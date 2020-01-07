@@ -50,8 +50,6 @@ from .const import (
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
     PERCENTAGE_FAN_MAP,
-    RANGE_FAN_MAP,
-    SPEED_FAN_MAP,
     Cause,
     Inputs,
 )
@@ -1095,8 +1093,10 @@ async def async_api_set_range(hass, config, directive, context):
 
     # Fan Speed
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
+        range_value = int(range_value)
         service = fan.SERVICE_SET_SPEED
-        speed = SPEED_FAN_MAP.get(int(range_value))
+        speed_list = entity.attributes[fan.ATTR_SPEED_LIST]
+        speed = next((v for i, v in enumerate(speed_list) if i == range_value), None)
 
         if not speed:
             msg = "Entity does not support value"
@@ -1173,9 +1173,16 @@ async def async_api_adjust_range(hass, config, directive, context):
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
         range_delta = int(range_delta)
         service = fan.SERVICE_SET_SPEED
-        current_range = RANGE_FAN_MAP.get(entity.attributes.get(fan.ATTR_SPEED), 0)
-        speed = SPEED_FAN_MAP.get(
-            min(3, max(0, range_delta + current_range)), fan.SPEED_OFF
+        speed_list = entity.attributes[fan.ATTR_SPEED_LIST]
+        current_speed = entity.attributes[fan.ATTR_SPEED]
+        current_speed_index = next(
+            (i for i, v in enumerate(speed_list) if v == current_speed), 0
+        )
+        new_speed_index = min(
+            len(speed_list) - 1, max(0, current_speed_index + range_delta)
+        )
+        speed = next(
+            (v for i, v in enumerate(speed_list) if i == new_speed_index), None
         )
 
         if speed == fan.SPEED_OFF:
