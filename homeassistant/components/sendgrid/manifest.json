@@ -1,6 +1,6 @@
 {
   "domain": "sendgrid",
-  "name": "Sendgrid",
+  "name": "SendGrid",
   "documentation": "https://www.home-assistant.io/integrations/sendgrid",
   "requirements": ["sendgrid==6.1.0"],
   "dependencies": [],

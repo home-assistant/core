@@ -1,6 +1,6 @@
 {
   "domain": "soma",
-  "name": "Soma Open API",
+  "name": "Soma Connect",
   "config_flow": true,
   "documentation": "",
   "dependencies": [],
