@@ -107,7 +107,6 @@ PLATFORM_SCHEMA = vol.Schema(
     }
 )
 
-
 TRIGGER_SERVICE_SCHEMA = make_entity_service_schema(
     {
         vol.Optional(ATTR_VARIABLES, default={}): dict,
