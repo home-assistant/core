@@ -1,6 +1,5 @@
 """Constants used by vizio component."""
 
-CONF_SUPPRESS_WARNING = "suppress_warning"
 CONF_VOLUME_STEP = "volume_step"
 
 DEFAULT_NAME = "Vizio SmartCast"
