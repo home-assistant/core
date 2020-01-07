@@ -38,6 +38,7 @@ LOVELACE_CONFIG_FILE = "ui-lovelace.yaml"
 
 WS_TYPE_GET_LOVELACE_UI = "lovelace/config"
 WS_TYPE_SAVE_CONFIG = "lovelace/config/save"
+WS_TYPE_DELETE_CONFIG = "lovelace/config/delete"
 
 SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
     {
@@ -51,6 +52,10 @@ SCHEMA_SAVE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
         vol.Required("type"): WS_TYPE_SAVE_CONFIG,
         vol.Required("config"): vol.Any(str, dict),
     }
+)
+
+SCHEMA_DELETE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
+    {vol.Required("type"): WS_TYPE_DELETE_CONFIG}
 )
 
 
@@ -78,6 +83,10 @@ async def async_setup(hass, config):
 
     hass.components.websocket_api.async_register_command(
         WS_TYPE_SAVE_CONFIG, websocket_lovelace_save_config, SCHEMA_SAVE_CONFIG
+    )
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_DELETE_CONFIG, websocket_lovelace_delete_config, SCHEMA_DELETE_CONFIG
     )
 
     hass.components.system_health.async_register_info(DOMAIN, system_health_info)
@@ -123,6 +132,10 @@ class LovelaceStorage:
         self._data["config"] = config
         self._hass.bus.async_fire(EVENT_LOVELACE_UPDATED)
         await self._store.async_save(self._data)
+
+    async def async_delete(self):
+        """Delete config."""
+        await self.async_save(None)
 
     async def _load(self):
         """Load the config."""
@@ -223,6 +236,13 @@ async def websocket_lovelace_config(hass, connection, msg):
 async def websocket_lovelace_save_config(hass, connection, msg):
     """Save Lovelace UI configuration."""
     await hass.data[DOMAIN].async_save(msg["config"])
+
+
+@websocket_api.async_response
+@handle_yaml_errors
+async def websocket_lovelace_delete_config(hass, connection, msg):
+    """Delete Lovelace UI configuration."""
+    await hass.data[DOMAIN].async_delete()
 
 
 async def system_health_info(hass):
