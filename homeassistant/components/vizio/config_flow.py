@@ -31,7 +31,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def vizio_schema(self, defaults: dict) -> vol.Schema:
-        """Return vol schema with expected defaults or defaults of what was previously filled in."""
+        """Return vol schema with expected defaults for blank form or retain what was previously filled in."""
 
         if not defaults:
             defaults = {
