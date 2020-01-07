@@ -24,7 +24,7 @@ ATTRIBUTION = "Data provided by currencylayer.com"
 DEFAULT_BASE = "USD"
 DEFAULT_NAME = "CurrencyLayer Sensor"
 
-ICON = "mdi:currency"
+ICON = "mdi:cash"
 
 SCAN_INTERVAL = timedelta(hours=2)
 
@@ -73,7 +73,7 @@ class CurrencylayerSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._base
+        return self._quote
 
     @property
     def icon(self):
