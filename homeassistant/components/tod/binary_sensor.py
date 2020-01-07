@@ -176,7 +176,10 @@ class TodSensor(BinarySensorDevice):
 
         # We are calculating the _time_after value assuming that it will happen today
         # But it's not always truth. E.g. after 23:00, before 12:00, and now is 10:00
-        # Here we check if _time_after was yesterday and _time_before will be today
+        # If _time_before and _time_after are ahead of current_datetime:
+        # _time_before is set to 12:00 next day
+        # _time_after is set to 23:00 today
+        # current_datetime is set to 10:00 today
         if (
             self._time_after > self.current_datetime
             and self._time_before > self.current_datetime + timedelta(days=1)
