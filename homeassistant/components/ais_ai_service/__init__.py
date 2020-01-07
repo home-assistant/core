@@ -110,8 +110,7 @@ INTENT_PREV = "AisPrev"
 INTENT_SCENE = "AisSceneActive"
 INTENT_SAY_IT = "AisSayIt"
 INTENT_CLIMATE_SET_TEMPERATURE = "AisClimateSetTemperature"
-INTENT_CLIMATE_SET_AWAY = "AisClimateSetAway"
-INTENT_CLIMATE_UNSET_AWAY = "AisClimateUnSetAway"
+INTENT_CLIMATE_SET_PRESENT_MODE = "AisClimateSetPresentMode"
 INTENT_CLIMATE_SET_ALL_ON = "AisClimateSetAllOn"
 INTENT_CLIMATE_SET_ALL_OFF = "AisClimateSetAllOff"
 INTENT_SPELL_STATUS = "AisSpellStatusInfo"
@@ -2548,8 +2547,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(GetTimeIntent())
     hass.helpers.intent.async_register(GetDateIntent())
     hass.helpers.intent.async_register(AisClimateSetTemperature())
-    hass.helpers.intent.async_register(AisClimateSetAway())
-    hass.helpers.intent.async_register(AisClimateUnSetAway())
+    hass.helpers.intent.async_register(AisClimateSetPresentMode())
     hass.helpers.intent.async_register(AisClimateSetAllOn())
     hass.helpers.intent.async_register(AisClimateSetAllOff())
     hass.helpers.intent.async_register(TurnOnIntent())
@@ -2594,14 +2592,9 @@ async def async_setup(hass, config):
             "Ogrzewanie [w] {item} temperatura {temp} stopni[e]",
         ],
     )
-    async_register(
-        hass, INTENT_CLIMATE_SET_AWAY, ["Ogrzewanie tryb poza domem"],
-    )
-    async_register(
-        hass, INTENT_CLIMATE_UNSET_AWAY, ["Ogrzewanie  tryb w domu"],
-    )
-    async_register(hass, INTENT_CLIMATE_SET_ALL_OFF, ["Wyłącz całe ogrzewnie"])
-    async_register(hass, INTENT_CLIMATE_SET_ALL_ON, ["Włącz całe ogrzewnie"])
+    async_register(hass, INTENT_CLIMATE_SET_PRESENT_MODE, ["Ogrzewanie tryb {item}"])
+    async_register(hass, INTENT_CLIMATE_SET_ALL_OFF, ["Wyłącz całe ogrzewanie"])
+    async_register(hass, INTENT_CLIMATE_SET_ALL_ON, ["Włącz całe ogrzewanie"])
     async_register(
         hass,
         INTENT_LAMPS_ON,
@@ -4559,35 +4552,51 @@ class AisClimateSetTemperature(intent.IntentHandler):
         return msg, success
 
 
-class AisClimateSetAway(intent.IntentHandler):
-    """Handle AisClimateSetAway intents."""
+class AisClimateSetPresentMode(intent.IntentHandler):
+    """Handle AisClimateSetPresentMode intents."""
 
-    intent_type = INTENT_CLIMATE_SET_AWAY
-
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
-        """Handle the intent."""
-        hass = intent_obj.hass
-        yield from hass.services.async_call(
-            "climate", "set_away_mode", {"entity_id": "all", "away_mode": True}
-        )
-        message = "ok, tryb poza domem włączony"
-        return message, True
-
-
-class AisClimateUnSetAway(intent.IntentHandler):
-    """Handle AisClimateUnSetAway intents."""
-
-    intent_type = INTENT_CLIMATE_UNSET_AWAY
+    intent_type = INTENT_CLIMATE_SET_PRESENT_MODE
+    slot_schema = {"item": cv.string}
 
     @asyncio.coroutine
     def async_handle(self, intent_obj):
         """Handle the intent."""
+        slots = self.async_validate_slots(intent_obj.slots)
         hass = intent_obj.hass
-        yield from hass.services.async_call(
-            "climate", "set_away_mode", {"entity_id": "all", "away_mode": False}
-        )
-        message = "ok, tryb poza domem wyłączony"
+        mode = slots["item"]["value"]
+
+        present_mode = ""
+        if mode in ["poza domem", "za domem", "domem"]:
+            # Device is in away mode
+            present_mode = "away"
+        elif mode in ["w domu", "domu", "dom"]:
+            # Device is in home mode - No preset is active
+            present_mode = "none"
+        elif mode in ["eko", "eco", "oszczędzanie"]:
+            # Device is running an energy-saving mode
+            present_mode = "eco"
+        elif mode in ["podgrzanie", "podgrzewanie"]:
+            # Device turn all valve full up
+            present_mode = "boost"
+        elif mode in ["comfort", "komfort", "wygoda"]:
+            #  Device is in comfort mode
+            present_mode = "comfort"
+        elif mode in ["spanie", "noc"]:
+            # Device is prepared for sleep
+            present_mode = "sleep"
+        elif mode in ["aktywność", "ruch"]:
+            # Device is reacting to activity (e.g. movement sensors)
+            present_mode = "activity"
+
+        if present_mode != "":
+            yield from hass.services.async_call(
+                "climate",
+                "set_preset_mode",
+                {"entity_id": "all", "preset_mode": present_mode},
+            )
+            message = "ok, tryb " + mode + " włączony"
+        else:
+            message = "nie znajduje trybu ogrzewania " + mode
         return message, True
 
 
@@ -4601,7 +4610,7 @@ class AisClimateSetAllOn(intent.IntentHandler):
         """Handle the intent."""
         hass = intent_obj.hass
         yield from hass.services.async_call(
-            "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "heat"},
+            "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "heat"}
         )
         message = "ok, całe ogrzewanie włączone"
         return message, True
@@ -4617,7 +4626,7 @@ class AisClimateSetAllOff(intent.IntentHandler):
         """Handle the intent."""
         hass = intent_obj.hass
         yield from hass.services.async_call(
-            "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "off"},
+            "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "off"}
         )
         message = "ok, całe ogrzewanie wyłączone"
         return message, True
