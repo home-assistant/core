@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/template",
   "requirements": [],
   "dependencies": [],
-  "codeowners": ["@PhracturedBlue"]
+  "codeowners": ["@PhracturedBlue", "@tetienne"]
 }
