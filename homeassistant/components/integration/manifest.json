@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/integration",
   "requirements": [],
   "dependencies": [],
-  "codeowners": ["@dgomes"]
+  "codeowners": ["@dgomes"],
+  "quality_scale": "internal"
 }
