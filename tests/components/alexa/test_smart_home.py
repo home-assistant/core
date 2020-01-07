@@ -1,4 +1,5 @@
 """Test for smart home alexa support."""
+
 import pytest
 
 from homeassistant.components.alexa import messages, smart_home
@@ -197,7 +198,7 @@ async def test_light(hass):
     assert appliance["displayCategories"][0] == "LIGHT"
     assert appliance["friendlyName"] == "Test light 1"
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa",
     )
 
     await assert_power_controller_works(
@@ -271,6 +272,79 @@ async def test_color_light(hass):
 
     # IncreaseColorTemperature and DecreaseColorTemperature have their own
     # tests
+
+
+async def test_effect_light(hass):
+    """Test effect light discovery."""
+    device = (
+        "light.test_4",
+        "on",
+        {
+            "friendly_name": "Test light 4",
+            "supported_features": 4,
+            "effect_list": [0, 1, 2, 3, 4],
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "light#test_4"
+    assert appliance["displayCategories"][0] == "LIGHT"
+    assert appliance["friendlyName"] == "Test light 4"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa.PowerController",
+        "Alexa.ModeController",
+        "Alexa.EndpointHealth",
+        "Alexa",
+    )
+
+    mode_capability = get_capability(capabilities, "Alexa.ModeController")
+    assert mode_capability is not None
+    assert mode_capability["instance"] == "light.effect"
+
+    properties = mode_capability["properties"]
+    assert properties["nonControllable"] is False
+    assert {"name": "mode"} in properties["supported"]
+
+    capability_resources = mode_capability["capabilityResources"]
+    assert capability_resources is not None
+
+    assert {
+        "@type": "text",
+        "value": {"text": "Effect", "locale": "en-US"},
+    } in capability_resources["friendlyNames"]
+
+    configuration = mode_capability["configuration"]
+    assert configuration is not None
+    assert configuration["ordered"] is False
+
+    supported_modes = configuration["supportedModes"]
+    assert supported_modes is not None
+
+    for effect in device[-1]["effect_list"]:
+        assert {
+            "value": "{}".format(effect),
+            "modeResources": {
+                "friendlyNames": [
+                    {
+                        "@type": "text",
+                        "value": {"text": "{}".format(effect), "locale": "en-US"},
+                    }
+                ]
+            },
+        } in supported_modes
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.ModeController",
+        "SetMode",
+        "light#test_4",
+        "light.turn_on",
+        hass,
+        payload={"mode": "4"},
+        instance="light.effect",
+    )
+    assert call.data["effect"] == "4"
 
 
 async def test_script(hass):
@@ -2129,7 +2203,7 @@ async def test_entity_config(hass):
     assert appliance["friendlyName"] == "Config name"
     assert appliance["description"] == "Config description via Home Assistant"
     assert_endpoint_capabilities(
-        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa"
+        appliance, "Alexa.PowerController", "Alexa.EndpointHealth", "Alexa",
     )
 
     scene = msg["payload"]["endpoints"][1]

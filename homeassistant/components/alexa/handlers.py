@@ -980,7 +980,9 @@ async def async_api_set_mode(hass, config, directive, context):
             service = cover.SERVICE_OPEN_COVER
         elif position == "custom":
             service = cover.SERVICE_STOP_COVER
-
+    elif instance == f"{light.DOMAIN}.{light.ATTR_EFFECT}":
+        service = light.SERVICE_TURN_ON
+        data[light.ATTR_EFFECT] = mode
     else:
         msg = "Entity does not support directive"
         raise AlexaInvalidDirectiveError(msg)

@@ -1138,6 +1138,10 @@ class AlexaModeController(AlexaCapability):
             ):
                 return f"{cover.ATTR_POSITION}.{mode}"
 
+        if self.instance == f"{light.DOMAIN}.effect":
+            mode = self.entity.attributes.get(light.ATTR_EFFECT)
+            return f"{mode}"
+
         return None
 
     def configuration(self):
@@ -1177,6 +1181,16 @@ class AlexaModeController(AlexaCapability):
                 [AlexaGlobalCatalog.VALUE_CLOSE],
             )
             self._resource.add_mode(f"{cover.ATTR_POSITION}.custom", ["Custom"])
+            return self._resource.serialize_capability_resources()
+
+        if self.instance == f"{light.DOMAIN}.{light.ATTR_EFFECT}":
+            self._resource = AlexaModeResource(["Effect"], False)
+
+            effect_list = self.entity.attributes.get(light.ATTR_EFFECT_LIST, 0)
+            if effect_list:
+                for effect in effect_list:
+                    self._resource.add_mode(f"{effect}", [f"{effect}"])
+
             return self._resource.serialize_capability_resources()
 
         return None
