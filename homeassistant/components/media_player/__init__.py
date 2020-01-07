@@ -789,10 +789,14 @@ class MediaPlayerDevice(Entity):
         data = {}
 
         if supported_features & SUPPORT_SELECT_SOURCE:
-            data[ATTR_INPUT_SOURCE_LIST] = self.source_list
+            source_list = self.source_list
+            if source_list:
+                data[ATTR_INPUT_SOURCE_LIST] = source_list
 
         if supported_features & SUPPORT_SELECT_SOUND_MODE:
-            data[ATTR_SOUND_MODE_LIST] = self.sound_mode_list
+            sound_mode_list = self.sound_mode_list
+            if sound_mode_list:
+                data[ATTR_SOUND_MODE_LIST] = sound_mode_list
 
         return data
 
