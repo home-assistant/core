@@ -3,7 +3,7 @@ from collections import defaultdict
 
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import group, websocket_api
 from homeassistant.components.homeassistant import scene
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import device_registry, entity_registry
@@ -22,7 +22,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     {
         vol.Required("type"): "search/related",
         vol.Required("item_type"): vol.In(
-            ("area", "device", "entity", "script", "scene", "automation")
+            ("area", "device", "entity", "script", "scene", "automation", "group")
         ),
         vol.Required("item_id"): str,
     }
@@ -48,8 +48,8 @@ class Searcher:
     turn the results into garbage.
     """
 
-    # These types won't be further explored
-    DONT_RESOLVE = {"scene", "automation", "script", "config_entry"}
+    # These types won't be further explored. Config entries + Output types.
+    DONT_RESOLVE = {"scene", "automation", "script", "group", "config_entry"}
 
     def __init__(
         self,
@@ -79,6 +79,7 @@ class Searcher:
         self.results["entity"] -= self.results["script"]
         self.results["entity"] -= self.results["scene"]
         self.results["entity"] -= self.results["automation"]
+        self.results["entity"] -= self.results["group"]
 
         # Remove entry into graph from search results.
         self.results[item_type].remove(item_id)
@@ -133,6 +134,9 @@ class Searcher:
         for entity in scene.scenes_with_entity(self.hass, entity_id):
             self._add_or_resolve("entity", entity)
 
+        for entity in group.groups_with_entity(self.hass, entity_id):
+            self._add_or_resolve("entity", entity)
+
         # Find devices
         entity_entry = self._entity_reg.async_get(entity_id)
         if entity_entry is not None:
@@ -144,7 +148,7 @@ class Searcher:
 
         domain = split_entity_id(entity_id)[0]
 
-        if domain in ("scene", "automation", "script"):
+        if domain in ("scene", "automation", "script", "group"):
             self._add_or_resolve(domain, entity_id)
 
     @callback
@@ -162,6 +166,15 @@ class Searcher:
         Will only be called if script is an entry point.
         """
         # Extra: Check with script integration what entities/devices they reference
+
+    @callback
+    def _resolve_group(self, group_entity_id) -> None:
+        """Resolve a group.
+
+        Will only be called if group is an entry point.
+        """
+        for entity_id in group.get_entity_ids(self.hass, group_entity_id):
+            self._add_or_resolve("entity", entity_id)
 
     @callback
     def _resolve_scene(self, scene_entity_id) -> None:

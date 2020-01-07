@@ -75,6 +75,38 @@ async def test_search(hass):
 
     await async_setup_component(
         hass,
+        "group",
+        {
+            "group": {
+                "wled": {
+                    "name": "wled",
+                    "entities": [
+                        wled_segment_1_entity.entity_id,
+                        wled_segment_2_entity.entity_id,
+                    ],
+                },
+                "hue": {
+                    "name": "hue",
+                    "entities": [
+                        hue_segment_1_entity.entity_id,
+                        hue_segment_2_entity.entity_id,
+                    ],
+                },
+                "wled_hue": {
+                    "name": "wled and hue",
+                    "entities": [
+                        wled_segment_1_entity.entity_id,
+                        wled_segment_2_entity.entity_id,
+                        hue_segment_1_entity.entity_id,
+                        hue_segment_2_entity.entity_id,
+                    ],
+                },
+            }
+        },
+    )
+
+    await async_setup_component(
+        hass,
         "scene",
         {
             "scene": [
@@ -106,6 +138,7 @@ async def test_search(hass):
         "device": {wled_device.id},
         "entity": {wled_segment_1_entity.entity_id, wled_segment_2_entity.entity_id},
         "scene": {"scene.scene_wled_seg_1", "scene.scene_wled_hue"},
+        "group": {"group.wled", "group.wled_hue"},
     }
 
     for search_type, search_id in (
@@ -115,6 +148,7 @@ async def test_search(hass):
         ("entity", wled_segment_1_entity.entity_id),
         ("entity", wled_segment_2_entity.entity_id),
         ("scene", "scene.scene_wled_seg_1"),
+        ("group", "group.wled"),
     ):
         searcher = search.Searcher(hass, device_reg, entity_reg)
         results = searcher.async_search(search_type, search_id)
@@ -125,9 +159,8 @@ async def test_search(hass):
             results == expected
         ), f"Results for {search_type}/{search_id} do not match up"
 
-    # For combined scene, needs to return everything.
-    searcher = search.Searcher(hass, device_reg, entity_reg)
-    assert searcher.async_search("scene", "scene.scene_wled_hue") == {
+    # For combined things, needs to return everything.
+    expected_combined = {
         "config_entry": {wled_config_entry.entry_id, hue_config_entry.entry_id},
         "area": {living_room_area.id, kitchen_area.id},
         "device": {wled_device.id, hue_device.id},
@@ -137,8 +170,24 @@ async def test_search(hass):
             hue_segment_1_entity.entity_id,
             hue_segment_2_entity.entity_id,
         },
-        "scene": {"scene.scene_wled_seg_1", "scene.scene_hue_seg_1"},
+        "scene": {
+            "scene.scene_wled_seg_1",
+            "scene.scene_hue_seg_1",
+            "scene.scene_wled_hue",
+        },
+        "group": {"group.wled", "group.hue", "group.wled_hue"},
     }
+    for search_type, search_id in (
+        ("scene", "scene.scene_wled_hue"),
+        ("group", "group.wled_hue"),
+    ):
+        searcher = search.Searcher(hass, device_reg, entity_reg)
+        results = searcher.async_search(search_type, search_id)
+        # Add the item we searched for, it's omitted from results
+        results.setdefault(search_type, set()).add(search_id)
+        assert (
+            results == expected_combined
+        ), f"Results for {search_type}/{search_id} do not match up"
 
 
 async def test_ws_api(hass, hass_ws_client):

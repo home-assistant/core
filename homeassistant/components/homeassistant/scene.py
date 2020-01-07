@@ -1,7 +1,7 @@
 """Allow users to set and activate scenes."""
 from collections import namedtuple
 import logging
-from typing import Set
+from typing import List
 
 import voluptuous as vol
 
@@ -110,36 +110,36 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> Set[str]:
+def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
     """Return all scenes that reference the entity."""
     if DATA_PLATFORM not in hass.data:
-        return set()
+        return []
 
     platform = hass.data[DATA_PLATFORM]
 
-    results = set()
+    results = []
 
     for scene_entity in platform.entities.values():
         if entity_id in scene_entity.scene_config.states:
-            results.add(scene_entity.entity_id)
+            results.append(scene_entity.entity_id)
 
     return results
 
 
 @callback
-def entities_in_scene(hass: HomeAssistant, entity_id: str) -> Set[str]:
+def entities_in_scene(hass: HomeAssistant, entity_id: str) -> List[str]:
     """Return all entities in a scene."""
     if DATA_PLATFORM not in hass.data:
-        return set()
+        return []
 
     platform = hass.data[DATA_PLATFORM]
 
     entity = platform.entities.get(entity_id)
 
     if entity is None:
-        return set()
+        return []
 
-    return set(entity.scene_config.states)
+    return list(entity.scene_config.states)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
