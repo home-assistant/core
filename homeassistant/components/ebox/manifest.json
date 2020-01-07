@@ -1,6 +1,6 @@
 {
   "domain": "ebox",
-  "name": "Ebox",
+  "name": "EBox",
   "documentation": "https://www.home-assistant.io/integrations/ebox",
   "requirements": ["pyebox==1.1.4"],
   "dependencies": [],

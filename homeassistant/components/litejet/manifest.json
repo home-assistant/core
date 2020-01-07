@@ -1,6 +1,6 @@
 {
   "domain": "litejet",
-  "name": "Litejet",
+  "name": "LiteJet",
   "documentation": "https://www.home-assistant.io/integrations/litejet",
   "requirements": ["pylitejet==0.1"],
   "dependencies": [],

@@ -1,6 +1,6 @@
 {
   "domain": "deconz",
-  "name": "Deconz",
+  "name": "deCONZ",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/deconz",
   "requirements": ["pydeconz==67"],

@@ -1,6 +1,6 @@
 {
   "domain": "fritz",
-  "name": "Fritz",
+  "name": "AVM Fritzbox",
   "documentation": "https://www.home-assistant.io/integrations/fritz",
   "requirements": ["fritzconnection==0.8.4"],
   "dependencies": [],
