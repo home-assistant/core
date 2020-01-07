@@ -263,7 +263,7 @@ async def test_reload(hass, hass_admin_user):
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
 
-    assert STATE_OFF == state_2.state
+    assert STATE_ON == state_2.state  # reload is not supposed to change entity state
     assert "Hello World reloaded" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
     assert "mdi:work_reloaded" == state_2.attributes.get(ATTR_ICON)
 

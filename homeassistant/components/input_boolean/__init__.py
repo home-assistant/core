@@ -217,5 +217,4 @@ class InputBoolean(ToggleEntity, RestoreEntity):
     async def async_update_config(self, config: typing.Dict) -> None:
         """Handle when the config is updated."""
         self._config = config
-        self._state = config.get(CONF_INITIAL, self._state)
         self.async_write_ha_state()
