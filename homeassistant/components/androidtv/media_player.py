@@ -528,7 +528,13 @@ class ADBDevice(MediaPlayerDevice):
             self.schedule_update_ha_state()
             return self._adb_response
 
-        response = self.aftv.adb_shell(cmd)
+        try:
+            response = self.aftv.adb_shell(cmd)
+        except UnicodeDecodeError:
+            self._adb_response = None
+            self.schedule_update_ha_state()
+            return
+
         if isinstance(response, str) and response.strip():
             self._adb_response = response.strip()
         else:
