@@ -61,8 +61,8 @@ class StookalertBinarySensor(BinarySensorDevice):
         """Return the attribute(s) of the sensor."""
         state_attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
-        if self._api_handler._last_updated is not None:
-            state_attr["last_updated"] = self._api_handler._last_updated.isoformat()
+        if self._api_handler.last_updated is not None:
+            state_attr["last_updated"] = self._api_handler.last_updated.isoformat()
 
         return state_attr
 
@@ -79,10 +79,10 @@ class StookalertBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return True if the Alert is active."""
-        if self._api_handler._state == 1:
+        if self._api_handler.state == 1:
             return True
         return False
 
     def update(self):
         """Update the data from the Stookalert handler."""
-        self._api_handler.get_alert()
+        self._api_handler.get_alerts()
