@@ -1,6 +1,6 @@
 {
   "domain": "sony_projector",
-  "name": "Sony projector",
+  "name": "Sony Projector",
   "documentation": "https://www.home-assistant.io/integrations/sony_projector",
   "requirements": ["pysdcp==1"],
   "dependencies": [],
