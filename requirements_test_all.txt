@@ -579,7 +579,7 @@ samsungctl[websocket]==0.7.1
 sentry-sdk==0.13.5
 
 # homeassistant.components.simplisafe
-simplisafe-python==5.3.6
+simplisafe-python==6.0.0
 
 # homeassistant.components.sleepiq
 sleepyq==0.7
