@@ -12,12 +12,15 @@ from homeassistant.components.device_tracker import (
     SOURCE_TYPE_GPS,
 )
 from homeassistant.const import (
+    ATTR_EDITABLE,
     ATTR_GPS_ACCURACY,
     ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    ATTR_NAME,
     CONF_ID,
     CONF_NAME,
+    CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
     STATE_HOME,
@@ -48,7 +51,6 @@ from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_EDITABLE = "editable"
 ATTR_SOURCE = "source"
 ATTR_USER_ID = "user_id"
 
@@ -85,7 +87,7 @@ _UNDEF = object()
 async def async_create_person(hass, name, *, user_id=None, device_trackers=None):
     """Create a new person."""
     await hass.data[DOMAIN][1].async_create_item(
-        {"name": name, "user_id": user_id, "device_trackers": device_trackers}
+        {ATTR_NAME: name, ATTR_USER_ID: user_id, "device_trackers": device_trackers}
     )
 
 
@@ -113,18 +115,18 @@ async def async_add_user_device_tracker(
 
 
 CREATE_FIELDS = {
-    vol.Required("name"): vol.All(str, vol.Length(min=1)),
-    vol.Optional("user_id"): vol.Any(str, None),
-    vol.Optional("device_trackers", default=list): vol.All(
+    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Optional(CONF_USER_ID): vol.Any(str, None),
+    vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
 }
 
 
 UPDATE_FIELDS = {
-    vol.Optional("name"): vol.All(str, vol.Length(min=1)),
-    vol.Optional("user_id"): vol.Any(str, None),
-    vol.Optional("device_trackers", default=list): vol.All(
+    vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Optional(CONF_USER_ID): vol.Any(str, None),
+    vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
         cv.ensure_list, cv.entities_domain(DEVICE_TRACKER_DOMAIN)
     ),
 }
@@ -193,7 +195,7 @@ class PersonStorageCollection(collection.StorageCollection):
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
 
-        user_id = data.get("user_id")
+        user_id = data.get(CONF_USER_ID)
 
         if user_id is not None:
             await self._validate_user_id(user_id)
@@ -203,13 +205,13 @@ class PersonStorageCollection(collection.StorageCollection):
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
-        return info["name"]
+        return info[CONF_NAME]
 
     async def _update_data(self, data: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
 
-        user_id = update_data.get("user_id")
+        user_id = update_data.get(CONF_USER_ID)
 
         if user_id is not None:
             await self._validate_user_id(user_id)
@@ -307,11 +309,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     async def _handle_user_removed(event: Event) -> None:
         """Handle a user being removed."""
-        user_id = event.data["user_id"]
+        user_id = event.data[ATTR_USER_ID]
         for person in storage_collection.async_items():
             if person[CONF_USER_ID] == user_id:
                 await storage_collection.async_update_item(
-                    person[CONF_ID], {"user_id": None}
+                    person[CONF_ID], {CONF_USER_ID: None}
                 )
 
     hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
@@ -476,14 +478,14 @@ class Person(RestoreEntity):
         self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
 
 
-@websocket_api.websocket_command({vol.Required("type"): "person/list"})
+@websocket_api.websocket_command({vol.Required(CONF_TYPE): "person/list"})
 def ws_list_person(
     hass: HomeAssistantType, connection: websocket_api.ActiveConnection, msg
 ):
     """List persons."""
     yaml, storage = hass.data[DOMAIN]
     connection.send_result(
-        msg["id"], {"storage": storage.async_items(), "config": yaml.async_items()},
+        msg[ATTR_ID], {"storage": storage.async_items(), "config": yaml.async_items()}
     )
 
 
