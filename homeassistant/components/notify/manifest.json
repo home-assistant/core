@@ -1,6 +1,6 @@
 {
   "domain": "notify",
-  "name": "Notify",
+  "name": "Notifications",
   "documentation": "https://www.home-assistant.io/integrations/notify",
   "requirements": [],
   "dependencies": [],

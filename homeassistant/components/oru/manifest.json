@@ -1,6 +1,6 @@
 {
   "domain": "oru",
-  "name": "Orange and Rockland Utility Smart Energy Meter Sensor",
+  "name": "Orange and Rockland Utility (ORU)",
   "documentation": "https://www.home-assistant.io/integrations/oru",
   "dependencies": [],
   "codeowners": ["@bvlaicu"],
