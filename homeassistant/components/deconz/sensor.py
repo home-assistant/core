@@ -89,10 +89,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
 
     async_add_sensor(
-        [
-            gateway.api.sensors[key]
-            for key in sorted(gateway.api.sensors.keys(), key=int)
-        ]
+        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
     )
 
 
