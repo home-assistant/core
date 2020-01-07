@@ -128,7 +128,7 @@ def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> Set[str]:
 
 @callback
 def entities_in_scene(hass: HomeAssistant, entity_id: str) -> Set[str]:
-    """Return all scenes that reference the entity."""
+    """Return all entities in a scene."""
     if DATA_PLATFORM not in hass.data:
         return set()
 

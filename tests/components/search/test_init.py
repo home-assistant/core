@@ -117,7 +117,7 @@ async def test_search(hass):
         ("scene", "scene.scene_wled_seg_1"),
     ):
         searcher = search.Searcher(hass, device_reg, entity_reg)
-        results = await searcher.search(search_type, search_id)
+        results = searcher.async_search(search_type, search_id)
         # Add the item we searched for, it's omitted from results
         results.setdefault(search_type, set()).add(search_id)
 
@@ -127,7 +127,7 @@ async def test_search(hass):
 
     # For combined scene, needs to return everything.
     searcher = search.Searcher(hass, device_reg, entity_reg)
-    assert await searcher.search("scene", "scene.scene_wled_hue") == {
+    assert searcher.async_search("scene", "scene.scene_wled_hue") == {
         "config_entry": {wled_config_entry.entry_id, hue_config_entry.entry_id},
         "area": {living_room_area.id, kitchen_area.id},
         "device": {wled_device.id, hue_device.id},
@@ -164,7 +164,12 @@ async def test_ws_api(hass, hass_ws_client):
     client = await hass_ws_client(hass)
 
     await client.send_json(
-        {"id": 1, "type": "search", "item_type": "device", "item_id": hue_device.id}
+        {
+            "id": 1,
+            "type": "search/related",
+            "item_type": "device",
+            "item_id": hue_device.id,
+        }
     )
     response = await client.receive_json()
     assert response["success"]

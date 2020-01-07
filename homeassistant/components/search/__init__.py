@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.homeassistant import scene
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import device_registry, entity_registry
 
 DOMAIN = "search"
@@ -13,21 +13,21 @@ DOMAIN = "search"
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Search component."""
-    websocket_api.async_register_command(hass, websocket_search)
+    websocket_api.async_register_command(hass, websocket_search_related)
     return True
 
 
 @websocket_api.async_response
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "search",
+        vol.Required("type"): "search/related",
         vol.Required("item_type"): vol.In(
             ("area", "device", "entity", "script", "scene", "automation")
         ),
         vol.Required("item_id"): str,
     }
 )
-async def websocket_search(hass, connection, msg):
+async def websocket_search_related(hass, connection, msg):
     """Handle search."""
     searcher = Searcher(
         hass,
@@ -35,7 +35,7 @@ async def websocket_search(hass, connection, msg):
         await entity_registry.async_get_registry(hass),
     )
     connection.send_result(
-        msg["id"], await searcher.search(msg["item_type"], msg["item_id"])
+        msg["id"], searcher.async_search(msg["item_type"], msg["item_id"])
     )
 
 
@@ -64,14 +64,15 @@ class Searcher:
         self.results = defaultdict(set)
         self._to_resolve = set()
 
-    async def search(self, item_type, item_id):
+    @callback
+    def async_search(self, item_type, item_id):
         """Find results."""
         self.results[item_type].add(item_id)
         self._to_resolve.add((item_type, item_id))
 
         while self._to_resolve:
             search_type, search_id = self._to_resolve.pop()
-            await getattr(self, f"_resolve_{search_type}")(search_id)
+            getattr(self, f"_resolve_{search_type}")(search_id)
 
         # Clean up entity_id items, from the general "entity" type result,
         # that are also found in the specific entity domain type.
@@ -85,6 +86,7 @@ class Searcher:
         # Filter out empty sets.
         return {key: val for key, val in self.results.items() if val}
 
+    @callback
     def _add_or_resolve(self, item_type, item_id):
         """Add an item to explore."""
         if item_id in self.results[item_type]:
@@ -95,12 +97,14 @@ class Searcher:
         if item_type not in self.DONT_RESOLVE:
             self._to_resolve.add((item_type, item_id))
 
-    async def _resolve_area(self, area_id) -> None:
+    @callback
+    def _resolve_area(self, area_id) -> None:
         """Resolve an area."""
         for device in device_registry.async_entries_for_area(self._device_reg, area_id):
             self._add_or_resolve("device", device.id)
 
-    async def _resolve_device(self, device_id) -> None:
+    @callback
+    def _resolve_device(self, device_id) -> None:
         """Resolve a device."""
         device_entry = self._device_reg.async_get(device_id)
         # Unlikely entry doesn't exist, but let's guard for bad data.
@@ -121,7 +125,8 @@ class Searcher:
 
         # Extra: Find automations that reference this device
 
-    async def _resolve_entity(self, entity_id) -> None:
+    @callback
+    def _resolve_entity(self, entity_id) -> None:
         """Resolve an entity."""
         # Extra: Find automations and scripts that reference this entity.
 
@@ -142,21 +147,24 @@ class Searcher:
         if domain in ("scene", "automation", "script"):
             self._add_or_resolve(domain, entity_id)
 
-    async def _resolve_automation(self, automation_entity_id) -> None:
+    @callback
+    def _resolve_automation(self, automation_entity_id) -> None:
         """Resolve an automation.
 
         Will only be called if automation is an entry point.
         """
         # Extra: Check with automation integration what entities/devices they reference
 
-    async def _resolve_script(self, script_entity_id) -> None:
+    @callback
+    def _resolve_script(self, script_entity_id) -> None:
         """Resolve a script.
 
         Will only be called if script is an entry point.
         """
         # Extra: Check with script integration what entities/devices they reference
 
-    async def _resolve_scene(self, scene_entity_id) -> None:
+    @callback
+    def _resolve_scene(self, scene_entity_id) -> None:
         """Resolve a scene.
 
         Will only be called if scene is an entry point.
@@ -164,7 +172,8 @@ class Searcher:
         for entity in scene.entities_in_scene(self.hass, scene_entity_id):
             self._add_or_resolve("entity", entity)
 
-    async def _resolve_config_entry(self, config_entry_id) -> None:
+    @callback
+    def _resolve_config_entry(self, config_entry_id) -> None:
         """Resolve a config entry.
 
         Will only be called if config entry is an entry point.
