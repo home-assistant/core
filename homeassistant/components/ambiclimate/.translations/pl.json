@@ -3,7 +3,7 @@
         "abort": {
             "access_token": "Nieznany b\u0142\u0105d podczas generowania tokena dost\u0119pu.",
             "already_setup": "Konto Ambiclimate jest skonfigurowane.",
-            "no_config": "Musisz skonfigurowa\u0107 Ambiclimate, zanim b\u0119dziesz m\u00f3g\u0142 si\u0119 w nim uwierzytelni\u0107. [Przeczytaj instrukcj\u0119] (https://www.home-assistant.io/components/ambiclimate/)."
+            "no_config": "Musisz skonfigurowa\u0107 Ambiclimate, aby m\u00f3c si\u0119 z nim uwierzytelni\u0107. Zapoznaj si\u0119 z [instrukcj\u0105](https://www.home-assistant.io/components/ambiclimate/)."
         },
         "create_entry": {
             "default": "Pomy\u015blnie uwierzytelniono z Ambiclimate"

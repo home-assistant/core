@@ -11,14 +11,14 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     DOMAIN,
     SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
     STATE_UNKNOWN,
 )
 
@@ -101,7 +101,9 @@ async def test_light_brightness(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     acc = cls.light(hass, hk_driver, "Light", entity_id, 2, None)
 
-    assert acc.char_brightness.value == 0
+    # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
+    # brightness to 100 when turning on a light on a freshly booted up server.
+    assert acc.char_brightness.value != 0
 
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()

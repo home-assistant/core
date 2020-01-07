@@ -9,6 +9,7 @@ from homeassistant.components.timer import (
     STATUS_PAUSED,
 )
 from homeassistant.core import State
+
 from tests.common import async_mock_service
 
 

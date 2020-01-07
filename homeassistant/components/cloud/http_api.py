@@ -6,7 +6,7 @@ import logging
 import aiohttp
 import async_timeout
 import attr
-from hass_nabucasa import Cloud, auth
+from hass_nabucasa import Cloud, auth, thingtalk
 from hass_nabucasa.const import STATE_DISCONNECTED
 import voluptuous as vol
 
@@ -75,28 +75,29 @@ _CLOUD_ERRORS = {
 
 async def async_setup(hass):
     """Initialize the HTTP API."""
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_STATUS, websocket_cloud_status, SCHEMA_WS_STATUS
-    )
-    hass.components.websocket_api.async_register_command(
+    async_register_command = hass.components.websocket_api.async_register_command
+    async_register_command(WS_TYPE_STATUS, websocket_cloud_status, SCHEMA_WS_STATUS)
+    async_register_command(
         WS_TYPE_SUBSCRIPTION, websocket_subscription, SCHEMA_WS_SUBSCRIPTION
     )
-    hass.components.websocket_api.async_register_command(websocket_update_prefs)
-    hass.components.websocket_api.async_register_command(
+    async_register_command(websocket_update_prefs)
+    async_register_command(
         WS_TYPE_HOOK_CREATE, websocket_hook_create, SCHEMA_WS_HOOK_CREATE
     )
-    hass.components.websocket_api.async_register_command(
+    async_register_command(
         WS_TYPE_HOOK_DELETE, websocket_hook_delete, SCHEMA_WS_HOOK_DELETE
     )
-    hass.components.websocket_api.async_register_command(websocket_remote_connect)
-    hass.components.websocket_api.async_register_command(websocket_remote_disconnect)
+    async_register_command(websocket_remote_connect)
+    async_register_command(websocket_remote_disconnect)
 
-    hass.components.websocket_api.async_register_command(google_assistant_list)
-    hass.components.websocket_api.async_register_command(google_assistant_update)
+    async_register_command(google_assistant_list)
+    async_register_command(google_assistant_update)
 
-    hass.components.websocket_api.async_register_command(alexa_list)
-    hass.components.websocket_api.async_register_command(alexa_update)
-    hass.components.websocket_api.async_register_command(alexa_sync)
+    async_register_command(alexa_list)
+    async_register_command(alexa_update)
+    async_register_command(alexa_sync)
+
+    async_register_command(thingtalk_convert)
 
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
@@ -173,7 +174,8 @@ class GoogleActionsSyncView(HomeAssistantView):
         """Trigger a Google Actions sync."""
         hass = request.app["hass"]
         cloud: Cloud = hass.data[DOMAIN]
-        status = await cloud.client.google_config.async_sync_entities()
+        gconf = await cloud.client.get_google_config()
+        status = await gconf.async_sync_entities(gconf.agent_user_id)
         return self.json({}, status_code=status)
 
 
@@ -191,11 +193,7 @@ class CloudLoginView(HomeAssistantView):
         """Handle login request."""
         hass = request.app["hass"]
         cloud = hass.data[DOMAIN]
-
-        with async_timeout.timeout(REQUEST_TIMEOUT):
-            await hass.async_add_job(cloud.auth.login, data["email"], data["password"])
-
-        hass.async_add_job(cloud.iot.connect)
+        await cloud.login(data["email"], data["password"])
         return self.json({"success": True})
 
 
@@ -476,7 +474,8 @@ async def websocket_remote_disconnect(hass, connection, msg):
 async def google_assistant_list(hass, connection, msg):
     """List all google assistant entities."""
     cloud = hass.data[DOMAIN]
-    entities = google_helpers.async_get_entities(hass, cloud.client.google_config)
+    gconf = await cloud.client.get_google_config()
+    entities = google_helpers.async_get_entities(hass, gconf)
 
     result = []
 
@@ -584,7 +583,7 @@ async def alexa_sync(hass, connection, msg):
             connection.send_error(
                 msg["id"],
                 "alexa_relink",
-                "Please go to the Alexa app and re-link the Home Assistant " "skill.",
+                "Please go to the Alexa app and re-link the Home Assistant skill.",
             )
             return
 
@@ -592,3 +591,18 @@ async def alexa_sync(hass, connection, msg):
         connection.send_result(msg["id"])
     else:
         connection.send_error(msg["id"], ws_const.ERR_UNKNOWN_ERROR, "Unknown error")
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command({"type": "cloud/thingtalk/convert", "query": str})
+async def thingtalk_convert(hass, connection, msg):
+    """Convert a query."""
+    cloud = hass.data[DOMAIN]
+
+    with async_timeout.timeout(10):
+        try:
+            connection.send_result(
+                msg["id"], await thingtalk.async_convert(cloud, msg["query"])
+            )
+        except thingtalk.ThingTalkConversionError as err:
+            connection.send_error(msg["id"], ws_const.ERR_UNKNOWN_ERROR, str(err))

@@ -3,10 +3,9 @@ import logging
 import unittest
 from unittest.mock import patch
 
-from homeassistant.setup import async_setup_component
-
 import homeassistant.components.http as http
-from homeassistant.util.ssl import server_context_modern, server_context_intermediate
+from homeassistant.setup import async_setup_component
+from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
 
 class TestView(http.HomeAssistantView):

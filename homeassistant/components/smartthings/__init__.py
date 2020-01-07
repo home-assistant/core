@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .config_flow import SmartThingsFlowHandler  # noqa
+from .config_flow import SmartThingsFlowHandler  # noqa: F401
 from .const import (
     CONF_APP_ID,
     CONF_INSTALLED_APP_ID,
@@ -279,7 +279,7 @@ class DeviceBroker:
             capabilities = device.capabilities.copy()
             slots = {}
             for platform_name in SUPPORTED_PLATFORMS:
-                platform = importlib.import_module("." + platform_name, self.__module__)
+                platform = importlib.import_module(f".{platform_name}", self.__module__)
                 if not hasattr(platform, "get_capabilities"):
                     continue
                 assigned = platform.get_capabilities(capabilities)

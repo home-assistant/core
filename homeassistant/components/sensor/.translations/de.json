@@ -8,7 +8,7 @@
             "is_pressure": "{entity_name} Druck",
             "is_signal_strength": "{entity_name} Signalst\u00e4rke",
             "is_temperature": "{entity_name} Temperatur",
-            "is_timestamp": "{entity_name} Zeitstempel",
+            "is_timestamp": "Aktueller Zeitstempel von {entity_name}",
             "is_value": "{entity_name} Wert"
         },
         "trigger_type": {

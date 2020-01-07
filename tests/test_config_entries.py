@@ -12,14 +12,14 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
 from tests.common import (
-    MockModule,
-    mock_coro,
     MockConfigEntry,
-    async_fire_time_changed,
-    MockPlatform,
     MockEntity,
-    mock_integration,
+    MockModule,
+    MockPlatform,
+    async_fire_time_changed,
+    mock_coro,
     mock_entity_platform,
+    mock_integration,
     mock_registry,
 )
 
@@ -251,8 +251,7 @@ async def test_remove_entry(hass, manager):
 
     # Check entity state got added
     assert hass.states.get("light.test_entity") is not None
-    # Group all_lights, light.test_entity
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
 
     # Check entity got added to entity registry
     ent_reg = await hass.helpers.entity_registry.async_get_registry()
@@ -275,8 +274,7 @@ async def test_remove_entry(hass, manager):
 
     # Check that entity state has been removed
     assert hass.states.get("light.test_entity") is None
-    # Just Group all_lights
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 0
 
     # Check that entity registry entry has been removed
     entity_entry_list = list(ent_reg.entities.values())
@@ -434,8 +432,8 @@ async def test_saving_and_loading(hass):
         VERSION = 5
         CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-        @asyncio.coroutine
-        def async_step_user(self, user_input=None):
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("unique")
             return self.async_create_entry(title="Test Title", data={"token": "abcd"})
 
     with patch.dict(config_entries.HANDLERS, {"test": TestFlow}):
@@ -477,6 +475,7 @@ async def test_saving_and_loading(hass):
         assert orig.data == loaded.data
         assert orig.source == loaded.source
         assert orig.connection_class == loaded.connection_class
+        assert orig.unique_id == loaded.unique_id
 
 
 async def test_forward_entry_sets_up_component(hass):
@@ -691,13 +690,13 @@ async def test_entry_options(hass, manager):
             return OptionsFlowHandler()
 
     config_entries.HANDLERS["test"] = TestFlow()
-    flow = await manager.options._async_create_flow(
+    flow = await manager.options.async_create_flow(
         entry.entry_id, context={"source": "test"}, data=None
     )
 
     flow.handler = entry.entry_id  # Used to keep reference to config entry
 
-    await manager.options._async_finish_flow(flow, {"data": {"second": True}})
+    await manager.options.async_finish_flow(flow, {"data": {"second": True}})
 
     assert entry.data == {"first": True}
 
@@ -1001,3 +1000,361 @@ async def test_reload_entry_entity_registry_works(hass):
     await hass.async_block_till_done()
 
     assert len(mock_unload_entry.mock_calls) == 1
+
+
+async def test_unqiue_id_persisted(hass, manager):
+    """Test that a unique ID is stored in the config entry."""
+    mock_setup_entry = MagicMock(return_value=mock_coro(True))
+
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_create_entry(title="mock-title", data={})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    p_hass, p_entry = mock_setup_entry.mock_calls[0][1]
+
+    assert p_hass is hass
+    assert p_entry.unique_id == "mock-unique-id"
+
+
+async def test_unique_id_existing_entry(hass, manager):
+    """Test that we remove an entry if there already is an entry with unique ID."""
+    hass.config.components.add("comp")
+    MockConfigEntry(
+        domain="comp",
+        state=config_entries.ENTRY_STATE_LOADED,
+        unique_id="mock-unique-id",
+    ).add_to_hass(hass)
+
+    async_setup_entry = MagicMock(side_effect=lambda _, _2: mock_coro(True))
+    async_unload_entry = MagicMock(side_effect=lambda _, _2: mock_coro(True))
+    async_remove_entry = MagicMock(side_effect=lambda _, _2: mock_coro(True))
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=async_unload_entry,
+            async_remove_entry=async_remove_entry,
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            existing_entry = await self.async_set_unique_id("mock-unique-id")
+
+            assert existing_entry is not None
+
+            return self.async_create_entry(title="mock-title", data={"via": "flow"})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    entries = hass.config_entries.async_entries("comp")
+    assert len(entries) == 1
+    assert entries[0].data == {"via": "flow"}
+
+    assert len(async_setup_entry.mock_calls) == 1
+    assert len(async_unload_entry.mock_calls) == 1
+    assert len(async_remove_entry.mock_calls) == 1
+
+
+async def test_unique_id_in_progress(hass, manager):
+    """Test that we abort if there is already a flow in progress with same unique id."""
+    mock_integration(hass, MockModule("comp"))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_show_form(step_id="discovery")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Create one to be in progress
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        # Will be canceled
+        result2 = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_in_progress"
+
+
+async def test_finish_flow_aborts_progress(hass, manager):
+    """Test that when finishing a flow, we abort other flows in progress with unique ID."""
+    mock_integration(
+        hass,
+        MockModule("comp", async_setup_entry=MagicMock(return_value=mock_coro(True))),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("mock-unique-id", raise_on_progress=False)
+
+            if user_input is None:
+                return self.async_show_form(step_id="discovery")
+
+            return self.async_create_entry(title="yo", data={})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Create one to be in progress
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        # Will finish and cancel other one.
+        result2 = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}, data={}
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    assert len(hass.config_entries.flow.async_progress()) == 0
+
+
+async def test_unique_id_ignore(hass, manager):
+    """Test that we can ignore flows that are in progress and have a unique ID."""
+    async_setup_entry = MagicMock(return_value=mock_coro(False))
+    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_user(self, user_input=None):
+            await self.async_set_unique_id("mock-unique-id")
+            return self.async_show_form(step_id="discovery")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Create one to be in progress
+        result = await manager.flow.async_init(
+            "comp", context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+
+        result2 = await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_IGNORE},
+            data={"unique_id": "mock-unique-id"},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+    # assert len(hass.config_entries.flow.async_progress()) == 0
+
+    # We should never set up an ignored entry.
+    assert len(async_setup_entry.mock_calls) == 0
+
+    entry = hass.config_entries.async_entries("comp")[0]
+
+    assert entry.source == "ignore"
+    assert entry.unique_id == "mock-unique-id"
+
+
+async def test_unignore_step_form(hass, manager):
+    """Test that we can ignore flows that are in progress and have a unique ID, then rediscover them."""
+    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_unignore(self, user_input):
+            unique_id = user_input["unique_id"]
+            await self.async_set_unique_id(unique_id)
+            return self.async_show_form(step_id="discovery")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        result = await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_IGNORE},
+            data={"unique_id": "mock-unique-id"},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+        entry = hass.config_entries.async_entries("comp")[0]
+        assert entry.source == "ignore"
+        assert entry.unique_id == "mock-unique-id"
+        assert entry.domain == "comp"
+
+        await manager.async_remove(entry.entry_id)
+
+        # Right after removal there shouldn't be an entry or active flows
+        assert len(hass.config_entries.async_entries("comp")) == 0
+        assert len(hass.config_entries.flow.async_progress()) == 0
+
+        # But after a 'tick' the unignore step has run and we can see an active flow again.
+        await hass.async_block_till_done()
+        assert len(hass.config_entries.flow.async_progress()) == 1
+
+        # and still not config entries
+        assert len(hass.config_entries.async_entries("comp")) == 0
+
+
+async def test_unignore_create_entry(hass, manager):
+    """Test that we can ignore flows that are in progress and have a unique ID, then rediscover them."""
+    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_unignore(self, user_input):
+            unique_id = user_input["unique_id"]
+            await self.async_set_unique_id(unique_id)
+            return self.async_create_entry(title="yo", data={})
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        result = await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_IGNORE},
+            data={"unique_id": "mock-unique-id"},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+        entry = hass.config_entries.async_entries("comp")[0]
+        assert entry.source == "ignore"
+        assert entry.unique_id == "mock-unique-id"
+        assert entry.domain == "comp"
+
+        await manager.async_remove(entry.entry_id)
+
+        # Right after removal there shouldn't be an entry or flow
+        assert len(hass.config_entries.flow.async_progress()) == 0
+        assert len(hass.config_entries.async_entries("comp")) == 0
+
+        # But after a 'tick' the unignore step has run and we can see a config entry.
+        await hass.async_block_till_done()
+        entry = hass.config_entries.async_entries("comp")[0]
+        assert entry.source == "unignore"
+        assert entry.unique_id == "mock-unique-id"
+        assert entry.title == "yo"
+
+        # And still no active flow
+        assert len(hass.config_entries.flow.async_progress()) == 0
+
+
+async def test_unignore_default_impl(hass, manager):
+    """Test that resdicovery is a no-op by default."""
+    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        result = await manager.flow.async_init(
+            "comp",
+            context={"source": config_entries.SOURCE_IGNORE},
+            data={"unique_id": "mock-unique-id"},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+        entry = hass.config_entries.async_entries("comp")[0]
+        assert entry.source == "ignore"
+        assert entry.unique_id == "mock-unique-id"
+        assert entry.domain == "comp"
+
+        await manager.async_remove(entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert len(hass.config_entries.async_entries("comp")) == 0
+        assert len(hass.config_entries.flow.async_progress()) == 0
+
+
+async def test_partial_flows_hidden(hass, manager):
+    """Test that flows that don't have a cur_step and haven't finished initing are hidden."""
+    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    # A flag to test our assertion that `async_step_discovery` was called and is in its blocked state
+    # This simulates if the step was e.g. doing network i/o
+    discovery_started = asyncio.Event()
+
+    # A flag to allow `async_step_discovery` to resume after we have verified the uninited flow is not
+    # visible and has not triggered a discovery alert. This lets us control when the mocked network
+    # i/o is complete.
+    pause_discovery = asyncio.Event()
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_discovery(self, user_input):
+            discovery_started.set()
+            await pause_discovery.wait()
+            return self.async_show_form(step_id="someform")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Start a config entry flow and wait for it to be blocked
+        init_task = asyncio.ensure_future(
+            manager.flow.async_init(
+                "comp",
+                context={"source": config_entries.SOURCE_DISCOVERY},
+                data={"unique_id": "mock-unique-id"},
+            )
+        )
+        await discovery_started.wait()
+
+        # While it's blocked it shouldn't be visible or trigger discovery notifications
+        assert len(hass.config_entries.flow.async_progress()) == 0
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is None
+
+        # Let the flow init complete
+        pause_discovery.set()
+
+        # When it's complete it should now be visible in async_progress and have triggered
+        # discovery notifications
+        result = await init_task
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert len(hass.config_entries.flow.async_progress()) == 1
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is not None

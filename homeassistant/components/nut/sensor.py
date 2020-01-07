@@ -1,25 +1,26 @@
 """Provides a sensor to track various status aspects of a UPS."""
-import logging
 from datetime import timedelta
+import logging
 
+from pynut2.nut2 import PyNUTClient, PyNUTError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    TEMP_CELSIUS,
-    CONF_RESOURCES,
-    CONF_ALIAS,
     ATTR_STATE,
-    STATE_UNKNOWN,
+    CONF_ALIAS,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_RESOURCES,
+    CONF_USERNAME,
     POWER_WATT,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
 )
 from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -133,6 +134,7 @@ STATE_TYPES = {
     "TRIM": "Trimming Voltage",
     "BOOST": "Boosting Voltage",
     "FSD": "Forced Shutdown",
+    "ALARM": "Alarm",
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -187,7 +189,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         data.update(no_throttle=True)
     except data.pynuterror as err:
         _LOGGER.error(
-            "Failure while testing NUT status retrieval. " "Cannot continue setup: %s",
+            "Failure while testing NUT status retrieval. Cannot continue setup: %s",
             err,
         )
         raise PlatformNotReady
@@ -269,7 +271,6 @@ class PyNUTData:
 
     def __init__(self, host, port, alias, username, password):
         """Initialize the data object."""
-        from pynut2.nut2 import PyNUTClient, PyNUTError
 
         self._host = host
         self._port = port

@@ -2,6 +2,7 @@
 from http.client import HTTPException
 import logging
 
+from pycsspeechtts import pycsspeechtts
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
@@ -94,7 +95,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up Microsoft speech component."""
     return MicrosoftProvider(
         config[CONF_API_KEY],
@@ -142,7 +143,6 @@ class MicrosoftProvider(Provider):
         """Load TTS from Microsoft."""
         if language is None:
             language = self._lang
-        from pycsspeechtts import pycsspeechtts
 
         try:
             trans = pycsspeechtts.TTSTranslator(self._apikey, self._region)

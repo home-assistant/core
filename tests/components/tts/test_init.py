@@ -2,27 +2,27 @@
 import ctypes
 import os
 import shutil
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
 import pytest
 import requests
 
-import homeassistant.components.http as http
-import homeassistant.components.tts as tts
 from homeassistant.components.demo.tts import DemoProvider
+import homeassistant.components.http as http
 from homeassistant.components.media_player.const import (
-    SERVICE_PLAY_MEDIA,
-    MEDIA_TYPE_MUSIC,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
     DOMAIN as DOMAIN_MP,
+    MEDIA_TYPE_MUSIC,
+    SERVICE_PLAY_MEDIA,
 )
-from homeassistant.setup import setup_component, async_setup_component
+import homeassistant.components.tts as tts
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import (
+    assert_setup_component,
     get_test_home_assistant,
     get_test_instance_port,
-    assert_setup_component,
     mock_service,
 )
 
@@ -99,7 +99,7 @@ class TestTTS:
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" "_en_-_demo.mp3".format(
+        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3".format(
             self.hass.config.api.base_url
         )
         assert os.path.isfile(
@@ -129,7 +129,7 @@ class TestTTS:
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" "_de_-_demo.mp3".format(
+        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_de_-_demo.mp3".format(
             self.hass.config.api.base_url
         )
         assert os.path.isfile(
@@ -169,7 +169,7 @@ class TestTTS:
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" "_de_-_demo.mp3".format(
+        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_de_-_demo.mp3".format(
             self.hass.config.api.base_url
         )
         assert os.path.isfile(
@@ -232,7 +232,7 @@ class TestTTS:
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" "_de_{}_demo.mp3".format(
+        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_de_{}_demo.mp3".format(
             self.hass.config.api.base_url, opt_hash
         )
         assert os.path.isfile(
@@ -273,7 +273,7 @@ class TestTTS:
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" "_de_{}_demo.mp3".format(
+        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_de_{}_demo.mp3".format(
             self.hass.config.api.base_url, opt_hash
         )
         assert os.path.isfile(
@@ -449,7 +449,7 @@ class TestTTS:
         self.hass.start()
 
         url = (
-            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" "_en_-_demo.mp3"
+            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3"
         ).format(self.hass.config.api.base_url)
 
         req = requests.get(url)
@@ -465,7 +465,7 @@ class TestTTS:
         self.hass.start()
 
         url = (
-            "{}/api/tts_proxy/265944dsk32c1b2a621be5930510bb2cd" "_en_-_demo.mp3"
+            "{}/api/tts_proxy/265944dsk32c1b2a621be5930510bb2cd_en_-_demo.mp3"
         ).format(self.hass.config.api.base_url)
 
         req = requests.get(url)
@@ -542,7 +542,7 @@ class TestTTS:
             setup_component(self.hass, tts.DOMAIN, config)
 
         with patch(
-            "homeassistant.components.demo.tts.DemoProvider." "get_tts_audio",
+            "homeassistant.components.demo.tts.DemoProvider.get_tts_audio",
             return_value=(None, None),
         ):
             self.hass.services.call(
@@ -555,7 +555,7 @@ class TestTTS:
         assert len(calls) == 1
         assert calls[0].data[
             ATTR_MEDIA_CONTENT_ID
-        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" "_en_-_demo.mp3".format(
+        ] == "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3".format(
             self.hass.config.api.base_url
         )
 
@@ -601,7 +601,7 @@ class TestTTS:
         self.hass.start()
 
         url = (
-            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" "_en_-_demo.mp3"
+            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3"
         ).format(self.hass.config.api.base_url)
 
         req = requests.get(url)

@@ -4,18 +4,18 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import onboarding
 from homeassistant.components.onboarding import const, views
-
-from tests.common import CLIENT_ID, register_auth_provider
-from tests.components.met.conftest import mock_weather  # noqa
+from homeassistant.setup import async_setup_component
 
 from . import mock_storage
 
+from tests.common import CLIENT_ID, register_auth_provider
+from tests.components.met.conftest import mock_weather  # noqa: F401
+
 
 @pytest.fixture(autouse=True)
-def always_mock_weather(mock_weather):  # noqa
+def always_mock_weather(mock_weather):  # noqa: F811
     """Mock the Met weather provider."""
     pass
 
@@ -98,7 +98,7 @@ async def test_onboarding_user(hass, hass_storage, aiohttp_client):
     assert user.name == "Test Name"
     assert len(user.credentials) == 1
     assert user.credentials[0].data["username"] == "test-user"
-    assert len(hass.data["person"].storage_data) == 1
+    assert len(hass.data["person"][1].async_items()) == 1
 
     # Validate refresh token 1
     resp = await client.post(

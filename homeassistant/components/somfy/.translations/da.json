@@ -8,6 +8,11 @@
         "create_entry": {
             "default": "Godkendt med Somfy."
         },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e6lg godkendelsesmetode"
+            }
+        },
         "title": "Somfy"
     }
 }

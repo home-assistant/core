@@ -7,24 +7,23 @@ import aiohttp
 import async_timeout
 from hass_nabucasa import cloud_api
 
-from homeassistant.core import callback
+from homeassistant.components.alexa import (
+    config as alexa_config,
+    entities as alexa_entities,
+    errors as alexa_errors,
+    state_report as alexa_state_report,
+)
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
+from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util.dt import utcnow
-from homeassistant.components.alexa import (
-    config as alexa_config,
-    errors as alexa_errors,
-    entities as alexa_entities,
-    state_report as alexa_state_report,
-)
-
 
 from .const import (
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
-    PREF_SHOULD_EXPOSE,
     DEFAULT_SHOULD_EXPOSE,
+    PREF_SHOULD_EXPOSE,
     RequireRelink,
 )
 

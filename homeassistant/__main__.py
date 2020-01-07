@@ -1,25 +1,22 @@
 """Start Home Assistant."""
 import argparse
+import asyncio
 import os
 import platform
 import subprocess
 import sys
 import threading
-from typing import List, Dict, Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Dict, List
 
-from homeassistant import monkey_patch
-from homeassistant.const import __version__, REQUIRED_PYTHON_VER, RESTART_EXIT_CODE
+from homeassistant.const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
 
 if TYPE_CHECKING:
     from homeassistant import core
 
 
 def set_loop() -> None:
-    """Attempt to use uvloop."""
-    import asyncio
+    """Attempt to use different loop."""
     from asyncio.events import BaseDefaultEventLoopPolicy
-
-    policy = None
 
     if sys.platform == "win32":
         if hasattr(asyncio, "WindowsProactorEventLoopPolicy"):
@@ -33,15 +30,7 @@ def set_loop() -> None:
                 _loop_factory = asyncio.ProactorEventLoop
 
             policy = ProactorPolicy()
-    else:
-        try:
-            import uvloop
-        except ImportError:
-            pass
-        else:
-            policy = uvloop.EventLoopPolicy()
 
-    if policy is not None:
         asyncio.set_event_loop_policy(policy)
 
 
@@ -66,10 +55,8 @@ def ensure_config_path(config_dir: str) -> None:
     if not os.path.isdir(config_dir):
         if config_dir != config_util.get_default_config_dir():
             print(
-                (
-                    "Fatal Error: Specified configuration directory does "
-                    "not exist {} "
-                ).format(config_dir)
+                f"Fatal Error: Specified configuration directory {config_dir} "
+                "does not exist"
             )
             sys.exit(1)
 
@@ -77,10 +64,8 @@ def ensure_config_path(config_dir: str) -> None:
             os.mkdir(config_dir)
         except OSError:
             print(
-                (
-                    "Fatal Error: Unable to create default configuration "
-                    "directory {} "
-                ).format(config_dir)
+                "Fatal Error: Unable to create default configuration "
+                f"directory {config_dir}"
             )
             sys.exit(1)
 
@@ -89,11 +74,7 @@ def ensure_config_path(config_dir: str) -> None:
         try:
             os.mkdir(lib_dir)
         except OSError:
-            print(
-                ("Fatal Error: Unable to create library " "directory {} ").format(
-                    lib_dir
-                )
-            )
+            print(f"Fatal Error: Unable to create library directory {lib_dir}")
             sys.exit(1)
 
 
@@ -158,7 +139,7 @@ def get_arguments() -> argparse.Namespace:
         "--log-file",
         type=str,
         default=None,
-        help="Log file to write to.  If not set, CONFIG/home-assistant.log " "is used",
+        help="Log file to write to.  If not set, CONFIG/home-assistant.log is used",
     )
     parser.add_argument(
         "--log-no-color", action="store_true", help="Disable color logs"
@@ -227,7 +208,7 @@ def check_pid(pid_file: str) -> None:
     except OSError:
         # PID does not exist
         return
-    print("Fatal Error: HomeAssistant is already running.")
+    print("Fatal Error: Home Assistant is already running.")
     sys.exit(1)
 
 
@@ -271,8 +252,7 @@ def cmdline() -> List[str]:
 
 
 async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
-    """Set up HASS and run."""
-    # pylint: disable=redefined-outer-name
+    """Set up Home Assistant and run."""
     from homeassistant import bootstrap, core
 
     hass = core.HomeAssistant()
@@ -356,11 +336,6 @@ def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    monkey_patch_needed = sys.version_info[:3] < (3, 6, 3)
-    if monkey_patch_needed and os.environ.get("HASS_NO_MONKEY") != "1":
-        monkey_patch.disable_c_asyncio()
-        monkey_patch.patch_weakref_tasks()
-
     set_loop()
 
     # Run a simple daemon runner process on Windows to handle restarts
@@ -394,13 +369,11 @@ def main() -> int:
     if args.pid_file:
         write_pid(args.pid_file)
 
-    from homeassistant.util.async_ import asyncio_run
-
-    exit_code = asyncio_run(setup_and_run_hass(config_dir, args))
+    exit_code = asyncio.run(setup_and_run_hass(config_dir, args))
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 
-    return exit_code  # type: ignore
+    return exit_code
 
 
 if __name__ == "__main__":

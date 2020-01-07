@@ -92,6 +92,8 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         else:
             self.vera_device.fan_auto()
 
+        self.schedule_update_ha_state()
+
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
@@ -129,6 +131,8 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self.vera_device.set_temperature(kwargs.get(ATTR_TEMPERATURE))
 
+        self.schedule_update_ha_state()
+
     def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_OFF:
@@ -139,3 +143,5 @@ class VeraThermostat(VeraDevice, ClimateDevice):
             self.vera_device.turn_cool_on()
         elif hvac_mode == HVAC_MODE_HEAT:
             self.vera_device.turn_heat_on()
+
+        self.schedule_update_ha_state()

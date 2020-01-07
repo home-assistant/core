@@ -4,10 +4,10 @@ import os
 
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import demo
 from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.helpers.json import JSONEncoder
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture(autouse=True)

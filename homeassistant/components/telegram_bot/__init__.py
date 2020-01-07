@@ -1,8 +1,8 @@
 """Support to send and receive Telegram messages."""
-import io
-from ipaddress import ip_network
 from functools import partial
 import importlib
+import io
+from ipaddress import ip_network
 import logging
 
 import requests
@@ -19,7 +19,6 @@ from telegram.parsemode import ParseMode
 from telegram.utils.request import Request
 import voluptuous as vol
 
-from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TITLE
 from homeassistant.const import (
     ATTR_COMMAND,
     ATTR_LATITUDE,
@@ -27,13 +26,17 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_PLATFORM,
     CONF_TIMEOUT,
-    HTTP_DIGEST_AUTHENTICATION,
     CONF_URL,
+    HTTP_DIGEST_AUTHENTICATION,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+ATTR_DATA = "data"
+ATTR_MESSAGE = "message"
+ATTR_TITLE = "title"
 
 ATTR_ARGS = "args"
 ATTR_AUTHENTICATION = "authentication"
@@ -625,7 +628,7 @@ class TelegramNotificationService:
         """Answer a callback originated with a press in an inline keyboard."""
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
-            "Answer callback query with callback ID %s: %s, " "alert: %s.",
+            "Answer callback query with callback ID %s: %s, alert: %s.",
             callback_query_id,
             message,
             show_alert,
@@ -731,6 +734,8 @@ class BaseTelegramBotEntity:
             ATTR_USER_ID: msg_data["from"]["id"],
             ATTR_FROM_FIRST: msg_data["from"]["first_name"],
         }
+        if "message_id" in msg_data:
+            data[ATTR_MSGID] = msg_data["message_id"]
         if "last_name" in msg_data["from"]:
             data[ATTR_FROM_LAST] = msg_data["from"]["last_name"]
         if "chat" in msg_data:
@@ -751,6 +756,9 @@ class BaseTelegramBotEntity:
             message_ok, event_data = self._get_message_data(data)
             if event_data is None:
                 return message_ok
+
+            if ATTR_MSGID in data:
+                event_data[ATTR_MSGID] = data[ATTR_MSGID]
 
             if "text" in data:
                 if data["text"][0] == "/":
@@ -774,7 +782,13 @@ class BaseTelegramBotEntity:
             if event_data is None:
                 return message_ok
 
-            event_data[ATTR_DATA] = data[ATTR_DATA]
+            query_data = event_data[ATTR_DATA] = data[ATTR_DATA]
+
+            if query_data[0] == "/":
+                pieces = query_data.split(" ")
+                event_data[ATTR_COMMAND] = pieces[0]
+                event_data[ATTR_ARGS] = pieces[1:]
+
             event_data[ATTR_MSG] = data[ATTR_MSG]
             event_data[ATTR_CHAT_INSTANCE] = data[ATTR_CHAT_INSTANCE]
             event_data[ATTR_MSGID] = data[ATTR_MSGID]

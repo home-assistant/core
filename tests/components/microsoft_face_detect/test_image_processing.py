@@ -1,15 +1,15 @@
 """The tests for the microsoft face detect platform."""
-from unittest.mock import patch, PropertyMock
+from unittest.mock import PropertyMock, patch
 
-from homeassistant.core import callback
-from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.setup import setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.microsoft_face as mf
+from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.core import callback
+from homeassistant.setup import setup_component
 
 from tests.common import (
-    get_test_home_assistant,
     assert_setup_component,
+    get_test_home_assistant,
     load_fixture,
     mock_coro,
 )
@@ -28,7 +28,7 @@ class TestMicrosoftFaceDetectSetup:
         self.hass.stop()
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
         return_value=mock_coro(),
     )
     def test_setup_platform(self, store_mock):
@@ -49,7 +49,7 @@ class TestMicrosoftFaceDetectSetup:
         assert self.hass.states.get("image_processing.microsoftface_demo_camera")
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
         return_value=mock_coro(),
     )
     def test_setup_platform_name(self, store_mock):

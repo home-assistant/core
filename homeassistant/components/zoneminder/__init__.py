@@ -2,18 +2,19 @@
 import logging
 
 import voluptuous as vol
+from zoneminder.zm import ZoneMinder
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
+    ATTR_ID,
+    ATTR_NAME,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PATH,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
-    ATTR_NAME,
-    ATTR_ID,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +52,6 @@ SET_RUN_STATE_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the ZoneMinder component."""
-    from zoneminder.zm import ZoneMinder
 
     hass.data[DOMAIN] = {}
 

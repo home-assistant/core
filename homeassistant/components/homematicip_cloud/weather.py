@@ -37,7 +37,9 @@ HOME_WEATHER_CONDITION = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+) -> None:
     """Set up the HomematicIP Cloud weather sensor."""
     pass
 
@@ -47,17 +49,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the HomematicIP weather sensor from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
-    devices = []
+    entities = []
     for device in hap.home.devices:
         if isinstance(device, AsyncWeatherSensorPro):
-            devices.append(HomematicipWeatherSensorPro(hap, device))
+            entities.append(HomematicipWeatherSensorPro(hap, device))
         elif isinstance(device, (AsyncWeatherSensor, AsyncWeatherSensorPlus)):
-            devices.append(HomematicipWeatherSensor(hap, device))
+            entities.append(HomematicipWeatherSensor(hap, device))
 
-    devices.append(HomematicipHomeWeather(hap))
+    entities.append(HomematicipHomeWeather(hap))
 
-    if devices:
-        async_add_entities(devices)
+    if entities:
+        async_add_entities(entities)
 
 
 class HomematicipWeatherSensor(HomematicipGenericDevice, WeatherEntity):

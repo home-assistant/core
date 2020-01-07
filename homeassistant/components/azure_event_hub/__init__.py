@@ -3,8 +3,8 @@ import json
 import logging
 from typing import Any, Dict
 
-import voluptuous as vol
 from azure.eventhub import EventData, EventHubClientAsync
+import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,

@@ -110,9 +110,9 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
             [],
             None,
             zha_gateway,
-            ieee="00:15:8d:00:02:32:4f:0{}".format(counter),
-            manufacturer="Fake{}".format(cluster_id),
-            model="FakeModel{}".format(cluster_id),
+            ieee=f"00:15:8d:00:02:32:4f:0{counter}",
+            manufacturer=f"Fake{cluster_id}",
+            model=f"FakeModel{cluster_id}",
         )
 
         counter += 1
@@ -166,7 +166,7 @@ async def async_test_metering(hass, device_info):
 async def async_test_electrical_measurement(hass, device_info):
     """Test electrical measurement sensor."""
     await send_attribute_report(hass, device_info["cluster"], 1291, 100)
-    assert_state(hass, device_info, "10.0", "W")
+    assert_state(hass, device_info, "100", "W")
 
 
 async def send_attribute_report(hass, cluster, attrid, value):
