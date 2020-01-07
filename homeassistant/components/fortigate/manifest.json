@@ -1,6 +1,6 @@
 {
   "domain": "fortigate",
-  "name": "Fortigate",
+  "name": "FortiGate",
   "documentation": "https://www.home-assistant.io/integrations/fortigate",
   "dependencies": [],
   "codeowners": ["@kifeo"],

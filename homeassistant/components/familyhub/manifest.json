@@ -1,6 +1,6 @@
 {
   "domain": "familyhub",
-  "name": "Familyhub",
+  "name": "Samsung Family Hub",
   "documentation": "https://www.home-assistant.io/integrations/familyhub",
   "requirements": ["python-family-hub-local==0.0.2"],
   "dependencies": [],
