@@ -1,6 +1,6 @@
 {
   "domain": "scene",
-  "name": "Scene",
+  "name": "Scenes",
   "documentation": "https://www.home-assistant.io/integrations/scene",
   "requirements": [],
   "dependencies": [],

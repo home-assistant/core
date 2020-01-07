@@ -1,6 +1,6 @@
 {
   "domain": "shell_command",
-  "name": "Shell command",
+  "name": "Shell Command",
   "documentation": "https://www.home-assistant.io/integrations/shell_command",
   "requirements": [],
   "dependencies": [],

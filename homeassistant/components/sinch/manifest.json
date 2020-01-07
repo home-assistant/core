@@ -1,6 +1,6 @@
 {
   "domain": "sinch",
-  "name": "Sinch",
+  "name": "Sinch SMS",
   "documentation": "https://www.home-assistant.io/components/sinch",
   "dependencies": [],
   "codeowners": ["@bendikrb"],
