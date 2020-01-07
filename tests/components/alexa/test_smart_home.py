@@ -692,6 +692,61 @@ async def test_fan_range(hass):
     assert range_capability is not None
     assert range_capability["instance"] == "fan.speed"
 
+    capability_resources = range_capability["capabilityResources"]
+    assert capability_resources is not None
+    assert {
+        "@type": "asset",
+        "value": {"assetId": "Alexa.Setting.FanSpeed"},
+    } in capability_resources["friendlyNames"]
+
+    configuration = range_capability["configuration"]
+    assert configuration is not None
+
+    supported_range = configuration["supportedRange"]
+    assert supported_range["minimumValue"] == 0
+    assert supported_range["maximumValue"] == 5
+    assert supported_range["precision"] == 1
+
+    presets = configuration["presets"]
+    print(presets)
+    assert {
+        "rangeValue": 0,
+        "presetResources": {
+            "friendlyNames": [
+                {"@type": "text", "value": {"text": "off", "locale": "en-US"}}
+            ]
+        },
+    } in presets
+
+    assert {
+        "rangeValue": 1,
+        "presetResources": {
+            "friendlyNames": [
+                {"@type": "text", "value": {"text": "low", "locale": "en-US"}},
+                {"@type": "asset", "value": {"assetId": "Alexa.Value.Minimum"}},
+            ]
+        },
+    } in presets
+
+    assert {
+        "rangeValue": 2,
+        "presetResources": {
+            "friendlyNames": [
+                {"@type": "text", "value": {"text": "medium", "locale": "en-US"}}
+            ]
+        },
+    } in presets
+
+    assert {
+        "rangeValue": 5,
+        "presetResources": {
+            "friendlyNames": [
+                {"@type": "text", "value": {"text": "warp_speed", "locale": "en-US"}},
+                {"@type": "asset", "value": {"assetId": "Alexa.Value.Maximum"}},
+            ]
+        },
+    } in presets
+
     call, _ = await assert_request_calls_service(
         "Alexa.RangeController",
         "SetRangeValue",
