@@ -640,7 +640,7 @@ async def test_adb_command_unicode_decode_error(hass):
     ):
         await hass.services.async_call(
             ANDROIDTV_DOMAIN,
-            "adb_command",
+            SERVICE_ADB_COMMAND,
             {ATTR_ENTITY_ID: entity_id, ATTR_COMMAND: command},
             blocking=True,
         )
