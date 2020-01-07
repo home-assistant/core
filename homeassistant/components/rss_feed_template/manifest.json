@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/rss_feed_template",
   "requirements": [],
   "dependencies": ["http"],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }
