@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/media_extractor",
   "requirements": ["youtube_dl==2020.01.01"],
   "dependencies": ["media_player"],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

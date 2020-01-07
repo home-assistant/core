@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/device_sun_light_trigger",
   "requirements": [],
   "dependencies": ["device_tracker", "group", "light", "person"],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

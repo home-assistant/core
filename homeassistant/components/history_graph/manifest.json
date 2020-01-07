@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/history_graph",
   "requirements": [],
   "dependencies": ["history"],
-  "codeowners": ["@andrey-git"]
+  "codeowners": ["@andrey-git"],
+  "quality_scale": "internal"
 }

@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/time_date",
   "requirements": [],
   "dependencies": [],
-  "codeowners": ["@fabaff"]
+  "codeowners": ["@fabaff"],
+  "quality_scale": "internal"
 }
