@@ -1,6 +1,6 @@
 {
   "domain": "cast",
-  "name": "Cast",
+  "name": "Google Cast",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/cast",
   "requirements": ["pychromecast==4.0.1"],
