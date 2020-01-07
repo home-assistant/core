@@ -240,6 +240,11 @@ class Integration:
         return cast(str, self.manifest.get("documentation"))
 
     @property
+    def quality_scale(self) -> Optional[str]:
+        """Return Integration Quality Scale."""
+        return cast(str, self.manifest.get("quality_scale"))
+
+    @property
     def is_built_in(self) -> bool:
         """Test if package is a built-in integration."""
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
