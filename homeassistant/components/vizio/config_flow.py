@@ -25,7 +25,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def vizio_schema(self, defaults: Dict[str, Any]) -> vol.Schema:
+def vizio_schema(self, defaults) -> vol.Schema:
     """Return vol schema with expected defaults for blank form or retain what was previously filled in."""
 
     if not defaults:
