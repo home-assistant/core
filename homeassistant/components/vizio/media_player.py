@@ -3,7 +3,6 @@ from datetime import timedelta
 import logging
 
 from pyvizio import Vizio
-from requests.packages import urllib3
 import voluptuous as vol
 
 from homeassistant import util
@@ -28,13 +27,7 @@ from homeassistant.const import (
 )
 
 from . import VIZIO_SCHEMA, validate_auth
-from .const import (
-    CONF_SUPPRESS_WARNING,
-    CONF_VOLUME_STEP,
-    DEFAULT_NAME,
-    DEVICE_ID,
-    ICON,
-)
+from .const import CONF_VOLUME_STEP, DEFAULT_NAME, DEVICE_ID, ICON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,12 +71,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
         return
 
-    if config[CONF_SUPPRESS_WARNING]:
-        _LOGGER.warning(
-            "InsecureRequestWarning is disabled "
-            "because of Vizio platform configuration"
-        )
-        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
     add_entities([device], True)
 
 
