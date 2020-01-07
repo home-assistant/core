@@ -2,7 +2,9 @@
   "domain": "vizio",
   "name": "Vizio",
   "documentation": "https://www.home-assistant.io/integrations/vizio",
-  "requirements": ["pyvizio==0.0.9"],
+  "requirements": [
+    "pyvizio==0.0.11"
+  ],
   "dependencies": [],
   "codeowners": ["@raman325"]
 }
