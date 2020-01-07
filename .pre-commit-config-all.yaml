@@ -57,3 +57,10 @@ repos:
         types: [python]
         require_serial: true
         files: ^homeassistant/.+\.py$
+    -   id: format_json
+        name: format_json
+        entry: script/format_json
+        language: script
+        types: [json]
+        files: ^(homeassistant|script|tests)/.+\.json$
+        exclude: /(\.translations/|strings(\.\w+)?\.json$)

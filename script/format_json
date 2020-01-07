@@ -1,0 +1,7 @@
+#!/bin/sh -eu
+
+for srcfile in "$@"; do
+    destfile=$(mktemp)
+    python3 -m json.tool "$srcfile" "$destfile"
+    mv "$destfile" "$srcfile"
+done
