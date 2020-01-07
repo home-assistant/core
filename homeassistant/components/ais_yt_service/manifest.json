@@ -1,1 +1,1 @@
-{"domain": "ais_yt_service", "name": "AIS YouTube", "config_flow": false, "documentation": "https://www.ai-speaker.com", "requirements": ["youtube_dl==2019.11.28"], "dependencies": [], "codeowners": []}
+{"domain": "ais_yt_service", "name": "AIS YouTube", "config_flow": false, "documentation": "https://www.ai-speaker.com", "requirements": ["youtube_dl==2019.12.25"], "dependencies": [], "codeowners": []}

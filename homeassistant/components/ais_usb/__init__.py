@@ -16,6 +16,7 @@ import homeassistant.components.ais_dom.ais_global as ais_global
 DOMAIN = "ais_usb"
 _LOGGER = logging.getLogger(__name__)
 G_ZIGBEE_ID = "0451:16a8"
+G_AIS_REMOTE_ID = "1d6b:0003"
 
 
 def get_device_info(pathname):
@@ -179,31 +180,34 @@ def _lsusb():
                 .decode("utf-8")
                 .strip()
             )
-            manufacturer = (
-                subprocess.check_output(
-                    "cat /sys/bus/usb/devices/" + d + "/manufacturer", shell=True
+            try:
+                manufacturer = (
+                    subprocess.check_output(
+                        "cat /sys/bus/usb/devices/" + d + "/manufacturer", shell=True
+                    )
+                    .decode("utf-8")
+                    .strip()
                 )
-                .decode("utf-8")
-                .strip()
-            )
+                manufacturer = " producent " + manufacturer
+            except Exception as e:
+                manufacturer = " "
+
             _LOGGER.info("id_vendor: " + id_vendor)
             _LOGGER.info("id_product: " + id_product)
             for device in devices:
                 if device["id"] == id_vendor + ":" + id_product:
                     device["product"] = product
                     device["manufacturer"] = manufacturer
-                    device["info"] = (
-                        "urządzenie " + product + " producent " + manufacturer
-                    )
+                    device["info"] = "urządzenie " + product + manufacturer
                     # special cases
                     if device["id"] == G_ZIGBEE_ID:
                         # USB zigbee dongle
-                        device["info"] = (
-                            "urządzenie Zigbee "
-                            + product
-                            + " producent "
-                            + manufacturer
-                        )
+                        device["info"] = "urządzenie Zigbee" + product + manufacturer
+                    if device["id"] == G_AIS_REMOTE_ID:
+                        # USB ais remote dongle
+                        device[
+                            "info"
+                        ] = "urządzenie Pilot radiowy, producent AI-Speaker"
 
         except Exception as e:
             _LOGGER.info(str(e))

@@ -47,4 +47,7 @@ input_number:
     step: 0.1
     initial: 1
 
-
+timer:
+  ais_dom_pin_join:
+    name: Parowanie z bramką za pomocą PIN
+    duration: 120
