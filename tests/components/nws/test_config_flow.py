@@ -22,7 +22,7 @@ async def test_form(hass):
 
     with patch(
         "homeassistant.components.nws.config_flow.validate_input",
-        return_value=mock_coro((["ABC"], {"title": "test"})),
+        return_value=mock_coro(["ABC"]),
     ), patch(
         "homeassistant.components.nws.async_setup", return_value=mock_coro(True)
     ) as mock_setup, patch(

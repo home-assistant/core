@@ -18,12 +18,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def configured_instances(hass):
     """Return a set of configured instances."""
-    return set(
-        [
-            unique_id(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])
-            for entry in hass.config_entries.async_entries(DOMAIN)
-        ]
-    )
+    return {
+        unique_id(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    }
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -49,15 +47,19 @@ async def validate_input(hass: core.HomeAssistant, data):
     except aiohttp.ClientError:
         raise CannotConnect
 
-    return nws.stations, {"title": unique_id(latitude, longitude)}
+    return nws.stations
 
 
 class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for National Weather Service."""
 
     VERSION = 1
-
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
+    def __init__(self):
+        """Initialiaze variablea needed accross steps."""
+        self.stations = None
+        self.user_data = None
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -76,7 +78,7 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
-                stations, info = await validate_input(self.hass, user_input)
+                stations = await validate_input(self.hass, user_input)
                 self.stations = stations
             except AlreadyConfigured:
                 _LOGGER.exception("Entry already configured")
