@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/nws",
   "dependencies": [],
   "codeowners": ["@MatthewFlamm"],
-  "requirements": ["pynws==0.8.1"]
+  "requirements": ["pynws==0.8.1"],
+  "config_flow": true
 }
