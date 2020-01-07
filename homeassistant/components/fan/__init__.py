@@ -51,7 +51,6 @@ ATTR_DIRECTION = "direction"
 
 PROP_TO_ATTR = {
     "speed": ATTR_SPEED,
-    "speed_list": ATTR_SPEED_LIST,
     "oscillating": ATTR_OSCILLATING,
     "current_direction": ATTR_DIRECTION,
 }
@@ -182,6 +181,11 @@ class FanEntity(ToggleEntity):
     def current_direction(self) -> Optional[str]:
         """Return the current direction of the fan."""
         return None
+
+    @property
+    def capability_attributes(self):
+        """Return capabilitiy attributes."""
+        return {ATTR_SPEED_LIST: self.speed_list}
 
     @property
     def state_attributes(self) -> dict:

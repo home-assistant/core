@@ -149,9 +149,7 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_ID,
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
-    ATTR_INPUT_SOURCE_LIST,
     ATTR_SOUND_MODE,
-    ATTR_SOUND_MODE_LIST,
     ATTR_MEDIA_SHUFFLE,
 ]
 
@@ -783,6 +781,21 @@ class MediaPlayerDevice(Entity):
             return None
 
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_token, image_hash)
+
+    @property
+    def capability_attributes(self):
+        """Return capabilitiy attributes."""
+        data = {}
+
+        source_list = self.source_list
+        if source_list is not None:
+            data[ATTR_INPUT_SOURCE_LIST] = source_list
+
+        sound_mode_list = self.sound_mode_list
+        if sound_mode_list is not None:
+            data[ATTR_SOUND_MODE_LIST] = sound_mode_list
+
+        return data
 
     @property
     def state_attributes(self):

@@ -252,6 +252,12 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         )
 
     @property
+    def capability_attributes(self):
+        """Return capabilitiy attributes."""
+        if self.fan_speed is not None:
+            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
+
+    @property
     def state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
@@ -265,7 +271,6 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
 
         if self.fan_speed is not None:
             data[ATTR_FAN_SPEED] = self.fan_speed
-            data[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
 
         return data
 
@@ -327,6 +332,12 @@ class StateVacuumDevice(_BaseVacuum):
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging
         )
+
+    @property
+    def capability_attributes(self):
+        """Return capabilitiy attributes."""
+        if self.fan_speed is not None:
+            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 
     @property
     def state_attributes(self):

@@ -144,6 +144,25 @@ class WaterHeaterDevice(Entity):
         return PRECISION_WHOLE
 
     @property
+    def capability_attributes(self):
+        """Return capabilitiy attributes."""
+        supported_features = self.supported_features
+
+        data = {
+            ATTR_MIN_TEMP: show_temp(
+                self.hass, self.min_temp, self.temperature_unit, self.precision
+            ),
+            ATTR_MAX_TEMP: show_temp(
+                self.hass, self.max_temp, self.temperature_unit, self.precision
+            ),
+        }
+
+        if supported_features & SUPPORT_OPERATION_MODE:
+            data[ATTR_OPERATION_LIST] = self.operation_list
+
+        return data
+
+    @property
     def state_attributes(self):
         """Return the optional state attributes."""
         data = {
@@ -152,12 +171,6 @@ class WaterHeaterDevice(Entity):
                 self.current_temperature,
                 self.temperature_unit,
                 self.precision,
-            ),
-            ATTR_MIN_TEMP: show_temp(
-                self.hass, self.min_temp, self.temperature_unit, self.precision
-            ),
-            ATTR_MAX_TEMP: show_temp(
-                self.hass, self.max_temp, self.temperature_unit, self.precision
             ),
             ATTR_TEMPERATURE: show_temp(
                 self.hass,
@@ -183,8 +196,6 @@ class WaterHeaterDevice(Entity):
 
         if supported_features & SUPPORT_OPERATION_MODE:
             data[ATTR_OPERATION_MODE] = self.current_operation
-            if self.operation_list:
-                data[ATTR_OPERATION_LIST] = self.operation_list
 
         if supported_features & SUPPORT_AWAY_MODE:
             is_away = self.is_away_mode_on
