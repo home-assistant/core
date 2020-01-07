@@ -1,4 +1,5 @@
 """The tests for the Ring binary sensor platform."""
+from asyncio import run_coroutine_threadsafe
 import os
 import unittest
 
@@ -69,6 +70,9 @@ class TestRingBinarySensorSetup(unittest.TestCase):
         )
 
         base_ring.setup(self.hass, VALID_CONFIG)
+        run_coroutine_threadsafe(
+            self.hass.async_block_till_done(), self.hass.loop
+        ).result()
         ring.setup_platform(self.hass, self.config, self.add_entities, None)
 
         for device in self.DEVICES:
