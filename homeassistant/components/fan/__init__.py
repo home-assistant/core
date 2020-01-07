@@ -6,7 +6,6 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components import group
 from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -21,9 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "fan"
 SCAN_INTERVAL = timedelta(seconds=30)
-
-GROUP_NAME_ALL_FANS = "all fans"
-ENTITY_ID_ALL_FANS = group.ENTITY_ID_FORMAT.format(GROUP_NAME_ALL_FANS)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -58,9 +54,8 @@ PROP_TO_ATTR = {
 
 
 @bind_hass
-def is_on(hass, entity_id: Optional[str] = None) -> bool:
+def is_on(hass, entity_id: str) -> bool:
     """Return if the fans are on based on the statemachine."""
-    entity_id = entity_id or ENTITY_ID_ALL_FANS
     state = hass.states.get(entity_id)
     return state.attributes[ATTR_SPEED] not in [SPEED_OFF, None]
 
@@ -68,7 +63,7 @@ def is_on(hass, entity_id: Optional[str] = None) -> bool:
 async def async_setup(hass, config: dict):
     """Expose fan control via statemachine and services."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_FANS
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)

@@ -80,10 +80,6 @@ async def test_service_specify_data(hass, calls):
     assert state is not None
     assert state.attributes.get("last_triggered") == time
 
-    state = hass.states.get("group.all_automations")
-    assert state is not None
-    assert state.attributes.get("entity_id") == ("automation.hello",)
-
 
 async def test_action_delay(hass, calls):
     """Test action delay."""
@@ -134,9 +130,6 @@ async def test_action_delay(hass, calls):
     state = hass.states.get("automation.hello")
     assert state is not None
     assert state.attributes.get("last_triggered") == time
-    state = hass.states.get("group.all_automations")
-    assert state is not None
-    assert state.attributes.get("entity_id") == ("automation.hello",)
 
 
 async def test_service_specify_entity_id(hass, calls):

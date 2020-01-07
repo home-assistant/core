@@ -68,7 +68,7 @@ async def test_switches(hass):
     assert "switch.smart_plug" in gateway.deconz_ids
     assert "switch.warning_device" in gateway.deconz_ids
     assert "switch.unsupported_switch" not in gateway.deconz_ids
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 4
 
     on_off_switch = hass.states.get("switch.on_off_switch")
     assert on_off_switch.state == "on"
@@ -161,4 +161,4 @@ async def test_switches(hass):
 
     await gateway.async_reset()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 0

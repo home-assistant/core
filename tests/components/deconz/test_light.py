@@ -91,8 +91,8 @@ async def test_lights_and_groups(hass):
     assert "light.light_group" in gateway.deconz_ids
     assert "light.empty_group" not in gateway.deconz_ids
     assert "light.on_off_switch" not in gateway.deconz_ids
-    # 4 entities + 2 groups (one for switches and one for lights)
-    assert len(hass.states.async_all()) == 6
+    # 4 entities
+    assert len(hass.states.async_all()) == 4
 
     rgb_light = hass.states.get("light.rgb_light")
     assert rgb_light.state == "on"
@@ -200,7 +200,7 @@ async def test_lights_and_groups(hass):
 
     await gateway.async_reset()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_disable_light_groups(hass):
@@ -218,8 +218,8 @@ async def test_disable_light_groups(hass):
     assert "light.light_group" not in gateway.deconz_ids
     assert "light.empty_group" not in gateway.deconz_ids
     assert "light.on_off_switch" not in gateway.deconz_ids
-    # 4 entities + 2 groups (one for switches and one for lights)
-    assert len(hass.states.async_all()) == 5
+    # 3 entities
+    assert len(hass.states.async_all()) == 3
 
     rgb_light = hass.states.get("light.rgb_light")
     assert rgb_light is not None

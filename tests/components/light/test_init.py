@@ -52,12 +52,6 @@ class TestLight(unittest.TestCase):
         self.hass.states.set("light.test", STATE_OFF)
         assert not light.is_on(self.hass, "light.test")
 
-        self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, STATE_ON)
-        assert light.is_on(self.hass)
-
-        self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, STATE_OFF)
-        assert not light.is_on(self.hass)
-
         # Test turn_on
         turn_on_calls = mock_service(self.hass, light.DOMAIN, SERVICE_TURN_ON)
 
