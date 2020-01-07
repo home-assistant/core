@@ -785,15 +785,14 @@ class MediaPlayerDevice(Entity):
     @property
     def capability_attributes(self):
         """Return capabilitiy attributes."""
+        supported_features = self.supported_features
         data = {}
 
-        source_list = self.source_list
-        if source_list is not None:
-            data[ATTR_INPUT_SOURCE_LIST] = source_list
+        if supported_features & SUPPORT_SELECT_SOURCE:
+            data[ATTR_INPUT_SOURCE_LIST] = self.source_list
 
-        sound_mode_list = self.sound_mode_list
-        if sound_mode_list is not None:
-            data[ATTR_SOUND_MODE_LIST] = sound_mode_list
+        if supported_features & SUPPORT_SELECT_SOUND_MODE:
+            data[ATTR_SOUND_MODE_LIST] = self.sound_mode_list
 
         return data
 
