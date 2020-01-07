@@ -67,6 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             vol.Coerce(int), vol.Range(min=1)
         ),
         vol.Optional(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_PIN): cv.string,
     }
 )
 
