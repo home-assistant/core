@@ -282,7 +282,7 @@ async def test_effect_light(hass):
         {
             "friendly_name": "Test light 4",
             "supported_features": 4,
-            "effect_list": [0, 1, 2, 3, 4],
+            "effect_list": [0, 1, 2, 3, 4, "colorloop", "color_loop", "random", "white", "0", "1","Rainbow","In In","Sparkle+"],
         },
     )
     appliance = await discovery_test(device, hass)
