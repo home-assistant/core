@@ -11,10 +11,14 @@ from homeassistant.const import (
     CONF_NAME,
     SERVICE_RELOAD,
 )
+from homeassistant.core import callback
+from homeassistant.helpers import collection, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,13 +32,25 @@ ATTR_OPTION = "option"
 ATTR_OPTIONS = "options"
 
 SERVICE_SELECT_OPTION = "select_option"
-
-
 SERVICE_SELECT_NEXT = "select_next"
-
 SERVICE_SELECT_PREVIOUS = "select_previous"
-
 SERVICE_SET_OPTIONS = "set_options"
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
+
+CREATE_FIELDS = {
+    vol.Optional(CONF_ID): cv.slug,
+    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+    vol.Optional(CONF_INITIAL): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
+}
+UPDATE_FIELDS = {
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+    vol.Optional(CONF_INITIAL): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
+}
 
 
 def _cv_input_select(cfg):
@@ -72,26 +88,78 @@ CONFIG_SCHEMA = vol.Schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
-async def async_setup(hass, config):
+class InputSelectStorageCollection(collection.StorageCollection):
+    """Input storage based collection."""
+
+    CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_select))
+    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+
+    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+        """Validate the config is valid."""
+        return self.CREATE_SCHEMA(data)
+
+    @callback
+    def _get_suggested_id(self, info: typing.Dict) -> str:
+        """Suggest an ID based on the config."""
+        return info[CONF_NAME]
+
+    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+        """Return a new updated data object."""
+        update_data = self.UPDATE_SCHEMA(update_data)
+        return self.CREATE_SCHEMA({**data, **update_data})
+
+
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up an input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    id_manager = collection.IDManager()
 
-    entities = [
-        InputSelect.from_yaml({CONF_ID: id_, **cfg})
-        for id_, cfg in config[DOMAIN].items()
-    ]
+    yaml_collection = collection.YamlCollection(
+        logging.getLogger(f"{__name__}.yaml_collection"), id_manager
+    )
+    collection.attach_entity_component_collection(
+        component, yaml_collection, InputSelect.from_yaml
+    )
 
-    async def reload_service_handler(service_call):
-        """Remove all entities and load new ones from config."""
-        conf = await component.async_prepare_reload()
-        if conf is None:
+    storage_collection = InputSelectStorageCollection(
+        Store(hass, STORAGE_VERSION, STORAGE_KEY),
+        logging.getLogger(f"{__name__}_storage_collection"),
+        id_manager,
+    )
+    collection.attach_entity_component_collection(
+        component, storage_collection, InputSelect
+    )
+
+    await yaml_collection.async_load(
+        [{CONF_ID: id_, **cfg} for id_, cfg in config[DOMAIN].items()]
+    )
+    await storage_collection.async_load()
+
+    collection.StorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+    ).async_setup(hass)
+
+    async def _collection_changed(
+        change_type: str, item_id: str, config: typing.Optional[typing.Dict]
+    ) -> None:
+        """Handle a collection change: clean up entity registry on removals."""
+        if change_type != collection.CHANGE_REMOVED:
             return
-        new_entities = [
-            InputSelect.from_yaml({CONF_ID: id_, **cfg})
-            for id_, cfg in conf[DOMAIN].items()
-        ]
-        if new_entities:
-            await component.async_add_entities(new_entities)
+
+        ent_reg = await entity_registry.async_get_registry(hass)
+        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
+
+    yaml_collection.async_add_listener(_collection_changed)
+    storage_collection.async_add_listener(_collection_changed)
+
+    async def reload_service_handler(service_call: ServiceCallType) -> None:
+        """Reload yaml entities."""
+        conf = await component.async_prepare_reload(skip_reset=True)
+        if conf is None:
+            conf = {DOMAIN: {}}
+        await yaml_collection.async_load(
+            [{CONF_ID: id_, **cfg} for id_, cfg in conf[DOMAIN].items()]
+        )
 
     homeassistant.helpers.service.async_register_admin_service(
         hass,
@@ -125,8 +193,6 @@ async def async_setup(hass, config):
         "async_set_options",
     )
 
-    if entities:
-        await component.async_add_entities(entities)
     return True
 
 
@@ -136,7 +202,7 @@ class InputSelect(RestoreEntity):
     def __init__(self, config: typing.Dict):
         """Initialize a select input."""
         self._config = config
-        self._editable = True
+        self.editable = True
         self._current_option = config.get(CONF_INITIAL)
 
     @classmethod
@@ -144,7 +210,7 @@ class InputSelect(RestoreEntity):
         """Return entity instance initialized from yaml storage."""
         input_select = cls(config)
         input_select.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
-        input_select._editable = False
+        input_select.editable = False
         return input_select
 
     async def async_added_to_hass(self):
@@ -187,7 +253,7 @@ class InputSelect(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_OPTIONS: self._config[ATTR_OPTIONS], ATTR_EDITABLE: self._editable}
+        return {ATTR_OPTIONS: self._config[ATTR_OPTIONS], ATTR_EDITABLE: self.editable}
 
     @property
     def unique_id(self) -> typing.Optional[str]:
@@ -218,3 +284,8 @@ class InputSelect(RestoreEntity):
         self._current_option = options[0]
         self._config[CONF_OPTIONS] = options
         await self.async_update_ha_state()
+
+    async def async_update_config(self, config: typing.Dict) -> None:
+        """Handle when the config is updated."""
+        self._config = config
+        self.async_write_ha_state()
