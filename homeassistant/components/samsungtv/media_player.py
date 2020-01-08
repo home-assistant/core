@@ -8,6 +8,7 @@ from websocket import WebSocketException
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -29,6 +30,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
@@ -59,45 +61,20 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
-    host = config_entry.data[CONF_HOST]
-    manufacturer = config_entry.data.get(CONF_MANUFACTURER)
-    method = config_entry.data.get(CONF_METHOD)
-    model = config_entry.data.get(CONF_MODEL)
-    name = config_entry.title
-    port = config_entry.data.get(CONF_PORT)
-    uuid = config_entry.data.get(CONF_ID)
-    turn_on_action = config_entry.data.get(CONF_ON_ACTION)
-    on_script = Script(hass, turn_on_action) if turn_on_action else None
-
-    async_add_entities(
-        [
-            SamsungTVDevice(
-                host, name, method, uuid, port, manufacturer, model, on_script
-            )
-        ]
-    )
+    async_add_entities([SamsungTVDevice(config_entry)])
 
 
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(
-        self,
-        host,
-        name,
-        method,
-        uuid,
-        port=None,
-        manufacturer=None,
-        model=None,
-        on_script=None,
-    ):
+    def __init__(self, config_entry):
         """Initialize the Samsung device."""
-        self._name = name
-        self._uuid = uuid
-        self._manufacturer = manufacturer
-        self._model = model
-        self._on_script = on_script
+        self._name = config_entry.title
+        self._uuid = config_entry.data.get(CONF_ID)
+        self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
+        self._model = config_entry.data.get(CONF_MODEL)
+        turn_on_action = config_entry.data.get(CONF_ON_ACTION)
+        self._on_script = Script(self.hass, turn_on_action) if turn_on_action else None
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -110,13 +87,33 @@ class SamsungTVDevice(MediaPlayerDevice):
         # Generate a configuration for the Samsung library
         self._config = {
             "name": "HomeAssistant",
-            "description": name,
+            "description": self._name,
             "id": "ha.component.samsung",
-            "method": method,
-            "port": port,
-            "host": host,
+            "method": config_entry.data[CONF_METHOD],
+            "port": config_entry.data.get(CONF_PORT),
+            "host": config_entry.data[CONF_HOST],
             "timeout": 1,
         }
+
+        # set up config_entry updates listener
+        config_entry.add_update_listener(self.async_config_entry_update)
+
+    @staticmethod
+    async def async_config_entry_update(hass, config_entry):
+        """Pass config_entry updates to component."""
+        registry = await async_get_registry(hass)
+        entity_id = registry.async_get_entity_id(
+            MEDIA_PLAYER_DOMAIN, DOMAIN, config_entry.data.get("id")
+        )
+        component = hass.data[MEDIA_PLAYER_DOMAIN].get_entity(entity_id)
+        if component is not None:
+            await component.update_device_info(config_entry)
+
+    async def update_device_info(self, config_entry):
+        """Update device info according to config_entry."""
+        self._uuid = config_entry.data.get(CONF_ID)
+        self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
+        self._model = config_entry.data.get(CONF_MODEL)
 
     def update(self):
         """Update state of device."""

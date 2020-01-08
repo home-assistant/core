@@ -162,9 +162,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         config_entry = await self.async_set_unique_id(ip_address)
         if config_entry:
+            config_entry.data[CONF_ID] = self._uuid
             config_entry.data[CONF_MANUFACTURER] = self._manufacturer
             config_entry.data[CONF_MODEL] = self._model
-            config_entry.data[CONF_ID] = self._uuid
             self.hass.config_entries.async_update_entry(config_entry)
             return self.async_abort(reason="already_configured")
 
