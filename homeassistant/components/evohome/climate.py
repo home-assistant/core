@@ -81,8 +81,8 @@ async def async_setup_platform(
         broker.params[CONF_LOCATION_IDX],
     )
 
-    # special case of RoundModulation/RoundWireless (is a single zone system)
-    if broker.config["zones"][0]["zoneType"] == "Thermostat":
+    # special case of RoundModulation/RoundWireless as a single zone system
+    if len(broker.tcs.zones) == 1 and list(broker.tcs.zones.keys())[0] == "Thermostat":
         zone = list(broker.tcs.zones.values())[0]
         _LOGGER.debug(
             "Found the Thermostat (%s), id=%s, name=%s",
