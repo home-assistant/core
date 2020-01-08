@@ -13,6 +13,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import (
     ATTR_EDITABLE,
+    ATTR_ENTITY_ID,
     ATTR_GPS_ACCURACY,
     ATTR_ID,
     ATTR_LATITUDE,
@@ -173,7 +174,7 @@ class PersonStorageCollection(collection.StorageCollection):
         if event.data["action"] != "remove":
             return
 
-        entity_id = event.data["entity_id"]
+        entity_id = event.data[ATTR_ENTITY_ID]
 
         if split_entity_id(entity_id)[0] != "device_tracker":
             return
