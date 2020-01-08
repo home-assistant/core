@@ -21,8 +21,7 @@
         },
         "abort": {
             "name_exists": "Vizio component with name already configured.",
-            "host_exists": "Vizio component with host already configured.",
-            "cant_connect": "Vizio component could not be connected to."
+            "host_exists": "Vizio component with host already configured."
         }
     }
 }

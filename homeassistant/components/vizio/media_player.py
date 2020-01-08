@@ -202,7 +202,7 @@ class VizioDevice(MediaPlayerDevice):
         return {
             "identifiers": {(DOMAIN, self._unique_id)},
             "name": self.name,
-            "manufacturer": "vizio",
+            "manufacturer": "Vizio",
             "model": self._model,
         }
 

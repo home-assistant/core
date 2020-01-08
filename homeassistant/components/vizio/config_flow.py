@@ -31,27 +31,23 @@ def vizio_schema(self, defaults: Optional[Dict[str, any]] = None) -> vol.Schema:
     """Return vol schema with expected defaults for blank form, retain what was previously filled in on error, or prefill data obtained via zeroconf."""
 
     if not defaults:
-        defaults = {
-            CONF_NAME: DEFAULT_NAME,
-            CONF_HOST: "",
-            CONF_DEVICE_CLASS: DEFAULT_DEVICE_CLASS,
-            CONF_ACCESS_TOKEN: "",
-            CONF_VOLUME_STEP: DEFAULT_VOLUME_STEP,
-        }
+        defaults = {}
 
     return vol.Schema(
         {
-            vol.Optional(CONF_NAME, default=defaults[CONF_NAME]): str,
+            vol.Optional(CONF_NAME, default=defaults.get(CONF_NAME, DEFAULT_NAME)): str,
             vol.Required(CONF_HOST, default=defaults.get(CONF_HOST)): str,
             vol.Optional(
-                CONF_DEVICE_CLASS, default=defaults[CONF_DEVICE_CLASS]
+                CONF_DEVICE_CLASS,
+                default=defaults.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
             ): vol.All(str, vol.Lower, vol.In(["tv", "soundbar"])),
             vol.Optional(
                 CONF_ACCESS_TOKEN, default=defaults.get(CONF_ACCESS_TOKEN)
             ): str,
-            vol.Optional(CONF_VOLUME_STEP, default=defaults[CONF_VOLUME_STEP]): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=10)
-            ),
+            vol.Optional(
+                CONF_VOLUME_STEP,
+                default=defaults.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
         }
     )
 
@@ -69,6 +65,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         defaults = None
+        no_ctx = self.context.get("source") is None
 
         if user_input is not None:
             defaults = user_input
@@ -76,14 +73,14 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_HOST] == user_input[CONF_HOST]:
-                    if not user_input.get(CONF_CONTEXT):
+                    if no_ctx:
                         errors[CONF_HOST] = "host_exists"
                         break
 
                     return self.async_abort(reason="host_exists")
 
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
-                    if not user_input.get(CONF_CONTEXT):
+                    if no_ctx:
                         errors[CONF_NAME] = "name_exists"
                         break
 
@@ -122,8 +119,5 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: Dict[str, Any]) -> Dict[str, Any]:
         """Import a config entry from configuration.yaml."""
-
-        # add key to track entities coming from config
-        import_config[CONF_CONTEXT] = "config"
 
         return await self.async_step_user(user_input=import_config)
