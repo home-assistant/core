@@ -1293,7 +1293,7 @@ class AlexaRangeController(AlexaCapability):
 
         # Fan Speed Resources
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-            speed_list = self.entity.attributes.get(fan.ATTR_SPEED_LIST)
+            speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
             max_value = len(speed_list) - 1
             self._resource = AlexaPresetResource(
                 labels=[AlexaGlobalCatalog.SETTING_FAN_SPEED],
