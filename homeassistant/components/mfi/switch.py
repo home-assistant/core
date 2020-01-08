@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SSL = True
 DEFAULT_VERIFY_SSL = True
 
-SWITCH_MODELS = ["Outlet", "Output 5v", "Output 12v", "Output 24v"]
+SWITCH_MODELS = ["Outlet", "Output 5v", "Output 12v", "Output 24v", "Dimmer Switch"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
