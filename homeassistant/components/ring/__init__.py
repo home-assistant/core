@@ -34,7 +34,7 @@ SIGNAL_UPDATE_RING = "ring_update"
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
-PLATFORMS = ("binary_sensor", "light", "sensor", "switch")
+PLATFORMS = ("binary_sensor", "light", "sensor", "switch", "camera")
 
 CONFIG_SCHEMA = vol.Schema(
     {

@@ -82,7 +82,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 sensors.append(RingSensor(hass, device, sensor_type))
 
     async_add_entities(sensors, True)
-    return True
 
 
 class RingSensor(Entity):
