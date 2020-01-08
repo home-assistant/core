@@ -65,7 +65,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         defaults = None
-        no_ctx = self.context.get("source") is None
+        no_ctx = user_input.get(CONF_CONTEXT) is None
 
         if user_input is not None:
             defaults = user_input
@@ -119,5 +119,8 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: Dict[str, Any]) -> Dict[str, Any]:
         """Import a config entry from configuration.yaml."""
+
+        # Insert record into dict to indicate data came from config import
+        import_config[CONF_CONTEXT] = "import"
 
         return await self.async_step_user(user_input=import_config)
