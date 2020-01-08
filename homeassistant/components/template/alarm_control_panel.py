@@ -16,7 +16,7 @@ from homeassistant.components.alarm_control_panel.const import (
 )
 from homeassistant.const import (
     ATTR_CODE,
-    CONF_FRIENDLY_NAME,
+    CONF_NAME,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
@@ -59,7 +59,7 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
         vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
     }
 )
 
@@ -77,7 +77,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     alarm_control_panels = []
 
     for device, device_config in config[CONF_ALARM_CONTROL_PANELS].items():
-        friendly_name = device_config.get(CONF_FRIENDLY_NAME, device)
+        name = device_config.get(CONF_NAME, device)
         state_template = device_config.get(CONF_VALUE_TEMPLATE)
         disarm_action = device_config.get(CONF_DISARM_ACTION)
         arm_away_action = device_config.get(CONF_ARM_AWAY_ACTION)
@@ -101,7 +101,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             AlarmControlPanelTemplate(
                 hass,
                 device,
-                friendly_name,
+                name,
                 state_template,
                 disarm_action,
                 arm_away_action,
@@ -122,7 +122,7 @@ class AlarmControlPanelTemplate(AlarmControlPanel):
         self,
         hass,
         device_id,
-        friendly_name,
+        name,
         state_template,
         disarm_action,
         arm_away_action,
@@ -136,7 +136,7 @@ class AlarmControlPanelTemplate(AlarmControlPanel):
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, device_id, hass=hass
         )
-        self._name = friendly_name
+        self._name = name
         self._template = state_template
         self._disarm_script = None
         self._code_arm_required = code_arm_required
@@ -176,19 +176,16 @@ class AlarmControlPanelTemplate(AlarmControlPanel):
     @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
-        supported_features = (
-            SUPPORT_ALARM_ARM_NIGHT if (self._arm_night_script is not None) else 0
-        )
-        supported_features = (
-            supported_features | SUPPORT_ALARM_ARM_HOME
-            if (self._arm_home_script is not None)
-            else 0
-        )
-        supported_features = (
-            supported_features | SUPPORT_ALARM_ARM_AWAY
-            if (self._arm_away_script is not None)
-            else 0
-        )
+        supported_features = 0
+        if self._arm_night_script is not None:
+            supported_features = supported_features | SUPPORT_ALARM_ARM_NIGHT
+
+        if self._arm_home_script is not None:
+            supported_features = supported_features | SUPPORT_ALARM_ARM_HOME
+
+        if self._arm_away_script is not None:
+            supported_features = supported_features | SUPPORT_ALARM_ARM_AWAY
+
         return supported_features
 
     @property
@@ -223,94 +220,64 @@ class AlarmControlPanelTemplate(AlarmControlPanel):
             EVENT_HOMEASSISTANT_START, template_alarm_control_panel_startup
         )
 
-    async def async_alarm_arm_away(self, code=None):
-        """Arm the panel to Away."""
+    async def _async_alarm_arm(self, state, script=None, code=None):
+        """Arm the panel to specified state with supplied script."""
         optimistic_set = False
 
         if self._template is None:
-            self._state = STATE_ALARM_ARMED_AWAY
+            self._state = state
             optimistic_set = True
 
-        if self._arm_away_script is not None:
-            await self._arm_away_script.async_run(
-                {ATTR_CODE: code}, context=self._context
-            )
+        if script is not None:
+            await script.async_run({ATTR_CODE: code}, context=self._context)
         else:
-            _LOGGER.error("No script action defined for Arm Away")
+            _LOGGER.error("No script action defined for %s", state)
 
         if optimistic_set:
             self.async_schedule_update_ha_state()
+
+    async def async_alarm_arm_away(self, code=None):
+        """Arm the panel to Away."""
+        await self._async_alarm_arm(
+            STATE_ALARM_ARMED_AWAY, script=self._arm_away_script, code=code
+        )
 
     async def async_alarm_arm_home(self, code=None):
         """Arm the panel to Home."""
-        optimistic_set = False
-
-        if self._template is None:
-            self._state = STATE_ALARM_ARMED_HOME
-            optimistic_set = True
-
-        if self._arm_home_script is not None:
-            await self._arm_home_script.async_run(
-                {ATTR_CODE: code}, context=self._context
-            )
-        else:
-            _LOGGER.error("No script action defined for Arm Home")
-
-        if optimistic_set:
-            self.async_schedule_update_ha_state()
+        await self._async_alarm_arm(
+            STATE_ALARM_ARMED_HOME, script=self._arm_home_script, code=code
+        )
 
     async def async_alarm_arm_night(self, code=None):
         """Arm the panel to Night."""
-        optimistic_set = False
-
-        if self._template is None:
-            self._state = STATE_ALARM_ARMED_NIGHT
-            optimistic_set = True
-
-        if self._arm_night_script is not None:
-            await self._arm_night_script.async_run(
-                {ATTR_CODE: code}, context=self._context
-            )
-        else:
-            _LOGGER.error("No script action defined for Arm Night")
-
-        if optimistic_set:
-            self.async_schedule_update_ha_state()
+        await self._async_alarm_arm(
+            STATE_ALARM_ARMED_NIGHT, script=self._arm_night_script, code=code
+        )
 
     async def async_alarm_disarm(self, code=None):
         """Disarm the panel."""
-        optimistic_set = False
-
-        if self._template is None:
-            self._state = STATE_ALARM_DISARMED
-            optimistic_set = True
-
-        if self._disarm_script is not None:
-            await self._disarm_script.async_run(
-                {ATTR_CODE: code}, context=self._context
-            )
-        else:
-            _LOGGER.error("No script action defined for Disarm")
-
-        if optimistic_set:
-            self.async_schedule_update_ha_state()
+        await self._async_alarm_arm(
+            STATE_ALARM_DISARMED, script=self._disarm_script, code=code
+        )
 
     async def async_update(self):
         """Update the state from the template."""
-        if self._template is not None:
-            try:
-                state = self._template.async_render().lower()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._state = None
+        if self._template is None:
+            return
 
-            if state in _VALID_STATES:
-                self._state = state
-                _LOGGER.debug("Valid state - %s", state)
-            else:
-                _LOGGER.error(
-                    "Received invalid alarm panel state: %s. Expected: %s",
-                    state,
-                    ", ".join(_VALID_STATES),
-                )
-                self._state = None
+        try:
+            state = self._template.async_render().lower()
+        except TemplateError as ex:
+            _LOGGER.error(ex)
+            self._state = None
+
+        if state in _VALID_STATES:
+            self._state = state
+            _LOGGER.debug("Valid state - %s", state)
+        else:
+            _LOGGER.error(
+                "Received invalid alarm panel state: %s. Expected: %s",
+                state,
+                ", ".join(_VALID_STATES),
+            )
+            self._state = None

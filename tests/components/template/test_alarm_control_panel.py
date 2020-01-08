@@ -1,6 +1,5 @@
 """The tests for the Template alarm control panel platform."""
 import logging
-from unittest.mock import MagicMock
 
 from homeassistant import setup
 from homeassistant.const import (
@@ -10,6 +9,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
 )
 
+from tests.common import async_mock_service
 from tests.components.alarm_control_panel import common
 
 _LOGGER = logging.getLogger(__name__)
@@ -325,8 +325,8 @@ async def test_no_panels_does_not_create(hass, caplog):
     assert ("required key not provided @ data['panels']") in caplog.text
 
 
-async def test_friendly_name(hass):
-    """Test the accessibility of the friendly_name attribute."""
+async def test_name(hass):
+    """Test the accessibility of the name attribute."""
     await setup.async_setup_component(
         hass,
         "alarm_control_panel",
@@ -335,7 +335,7 @@ async def test_friendly_name(hass):
                 "platform": "template",
                 "panels": {
                     "test_template_panel": {
-                        "friendly_name": "Template Alarm Panel",
+                        "name": "Template Alarm Panel",
                         "value_template": "{{ disarmed }}",
                         "arm_away": {
                             "service": "alarm_control_panel.alarm_arm_away",
@@ -408,15 +408,14 @@ async def test_arm_home_action(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    dummy_service = MagicMock()
-    hass.services.async_register("test", "automation", dummy_service)
+    service_calls = async_mock_service(hass, "test", "automation")
 
     await common.async_alarm_arm_home(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
     await hass.async_block_till_done()
 
-    dummy_service.assert_called_once()
+    assert len(service_calls) == 1
 
 
 async def test_arm_away_action(hass):
@@ -455,15 +454,14 @@ async def test_arm_away_action(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    dummy_service = MagicMock()
-    hass.services.async_register("test", "automation", dummy_service)
+    service_calls = async_mock_service(hass, "test", "automation")
 
     await common.async_alarm_arm_away(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
     await hass.async_block_till_done()
 
-    dummy_service.assert_called_once()
+    assert len(service_calls) == 1
 
 
 async def test_arm_night_action(hass):
@@ -502,15 +500,14 @@ async def test_arm_night_action(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    dummy_service = MagicMock()
-    hass.services.async_register("test", "automation", dummy_service)
+    service_calls = async_mock_service(hass, "test", "automation")
 
     await common.async_alarm_arm_night(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
     await hass.async_block_till_done()
 
-    dummy_service.assert_called_once()
+    assert len(service_calls) == 1
 
 
 async def test_disarm_action(hass):
@@ -549,12 +546,11 @@ async def test_disarm_action(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
-    dummy_service = MagicMock()
-    hass.services.async_register("test", "automation", dummy_service)
+    service_calls = async_mock_service(hass, "test", "automation")
 
     await common.async_alarm_disarm(
         hass, entity_id="alarm_control_panel.test_template_panel"
     )
     await hass.async_block_till_done()
 
-    dummy_service.assert_called_once()
+    assert len(service_calls) == 1
