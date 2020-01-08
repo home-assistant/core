@@ -115,7 +115,7 @@ STORAGE_VERSION = 1
 
 
 class NumberStorageCollection(collection.StorageCollection):
-    """Input boolean collection stored in storage."""
+    """Input storage based collection."""
 
     CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_number))
     UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
