@@ -1,6 +1,8 @@
 """Vizio SmartCast Device support."""
+
 from datetime import timedelta
 import logging
+from typing import Any, Dict, List
 
 from pyvizio import Vizio
 import voluptuous as vol
@@ -25,9 +27,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import VIZIO_SCHEMA, validate_auth
-from .const import CONF_VOLUME_STEP, DEFAULT_NAME, DEVICE_ID, ICON
+from .const import CONF_VOLUME_STEP, DEFAULT_NAME, DEVICE_ID, DOMAIN, ICON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,34 +55,49 @@ SUPPORTED_COMMANDS = {
 PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA), validate_auth)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType,
+    config: ConfigType,
+    async_add_entities,
+    discovery_info: Dict[str, Any] = None,
+) -> bool:
     """Set up the Vizio media player platform."""
+
     host = config[CONF_HOST]
     token = config.get(CONF_ACCESS_TOKEN)
     name = config[CONF_NAME]
     volume_step = config[CONF_VOLUME_STEP]
     device_type = config[CONF_DEVICE_CLASS]
-    device = VizioDevice(host, token, name, volume_step, device_type)
-    if not device.validate_setup():
+    device = VizioDevice(hass, host, token, name, volume_step, device_type)
+    if not await hass.async_add_executor_job(device.validate_setup):
         fail_auth_msg = ""
         if token:
-            fail_auth_msg = " and auth token is correct"
+            fail_auth_msg = ", auth token is correct"
         _LOGGER.error(
             "Failed to set up Vizio platform, please check if host "
-            "is valid and available%s",
+            "is valid and available, device type is correct%s",
             fail_auth_msg,
         )
-        return
+        return False
 
-    add_entities([device], True)
+    return async_add_entities([device], True)
 
 
 class VizioDevice(MediaPlayerDevice):
     """Media Player implementation which performs REST requests to device."""
 
-    def __init__(self, host, token, name, volume_step, device_type):
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        host: str,
+        token: str,
+        name: str,
+        volume_step: int,
+        device_type: str,
+    ) -> None:
         """Initialize Vizio device."""
 
+        self._hass = hass
         self._name = name
         self._state = None
         self._volume_level = None
@@ -94,25 +112,32 @@ class VizioDevice(MediaPlayerDevice):
         self._icon = ICON[device_type]
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-        is_on = self._device.get_power_state()
 
         if not self._unique_id:
-            self._unique_id = self._device.get_esn()
+            self._unique_id = await self._hass.async_add_executor_job(
+                self._device.get_esn
+            )
+
+        is_on = await self._hass.async_add_executor_job(self._device.get_power_state)
 
         if is_on:
             self._state = STATE_ON
 
-            volume = self._device.get_current_volume()
+            volume = await self._hass.async_add_executor_job(
+                self._device.get_current_volume
+            )
             if volume is not None:
                 self._volume_level = float(volume) / self._max_volume
 
-            input_ = self._device.get_current_input()
+            input_ = await self._hass.async_add_executor_job(
+                self._device.get_current_input
+            )
             if input_ is not None:
                 self._current_input = input_.meta_name
 
-            inputs = self._device.get_inputs()
+            inputs = await self._hass.async_add_executor_job(self._device.get_inputs)
             if inputs is not None:
                 self._available_inputs = [input_.name for input_ in inputs]
 
@@ -127,100 +152,132 @@ class VizioDevice(MediaPlayerDevice):
             self._available_inputs = None
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
+
         return self._state
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
+
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon of the device."""
+
         return self._icon
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float:
         """Return the volume level of the device."""
+
         return self._volume_level
 
     @property
-    def source(self):
+    def source(self) -> str:
         """Return current input of the device."""
+
         return self._current_input
 
     @property
-    def source_list(self):
+    def source_list(self) -> List:
         """Return list of available inputs of the device."""
+
         return self._available_inputs
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag device features that are supported."""
+
         return self._supported_commands
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id of the device."""
+
         return self._unique_id
 
-    def turn_on(self):
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device registry information."""
+
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "name": self.name,
+            "manufacturer": "Vizio",
+        }
+
+    async def async_turn_on(self) -> None:
         """Turn the device on."""
-        self._device.pow_on()
 
-    def turn_off(self):
+        await self._hass.async_add_executor_job(self._device.pow_on)
+
+    async def async_turn_off(self) -> None:
         """Turn the device off."""
-        self._device.pow_off()
 
-    def mute_volume(self, mute):
+        await self._hass.async_add_executor_job(self._device.pow_off)
+
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
+
         if mute:
-            self._device.mute_on()
+            await self._hass.async_add_executor_job(self._device.mute_on)
         else:
-            self._device.mute_off()
+            await self._hass.async_add_executor_job(self._device.mute_off)
 
-    def media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous channel command."""
-        self._device.ch_down()
 
-    def media_next_track(self):
+        await self._hass.async_add_executor_job(self._device.ch_down)
+
+    async def async_media_next_track(self) -> None:
         """Send next channel command."""
-        self._device.ch_up()
 
-    def select_source(self, source):
+        await self._hass.async_add_executor_job(self._device.ch_up)
+
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        self._device.input_switch(source)
 
-    def volume_up(self):
+        await self._hass.async_add_executor_job(self._device.input_switch(source))
+
+    async def async_volume_up(self) -> None:
         """Increasing volume of the device."""
-        self._device.vol_up(num=self._volume_step)
+
+        await self._hass.async_add_executor_job(self._device.vol_up, self._volume_step)
+
         if self._volume_level is not None:
             self._volume_level = min(
                 1.0, self._volume_level + self._volume_step / self._max_volume
             )
 
-    def volume_down(self):
+    async def async_volume_down(self) -> None:
         """Decreasing volume of the device."""
-        self._device.vol_down(num=self._volume_step)
+
+        await self._hass.async_add_executor_job(
+            self._device.vol_down, self._volume_step
+        )
+
         if self._volume_level is not None:
             self._volume_level = max(
                 0.0, self._volume_level - self._volume_step / self._max_volume
             )
 
-    def validate_setup(self):
+    def validate_setup(self) -> bool:
         """Validate if host is available and auth token is correct."""
+
         return self._device.can_connect()
 
-    def set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
+
         if self._volume_level is not None:
             if volume > self._volume_level:
                 num = int(self._max_volume * (volume - self._volume_level))
+                await self._hass.async_add_executor_job(self._device.vol_up, num)
                 self._volume_level = volume
-                self._device.vol_up(num=num)
             elif volume < self._volume_level:
                 num = int(self._max_volume * (self._volume_level - volume))
+                await self._hass.async_add_executor_job(self._device.vol_down, num)
                 self._volume_level = volume
-                self._device.vol_down(num=num)
