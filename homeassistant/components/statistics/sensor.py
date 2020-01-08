@@ -20,8 +20,8 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    async_track_state_change,
     async_track_point_in_utc_time,
+    async_track_state_change,
 )
 from homeassistant.util import dt as dt_util
 
@@ -278,7 +278,6 @@ class StatisticsSensor(Entity):
                 self.min_age = self.max_age = dt_util.utcnow()
                 self.change = self.average_change = STATE_UNKNOWN
                 self.change_rate = STATE_UNKNOWN
-        self.async_schedule_update_ha_state()
 
         # If max_age is set, ensure to update again after the defined interval.
         next_to_purge_timestamp = self._next_to_purge_timestamp()
@@ -293,7 +292,7 @@ class StatisticsSensor(Entity):
             async def _scheduled_update(now):
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s: executing scheduled update", self.entity_id)
-                await self.async_update()
+                self.async_schedule_update_ha_state(True)
 
             self._update_listener = async_track_point_in_utc_time(
                 self.hass, _scheduled_update, next_to_purge_timestamp
