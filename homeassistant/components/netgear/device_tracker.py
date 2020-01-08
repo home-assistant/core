@@ -123,7 +123,6 @@ class NetgearDeviceScanner(DeviceScanner):
                     or dev.name in self.excluded_devices
                 )
             )
-
             # if link_rate is None, the device is still remembered by the router however,
             # it is no longer connected. Therefore, we will not report it as seen.
             if tracked and dev.link_rate is not None:
