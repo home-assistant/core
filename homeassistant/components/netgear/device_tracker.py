@@ -139,6 +139,7 @@ class NetgearDeviceScanner(DeviceScanner):
 >>>>>>> change style again
         return devices
 
+    
     def get_device_name(self, device):
         """Return the name of the given device or the MAC if we don't know."""
         parts = device.split("_")
