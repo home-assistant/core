@@ -22,7 +22,7 @@ SIREN_ICON = "mdi:alarm-bell"
 SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the switches for the Ring devices."""
     cameras = hass.data[DATA_RING_STICKUP_CAMS]
     switches = []
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if device.has_capability("siren"):
             switches.append(SirenSwitch(device))
 
-    add_entities(switches, True)
+    async_add_entities(switches, True)
 
 
 class BaseRingSwitch(SwitchDevice):

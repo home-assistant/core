@@ -1,4 +1,5 @@
 """Support for Ring Doorbell/Chimes."""
+import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -9,7 +10,7 @@ from ring_doorbell import Ring
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
@@ -24,6 +25,7 @@ NOTIFICATION_TITLE = "Ring Setup"
 DATA_RING_DOORBELLS = "ring_doorbells"
 DATA_RING_STICKUP_CAMS = "ring_stickup_cams"
 DATA_RING_CHIMES = "ring_chimes"
+DATA_TRACK_INTERVAL = "ring_track_interval"
 
 DOMAIN = "ring"
 DEFAULT_CACHEDB = ".ring_cache.pickle"
@@ -32,13 +34,14 @@ SIGNAL_UPDATE_RING = "ring_update"
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
+PLATFORMS = ("binary_sensor", "light", "sensor", "switch")
+
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(DOMAIN): vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
             }
         )
     },
@@ -91,7 +94,14 @@ async def async_setup_entry(hass, entry):
         _LOGGER.error("Unable to connect to Ring service")
         return False
 
-    return await hass.async_add_executor_job(finish_setup_entry, hass, ring)
+    await hass.async_add_executor_job(finish_setup_entry, hass, ring)
+
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
+
+    return True
 
 
 def finish_setup_entry(hass, ring):
@@ -122,9 +132,34 @@ def finish_setup_entry(hass, ring):
     hass.services.register(DOMAIN, "update", service_hub_refresh)
 
     # register scan interval for ring
-    track_time_interval(hass, timer_hub_refresh, SCAN_INTERVAL)
+    hass.data[DATA_TRACK_INTERVAL] = track_time_interval(
+        hass, timer_hub_refresh, SCAN_INTERVAL
+    )
 
-    return True
+
+async def async_unload_entry(hass, entry):
+    """Unload Ring entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if not unload_ok:
+        return False
+
+    await hass.async_add_executor_job(hass.data[DATA_TRACK_INTERVAL])
+
+    hass.services.async_remove(DOMAIN, "update")
+
+    hass.data.pop(DATA_RING_DOORBELLS)
+    hass.data.pop(DATA_RING_STICKUP_CAMS)
+    hass.data.pop(DATA_RING_CHIMES)
+    hass.data.pop(DATA_TRACK_INTERVAL)
+
+    return unload_ok
 
 
 async def async_remove_entry(hass, entry):

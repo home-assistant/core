@@ -2,6 +2,7 @@
 from asyncio import run_coroutine_threadsafe
 import os
 import unittest
+from unittest.mock import patch
 
 import requests_mock
 
@@ -9,7 +10,12 @@ from homeassistant.components import ring as base_ring
 import homeassistant.components.ring.sensor as ring
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from tests.common import get_test_config_dir, get_test_home_assistant, load_fixture
+from tests.common import (
+    get_test_config_dir,
+    get_test_home_assistant,
+    load_fixture,
+    mock_storage,
+)
 from tests.components.ring.test_init import ATTRIBUTION, VALID_CONFIG
 
 
@@ -77,11 +83,16 @@ class TestRingSensorSetup(unittest.TestCase):
             "https://api.ring.com/clients_api/chimes/999999/health",
             text=load_fixture("ring_chime_health_attrs.json"),
         )
-        base_ring.setup(self.hass, VALID_CONFIG)
-        run_coroutine_threadsafe(
-            self.hass.async_block_till_done(), self.hass.loop
-        ).result()
-        ring.setup_platform(self.hass, self.config, self.add_entities, None)
+
+        with mock_storage(), patch("homeassistant.components.ring.PLATFORMS", []):
+            base_ring.setup(self.hass, VALID_CONFIG)
+            run_coroutine_threadsafe(
+                self.hass.async_block_till_done(), self.hass.loop
+            ).result()
+            run_coroutine_threadsafe(
+                ring.async_setup_entry(self.hass, None, self.add_entities),
+                self.hass.loop,
+            ).result()
 
         for device in self.DEVICES:
             device.update()

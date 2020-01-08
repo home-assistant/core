@@ -47,8 +47,7 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.ring.config_flow.validate_input",
-        side_effect=InvalidAuth,
+        "homeassistant.components.ring.config_flow.Ring", side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

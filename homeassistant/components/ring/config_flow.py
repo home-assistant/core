@@ -94,8 +94,6 @@ class RingConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
 
-        await self.async_set_unique_id(user_input["username"])
-        self._abort_if_unique_id_configured()
         return await self.async_step_user(user_input)
 
 

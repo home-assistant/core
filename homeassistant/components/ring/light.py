@@ -23,7 +23,7 @@ ON_STATE = "on"
 OFF_STATE = "off"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the lights for the Ring devices."""
     cameras = hass.data[DATA_RING_STICKUP_CAMS]
     lights = []
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if device.has_capability("light"):
             lights.append(RingLight(device))
 
-    add_entities(lights, True)
+    async_add_entities(lights, True)
 
 
 class RingLight(Light):
