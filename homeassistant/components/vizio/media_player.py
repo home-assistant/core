@@ -28,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_VOLUME_STEP, DEFAULT_NAME, DEVICE_ID, ICON
+from .const import CONF_VOLUME_STEP, DEFAULT_NAME, DEVICE_ID, DOMAIN, ICON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +88,7 @@ class VizioDevice(MediaPlayerDevice):
         name: str,
         volume_step: int,
         device_type: str,
+        model: str = None,
     ) -> None:
         """Initialize Vizio device."""
 
@@ -103,6 +104,7 @@ class VizioDevice(MediaPlayerDevice):
         self._device = Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
         self._max_volume = float(self._device.get_max_volume())
         self._unique_id = None
+        self._model = model
         self._icon = ICON[device_type]
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
@@ -192,6 +194,17 @@ class VizioDevice(MediaPlayerDevice):
         """Return the unique id of the device."""
 
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return device registry information."""
+
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "name": self.name,
+            "manufacturer": "vizio",
+            "model": self._model,
+        }
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""

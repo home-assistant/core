@@ -76,17 +76,18 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_HOST] == user_input[CONF_HOST]:
-                    if user_input.get(CONF_CONTEXT) == "config":
-                        return self.async_abort(reason="host_exists")
-                    else:
+                    if not user_input.get(CONF_CONTEXT):
                         errors[CONF_HOST] = "host_exists"
                         break
+
+                    return self.async_abort(reason="host_exists")
+
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
-                    if user_input.get(CONF_CONTEXT) == "config":
-                        return self.async_abort(reason="name_exists")
-                    else:
+                    if not user_input.get(CONF_CONTEXT):
                         errors[CONF_NAME] = "name_exists"
                         break
+
+                    return self.async_abort(reason="name_exists")
 
             if not errors:
                 try:
@@ -107,7 +108,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 if user_input.get(CONF_CONTEXT) == "config":
                     return self.async_create_entry(
-                        title=f"configuration.yaml - {user_input[CONF_NAME]}",
+                        title=f"{user_input[CONF_NAME]} (configuration.yaml)",
                         data=user_input,
                     )
 
