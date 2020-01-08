@@ -31,7 +31,7 @@ DATA_LOGGING = "logging"
 
 DEBUGGER_INTEGRATIONS = {"ptvsd"}
 CORE_INTEGRATIONS = ("homeassistant", "persistent_notification")
-LOGGING_INTEGRATIONS = {"logger", "system_log"}
+LOGGING_INTEGRATIONS = {"logger", "system_log", "sentry"}
 STAGE_1_INTEGRATIONS = {
     # To record data
     "recorder",
@@ -66,7 +66,7 @@ async def async_from_config_dict(
     hass.config.skip_pip = skip_pip
     if skip_pip:
         _LOGGER.warning(
-            "Skipping pip installation of required modules. " "This may cause issues"
+            "Skipping pip installation of required modules. This may cause issues"
         )
 
     core_config = config.get(core.DOMAIN, {})
@@ -168,7 +168,7 @@ def async_enable_logging(
 
     This method must be run in the event loop.
     """
-    fmt = "%(asctime)s %(levelname)s (%(threadName)s) " "[%(name)s] %(message)s"
+    fmt = "%(asctime)s %(levelname)s (%(threadName)s) [%(name)s] %(message)s"
     datefmt = "%Y-%m-%d %H:%M:%S"
 
     if not log_no_color:

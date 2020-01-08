@@ -55,10 +55,8 @@ def ensure_config_path(config_dir: str) -> None:
     if not os.path.isdir(config_dir):
         if config_dir != config_util.get_default_config_dir():
             print(
-                (
-                    "Fatal Error: Specified configuration directory does "
-                    "not exist {} "
-                ).format(config_dir)
+                f"Fatal Error: Specified configuration directory {config_dir} "
+                "does not exist"
             )
             sys.exit(1)
 
@@ -66,10 +64,8 @@ def ensure_config_path(config_dir: str) -> None:
             os.mkdir(config_dir)
         except OSError:
             print(
-                (
-                    "Fatal Error: Unable to create default configuration "
-                    "directory {} "
-                ).format(config_dir)
+                "Fatal Error: Unable to create default configuration "
+                f"directory {config_dir}"
             )
             sys.exit(1)
 
@@ -78,11 +74,7 @@ def ensure_config_path(config_dir: str) -> None:
         try:
             os.mkdir(lib_dir)
         except OSError:
-            print(
-                ("Fatal Error: Unable to create library " "directory {} ").format(
-                    lib_dir
-                )
-            )
+            print(f"Fatal Error: Unable to create library directory {lib_dir}")
             sys.exit(1)
 
 
@@ -147,7 +139,7 @@ def get_arguments() -> argparse.Namespace:
         "--log-file",
         type=str,
         default=None,
-        help="Log file to write to.  If not set, CONFIG/home-assistant.log " "is used",
+        help="Log file to write to.  If not set, CONFIG/home-assistant.log is used",
     )
     parser.add_argument(
         "--log-no-color", action="store_true", help="Disable color logs"
@@ -216,7 +208,7 @@ def check_pid(pid_file: str) -> None:
     except OSError:
         # PID does not exist
         return
-    print("Fatal Error: HomeAssistant is already running.")
+    print("Fatal Error: Home Assistant is already running.")
     sys.exit(1)
 
 
@@ -260,7 +252,7 @@ def cmdline() -> List[str]:
 
 
 async def setup_and_run_hass(config_dir: str, args: argparse.Namespace) -> int:
-    """Set up HASS and run."""
+    """Set up Home Assistant and run."""
     from homeassistant import bootstrap, core
 
     hass = core.HomeAssistant()

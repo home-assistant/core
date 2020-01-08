@@ -121,6 +121,10 @@ class GoogleConfig(AbstractConfig):
 
         return is_default_exposed or explicit_expose
 
+    def get_agent_user_id(self, context):
+        """Get agent user ID making request."""
+        return context.user_id
+
     def should_2fa(self, state):
         """If an entity should have 2FA checked."""
         return True

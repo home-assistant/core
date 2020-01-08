@@ -422,7 +422,7 @@ class TelevisionMediaPlayer(HomeAccessory):
                     self.char_input_source.set_value(index)
                 else:
                     _LOGGER.warning(
-                        "%s: Sources out of sync. " "Restart HomeAssistant",
+                        "%s: Sources out of sync. Restart Home Assistant",
                         self.entity_id,
                     )
                     self.char_input_source.set_value(0)

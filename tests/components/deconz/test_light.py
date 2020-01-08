@@ -7,7 +7,7 @@ from homeassistant.components import deconz
 import homeassistant.components.light as light
 from homeassistant.setup import async_setup_component
 
-from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 GROUPS = {
     "1": {
@@ -75,10 +75,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_lights_or_groups(hass):
     """Test that no lights or groups entities are created."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
@@ -88,16 +85,14 @@ async def test_lights_and_groups(hass):
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["groups"] = deepcopy(GROUPS)
     data["lights"] = deepcopy(LIGHTS)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass, get_state_response=data)
     assert "light.rgb_light" in gateway.deconz_ids
     assert "light.tunable_white_light" in gateway.deconz_ids
     assert "light.light_group" in gateway.deconz_ids
     assert "light.empty_group" not in gateway.deconz_ids
     assert "light.on_off_switch" not in gateway.deconz_ids
-    # 4 entities + 2 groups (one for switches and one for lights)
-    assert len(hass.states.async_all()) == 6
+    # 4 entities
+    assert len(hass.states.async_all()) == 4
 
     rgb_light = hass.states.get("light.rgb_light")
     assert rgb_light.state == "on"
@@ -205,7 +200,7 @@ async def test_lights_and_groups(hass):
 
     await gateway.async_reset()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_disable_light_groups(hass):
@@ -215,7 +210,6 @@ async def test_disable_light_groups(hass):
     data["lights"] = deepcopy(LIGHTS)
     gateway = await setup_deconz_integration(
         hass,
-        ENTRY_CONFIG,
         options={deconz.gateway.CONF_ALLOW_DECONZ_GROUPS: False},
         get_state_response=data,
     )
@@ -224,8 +218,8 @@ async def test_disable_light_groups(hass):
     assert "light.light_group" not in gateway.deconz_ids
     assert "light.empty_group" not in gateway.deconz_ids
     assert "light.on_off_switch" not in gateway.deconz_ids
-    # 4 entities + 2 groups (one for switches and one for lights)
-    assert len(hass.states.async_all()) == 5
+    # 3 entities
+    assert len(hass.states.async_all()) == 3
 
     rgb_light = hass.states.get("light.rgb_light")
     assert rgb_light is not None

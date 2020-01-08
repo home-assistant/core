@@ -209,7 +209,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend(
                     {
                         CONF_TYPE: vol.NotIn(
                             ["insecure_example"],
-                            "The insecure_example mfa module" " is for testing only.",
+                            "The insecure_example mfa module is for testing only.",
                         )
                     }
                 )
@@ -572,9 +572,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: Dict) -> Non
 
 def _log_pkg_error(package: str, component: str, config: Dict, message: str) -> None:
     """Log an error while merging packages."""
-    message = "Package {} setup failed. Integration {} {}".format(
-        package, component, message
-    )
+    message = f"Package {package} setup failed. Integration {component} {message}"
 
     pack_config = config[CONF_CORE][CONF_PACKAGES].get(package, config)
     message += " (See {}:{}). ".format(

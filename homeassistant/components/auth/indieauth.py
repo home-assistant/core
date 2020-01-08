@@ -30,6 +30,14 @@ async def verify_redirect_uri(hass, client_id, redirect_uri):
     if is_valid:
         return True
 
+    # Whitelist the iOS and Android callbacks so that people can link apps
+    # without being connected to the internet.
+    if redirect_uri == "homeassistant://auth-callback" and client_id in (
+        "https://home-assistant.io/android",
+        "https://home-assistant.io/iOS",
+    ):
+        return True
+
     # IndieAuth 4.2.2 allows for redirect_uri to be on different domain
     # but needs to be specified in link tag when fetching `client_id`.
     redirect_uris = await fetch_redirect_uris(hass, client_id)
@@ -91,7 +99,7 @@ async def fetch_redirect_uris(hass, url):
         pass
     except aiohttp.client_exceptions.ClientConnectionError:
         _LOGGER.error(
-            ("Low level connection error while looking up " "redirect_uri %s"), url
+            "Low level connection error while looking up redirect_uri %s", url
         )
         pass
     except aiohttp.client_exceptions.ClientError:

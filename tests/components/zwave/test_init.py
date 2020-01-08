@@ -130,6 +130,7 @@ async def test_auto_heal_midnight(hass, mock_openzwave):
     time = utc.localize(datetime(2017, 5, 6, 0, 0, 0))
     async_fire_time_changed(hass, time)
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
     assert network.heal.called
     assert len(network.heal.mock_calls) == 1
 
@@ -458,18 +459,18 @@ async def test_value_entities(hass, mock_openzwave):
 
     entry = ent_reg.async_get("zwave.mock_node")
     assert entry is not None
-    assert entry.unique_id == "node-{}".format(node.node_id)
+    assert entry.unique_id == f"node-{node.node_id}"
     node_dev_id = entry.device_id
 
     entry = ent_reg.async_get("binary_sensor.mock_node_mock_value")
     assert entry is not None
-    assert entry.unique_id == "{}-{}".format(node.node_id, value.object_id)
+    assert entry.unique_id == f"{node.node_id}-{value.object_id}"
     assert entry.name is None
     assert entry.device_id == node_dev_id
 
     entry = ent_reg.async_get("binary_sensor.mock_node_mock_value_b")
     assert entry is not None
-    assert entry.unique_id == "{}-{}".format(node.node_id, value2.object_id)
+    assert entry.unique_id == f"{node.node_id}-{value2.object_id}"
     assert entry.name is None
     assert entry.device_id != node_dev_id
     device_id_b = entry.device_id
@@ -481,7 +482,7 @@ async def test_value_entities(hass, mock_openzwave):
 
     device = dev_reg.async_get(device_id_b)
     assert device is not None
-    assert device.name == "{} ({})".format(node.name, value2.instance)
+    assert device.name == f"{node.name} ({value2.instance})"
 
     # test renaming without updating
     await hass.services.async_call(
@@ -509,7 +510,7 @@ async def test_value_entities(hass, mock_openzwave):
 
     device = dev_reg.async_get(device_id_b)
     assert device is not None
-    assert device.name == "{} ({})".format(node.name, value2.instance)
+    assert device.name == f"{node.name} ({value2.instance})"
 
     # test renaming
     await hass.services.async_call(
@@ -527,11 +528,11 @@ async def test_value_entities(hass, mock_openzwave):
 
     entry = ent_reg.async_get("zwave.new_node")
     assert entry is not None
-    assert entry.unique_id == "node-{}".format(node.node_id)
+    assert entry.unique_id == f"node-{node.node_id}"
 
     entry = ent_reg.async_get("binary_sensor.new_node_mock_value")
     assert entry is not None
-    assert entry.unique_id == "{}-{}".format(node.node_id, value.object_id)
+    assert entry.unique_id == f"{node.node_id}-{value.object_id}"
 
     device = dev_reg.async_get(node_dev_id)
     assert device is not None
@@ -540,7 +541,7 @@ async def test_value_entities(hass, mock_openzwave):
 
     device = dev_reg.async_get(device_id_b)
     assert device is not None
-    assert device.name == "{} ({})".format(node.name, value2.instance)
+    assert device.name == f"{node.name} ({value2.instance})"
 
     await hass.services.async_call(
         "zwave",
@@ -556,7 +557,7 @@ async def test_value_entities(hass, mock_openzwave):
 
     entry = ent_reg.async_get("binary_sensor.new_node_new_label")
     assert entry is not None
-    assert entry.unique_id == "{}-{}".format(node.node_id, value.object_id)
+    assert entry.unique_id == f"{node.node_id}-{value.object_id}"
 
 
 async def test_value_discovery_existing_entity(hass, mock_openzwave):

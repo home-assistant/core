@@ -67,6 +67,69 @@ async def auth_manager_from_config(
     return manager
 
 
+class AuthManagerFlowManager(data_entry_flow.FlowManager):
+    """Manage authentication flows."""
+
+    def __init__(self, hass: HomeAssistant, auth_manager: "AuthManager"):
+        """Init auth manager flows."""
+        super().__init__(hass)
+        self.auth_manager = auth_manager
+
+    async def async_create_flow(
+        self,
+        handler_key: Any,
+        *,
+        context: Optional[Dict[str, Any]] = None,
+        data: Optional[Dict[str, Any]] = None,
+    ) -> data_entry_flow.FlowHandler:
+        """Create a login flow."""
+        auth_provider = self.auth_manager.get_auth_provider(*handler_key)
+        if not auth_provider:
+            raise KeyError(f"Unknown auth provider {handler_key}")
+        return await auth_provider.async_login_flow(context)
+
+    async def async_finish_flow(
+        self, flow: data_entry_flow.FlowHandler, result: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Return a user as result of login flow."""
+        flow = cast(LoginFlow, flow)
+
+        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return result
+
+        # we got final result
+        if isinstance(result["data"], models.User):
+            result["result"] = result["data"]
+            return result
+
+        auth_provider = self.auth_manager.get_auth_provider(*result["handler"])
+        if not auth_provider:
+            raise KeyError(f"Unknown auth provider {result['handler']}")
+
+        credentials = await auth_provider.async_get_or_create_credentials(
+            result["data"]
+        )
+
+        if flow.context.get("credential_only"):
+            result["result"] = credentials
+            return result
+
+        # multi-factor module cannot enabled for new credential
+        # which has not linked to a user yet
+        if auth_provider.support_mfa and not credentials.is_new:
+            user = await self.auth_manager.async_get_user_by_credentials(credentials)
+            if user is not None:
+                modules = await self.auth_manager.async_get_enabled_mfa(user)
+
+                if modules:
+                    flow.user = user
+                    flow.available_mfa_modules = modules
+                    return await flow.async_step_select_mfa_module()
+
+        result["result"] = await self.auth_manager.async_get_or_create_user(credentials)
+        return result
+
+
 class AuthManager:
     """Manage the authentication for Home Assistant."""
 
@@ -82,9 +145,7 @@ class AuthManager:
         self._store = store
         self._providers = providers
         self._mfa_modules = mfa_modules
-        self.login_flow = data_entry_flow.FlowManager(
-            hass, self._async_create_login_flow, self._async_finish_login_flow
-        )
+        self.login_flow = AuthManagerFlowManager(hass, self)
 
     @property
     def auth_providers(self) -> List[AuthProvider]:
@@ -416,50 +477,6 @@ class AuthManager:
             return None
 
         return refresh_token
-
-    async def _async_create_login_flow(
-        self, handler: _ProviderKey, *, context: Optional[Dict], data: Optional[Any]
-    ) -> data_entry_flow.FlowHandler:
-        """Create a login flow."""
-        auth_provider = self._providers[handler]
-
-        return await auth_provider.async_login_flow(context)
-
-    async def _async_finish_login_flow(
-        self, flow: LoginFlow, result: Dict[str, Any]
-    ) -> Dict[str, Any]:
-        """Return a user as result of login flow."""
-        if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            return result
-
-        # we got final result
-        if isinstance(result["data"], models.User):
-            result["result"] = result["data"]
-            return result
-
-        auth_provider = self._providers[result["handler"]]
-        credentials = await auth_provider.async_get_or_create_credentials(
-            result["data"]
-        )
-
-        if flow.context.get("credential_only"):
-            result["result"] = credentials
-            return result
-
-        # multi-factor module cannot enabled for new credential
-        # which has not linked to a user yet
-        if auth_provider.support_mfa and not credentials.is_new:
-            user = await self.async_get_user_by_credentials(credentials)
-            if user is not None:
-                modules = await self.async_get_enabled_mfa(user)
-
-                if modules:
-                    flow.user = user
-                    flow.available_mfa_modules = modules
-                    return await flow.async_step_select_mfa_module()
-
-        result["result"] = await self.async_get_or_create_user(credentials)
-        return result
 
     @callback
     def _async_get_auth_provider(

@@ -160,7 +160,7 @@ class YrData:
     def __init__(self, hass, coordinates, forecast, devices):
         """Initialize the data object."""
         self._url = (
-            "https://aa015h6buqvih86i1.api.met.no/" "weatherapi/locationforecast/1.9/"
+            "https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/"
         )
         self._urlparams = coordinates
         self._forecast = forecast

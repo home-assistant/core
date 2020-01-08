@@ -67,9 +67,7 @@ def nwk():
 async def test_in_channel_config(cluster_id, bind_count, attrs, zha_gateway, hass):
     """Test ZHA core channel configuration for input clusters."""
     zigpy_dev = make_device(
-        [cluster_id],
-        [],
-        0x1234,
+        {1: {"in_clusters": [cluster_id], "out_clusters": [], "device_type": 0x1234}},
         "00:11:22:33:44:55:66:77",
         "test manufacturer",
         "test model",
@@ -125,9 +123,7 @@ async def test_in_channel_config(cluster_id, bind_count, attrs, zha_gateway, has
 async def test_out_channel_config(cluster_id, bind_count, zha_gateway, hass):
     """Test ZHA core channel configuration for output clusters."""
     zigpy_dev = make_device(
-        [],
-        [cluster_id],
-        0x1234,
+        {1: {"out_clusters": [cluster_id], "in_clusters": [], "device_type": 0x1234}},
         "00:11:22:33:44:55:66:77",
         "test manufacturer",
         "test model",

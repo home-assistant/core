@@ -129,9 +129,7 @@ async def test_connection_error_on_init(hass, caplog, valid_settings, connection
             and record.name == "homeassistant.components.yessssms.notify"
         ):
             assert (
-                "Connection Error, could not verify login data for '{}'".format(
-                    "educom"
-                )
+                "Connection Error, could not verify login data for 'educom'"
                 in record.message
             )
     for record in caplog.records:

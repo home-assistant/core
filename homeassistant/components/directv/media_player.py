@@ -129,7 +129,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             else:
                 _LOGGER.debug(
-                    "Adding discovered device %s with" " client address %s",
+                    "Adding discovered device %s with client address %s",
                     str.title(loc["locationName"]),
                     loc["clientAddr"],
                 )
@@ -214,7 +214,7 @@ class DirecTvDevice(MediaPlayerDevice):
 
         except requests.RequestException as ex:
             _LOGGER.error(
-                "%s: Request error trying to update current status: " "%s",
+                "%s: Request error trying to update current status: %s",
                 self.entity_id,
                 ex,
             )

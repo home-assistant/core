@@ -148,7 +148,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # We have a raw GPIO ow sensor on a Pi
     elif base_dir == DEFAULT_MOUNT_DIR:
         for device_family in DEVICE_SENSORS:
-            for device_folder in glob(os.path.join(base_dir, device_family + "[.-]*")):
+            for device_folder in glob(os.path.join(base_dir, f"{device_family}[.-]*")):
                 sensor_id = os.path.split(device_folder)[1]
                 device_file = os.path.join(device_folder, "w1_slave")
                 devs.append(

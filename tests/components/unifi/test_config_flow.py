@@ -231,7 +231,7 @@ async def test_option_flow(hass):
     entry = MockConfigEntry(domain=config_flow.DOMAIN, data={}, options=None)
     hass.config_entries._entries.append(entry)
 
-    flow = await hass.config_entries.options._async_create_flow(
+    flow = await hass.config_entries.options.async_create_flow(
         entry.entry_id, context={"source": "test"}, data=None
     )
 

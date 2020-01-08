@@ -117,11 +117,11 @@ class TestFilterSensor(unittest.TestCase):
             }
 
         with patch(
-            "homeassistant.components.history." "state_changes_during_period",
+            "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ):
             with patch(
-                "homeassistant.components.history." "get_last_state_changes",
+                "homeassistant.components.history.get_last_state_changes",
                 return_value=fake_states,
             ):
                 with assert_setup_component(1, "sensor"):
@@ -165,11 +165,11 @@ class TestFilterSensor(unittest.TestCase):
             ]
         }
         with patch(
-            "homeassistant.components.history." "state_changes_during_period",
+            "homeassistant.components.history.state_changes_during_period",
             return_value=fake_states,
         ):
             with patch(
-                "homeassistant.components.history." "get_last_state_changes",
+                "homeassistant.components.history.get_last_state_changes",
                 return_value=fake_states,
             ):
                 with assert_setup_component(1, "sensor"):
@@ -207,6 +207,13 @@ class TestFilterSensor(unittest.TestCase):
         for state in [out] + self.values:
             filtered = filt.filter_state(state)
         assert 21 == filtered.state
+
+    def test_precision_zero(self):
+        """Test if precision of zero returns an integer."""
+        filt = LowPassFilter(window_size=10, precision=0, entity=None, time_constant=10)
+        for state in self.values:
+            filtered = filt.filter_state(state)
+        assert isinstance(filtered.state, int)
 
     def test_lowpass(self):
         """Test if lowpass filter works."""

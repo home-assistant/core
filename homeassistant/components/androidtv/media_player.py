@@ -12,6 +12,7 @@ from adb_shell.exceptions import (
 )
 from androidtv import ha_state_detection_rules_validator, setup
 from androidtv.constants import APPS, KEYS
+from androidtv.exceptions import LockNotAcquiredException
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -72,6 +73,9 @@ SUPPORT_FIRETV = (
     | SUPPORT_STOP
 )
 
+ATTR_DEVICE_PATH = "device_path"
+ATTR_LOCAL_PATH = "local_path"
+
 CONF_ADBKEY = "adbkey"
 CONF_ADB_SERVER_IP = "adb_server_ip"
 CONF_ADB_SERVER_PORT = "adb_server_port"
@@ -92,9 +96,27 @@ DEVICE_FIRETV = "firetv"
 DEVICE_CLASSES = [DEFAULT_DEVICE_CLASS, DEVICE_ANDROIDTV, DEVICE_FIRETV]
 
 SERVICE_ADB_COMMAND = "adb_command"
+SERVICE_DOWNLOAD = "download"
+SERVICE_UPLOAD = "upload"
 
 SERVICE_ADB_COMMAND_SCHEMA = vol.Schema(
     {vol.Required(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_COMMAND): cv.string}
+)
+
+SERVICE_DOWNLOAD_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_DEVICE_PATH): cv.string,
+        vol.Required(ATTR_LOCAL_PATH): cv.string,
+    }
+)
+
+SERVICE_UPLOAD_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_DEVICE_PATH): cv.string,
+        vol.Required(ATTR_LOCAL_PATH): cv.string,
+    }
 )
 
 
@@ -133,7 +155,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Android TV / Fire TV platform."""
     hass.data.setdefault(ANDROIDTV_DOMAIN, {})
 
-    host = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
+    address = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
+
+    if address in hass.data[ANDROIDTV_DOMAIN]:
+        _LOGGER.warning("Platform already setup on %s, skipping", address)
+        return
 
     if CONF_ADB_SERVER_IP not in config:
         # Use "adb_shell" (Python ADB implementation)
@@ -192,44 +218,38 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             device_name = "Android TV / Fire TV device"
 
-        _LOGGER.warning("Could not connect to %s at %s %s", device_name, host, adb_log)
+        _LOGGER.warning(
+            "Could not connect to %s at %s %s", device_name, address, adb_log
+        )
         raise PlatformNotReady
 
-    if host in hass.data[ANDROIDTV_DOMAIN]:
-        _LOGGER.warning("Platform already setup on %s, skipping", host)
-    else:
-        if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
-            device = AndroidTVDevice(
-                aftv,
-                config[CONF_NAME],
-                config[CONF_APPS],
-                config[CONF_GET_SOURCES],
-                config.get(CONF_TURN_ON_COMMAND),
-                config.get(CONF_TURN_OFF_COMMAND),
-            )
-            device_name = config[CONF_NAME] if CONF_NAME in config else "Android TV"
-        else:
-            device = FireTVDevice(
-                aftv,
-                config[CONF_NAME],
-                config[CONF_APPS],
-                config[CONF_GET_SOURCES],
-                config.get(CONF_TURN_ON_COMMAND),
-                config.get(CONF_TURN_OFF_COMMAND),
-            )
-            device_name = config[CONF_NAME] if CONF_NAME in config else "Fire TV"
+    device_args = [
+        aftv,
+        config[CONF_NAME],
+        config[CONF_APPS],
+        config[CONF_GET_SOURCES],
+        config.get(CONF_TURN_ON_COMMAND),
+        config.get(CONF_TURN_OFF_COMMAND),
+    ]
 
-        add_entities([device])
-        _LOGGER.debug("Setup %s at %s %s", device_name, host, adb_log)
-        hass.data[ANDROIDTV_DOMAIN][host] = device
+    if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
+        device = AndroidTVDevice(*device_args)
+        device_name = config.get(CONF_NAME, "Android TV")
+    else:
+        device = FireTVDevice(*device_args)
+        device_name = config.get(CONF_NAME, "Fire TV")
+
+    add_entities([device])
+    _LOGGER.debug("Setup %s at %s %s", device_name, address, adb_log)
+    hass.data[ANDROIDTV_DOMAIN][address] = device
 
     if hass.services.has_service(ANDROIDTV_DOMAIN, SERVICE_ADB_COMMAND):
         return
 
     def service_adb_command(service):
         """Dispatch service calls to target entities."""
-        cmd = service.data.get(ATTR_COMMAND)
-        entity_id = service.data.get(ATTR_ENTITY_ID)
+        cmd = service.data[ATTR_COMMAND]
+        entity_id = service.data[ATTR_ENTITY_ID]
         target_devices = [
             dev
             for dev in hass.data[ANDROIDTV_DOMAIN].values()
@@ -255,6 +275,52 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         schema=SERVICE_ADB_COMMAND_SCHEMA,
     )
 
+    def service_download(service):
+        """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
+        local_path = service.data[ATTR_LOCAL_PATH]
+        if not hass.config.is_allowed_path(local_path):
+            _LOGGER.warning("'%s' is not secure to load data from!", local_path)
+            return
+
+        device_path = service.data[ATTR_DEVICE_PATH]
+        entity_id = service.data[ATTR_ENTITY_ID]
+        target_device = [
+            dev
+            for dev in hass.data[ANDROIDTV_DOMAIN].values()
+            if dev.entity_id in entity_id
+        ][0]
+
+        target_device.adb_pull(local_path, device_path)
+
+    hass.services.register(
+        ANDROIDTV_DOMAIN,
+        SERVICE_DOWNLOAD,
+        service_download,
+        schema=SERVICE_DOWNLOAD_SCHEMA,
+    )
+
+    def service_upload(service):
+        """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
+        local_path = service.data[ATTR_LOCAL_PATH]
+        if not hass.config.is_allowed_path(local_path):
+            _LOGGER.warning("'%s' is not secure to load data from!", local_path)
+            return
+
+        device_path = service.data[ATTR_DEVICE_PATH]
+        entity_id = service.data[ATTR_ENTITY_ID]
+        target_devices = [
+            dev
+            for dev in hass.data[ANDROIDTV_DOMAIN].values()
+            if dev.entity_id in entity_id
+        ]
+
+        for target_device in target_devices:
+            target_device.adb_push(local_path, device_path)
+
+    hass.services.register(
+        ANDROIDTV_DOMAIN, SERVICE_UPLOAD, service_upload, schema=SERVICE_UPLOAD_SCHEMA,
+    )
+
 
 def adb_decorator(override_available=False):
     """Wrap ADB methods and catch exceptions.
@@ -274,6 +340,12 @@ def adb_decorator(override_available=False):
 
             try:
                 return func(self, *args, **kwargs)
+            except LockNotAcquiredException:
+                # If the ADB lock could not be acquired, skip this command
+                _LOGGER.info(
+                    "ADB command not executed because the connection is currently in use"
+                )
+                return
             except self.exceptions as err:
                 _LOGGER.error(
                     "Failed to execute an ADB command. ADB connection re-"
@@ -456,7 +528,13 @@ class ADBDevice(MediaPlayerDevice):
             self.schedule_update_ha_state()
             return self._adb_response
 
-        response = self.aftv.adb_shell(cmd)
+        try:
+            response = self.aftv.adb_shell(cmd)
+        except UnicodeDecodeError:
+            self._adb_response = None
+            self.schedule_update_ha_state()
+            return
+
         if isinstance(response, str) and response.strip():
             self._adb_response = response.strip()
         else:
@@ -464,6 +542,16 @@ class ADBDevice(MediaPlayerDevice):
 
         self.schedule_update_ha_state()
         return self._adb_response
+
+    @adb_decorator()
+    def adb_pull(self, local_path, device_path):
+        """Download a file from your Android TV / Fire TV device to your Home Assistant instance."""
+        self.aftv.adb_pull(local_path, device_path)
+
+    @adb_decorator()
+    def adb_push(self, local_path, device_path):
+        """Upload a file from your Home Assistant instance to an Android TV / Fire TV device."""
+        self.aftv.adb_push(local_path, device_path)
 
 
 class AndroidTVDevice(ADBDevice):

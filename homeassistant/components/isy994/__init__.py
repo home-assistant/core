@@ -56,8 +56,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# Do not use the Hass consts for the states here - we're matching exact API
-# responses, not using them for Hass states
+# Do not use the Home Assistant consts for the states here - we're matching
+# exact API responses, not using them for Home Assistant states
 NODE_FILTERS = {
     "binary_sensor": {
         "uom": [],
@@ -157,7 +157,7 @@ SUPPORTED_DOMAINS = [
 ]
 SUPPORTED_PROGRAM_DOMAINS = ["binary_sensor", "lock", "fan", "cover", "switch"]
 
-# ISY Scenes are more like Switches than Hass Scenes
+# ISY Scenes are more like Switches than Home Assistant Scenes
 # (they can turn off, and report their state)
 SCENE_DOMAIN = "switch"
 

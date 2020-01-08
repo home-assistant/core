@@ -340,7 +340,7 @@ async def test_no_unnecessary_changes(registry):
         identifiers={("hue", "456"), ("bla", "123")},
     )
     with patch(
-        "homeassistant.helpers.device_registry" ".DeviceRegistry.async_schedule_save"
+        "homeassistant.helpers.device_registry.DeviceRegistry.async_schedule_save"
     ) as mock_save:
         entry2 = registry.async_get_or_create(
             config_entry_id="1234", identifiers={("hue", "456")}

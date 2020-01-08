@@ -311,7 +311,9 @@ class Entity(ABC):
 
         start = timer()
 
-        attr = self.capability_attributes or {}
+        attr = self.capability_attributes
+        attr = dict(attr) if attr else {}
+
         if not self.available:
             state = STATE_UNAVAILABLE
         else:
@@ -471,8 +473,9 @@ class Entity(ABC):
             self._on_remove = []
         self._on_remove.append(func)
 
-    async def async_remove(self):
+    async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
+        assert self.hass is not None
         await self.async_internal_will_remove_from_hass()
         await self.async_will_remove_from_hass()
 
@@ -560,7 +563,7 @@ class Entity(ABC):
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return "<Entity {}: {}>".format(self.name, self.state)
+        return f"<Entity {self.name}: {self.state}>"
 
     # call an requests
     async def async_request_call(self, coro):

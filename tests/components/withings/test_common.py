@@ -1,4 +1,7 @@
 """Tests for the Withings component."""
+from datetime import timedelta
+from unittest.mock import patch
+
 from asynctest import MagicMock
 import pytest
 from withings_api import WithingsApi
@@ -8,16 +11,31 @@ from homeassistant.components.withings.common import (
     NotAuthenticatedError,
     WithingsDataManager,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.util import dt
 
 
 @pytest.fixture(name="withings_api")
 def withings_api_fixture() -> WithingsApi:
     """Provide withings api."""
     withings_api = WithingsApi.__new__(WithingsApi)
-    withings_api.get_measures = MagicMock()
-    withings_api.get_sleep = MagicMock()
+    withings_api.user_get_device = MagicMock()
+    withings_api.measure_get_meas = MagicMock()
+    withings_api.sleep_get = MagicMock()
+    withings_api.sleep_get_summary = MagicMock()
     return withings_api
+
+
+@pytest.fixture
+def mock_time_zone():
+    """Provide an alternative time zone."""
+    patch_time_zone = patch(
+        "homeassistant.util.dt.DEFAULT_TIME_ZONE",
+        new=dt.get_time_zone("America/Los_Angeles"),
+    )
+    with patch_time_zone:
+        yield
 
 
 @pytest.fixture(name="data_manager")
@@ -101,3 +119,23 @@ async def test_data_manager_call_throttle_disabled(
     assert result == "HELLO2"
 
     assert hello_func.call_count == 2
+
+
+async def test_data_manager_update_sleep_date_range(
+    hass: HomeAssistant, data_manager: WithingsDataManager, mock_time_zone
+) -> None:
+    """Test method."""
+    update_start_time = dt.now()
+    await data_manager.update_sleep()
+
+    call_args = data_manager.api.sleep_get.call_args_list[0][1]
+    startdate = call_args.get("startdate")
+    enddate = call_args.get("enddate")
+
+    assert startdate.tzname() == "PST"
+
+    assert enddate.tzname() == "PST"
+    assert startdate.tzname() == "PST"
+    assert update_start_time < enddate
+    assert enddate < update_start_time + timedelta(seconds=1)
+    assert enddate > startdate

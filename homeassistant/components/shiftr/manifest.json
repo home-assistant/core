@@ -1,12 +1,8 @@
 {
   "domain": "shiftr",
-  "name": "Shiftr",
+  "name": "shiftr.io",
   "documentation": "https://www.home-assistant.io/integrations/shiftr",
-  "requirements": [
-    "paho-mqtt==1.5.0"
-  ],
+  "requirements": ["paho-mqtt==1.5.0"],
   "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "codeowners": ["@fabaff"]
 }

@@ -14,7 +14,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -138,11 +140,25 @@ async def test_window_set_cover_position(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 0
     assert acc.char_target_position.value == 0
+    assert acc.char_position_state.value == 2
+
+    hass.states.async_set(entity_id, STATE_OPENING, {ATTR_CURRENT_POSITION: 60})
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 60
+    assert acc.char_target_position.value == 60
+    assert acc.char_position_state.value == 1
+
+    hass.states.async_set(entity_id, STATE_CLOSING, {ATTR_CURRENT_POSITION: 50})
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 50
+    assert acc.char_target_position.value == 50
+    assert acc.char_position_state.value == 0
 
     hass.states.async_set(entity_id, STATE_OPEN, {ATTR_CURRENT_POSITION: 50})
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 50
     assert acc.char_target_position.value == 50
+    assert acc.char_position_state.value == 2
 
     # Set from HomeKit
     call_set_cover_position = async_mock_service(hass, DOMAIN, "set_cover_position")
@@ -189,11 +205,23 @@ async def test_window_open_close(hass, hk_driver, cls, events):
     assert acc.char_target_position.value == 0
     assert acc.char_position_state.value == 2
 
+    hass.states.async_set(entity_id, STATE_OPENING)
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 0
+    assert acc.char_target_position.value == 0
+    assert acc.char_position_state.value == 1
+
     hass.states.async_set(entity_id, STATE_OPEN)
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 100
     assert acc.char_target_position.value == 100
     assert acc.char_position_state.value == 2
+
+    hass.states.async_set(entity_id, STATE_CLOSING)
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 100
+    assert acc.char_target_position.value == 100
+    assert acc.char_position_state.value == 0
 
     hass.states.async_set(entity_id, STATE_CLOSED)
     await hass.async_block_till_done()

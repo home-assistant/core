@@ -260,15 +260,23 @@ class AlexaEntity:
 
     def serialize_discovery(self):
         """Serialize the entity for discovery."""
-        return {
+        result = {
             "displayCategories": self.display_categories(),
             "cookie": {},
             "endpointId": self.alexa_id(),
             "friendlyName": self.friendly_name(),
             "description": self.description(),
             "manufacturerName": "Home Assistant",
-            "capabilities": [i.serialize_discovery() for i in self.interfaces()],
         }
+
+        locale = self.config.locale
+        capabilities = []
+        for i in self.interfaces():
+            if locale in i.supported_locales:
+                capabilities.append(i.serialize_discovery())
+        result["capabilities"] = capabilities
+
+        return result
 
 
 @callback

@@ -175,7 +175,7 @@ class GoogleActionsSyncView(HomeAssistantView):
         hass = request.app["hass"]
         cloud: Cloud = hass.data[DOMAIN]
         gconf = await cloud.client.get_google_config()
-        status = await gconf.async_sync_entities(gconf.cloud_user)
+        status = await gconf.async_sync_entities(gconf.agent_user_id)
         return self.json({}, status_code=status)
 
 
@@ -583,7 +583,7 @@ async def alexa_sync(hass, connection, msg):
             connection.send_error(
                 msg["id"],
                 "alexa_relink",
-                "Please go to the Alexa app and re-link the Home Assistant " "skill.",
+                "Please go to the Alexa app and re-link the Home Assistant skill.",
             )
             return
 
