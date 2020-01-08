@@ -377,22 +377,24 @@ async def test_report_fan_speed_state(hass):
 async def test_report_fan_oscillating(hass):
     """Test ToggleController reports fan oscillating correctly."""
     hass.states.async_set(
-        "fan.off", "off", {"friendly_name": "Off fan", "supported_features": 2}
+        "fan.oscillating_off",
+        "off",
+        {"friendly_name": "fan oscillating off", "supported_features": 2},
     )
     hass.states.async_set(
-        "fan.low_speed",
+        "fan.oscillating_on",
         "on",
         {
-            "friendly_name": "Low speed fan",
+            "friendly_name": "Fan oscillating on",
             "oscillating": True,
             "supported_features": 2,
         },
     )
 
-    properties = await reported_properties(hass, "fan.off")
+    properties = await reported_properties(hass, "fan.oscillating_off")
     properties.assert_equal("Alexa.ToggleController", "toggleState", "OFF")
 
-    properties = await reported_properties(hass, "fan.low_speed")
+    properties = await reported_properties(hass, "fan.oscillating_on")
     properties.assert_equal("Alexa.ToggleController", "toggleState", "ON")
 
 
