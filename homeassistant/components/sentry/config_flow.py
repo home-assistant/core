@@ -44,7 +44,7 @@ class SentryMixin:
         return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors)
 
 
-class SentryConfigFlow(SentryMixin, config_entries.ConfigFlow, domain=DOMAIN):
+class SentryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Sentry config flow."""
 
     VERSION = 1
@@ -55,7 +55,21 @@ class SentryConfigFlow(SentryMixin, config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="already_configured")
 
-        return await self.sentry_async_step("user", DEFAULT_SCHEMA, user_input)
+        errors = {}
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+
+                return self.async_create_entry(title=info["title"], data=user_input)
+            except BadDsn:
+                errors["dsn"] = "bad_dsn"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+
+        return self.async_show_form(
+            step_id="user", data_schema=DEFAULT_SCHEMA, errors=errors
+        )
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
