@@ -1,9 +1,16 @@
 """Support to select an option from a list."""
 import logging
+import typing
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ICON, CONF_NAME, SERVICE_RELOAD
+from homeassistant.const import (
+    ATTR_EDITABLE,
+    CONF_ICON,
+    CONF_ID,
+    CONF_NAME,
+    SERVICE_RELOAD,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -69,14 +76,20 @@ async def async_setup(hass, config):
     """Set up an input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    entities = await _async_process_config(config)
+    entities = [
+        InputSelect.from_yaml({CONF_ID: id_, **cfg})
+        for id_, cfg in config[DOMAIN].items()
+    ]
 
     async def reload_service_handler(service_call):
         """Remove all entities and load new ones from config."""
         conf = await component.async_prepare_reload()
         if conf is None:
             return
-        new_entities = await _async_process_config(conf)
+        new_entities = [
+            InputSelect.from_yaml({CONF_ID: id_, **cfg})
+            for id_, cfg in conf[DOMAIN].items()
+        ]
         if new_entities:
             await component.async_add_entities(new_entities)
 
@@ -95,11 +108,11 @@ async def async_setup(hass, config):
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT, {}, lambda entity, call: entity.async_offset_index(1),
+        SERVICE_SELECT_NEXT, {}, lambda entity, call: entity.async_offset_index(1)
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS, {}, lambda entity, call: entity.async_offset_index(-1),
+        SERVICE_SELECT_PREVIOUS, {}, lambda entity, call: entity.async_offset_index(-1)
     )
 
     component.async_register_entity_service(
@@ -117,30 +130,22 @@ async def async_setup(hass, config):
     return True
 
 
-async def _async_process_config(config):
-    """Process config and create list of entities."""
-    entities = []
-
-    for object_id, cfg in config[DOMAIN].items():
-        name = cfg.get(CONF_NAME)
-        options = cfg.get(CONF_OPTIONS)
-        initial = cfg.get(CONF_INITIAL)
-        icon = cfg.get(CONF_ICON)
-        entities.append(InputSelect(object_id, name, initial, options, icon))
-
-    return entities
-
-
 class InputSelect(RestoreEntity):
     """Representation of a select input."""
 
-    def __init__(self, object_id, name, initial, options, icon):
+    def __init__(self, config: typing.Dict):
         """Initialize a select input."""
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._name = name
-        self._current_option = initial
-        self._options = options
-        self._icon = icon
+        self._config = config
+        self._editable = True
+        self._current_option = config.get(CONF_INITIAL)
+
+    @classmethod
+    def from_yaml(cls, config: typing.Dict) -> "InputSelect":
+        """Return entity instance initialized from yaml storage."""
+        input_select = cls(config)
+        input_select.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        input_select._editable = False
+        return input_select
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
@@ -162,12 +167,17 @@ class InputSelect(RestoreEntity):
     @property
     def name(self):
         """Return the name of the select input."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def icon(self):
         """Return the icon to be used for this entity."""
-        return self._icon
+        return self._config.get(CONF_ICON)
+
+    @property
+    def _options(self) -> typing.List[str]:
+        """Return a list of selection options."""
+        return self._config[CONF_OPTIONS]
 
     @property
     def state(self):
@@ -177,7 +187,12 @@ class InputSelect(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_OPTIONS: self._options}
+        return {ATTR_OPTIONS: self._config[ATTR_OPTIONS], ATTR_EDITABLE: self._editable}
+
+    @property
+    def unique_id(self) -> typing.Optional[str]:
+        """Return unique id for the entity."""
+        return self._config[CONF_ID]
 
     async def async_select_option(self, option):
         """Select new option."""
@@ -201,5 +216,5 @@ class InputSelect(RestoreEntity):
     async def async_set_options(self, options):
         """Set options."""
         self._current_option = options[0]
-        self._options = options
+        self._config[CONF_OPTIONS] = options
         await self.async_update_ha_state()
