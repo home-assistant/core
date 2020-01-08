@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
 
-    nsapi = ns_api.NSAPI(config.get(CONF_EMAIL), config.get(CONF_PASSWORD))
+    nsapi = ns_api.NSAPI(config.get(CONF_PASSWORD))
     try:
         stations = nsapi.get_stations()
     except (
@@ -135,30 +135,26 @@ class NSDepartureSensor(Entity):
             ),
             "departure_time_actual": self._trips[0].departure_time_actual.strftime(
                 "%H:%M"
-            ),
+            ) if self._trips[0].departure_time_actual is not None else None,
             "departure_delay": self._trips[0].departure_time_planned
             != self._trips[0].departure_time_actual,
-            "departure_platform": self._trips[0].trip_parts[0].stops[0].platform,
-            "departure_platform_changed": self._trips[0]
-            .trip_parts[0]
-            .stops[0]
-            .platform_changed,
+            "departure_platform": self._trips[0].departure_platform_planned,
+            "departure_platform_changed": self._trips[0].departure_platform_actual,
             "arrival_time_planned": self._trips[0].arrival_time_planned.strftime(
                 "%H:%M"
             ),
-            "arrival_time_actual": self._trips[0].arrival_time_actual.strftime("%H:%M"),
+            "arrival_time_actual": self._trips[0].arrival_time_actual.strftime("%H:%M")
+            if self._trips[0].arrival_time_actual is not None else None,
             "arrival_delay": self._trips[0].arrival_time_planned
             != self._trips[0].arrival_time_actual,
-            "arrival_platform": self._trips[0].trip_parts[0].stops[-1].platform,
-            "arrival_platform_changed": self._trips[0]
-            .trip_parts[0]
-            .stops[-1]
-            .platform_changed,
-            "next": self._trips[1].departure_time_actual.strftime("%H:%M"),
+            "arrival_platform": self._trips[0].arrival_platform_planned,
+            "arrival_platform_changed": self._trips[0].arrival_platform_actual,
+            "next": self._trips[1].departure_time_actual.strftime("%H:%M")
+            if self._trips[1].departure_time_actual is not None
+            else self._trips[1].departure_time_planned.strftime("%H:%M"),
             "status": self._trips[0].status.lower(),
             "transfers": self._trips[0].nr_transfers,
             "route": route,
-            "remarks": [r.message for r in self._trips[0].trip_remarks],
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
@@ -173,10 +169,15 @@ class NSDepartureSensor(Entity):
                 self._heading,
                 True,
                 0,
+                2,
             )
             if self._trips:
-                actual_time = self._trips[0].departure_time_actual
-                self._state = actual_time.strftime("%H:%M")
+                if self._trips[0].departure_time_actual is not None:
+                    actual_time = self._trips[0].departure_time_actual
+                    self._state = actual_time.strftime("%H:%M")
+                else:
+                    planned_time = self._trips[0].departure_time_planned
+                    self._state = planned_time.strftime("%H:%M")
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.HTTPError,
