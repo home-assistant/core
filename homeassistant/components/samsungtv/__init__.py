@@ -11,12 +11,9 @@ from .const import CONF_ON_ACTION, DEFAULT_NAME, DOMAIN
 
 def ensure_unique_hosts(value):
     """Validate that all configs have a unique host."""
-    hosts = list()
-    for entry in value:
-        host = socket.gethostbyname(entry[CONF_HOST])
-        if host in hosts:
-            raise vol.Invalid("duplicate host entries found")
-        hosts.append(host)
+    vol.Schema(vol.Unique("duplicate host entries found"))(
+        [socket.gethostbyname(entry[CONF_HOST]) for entry in value]
+    )
     return value
 
 
@@ -24,7 +21,6 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
             cv.ensure_list,
-            ensure_unique_hosts,
             [
                 vol.Schema(
                     {
@@ -35,6 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
                     }
                 )
             ],
+            ensure_unique_hosts,
         )
     },
     extra=vol.ALLOW_EXTRA,
