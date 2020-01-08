@@ -123,7 +123,7 @@ class NetgearDeviceScanner(DeviceScanner):
                     or dev.name in self.excluded_devices
                 )
             )
-            
+
             # if link_rate is None, the device is still remembered by the router however,
             # it is no longer connected. Therefore, we will not report it as seen.
             if tracked and dev.link_rate is not None:
@@ -133,13 +133,9 @@ class NetgearDeviceScanner(DeviceScanner):
                     and dev.conn_ap_mac in self.tracked_accesspoints
                 ):
                     devices.append(f"{dev.mac}_{dev.conn_ap_mac}")
-<<<<<<< HEAD
 
-=======
->>>>>>> change style again
         return devices
 
-    
     def get_device_name(self, device):
         """Return the name of the given device or the MAC if we don't know."""
         parts = device.split("_")
