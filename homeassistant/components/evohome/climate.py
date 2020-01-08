@@ -121,9 +121,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
     async def _set_tcs_mode(self, op_mode: str) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
-        await self._call_client_api(
-            self._evo_tcs._set_status(op_mode)  # pylint: disable=protected-access
-        )
+        await self._call_client_api(self._evo_tcs.set_status(op_mode))
 
     @property
     def hvac_modes(self) -> List[str]:
