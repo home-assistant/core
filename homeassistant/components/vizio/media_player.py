@@ -83,7 +83,7 @@ async def async_setup_platform(
             "is valid and available, device type is correct%s",
             fail_auth_msg,
         )
-        return
+        return False
 
     async_add_entities([VizioDevice(device, name, volume_step, device_type)], True)
 
@@ -96,6 +96,7 @@ class VizioDevice(MediaPlayerDevice):
     ) -> None:
         """Initialize Vizio device."""
 
+        self._hass = hass
         self._name = name
         self._state = None
         self._volume_level = None
