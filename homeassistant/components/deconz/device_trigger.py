@@ -285,7 +285,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
 
 def _get_deconz_event_from_device_id(hass, device_id):
     """Resolve deconz event from device id."""
-    for gateway in hass.data.get(DOMAIN):
+    for gateway in hass.data.get(DOMAIN, {}).values():
 
         for deconz_event in gateway.events:
 
