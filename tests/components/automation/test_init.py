@@ -225,6 +225,22 @@ async def test_trigger_service_ignoring_condition(hass, calls):
     )
     assert len(calls) == 1
 
+    await hass.services.async_call(
+        "automation",
+        "trigger",
+        {"entity_id": "automation.test", "skip_condition": True},
+        blocking=True,
+    )
+    assert len(calls) == 2
+
+    await hass.services.async_call(
+        "automation",
+        "trigger",
+        {"entity_id": "automation.test", "skip_condition": False},
+        blocking=True,
+    )
+    assert len(calls) == 2
+
 
 async def test_two_conditions_with_and(hass, calls):
     """Test two and conditions."""
