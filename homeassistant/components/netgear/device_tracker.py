@@ -120,6 +120,7 @@ class NetgearDeviceScanner(DeviceScanner):
                     and dev.conn_ap_mac in self.tracked_accesspoints
                 ):
                     devices.append(f"{dev.mac}_{dev.conn_ap_mac}")
+        
         return devices
 
     
