@@ -1,5 +1,6 @@
 """The tests for the person component."""
 import logging
+from unittest.mock import patch
 
 import pytest
 
@@ -16,10 +17,11 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     EVENT_HOMEASSISTANT_START,
+    SERVICE_RELOAD,
     STATE_UNKNOWN,
 )
-from homeassistant.core import CoreState, State
-from homeassistant.helpers import collection
+from homeassistant.core import Context, CoreState, State
+from homeassistant.helpers import collection, entity_registry
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, mock_component, mock_restore_cache
@@ -664,3 +666,98 @@ async def test_update_person_when_user_removed(
     await hass.async_block_till_done()
 
     assert storage_collection.data[person["id"]]["user_id"] is None
+
+
+async def test_removing_device_tracker(hass, storage_setup):
+    """Test we automatically remove removed device trackers."""
+    storage_collection = hass.data[DOMAIN][1]
+    reg = await entity_registry.async_get_registry(hass)
+    entry = reg.async_get_or_create(
+        "device_tracker", "mobile_app", "bla", suggested_object_id="pixel"
+    )
+
+    person = await storage_collection.async_create_item(
+        {"name": "Hello", "device_trackers": [entry.entity_id]}
+    )
+
+    reg.async_remove(entry.entity_id)
+    await hass.async_block_till_done()
+
+    assert storage_collection.data[person["id"]]["device_trackers"] == []
+
+
+async def test_add_user_device_tracker(hass, storage_setup, hass_read_only_user):
+    """Test adding a device tracker to a person tied to a user."""
+    storage_collection = hass.data[DOMAIN][1]
+    pers = await storage_collection.async_create_item(
+        {
+            "name": "Hello",
+            "user_id": hass_read_only_user.id,
+            "device_trackers": ["device_tracker.on_create"],
+        }
+    )
+
+    await person.async_add_user_device_tracker(
+        hass, hass_read_only_user.id, "device_tracker.added"
+    )
+
+    assert storage_collection.data[pers["id"]]["device_trackers"] == [
+        "device_tracker.on_create",
+        "device_tracker.added",
+    ]
+
+
+async def test_reload(hass, hass_admin_user):
+    """Test reloading the YAML config."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {"name": "Person 1", "id": "id-1"},
+                {"name": "Person 2", "id": "id-2"},
+            ]
+        },
+    )
+
+    assert len(hass.states.async_entity_ids()) == 2
+
+    state_1 = hass.states.get("person.person_1")
+    state_2 = hass.states.get("person.person_2")
+    state_3 = hass.states.get("person.person_3")
+
+    assert state_1 is not None
+    assert state_1.name == "Person 1"
+    assert state_2 is not None
+    assert state_2.name == "Person 2"
+    assert state_3 is None
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            DOMAIN: [
+                {"name": "Person 1-updated", "id": "id-1"},
+                {"name": "Person 3", "id": "id-3"},
+            ]
+        },
+    ), patch("homeassistant.config.find_config_file", return_value=""):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 2
+
+    state_1 = hass.states.get("person.person_1")
+    state_2 = hass.states.get("person.person_2")
+    state_3 = hass.states.get("person.person_3")
+
+    assert state_1 is not None
+    assert state_1.name == "Person 1-updated"
+    assert state_2 is None
+    assert state_3 is not None
+    assert state_3.name == "Person 3"

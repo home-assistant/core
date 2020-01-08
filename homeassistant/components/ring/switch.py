@@ -78,7 +78,7 @@ class SirenSwitch(BaseRingSwitch):
         self._siren_on = False
 
     def _set_switch(self, new_state):
-        """Update switch state, and causes HASS to correctly update."""
+        """Update switch state, and causes Home Assistant to correctly update."""
         self._device.siren = new_state
         self._siren_on = new_state > 0
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY

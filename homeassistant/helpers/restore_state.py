@@ -13,6 +13,7 @@ from homeassistant.core import (
     valid_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.json import JSONEncoder
@@ -123,19 +124,27 @@ class RestoreStateData:
         """
         now = dt_util.utcnow()
         all_states = self.hass.states.async_all()
-        current_entity_ids = set(state.entity_id for state in all_states)
+        # Entities currently backed by an entity object
+        current_entity_ids = set(
+            state.entity_id
+            for state in all_states
+            if not state.attributes.get(entity_registry.ATTR_RESTORED)
+        )
 
         # Start with the currently registered states
         stored_states = [
             StoredState(state, now)
             for state in all_states
-            if state.entity_id in self.entity_ids
+            if state.entity_id in self.entity_ids and
+            # Ignore all states that are entity registry placeholders
+            not state.attributes.get(entity_registry.ATTR_RESTORED)
         ]
-
         expiration_time = now - STATE_EXPIRATION
 
         for entity_id, stored_state in self.last_states.items():
             # Don't save old states that have entities in the current run
+            # They are either registered and already part of stored_states,
+            # or no longer care about restoring.
             if entity_id in current_entity_ids:
                 continue
 
@@ -168,7 +177,7 @@ class RestoreStateData:
             self.hass.async_create_task(self.async_dump_states())
 
         # Dump the initial states now. This helps minimize the risk of having
-        # old states loaded by overwritting the last states once home assistant
+        # old states loaded by overwriting the last states once Home Assistant
         # has started and the old states have been read.
         _async_dump_states()
 

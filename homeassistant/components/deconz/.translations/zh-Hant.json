@@ -18,7 +18,7 @@
                     "allow_clip_sensor": "\u5141\u8a31\u532f\u5165\u865b\u64ec\u611f\u61c9\u5668",
                     "allow_deconz_groups": "\u5141\u8a31\u532f\u5165 deCONZ \u7fa4\u7d44"
                 },
-                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u9023\u7dda\u81f3 Hass.io \u9644\u52a0\u7d44\u4ef6 {addon} \u4e4b deCONZ \u9598\u9053\u5668\uff1f",
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a Home Assistant \u4ee5\u9023\u7dda\u81f3 Hass.io \u9644\u52a0\u6574\u5408 {addon} \u4e4b deCONZ \u9598\u9053\u5668\uff1f",
                 "title": "\u900f\u904e Hass.io \u9644\u52a0\u7d44\u4ef6 deCONZ Zigbee \u9598\u9053\u5668"
             },
             "init": {

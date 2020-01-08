@@ -5,7 +5,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import group
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
@@ -101,8 +100,6 @@ PLANT_SCHEMA = vol.Schema(
 )
 
 DOMAIN = "plant"
-GROUP_NAME_ALL_PLANTS = "all plants"
-ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format("all_plants")
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
@@ -114,7 +111,7 @@ ENABLE_LOAD_HISTORY = False
 
 async def async_setup(hass, config):
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_PLANTS)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():

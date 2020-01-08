@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_secret": "Hemlighet"
+                }
+            }
+        }
+    }
+}

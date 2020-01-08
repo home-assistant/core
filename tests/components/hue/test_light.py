@@ -258,8 +258,8 @@ async def test_lights(hass, mock_bridge):
     mock_bridge.mock_light_responses.append(LIGHT_RESPONSE)
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    # 1 All Lights group, 2 lights
-    assert len(hass.states.async_all()) == 3
+    # 2 lights
+    assert len(hass.states.async_all()) == 2
 
     lamp_1 = hass.states.get("light.hue_lamp_1")
     assert lamp_1 is not None
@@ -313,8 +313,8 @@ async def test_groups(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 2
-    # 1 all lights group, 2 hue group lights
-    assert len(hass.states.async_all()) == 3
+    # 2 hue group lights
+    assert len(hass.states.async_all()) == 2
 
     lamp_1 = hass.states.get("light.group_1")
     assert lamp_1 is not None
@@ -335,7 +335,7 @@ async def test_new_group_discovered(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 2
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     new_group_response = dict(GROUP_RESPONSE)
     new_group_response["3"] = {
@@ -365,7 +365,7 @@ async def test_new_group_discovered(hass, mock_bridge):
     )
     # 2x group update, 2x light update, 1 turn on request
     assert len(mock_bridge.mock_requests) == 5
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 3
 
     new_group = hass.states.get("light.group_3")
     assert new_group is not None
@@ -380,7 +380,7 @@ async def test_new_light_discovered(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     new_light_response = dict(LIGHT_RESPONSE)
     new_light_response["3"] = {
@@ -418,7 +418,7 @@ async def test_new_light_discovered(hass, mock_bridge):
     )
     # 2x light update, 1 turn on request
     assert len(mock_bridge.mock_requests) == 3
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 3
 
     light = hass.states.get("light.hue_lamp_3")
     assert light is not None
@@ -433,7 +433,7 @@ async def test_group_removed(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 2
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     mock_bridge.mock_light_responses.append({})
     mock_bridge.mock_group_responses.append({"1": GROUP_RESPONSE["1"]})
@@ -445,7 +445,7 @@ async def test_group_removed(hass, mock_bridge):
 
     # 2x group update, 2x light update, 1 turn on request
     assert len(mock_bridge.mock_requests) == 5
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
 
     group = hass.states.get("light.group_1")
     assert group is not None
@@ -460,7 +460,7 @@ async def test_light_removed(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     mock_bridge.mock_light_responses.clear()
     mock_bridge.mock_light_responses.append({"1": LIGHT_RESPONSE.get("1")})
@@ -472,7 +472,7 @@ async def test_light_removed(hass, mock_bridge):
 
     # 2x light update, 1 turn on request
     assert len(mock_bridge.mock_requests) == 3
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
 
     light = hass.states.get("light.hue_lamp_1")
     assert light is not None
@@ -489,7 +489,7 @@ async def test_other_group_update(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 2
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     group_2 = hass.states.get("light.group_2")
     assert group_2 is not None
@@ -526,7 +526,7 @@ async def test_other_group_update(hass, mock_bridge):
     )
     # 2x group update, 2x light update, 1 turn on request
     assert len(mock_bridge.mock_requests) == 5
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     group_2 = hass.states.get("light.group_2")
     assert group_2 is not None
@@ -540,7 +540,7 @@ async def test_other_light_update(hass, mock_bridge):
 
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 1
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     lamp_2 = hass.states.get("light.hue_lamp_2")
     assert lamp_2 is not None
@@ -583,7 +583,7 @@ async def test_other_light_update(hass, mock_bridge):
     )
     # 2x light update, 1 turn on request
     assert len(mock_bridge.mock_requests) == 3
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     lamp_2 = hass.states.get("light.hue_lamp_2")
     assert lamp_2 is not None
@@ -641,7 +641,7 @@ async def test_light_turn_on_service(hass, mock_bridge):
         "alert": "none",
     }
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     light = hass.states.get("light.hue_lamp_2")
     assert light is not None
@@ -685,7 +685,7 @@ async def test_light_turn_off_service(hass, mock_bridge):
 
     assert mock_bridge.mock_requests[1]["json"] == {"on": False, "alert": "none"}
 
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 2
 
     light = hass.states.get("light.hue_lamp_1")
     assert light is not None

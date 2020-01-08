@@ -582,12 +582,12 @@ class Group(Entity):
         self._async_update_group_state()
 
     async def async_added_to_hass(self):
-        """Handle addition to HASS."""
+        """Handle addition to Home Assistant."""
         if self.tracking:
             self.async_start()
 
     async def async_will_remove_from_hass(self):
-        """Handle removal from HASS."""
+        """Handle removal from Home Assistant."""
         if self._async_unsub_state_changed:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None

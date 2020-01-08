@@ -84,7 +84,6 @@ omit =
     homeassistant/components/blockchain/sensor.py
     homeassistant/components/bloomsky/*
     homeassistant/components/bluesound/*
-    homeassistant/components/bluetooth_le_tracker/device_tracker.py
     homeassistant/components/bluetooth_tracker/*
     homeassistant/components/bme280/sensor.py
     homeassistant/components/bme680/sensor.py
@@ -96,6 +95,9 @@ omit =
     homeassistant/components/broadlink/remote.py
     homeassistant/components/broadlink/sensor.py
     homeassistant/components/broadlink/switch.py
+    homeassistant/components/brother/__init__.py
+    homeassistant/components/brother/sensor.py
+    homeassistant/components/brother/const.py
     homeassistant/components/brottsplatskartan/sensor.py
     homeassistant/components/browser/*
     homeassistant/components/brunt/cover.py
@@ -666,6 +668,7 @@ omit =
     homeassistant/components/streamlabswater/*
     homeassistant/components/suez_water/*
     homeassistant/components/supervisord/sensor.py
+    homeassistant/components/surepetcare/*.py
     homeassistant/components/swiss_hydrological_data/sensor.py
     homeassistant/components/swiss_public_transport/sensor.py
     homeassistant/components/swisscom/device_tracker.py
@@ -711,6 +714,7 @@ omit =
     homeassistant/components/tikteck/light.py
     homeassistant/components/tile/device_tracker.py
     homeassistant/components/time_date/sensor.py
+    homeassistant/components/tmb/sensor.py
     homeassistant/components/todoist/calendar.py
     homeassistant/components/todoist/const.py
     homeassistant/components/tof/sensor.py
@@ -774,7 +778,7 @@ omit =
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vicare/*
     homeassistant/components/vivotek/camera.py
-    homeassistant/components/vizio/media_player.py
+    homeassistant/components/vizio/*
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/media_player.py
     homeassistant/components/volkszaehler/sensor.py

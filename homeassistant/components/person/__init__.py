@@ -1,6 +1,6 @@
 """Support for tracking people."""
 import logging
-from typing import List, Optional
+from typing import List, Optional, cast
 
 import voluptuous as vol
 
@@ -19,14 +19,26 @@ from homeassistant.const import (
     CONF_ID,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
+    SERVICE_RELOAD,
     STATE_HOME,
     STATE_NOT_HOME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Event, State, callback
-from homeassistant.helpers import collection, entity_registry
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import (
+    Event,
+    HomeAssistant,
+    ServiceCall,
+    State,
+    callback,
+    split_entity_id,
+)
+from homeassistant.helpers import (
+    collection,
+    config_validation as cv,
+    entity_registry,
+    service,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -77,6 +89,29 @@ async def async_create_person(hass, name, *, user_id=None, device_trackers=None)
     )
 
 
+@bind_hass
+async def async_add_user_device_tracker(
+    hass: HomeAssistant, user_id: str, device_tracker_entity_id: str
+):
+    """Add a device tracker to a person linked to a user."""
+    coll = cast(PersonStorageCollection, hass.data[DOMAIN][1])
+
+    for person in coll.async_items():
+        if person.get(ATTR_USER_ID) != user_id:
+            continue
+
+        device_trackers = person["device_trackers"]
+
+        if device_tracker_entity_id in device_trackers:
+            return
+
+        await coll.async_update_item(
+            person[collection.CONF_ID],
+            {"device_trackers": device_trackers + [device_tracker_entity_id]},
+        )
+        break
+
+
 CREATE_FIELDS = {
     vol.Required("name"): vol.All(str, vol.Length(min=1)),
     vol.Optional("user_id"): vol.Any(str, None),
@@ -124,6 +159,36 @@ class PersonStorageCollection(collection.StorageCollection):
         self.async_add_listener(self._collection_changed)
         self.yaml_collection = yaml_collection
 
+    async def async_load(self) -> None:
+        """Load the Storage collection."""
+        await super().async_load()
+        self.hass.bus.async_listen(
+            entity_registry.EVENT_ENTITY_REGISTRY_UPDATED, self._entity_registry_updated
+        )
+
+    async def _entity_registry_updated(self, event) -> None:
+        """Handle entity registry updated."""
+        if event.data["action"] != "remove":
+            return
+
+        entity_id = event.data["entity_id"]
+
+        if split_entity_id(entity_id)[0] != "device_tracker":
+            return
+
+        for person in list(self.data.values()):
+            if entity_id not in person["device_trackers"]:
+                continue
+
+            await self.async_update_item(
+                person[collection.CONF_ID],
+                {
+                    "device_trackers": [
+                        devt for devt in person["device_trackers"] if devt != entity_id
+                    ]
+                },
+            )
+
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(data)
@@ -133,7 +198,7 @@ class PersonStorageCollection(collection.StorageCollection):
         if user_id is not None:
             await self._validate_user_id(user_id)
 
-        return self.CREATE_SCHEMA(data)
+        return data
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
@@ -250,6 +315,17 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
                 )
 
     hass.bus.async_listen(EVENT_USER_REMOVED, _handle_user_removed)
+
+    async def async_reload_yaml(call: ServiceCall):
+        """Reload YAML."""
+        conf = await entity_component.async_prepare_reload(skip_reset=True)
+        if conf is None:
+            return
+        await yaml_collection.async_load(await filter_yaml_data(hass, conf[DOMAIN]))
+
+    service.async_register_admin_service(
+        hass, DOMAIN, SERVICE_RELOAD, async_reload_yaml
+    )
 
     return True
 

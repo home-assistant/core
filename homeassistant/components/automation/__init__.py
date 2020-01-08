@@ -125,9 +125,7 @@ def is_on(hass, entity_id):
 
 async def async_setup(hass, config):
     """Set up the automation."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_AUTOMATIONS
-    )
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await _async_process_config(hass, config, component)
 
@@ -323,7 +321,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         await self.async_update_ha_state()
 
     async def async_will_remove_from_hass(self):
-        """Remove listeners when removing automation from HASS."""
+        """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
         await self.async_disable()
 
