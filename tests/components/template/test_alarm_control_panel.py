@@ -467,7 +467,7 @@ async def test_arm_away_action(hass):
 
 
 async def test_arm_night_action(hass):
-    """Test arm away action."""
+    """Test arm night action."""
     await setup.async_setup_component(
         hass,
         "alarm_control_panel",
