@@ -55,26 +55,10 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     """Set up for Vera controllers."""
     config = base_config.get(DOMAIN)
 
-    if not config:
+    if config is None:
         return True
 
-    # Normalize the base url.
-    config[CONF_CONTROLLER] = config.get(CONF_CONTROLLER).rstrip("/")
-    base_url = config.get(CONF_CONTROLLER)
-
-    # Build a map of already configured controllers.
-    base_url_entries_map = {}
-    for config_entry in hass.config_entries.async_entries(DOMAIN):
-        base_url = config_entry.data.get(CONF_CONTROLLER)
-        base_url_entries_map[base_url] = config_entry
-
-    entry = base_url_entries_map.get(base_url)
-    if entry:
-        _LOGGER.debug("Updating existing config for %s", base_url)
-        hass.config_entries.async_update_entry(entry=entry, data=config)
-        return True
-
-    _LOGGER.debug("Creating new config for %s", base_url)
+    _LOGGER.debug("Creating new config for %s", config.get(CONF_CONTROLLER))
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config,
@@ -90,8 +74,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     # Get Vera specific configuration.
     base_url = config.get(CONF_CONTROLLER)
-    light_ids = config.get(CONF_LIGHTS)
-    exclude_ids = config.get(CONF_EXCLUDE)
+    light_ids = config_entry.options.get(CONF_LIGHTS, [])
+    exclude_ids = config_entry.options.get(CONF_EXCLUDE, [])
 
     # Initialize the Vera controller.
     controller = veraApi.VeraController(base_url)
