@@ -6,5 +6,6 @@
   "requirements": ["elgato==0.2.0"],
   "dependencies": [],
   "zeroconf": ["_elg._tcp.local."],
-  "codeowners": ["@frenck"]
+  "codeowners": ["@frenck"],
+  "quality_scale": "platinum"
 }
