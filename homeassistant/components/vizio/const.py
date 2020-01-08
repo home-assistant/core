@@ -1,5 +1,6 @@
 """Constants used by vizio component."""
 
+CONF_CONTEXT = "context"
 CONF_VOLUME_STEP = "volume_step"
 
 DEFAULT_NAME = "Vizio SmartCast"

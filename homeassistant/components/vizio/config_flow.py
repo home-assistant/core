@@ -16,6 +16,7 @@ from homeassistant.const import (
 
 from . import validate_auth
 from .const import (
+    CONF_CONTEXT,
     CONF_VOLUME_STEP,
     DEFAULT_DEVICE_CLASS,
     DEFAULT_NAME,
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def vizio_schema(self, defaults: Optional[Dict[str, any]] = None) -> vol.Schema:
-    """Return vol schema with expected defaults for blank form or retain what was previously filled in."""
+    """Return vol schema with expected defaults for blank form, retain what was previously filled in on error, or prefill data obtained via zeroconf."""
 
     if not defaults:
         defaults = {
@@ -68,7 +69,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         defaults = None
-        validate = True
 
         if user_input is not None:
             defaults = user_input
@@ -76,15 +76,19 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_HOST] == user_input[CONF_HOST]:
-                    errors[CONF_HOST] = "host_exists"
-                    validate = False
-                    break
+                    if user_input.get(CONF_CONTEXT) == "config":
+                        return self.async_abort(reason="host_exists")
+                    else:
+                        errors[CONF_HOST] = "host_exists"
+                        break
                 if entry.data[CONF_NAME] == user_input[CONF_NAME]:
-                    errors[CONF_NAME] = "name_exists"
-                    validate = False
-                    break
+                    if user_input.get(CONF_CONTEXT) == "config":
+                        return self.async_abort(reason="name_exists")
+                    else:
+                        errors[CONF_NAME] = "name_exists"
+                        break
 
-            if validate:
+            if not errors:
                 try:
                     # Ensure schema passes custom validation, otherwise catch exception and add error
                     validate_auth(user_input)
@@ -101,7 +105,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "tv_needs_token"
 
             if not errors:
-                if user_input.get("configuration.yaml"):
+                if user_input.get(CONF_CONTEXT) == "config":
                     return self.async_create_entry(
                         title=f"configuration.yaml - {user_input[CONF_NAME]}",
                         data=user_input,
@@ -118,13 +122,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: Dict[str, Any]) -> Dict[str, Any]:
         """Import a config entry from configuration.yaml."""
 
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == import_config[CONF_HOST]:
-                return self.async_abort(reason="host_exists")
-            if entry.data[CONF_NAME] == import_config[CONF_NAME]:
-                return self.async_abort(reason="name_exists")
-
         # add key to track entities coming from config
-        import_config["configuration.yaml"] = True
+        import_config[CONF_CONTEXT] = "config"
 
         return await self.async_step_user(user_input=import_config)

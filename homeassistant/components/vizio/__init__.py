@@ -51,7 +51,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Platform setup, do nothing."""
+    """Platform setup, run import config flow for each entry in config."""
+
     if DOMAIN in config:
         for entry in config[DOMAIN]:
             hass.async_create_task(
