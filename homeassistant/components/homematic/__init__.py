@@ -173,6 +173,7 @@ HM_DEVICE_TYPES = {
         "IPMultiIO",
         "TiltIP",
         "IPShutterContactSabotage",
+        "IPContact",
     ],
     DISCOVER_COVER: ["Blind", "KeyBlind", "IPKeyBlind", "IPKeyBlindTilt"],
     DISCOVER_LOCKS: ["KeyMatic"],
