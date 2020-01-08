@@ -132,7 +132,7 @@ def get_capability(capabilities, capability_name, instance=None):
     for capability in capabilities:
         if instance and capability["instance"] == instance:
             return capability
-        elif capability["interface"] == capability_name:
+        if capability["interface"] == capability_name:
             return capability
 
     return None

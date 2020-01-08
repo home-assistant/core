@@ -1262,7 +1262,10 @@ class AlexaRangeController(AlexaCapability):
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
             speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
             speed = self.entity.attributes[fan.ATTR_SPEED]
-            return speed_list.index(speed)
+            speed_index = next(
+                (i for i, v in enumerate(speed_list) if v == speed), None
+            )
+            return speed_index
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
@@ -1298,13 +1301,13 @@ class AlexaRangeController(AlexaCapability):
                 max_value=max_value,
                 precision=1,
             )
-            for speed_value, speed_name in enumerate(speed_list):
-                labels = [speed_name.replace("_", " ")]
-                if speed_value == 1:
+            for index, speed in enumerate(speed_list):
+                labels = [speed.replace("_", " ")]
+                if index == 1:
                     labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
-                if speed_value == max_value:
+                if index == max_value:
                     labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
-                self._resource.add_preset(value=speed_value, labels=labels)
+                self._resource.add_preset(value=index, labels=labels)
 
             return self._resource.serialize_capability_resources()
 

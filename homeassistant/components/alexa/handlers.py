@@ -1093,9 +1093,10 @@ async def async_api_set_range(hass, config, directive, context):
 
     # Fan Speed
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
+        range_value = int(range_value)
         service = fan.SERVICE_SET_SPEED
-        speed_list = entity.attributes.get(fan.ATTR_SPEED_LIST)
-        speed = speed_list[int(range_value)]
+        speed_list = entity.attributes[fan.ATTR_SPEED_LIST]
+        speed = next((v for i, v in enumerate(speed_list) if i == range_value), None)
 
         if not speed:
             msg = "Entity does not support value"
@@ -1174,11 +1175,15 @@ async def async_api_adjust_range(hass, config, directive, context):
         service = fan.SERVICE_SET_SPEED
         speed_list = entity.attributes[fan.ATTR_SPEED_LIST]
         current_speed = entity.attributes[fan.ATTR_SPEED]
-        current_speed_index = speed_list.index(current_speed)
-        new_speed_index = min(
-            len(speed_list) - 1, max(0, range_delta + current_speed_index)
+        current_speed_index = next(
+            (i for i, v in enumerate(speed_list) if v == current_speed), 0
         )
-        speed = speed_list[new_speed_index]
+        new_speed_index = min(
+            len(speed_list) - 1, max(0, current_speed_index + range_delta)
+        )
+        speed = next(
+            (v for i, v in enumerate(speed_list) if i == new_speed_index), None
+        )
 
         if speed == fan.SPEED_OFF:
             service = fan.SERVICE_TURN_OFF
