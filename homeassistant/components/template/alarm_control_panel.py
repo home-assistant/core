@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
@@ -40,6 +41,7 @@ _VALID_STATES = [
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_UNAVAILABLE,
 ]
 
 CONF_ARM_AWAY_ACTION = "arm_away"
