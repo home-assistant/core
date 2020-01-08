@@ -1,19 +1,23 @@
 """The test for the statistics sensor platform."""
+from datetime import datetime, timedelta
 import logging
-import unittest
 import statistics
+import unittest
 from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components import recorder
 from homeassistant.components.statistics.sensor import StatisticsSensor
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS
 from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
-from tests.common import get_test_home_assistant, fire_time_changed
-from datetime import datetime, timedelta
-from tests.common import init_recorder_component
-from homeassistant.components import recorder
+
+from tests.common import (
+    fire_time_changed,
+    get_test_home_assistant,
+    init_recorder_component,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
