@@ -65,7 +65,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         defaults = None
-        no_ctx = user_input.get(CONF_CONTEXT) is None
+        no_ctx = user_input and user_input.get(CONF_CONTEXT) is None
 
         if user_input is not None:
             defaults = user_input
