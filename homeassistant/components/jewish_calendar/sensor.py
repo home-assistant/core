@@ -174,9 +174,9 @@ class JewishCalendarSensor(Entity):
         if self._hebrew:
             heb_number = hdate.date.hebrew_number(daf_number + 2)
             heb_number = heb_number.replace("'", "").replace('"', "")
-            dafstring = "%s %s" % (entry["heb_name"], heb_number)
+            dafstring = f"{entry['heb_name']} {heb_number}"
         else:
-            dafstring = "%s %s" % (entry["en_name"], daf_number + 2)
+            dafstring = f"{entry['en_name']} {daf_number + 2}"
 
         return dafstring
 
