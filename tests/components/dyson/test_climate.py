@@ -4,12 +4,15 @@ from unittest import mock
 
 import asynctest
 from libpurecool.const import FocusMode, HeatMode, HeatState, HeatTarget
+from libpurecool.dyson_pure_hotcool import DysonPureHotCool
 from libpurecool.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from libpurecool.dyson_pure_state import DysonPureHotCoolState
 
 from homeassistant.components import dyson as dyson_parent
+from homeassistant.components.climate import DOMAIN
 from homeassistant.components.dyson import climate as dyson
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
 from .common import load_mock_device
@@ -38,6 +41,14 @@ def _get_config():
             ],
         }
     }
+
+
+def _get_dyson_purehotcool_device():
+    """Return a valid device as provided by the Dyson web services."""
+    device = mock.Mock(spec=DysonPureHotCool)
+    load_mock_device(device)
+    device.name = "Living room"
+    return device
 
 
 def _get_device_with_no_state():
@@ -134,14 +145,6 @@ class DysonTest(unittest.TestCase):
         add_devices = mock.MagicMock()
         dyson.setup_platform(self.hass, None, add_devices, discovery_info={})
         assert add_devices.called
-
-    def test_setup_component_with_invalid_devices(self):
-        """Test setup component with invalid devices."""
-        devices = [None, "foo_bar"]
-        self.hass.data[dyson.DYSON_DEVICES] = devices
-        add_devices = mock.MagicMock()
-        dyson.setup_platform(self.hass, None, add_devices, discovery_info={})
-        add_devices.assert_called_with([])
 
     def test_setup_component(self):
         """Test setup component with devices."""
@@ -357,3 +360,26 @@ async def test_setup_component_with_parent_discovery(
     await hass.async_block_till_done()
 
     assert len(hass.data[dyson.DYSON_DEVICES]) == 2
+
+
+@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch(
+    "libpurecool.dyson.DysonAccount.devices",
+    return_value=[_get_dyson_purehotcool_device()],
+)
+async def test_purehotcool_component_setup_only_once(devices, login, hass):
+    """Test if entities are created only once."""
+    config = _get_config()
+    await async_setup_component(hass, dyson_parent.DOMAIN, config)
+    await hass.async_block_till_done()
+    discovery.load_platform(hass, "climate", dyson_parent.DOMAIN, {}, config)
+    await hass.async_block_till_done()
+
+    climate_devices = [
+        device
+        for device in hass.data[DOMAIN].entities
+        if device.platform.platform_name == dyson_parent.DOMAIN
+    ]
+
+    assert len(climate_devices) == 1
+    assert climate_devices[0].device_serial == "XX-XXXXX-XX"
