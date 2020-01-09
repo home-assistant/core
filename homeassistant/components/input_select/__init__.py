@@ -88,27 +88,6 @@ CONFIG_SCHEMA = vol.Schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
-class InputSelectStorageCollection(collection.StorageCollection):
-    """Input storage based collection."""
-
-    CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_select))
-    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
-
-    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
-        """Validate the config is valid."""
-        return self.CREATE_SCHEMA(data)
-
-    @callback
-    def _get_suggested_id(self, info: typing.Dict) -> str:
-        """Suggest an ID based on the config."""
-        return info[CONF_NAME]
-
-    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
-        """Return a new updated data object."""
-        update_data = self.UPDATE_SCHEMA(update_data)
-        return self.CREATE_SCHEMA({**data, **update_data})
-
-
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up an input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
@@ -194,6 +173,27 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
 
     return True
+
+
+class InputSelectStorageCollection(collection.StorageCollection):
+    """Input storage based collection."""
+
+    CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_select))
+    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+
+    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+        """Validate the config is valid."""
+        return self.CREATE_SCHEMA(data)
+
+    @callback
+    def _get_suggested_id(self, info: typing.Dict) -> str:
+        """Suggest an ID based on the config."""
+        return info[CONF_NAME]
+
+    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+        """Return a new updated data object."""
+        update_data = self.UPDATE_SCHEMA(update_data)
+        return self.CREATE_SCHEMA({**data, **update_data})
 
 
 class InputSelect(RestoreEntity):
