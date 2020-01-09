@@ -825,6 +825,55 @@ async def test_purecool_update_state(devices, login, hass):
     "libpurecool.dyson.DysonAccount.devices",
     return_value=[_get_dyson_purecool_device()],
 )
+async def test_purecool_update_state_filter_inv(devices, login, hass):
+    """Test state TP06 carbon filter state."""
+    device = devices.return_value[0]
+    await async_setup_component(hass, dyson.DYSON_DOMAIN, _get_config())
+    await hass.async_block_till_done()
+    event = {
+        "msg": "CURRENT-STATE",
+        "product-state": {
+            "fpwr": "OFF",
+            "fdir": "OFF",
+            "auto": "OFF",
+            "oscs": "ON",
+            "oson": "ON",
+            "nmod": "OFF",
+            "rhtm": "ON",
+            "fnst": "FAN",
+            "ercd": "11E1",
+            "wacd": "NONE",
+            "nmdv": "0004",
+            "fnsp": "0002",
+            "bril": "0002",
+            "corf": "ON",
+            "cflr": "INV",
+            "hflr": "0095",
+            "sltm": "OFF",
+            "osal": "0045",
+            "osau": "0095",
+            "ancp": "CUST",
+        },
+    }
+    device.state = DysonPureCoolV2State(json.dumps(event))
+
+    for call in device.add_message_listener.call_args_list:
+        callback = call[0][0]
+        if type(callback.__self__) == dyson.DysonPureCoolDevice:
+            callback(device.state)
+
+    await hass.async_block_till_done()
+    fan_state = hass.states.get("fan.living_room")
+    attributes = fan_state.attributes
+
+    assert attributes[dyson.ATTR_CARBON_FILTER] == "INV"
+
+
+@asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
+@asynctest.patch(
+    "libpurecool.dyson.DysonAccount.devices",
+    return_value=[_get_dyson_purecool_device()],
+)
 async def test_purecool_component_setup_only_once(devices, login, hass):
     """Test if entities are created only once."""
     config = _get_config()
