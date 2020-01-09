@@ -12,7 +12,7 @@
       },
       "confirm": {
         "title": "Samsung TV",
-        "description": "Do you want to set up Samsung TV {model}? If you never connected Home Assistant before you should see a popup on your TV asking for authentication."
+        "description": "Do you want to set up Samsung TV {model}? If you never connected Home Assistant before you should see a popup on your TV asking for authentication. Manual configurations for this TV will be overwritten."
       }
     },
     "abort": {
