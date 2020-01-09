@@ -56,12 +56,6 @@ PRESET_SLEEP = "sleep"
 # Device is reacting to activity (e.g. movement sensors)
 PRESET_ACTIVITY = "activity"
 
-# Device in holday mode (Eid, Rosh Hashanah, etc)
-PRESET_HOLIDAY = "holiday"
-
-# Device is in alternate program mode
-PRESET_ALTERNATE = "alternate"
-
 # Possible fan state
 FAN_ON = "on"
 FAN_OFF = "off"
