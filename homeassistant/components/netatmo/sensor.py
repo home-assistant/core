@@ -1,7 +1,6 @@
 """Support for the Netatmo Weather Service."""
 from datetime import timedelta
 import logging
-import threading
 from time import time
 
 import pyatmo
@@ -29,8 +28,6 @@ CONF_LON_SW = "lon_sw"
 
 DEFAULT_MODE = "avg"
 MODE_TYPES = {"max", "avg"}
-
-DEFAULT_NAME_PUBLIC = "Public Data"
 
 # This is the Netatmo data upload interval in seconds
 NETATMO_UPDATE_INTERVAL = 600
@@ -519,7 +516,6 @@ class NetatmoData:
         self.station_data = station_data
         self._next_update = time()
         self.auth = auth
-        self._update_in_progress = threading.Lock()
 
     def get_module_infos(self):
         """Return all modules available on the API as a dict."""
@@ -527,22 +523,11 @@ class NetatmoData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Call the Netatmo API to update the data.
+        """Call the Netatmo API to update the data."""
+        self.station_data = self.station_data.__class__(self.auth)
 
-        This method is not throttled by the builtin Throttle decorator
-        but with a custom logic, which takes into account the time
-        of the last update from the cloud.
-        """
-        if not self._update_in_progress.acquire(False):
+        data = self.station_data.lastData(exclude=3600, byId=True)
+        if not data:
+            _LOGGER.debug("No data received when updating station data")
             return
-
-        try:
-            self.station_data = self.station_data.__class__(self.auth)
-
-            data = self.station_data.lastData(exclude=3600, byId=True)
-            if not data:
-                _LOGGER.debug("No data received when updating station data")
-                return
-            self.data = data
-        finally:
-            self._update_in_progress.release()
+        self.data = data

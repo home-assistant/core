@@ -64,8 +64,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up access to Netatmo cameras."""
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the available Netatmo weather sensors."""
     return
 
 

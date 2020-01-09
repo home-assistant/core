@@ -149,8 +149,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
         )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the NetAtmo Thermostat."""
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the available Netatmo weather sensors."""
     return
 
 
