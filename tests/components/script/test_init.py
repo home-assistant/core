@@ -135,10 +135,6 @@ class TestScriptComponent(unittest.TestCase):
         assert not script.is_on(self.hass, ENTITY_ID)
         assert 0 == len(events)
 
-        state = self.hass.states.get("group.all_scripts")
-        assert state is not None
-        assert state.attributes.get("entity_id") == (ENTITY_ID,)
-
     def test_toggle_service(self):
         """Test the toggling of a service."""
         event = "test_event"

@@ -222,9 +222,8 @@ def validate_dependencies(
     ):
         integration.add_error(
             "dependencies",
-            "Using component {} but it's not in 'dependencies' or 'after_dependencies'".format(
-                domain
-            ),
+            f"Using component {domain} but it's not in 'dependencies' "
+            "or 'after_dependencies'",
         )
 
 

@@ -106,7 +106,7 @@ class NetatmoCamera(Camera):
         self._camera_name = camera_name
         self._home = home
         if home:
-            self._name = home + " / " + camera_name
+            self._name = f"{home} / {camera_name}"
         else:
             self._name = camera_name
         self._cameratype = camera_type
@@ -383,7 +383,7 @@ class NetatmoCamera(Camera):
         """Set light mode ('auto', 'on', 'off')."""
         if self.model == "Presence":
             try:
-                config = '{"mode":"' + mode + '"}'
+                config = f'{{"mode":"{mode}"}}'
                 if self._localurl:
                     requests.get(
                         f"{self._localurl}/command/floodlight_set_config?config={config}",

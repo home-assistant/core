@@ -1,5 +1,4 @@
 """The tests for the openalpr local platform."""
-import asyncio
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import homeassistant.components.image_processing as ip
@@ -11,13 +10,11 @@ from tests.common import assert_setup_component, get_test_home_assistant, load_f
 from tests.components.image_processing import common
 
 
-@asyncio.coroutine
-def mock_async_subprocess():
+async def mock_async_subprocess():
     """Get a Popen mock back."""
     async_popen = MagicMock()
 
-    @asyncio.coroutine
-    def communicate(input=None):
+    async def communicate(input=None):
         """Communicate mock."""
         fixture = bytes(load_fixture("alpr_stdout.txt"), "utf-8")
         return (fixture, None)

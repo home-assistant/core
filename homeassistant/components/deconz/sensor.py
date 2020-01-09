@@ -1,5 +1,13 @@
 """Support for deCONZ sensors."""
-from pydeconz.sensor import Consumption, Daylight, LightLevel, Power, Switch, Thermostat
+from pydeconz.sensor import (
+    Battery,
+    Consumption,
+    Daylight,
+    LightLevel,
+    Power,
+    Switch,
+    Thermostat,
+)
 
 from homeassistant.const import ATTR_TEMPERATURE, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
@@ -53,7 +61,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     hass.async_create_task(new_event.async_update_device_registry())
                     gateway.events.append(new_event)
 
-            elif new and not sensor.BINARY and sensor.type not in Thermostat.ZHATYPE:
+            elif (
+                new
+                and sensor.BINARY is False
+                and sensor.type not in Battery.ZHATYPE + Thermostat.ZHATYPE
+            ):
 
                 new_sensor = DeconzSensor(sensor, gateway)
                 entity_handler.add_entity(new_sensor)
@@ -76,7 +88,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    async_add_sensor(gateway.api.sensors.values())
+    async_add_sensor(
+        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
+    )
 
 
 class DeconzSensor(DeconzDevice):

@@ -225,7 +225,7 @@ class TimeWrapper:
         if not TimeWrapper.warned:
             TimeWrapper.warned = True
             _LOGGER.warning(
-                "Using time.sleep can reduce the performance of " "Home Assistant"
+                "Using time.sleep can reduce the performance of Home Assistant"
             )
 
         time.sleep(*args, **kwargs)

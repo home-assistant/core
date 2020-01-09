@@ -533,8 +533,7 @@ async def test_unique_id(hass, mqtt_mock):
 
     async_fire_mqtt_message(hass, "test-topic", "payload")
 
-    assert len(hass.states.async_entity_ids()) == 2
-    # all vacuums group is 1, unique id created is 1
+    assert len(hass.states.async_entity_ids()) == 1
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):

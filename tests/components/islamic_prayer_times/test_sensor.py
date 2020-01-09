@@ -175,7 +175,7 @@ async def test_islamic_prayer_times_sensor_update(hass):
         future = midnight_dt + timedelta(days=1, minutes=1)
 
         with patch(
-            "homeassistant.components.islamic_prayer_times.sensor" ".dt_util.utcnow",
+            "homeassistant.components.islamic_prayer_times.sensor.dt_util.utcnow",
             return_value=future,
         ):
 

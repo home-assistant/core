@@ -89,18 +89,18 @@ class ZigbeeChannel(LogMixin):
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
         self._cluster = cluster
         self._zha_device = device
-        self._unique_id = "{}:{}:0x{:04x}".format(
-            str(device.ieee), cluster.endpoint.endpoint_id, cluster.cluster_id
-        )
-        # this keeps logs consistent with zigpy logging
-        self._log_id = "0x{:04x}:{}:0x{:04x}".format(
-            device.nwk, cluster.endpoint.endpoint_id, cluster.cluster_id
-        )
+        self._id = f"{cluster.endpoint.endpoint_id}:0x{cluster.cluster_id:04x}"
+        self._unique_id = f"{str(device.ieee)}:{self._id}"
         self._report_config = CLUSTER_REPORT_CONFIGS.get(
             self._cluster.cluster_id, self.REPORT_CONFIG
         )
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
+
+    @property
+    def id(self) -> str:
+        """Return channel id unique for this device only."""
+        return self._id
 
     @property
     def generic_id(self):
@@ -263,8 +263,8 @@ class ZigbeeChannel(LogMixin):
 
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = "[%s]: " + msg
-        args = (self._log_id,) + args
+        msg = f"[%s:%s]: {msg}"
+        args = (self.device.nwk, self._id,) + args
         _LOGGER.log(level, msg, *args)
 
     def __getattr__(self, name):
@@ -357,7 +357,7 @@ class ZDOChannel(LogMixin):
 
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = "[%s:ZDO](%s): " + msg
+        msg = f"[%s:ZDO](%s): {msg}"
         args = (self._zha_device.nwk, self._zha_device.model) + args
         _LOGGER.log(level, msg, *args)
 

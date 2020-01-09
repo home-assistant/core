@@ -155,7 +155,7 @@ class MaxCubeClimate(ClimateDevice):
 
     @staticmethod
     def map_temperature_max_hass(temperature):
-        """Map Temperature from MAX! to HASS."""
+        """Map Temperature from MAX! to Home Assistant."""
         if temperature is None:
             return 0.0
 

@@ -379,7 +379,7 @@ class MiroboVacuum(StateVacuumDevice):
                 fan_speed = int(fan_speed)
             except ValueError as exc:
                 _LOGGER.error(
-                    "Fan speed step not recognized (%s). " "Valid speeds are: %s",
+                    "Fan speed step not recognized (%s). Valid speeds are: %s",
                     exc,
                     self.fan_speed_list,
                 )

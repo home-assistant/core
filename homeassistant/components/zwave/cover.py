@@ -37,7 +37,7 @@ def _to_hex_str(id_in_bytes):
 
     Example: 0x1234 --> '0x1234'
     """
-    return "0x{:04x}".format(id_in_bytes)
+    return f"0x{id_in_bytes:04x}"
 
 
 # For some reason node.manufacturer_id is of type string. So we need to convert
@@ -340,7 +340,7 @@ class FibaroFGRM222(ZwaveRollershutter):
             # Note: This is safe to do even if the user has accidentally set
             # this configuration parameter, or configuration parameter 10 to
             # something other than venetian blind mode. The controller will just
-            # ignore potential tilt settings sent from home assistant in this
+            # ignore potential tilt settings sent from Home Assistant in this
             # case.
             self._has_tilt_mode = True
             _LOGGER.info(

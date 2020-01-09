@@ -412,6 +412,10 @@ async def async_api_lock(hass, config, directive, context):
 @HANDLERS.register(("Alexa.LockController", "Unlock"))
 async def async_api_unlock(hass, config, directive, context):
     """Process an unlock request."""
+    if config.locale not in {"de-DE", "en-US", "ja-JP"}:
+        msg = f"The unlock directive is not supported for the following locales: {config.locale}"
+        raise AlexaInvalidDirectiveError(msg)
+
     entity = directive.entity
     await hass.services.async_call(
         entity.domain,
@@ -1352,3 +1356,43 @@ async def async_api_seek(hass, config, directive, context):
     return directive.response(
         name="StateReport", namespace="Alexa.SeekController", payload=payload
     )
+
+
+@HANDLERS.register(("Alexa.EqualizerController", "SetMode"))
+async def async_api_set_eq_mode(hass, config, directive, context):
+    """Process a SetMode request for EqualizerController."""
+    mode = directive.payload["mode"]
+    entity = directive.entity
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    sound_mode_list = entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST)
+    if sound_mode_list and mode.lower() in sound_mode_list:
+        data[media_player.const.ATTR_SOUND_MODE] = mode.lower()
+    else:
+        msg = "failed to map sound mode {} to a mode on {}".format(
+            mode, entity.entity_id
+        )
+        raise AlexaInvalidValueError(msg)
+
+    await hass.services.async_call(
+        entity.domain,
+        media_player.SERVICE_SELECT_SOUND_MODE,
+        data,
+        blocking=False,
+        context=context,
+    )
+
+    return directive.response()
+
+
+@HANDLERS.register(("Alexa.EqualizerController", "AdjustBands"))
+@HANDLERS.register(("Alexa.EqualizerController", "ResetBands"))
+@HANDLERS.register(("Alexa.EqualizerController", "SetBands"))
+async def async_api_bands_directive(hass, config, directive, context):
+    """Handle an AdjustBands, ResetBands, SetBands request.
+
+    Only mode directives are currently supported for the EqualizerController.
+    """
+    # Currently bands directives are not supported.
+    msg = "Entity does not support directive"
+    raise AlexaInvalidDirectiveError(msg)

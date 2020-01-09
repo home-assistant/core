@@ -392,7 +392,7 @@ class TestSecrets(unittest.TestCase):
         with pytest.raises(HomeAssistantError):
             load_yaml(
                 os.path.join(self._sub_folder_path, "sub.yaml"),
-                "http:\n" "  api_password: !secret test",
+                "http:\n  api_password: !secret test",
             )
 
     def test_secrets_keyring(self):
@@ -431,9 +431,9 @@ class TestSecrets(unittest.TestCase):
 
     def test_secrets_are_not_dict(self):
         """Did secrets handle non-dict file."""
-        FILES[self._secret_path] = (
-            "- http_pw: pwhttp\n" "  comp1_un: un1\n" "  comp1_pw: pw1\n"
-        )
+        FILES[
+            self._secret_path
+        ] = "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
         yaml.clear_secret_cache()
         with pytest.raises(HomeAssistantError):
             load_yaml(

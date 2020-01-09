@@ -20,7 +20,7 @@ BASE_CONFIG = (
     "\n\n"
 )
 
-BAD_CORE_CONFIG = "homeassistant:\n" "  unit_system: bad\n" "\n\n"
+BAD_CORE_CONFIG = "homeassistant:\n  unit_system: bad\n\n\n"
 
 
 def normalize_yaml_files(check_dict):
@@ -92,8 +92,8 @@ def test_secrets(isfile_patch, loop):
 
     files = {
         get_test_config_dir(YAML_CONFIG_FILE): BASE_CONFIG
-        + ("http:\n" "  cors_allowed_origins: !secret http_pw"),
-        secrets_path: ("logger: debug\n" "http_pw: http://google.com"),
+        + ("http:\n  cors_allowed_origins: !secret http_pw"),
+        secrets_path: ("logger: debug\nhttp_pw: http://google.com"),
     }
 
     with patch_yaml_files(files):
@@ -122,8 +122,7 @@ def test_secrets(isfile_patch, loop):
 def test_package_invalid(isfile_patch, loop):
     """Test a valid platform setup."""
     files = {
-        YAML_CONFIG_FILE: BASE_CONFIG
-        + ("  packages:\n" "    p1:\n" '      group: ["a"]')
+        YAML_CONFIG_FILE: BASE_CONFIG + ("  packages:\n    p1:\n" '      group: ["a"]')
     }
     with patch_yaml_files(files):
         res = check_config.check(get_test_config_dir())

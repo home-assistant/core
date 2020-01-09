@@ -72,7 +72,7 @@
             "remote_button_quadruple_press": "Bot\u00f3n \"{subtype}\" pulsado cuatro veces consecutivas",
             "remote_button_quintuple_press": "Bot\u00f3n \"{subtype}\" pulsado cinco veces consecutivas",
             "remote_button_rotated": "Bot\u00f3n \"{subtype}\" girado",
-            "remote_button_rotation_stopped": "Bot\u00f3n rotativo \"{subtipo}\" detenido",
+            "remote_button_rotation_stopped": "Bot\u00f3n rotativo \"{subtype}\" detenido",
             "remote_button_short_press": "Bot\u00f3n \"{subtype}\" pulsado",
             "remote_button_short_release": "Bot\u00f3n \"{subtype}\" liberado",
             "remote_button_triple_press": "Bot\u00f3n \"{subtype}\" pulsado cuatro veces consecutivas",

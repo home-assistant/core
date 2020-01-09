@@ -1,6 +1,5 @@
 """Tests for the Input slider component."""
 # pylint: disable=protected-access
-import asyncio
 import datetime
 from unittest.mock import patch
 
@@ -192,10 +191,9 @@ async def test_set_invalid_2(hass):
     assert state.state == initial
 
 
-@asyncio.coroutine
-def test_set_datetime_date(hass):
+async def test_set_datetime_date(hass):
     """Test set_datetime method with only date."""
-    yield from async_setup_component(
+    await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_date": {"has_time": False, "has_date": True}}}
     )
 
@@ -204,7 +202,7 @@ def test_set_datetime_date(hass):
     dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
     date_portion = dt_obj.date()
 
-    yield from async_set_date_and_time(hass, entity_id, dt_obj)
+    await async_set_date_and_time(hass, entity_id, dt_obj)
 
     state = hass.states.get(entity_id)
     assert state.state == str(date_portion)
@@ -215,8 +213,7 @@ def test_set_datetime_date(hass):
     assert state.attributes["timestamp"] == date_dt_obj.timestamp()
 
 
-@asyncio.coroutine
-def test_restore_state(hass):
+async def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -232,7 +229,7 @@ def test_restore_state(hass):
 
     initial = datetime.datetime(2017, 1, 1, 23, 42)
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         DOMAIN,
         {
@@ -263,10 +260,9 @@ def test_restore_state(hass):
     assert state_bogus.state == str(initial)
 
 
-@asyncio.coroutine
-def test_default_value(hass):
+async def test_default_value(hass):
     """Test default value if none has been set via inital or restore state."""
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         DOMAIN,
         {

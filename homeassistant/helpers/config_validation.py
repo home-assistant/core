@@ -135,7 +135,7 @@ def boolean(value: Any) -> bool:
     elif isinstance(value, Number):
         # type ignore: https://github.com/python/mypy/issues/3186
         return value != 0  # type: ignore
-    raise vol.Invalid("invalid boolean value {}".format(value))
+    raise vol.Invalid(f"invalid boolean value {value}")
 
 
 def isdevice(value: Any) -> str:
@@ -144,7 +144,7 @@ def isdevice(value: Any) -> str:
         os.stat(value)
         return str(value)
     except OSError:
-        raise vol.Invalid("No device at {} found".format(value))
+        raise vol.Invalid(f"No device at {value} found")
 
 
 def matches_regex(regex: str) -> Callable[[Any], str]:
@@ -154,13 +154,11 @@ def matches_regex(regex: str) -> Callable[[Any], str]:
     def validator(value: Any) -> str:
         """Validate that value matches the given regex."""
         if not isinstance(value, str):
-            raise vol.Invalid("not a string value: {}".format(value))
+            raise vol.Invalid(f"not a string value: {value}")
 
         if not compiled.match(value):
             raise vol.Invalid(
-                "value {} does not match regular expression {}".format(
-                    value, compiled.pattern
-                )
+                f"value {value} does not match regular expression {compiled.pattern}"
             )
 
         return value
@@ -175,10 +173,10 @@ def is_regex(value: Any) -> Pattern[Any]:
         return r
     except TypeError:
         raise vol.Invalid(
-            "value {} is of the wrong type for a regular expression".format(value)
+            f"value {value} is of the wrong type for a regular expression"
         )
     except re.error:
-        raise vol.Invalid("value {} is not a valid regular expression".format(value))
+        raise vol.Invalid(f"value {value} is not a valid regular expression")
 
 
 def isfile(value: Any) -> str:
@@ -220,7 +218,7 @@ def entity_id(value: Any) -> str:
     if valid_entity_id(str_value):
         return str_value
 
-    raise vol.Invalid("Entity ID {} is an invalid entity id".format(value))
+    raise vol.Invalid(f"Entity ID {value} is an invalid entity id")
 
 
 def entity_ids(value: Union[str, List]) -> List[str]:
@@ -256,9 +254,7 @@ def entities_domain(domain: str) -> Callable[[Union[str, List]], List[str]]:
         for ent_id in values:
             if split_entity_id(ent_id)[0] != domain:
                 raise vol.Invalid(
-                    "Entity ID '{}' does not belong to domain '{}'".format(
-                        ent_id, domain
-                    )
+                    f"Entity ID '{ent_id}' does not belong to domain '{domain}'"
                 )
         return values
 
@@ -307,7 +303,7 @@ def time(value: Any) -> time_sys:
         raise vol.Invalid("Not a parseable type")
 
     if time_val is None:
-        raise vol.Invalid("Invalid time specified: {}".format(value))
+        raise vol.Invalid(f"Invalid time specified: {value}")
 
     return time_val
 
@@ -368,7 +364,7 @@ def time_period_seconds(value: Union[int, str]) -> timedelta:
     try:
         return timedelta(seconds=int(value))
     except (ValueError, TypeError):
-        raise vol.Invalid("Expected seconds, got {}".format(value))
+        raise vol.Invalid(f"Expected seconds, got {value}")
 
 
 time_period = vol.Any(time_period_str, time_period_seconds, timedelta, time_period_dict)
@@ -400,7 +396,7 @@ def service(value: Any) -> str:
     str_value = string(value).lower()
     if valid_entity_id(str_value):
         return str_value
-    raise vol.Invalid("Service {} does not match format <domain>.<name>".format(value))
+    raise vol.Invalid(f"Service {value} does not match format <domain>.<name>")
 
 
 def schema_with_slug_keys(value_schema: Union[T, Callable]) -> Callable:
@@ -432,7 +428,7 @@ def slug(value: Any) -> str:
     slg = util_slugify(str_value)
     if str_value == slg:
         return str_value
-    raise vol.Invalid("invalid slug {} (try {})".format(value, slg))
+    raise vol.Invalid(f"invalid slug {value} (try {slg})")
 
 
 def slugify(value: Any) -> str:
@@ -442,7 +438,7 @@ def slugify(value: Any) -> str:
     slg = util_slugify(str(value))
     if slg:
         return slg
-    raise vol.Invalid("Unable to slugify {}".format(value))
+    raise vol.Invalid(f"Unable to slugify {value}")
 
 
 def string(value: Any) -> str:
@@ -484,7 +480,7 @@ def template(value: Optional[Any]) -> template_helper.Template:
         template_value.ensure_valid()
         return cast(template_helper.Template, template_value)
     except TemplateError as ex:
-        raise vol.Invalid("invalid template ({})".format(ex))
+        raise vol.Invalid(f"invalid template ({ex})")
 
 
 def template_complex(value: Any) -> Any:
@@ -515,7 +511,7 @@ def datetime(value: Any) -> datetime_sys:
         date_val = None
 
     if date_val is None:
-        raise vol.Invalid("Invalid datetime specified: {}".format(value))
+        raise vol.Invalid(f"Invalid datetime specified: {value}")
 
     return date_val
 
@@ -544,9 +540,9 @@ def socket_timeout(value: Optional[Any]) -> object:
         float_value = float(value)
         if float_value > 0.0:
             return float_value
-        raise vol.Invalid("Invalid socket timeout value." " float > 0.0 required.")
-    except Exception as _:
-        raise vol.Invalid("Invalid socket timeout: {err}".format(err=_))
+        raise vol.Invalid("Invalid socket timeout value. float > 0.0 required.")
+    except Exception as err:
+        raise vol.Invalid(f"Invalid socket timeout: {err}")
 
 
 # pylint: disable=no-value-for-parameter
@@ -700,8 +696,8 @@ def key_dependency(
             raise vol.Invalid("key dependencies require a dict")
         if key in value and dependency not in value:
             raise vol.Invalid(
-                'dependency violation - key "{}" requires '
-                'key "{}" to exist'.format(key, dependency)
+                f'dependency violation - key "{key}" requires '
+                f'key "{dependency}" to exist'
             )
 
         return value

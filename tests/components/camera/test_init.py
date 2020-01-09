@@ -119,7 +119,7 @@ class TestGetImage:
     def test_get_image_without_exists_camera(self):
         """Try to get image without exists camera."""
         with patch(
-            "homeassistant.helpers.entity_component.EntityComponent." "get_entity",
+            "homeassistant.helpers.entity_component.EntityComponent.get_entity",
             return_value=None,
         ), pytest.raises(HomeAssistantError):
             asyncio.run_coroutine_threadsafe(
@@ -147,8 +147,7 @@ class TestGetImage:
             ).result()
 
 
-@asyncio.coroutine
-def test_snapshot_service(hass, mock_camera):
+async def test_snapshot_service(hass, mock_camera):
     """Test snapshot service."""
     mopen = mock_open()
 
@@ -156,7 +155,7 @@ def test_snapshot_service(hass, mock_camera):
         "homeassistant.components.camera.open", mopen, create=True
     ), patch.object(hass.config, "is_allowed_path", return_value=True):
         common.async_snapshot(hass, "/tmp/bla")
-        yield from hass.async_block_till_done()
+        await hass.async_block_till_done()
 
         mock_write = mopen().write
 

@@ -75,7 +75,7 @@ async def _async_process_dependencies(
 
     if failed:
         _LOGGER.error(
-            "Unable to set up dependencies of %s. " "Setup failed for dependencies: %s",
+            "Unable to set up dependencies of %s. Setup failed for dependencies: %s",
             name,
             ", ".join(failed),
         )
@@ -108,14 +108,14 @@ async def _async_setup_component(
         await loader.async_component_dependencies(hass, domain)
     except loader.IntegrationNotFound as err:
         _LOGGER.error(
-            "Not setting up %s because we are unable to resolve " "(sub)dependency %s",
+            "Not setting up %s because we are unable to resolve (sub)dependency %s",
             domain,
             err.domain,
         )
         return False
     except loader.CircularDependency as err:
         _LOGGER.error(
-            "Not setting up %s because it contains a circular dependency: " "%s -> %s",
+            "Not setting up %s because it contains a circular dependency: %s -> %s",
             domain,
             err.from_domain,
             err.to_domain,
@@ -191,8 +191,8 @@ async def _async_setup_component(
         return False
     if result is not True:
         log_error(
-            "Integration {!r} did not return boolean if setup was "
-            "successful. Disabling component.".format(domain)
+            f"Integration {domain!r} did not return boolean if setup was "
+            "successful. Disabling component."
         )
         return False
 

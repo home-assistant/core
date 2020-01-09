@@ -1,6 +1,5 @@
 """The tests for the Input select component."""
 # pylint: disable=protected-access
-import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -249,8 +248,7 @@ async def test_set_options_service(hass):
     assert "test2" == state.state
 
 
-@asyncio.coroutine
-def test_restore_state(hass):
+async def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -262,9 +260,7 @@ def test_restore_state(hass):
 
     options = {"options": ["first option", "middle option", "last option"]}
 
-    yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"s1": options, "s2": options}}
-    )
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"s1": options, "s2": options}})
 
     state = hass.states.get("input_select.s1")
     assert state
@@ -275,8 +271,7 @@ def test_restore_state(hass):
     assert state.state == "first option"
 
 
-@asyncio.coroutine
-def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -291,9 +286,7 @@ def test_initial_state_overrules_restore_state(hass):
         "initial": "middle option",
     }
 
-    yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"s1": options, "s2": options}}
-    )
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"s1": options, "s2": options}})
 
     state = hass.states.get("input_select.s1")
     assert state
