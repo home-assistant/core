@@ -85,7 +85,7 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
         vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
             vol.Coerce(int), vol.Range(min=0, max=255)
         ),
-        vol.Optional(ATTR_LIGHT): bool,
+        vol.Optional(ATTR_LIGHT): cv.boolean,
         vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
             vol.Coerce(int), vol.In(VOLUMES)
         ),
