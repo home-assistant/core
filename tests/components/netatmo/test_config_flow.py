@@ -1,5 +1,6 @@
 """Test the Netatmo config flow."""
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant.components.netatmo import config_flow
 from homeassistant.components.netatmo.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
@@ -7,8 +8,28 @@ from homeassistant.components.netatmo.const import (
 )
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from tests.common import MockConfigEntry
+
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+
+
+async def test_abort_if_existing_entry(hass):
+    """Check flow abort when an entry already exist."""
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
+
+    flow = config_flow.NetatmoFlowHandler()
+    flow.hass = hass
+
+    result = await flow.async_step_user()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_setup"
+
+    result = await flow.async_step_homekit(
+        {"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_setup"
 
 
 async def test_full_flow(hass, aiohttp_client, aioclient_mock):
