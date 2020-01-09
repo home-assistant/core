@@ -151,7 +151,8 @@ class FreeboxRouter:
 
     async def close(self) -> None:
         """Close the connection."""
-        await self._api.close()
+        if self._api is not None:
+            await self._api.close()
         self._api = None
 
     @property

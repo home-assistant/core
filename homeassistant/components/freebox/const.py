@@ -10,7 +10,7 @@ SENSOR_UPDATE = f"{DOMAIN}_sensor_update"
 APP_DESC = {
     "app_id": "hass",
     "app_name": "Home Assistant",
-    "app_version": "0.104",
+    "app_version": "0.105",
     "device_name": socket.gethostname(),
 }
 API_VERSION = "v6"

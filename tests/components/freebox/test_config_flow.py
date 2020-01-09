@@ -2,7 +2,11 @@
 import asyncio
 from unittest.mock import MagicMock, patch
 
-from aiofreepybox.exceptions import HttpRequestError
+from aiofreepybox.exceptions import (
+    AuthorizationError,
+    HttpRequestError,
+    InvalidTokenError,
+)
 import pytest
 
 from homeassistant import data_entry_flow
@@ -24,6 +28,19 @@ def mock_controller_connect():
     ) as service_mock:
         service_mock.return_value.open = MagicMock(return_value=asyncio.Future())
         service_mock.return_value.open.return_value.set_result(None)
+
+        service_mock.return_value.system.get_config = MagicMock(
+            return_value=asyncio.Future()
+        )
+        service_mock.return_value.system.get_config.return_value.set_result(None)
+
+        service_mock.return_value.lan.get_hosts_list = MagicMock(
+            return_value=asyncio.Future()
+        )
+        service_mock.return_value.lan.get_hosts_list.return_value.set_result(None)
+
+        service_mock.return_value.close = MagicMock(return_value=asyncio.Future())
+        service_mock.return_value.close.return_value.set_result(None)
         yield service_mock
 
 
@@ -44,10 +61,8 @@ async def test_user(hass, connect):
 
     # test with all provided
     result = await flow.async_step_user({CONF_HOST: HOST, CONF_PORT: PORT})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == HOST
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == PORT
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "link"
 
 
 async def test_import(hass, connect):
@@ -55,6 +70,16 @@ async def test_import(hass, connect):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import({CONF_HOST: HOST, CONF_PORT: PORT})
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "link"
+
+
+async def test_link(hass, connect):
+    """Test linking."""
+    flow = init_config_flow(hass)
+    await flow.async_step_user({CONF_HOST: HOST, CONF_PORT: PORT})
+
+    result = await flow.async_step_link({})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
@@ -79,14 +104,31 @@ async def test_abort_if_already_setup(hass):
     assert result["errors"] == {"base": "already_configured"}
 
 
-async def test_abort_on_connection_failed(hass):
-    """Test when we have errors during connection."""
+async def test_abort_on_link_failed(hass):
+    """Test when we have errors during linking the router."""
     flow = init_config_flow(hass)
+    await flow.async_step_user({CONF_HOST: HOST, CONF_PORT: PORT})
+
+    with patch(
+        "homeassistant.components.freebox.config_flow.Freepybox.open",
+        side_effect=AuthorizationError(),
+    ):
+        result = await flow.async_step_link({})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "register_failed"}
 
     with patch(
         "homeassistant.components.freebox.config_flow.Freepybox.open",
         side_effect=HttpRequestError(),
     ):
-        result = await flow.async_step_user({CONF_HOST: HOST, CONF_PORT: PORT})
+        result = await flow.async_step_link({})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "connection_failed"}
+
+    with patch(
+        "homeassistant.components.freebox.config_flow.Freepybox.open",
+        side_effect=InvalidTokenError(),
+    ):
+        result = await flow.async_step_link({})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "unknown"}

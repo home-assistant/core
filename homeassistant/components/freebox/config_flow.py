@@ -2,7 +2,7 @@
 import logging
 
 from aiofreepybox import Freepybox
-from aiofreepybox.exceptions import HttpRequestError
+from aiofreepybox.exceptions import AuthorizationError, HttpRequestError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -21,6 +21,8 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize Freebox config flow."""
+        self._host = None
+        self._port = None
 
     def _configuration_exists(self, host: str) -> bool:
         """Return True if host exists in configuration."""
@@ -51,29 +53,63 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is None:
-            return self._show_setup_form(user_input, None)
+            return self._show_setup_form(user_input, errors)
 
-        host = user_input[CONF_HOST]
-        port = user_input[CONF_PORT]
+        self._host = user_input[CONF_HOST]
+        self._port = user_input[CONF_PORT]
 
-        if self._configuration_exists(host):
+        if self._configuration_exists(self._host):
             errors["base"] = "already_configured"
             return self._show_setup_form(user_input, errors)
+
+        return await self.async_step_link()
+
+    async def async_step_link(self, user_input=None):
+        """Attempt to link with the Freebox router.
+
+        Given a configured host, will ask the user to press the button
+        to connect to the router.
+        """
+        errors = {}
+
+        if user_input is None:
+            return self.async_show_form(step_id="link")
 
         token_file = self.hass.config.path(CONFIG_FILE)
 
         fbx = Freepybox(APP_DESC, token_file, API_VERSION)
 
         try:
-            await fbx.open(host, port)
-        except HttpRequestError:
-            _LOGGER.exception("Failed to connect to Freebox")
-            errors["base"] = "connection_failed"
-            return self._show_setup_form(user_input, errors)
+            # Check connection and authentification
+            await fbx.open(self._host, self._port)
 
-        return self.async_create_entry(
-            title=host, data={CONF_HOST: host, CONF_PORT: port},
-        )
+            # Check permissions
+            await fbx.system.get_config()
+            await fbx.lan.get_hosts_list()
+            await self.hass.async_block_till_done()
+
+            # Close connection
+            await fbx.close()
+
+            return self.async_create_entry(
+                title=self._host, data={CONF_HOST: self._host, CONF_PORT: self._port},
+            )
+
+        except AuthorizationError as error:
+            _LOGGER.error(error)
+            errors["base"] = "register_failed"
+
+        except HttpRequestError:
+            _LOGGER.error("Error connecting to the Freebox router at %s", self._host)
+            errors["base"] = "connection_failed"
+
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception(
+                "Unknown error connecting with Freebox router at %s", self._host
+            )
+            errors["base"] = "unknown"
+
+        return self.async_show_form(step_id="link", errors=errors)
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
