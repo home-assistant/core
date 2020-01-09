@@ -72,7 +72,7 @@ async def async_setup_platform(
     device_type = config[CONF_DEVICE_CLASS]
 
     device = VizioAsync(
-        DEVICE_ID, host, name, token, device_type, async_get_clientsession(hass, False)
+        DEVICE_ID, name, device_type, async_get_clientsession(hass, False)
     )
     if not await device.can_connect():
         fail_auth_msg = ""
