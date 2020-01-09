@@ -32,7 +32,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import VIZIO_SCHEMA, validate_auth
-from .const import CONF_VOLUME_STEP, DEVICE_ID, DOMAIN, ICON
+from .const import CONF_VOLUME_STEP, DEVICE_ID, ICON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -190,16 +190,6 @@ class VizioDevice(MediaPlayerDevice):
         """Return the unique id of the device."""
 
         return self._unique_id
-
-    @property
-    def device_info(self) -> Dict[str, Any]:
-        """Return device registry information."""
-
-        return {
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "name": self.name,
-            "manufacturer": "Vizio",
-        }
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
