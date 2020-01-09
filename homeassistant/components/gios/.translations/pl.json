@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Integracja GIO\u015a dla tej stacji pomiarowej jest ju\u017c skonfigurowana."
+        },
         "error": {
             "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z serwerem GIO\u015a.",
             "invalid_sensors_data": "Nieprawid\u0142owe dane sensor\u00f3w dla tej stacji pomiarowej.",
