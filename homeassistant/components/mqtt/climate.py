@@ -37,6 +37,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICE,
     CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     PRECISION_HALVES,
     PRECISION_TENTHS,
@@ -294,7 +295,6 @@ class MqttClimate(
         self._target_temp_high = None
         self._target_temp_low = None
         self._topic = None
-        self._unit_of_measurement = hass.config.units.temperature_unit
         self._value_templates = None
 
         self._setup_from_config(config)
@@ -570,8 +570,11 @@ class MqttClimate(
 
     @property
     def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
+        """Return the unit this state is expressed in."""
+        mqtt_measure = self._config.get(CONF_UNIT_OF_MEASUREMENT)
+        if not mqtt_measure:
+            mqtt_measure = self.hass.config.units.temperature_unit
+        return mqtt_measure
 
     @property
     def current_temperature(self):
