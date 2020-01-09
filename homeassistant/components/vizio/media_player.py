@@ -72,7 +72,7 @@ async def async_setup_platform(
     device_type = config[CONF_DEVICE_CLASS]
 
     device = VizioAsync(
-        DEVICE_ID, name, device_type, async_get_clientsession(hass, False)
+        DEVICE_ID, host, name, token, device_type, async_get_clientsession(hass, False)
     )
     if not await device.can_connect():
         fail_auth_msg = ""
@@ -85,9 +85,7 @@ async def async_setup_platform(
         )
         return
 
-    async_add_entities(
-        [VizioDevice(device, host, token, name, volume_step, device_type)], True
-    )
+    async_add_entities([VizioDevice(device, name, volume_step, device_type)], True)
 
 
 class VizioDevice(MediaPlayerDevice):
