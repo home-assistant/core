@@ -83,7 +83,7 @@ async def async_setup_platform(
             "is valid and available, device type is correct%s",
             fail_auth_msg,
         )
-        return False
+        return
 
     async_add_entities([VizioDevice(device, name, volume_step, device_type)], True)
 
