@@ -96,23 +96,6 @@ class SamsungTVDevice(MediaPlayerDevice):
             "timeout": 1,
         }
 
-    async def async_added_to_hass(self):
-        """Set up config_entry update listener."""
-        self._update_listener = self._config_entry.add_update_listener(
-            self.update_device_info
-        )
-
-    async def async_will_remove_from_hass(self):
-        """Remove config_entry update listener."""
-        if self._update_listener is not None:
-            self._update_listener()
-
-    async def update_device_info(self, config_entry):
-        """Update device info according to config_entry."""
-        self._uuid = config_entry.data.get(CONF_ID)
-        self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
-        self._model = config_entry.data.get(CONF_MODEL)
-
     def update(self):
         """Update state of device."""
         self.send_key("KEY")
