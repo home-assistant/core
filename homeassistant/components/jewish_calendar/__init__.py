@@ -21,6 +21,7 @@ SENSOR_TYPES = {
         "weekly_portion": ["Parshat Hashavua", "mdi:book-open-variant"],
         "holiday": ["Holiday", "mdi:calendar-star"],
         "omer_count": ["Day of the Omer", "mdi:counter"],
+        "daf_yomi": ["Daf Yomi", "mdi:book-open-variant"],
     },
     "time": {
         "first_light": ["Alot Hashachar", "mdi:weather-sunset-up"],
