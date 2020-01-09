@@ -15,9 +15,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    PRESET_ALTERNATE,
     PRESET_AWAY,
-    PRESET_HOLIDAY,
     PRESET_HOME,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
@@ -38,6 +36,10 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_FAN_ACTION = "fan_action"
 
 CONF_HOLD_TEMP = "hold_temp"
+
+PRESET_HOLIDAY = "holiday"
+
+PRESET_ALTERNATE = "alternate"
 
 STATE_CIRCULATE = "circulate"
 
