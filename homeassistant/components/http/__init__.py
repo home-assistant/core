@@ -54,6 +54,8 @@ DEFAULT_DEVELOPMENT = "0"
 DEFAULT_CORS = "https://cast.home-assistant.io"
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
+MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
+
 
 HTTP_SCHEMA = vol.Schema(
     {
@@ -188,7 +190,9 @@ class HomeAssistantHTTP:
         ssl_profile,
     ):
         """Initialize the HTTP Home Assistant server."""
-        app = self.app = web.Application(middlewares=[])
+        app = self.app = web.Application(
+            middlewares=[], client_max_size=MAX_CLIENT_SIZE
+        )
         app[KEY_HASS] = hass
 
         # This order matters
