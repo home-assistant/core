@@ -9,8 +9,8 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import FreeboxDevice
 from .const import DOMAIN, TRACKER_UPDATE
+from .router import FreeboxDevice
 
 _LOGGER = logging.getLogger(__name__)
 

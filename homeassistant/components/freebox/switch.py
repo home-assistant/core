@@ -8,8 +8,8 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import FreeboxRouter
 from .const import DOMAIN
+from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -7,8 +7,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import FreeboxRouter, FreeboxSensor
 from .const import DOMAIN, SENSOR_UPDATE
+from .router import FreeboxRouter, FreeboxSensor
 
 _LOGGER = logging.getLogger(__name__)
 
