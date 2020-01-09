@@ -73,7 +73,7 @@ def mock_api_authentication_error():
 @pytest.fixture(name="conn_error")
 def mock_api_connection_error():
     """Mock an api."""
-    with patch("transmissionrpc.Client", side_effect=librouteros.exceptions.TrapError):
+    with patch("librouteros.connect", side_effect=librouteros.exceptions.TrapError("")):
         yield
 
 
@@ -86,8 +86,6 @@ def init_config_flow(hass):
 
 async def test_import(hass, api):
     """Test import step."""
-    # flow = init_config_flow(hass)
-
     result = await hass.config_entries.flow.async_init(
         mikrotik.DOMAIN, context={"source": "import"}, data=DEMO_CONFIG
     )

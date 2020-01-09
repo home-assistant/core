@@ -3,8 +3,8 @@ from asynctest import patch
 import librouteros
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import mikrotik
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import ARP_DATA, DHCP_DATA, MOCK_DATA, MOCK_OPTIONS, WIRELESS_DATA
 
@@ -41,7 +41,6 @@ async def setup_mikrotik_entry(hass, **kwargs):
     with patch("librouteros.connect"), patch.object(
         mikrotik.hub.MikrotikData, "command", new=mock_command
     ):
-        # await mikrotik.async_setup_entry(hass, config_entry)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         return hass.data[mikrotik.DOMAIN][config_entry.entry_id]
@@ -77,12 +76,16 @@ async def test_hub_setup_successful(hass):
 async def test_hub_setup_failed(hass):
     """Failed setup of Mikrotik hub."""
 
+    config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA)
+    config_entry.add_to_hass(hass)
     # error when connection fails
     with patch(
         "librouteros.connect", side_effect=librouteros.exceptions.ConnectionError
-    ), pytest.raises(ConfigEntryNotReady):
-        config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA)
-        await mikrotik.async_setup_entry(hass, config_entry)
+    ):
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+        assert config_entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
 
     # error when username or password is invalid
     with patch(
@@ -90,9 +93,11 @@ async def test_hub_setup_failed(hass):
     ) as forward_entry_setup, patch(
         "librouteros.connect",
         side_effect=librouteros.exceptions.TrapError("invalid user name or password"),
+    ), pytest.raises(
+        config_entries.OperationNotAllowed
     ):
-        config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA)
-        result = await mikrotik.async_setup_entry(hass, config_entry)
+
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
 
         assert result is False
         assert len(forward_entry_setup.mock_calls) == 0
