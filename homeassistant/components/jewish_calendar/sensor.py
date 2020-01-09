@@ -29,49 +29,51 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(sensors)
 
+
 # Define fixed values:
 DAF_YOMI_CYCLE_11_START = dt_util.dt.date(1997, 9, 29)
 DAF_YOMI_MESECHTOS = [
-    {"en_name":"Berachos", "heb_name":"ברכות", "pages":63},
-    {"en_name":"Shabbos", "heb_name":"שבת", "pages":156},
-    {"en_name":"Eruvin", "heb_name":"עירובין", "pages":104},
-    {"en_name":"Pesachim", "heb_name":"פסחים", "pages":120},
-    {"en_name":"Shekalim", "heb_name":"שקלים", "pages":21},
-    {"en_name":"Yoma", "heb_name":"יומא", "pages":87},
-    {"en_name":"Succah", "heb_name":"סוכה", "pages":55},
-    {"en_name":"Beitzah", "heb_name":"ביצה", "pages":39},
-    {"en_name":"Rosh Hashanah", "heb_name":"ראש השנה", "pages":34},
-    {"en_name":"Taanis", "heb_name":"תענית", "pages":30},
-    {"en_name":"Megillah", "heb_name":"מגילה", "pages":31},
-    {"en_name":"Moed Katan", "heb_name":"מועד קטן", "pages":28},
-    {"en_name":"Chagigah", "heb_name":"חגיגה", "pages":26},
-    {"en_name":"Yevamos", "heb_name":"יבמות", "pages":121},
-    {"en_name":"Kesubos", "heb_name":"כתובות", "pages":111},
-    {"en_name":"Nedarim", "heb_name":"נדרים", "pages":90},
-    {"en_name":"Nazir", "heb_name":"נזיר", "pages":65},
-    {"en_name":"Sotah", "heb_name":"סוטה", "pages":48},
-    {"en_name":"Gittin", "heb_name":"גיטין", "pages":89},
-    {"en_name":"Kiddushin", "heb_name":"קידושין", "pages":81},
-    {"en_name":"Bava Kamma", "heb_name":"בבא קמא", "pages":118},
-    {"en_name":"Bava Metzia", "heb_name":"בבא מציעא", "pages":118},
-    {"en_name":"Bava Basra", "heb_name":"בבא בתרא", "pages":175},
-    {"en_name":"Sanhedrin", "heb_name":"סנהדרין", "pages":112},
-    {"en_name":"Makkos", "heb_name":"מכות", "pages":23},
-    {"en_name":"Shevuos", "heb_name":"שבועות", "pages":48},
-    {"en_name":"Avodah Zarah", "heb_name":"עבודה זרה", "pages":75},
-    {"en_name":"Horayos", "heb_name":"הוריות", "pages":13},
-    {"en_name":"Zevachim", "heb_name":"זבחים", "pages":119},
-    {"en_name":"Menachos", "heb_name":"מנחות", "pages":109},
-    {"en_name":"Chullin", "heb_name":"חולין", "pages":141},
-    {"en_name":"Bechoros", "heb_name":"בכורות", "pages":60},
-    {"en_name":"Arachin", "heb_name":"ערכין", "pages":33},
-    {"en_name":"Temurah", "heb_name":"תמורה", "pages":33},
-    {"en_name":"Kereisos", "heb_name":"כריתות", "pages":27},
-    {"en_name":"Meilah", "heb_name":"מעילה", "pages":36},
-    {"en_name":"Niddah", "heb_name":"נדה", "pages":72}
-    ]
+    {"en_name": "Berachos", "heb_name": "ברכות", "pages": 63},
+    {"en_name": "Shabbos", "heb_name": "שבת", "pages": 156},
+    {"en_name": "Eruvin", "heb_name": "עירובין", "pages": 104},
+    {"en_name": "Pesachim", "heb_name": "פסחים", "pages": 120},
+    {"en_name": "Shekalim", "heb_name": "שקלים", "pages": 21},
+    {"en_name": "Yoma", "heb_name": "יומא", "pages": 87},
+    {"en_name": "Succah", "heb_name": "סוכה", "pages": 55},
+    {"en_name": "Beitzah", "heb_name": "ביצה", "pages": 39},
+    {"en_name": "Rosh Hashanah", "heb_name": "ראש השנה", "pages": 34},
+    {"en_name": "Taanis", "heb_name": "תענית", "pages": 30},
+    {"en_name": "Megillah", "heb_name": "מגילה", "pages": 31},
+    {"en_name": "Moed Katan", "heb_name": "מועד קטן", "pages": 28},
+    {"en_name": "Chagigah", "heb_name": "חגיגה", "pages": 26},
+    {"en_name": "Yevamos", "heb_name": "יבמות", "pages": 121},
+    {"en_name": "Kesubos", "heb_name": "כתובות", "pages": 111},
+    {"en_name": "Nedarim", "heb_name": "נדרים", "pages": 90},
+    {"en_name": "Nazir", "heb_name": "נזיר", "pages": 65},
+    {"en_name": "Sotah", "heb_name": "סוטה", "pages": 48},
+    {"en_name": "Gittin", "heb_name": "גיטין", "pages": 89},
+    {"en_name": "Kiddushin", "heb_name": "קידושין", "pages": 81},
+    {"en_name": "Bava Kamma", "heb_name": "בבא קמא", "pages": 118},
+    {"en_name": "Bava Metzia", "heb_name": "בבא מציעא", "pages": 118},
+    {"en_name": "Bava Basra", "heb_name": "בבא בתרא", "pages": 175},
+    {"en_name": "Sanhedrin", "heb_name": "סנהדרין", "pages": 112},
+    {"en_name": "Makkos", "heb_name": "מכות", "pages": 23},
+    {"en_name": "Shevuos", "heb_name": "שבועות", "pages": 48},
+    {"en_name": "Avodah Zarah", "heb_name": "עבודה זרה", "pages": 75},
+    {"en_name": "Horayos", "heb_name": "הוריות", "pages": 13},
+    {"en_name": "Zevachim", "heb_name": "זבחים", "pages": 119},
+    {"en_name": "Menachos", "heb_name": "מנחות", "pages": 109},
+    {"en_name": "Chullin", "heb_name": "חולין", "pages": 141},
+    {"en_name": "Bechoros", "heb_name": "בכורות", "pages": 60},
+    {"en_name": "Arachin", "heb_name": "ערכין", "pages": 33},
+    {"en_name": "Temurah", "heb_name": "תמורה", "pages": 33},
+    {"en_name": "Kereisos", "heb_name": "כריתות", "pages": 27},
+    {"en_name": "Meilah", "heb_name": "מעילה", "pages": 36},
+    {"en_name": "Niddah", "heb_name": "נדה", "pages": 72},
+]
 
-DAF_YOMI_TOTAL_PAGES = sum(mesechta['pages'] for mesechta in DAF_YOMI_MESECHTOS)
+DAF_YOMI_TOTAL_PAGES = sum(mesechta["pages"] for mesechta in DAF_YOMI_MESECHTOS)
+
 
 class JewishCalendarSensor(Entity):
     """Representation of an Jewish calendar sensor."""
@@ -168,7 +170,7 @@ class JewishCalendarSensor(Entity):
             else:
                 if self._hebrew:
                     heb_number = hdate.date.hebrew_number(daf_number + 2)
-                    heb_number = heb_number.replace("'", "").replace('"', '')
+                    heb_number = heb_number.replace("'", "").replace('"', "")
                     return "%s %s" % (entry["heb_name"], heb_number)
                 else:
                     return "%s %s" % (entry["en_name"], daf_number + 2)
