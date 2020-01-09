@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Denne printer er allerede konfigureret.",
             "unsupported_model": "Denne printermodel underst\u00f8ttes ikke."
         },
         "error": {
