@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any, Dict, List
 
-from pyvizio import Vizio
+from pyvizio import VizioAsync
 import voluptuous as vol
 
 from homeassistant import util
@@ -69,7 +69,7 @@ async def async_setup_platform(
     volume_step = config[CONF_VOLUME_STEP]
     device_type = config[CONF_DEVICE_CLASS]
     device = VizioDevice(hass, host, token, name, volume_step, device_type)
-    if not await hass.async_add_executor_job(device.validate_setup):
+    if not await device.validate_setup():
         fail_auth_msg = ""
         if token:
             fail_auth_msg = ", auth token is correct"
@@ -106,7 +106,7 @@ class VizioDevice(MediaPlayerDevice):
         self._available_inputs = None
         self._device_type = device_type
         self._supported_commands = SUPPORTED_COMMANDS[device_type]
-        self._device = Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
+        self._device = VizioAsync(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
         self._max_volume = float(self._device.get_max_volume())
         self._unique_id = None
         self._icon = ICON[device_type]
@@ -116,28 +116,22 @@ class VizioDevice(MediaPlayerDevice):
         """Retrieve latest state of the device."""
 
         if not self._unique_id:
-            self._unique_id = await self._hass.async_add_executor_job(
-                self._device.get_esn
-            )
+            self._unique_id = await self._device.get_esn()
 
-        is_on = await self._hass.async_add_executor_job(self._device.get_power_state)
+        is_on = await self._device.get_power_state()
 
         if is_on:
             self._state = STATE_ON
 
-            volume = await self._hass.async_add_executor_job(
-                self._device.get_current_volume
-            )
+            volume = await self._device.get_current_volume()
             if volume is not None:
                 self._volume_level = float(volume) / self._max_volume
 
-            input_ = await self._hass.async_add_executor_job(
-                self._device.get_current_input
-            )
+            input_ = await self._device.get_current_input()
             if input_ is not None:
                 self._current_input = input_.meta_name
 
-            inputs = await self._hass.async_add_executor_job(self._device.get_inputs)
+            inputs = await self._device.get_inputs()
             if inputs is not None:
                 self._available_inputs = [input_.name for input_ in inputs]
 
@@ -212,40 +206,40 @@ class VizioDevice(MediaPlayerDevice):
     async def async_turn_on(self) -> None:
         """Turn the device on."""
 
-        await self._hass.async_add_executor_job(self._device.pow_on)
+        await self._device.pow_on()
 
     async def async_turn_off(self) -> None:
         """Turn the device off."""
 
-        await self._hass.async_add_executor_job(self._device.pow_off)
+        await self._device.pow_off()
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
 
         if mute:
-            await self._hass.async_add_executor_job(self._device.mute_on)
+            await self._device.mute_on()
         else:
-            await self._hass.async_add_executor_job(self._device.mute_off)
+            await self._device.mute_off()
 
     async def async_media_previous_track(self) -> None:
         """Send previous channel command."""
 
-        await self._hass.async_add_executor_job(self._device.ch_down)
+        await self._device.ch_down()
 
     async def async_media_next_track(self) -> None:
         """Send next channel command."""
 
-        await self._hass.async_add_executor_job(self._device.ch_up)
+        await self._device.ch_up()
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
 
-        await self._hass.async_add_executor_job(self._device.input_switch(source))
+        await self._device.input_switch(source)
 
     async def async_volume_up(self) -> None:
         """Increasing volume of the device."""
 
-        await self._hass.async_add_executor_job(self._device.vol_up, self._volume_step)
+        await self._device.vol_up(self._volume_step)
 
         if self._volume_level is not None:
             self._volume_level = min(
@@ -255,19 +249,17 @@ class VizioDevice(MediaPlayerDevice):
     async def async_volume_down(self) -> None:
         """Decreasing volume of the device."""
 
-        await self._hass.async_add_executor_job(
-            self._device.vol_down, self._volume_step
-        )
+        await self._device.vol_down(self._volume_step)
 
         if self._volume_level is not None:
             self._volume_level = max(
                 0.0, self._volume_level - self._volume_step / self._max_volume
             )
 
-    def validate_setup(self) -> bool:
+    async def validate_setup(self) -> bool:
         """Validate if host is available and auth token is correct."""
 
-        return self._device.can_connect()
+        return await self._device.can_connect()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
@@ -275,9 +267,9 @@ class VizioDevice(MediaPlayerDevice):
         if self._volume_level is not None:
             if volume > self._volume_level:
                 num = int(self._max_volume * (volume - self._volume_level))
-                await self._hass.async_add_executor_job(self._device.vol_up, num)
+                await self._device.vol_up(num)
                 self._volume_level = volume
             elif volume < self._volume_level:
                 num = int(self._max_volume * (self._volume_level - volume))
-                await self._hass.async_add_executor_job(self._device.vol_down, num)
+                await self._device.vol_down(num)
                 self._volume_level = volume
