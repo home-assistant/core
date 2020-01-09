@@ -4,7 +4,17 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.input_text import ATTR_VALUE, DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.input_text import (
+    ATTR_MAX,
+    ATTR_MIN,
+    ATTR_MODE,
+    ATTR_VALUE,
+    CONF_MAX_VALUE,
+    CONF_MIN_VALUE,
+    DOMAIN,
+    MODE_TEXT,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_RELOAD
 from homeassistant.core import Context, CoreState, State
 from homeassistant.exceptions import Unauthorized
@@ -109,7 +119,7 @@ async def test_restore_state(hass):
     hass.state = CoreState.starting
 
     assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"b1": None, "b2": {"min": 0, "max": 10}}},
+        hass, DOMAIN, {DOMAIN: {"b1": None, "b2": {"min": 0, "max": 10}}}
     )
 
     state = hass.states.get("input_text.b1")
@@ -191,6 +201,11 @@ async def test_config_none(hass):
     state = hass.states.get("input_text.b1")
     assert state
     assert str(state.state) == "unknown"
+
+    # with empty config we still should have the defaults
+    assert state.attributes[ATTR_MODE] == MODE_TEXT
+    assert state.attributes[ATTR_MAX] == CONF_MAX_VALUE
+    assert state.attributes[ATTR_MIN] == CONF_MIN_VALUE
 
 
 async def test_reload(hass, hass_admin_user, hass_read_only_user):

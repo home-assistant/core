@@ -1,14 +1,17 @@
 """Support to enter a value into a text box."""
 import logging
+import typing
 
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_EDITABLE,
     ATTR_MODE,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ICON,
+    CONF_ID,
     CONF_MODE,
     CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
 )
 import homeassistant.helpers.config_validation as cv
@@ -26,14 +29,16 @@ CONF_MIN = "min"
 CONF_MIN_VALUE = 0
 CONF_MAX = "max"
 CONF_MAX_VALUE = 100
+CONF_PATTERN = "pattern"
+CONF_VALUE = "value"
 
 MODE_TEXT = "text"
 MODE_PASSWORD = "password"
 
-ATTR_VALUE = "value"
+ATTR_VALUE = CONF_VALUE
 ATTR_MIN = "min"
 ATTR_MAX = "max"
-ATTR_PATTERN = "pattern"
+ATTR_PATTERN = CONF_PATTERN
 
 SERVICE_SET_VALUE = "set_value"
 
@@ -65,8 +70,8 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
                         vol.Optional(CONF_INITIAL, ""): cv.string,
                         vol.Optional(CONF_ICON): cv.icon,
-                        vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
-                        vol.Optional(ATTR_PATTERN): cv.string,
+                        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                        vol.Optional(CONF_PATTERN): cv.string,
                         vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In(
                             [MODE_TEXT, MODE_PASSWORD]
                         ),
@@ -87,14 +92,20 @@ async def async_setup(hass, config):
     """Set up an input text box."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    entities = await _async_process_config(config)
+    entities = [
+        InputText.from_yaml({CONF_ID: id_, **(cfg or {})})
+        for id_, cfg in config[DOMAIN].items()
+    ]
 
     async def reload_service_handler(service_call):
         """Remove all entities and load new ones from config."""
         conf = await component.async_prepare_reload()
         if conf is None:
             return
-        new_entities = await _async_process_config(conf)
+        new_entities = [
+            InputText.from_yaml({CONF_ID: id_, **(cfg or {})})
+            for id_, cfg in conf[DOMAIN].items()
+        ]
         if new_entities:
             await component.async_add_entities(new_entities)
 
@@ -115,47 +126,30 @@ async def async_setup(hass, config):
     return True
 
 
-async def _async_process_config(config):
-    """Process config and create list of entities."""
-    entities = []
-
-    for object_id, cfg in config[DOMAIN].items():
-        if cfg is None:
-            cfg = {}
-        name = cfg.get(CONF_NAME)
-        minimum = cfg.get(CONF_MIN, CONF_MIN_VALUE)
-        maximum = cfg.get(CONF_MAX, CONF_MAX_VALUE)
-        initial = cfg.get(CONF_INITIAL)
-        icon = cfg.get(CONF_ICON)
-        unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
-        pattern = cfg.get(ATTR_PATTERN)
-        mode = cfg.get(CONF_MODE)
-
-        entities.append(
-            InputText(
-                object_id, name, initial, minimum, maximum, icon, unit, pattern, mode
-            )
-        )
-
-    return entities
-
-
 class InputText(RestoreEntity):
     """Represent a text box."""
 
-    def __init__(
-        self, object_id, name, initial, minimum, maximum, icon, unit, pattern, mode
-    ):
+    def __init__(self, config: typing.Dict):
         """Initialize a text input."""
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._name = name
-        self._current_value = initial
-        self._minimum = minimum
-        self._maximum = maximum
-        self._icon = icon
-        self._unit = unit
-        self._pattern = pattern
-        self._mode = mode
+        self._config = config
+        self.editable = True
+        self._current_value = config.get(CONF_INITIAL)
+
+    @classmethod
+    def from_yaml(cls, config: typing.Dict) -> "InputText":
+        """Return entity instance initialized from yaml storage."""
+        # set defaults for empty config
+        config = {
+            CONF_INITIAL: "",
+            CONF_MAX: CONF_MAX_VALUE,
+            CONF_MIN: CONF_MIN_VALUE,
+            CONF_MODE: MODE_TEXT,
+            **config,
+        }
+        input_text = cls(config)
+        input_text.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        input_text.editable = False
+        return input_text
 
     @property
     def should_poll(self):
@@ -165,12 +159,22 @@ class InputText(RestoreEntity):
     @property
     def name(self):
         """Return the name of the text input entity."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def icon(self):
         """Return the icon to be used for this entity."""
-        return self._icon
+        return self._config.get(CONF_ICON)
+
+    @property
+    def _maximum(self) -> int:
+        """Return max len of the text."""
+        return self._config[CONF_MAX]
+
+    @property
+    def _minimum(self) -> int:
+        """Return min len of the text."""
+        return self._config[CONF_MIN]
 
     @property
     def state(self):
@@ -180,16 +184,22 @@ class InputText(RestoreEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit
+        return self._config.get(CONF_UNIT_OF_MEASUREMENT)
+
+    @property
+    def unique_id(self) -> typing.Optional[str]:
+        """Return unique id for the entity."""
+        return self._config[CONF_ID]
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
         return {
+            ATTR_EDITABLE: self.editable,
             ATTR_MIN: self._minimum,
             ATTR_MAX: self._maximum,
-            ATTR_PATTERN: self._pattern,
-            ATTR_MODE: self._mode,
+            ATTR_PATTERN: self._config.get(CONF_PATTERN),
+            ATTR_MODE: self._config[CONF_MODE],
         }
 
     async def async_added_to_hass(self):
