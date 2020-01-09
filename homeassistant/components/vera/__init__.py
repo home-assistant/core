@@ -1,6 +1,7 @@
 """Support for Vera devices."""
 import asyncio
 from collections import defaultdict
+from copy import deepcopy
 import logging
 
 import pyvera as veraApi
@@ -73,13 +74,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     config = config_entry.data
 
     # Copy the configuration.yml options into the options.
+    if CONF_LIGHTS in config or CONF_EXCLUDE in config:
+        options = deepcopy(config_entry.options)
+        options.setdefault(CONF_LIGHTS, config.get(CONF_LIGHTS, []))
+        options.setdefault(CONF_EXCLUDE, config.get(CONF_EXCLUDE, []))
+
+        hass.config_entries.async_update_entry(
+            entry=config_entry, data=config_entry.data, options=options
+        )
+
     base_url = config.get(CONF_CONTROLLER)
-    light_ids = config_entry.options.setdefault(
-        CONF_LIGHTS, config.get(CONF_LIGHTS, [])
-    )
-    exclude_ids = config_entry.options.setdefault(
-        CONF_EXCLUDE, config.get(CONF_EXCLUDE, [])
-    )
+    light_ids = config_entry.options.get(CONF_LIGHTS, [])
+    exclude_ids = config_entry.options.get(CONF_EXCLUDE, [])
 
     # Initialize the Vera controller.
     controller = veraApi.VeraController(base_url)
