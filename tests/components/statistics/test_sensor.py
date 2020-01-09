@@ -1,6 +1,5 @@
 """The test for the statistics sensor platform."""
 from datetime import datetime, timedelta
-import logging
 import statistics
 import unittest
 from unittest.mock import patch
@@ -18,8 +17,6 @@ from tests.common import (
     get_test_home_assistant,
     init_recorder_component,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class TestStatisticsSensor(unittest.TestCase):
@@ -261,7 +258,6 @@ class TestStatisticsSensor(unittest.TestCase):
 
             # wait for 3 minutes (max_age).
             mock_data["return_time"] += timedelta(minutes=3)
-            _LOGGER.error("fire_time_changed %s", mock_data["return_time"])
             fire_time_changed(self.hass, mock_data["return_time"])
             self.hass.block_till_done()
 
