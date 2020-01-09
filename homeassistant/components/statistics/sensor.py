@@ -283,7 +283,7 @@ class StatisticsSensor(Entity):
         next_to_purge_timestamp = self._next_to_purge_timestamp()
         if next_to_purge_timestamp:
             _LOGGER.debug(
-                "%s: scheduling update at %s.", self.entity_id, next_to_purge_timestamp
+                "%s: scheduling update at %s", self.entity_id, next_to_purge_timestamp
             )
             if self._update_listener:
                 self._update_listener()
