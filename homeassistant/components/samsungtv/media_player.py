@@ -8,7 +8,6 @@ from websocket import WebSocketException
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN as MEDIA_PLAYER_DOMAIN,
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -68,6 +67,7 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def __init__(self, config_entry):
         """Initialize the Samsung device."""
+        self._config_entry = config_entry
         self._name = config_entry.title
         self._uuid = config_entry.data.get(CONF_ID)
         self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
@@ -96,13 +96,13 @@ class SamsungTVDevice(MediaPlayerDevice):
         }
 
     async def async_added_to_hass(self, hass):
-        """Set up config_entry updates listener."""
-        self._update_listener = config_entry.add_update_listener(
+        """Set up config_entry update listener."""
+        self._update_listener = self._config_entry.add_update_listener(
             self.update_device_info
         )
 
     async def async_will_remove_from_hass(self, hass):
-        """Remove config_entry updates listener."""
+        """Remove config_entry update listener."""
         if self._update_listener is not None:
             self._update_listener()
 
