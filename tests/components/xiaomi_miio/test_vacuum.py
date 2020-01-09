@@ -273,7 +273,7 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_FAN_SPEED,
-        {"entity_id": entity_id, "fan_speed": "turbo"},
+        {"entity_id": entity_id, "fan_speed": "Medium"},
         blocking=True,
     )
     mock_mirobo_is_got_error.assert_has_calls(
