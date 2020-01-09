@@ -87,6 +87,15 @@ def remote_fixture():
         yield remote
 
 
+@pytest.fixture(name="delay")
+def delay_fixture():
+    """Patch the delay script function."""
+    with patch(
+        "homeassistant.components.samsungtv.media_player.Script.async_run"
+    ) as delay:
+        yield delay
+
+
 @pytest.fixture
 def mock_now():
     """Fixture for dtutil.now."""
@@ -222,7 +231,7 @@ async def test_name(hass, remote):
     assert state.attributes[ATTR_FRIENDLY_NAME] == "fake"
 
 
-async def test_state_with_turnon(hass, remote):
+async def test_state_with_turnon(hass, remote, delay):
     """Test for state property."""
     await setup_samsungtv(hass, MOCK_CONFIG)
     assert await hass.services.async_call(
@@ -230,6 +239,8 @@ async def test_state_with_turnon(hass, remote):
     )
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_ON
+    assert delay.call_count == 1
+
     assert await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
@@ -398,16 +409,13 @@ async def test_media_previous_track(hass, remote):
     assert remote.control.call_args_list == [call("KEY_CHDOWN"), call("KEY")]
 
 
-async def test_turn_on_with_turnon(hass, remote):
+async def test_turn_on_with_turnon(hass, remote, delay):
     """Test turn on."""
-    with patch(
-        "homeassistant.components.samsungtv.media_player.Script.async_run"
-    ) as delay:
-        await setup_samsungtv(hass, MOCK_CONFIG)
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
-        )
-        assert delay.call_count == 1
+    await setup_samsungtv(hass, MOCK_CONFIG)
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    assert delay.call_count == 1
 
 
 async def test_turn_on_without_turnon(hass, remote):
