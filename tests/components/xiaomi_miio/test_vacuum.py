@@ -204,12 +204,12 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-80"
     assert state.attributes.get(ATTR_CLEANING_TIME) == 155
     assert state.attributes.get(ATTR_CLEANED_AREA) == 123
-    assert state.attributes.get(ATTR_FAN_SPEED) == "Quiet"
+    assert state.attributes.get(ATTR_FAN_SPEED) == "Silent"
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == [
-        "Quiet",
-        "Balanced",
+        "Silent",
+        "Standard",
+        "Medium",
         "Turbo",
-        "Max",
         "Gentle",
     ]
     assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 12
@@ -348,10 +348,10 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     assert state.attributes.get(ATTR_CLEANED_AREA) == 133
     assert state.attributes.get(ATTR_FAN_SPEED) == 99
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == [
-        "Quiet",
-        "Balanced",
+        "Silent",
+        "Standard",
+        "Medium",
         "Turbo",
-        "Max",
         "Gentle",
     ]
     assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 11
