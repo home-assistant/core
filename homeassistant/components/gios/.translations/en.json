@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "GIO\u015a integration for this measuring station is already configured."
+        },
         "error": {
             "cannot_connect": "Cannot connect to the GIO\u015a server.",
             "invalid_sensors_data": "Invalid sensors' data for this measuring station.",
