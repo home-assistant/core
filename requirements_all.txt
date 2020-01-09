@@ -1696,7 +1696,11 @@ pyversasense==0.0.6
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
+<<<<<<< HEAD
 pyvizio==0.0.15
+=======
+pyvizio==0.0.14
+>>>>>>> update requirements_all
 
 # homeassistant.components.velux
 pyvlx==0.2.12
