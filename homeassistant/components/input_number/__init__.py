@@ -214,7 +214,7 @@ class InputNumber(RestoreEntity):
     def __init__(self, config: typing.Dict):
         """Initialize an input number."""
         self._config = config
-        self._editable = True
+        self.editable = True
         self._current_value = config.get(CONF_INITIAL)
 
     @classmethod
@@ -222,7 +222,7 @@ class InputNumber(RestoreEntity):
         """Return entity instance initialized from yaml storage."""
         input_num = cls(config)
         input_num.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
-        input_num._editable = False
+        input_num.editable = False
         return input_num
 
     @property
@@ -275,7 +275,7 @@ class InputNumber(RestoreEntity):
         """Return the state attributes."""
         return {
             ATTR_INITIAL: self._config.get(CONF_INITIAL),
-            ATTR_EDITABLE: self._editable,
+            ATTR_EDITABLE: self.editable,
             ATTR_MIN: self._minimum,
             ATTR_MAX: self._maximum,
             ATTR_STEP: self._step,
