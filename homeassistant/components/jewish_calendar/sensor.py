@@ -158,6 +158,7 @@ class JewishCalendarSensor(Entity):
         return {}
 
     def get_daf(self, date):
+        """Returns a string representing the day's daf"""
         # The first few cycles were only 2702 blatt. After that it became 2711. Even with
         # that, the math doesn't play nicely with the dates before the 11th cycle :(
         # From Cycle 11 onwards, it was simple and sequential
