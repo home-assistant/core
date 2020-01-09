@@ -36,7 +36,7 @@ DEFAULT_TIMEOUT = 90
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up the Netatmo energy platform."""
+    """Set up the access to Netatmo binary sensor."""
     auth = hass.data[DOMAIN][entry.entry_id][AUTH]
 
     def get_entities():
