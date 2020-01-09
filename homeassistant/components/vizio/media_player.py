@@ -96,6 +96,7 @@ class VizioDevice(MediaPlayerDevice):
     ) -> None:
         """Initialize Vizio device."""
 
+        self._hass = hass
         self._name = name
         self._state = None
         self._volume_level = None
