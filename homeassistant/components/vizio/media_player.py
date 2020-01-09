@@ -27,11 +27,12 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import VIZIO_SCHEMA, validate_auth
-from .const import CONF_VOLUME_STEP, DEFAULT_NAME, DEVICE_ID, DOMAIN, ICON
+from .const import CONF_VOLUME_STEP, DEVICE_ID, DOMAIN, ICON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,8 +70,16 @@ async def async_setup_platform(
     name = config[CONF_NAME]
     volume_step = config[CONF_VOLUME_STEP]
     device_type = config[CONF_DEVICE_CLASS]
-    device = VizioDevice(host, token, name, volume_step, device_type)
-    if not await device.validate_setup():
+
+    device = VizioAsync(
+        DEVICE_ID, host, name, token, device_type, async_get_clientsession(hass, False)
+    )
+    if await device.can_connect():
+        async_add_entities(
+            [VizioDevice(hass, device, host, token, name, volume_step, device_type)],
+            True,
+        )
+    else:
         fail_auth_msg = ""
         if token:
             fail_auth_msg = ", auth token is correct"
@@ -81,17 +90,23 @@ async def async_setup_platform(
         )
         return
 
-    async_add_entities([device], True)
-
 
 class VizioDevice(MediaPlayerDevice):
     """Media Player implementation which performs REST requests to device."""
 
     def __init__(
-        self, host: str, token: str, name: str, volume_step: int, device_type: str,
+        self,
+        hass: HomeAssistantType,
+        device: VizioAsync,
+        host: str,
+        token: str,
+        name: str,
+        volume_step: int,
+        device_type: str,
     ) -> None:
         """Initialize Vizio device."""
 
+        self._hass = hass
         self._name = name
         self._state = None
         self._volume_level = None
@@ -100,7 +115,7 @@ class VizioDevice(MediaPlayerDevice):
         self._available_inputs = None
         self._device_type = device_type
         self._supported_commands = SUPPORTED_COMMANDS[device_type]
-        self._device = VizioAsync(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
+        self._device = device
         self._max_volume = float(self._device.get_max_volume())
         self._unique_id = None
         self._icon = ICON[device_type]
@@ -249,11 +264,6 @@ class VizioDevice(MediaPlayerDevice):
             self._volume_level = max(
                 0.0, self._volume_level - self._volume_step / self._max_volume
             )
-
-    async def validate_setup(self) -> bool:
-        """Validate if host is available and auth token is correct."""
-
-        return await self._device.can_connect()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
