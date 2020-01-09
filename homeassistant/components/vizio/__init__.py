@@ -32,12 +32,12 @@ def validate_auth(config: ConfigType) -> ConfigType:
 
 
 VIZIO_SCHEMA = {
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_ACCESS_TOKEN): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.All(
         cv.string, vol.Lower, vol.In(["tv", "soundbar"])
     ),
-    vol.Optional(CONF_ACCESS_TOKEN): cv.string,
     vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=10)
     ),
