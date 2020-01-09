@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List
 
 from pyvizio import VizioAsync
 import voluptuous as vol
@@ -27,6 +27,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import VIZIO_SCHEMA, validate_auth
@@ -58,9 +59,9 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA), validate_auth)
 async def async_setup_platform(
     hass: HomeAssistantType,
     config: ConfigType,
-    async_add_entities,
+    async_add_entities: Callable[[List[Entity], bool], None],
     discovery_info: Dict[str, Any] = None,
-) -> bool:
+):
     """Set up the Vizio media player platform."""
 
     host = config[CONF_HOST]
@@ -78,9 +79,9 @@ async def async_setup_platform(
             "is valid and available, device type is correct%s",
             fail_auth_msg,
         )
-        return False
+        return
 
-    return async_add_entities([device], True)
+    async_add_entities([device], True)
 
 
 class VizioDevice(MediaPlayerDevice):
