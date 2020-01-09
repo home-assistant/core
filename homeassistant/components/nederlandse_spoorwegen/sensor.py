@@ -135,7 +135,9 @@ class NSDepartureSensor(Entity):
             ),
             "departure_time_actual": self._trips[0].departure_time_actual.strftime(
                 "%H:%M"
-            ) if self._trips[0].departure_time_actual is not None else None,
+            )
+            if self._trips[0].departure_time_actual is not None
+            else None,
             "departure_delay": self._trips[0].departure_time_planned
             != self._trips[0].departure_time_actual,
             "departure_platform": self._trips[0].departure_platform_planned,
@@ -144,7 +146,8 @@ class NSDepartureSensor(Entity):
                 "%H:%M"
             ),
             "arrival_time_actual": self._trips[0].arrival_time_actual.strftime("%H:%M")
-            if self._trips[0].arrival_time_actual is not None else None,
+            if self._trips[0].arrival_time_actual is not None
+            else None,
             "arrival_delay": self._trips[0].arrival_time_planned
             != self._trips[0].arrival_time_actual,
             "arrival_platform": self._trips[0].arrival_platform_planned,
