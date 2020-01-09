@@ -173,8 +173,7 @@ class JewishCalendarSensor(Entity):
                     heb_number = hdate.date.hebrew_number(daf_number + 2)
                     heb_number = heb_number.replace("'", "").replace('"', "")
                     return "%s %s" % (entry["heb_name"], heb_number)
-                else:
-                    return "%s %s" % (entry["en_name"], daf_number + 2)
+                return "%s %s" % (entry["en_name"], daf_number + 2)
 
     def get_state(self, after_shkia_date, after_tzais_date):
         """For a given type of sensor, return the state."""
