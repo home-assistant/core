@@ -59,13 +59,13 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
-    async_add_entities([SamsungTVDevice(config_entry)])
+    async_add_entities([SamsungTVDevice(hass, config_entry)])
 
 
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, config_entry):
+    def __init__(self, hass, config_entry):
         """Initialize the Samsung device."""
         self._config_entry = config_entry
         self._name = config_entry.title
@@ -73,7 +73,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
         self._model = config_entry.data.get(CONF_MODEL)
         turn_on_action = config_entry.data.get(CONF_ON_ACTION)
-        self._on_script = Script(self.hass, turn_on_action) if turn_on_action else None
+        self._on_script = Script(hass, turn_on_action) if turn_on_action else None
         self._update_listener = None
         # Assume that the TV is not muted
         self._muted = False
