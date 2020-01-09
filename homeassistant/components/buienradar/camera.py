@@ -17,9 +17,7 @@ CONF_DIMENSION = "dimension"
 CONF_DELTA = "delta"
 CONF_COUNTRY = "country_code"
 
-RADAR_MAP_URL_TEMPLATE = (
-    "https://api.buienradar.nl/image/1.0/" "RadarMap{c}?w={w}&h={h}"
-)
+RADAR_MAP_URL_TEMPLATE = "https://api.buienradar.nl/image/1.0/RadarMap{c}?w={w}&h={h}"
 
 _LOG = logging.getLogger(__name__)
 
@@ -27,7 +25,7 @@ _LOG = logging.getLogger(__name__)
 DIM_RANGE = vol.All(vol.Coerce(int), vol.Range(min=120, max=700))
 
 # Multiple choice for available Radar Map URL
-SUPPORTED_COUNTRY_CODES = vol.All(vol.Coerce(str), vol.In(["NL", "BE"]))
+SUPPORTED_COUNTRY_CODES = ["NL", "BE"]
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend(
@@ -37,7 +35,9 @@ PLATFORM_SCHEMA = vol.All(
                 vol.Coerce(float), vol.Range(min=0)
             ),
             vol.Optional(CONF_NAME, default="Buienradar loop"): cv.string,
-            vol.Optional(CONF_COUNTRY, default="NL"): SUPPORTED_COUNTRY_CODES,
+            vol.Optional(CONF_COUNTRY, default="NL"): vol.All(
+                vol.Coerce(str), vol.In(SUPPORTED_COUNTRY_CODES)
+            ),
         }
     )
 )

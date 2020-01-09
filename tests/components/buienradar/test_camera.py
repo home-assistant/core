@@ -12,9 +12,7 @@ EPSILON_DELTA = 0.0000000001
 
 def radar_map_url(dim: int = 512, country_code: str = "NL") -> str:
     """Build map url, defaulting to 512 wide (as in component)."""
-    return (
-        "https://api.buienradar.nl/" "image/1.0/RadarMap{country}?w={dim}&h={dim}"
-    ).format(country=country_code, dim=dim)
+    return f"https://api.buienradar.nl/image/1.0/RadarMap{country_code}?w={dim}&h={dim}"
 
 
 async def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
