@@ -8,9 +8,13 @@ MOCK_DATA = {
     mikrotik.CONF_PASSWORD: "pass",
     mikrotik.CONF_PORT: 8278,
     mikrotik.CONF_VERIFY_SSL: False,
-    "options": {mikrotik.CONF_TRACK_DEVICES: True},
 }
 
+MOCK_OPTIONS = {
+    mikrotik.CONF_ARP_PING: False,
+    mikrotik.const.CONF_FORCE_DHCP: False,
+    mikrotik.CONF_DETECTION_TIME: mikrotik.DEFAULT_DETECTION_TIME,
+}
 
 DEVICE_1_DHCP = {
     ".id": "*1A",

@@ -54,10 +54,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 def update_items(hub, async_add_entities, tracked):
     """Update tracked device state from the hub."""
     new_tracked = []
-    for device in hub.api.devices:
-        if device not in tracked:
-            tracked[device] = MikrotikHubTracker(hub.api.devices[device], hub)
-            new_tracked.append(tracked[device])
+    for mac, device in hub.api.devices.items():
+        if mac not in tracked:
+            tracked[mac] = MikrotikHubTracker(device, hub)
+            new_tracked.append(tracked[mac])
 
     if new_tracked:
         async_add_entities(new_tracked)
@@ -116,7 +116,7 @@ class MikrotikHubTracker(ScannerEntity):
         info = {
             "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
             "manufacturer": ATTR_MANUFACTURER,
-            "identifiers": {(DOMAIN, self.unique_id)},
+            "identifiers": {(DOMAIN, self.device.mac)},
             "name": self.name,
             "via_device": (DOMAIN, self.hub.serial_num),
         }

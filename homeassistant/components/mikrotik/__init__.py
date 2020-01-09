@@ -16,7 +16,7 @@ from .const import (
     ATTR_MANUFACTURER,
     CONF_ARP_PING,
     CONF_DETECTION_TIME,
-    CONF_TRACK_DEVICES,
+    CONF_FORCE_DHCP,
     DEFAULT_API_PORT,
     DEFAULT_DETECTION_TIME,
     DEFAULT_NAME,
@@ -33,8 +33,8 @@ MIKROTIK_SCHEMA = vol.All(
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_API_PORT): cv.port,
             vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
-            vol.Optional(CONF_TRACK_DEVICES, default=True): cv.boolean,
             vol.Optional(CONF_ARP_PING, default=False): cv.boolean,
+            vol.Optional(CONF_FORCE_DHCP, default=False): cv.boolean,
             vol.Optional(
                 CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME
             ): cv.time_period,
@@ -65,11 +65,10 @@ async def async_setup_entry(hass, config_entry):
     """Set up the Mikrotik component."""
 
     hub = MikrotikHub(hass, config_entry)
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
-
     if not await hub.async_setup():
         return False
 
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
     device_registry = await hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,

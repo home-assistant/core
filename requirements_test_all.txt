@@ -277,7 +277,7 @@ keyrings.alt==3.4.0
 libpurecool==0.6.0
 
 # homeassistant.components.mikrotik
-librouteros==2.3.0
+librouteros==2.4.0
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.7.2

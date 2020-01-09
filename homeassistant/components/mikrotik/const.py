@@ -1,10 +1,8 @@
 """Constants used in the Mikrotik components."""
 
 DOMAIN = "mikrotik"
-# MK_CONFIG = "mikrotik_config"
 DEFAULT_NAME = "Mikrotik"
 DEFAULT_API_PORT = 8728
-# DEFAULT_API_SSL_PORT = 8729
 DEFAULT_DETECTION_TIME = 300
 
 ATTR_MANUFACTURER = "Mikrotik"
@@ -14,7 +12,6 @@ ATTR_MODEL = "model"
 
 CONF_ARP_PING = "arp_ping"
 CONF_FORCE_DHCP = "force_dhcp"
-CONF_TRACK_DEVICES = "track_devices"
 CONF_DETECTION_TIME = "detection_time"
 
 

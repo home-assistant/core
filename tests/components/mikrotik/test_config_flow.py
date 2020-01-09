@@ -1,4 +1,5 @@
 """Test Mikrotik setup process."""
+from datetime import timedelta
 from unittest.mock import patch
 
 import librouteros
@@ -25,7 +26,6 @@ DEMO_USER_INPUT = {
     CONF_PASSWORD: "password",
     CONF_PORT: 8278,
     CONF_VERIFY_SSL: False,
-    mikrotik.CONF_TRACK_DEVICES: True,
 }
 
 DEMO_CONFIG = {
@@ -36,13 +36,21 @@ DEMO_CONFIG = {
     CONF_PORT: 8278,
     CONF_VERIFY_SSL: False,
     mikrotik.const.CONF_FORCE_DHCP: False,
-    mikrotik.CONF_TRACK_DEVICES: True,
+    mikrotik.CONF_ARP_PING: False,
+    mikrotik.CONF_DETECTION_TIME: timedelta(seconds=30),
+}
+
+DEMO_CONFIG_ENTRY = {
+    CONF_NAME: "Home router",
+    CONF_HOST: "0.0.0.0",
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
+    CONF_PORT: 8278,
+    CONF_VERIFY_SSL: False,
+    mikrotik.const.CONF_FORCE_DHCP: False,
     mikrotik.CONF_ARP_PING: False,
     mikrotik.CONF_DETECTION_TIME: 30,
 }
-
-
-MOCK_ENTRY = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG)
 
 
 @pytest.fixture(name="api")
@@ -78,9 +86,11 @@ def init_config_flow(hass):
 
 async def test_import(hass, api):
     """Test import step."""
-    flow = init_config_flow(hass)
+    # flow = init_config_flow(hass)
 
-    result = await flow.async_step_import(DEMO_CONFIG)
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "import"}, data=DEMO_CONFIG
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Home router"
@@ -90,9 +100,6 @@ async def test_import(hass, api):
     assert result["data"][CONF_PASSWORD] == "password"
     assert result["data"][CONF_PORT] == 8278
     assert result["data"][CONF_VERIFY_SSL] is False
-    assert result["data"]["options"][mikrotik.CONF_DETECTION_TIME] == 30
-    assert result["data"]["options"][mikrotik.CONF_ARP_PING] is False
-    assert result["data"]["options"][mikrotik.const.CONF_FORCE_DHCP] is False
 
 
 async def test_flow_works(hass, api):
@@ -112,12 +119,11 @@ async def test_flow_works(hass, api):
     assert result["data"][CONF_USERNAME] == "username"
     assert result["data"][CONF_PASSWORD] == "password"
     assert result["data"][CONF_PORT] == 8278
-    assert result["data"]["options"][mikrotik.CONF_TRACK_DEVICES] is True
 
 
 async def test_options(hass):
     """Test updating options."""
-    entry = MOCK_ENTRY
+    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
     flow = init_config_flow(hass)
     options_flow = flow.async_get_options_flow(entry)
 
@@ -143,7 +149,7 @@ async def test_options(hass):
 async def test_host_already_configured(hass, auth_error):
     """Test host already configured."""
 
-    entry = MOCK_ENTRY
+    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
     entry.add_to_hass(hass)
     flow = init_config_flow(hass)
 
@@ -156,7 +162,7 @@ async def test_host_already_configured(hass, auth_error):
 async def test_name_exists(hass, api):
     """Test name already configured."""
 
-    entry = MOCK_ENTRY
+    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
     entry.add_to_hass(hass)
     flow = init_config_flow(hass)
     user_input = DEMO_USER_INPUT.copy()

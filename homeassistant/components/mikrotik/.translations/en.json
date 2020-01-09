@@ -10,8 +10,7 @@
                     "username": "Username",
                     "password": "Password",
                     "port": "Port",
-                    "verify_ssl": "Use ssl",
-                    "track_devices": "Enable newly added entities"
+                    "verify_ssl": "Use ssl"
                 }
             }
         },

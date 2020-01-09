@@ -3,23 +3,12 @@ from asynctest import patch
 import librouteros
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components import mikrotik
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from . import ARP_DATA, DHCP_DATA, MOCK_DATA, WIRELESS_DATA
+from . import ARP_DATA, DHCP_DATA, MOCK_DATA, MOCK_OPTIONS, WIRELESS_DATA
 
-CONFIG_ENTRY = config_entries.ConfigEntry(
-    version=1,
-    domain=mikrotik.DOMAIN,
-    title="Mikrotik",
-    data=MOCK_DATA,
-    source="test",
-    connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
-    system_options={},
-    options={},
-    entry_id=1,
-)
+from tests.common import MockConfigEntry
 
 
 async def setup_mikrotik_entry(hass, **kwargs):
@@ -38,7 +27,11 @@ async def setup_mikrotik_entry(hass, **kwargs):
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ARP]:
             return ARP_DATA
 
-    config_entry = CONFIG_ENTRY
+    config_entry = MockConfigEntry(
+        domain=mikrotik.DOMAIN, data=MOCK_DATA, options=MOCK_OPTIONS
+    )
+    config_entry.add_to_hass(hass)
+
     if "force_dhcp" in kwargs:
         config_entry.options["force_dhcp"] = True
 
@@ -48,7 +41,8 @@ async def setup_mikrotik_entry(hass, **kwargs):
     with patch("librouteros.connect"), patch.object(
         mikrotik.hub.MikrotikData, "command", new=mock_command
     ):
-        await mikrotik.async_setup_entry(hass, config_entry)
+        # await mikrotik.async_setup_entry(hass, config_entry)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         return hass.data[mikrotik.DOMAIN][config_entry.entry_id]
 
@@ -74,9 +68,7 @@ async def test_hub_setup_successful(hass):
         mikrotik.CONF_ARP_PING: False,
         mikrotik.CONF_DETECTION_TIME: 300,
     }
-    assert hub.config_entry.system_options == config_entries.SystemOptions(
-        disable_new_entities=False
-    )
+
     assert hub.api.available is True
     assert hub.signal_update == "mikrotik-update-0.0.0.0"
     assert forward_entry_setup.mock_calls[0][1] == (hub.config_entry, "device_tracker")
@@ -88,9 +80,9 @@ async def test_hub_setup_failed(hass):
     # error when connection fails
     with patch(
         "librouteros.connect", side_effect=librouteros.exceptions.ConnectionError
-    ):
-        with pytest.raises(ConfigEntryNotReady):
-            await mikrotik.async_setup_entry(hass, CONFIG_ENTRY)
+    ), pytest.raises(ConfigEntryNotReady):
+        config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA)
+        await mikrotik.async_setup_entry(hass, config_entry)
 
     # error when username or password is invalid
     with patch(
@@ -99,7 +91,8 @@ async def test_hub_setup_failed(hass):
         "librouteros.connect",
         side_effect=librouteros.exceptions.TrapError("invalid user name or password"),
     ):
-        result = await mikrotik.async_setup_entry(hass, CONFIG_ENTRY)
+        config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA)
+        result = await mikrotik.async_setup_entry(hass, config_entry)
 
         assert result is False
         assert len(forward_entry_setup.mock_calls) == 0
@@ -112,7 +105,7 @@ async def test_update_failed(hass):
 
     with patch.object(
         mikrotik.hub.MikrotikData, "command", side_effect=mikrotik.errors.CannotConnect
-    ):
+    ), pytest.raises(mikrotik.errors.CannotConnect):
         await hub.async_update()
 
     assert hub.api.available is False

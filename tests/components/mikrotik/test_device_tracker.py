@@ -1,17 +1,16 @@
 """The tests for the Mikrotik device tracker platform."""
 from datetime import timedelta
 
-from homeassistant import config_entries
 from homeassistant.components import mikrotik
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.helpers import entity_registry
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from . import DEVICE_2_WIRELESS, DHCP_DATA, MOCK_DATA, WIRELESS_DATA
+from . import DEVICE_2_WIRELESS, DHCP_DATA, MOCK_DATA, MOCK_OPTIONS, WIRELESS_DATA
 from .test_hub import setup_mikrotik_entry
 
-from tests.common import patch
+from tests.common import MockConfigEntry, patch
 
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 
@@ -60,11 +59,10 @@ async def test_device_trackers(hass):
 
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2 is not None
-        assert device_1.state == "home"
+        assert device_2.state == "home"
 
-        # test state changes to away if last_seen > consider_home_interval
-
-        del WIRELESS_DATA[1]
+        # test state remains home if last_seen  consider_home_interval
+        del WIRELESS_DATA[1]  # device 2 is removed from wireless list
         hub.api.devices["00:00:00:00:00:02"]._last_seen = dt_util.utcnow() - timedelta(
             minutes=4
         )
@@ -74,6 +72,7 @@ async def test_device_trackers(hass):
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2.state != "not_home"
 
+        # test state changes to away if last_seen > consider_home_interval
         hub.api.devices["00:00:00:00:00:02"]._last_seen = dt_util.utcnow() - timedelta(
             minutes=5
         )
@@ -86,17 +85,10 @@ async def test_device_trackers(hass):
 
 async def test_restoring_devices(hass):
     """Test restoring existing device_tracker entities if not detected on startup."""
-    config_entry = config_entries.ConfigEntry(
-        version=1,
-        domain=mikrotik.DOMAIN,
-        title="Mikrotik",
-        data=MOCK_DATA,
-        source="test",
-        connection_class=config_entries.CONN_CLASS_LOCAL_POLL,
-        system_options={},
-        options={},
-        entry_id=1,
+    config_entry = MockConfigEntry(
+        domain=mikrotik.DOMAIN, data=MOCK_DATA, options=MOCK_OPTIONS
     )
+    config_entry.add_to_hass(hass)
 
     registry = await entity_registry.async_get_registry(hass)
     registry.async_get_or_create(

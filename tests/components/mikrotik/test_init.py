@@ -60,7 +60,7 @@ async def test_successful_config_entry(hass):
 
 
 async def test_hub_fail_setup(hass):
-    """Test that a failed setup still stores hub."""
+    """Test that a failed setup will not store the hub."""
     entry = MOCK_ENTRY
     entry.add_to_hass(hass)
 
@@ -68,7 +68,7 @@ async def test_hub_fail_setup(hass):
         mock_hub.return_value.async_setup.return_value = mock_coro(False)
         assert await mikrotik.async_setup_entry(hass, entry) is False
 
-    assert entry.entry_id in hass.data[mikrotik.DOMAIN]
+    assert mikrotik.DOMAIN not in hass.data
 
 
 async def test_unload_entry(hass):

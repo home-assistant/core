@@ -22,7 +22,6 @@ from .const import (
     CONF_ARP_PING,
     CONF_DETECTION_TIME,
     CONF_FORCE_DHCP,
-    CONF_TRACK_DEVICES,
     DEFAULT_DETECTION_TIME,
     DHCP,
     IDENTITY,
@@ -96,6 +95,10 @@ class MikrotikData:
         self.devices = {}
         self.available = True
         self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
+        self.hostname = None
+        self.model = None
+        self.firmware = None
+        self.serial_number = None
 
     @staticmethod
     def load_mac(devices=None):
@@ -125,10 +128,17 @@ class MikrotikData:
         data = self.command(MIKROTIK_SERVICES[cmd])
         return data[0].get(param) if data else None
 
+    def get_details(self):
+        """Get Hub info."""
+        self.hostname = self.get_info(NAME)
+        self.model = self.get_info(ATTR_MODEL)
+        self.firmware = self.get_info(ATTR_FIRMWARE)
+        self.serial_number = self.get_info(ATTR_SERIAL_NUMBER)
+
     def connect_to_hub(self):
         """Connect to hub."""
         try:
-            self.api = get_hub(self.hass, self.config_entry.data)
+            self.api = get_api(self.hass, self.config_entry.data)
             self.available = True
             return True
         except (LoginError, CannotConnect):
@@ -138,7 +148,7 @@ class MikrotikData:
     def get_list_from_interface(self, interface):
         """Get devices from interface."""
         result = self.command(MIKROTIK_SERVICES[interface])
-        return self.load_mac(result) if result else None
+        return self.load_mac(result) if result else {}
 
     def restore_device(self, mac):
         """Restore a missing device after restart."""
@@ -274,22 +284,22 @@ class MikrotikHub:
     @property
     def hostname(self):
         """Return the hostname of the hub."""
-        return self._mk_data.get_info(NAME)
+        return self._mk_data.hostname
 
     @property
     def model(self):
         """Return the model of the hub."""
-        return self._mk_data.get_info(ATTR_MODEL)
+        return self._mk_data.model
 
     @property
     def firmware(self):
         """Return the firware of the hub."""
-        return self._mk_data.get_info(ATTR_FIRMWARE)
+        return self._mk_data.firmware
 
     @property
     def serial_num(self):
         """Return the serial number of the hub."""
-        return self._mk_data.get_info(ATTR_SERIAL_NUMBER)
+        return self._mk_data.serial_number
 
     @property
     def available(self):
@@ -311,31 +321,26 @@ class MikrotikHub:
         """Represent Mikrotik data object."""
         return self._mk_data
 
-    async def add_options(self):
+    async def async_add_options(self):
         """Populate default options for Mikrotik."""
         if not self.config_entry.options:
-            hub_options = self.config_entry.data.pop("options", {})
-            system_options = {
-                "disable_new_entities": not hub_options.get(CONF_TRACK_DEVICES, False)
-            }
-            if CONF_DETECTION_TIME in hub_options:
-                detection_time = hub_options[CONF_DETECTION_TIME].seconds
-            else:
-                detection_time = DEFAULT_DETECTION_TIME
             options = {
-                CONF_ARP_PING: hub_options.get(CONF_ARP_PING, False),
-                CONF_FORCE_DHCP: hub_options.get(CONF_FORCE_DHCP, False),
-                CONF_DETECTION_TIME: detection_time,
+                CONF_ARP_PING: self.config_entry.data.pop(CONF_ARP_PING, False),
+                CONF_FORCE_DHCP: self.config_entry.data.pop(CONF_FORCE_DHCP, False),
+                CONF_DETECTION_TIME: self.config_entry.data.pop(
+                    CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME
+                ),
             }
 
             self.hass.config_entries.async_update_entry(
-                self.config_entry, options=options, system_options=system_options
+                self.config_entry, options=options
             )
 
     async def request_update(self):
         """Request an update."""
         if self.progress is not None:
-            return await self.progress
+            await self.progress
+            return
 
         self.progress = self.hass.async_create_task(self.async_update())
         await self.progress
@@ -345,13 +350,14 @@ class MikrotikHub:
     async def async_update(self):
         """Update Mikrotik devices information."""
         await self.hass.async_add_executor_job(self._mk_data.update)
+        await self.hass.async_add_executor_job(self._mk_data.get_details)
         async_dispatcher_send(self.hass, self.signal_update)
 
     async def async_setup(self):
         """Set up the Mikrotik hub."""
         try:
             api = await self.hass.async_add_executor_job(
-                get_hub, self.hass, self.config_entry.data
+                get_api, self.hass, self.config_entry.data
             )
         except CannotConnect:
             raise ConfigEntryNotReady
@@ -359,8 +365,10 @@ class MikrotikHub:
             return False
 
         self._mk_data = MikrotikData(self.hass, self.config_entry, api)
-        await self.add_options()
+        await self.async_add_options()
+        await self.hass.async_add_executor_job(self._mk_data.get_details)
         await self.hass.async_add_executor_job(self._mk_data.update_devices)
+
         self.hass.async_create_task(
             self.hass.config_entries.async_forward_entry_setup(
                 self.config_entry, "device_tracker"
@@ -369,14 +377,14 @@ class MikrotikHub:
         return True
 
 
-def get_hub(hass, config_entry):
+def get_api(hass, entry):
     """Connect to Mikrotik hub."""
-    _LOGGER.debug("Connecting to Mikrotik hub [%s]", config_entry[CONF_HOST])
+    _LOGGER.debug("Connecting to Mikrotik hub [%s]", entry[CONF_HOST])
 
     _login_method = (login_plain, login_token)
-    kwargs = {"login_methods": _login_method, "port": config_entry["port"]}
+    kwargs = {"login_methods": _login_method, "port": entry["port"]}
 
-    if config_entry[CONF_VERIFY_SSL]:
+    if entry[CONF_VERIFY_SSL]:
         ssl_context = ssl.create_default_context()
         ssl_context.check_hostname = False
         ssl_context.verify_mode = ssl.CERT_NONE
@@ -385,19 +393,16 @@ def get_hub(hass, config_entry):
 
     try:
         api = librouteros.connect(
-            config_entry[CONF_HOST],
-            config_entry[CONF_USERNAME],
-            config_entry[CONF_PASSWORD],
-            **kwargs,
+            entry[CONF_HOST], entry[CONF_USERNAME], entry[CONF_PASSWORD], **kwargs,
         )
-        _LOGGER.debug("Connected to %s successfully", config_entry[CONF_HOST])
+        _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
         return api
     except (
         librouteros.exceptions.TrapError,
         librouteros.exceptions.MultiTrapError,
         librouteros.exceptions.ConnectionError,
     ) as api_error:
-        _LOGGER.error("Mikrotik %s error: %s", config_entry[CONF_HOST], api_error)
+        _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
         if "invalid user name or password" in str(api_error):
             raise LoginError
         raise CannotConnect
