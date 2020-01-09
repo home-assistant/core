@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import ZigbeeChannel
 from .. import registries
-from ..const import CLUSTER_COMMAND_SERVER, REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED, REPORT_CONFIG_DEFAULT
+from ..const import CLUSTER_COMMAND_SERVER, REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class WindowCovering(ZigbeeChannel):
     """Window channel."""
 
     _value_attribute = 8
-    REPORT_CONFIG = ({"attr": "current_position_lift_percentage", "config": REPORT_CONFIG_DEFAULT},)
+    REPORT_CONFIG = ({"attr": "current_position_lift_percentage", "config": REPORT_CONFIG_IMMEDIATE},)
 
     async def async_open(self) -> None:
         """Commands the covering to open."""

@@ -177,10 +177,3 @@ class ZhaCover(ZhaEntity, CoverDevice):
             else:
                 self._current_position = None
                 self._state = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return True if HA needs to poll for state changes."""
-        return True
-
-
