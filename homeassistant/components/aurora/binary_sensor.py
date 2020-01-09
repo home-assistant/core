@@ -1,7 +1,7 @@
 """Support for aurora forecast data sensor."""
 from datetime import timedelta
-from math import floor
 import logging
+from math import floor
 
 from aiohttp.hdrs import USER_AGENT
 import requests
