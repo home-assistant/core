@@ -30,7 +30,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
@@ -75,6 +74,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._model = config_entry.data.get(CONF_MODEL)
         turn_on_action = config_entry.data.get(CONF_ON_ACTION)
         self._on_script = Script(self.hass, turn_on_action) if turn_on_action else None
+        self._update_listener = None
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -95,19 +95,16 @@ class SamsungTVDevice(MediaPlayerDevice):
             "timeout": 1,
         }
 
-        # set up config_entry updates listener
-        config_entry.add_update_listener(self.async_config_entry_update)
-
-    @staticmethod
-    async def async_config_entry_update(hass, config_entry):
-        """Pass config_entry updates to component."""
-        registry = await async_get_registry(hass)
-        entity_id = registry.async_get_entity_id(
-            MEDIA_PLAYER_DOMAIN, DOMAIN, config_entry.data.get("id")
+    async def async_added_to_hass(self, hass):
+        """Set up config_entry updates listener."""
+        self._update_listener = config_entry.add_update_listener(
+            self.update_device_info
         )
-        component = hass.data[MEDIA_PLAYER_DOMAIN].get_entity(entity_id)
-        if component is not None:
-            await component.update_device_info(config_entry)
+
+    async def async_will_remove_from_hass(self, hass):
+        """Remove config_entry updates listener."""
+        if self._update_listener is not None:
+            self._update_listener()
 
     async def update_device_info(self, config_entry):
         """Update device info according to config_entry."""
