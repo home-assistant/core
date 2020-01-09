@@ -72,14 +72,9 @@ async def async_setup_platform(
     device_type = config[CONF_DEVICE_CLASS]
 
     device = VizioAsync(
-        DEVICE_ID, host, name, token, device_type, async_get_clientsession(hass, False)
+        DEVICE_ID, name, device_type, async_get_clientsession(hass, False)
     )
-    if await device.can_connect():
-        async_add_entities(
-            [VizioDevice(hass, device, host, token, name, volume_step, device_type)],
-            True,
-        )
-    else:
+    if not await device.can_connect():
         fail_auth_msg = ""
         if token:
             fail_auth_msg = ", auth token is correct"
@@ -90,23 +85,19 @@ async def async_setup_platform(
         )
         return
 
+    async_add_entities(
+        [VizioDevice(device, host, token, name, volume_step, device_type)], True
+    )
+
 
 class VizioDevice(MediaPlayerDevice):
     """Media Player implementation which performs REST requests to device."""
 
     def __init__(
-        self,
-        hass: HomeAssistantType,
-        device: VizioAsync,
-        host: str,
-        token: str,
-        name: str,
-        volume_step: int,
-        device_type: str,
+        self, device: VizioAsync, name: str, volume_step: int, device_type: str
     ) -> None:
         """Initialize Vizio device."""
 
-        self._hass = hass
         self._name = name
         self._state = None
         self._volume_level = None
