@@ -935,6 +935,6 @@ class YeelightAmbientLight(YeelightColorLight):
         bg_prop = self.PROPERTIES_MAPPING.get(prop)
 
         if not bg_prop:
-            bg_prop = "bg_" + prop
+            bg_prop = f"bg_{prop}"
 
         return super()._get_property(bg_prop, default)

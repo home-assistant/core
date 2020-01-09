@@ -29,10 +29,10 @@ YesssSMS==0.4.1
 abodepy==0.16.7
 
 # homeassistant.components.androidtv
-adb-shell==0.1.0
+adb-shell==0.1.1
 
 # homeassistant.components.adguard
-adguardhome==0.3.0
+adguardhome==0.4.0
 
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.11
@@ -87,7 +87,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv==0.0.36
+androidtv==0.0.38
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -119,6 +119,9 @@ bomradarloop==0.1.3
 
 # homeassistant.components.broadlink
 broadlink==0.12.0
+
+# homeassistant.components.brother
+brother==0.1.4
 
 # homeassistant.components.buienradar
 buienradar==1.0.1
@@ -165,7 +168,7 @@ dsmr_parser==0.12
 eebrightbox==0.0.4
 
 # homeassistant.components.elgato
-elgato==0.1.0
+elgato==0.2.0
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.1.8
@@ -200,6 +203,7 @@ georss_qld_bushfire_alert_client==0.3
 
 # homeassistant.components.braviatv
 # homeassistant.components.huawei_lte
+# homeassistant.components.kef
 # homeassistant.components.nmap_tracker
 getmac==0.8.1
 
@@ -222,7 +226,7 @@ ha-ffmpeg==2.0
 hangups==0.4.9
 
 # homeassistant.components.cloud
-hass-nabucasa==0.30
+hass-nabucasa==0.31
 
 # homeassistant.components.mqtt
 hbmqtt==0.9.5
@@ -240,7 +244,7 @@ hole==0.5.0
 holidays==0.9.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20191204.1
+home-assistant-frontend==20200108.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.7
@@ -383,7 +387,7 @@ pyHS100==0.3.5
 pyMetno==0.4.6
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.24
+pyRFXtrx==0.25
 
 # homeassistant.components.nextbus
 py_nextbusnext==0.1.4
@@ -413,7 +417,7 @@ pycoolmasternet==0.0.4
 pydaikin==1.6.1
 
 # homeassistant.components.deconz
-pydeconz==66
+pydeconz==67
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -430,6 +434,10 @@ pyfritzhome==0.4.0
 # homeassistant.components.ifttt
 pyfttt==0.3
 
+# homeassistant.components.bluetooth_le_tracker
+# homeassistant.components.skybeacon
+pygatt[GATTTOOL]==4.0.5
+
 # homeassistant.components.version
 pyhaversion==3.1.0
 
@@ -437,7 +445,7 @@ pyhaversion==3.1.0
 pyheos==0.6.0
 
 # homeassistant.components.homematic
-pyhomematic==0.1.62
+pyhomematic==0.1.63
 
 # homeassistant.components.icloud
 pyicloud==0.9.1
@@ -532,7 +540,7 @@ python-miio==0.4.8
 python-nest==4.1.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.32
+python-velbus==2.0.35
 
 # homeassistant.components.awair
 python_awair==0.0.4
@@ -562,13 +570,16 @@ restrictedpython==5.0
 rflink==0.0.50
 
 # homeassistant.components.ring
-ring_doorbell==0.2.8
+ring_doorbell==0.2.9
 
 # homeassistant.components.yamaha
 rxv==0.6.0
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
+
+# homeassistant.components.sentry
+sentry-sdk==0.13.5
 
 # homeassistant.components.simplisafe
 simplisafe-python==5.3.6
@@ -608,7 +619,7 @@ sunwatcher==0.2.1
 tellduslive==0.10.10
 
 # homeassistant.components.tesla
-teslajsonpy==0.2.1
+teslajsonpy==0.2.2
 
 # homeassistant.components.toon
 toonapilib==3.2.4
@@ -617,7 +628,7 @@ toonapilib==3.2.4
 transmissionrpc==0.11
 
 # homeassistant.components.twentemilieu
-twentemilieu==0.1.0
+twentemilieu==0.2.0
 
 # homeassistant.components.twilio
 twilio==6.32.0
@@ -646,7 +657,7 @@ watchdog==0.8.3
 withings-api==2.1.3
 
 # homeassistant.components.wled
-wled==0.1.0
+wled==0.2.1
 
 # homeassistant.components.bluesound
 # homeassistant.components.startca

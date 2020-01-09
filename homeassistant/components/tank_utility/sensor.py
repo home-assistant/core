@@ -73,7 +73,7 @@ class TankUtilitySensor(Entity):
         self._token = token
         self._device = device
         self._state = None
-        self._name = "Tank Utility " + self.device
+        self._name = f"Tank Utility {self.device}"
         self._unit_of_measurement = SENSOR_UNIT_OF_MEASUREMENT
         self._attributes = {}
 

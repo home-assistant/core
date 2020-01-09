@@ -251,8 +251,7 @@ async def test_remove_entry(hass, manager):
 
     # Check entity state got added
     assert hass.states.get("light.test_entity") is not None
-    # Group all_lights, light.test_entity
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 1
 
     # Check entity got added to entity registry
     ent_reg = await hass.helpers.entity_registry.async_get_registry()
@@ -275,8 +274,7 @@ async def test_remove_entry(hass, manager):
 
     # Check that entity state has been removed
     assert hass.states.get("light.test_entity") is None
-    # Just Group all_lights
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 0
 
     # Check that entity registry entry has been removed
     entity_entry_list = list(ent_reg.entities.values())
@@ -1303,3 +1301,60 @@ async def test_unignore_default_impl(hass, manager):
 
         assert len(hass.config_entries.async_entries("comp")) == 0
         assert len(hass.config_entries.flow.async_progress()) == 0
+
+
+async def test_partial_flows_hidden(hass, manager):
+    """Test that flows that don't have a cur_step and haven't finished initing are hidden."""
+    async_setup_entry = MagicMock(return_value=mock_coro(True))
+    mock_integration(hass, MockModule("comp", async_setup_entry=async_setup_entry))
+    mock_entity_platform(hass, "config_flow.comp", None)
+    await async_setup_component(hass, "persistent_notification", {})
+
+    # A flag to test our assertion that `async_step_discovery` was called and is in its blocked state
+    # This simulates if the step was e.g. doing network i/o
+    discovery_started = asyncio.Event()
+
+    # A flag to allow `async_step_discovery` to resume after we have verified the uninited flow is not
+    # visible and has not triggered a discovery alert. This lets us control when the mocked network
+    # i/o is complete.
+    pause_discovery = asyncio.Event()
+
+    class TestFlow(config_entries.ConfigFlow):
+
+        VERSION = 1
+
+        async def async_step_discovery(self, user_input):
+            discovery_started.set()
+            await pause_discovery.wait()
+            return self.async_show_form(step_id="someform")
+
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        # Start a config entry flow and wait for it to be blocked
+        init_task = asyncio.ensure_future(
+            manager.flow.async_init(
+                "comp",
+                context={"source": config_entries.SOURCE_DISCOVERY},
+                data={"unique_id": "mock-unique-id"},
+            )
+        )
+        await discovery_started.wait()
+
+        # While it's blocked it shouldn't be visible or trigger discovery notifications
+        assert len(hass.config_entries.flow.async_progress()) == 0
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is None
+
+        # Let the flow init complete
+        pause_discovery.set()
+
+        # When it's complete it should now be visible in async_progress and have triggered
+        # discovery notifications
+        result = await init_task
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert len(hass.config_entries.flow.async_progress()) == 1
+
+        await hass.async_block_till_done()
+        state = hass.states.get("persistent_notification.config_entry_discovery")
+        assert state is not None

@@ -65,7 +65,7 @@ def assert_result_info(info, result, entities=None, domains=None, all_states=Fal
 def test_template_equality():
     """Test template comparison and hashing."""
     template_one = template.Template("{{ template_one }}")
-    template_one_1 = template.Template("{{ template_" + "one }}")
+    template_one_1 = template.Template("{{ template_one }}")
     template_two = template.Template("{{ template_two }}")
 
     assert template_one == template_one_1
@@ -486,9 +486,9 @@ def test_timestamp_custom(hass):
 
     for inp, fmt, local, out in tests:
         if fmt:
-            fil = "timestamp_custom('{}')".format(fmt)
+            fil = f"timestamp_custom('{fmt}')"
         elif fmt and local:
-            fil = "timestamp_custom('{0}', {1})".format(fmt, local)
+            fil = f"timestamp_custom('{fmt}', {local})"
         else:
             fil = "timestamp_custom"
 
@@ -857,7 +857,7 @@ def test_regex_match(hass):
 
     tpl = template.Template(
         """
-{{ 'home assistant test' | regex_match('Home', True) }}
+{{ 'Home Assistant test' | regex_match('home', True) }}
             """,
         hass,
     )
@@ -865,7 +865,7 @@ def test_regex_match(hass):
 
     tpl = template.Template(
         """
-    {{ 'Another home assistant test' | regex_match('home') }}
+    {{ 'Another Home Assistant test' | regex_match('Home') }}
                     """,
         hass,
     )
@@ -873,7 +873,7 @@ def test_regex_match(hass):
 
     tpl = template.Template(
         """
-{{ ['home assistant test'] | regex_match('.*assist') }}
+{{ ['Home Assistant test'] | regex_match('.*Assist') }}
             """,
         hass,
     )
@@ -892,7 +892,7 @@ def test_regex_search(hass):
 
     tpl = template.Template(
         """
-{{ 'home assistant test' | regex_search('Home', True) }}
+{{ 'Home Assistant test' | regex_search('home', True) }}
             """,
         hass,
     )
@@ -900,7 +900,7 @@ def test_regex_search(hass):
 
     tpl = template.Template(
         """
-    {{ 'Another home assistant test' | regex_search('home') }}
+    {{ 'Another Home Assistant test' | regex_search('Home') }}
                     """,
         hass,
     )
@@ -908,7 +908,7 @@ def test_regex_search(hass):
 
     tpl = template.Template(
         """
-{{ ['home assistant test'] | regex_search('assist') }}
+{{ ['Home Assistant test'] | regex_search('Assist') }}
             """,
         hass,
     )
@@ -927,11 +927,11 @@ def test_regex_replace(hass):
 
     tpl = template.Template(
         """
-{{ ['home hinderant test'] | regex_replace('hinder', 'assist') }}
+{{ ['Home hinderant test'] | regex_replace('hinder', 'Assist') }}
             """,
         hass,
     )
-    assert tpl.async_render() == "['home assistant test']"
+    assert tpl.async_render() == "['Home Assistant test']"
 
 
 def test_regex_findall_index(hass):

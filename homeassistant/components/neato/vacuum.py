@@ -208,6 +208,13 @@ class NeatoConnectedVacuum(StateVacuumDevice):
                     + " "
                     + ACTION.get(self._state["action"])
                 )
+                if (
+                    "boundary" in self._state["cleaning"]
+                    and "name" in self._state["cleaning"]["boundary"]
+                ):
+                    self._status_state += (
+                        " " + self._state["cleaning"]["boundary"]["name"]
+                    )
             else:
                 self._status_state = robot_alert
         elif self._state["state"] == 3:

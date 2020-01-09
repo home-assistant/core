@@ -322,7 +322,7 @@ class KNXExposeTime:
 
 
 class KNXExposeSensor:
-    """Object to Expose HASS entity to KNX bus."""
+    """Object to Expose Home Assistant entity to KNX bus."""
 
     def __init__(self, hass, xknx, expose_type, entity_id, address):
         """Initialize of Expose class."""

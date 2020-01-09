@@ -18,7 +18,7 @@ from homeassistant.helpers.discovery import load_platform
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ecoal_boiler"
-DATA_ECOAL_BOILER = "data_" + DOMAIN
+DATA_ECOAL_BOILER = f"data_{DOMAIN}"
 
 DEFAULT_USERNAME = "admin"
 DEFAULT_PASSWORD = "admin"

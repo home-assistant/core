@@ -63,7 +63,7 @@ class TestUkTransportSensor(unittest.TestCase):
         bus_state = self.hass.states.get("sensor.next_bus_to_wantage")
 
         assert type(bus_state.state) == str
-        assert bus_state.name == "Next bus to {}".format(BUS_DIRECTION)
+        assert bus_state.name == f"Next bus to {BUS_DIRECTION}"
         assert bus_state.attributes.get(ATTR_ATCOCODE) == BUS_ATCOCODE
         assert bus_state.attributes.get(ATTR_LOCALITY) == "Harwell Campus"
         assert bus_state.attributes.get(ATTR_STOP_NAME) == "Bus Station"
@@ -85,7 +85,7 @@ class TestUkTransportSensor(unittest.TestCase):
         train_state = self.hass.states.get("sensor.next_train_to_WAT")
 
         assert type(train_state.state) == str
-        assert train_state.name == "Next train to {}".format(TRAIN_DESTINATION_NAME)
+        assert train_state.name == f"Next train to {TRAIN_DESTINATION_NAME}"
         assert train_state.attributes.get(ATTR_STATION_CODE) == TRAIN_STATION_CODE
         assert train_state.attributes.get(ATTR_CALLING_AT) == TRAIN_DESTINATION_NAME
         assert len(train_state.attributes.get(ATTR_NEXT_TRAINS)) == 25

@@ -32,7 +32,6 @@ class EntityPlatform:
         platform,
         scan_interval,
         entity_namespace,
-        async_entities_added_callback,
     ):
         """Initialize the entity platform.
 
@@ -42,7 +41,6 @@ class EntityPlatform:
         platform_name: str
         scan_interval: timedelta
         entity_namespace: str
-        async_entities_added_callback: @callback method
         """
         self.hass = hass
         self.logger = logger
@@ -51,7 +49,6 @@ class EntityPlatform:
         self.platform = platform
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
-        self.async_entities_added_callback = async_entities_added_callback
         self.config_entry = None
         self.entities = {}
         self._tasks = []
@@ -250,7 +247,6 @@ class EntityPlatform:
             return
 
         await asyncio.wait(tasks)
-        self.async_entities_added_callback()
 
         if self._async_unsub_polling is not None or not any(
             entity.should_poll for entity in self.entities.values()
@@ -304,9 +300,7 @@ class EntityPlatform:
                 suggested_object_id = entity.name
 
             if self.entity_namespace is not None:
-                suggested_object_id = "{} {}".format(
-                    self.entity_namespace, suggested_object_id
-                )
+                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
 
             if self.config_entry is not None:
                 config_entry_id = self.config_entry.entry_id
@@ -380,9 +374,7 @@ class EntityPlatform:
             )
 
             if self.entity_namespace is not None:
-                suggested_object_id = "{} {}".format(
-                    self.entity_namespace, suggested_object_id
-                )
+                suggested_object_id = f"{self.entity_namespace} {suggested_object_id}"
             entity.entity_id = entity_registry.async_generate_entity_id(
                 self.domain, suggested_object_id, self.entities.keys()
             )
@@ -402,9 +394,7 @@ class EntityPlatform:
         if already_exists:
             msg = f"Entity id already exists: {entity.entity_id}"
             if entity.unique_id is not None:
-                msg += ". Platform {} does not generate unique IDs".format(
-                    self.platform_name
-                )
+                msg += f". Platform {self.platform_name} does not generate unique IDs"
             raise HomeAssistantError(msg)
 
         entity_id = entity.entity_id

@@ -20,7 +20,7 @@ MOCK_DATA2 = {"goodbye": "cruel world"}
 
 @pytest.fixture
 def store(hass):
-    """Fixture of a store that prevents writing on HASS stop."""
+    """Fixture of a store that prevents writing on Home Assistant stop."""
     yield storage.Store(hass, MOCK_VERSION, MOCK_KEY)
 
 
@@ -62,7 +62,7 @@ async def test_loading_parallel(hass, store, hass_storage, caplog):
 
     assert results[0] is MOCK_DATA
     assert results[1] is MOCK_DATA
-    assert caplog.text.count("Loading data for {}".format(store.key))
+    assert caplog.text.count(f"Loading data for {store.key}")
 
 
 async def test_saving_with_delay(hass, store, hass_storage):

@@ -29,6 +29,11 @@ class AbstractConfig:
         return None
 
     @property
+    def locale(self):
+        """Return config locale."""
+        return None
+
+    @property
     def entity_config(self):
         """Return entity config."""
         return {}

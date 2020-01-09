@@ -67,7 +67,7 @@ class YesssSMSNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a SMS message via Yesss.at's website."""
         if self.yesss.account_is_suspended():
-            # only retry to login after HASS was restarted with (hopefully)
+            # only retry to login after Home Assistant was restarted with (hopefully)
             # new login data.
             _LOGGER.error(
                 "Account is suspended, cannot send SMS. "

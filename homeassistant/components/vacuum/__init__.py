@@ -5,7 +5,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import group
 from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
@@ -33,9 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "vacuum"
 SCAN_INTERVAL = timedelta(seconds=20)
-
-GROUP_NAME_ALL_VACUUMS = "all vacuum cleaners"
-ENTITY_ID_ALL_VACUUMS = group.ENTITY_ID_FORMAT.format("all_vacuum_cleaners")
 
 ATTR_BATTERY_ICON = "battery_icon"
 ATTR_CLEANED_AREA = "cleaned_area"
@@ -81,16 +77,15 @@ SUPPORT_START = 8192
 
 
 @bind_hass
-def is_on(hass, entity_id=None):
+def is_on(hass, entity_id):
     """Return if the vacuum is on based on the statemachine."""
-    entity_id = entity_id or ENTITY_ID_ALL_VACUUMS
     return hass.states.is_state(entity_id, STATE_ON)
 
 
 async def async_setup(hass, config):
     """Set up the vacuum component."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_VACUUMS
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)
@@ -252,6 +247,12 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         )
 
     @property
+    def capability_attributes(self):
+        """Return capabilitiy attributes."""
+        if self.fan_speed is not None:
+            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
+
+    @property
     def state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
@@ -265,7 +266,6 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
 
         if self.fan_speed is not None:
             data[ATTR_FAN_SPEED] = self.fan_speed
-            data[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
 
         return data
 
@@ -327,6 +327,12 @@ class StateVacuumDevice(_BaseVacuum):
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging
         )
+
+    @property
+    def capability_attributes(self):
+        """Return capabilitiy attributes."""
+        if self.fan_speed is not None:
+            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
 
     @property
     def state_attributes(self):

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "connection_error": "Fehler beim Verbinden; \u00dcberpr\u00fcfen Sie Ihr Netzwerk und versuchen Sie es erneut",
+            "identifier_exists": "E-Mail bereits registriert",
+            "invalid_credentials": "Ung\u00fcltige Anmeldeinformationen",
+            "unknown_error": "Unbekannter Fehler, bitte Log-Info melden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "E-Mail-Adresse"
+                },
+                "description": "Bitte geben Sie Ihre Daten ein.",
+                "title": "Tesla - Konfiguration"
+            }
+        },
+        "title": "Tesla"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Sekunden zwischen den Scans"
+                }
+            }
+        }
+    }
+}

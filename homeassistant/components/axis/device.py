@@ -56,8 +56,8 @@ class AxisNetworkDevice:
 
     @property
     def serial(self):
-        """Return the mac of this device."""
-        return self.config_entry.data[CONF_MAC]
+        """Return the serial number of this device."""
+        return self.config_entry.unique_id
 
     async def async_update_device_registry(self):
         """Update device registry."""

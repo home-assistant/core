@@ -327,7 +327,7 @@ class TestSetup:
             """Test that config is passed in."""
             if config.get("comp_a", {}).get("valid", False):
                 return True
-            raise Exception("Config not passed in: {}".format(config))
+            raise Exception(f"Config not passed in: {config}")
 
         platform = MockPlatform()
 

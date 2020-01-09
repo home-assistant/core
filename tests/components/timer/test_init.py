@@ -11,6 +11,7 @@ from homeassistant.components.timer import (
     CONF_DURATION,
     CONF_ICON,
     CONF_NAME,
+    DEFAULT_DURATION,
     DOMAIN,
     EVENT_TIMER_CANCELLED,
     EVENT_TIMER_FINISHED,
@@ -63,20 +64,23 @@ async def test_config_options(hass):
                 CONF_ICON: "mdi:work",
                 CONF_DURATION: 10,
             },
+            "test_3": None,
         }
     }
 
     assert await async_setup_component(hass, "timer", config)
     await hass.async_block_till_done()
 
-    assert count_start + 2 == len(hass.states.async_entity_ids())
+    assert count_start + 3 == len(hass.states.async_entity_ids())
     await hass.async_block_till_done()
 
     state_1 = hass.states.get("timer.test_1")
     state_2 = hass.states.get("timer.test_2")
+    state_3 = hass.states.get("timer.test_3")
 
     assert state_1 is not None
     assert state_2 is not None
+    assert state_3 is not None
 
     assert STATUS_IDLE == state_1.state
     assert ATTR_ICON not in state_1.attributes
@@ -86,6 +90,9 @@ async def test_config_options(hass):
     assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
     assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
     assert "0:00:10" == state_2.attributes.get(ATTR_DURATION)
+
+    assert STATUS_IDLE == state_3.state
+    assert str(DEFAULT_DURATION) == state_3.attributes.get(CONF_DURATION)
 
 
 async def test_methods_and_events(hass):
@@ -120,6 +127,8 @@ async def test_methods_and_events(hass):
         {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_STARTED},
         {"call": SERVICE_PAUSE, "state": STATUS_PAUSED, "event": EVENT_TIMER_PAUSED},
         {"call": SERVICE_CANCEL, "state": STATUS_IDLE, "event": EVENT_TIMER_CANCELLED},
+        {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_STARTED},
+        {"call": SERVICE_START, "state": STATUS_ACTIVE, "event": EVENT_TIMER_RESTARTED},
     ]
 
     expectedEvents = 0
@@ -284,3 +293,70 @@ async def test_config_reload(hass, hass_admin_user, hass_read_only_user):
     assert STATUS_IDLE == state_3.state
     assert ATTR_ICON not in state_3.attributes
     assert ATTR_FRIENDLY_NAME not in state_3.attributes
+
+
+async def test_timer_restarted_event(hass):
+    """Ensure restarted event is called after starting a paused or running timer."""
+    hass.state = CoreState.starting
+
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_DURATION: 10}}})
+
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_IDLE
+
+    results = []
+
+    def fake_event_listener(event):
+        """Fake event listener for trigger."""
+        results.append(event)
+
+    hass.bus.async_listen(EVENT_TIMER_STARTED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_RESTARTED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_PAUSED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_FINISHED, fake_event_listener)
+    hass.bus.async_listen(EVENT_TIMER_CANCELLED, fake_event_listener)
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+
+    assert results[-1].event_type == EVENT_TIMER_STARTED
+    assert len(results) == 1
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+
+    assert results[-1].event_type == EVENT_TIMER_RESTARTED
+    assert len(results) == 2
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_PAUSE, {CONF_ENTITY_ID: "timer.test1"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_PAUSED
+
+    assert results[-1].event_type == EVENT_TIMER_PAUSED
+    assert len(results) == 3
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_START, {CONF_ENTITY_ID: "timer.test1"}
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("timer.test1")
+    assert state
+    assert state.state == STATUS_ACTIVE
+
+    assert results[-1].event_type == EVENT_TIMER_RESTARTED
+    assert len(results) == 4

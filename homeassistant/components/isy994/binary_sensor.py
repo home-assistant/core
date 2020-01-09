@@ -100,8 +100,8 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
 
     Often times, a single device is represented by multiple nodes in the ISY,
     allowing for different nuances in how those devices report their on and
-    off events. This class turns those multiple nodes in to a single Hass
-    entity and handles both ways that ISY binary sensors can work.
+    off events. This class turns those multiple nodes in to a single Home
+    Assistant entity and handles both ways that ISY binary sensors can work.
     """
 
     def __init__(self, node) -> None:

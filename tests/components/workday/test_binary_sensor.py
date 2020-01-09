@@ -1,4 +1,4 @@
-"""Tests the HASS workday binary sensor."""
+"""Tests the Home Assistant workday binary sensor."""
 from datetime import date
 from unittest.mock import patch
 

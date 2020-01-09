@@ -52,12 +52,6 @@ class TestLight(unittest.TestCase):
         self.hass.states.set("light.test", STATE_OFF)
         assert not light.is_on(self.hass, "light.test")
 
-        self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, STATE_ON)
-        assert light.is_on(self.hass)
-
-        self.hass.states.set(light.ENTITY_ID_ALL_LIGHTS, STATE_OFF)
-        assert not light.is_on(self.hass)
-
         # Test turn_on
         turn_on_calls = mock_service(self.hass, light.DOMAIN, SERVICE_TURN_ON)
 
@@ -372,7 +366,7 @@ class TestLight(unittest.TestCase):
                 return StringIO(profile_data)
             return real_open(path, *args, **kwargs)
 
-        profile_data = "id,x,y,brightness\n" + "group.all_lights.default,.4,.6,99\n"
+        profile_data = "id,x,y,brightness\ngroup.all_lights.default,.4,.6,99\n"
         with mock.patch("os.path.isfile", side_effect=_mock_isfile):
             with mock.patch("builtins.open", side_effect=_mock_open):
                 with mock_storage():
