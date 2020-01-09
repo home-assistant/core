@@ -1122,7 +1122,7 @@ py_nextbusnext==0.1.4
 pyads==3.0.7
 
 # homeassistant.components.hisense_aehw4a1
-pyaehw4a1==0.3.1
+pyaehw4a1==0.3.4
 
 # homeassistant.components.aftership
 pyaftership==0.1.2
