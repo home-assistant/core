@@ -3,7 +3,7 @@
   "name": "AIS MDNS",
   "config_flow": false,
   "documentation": "https://www.ai-speaker.com",
-  "requirements": ["zeroconf==0.23.0"],
+  "requirements": ["zeroconf==0.24.0"],
   "dependencies": [],
   "codeowners": []
 }
