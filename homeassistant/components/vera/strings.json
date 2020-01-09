@@ -19,7 +19,7 @@
     "step": {
       "init": {
         "title": "Vera controller options",
-        "description": "See the vera documentation for details on optional parameters: https://www.home-assistant.io/integrations/vera/",
+        "description": "See the vera documentation for details on optional parameters: https://www.home-assistant.io/integrations/vera/. Note: Any changes here will need a restart to the home assistant server.",
         "data": {
           "lights": "Vera switch device ids to treat as lights in Home Assistant.",
           "exclude": "Vera device ids to exclude from Home Assistant."

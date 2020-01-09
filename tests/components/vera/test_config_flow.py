@@ -119,16 +119,19 @@ async def test_options(hass):
     entry = MockConfigEntry(
         domain=DOMAIN, title=base_url, data={CONF_CONTROLLER: "http://127.0.0.1/"},
     )
-    flow = VeraFlowHandler()
-    flow.hass = hass
-    options_flow = flow.async_get_options_flow(entry)
+    entry.options[CONF_LIGHTS] = [1, 2, 3]
+    entry.add_to_hass(hass)
 
-    result = await options_flow.async_step_init()
+    result = await hass.config_entries.options.flow.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await options_flow.async_step_init(
-        {CONF_LIGHTS: "1,2;3  4 5_6bb7", CONF_EXCLUDE: "8,9;10  11 12_13bb14"}
+    result = await hass.config_entries.options.flow.async_init(
+        entry.entry_id,
+        context={"source": "test"},
+        data={CONF_LIGHTS: "1,2;3  4 5_6bb7", CONF_EXCLUDE: "8,9;10  11 12_13bb14"},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result.get("data") == {

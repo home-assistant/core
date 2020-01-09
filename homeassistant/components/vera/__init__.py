@@ -72,10 +72,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
     """Do setup of vera."""
     config = config_entry.data
 
-    # Get Vera specific configuration.
+    # Copy the configuration.yml options into the options.
     base_url = config.get(CONF_CONTROLLER)
-    light_ids = config_entry.options.get(CONF_LIGHTS, [])
-    exclude_ids = config_entry.options.get(CONF_EXCLUDE, [])
+    light_ids = config_entry.options.setdefault(
+        CONF_LIGHTS, config.get(CONF_LIGHTS, [])
+    )
+    exclude_ids = config_entry.options.setdefault(
+        CONF_EXCLUDE, config.get(CONF_EXCLUDE, [])
+    )
 
     # Initialize the Vera controller.
     controller = veraApi.VeraController(base_url)
