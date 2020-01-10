@@ -120,11 +120,9 @@ class VizioDevice(MediaPlayerDevice):
             self._available = False
         else:
             self._available = True
+
             if not self._unique_id:
                 self._unique_id = await self._device.get_esn()
-                if not self._unique_id:
-                    self._available = False
-                    return
 
             if is_on:
                 self._state = STATE_ON
