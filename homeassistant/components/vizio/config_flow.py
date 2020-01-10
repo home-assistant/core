@@ -155,7 +155,7 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
     ) -> Dict[str, Any]:
         """Manage the vizio options."""
         if user_input is not None:
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            return self.async_create_entry(title="", data=user_input)
 
         options = {
             vol.Optional(
