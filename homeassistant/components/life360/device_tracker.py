@@ -195,7 +195,10 @@ class Life360Scanner:
                 )
                 reported = False
 
-        self._dev_data[dev_id] = last_seen or prev_seen, reported
+        # Don't remember last_seen unless it's really an update.
+        if not last_seen or prev_seen and last_seen <= prev_seen:
+            last_seen = prev_seen
+        self._dev_data[dev_id] = last_seen, reported
 
         return prev_seen
 
@@ -218,7 +221,17 @@ class Life360Scanner:
             return
 
         # Only update when we truly have an update.
-        if not last_seen or prev_seen and last_seen <= prev_seen:
+        if not last_seen:
+            _LOGGER.warning("%s: Ignoring update because timestamp is missing", dev_id)
+            return
+        if prev_seen and last_seen < prev_seen:
+            _LOGGER.warning(
+                "%s: Ignoring update because timestamp is older than last timestamp",
+                dev_id,
+            )
+            _LOGGER.debug("%s < %s", last_seen, prev_seen)
+            return
+        if last_seen == prev_seen:
             return
 
         lat = loc.get("latitude")
