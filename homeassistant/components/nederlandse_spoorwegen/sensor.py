@@ -141,12 +141,11 @@ class NSDepartureSensor(Entity):
             "arrival_delay": None,
             "arrival_platform_platform": self._trips[0].arrival_platform_planned,
             "arrival_platform_actual": self._trips[0].arrival_platform_actual,
-            "direction": self._trips[0].direction,
+            "direction": self._trips[0].destination,
             "next": None,
             "status": self._trips[0].status.lower(),
             "transfers": self._trips[0].nr_transfers,
             "route": route,
-            "remarks": self._trips[0].trip_remarks,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
