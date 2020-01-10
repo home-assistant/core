@@ -214,7 +214,7 @@ homeassistant/components/modbus/* @adamchengtkc
 homeassistant/components/monoprice/* @etsinko
 homeassistant/components/moon/* @fabaff
 homeassistant/components/mpd/* @fabaff
-homeassistant/components/mqtt/* @home-assistant/core
+homeassistant/components/mqtt/* @home-assistant/core @cerebrate
 homeassistant/components/msteams/* @peroyvind
 homeassistant/components/mysensors/* @MartinHjelmare
 homeassistant/components/mystrom/* @fabaff
@@ -229,7 +229,6 @@ homeassistant/components/nissan_leaf/* @filcole
 homeassistant/components/nmbs/* @thibmaek
 homeassistant/components/no_ip/* @fabaff
 homeassistant/components/notify/* @home-assistant/core
-homeassistant/components/notify_mqtt/* @cerebrate
 homeassistant/components/notion/* @bachya
 homeassistant/components/nsw_fuel_station/* @nickw444
 homeassistant/components/nsw_rural_fire_service_feed/* @exxamalte

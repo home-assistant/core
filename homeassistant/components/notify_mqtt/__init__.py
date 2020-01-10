@@ -1,1 +1,0 @@
-"""The Notify MQTT integration."""

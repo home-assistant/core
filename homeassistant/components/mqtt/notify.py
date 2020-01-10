@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.mqtt import valid_publish_topic
 from homeassistant.components.notify import (
     ATTR_DATA,
+    ATTR_MESSAGE,
     ATTR_TARGET,
     ATTR_TITLE,
     PLATFORM_SCHEMA,
@@ -14,10 +15,6 @@ from homeassistant.components.notify import (
 )
 
 CONF_TOPIC_NAME = "topic"
-
-ATTR_ASB_MESSAGE = "message"
-ATTR_ASB_TITLE = "title"
-ATTR_ASB_TARGET = "target"
 
 PLATFORM_SCHEMA = vol.All(
     PLATFORM_SCHEMA.extend({vol.Required(CONF_TOPIC_NAME): valid_publish_topic,}),
@@ -41,12 +38,12 @@ class MqttNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message, **kwargs):
         """Send a message."""
-        dto = {ATTR_ASB_MESSAGE: message}
+        dto = {ATTR_MESSAGE: message}
 
         if ATTR_TITLE in kwargs:
-            dto[ATTR_ASB_TITLE] = kwargs[ATTR_TITLE]
+            dto[ATTR_TITLE] = kwargs[ATTR_TITLE]
         if ATTR_TARGET in kwargs:
-            dto[ATTR_ASB_TARGET] = kwargs[ATTR_TARGET]
+            dto[ATTR_TARGET] = kwargs[ATTR_TARGET]
 
         data = kwargs.get(ATTR_DATA)
         if data:
