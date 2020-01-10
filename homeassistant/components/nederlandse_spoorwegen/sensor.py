@@ -124,38 +124,75 @@ class NSDepartureSensor(Entity):
             for k in self._trips[0].trip_parts:
                 route.append(k.destination)
 
-        return {
+        # Static attributes
+        attributes = {
             "going": self._trips[0].going,
             "departure_time_planned": self._trips[0].departure_time_planned.strftime(
                 "%H:%M"
             ),
-            "departure_time_actual": self._trips[0].departure_time_actual.strftime(
-                "%H:%M"
-            )
-            if self._trips[0].departure_time_actual is not None
-            else None,
-            "departure_delay": self._trips[0].departure_time_planned
-            != self._trips[0].departure_time_actual,
-            "departure_platform": self._trips[0].departure_platform_planned,
-            "departure_platform_changed": self._trips[0].departure_platform_actual,
+            "departure_time_actual": None,
+            "departure_delay": None,
+            "departure_platform_planned": self._trips[0].departure_platform_planned,
+            "departure_platform_actual": None,
             "arrival_time_planned": self._trips[0].arrival_time_planned.strftime(
                 "%H:%M"
             ),
-            "arrival_time_actual": self._trips[0].arrival_time_actual.strftime("%H:%M")
-            if self._trips[0].arrival_time_actual is not None
-            else None,
-            "arrival_delay": self._trips[0].arrival_time_planned
-            != self._trips[0].arrival_time_actual,
-            "arrival_platform": self._trips[0].arrival_platform_planned,
-            "arrival_platform_changed": self._trips[0].arrival_platform_actual,
-            "next": self._trips[1].departure_time_actual.strftime("%H:%M")
-            if self._trips[1].departure_time_actual is not None
-            else self._trips[1].departure_time_planned.strftime("%H:%M"),
+            "arrival_time_actual": None,
+            "arrival_delay": None,
+            "arrival_platform_platform": self._trips[0].arrival_platform_planned,
+            "arrival_platform_actual": self._trips[0].arrival_platform_actual,
+            "direction": self._trips[0].direction,
+            "next": None,
             "status": self._trips[0].status.lower(),
             "transfers": self._trips[0].nr_transfers,
             "route": route,
+            "remarks": self._trips[0].trip_remarks,
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
+
+        # Departure attributes
+        if self._trips[0].departure_time_actual is None:
+            attributes["departure_time_actual"] = self._trips[
+                0
+            ].departure_time_planned.strftime("%H:%M")
+            attributes["departure_delay"] = False
+            attributes["departure_platform_actual"] = self._trips[
+                0
+            ].departure_platform_planned
+        else:
+            attributes["departure_time_actual"] = self._trips[
+                0
+            ].departure_time_actual.strftime("%H:%M")
+            attributes["departure_delay"] = True
+            attributes["departure_platform_actual"] = self._trips[
+                0
+            ].departure_platform_actual
+
+        # Arrival attributes
+        if self._trips[0].arrival_time_actual is None:
+            attributes["arrival_time_actual"] = self._trips[
+                0
+            ].arrival_time_planned.strftime("%H:%M")
+            attributes["arrival_delay"] = False
+            attributes["arrival_platform_actual"] = self._trips[
+                0
+            ].arrival_platform_planned
+        else:
+            attributes["arrival_time_actual"] = self._trips[
+                0
+            ].arrival_time_actual.strftime("%H:%M")
+            attributes["arrival_delay"] = True
+            attributes["arrival_platform_actual"] = self._trips[
+                0
+            ].arrival_platform_actual
+
+        # Next attributes
+        if self._trips[1].departure_time_actual is not None:
+            attributes["next"] = self._trips[1].departure_time_actual.strftime("%H:%M")
+        else:
+            attributes["next"] = self._trips[1].departure_time_planned.strftime("%H:%M")
+
+        return attributes
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
