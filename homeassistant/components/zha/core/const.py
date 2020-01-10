@@ -3,6 +3,7 @@ import enum
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
@@ -48,6 +49,7 @@ CHANNEL_ACCELEROMETER = "accelerometer"
 CHANNEL_ATTRIBUTE = "attribute"
 CHANNEL_BASIC = "basic"
 CHANNEL_COLOR = "light_color"
+CHANNEL_COVER = "window_covering"
 CHANNEL_DOORLOCK = "door_lock"
 CHANNEL_ELECTRICAL_MEASUREMENT = "electrical_measurement"
 CHANNEL_EVENT_RELAY = "event_relay"
@@ -71,7 +73,7 @@ CLUSTER_COMMANDS_SERVER = "server_commands"
 CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
-COMPONENTS = (BINARY_SENSOR, DEVICE_TRACKER, FAN, LIGHT, LOCK, SENSOR, SWITCH)
+COMPONENTS = (BINARY_SENSOR, COVER, DEVICE_TRACKER, FAN, LIGHT, LOCK, SENSOR, SWITCH)
 
 CONF_BAUDRATE = "baudrate"
 CONF_DATABASE = "database_path"
