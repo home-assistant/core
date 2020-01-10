@@ -108,40 +108,50 @@ class VizioDevice(MediaPlayerDevice):
         self._max_volume = float(self._device.get_max_volume())
         self._unique_id = None
         self._icon = ICON[device_type]
+        self._available = True
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
 
-        if not self._unique_id:
-            self._unique_id = await self._device.get_esn()
-
         is_on = await self._device.get_power_state()
 
-        if is_on:
-            self._state = STATE_ON
-
-            volume = await self._device.get_current_volume()
-            if volume is not None:
-                self._volume_level = float(volume) / self._max_volume
-
-            input_ = await self._device.get_current_input()
-            if input_ is not None:
-                self._current_input = input_.meta_name
-
-            inputs = await self._device.get_inputs()
-            if inputs is not None:
-                self._available_inputs = [input_.name for input_ in inputs]
-
+        if is_on is None:
+            self._available = False
         else:
-            if is_on is None:
-                self._state = None
+            self._available = True
+            if not self._unique_id:
+                self._unique_id = await self._device.get_esn()
+                if not self._unique_id:
+                    self._available = False
+                    return
+
+            if is_on:
+                self._state = STATE_ON
+
+                volume = await self._device.get_current_volume()
+                if volume is not None:
+                    self._volume_level = float(volume) / self._max_volume
+
+                input_ = await self._device.get_current_input()
+                if input_ is not None:
+                    self._current_input = input_.meta_name
+
+                inputs = await self._device.get_inputs()
+                if inputs is not None:
+                    self._available_inputs = [input_.name for input_ in inputs]
+
             else:
                 self._state = STATE_OFF
+                self._volume_level = None
+                self._current_input = None
+                self._available_inputs = None
 
-            self._volume_level = None
-            self._current_input = None
-            self._available_inputs = None
+    @property
+    def available(self) -> bool:
+        """Return the availabiliity of the device."""
+
+        return self._available
 
     @property
     def state(self) -> str:
