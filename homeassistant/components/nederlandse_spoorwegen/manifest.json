@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/nederlandse_spoorwegen",
   "requirements": ["nsapi==3.0.0"],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@YarmoM"]
 }
