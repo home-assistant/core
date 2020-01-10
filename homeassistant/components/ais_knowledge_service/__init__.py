@@ -36,12 +36,14 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def ask(service):
         """ask service about info"""
-        yield from _process_ask_async(hass, service)
+        query = service.data[ATTR_TEXT]
+        yield from process_ask_async(hass, query)
 
     @asyncio.coroutine
     def ask_wiki(service):
         """ask wikipedia service about info"""
-        yield from _process_ask_wiki_async(hass, service)
+        query = service.data[ATTR_TEXT]
+        yield from process_ask_wiki_async(hass, query)
 
     # register services
     hass.services.async_register(DOMAIN, SERVICE_ASK, ask, schema=SERVICE_ASK_SCHEMA)
@@ -54,12 +56,12 @@ def async_setup(hass, config):
 
 
 @asyncio.coroutine
-def _process_ask_async(hass, call):
+def process_ask_async(hass, query):
     import requests
 
     global G_GKS_KEY
     """Ask the service about text."""
-    query = call.data[ATTR_TEXT]
+
     full_message = ""
     image_url = None
     if G_GKS_KEY is None:
@@ -103,35 +105,42 @@ def _process_ask_async(hass, call):
         except Exception:
             pass
 
-        if ATTR_SAY_IT in call.data:
-            yield from hass.services.async_call(
-                "ais_ai_service", "say_it", {"text": full_message, "img": image_url}
-            )
     except Exception:
         full_message = "Brak wyników"
-        yield from hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": full_message}
-        )
+
+    yield from hass.services.async_call(
+        "ais_ai_service", "say_it", {"text": full_message, "img": image_url}
+    )
+
+    return full_message
 
 
 @asyncio.coroutine
-def _process_ask_wiki_async(hass, call):
+def process_ask_wiki_async(hass, query):
     import wikipedia
 
     wikipedia.set_lang("pl")
     """Ask the service about text."""
-    query = call.data[ATTR_TEXT]
     image_url = None
     try:
         full_message = wikipedia.summary(query)
-        if ATTR_SAY_IT in call.data:
-            yield from hass.services.async_call(
-                "ais_ai_service", "say_it", {"text": full_message, "img": image_url}
-            )
     except Exception:
-        yield from hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": "Brak wyników"}
-        )
+        full_message = "Brak wyników"
+
+    try:
+        images = wikipedia.page(query).images
+        for image in images:
+            if not image.endswith(".svg"):
+                image_url = image
+
+    except Exception:
+        full_message = "Brak wyników"
+
+    yield from hass.services.async_call(
+        "ais_ai_service", "say_it", {"text": full_message, "img": image_url}
+    )
+
+    return full_message
 
 
 @asyncio.coroutine

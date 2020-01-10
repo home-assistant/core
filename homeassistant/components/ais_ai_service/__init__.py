@@ -2235,8 +2235,9 @@ async def async_setup(hass, config):
         #         return
         if "img" in service.data:
             img = service.data["img"]
-            if len(img) < 3:
-                img = None
+            if img is not None:
+                if len(img) < 3:
+                    img = None
         else:
             img = None
         _say_it(hass, text, img)
@@ -3690,10 +3691,13 @@ def _process(hass, text):
         _LOGGER.warning("_process: " + str(e))
         m = "Przepraszam, ale mam problem ze zrozumieniem: " + text
     # return response to the ais dom
-    if m != "DO_NOT_SAY":
+    if m.startswith("DO_NOT_SAY"):
+        m = m.replace("DO_NOT_SAY", "")
+    else:
         _say_it(hass, m)
     # return response to the hass conversation
     intent_resp = intent.IntentResponse()
+    # intent_resp.async_set_card("Beer ordered", "You chose a XXX")
     intent_resp.async_set_speech(m)
     intent_resp.hass = hass
     return intent_resp
@@ -4004,16 +4008,13 @@ class AskQuestionIntent(intent.IntentHandler):
         item = slots["item"]["value"]
         question = item
         if not question:
-            message = "Nie wiem o co zapytać, " + question
+            message = "Nie wiem o co zapytać"
             return message, False
         else:
-            yield from hass.services.async_call(
-                "ais_knowledge_service",
-                "ask",
-                {"text": question, "say_it": True},
-                blocking=True,
-            )
-        return "DO_NOT_SAY", True
+            from homeassistant.components import ais_knowledge_service
+
+            message = yield from ais_knowledge_service.process_ask_async(hass, question)
+        return "DO_NOT_SAY " + message, True
 
 
 class AskWikiQuestionIntent(intent.IntentHandler):
@@ -4030,16 +4031,16 @@ class AskWikiQuestionIntent(intent.IntentHandler):
         item = slots["item"]["value"]
         question = item
         if not question:
-            message = "Nie wiem o co zapytać, " + question
+            message = "Nie wiem o co zapytać"
             return message, False
         else:
-            yield from hass.services.async_call(
-                "ais_knowledge_service",
-                "ask_wiki",
-                {"text": question, "say_it": True},
-                blocking=True,
+            from homeassistant.components import ais_knowledge_service
+
+            message = yield from ais_knowledge_service.process_ask_wiki_async(
+                hass, question
             )
-        return "DO_NOT_SAY", True
+
+        return "DO_NOT_SAY " + message, True
 
 
 class ChangeContextIntent(intent.IntentHandler):
@@ -4096,9 +4097,6 @@ class GetTimeIntent(intent.IntentHandler):
     @asyncio.coroutine
     def async_handle(self, intent_obj):
         """Handle the intent."""
-        # hass = intent_obj.hass
-        # time = hass.states.get('sensor.time').state
-        # message = 'Jest godzina ' + time
         import babel.dates
 
         now = datetime.datetime.now()
