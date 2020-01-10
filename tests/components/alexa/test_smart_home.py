@@ -3064,3 +3064,17 @@ async def test_timer_hold(hass):
     await assert_request_calls_service(
         "Alexa.TimeHoldController", "Hold", "timer#laundry", "timer.pause", hass
     )
+
+
+async def test_timer_resume(hass):
+    """Test timer resume."""
+    device = (
+        "timer.laundry",
+        "paused",
+        {"friendly_name": "Laundry", "duration": "00:01:00", "remaining": "00:50:00"},
+    )
+    await discovery_test(device, hass)
+
+    await assert_request_calls_service(
+        "Alexa.TimeHoldController", "Resume", "timer#laundry", "timer.start", hass
+    )
