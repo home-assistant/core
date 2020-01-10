@@ -11,15 +11,11 @@ from homeassistant.const import (
 )
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
     CoverDevice,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import async_track_time_interval
 
 from .core.const import (
     CHANNEL_COVER,
@@ -120,7 +116,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
         return self._current_position
 
     def async_set_position(self, pos):
-        """Handle position update from channel"""
+        """Handle position update from channel."""
         _LOGGER.debug("setting position: %s", pos)
         self._current_position = 100 - pos
         self.async_schedule_update_ha_state()
@@ -160,6 +156,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
         await self.async_get_state()
 
     async def async_get_state(self, from_cache=True):
+        """Gets current state."""
         _LOGGER.debug("polling current state")
         if self._cover_channel:
             pos = await self._cover_channel.get_attribute_value(
@@ -167,7 +164,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
             )
             _LOGGER.debug("read pos=%s", pos)
 
-            if pos != None:
+            if pos is not None:
                 self._current_position = 100 - pos
                 self._state = (
                     STATE_OPEN if self.current_cover_position > 0 else STATE_CLOSED
