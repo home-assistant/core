@@ -3,6 +3,8 @@ from datetime import timedelta
 import functools
 import logging
 
+from zigpy.zcl.foundation import Status
+
 from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverDevice
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import callback
@@ -110,6 +112,10 @@ class ZhaCover(ZhaEntity, CoverDevice):
         """Handle position update from channel."""
         _LOGGER.debug("setting position: %s", pos)
         self._current_position = 100 - pos
+        if self._current_position == 0:
+            self._state = STATE_CLOSED
+        elif self._current_position == 100:
+            self._state = STATE_OPEN
         self.async_schedule_update_ha_state()
 
     def async_set_state(self, state):
@@ -120,26 +126,33 @@ class ZhaCover(ZhaEntity, CoverDevice):
 
     async def async_open_cover(self, **kwargs):
         """Open the window cover."""
-        await self._cover_channel.up_open()
-        self.async_set_state(STATE_OPENING)
+        res = await self._cover_channel.up_open()
+        if isinstance(res, list) and res[1] is Status.SUCCESS:
+            self.async_set_state(STATE_OPENING)
 
     async def async_close_cover(self, **kwargs):
         """Close the window cover."""
-        await self._cover_channel.down_close()
-        self.async_set_state(STATE_CLOSING)
+        res = await self._cover_channel.down_close()
+        if isinstance(res, list) and res[1] is Status.SUCCESS:
+            self.async_set_state(STATE_CLOSING)
 
     async def async_set_cover_position(self, **kwargs):
         """Move the roller shutter to a specific position."""
         new_pos = kwargs.get(ATTR_POSITION)
-        await self._cover_channel.go_to_lift_percentage(100 - new_pos)
-        self.async_set_state(
-            STATE_CLOSING if new_pos < self._current_position else STATE_OPENING
-        )
+        res = await self._cover_channel.go_to_lift_percentage(100 - new_pos)
+        if isinstance(res, list) and res[1] is Status.SUCCESS:
+            self.async_set_state(
+                STATE_CLOSING if new_pos < self._current_position else STATE_OPENING
+            )
 
     async def async_stop_cover(self, **kwargs):
         """Stop the window cover."""
-        await self._cover_channel.stop()
-        self.async_schedule_update_ha_state()
+        res = await self._cover_channel.stop()
+        if isinstance(res, list) and res[1] is Status.SUCCESS:
+            self._state = (
+                STATE_OPEN if self._current_position > 0 else STATE_CLOSED
+            )
+            self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Attempt to retrieve the open/close state of the cover."""
