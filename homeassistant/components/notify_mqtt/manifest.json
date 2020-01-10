@@ -1,0 +1,8 @@
+{
+  "domain": "notify_mqtt",
+  "name": "Notify MQTT",
+  "documentation": "https://www.home-assistant.io/integrations/notify_mqtt/",
+  "requirements": [],
+  "dependencies": ["mqtt"],
+  "codeowners": ["@cerebrate"]
+}
