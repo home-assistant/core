@@ -23,7 +23,7 @@ ON_STATE = "on"
 OFF_STATE = "off"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the lights for the Ring devices."""
     cameras = hass.data[DATA_RING_STICKUP_CAMS]
     lights = []
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if device.has_capability("light"):
             lights.append(RingLight(device))
 
-    add_entities(lights, True)
+    async_add_entities(lights, True)
 
 
 class RingLight(Light):
@@ -44,10 +44,19 @@ class RingLight(Light):
         self._unique_id = self._device.id
         self._light_on = False
         self._no_updates_until = dt_util.utcnow()
+        self._disp_disconnect = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_RING, self._update_callback)
+        self._disp_disconnect = async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_RING, self._update_callback
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks."""
+        if self._disp_disconnect:
+            self._disp_disconnect()
+            self._disp_disconnect = None
 
     @callback
     def _update_callback(self):

@@ -36,6 +36,10 @@ def requests_mock_fixture(ring_mock):
             "https://api.ring.com/clients_api/ring_devices",
             text=load_fixture("ring_devices.json"),
         )
+        mock.get(
+            "https://api.ring.com/clients_api/dings/active",
+            text=load_fixture("ring_ding_active.json"),
+        )
         # Mocks the response for getting the history of a device
         mock.get(
             "https://api.ring.com/clients_api/doorbots/987652/history",

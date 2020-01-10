@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/ring",
   "requirements": ["ring_doorbell==0.2.9"],
   "dependencies": ["ffmpeg"],
-  "codeowners": []
+  "codeowners": [],
+  "config_flow": true
 }
