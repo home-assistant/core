@@ -130,10 +130,10 @@ class ZhaCover(ZhaEntity, CoverDevice):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the roller shutter to a specific position."""
-        newPos = kwargs.get(ATTR_POSITION)
-        await self._cover_channel.async_goto_lift_percent(100 - newPos)
+        new_pos = kwargs.get(ATTR_POSITION)
+        await self._cover_channel.async_goto_lift_percent(100 - new_pos)
         self.async_set_state(
-            STATE_CLOSING if newPos < self._current_position else STATE_OPENING
+            STATE_CLOSING if new_pos < self._current_position else STATE_OPENING
         )
 
     async def async_stop_cover(self, **kwargs):
