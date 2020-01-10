@@ -10,6 +10,7 @@ from homeassistant.components import (
     input_number,
     light,
     media_player,
+    timer,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
@@ -1396,3 +1397,29 @@ async def async_api_bands_directive(hass, config, directive, context):
     # Currently bands directives are not supported.
     msg = "Entity does not support directive"
     raise AlexaInvalidDirectiveError(msg)
+
+
+@HANDLERS.register(("Alexa.TimeHoldController", "Hold"))
+async def async_api_hold(hass, config, directive, context):
+    """Process a TimeHoldController Hold request."""
+    entity = directive.entity
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    await hass.services.async_call(
+        entity.domain, timer.SERVICE_PAUSE, data, blocking=False, context=context
+    )
+
+    return directive.response()
+
+
+@HANDLERS.register(("Alexa.TimeHoldController", "Resume"))
+async def async_api_resume(hass, config, directive, context):
+    """Process a TimeHoldController Resume request."""
+    entity = directive.entity
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    await hass.services.async_call(
+        entity.domain, timer.SERVICE_START, data, blocking=False, context=context
+    )
+
+    return directive.response()

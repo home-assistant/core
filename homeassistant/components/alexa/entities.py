@@ -19,6 +19,7 @@ from homeassistant.components import (
     script,
     sensor,
     switch,
+    timer,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
@@ -61,6 +62,7 @@ from .capabilities import (
     AlexaStepSpeaker,
     AlexaTemperatureSensor,
     AlexaThermostatController,
+    AlexaTimeHoldController,
     AlexaToggleController,
 )
 from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
@@ -708,3 +710,17 @@ class InputNumberCapabilities(AlexaEntity):
         )
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
+
+
+@ENTITY_ADAPTERS.register(timer.DOMAIN)
+class TimerCapabilities(AlexaEntity):
+    """Class to represent Timer capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        yield AlexaTimeHoldController(self.entity, allow_remote_resume=True)
+        yield Alexa(self.entity)
