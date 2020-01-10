@@ -1028,7 +1028,7 @@ pocketcasts==0.1
 postnl_api==1.2.2
 
 # homeassistant.components.reddit
-praw==6.4.0
+praw==6.5.0
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
