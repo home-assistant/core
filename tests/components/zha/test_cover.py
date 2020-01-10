@@ -94,7 +94,10 @@ async def test_cover(hass, config_entry, zha_gateway):
         return_value=mock_coro([0x5, zcl_f.Status.SUCCESS]),
     ):
         await hass.services.async_call(
-            DOMAIN, "set_cover_position", {"entity_id": entity_id, "position": 47}, blocking=True
+            DOMAIN,
+            "set_cover_position",
+            {"entity_id": entity_id, "position": 47},
+            blocking=True,
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args == call(
