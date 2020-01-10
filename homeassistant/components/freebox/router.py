@@ -23,7 +23,7 @@ from .const import (
     SENSOR_NAME,
     SENSOR_UNIT,
     SENSOR_UPDATE,
-    TEMP_SENSORS,
+    TEMP_SENSOR_TEMPLATE,
     TRACKER_UPDATE,
 )
 
@@ -108,10 +108,9 @@ class FreeboxRouter:
         # System sensors
         syst_datas: Dict[str, any] = await self._api.system.get_config()
         temp_datas = {item["id"]: item for item in syst_datas["sensors"]}
+        # According to the doc it is only temperature sensors in celsius degree, name and id of the sensors may vary under Freebox devices
 
-        for sensor_key, sensor_attrs in TEMP_SENSORS.items():
-            if temp_datas.get(sensor_key) is None:
-                continue
+        for sensor_key, sensor_attrs in temp_datas.items():
 
             if self._temp_sensors.get(sensor_key) is not None:
                 # Seen sensor -> updating
@@ -120,7 +119,15 @@ class FreeboxRouter:
             else:
                 # New sensor, should be unique
                 _LOGGER.debug("Adding Freebox sensor: %s", sensor_key)
-                self._temp_sensors[sensor_key] = FreeboxSensor(sensor_attrs)
+                self._temp_sensors[sensor_key] = FreeboxSensor(
+                    {
+                        **TEMP_SENSOR_TEMPLATE,
+                        **{
+                            SENSOR_NAME: f"Freebox {sensor_attrs['name']}",
+                            "value": sensor_attrs["value"],
+                        },
+                    }
+                )
                 self._temp_sensors[sensor_key].update(temp_datas[sensor_key]["value"])
 
         # Connection sensors

@@ -55,29 +55,9 @@ CONN_SENSORS = {
     },
 }
 
-TEMP_SENSORS = {
-    "temp_hdd": {
-        SENSOR_NAME: "Freebox HDD temperature",
-        SENSOR_UNIT: TEMP_CELSIUS,
-        SENSOR_ICON: "mdi:thermometer",
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
-    "temp_sw": {
-        SENSOR_NAME: "Freebox switch temperature",
-        SENSOR_UNIT: TEMP_CELSIUS,
-        SENSOR_ICON: "mdi:thermometer",
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
-    "temp_cpum": {
-        SENSOR_NAME: "Freebox CPU M temperature",
-        SENSOR_UNIT: TEMP_CELSIUS,
-        SENSOR_ICON: "mdi:thermometer",
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
-    "temp_cpub": {
-        SENSOR_NAME: "Freebox CPU B temperature",
-        SENSOR_UNIT: TEMP_CELSIUS,
-        SENSOR_ICON: "mdi:thermometer",
-        SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-    },
+TEMP_SENSOR_TEMPLATE = {
+    SENSOR_NAME: None,
+    SENSOR_UNIT: TEMP_CELSIUS,
+    SENSOR_ICON: "mdi:thermometer",
+    SENSOR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
 }
