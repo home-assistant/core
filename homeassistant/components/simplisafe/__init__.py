@@ -69,7 +69,7 @@ SERVICE_SET_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
         vol.Optional(ATTR_ALARM_DURATION): vol.All(
-            vol.Coerce(int), vol.Range(min=30, max=480)
+            cv.time_period, lambda value: value.seconds, vol.Range(min=30, max=480)
         ),
         vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
         vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
