@@ -101,10 +101,19 @@ class RingSensor(Entity):
         self._state = None
         self._tz = str(hass.config.time_zone)
         self._unique_id = f"{self._data.id}-{self._sensor_type}"
+        self._disp_disconnect = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_RING, self._update_callback)
+        self._disp_disconnect = async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_RING, self._update_callback
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks."""
+        if self._disp_disconnect:
+            self._disp_disconnect()
+            self._disp_disconnect = None
 
     @callback
     def _update_callback(self):

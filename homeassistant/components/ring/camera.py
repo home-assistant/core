@@ -33,8 +33,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     cams = []
     for camera in ring_doorbell + ring_stickup_cams:
-        if camera.has_subscription:
-            cams.append(RingCam(hass, camera))
+        if not camera.has_subscription:
+            continue
+
+        camera = await hass.async_add_executor_job(RingCam, hass, camera)
+        cams.append(camera)
 
     async_add_entities(cams, True)
 
@@ -53,10 +56,19 @@ class RingCam(Camera):
         self._video_url = self._camera.recording_url(self._last_video_id)
         self._utcnow = dt_util.utcnow()
         self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow
+        self._disp_disconnect = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_RING, self._update_callback)
+        self._disp_disconnect = async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_RING, self._update_callback
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks."""
+        if self._disp_disconnect:
+            self._disp_disconnect()
+            self._disp_disconnect = None
 
     @callback
     def _update_callback(self):
