@@ -36,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=60)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up Zigbee Home Automation covers."""
     pass
@@ -61,6 +62,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
         del hass.data[DATA_ZHA][DOMAIN]
 
+
 async def _async_setup_entities(
     hass, config_entry, async_add_entities, discovery_infos
 ):
@@ -76,6 +78,7 @@ async def _async_setup_entities(
 
     if entities:
         async_add_entities(entities, update_before_add=True)
+
 
 @STRICT_MATCH(channel_names=CHANNEL_COVER)
 class ZhaCover(ZhaEntity, CoverDevice):
@@ -100,7 +103,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
         self._state = last_state.state
         if "current_position" in last_state.attributes:
             self._current_position = last_state.attributes["current_position"]
-        
+
     @property
     def is_closed(self):
         """Return if the cover is closed."""
@@ -121,13 +124,13 @@ class ZhaCover(ZhaEntity, CoverDevice):
         _LOGGER.debug("setting position: %s", pos)
         self._current_position = 100 - pos
         self.async_schedule_update_ha_state()
-    
+
     def async_set_state(self, state):
         """Handle state update from channel."""
         _LOGGER.debug("state=%s", state)
         self._state = state
         self.async_schedule_update_ha_state()
-        
+
     async def async_open_cover(self, **kwargs):
         """Open the window cover."""
         await self._cover_channel.async_open()
@@ -142,12 +145,14 @@ class ZhaCover(ZhaEntity, CoverDevice):
         """Move the roller shutter to a specific position."""
         newPos = kwargs.get(ATTR_POSITION)
         await self._cover_channel.async_goto_lift_percent(100 - newPos)
-        self.async_set_state(STATE_CLOSING if newPos < self._current_position else STATE_OPENING)
+        self.async_set_state(
+            STATE_CLOSING if newPos < self._current_position else STATE_OPENING
+        )
 
     async def async_stop_cover(self, **kwargs):
         """Stop the window cover."""
         await self._cover_channel.async_stop()
-        self.async_schedule_update_ha_state() 
+        self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Attempt to retrieve the open/close state of the cover."""
@@ -164,7 +169,9 @@ class ZhaCover(ZhaEntity, CoverDevice):
 
             if pos != None:
                 self._current_position = 100 - pos
-                self._state = STATE_OPEN if self.current_cover_position > 0 else STATE_CLOSED
+                self._state = (
+                    STATE_OPEN if self.current_cover_position > 0 else STATE_CLOSED
+                )
             else:
                 self._current_position = None
                 self._state = None
