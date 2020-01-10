@@ -1141,7 +1141,7 @@ class AlexaModeController(AlexaCapability):
 
         if self.instance == f"{light.DOMAIN}.{light.ATTR_EFFECT}":
             mode = self.entity.attributes.get(light.ATTR_EFFECT)
-            return base64.b64encode(f"{light.ATTR_EFFECT}.{mode}".encode())
+            return base64.b64encode(f"{light.ATTR_EFFECT}.{mode}".encode()).decode()
 
         return None
 
@@ -1191,7 +1191,9 @@ class AlexaModeController(AlexaCapability):
             if effect_list:
                 for effect in effect_list:
                     self._resource.add_mode(
-                        base64.b64encode(f"{light.ATTR_EFFECT}.{effect}".encode()),
+                        base64.b64encode(
+                            f"{light.ATTR_EFFECT}.{effect}".encode()
+                        ).decode(),
                         [f"{effect}"],
                     )
 

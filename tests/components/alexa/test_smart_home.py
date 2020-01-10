@@ -420,7 +420,7 @@ async def test_effect_light(hass):
 
     for effect in device[-1]["effect_list"]:
         assert {
-            "value": base64.b64encode(("effect.{}".format(effect)).encode()),
+            "value": base64.b64encode(("effect.{}".format(effect)).encode()).decode(),
             "modeResources": {
                 "friendlyNames": [
                     {
