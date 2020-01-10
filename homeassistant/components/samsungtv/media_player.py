@@ -151,6 +151,9 @@ class SamsungTVDevice(MediaPlayerDevice):
         except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
             # We got a response so it's on.
             LOGGER.debug("Failed sending command %s", key, exc_info=True)
+        except OSError:
+            # Different reasons, e.g. hostname not resolveable
+            pass
 
     def _power_off_in_progress(self):
         return (
