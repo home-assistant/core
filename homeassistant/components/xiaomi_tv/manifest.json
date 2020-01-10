@@ -2,7 +2,7 @@
   "domain": "xiaomi_tv",
   "name": "Xiaomi TV",
   "documentation": "https://www.home-assistant.io/integrations/xiaomi_tv",
-  "requirements": ["pymitv==1.4.3"],
+  "requirements": ["pymitv==1.5.0"],
   "dependencies": [],
   "codeowners": ["@simse"]
 }

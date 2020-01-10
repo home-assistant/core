@@ -1357,7 +1357,7 @@ pymediaroom==0.6.4
 pymfy==0.7.1
 
 # homeassistant.components.xiaomi_tv
-pymitv==1.4.3
+pymitv==1.5.0
 
 # homeassistant.components.mochad
 pymochad==0.2.0
