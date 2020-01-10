@@ -1,4 +1,7 @@
 """Test zha cover."""
+from unittest.mock import call, patch
+
+import zigpy.types
 import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
@@ -13,6 +16,8 @@ from .common import (
     make_attribute,
     make_zcl_header,
 )
+
+from tests.common import mock_coro
 
 
 async def test_cover(hass, config_entry, zha_gateway):
@@ -56,3 +61,55 @@ async def test_cover(hass, config_entry, zha_gateway):
     cluster.handle_message(hdr, [[attr]])
     await hass.async_block_till_done()
     assert hass.states.get(entity_id).state == STATE_OPEN
+
+    # close from UI
+    with patch(
+        "zigpy.zcl.Cluster.request",
+        return_value=mock_coro([0x1, zcl_f.Status.SUCCESS]),
+    ):
+        await hass.services.async_call(
+            DOMAIN, "close_cover", {"entity_id": entity_id}, blocking=True
+        )
+        assert len(cluster.request.mock_calls) == 1
+        assert cluster.request.call_args == call(
+            False, 0x1, (), expect_reply=True, manufacturer=None
+        )
+
+    # open from UI
+    with patch(
+        "zigpy.zcl.Cluster.request",
+        return_value=mock_coro([0x0, zcl_f.Status.SUCCESS]),
+    ):
+        await hass.services.async_call(
+            DOMAIN, "open_cover", {"entity_id": entity_id}, blocking=True
+        )
+        assert len(cluster.request.mock_calls) == 1
+        assert cluster.request.call_args == call(
+            False, 0x0, (), expect_reply=True, manufacturer=None
+        )
+
+    # set position UI
+    with patch(
+        "zigpy.zcl.Cluster.request",
+        return_value=mock_coro([0x5, zcl_f.Status.SUCCESS]),
+    ):
+        await hass.services.async_call(
+            DOMAIN, "set_cover_position", {"entity_id": entity_id, "position": 47}, blocking=True
+        )
+        assert len(cluster.request.mock_calls) == 1
+        assert cluster.request.call_args == call(
+            False, 0x5, (zigpy.types.uint8_t,), 53, expect_reply=True, manufacturer=None
+        )
+
+    # stop from UI
+    with patch(
+        "zigpy.zcl.Cluster.request",
+        return_value=mock_coro([0x2, zcl_f.Status.SUCCESS]),
+    ):
+        await hass.services.async_call(
+            DOMAIN, "stop_cover", {"entity_id": entity_id}, blocking=True
+        )
+        assert len(cluster.request.mock_calls) == 1
+        assert cluster.request.call_args == call(
+            False, 0x2, (), expect_reply=True, manufacturer=None
+        )
