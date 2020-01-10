@@ -29,7 +29,10 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    verify_domain_control,
+)
 
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
@@ -285,7 +288,7 @@ async def async_setup_entry(hass, config_entry):
             SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
         ),
     ]:
-        hass.services.async_register(DOMAIN, service, method, schema=schema)
+        async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
     return True
 
