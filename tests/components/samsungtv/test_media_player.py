@@ -236,15 +236,15 @@ async def test_send_key_websocketexception(hass, remote):
     assert state.state == STATE_ON
 
 
-# async def test_send_key_os_error(hass, remote):
-#     """Testing broken pipe Exception."""
-#     await setup_samsungtv(hass, MOCK_CONFIG)
-#     remote.control = mock.Mock(side_effect=OSError("Boom"))
-#     assert await hass.services.async_call(
-#         DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-#     )
-#     state = hass.states.get(ENTITY_ID)
-#     assert state.state == STATE_OFF
+async def test_send_key_os_error(hass, remote):
+    """Testing broken pipe Exception."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+    remote.control = mock.Mock(side_effect=OSError("Boom"))
+    assert await hass.services.async_call(
+        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_ON
 
 
 async def test_name(hass, remote):
