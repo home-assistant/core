@@ -93,9 +93,6 @@ class ZhaCover(ZhaEntity, CoverDevice):
         await self.async_accept_signal(
             self._cover_channel, SIGNAL_ATTR_UPDATED, self.async_set_position
         )
-        async_track_time_interval(self.hass, self.refresh, SCAN_INTERVAL)
-        await self.async_get_state(from_cache=False)
-        self.async_schedule_update_ha_state()
 
     @callback
     def async_restore_last_state(self, last_state):
@@ -150,18 +147,12 @@ class ZhaCover(ZhaEntity, CoverDevice):
     async def async_stop_cover(self, **kwargs):
         """Stop the window cover."""
         await self._cover_channel.async_stop()
-        await self.async_get_state(from_cache=False)
         self.async_schedule_update_ha_state() 
 
     async def async_update(self):
         """Attempt to retrieve the open/close state of the cover."""
         await super().async_update()
-        await self.async_get_state(from_cache=False)
-
-    async def refresh(self, time):
-        """Call async_update at an interval."""
-        await self.async_get_state(from_cache=False)
-        self.async_schedule_update_ha_state() 
+        await self.async_get_state()
 
     async def async_get_state(self, from_cache=True):
         _LOGGER.debug("polling current state")
