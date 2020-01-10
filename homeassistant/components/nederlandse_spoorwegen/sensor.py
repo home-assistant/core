@@ -7,7 +7,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_EMAIL, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -37,18 +37,14 @@ ROUTE_SCHEMA = vol.Schema(
 ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_EMAIL): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_ROUTES): ROUTES_SCHEMA,
-    }
+    {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
 
-    nsapi = ns_api.NSAPI(config.get(CONF_PASSWORD))
+    nsapi = ns_api.NSAPI(config[CONF_API_KEY])
     try:
         stations = nsapi.get_stations()
     except (
