@@ -13,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import ZigbeeChannel
 from .. import registries
-from ..const import CLUSTER_COMMAND_SERVER, REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
+from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,43 +66,6 @@ class WindowCovering(ZigbeeChannel):
     REPORT_CONFIG = (
         {"attr": "current_position_lift_percentage", "config": REPORT_CONFIG_IMMEDIATE},
     )
-
-    async def async_open(self) -> None:
-        """Commands the covering to open."""
-        await self.device.issue_cluster_command(
-            self.cluster.endpoint.endpoint_id,
-            self.cluster.cluster_id,
-            0x0000,
-            CLUSTER_COMMAND_SERVER,
-        )
-
-    async def async_close(self) -> None:
-        """Commands the covering to close."""
-        await self.device.issue_cluster_command(
-            self.cluster.endpoint.endpoint_id,
-            self.cluster.cluster_id,
-            0x0001,
-            CLUSTER_COMMAND_SERVER,
-        )
-
-    async def async_stop(self) -> None:
-        """Commands the covering to stop."""
-        await self.device.issue_cluster_command(
-            self.cluster.endpoint.endpoint_id,
-            self.cluster.cluster_id,
-            0x0002,
-            CLUSTER_COMMAND_SERVER,
-        )
-
-    async def async_goto_lift_percent(self, value) -> None:
-        """Commands the covering to stop."""
-        await self.device.issue_cluster_command(
-            self.cluster.endpoint.endpoint_id,
-            self.cluster.cluster_id,
-            0x0005,
-            CLUSTER_COMMAND_SERVER,
-            value,
-        )
 
     async def async_update(self):
         """Retrieve latest state."""
