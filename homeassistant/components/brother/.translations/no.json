@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Denne skriveren er allerede konfigurert.",
             "unsupported_model": "Denne skrivermodellen er ikke st\u00f8ttet."
         },
         "error": {
