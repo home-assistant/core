@@ -39,6 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
+PARALLEL_UPDATES = 0
+
 COMMON_SUPPORTED_COMMANDS = (
     SUPPORT_SELECT_SOURCE
     | SUPPORT_TURN_ON
