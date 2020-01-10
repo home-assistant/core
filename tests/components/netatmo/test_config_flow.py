@@ -21,12 +21,16 @@ async def test_abort_if_existing_entry(hass):
     flow = config_flow.NetatmoFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        "netatmo", context={"source": config_entries.SOURCE_USER}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_setup"
 
-    result = await flow.async_step_homekit(
-        {"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}}
+    result = await hass.config_entries.flow.async_init(
+        "netatmo",
+        context={"source": "homekit"},
+        data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_setup"
