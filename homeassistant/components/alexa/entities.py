@@ -257,6 +257,7 @@ class AlexaEntity:
         for interface in self.interfaces():
             if not interface.properties_proactively_reported():
                 continue
+
             for prop in interface.serialize_properties():
                 yield prop
 
