@@ -24,7 +24,11 @@ async def test_cover(hass, config_entry, zha_gateway):
 
     # create zigpy device
     zigpy_device = await async_init_zigpy_device(
-        hass, [closures.WindowCovering.cluster_id, general.Basic.cluster_id], [], None, zha_gateway
+        hass,
+        [closures.WindowCovering.cluster_id, general.Basic.cluster_id],
+        [],
+        None,
+        zha_gateway,
     )
 
     # load up cover domain

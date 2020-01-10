@@ -156,7 +156,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
         await self.async_get_state()
 
     async def async_get_state(self, from_cache=True):
-        """Gets current state."""
+        """Fetch the current state."""
         _LOGGER.debug("polling current state")
         if self._cover_channel:
             pos = await self._cover_channel.get_attribute_value(
