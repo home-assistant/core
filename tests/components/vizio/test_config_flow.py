@@ -214,35 +214,3 @@ async def test_import_entity_already_configured(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_setup"
-
-
-async def test_import_name_already_configured(hass):
-    """Test name is already configured during user setup."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_SOUNDBAR_ENTRY, options={CONF_VOLUME_STEP: VOLUME_STEP}
-    )
-    entry.add_to_hass(hass)
-
-    mock_entry = MOCK_SOUNDBAR_ENTRY.copy()
-    mock_entry[CONF_HOST] = "0.0.0.0"
-    flow = init_config_flow(hass)
-    result = await flow.async_step_import(mock_entry)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "name_exists"
-
-
-async def test_import_host_already_configured(hass):
-    """Test host is already configured during user setup."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_SOUNDBAR_ENTRY, options={CONF_VOLUME_STEP: VOLUME_STEP}
-    )
-    entry.add_to_hass(hass)
-
-    mock_entry = MOCK_SOUNDBAR_ENTRY.copy()
-    mock_entry[CONF_NAME] = "newtestname"
-    flow = init_config_flow(hass)
-    result = await flow.async_step_import(mock_entry)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "host_exists"

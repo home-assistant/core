@@ -40,11 +40,37 @@ VIZIO_SCHEMA = {
 }
 
 
+def update_schema_defaults(input):
+    """Update schema defaults based on user input/config dict. Retains info already provided for future form views."""
+    return vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=input.get(CONF_NAME, DEFAULT_NAME)): str,
+            vol.Required(CONF_HOST, default=input.get(CONF_HOST, "")): str,
+            vol.Optional(
+                CONF_DEVICE_CLASS,
+                default=input.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
+            ): vol.All(str, vol.Lower, vol.In(["tv", "soundbar"])),
+            vol.Optional(
+                CONF_ACCESS_TOKEN, default=input.get(CONF_ACCESS_TOKEN, "")
+            ): str,
+            vol.Optional(
+                CONF_VOLUME_STEP,
+                default=input.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
+        }
+    )
+
+
 class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Vizio config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+
+    def __init__(self):
+        """Initialize config flow."""
+        self.import_schema = None
+        self.user_schema = None
 
     @staticmethod
     @callback
@@ -59,6 +85,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            # Store current values in case setup fails and user needs to edit
+            self.user_schema = update_schema_defaults(user_input)
+
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_HOST] == user_input[CONF_HOST]:
@@ -89,9 +118,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=user_input
                 )
 
-        return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(VIZIO_SCHEMA), errors=errors
-        )
+        schema = self.user_schema or self.import_schema or vol.Schema(VIZIO_SCHEMA)
+
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_import(self, import_config: Dict[str, Any]) -> Dict[str, Any]:
         """Import a config entry from configuration.yaml."""
@@ -101,24 +130,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_NAME
             ] == import_config.get(CONF_NAME):
                 return self.async_abort(reason="already_setup")
-            if entry.data[CONF_HOST] == import_config[CONF_HOST]:
-                _LOGGER.error(
-                    "Vizio entity 'media_player.%s' already configured with host '%s' so entity 'media_player.%s' with host '%s' can't be imported.",
-                    entry.data[CONF_NAME],
-                    entry.data[CONF_HOST],
-                    import_config[CONF_NAME],
-                    import_config[CONF_HOST],
-                )
-                return self.async_abort(reason="host_exists")
-            if entry.data[CONF_NAME] == import_config.get(CONF_NAME):
-                _LOGGER.error(
-                    "Vizio entity 'media_player.%s' already configured with host '%s' so entity 'media_player.%s' with host '%s' can't be imported.",
-                    entry.data[CONF_NAME],
-                    entry.data[CONF_HOST],
-                    import_config[CONF_NAME],
-                    import_config[CONF_HOST],
-                )
-                return self.async_abort(reason="name_exists")
+
+        # Store import values in case setup fails so user can see error
+        self.import_schema = update_schema_defaults(import_config)
 
         return await self.async_step_user(user_input=import_config)
 
