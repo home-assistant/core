@@ -33,7 +33,7 @@ SENSOR_TYPES = {
         "small_mincha": ["Mincha Ketana", "mdi:calendar-clock"],
         "plag_mincha": ["Plag Hamincha", "mdi:weather-sunset-down"],
         "sunset": ["Shkia", "mdi:weather-sunset"],
-        "first_stars": ["Tseit Hakochavim", "mdi:weather-night"],
+        "first_stars": ["T'set Hakochavim", "mdi:weather-night"],
         "upcoming_shabbat_candle_lighting": [
             "Upcoming Shabbat Candle Lighting",
             "mdi:candle",
