@@ -76,7 +76,9 @@ class TestRingBinarySensorSetup(unittest.TestCase):
         )
 
         with mock_storage(), patch("homeassistant.components.ring.PLATFORMS", []):
-            base_ring.setup(self.hass, VALID_CONFIG)
+            run_coroutine_threadsafe(
+                base_ring.async_setup(self.hass, VALID_CONFIG), self.hass.loop
+            ).result()
             run_coroutine_threadsafe(
                 self.hass.async_block_till_done(), self.hass.loop
             ).result()

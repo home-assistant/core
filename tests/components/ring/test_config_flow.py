@@ -21,7 +21,7 @@ async def test_form(hass):
         "homeassistant.components.ring.config_flow.Ring",
         return_value=Mock(is_connected=True),
     ), patch(
-        "homeassistant.components.ring.setup", return_value=True
+        "homeassistant.components.ring.async_setup", return_value=mock_coro(True)
     ) as mock_setup, patch(
         "homeassistant.components.ring.async_setup_entry", return_value=mock_coro(True),
     ) as mock_setup_entry:

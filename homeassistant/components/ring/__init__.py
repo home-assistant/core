@@ -49,7 +49,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Ring component."""
     if DOMAIN not in config:
         return True
