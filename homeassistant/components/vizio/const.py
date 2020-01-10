@@ -6,7 +6,6 @@ DEFAULT_NAME = "Vizio SmartCast"
 DEFAULT_VOLUME_STEP = 1
 DEFAULT_DEVICE_CLASS = "tv"
 DEVICE_ID = "pyvizio"
-DEVICE_NAME = "Python Vizio"
 
 DOMAIN = "vizio"
 
