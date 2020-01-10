@@ -1,4 +1,5 @@
 """The tests for the Ring component."""
+from asyncio import run_coroutine_threadsafe
 from copy import deepcopy
 from datetime import timedelta
 import os
@@ -59,7 +60,10 @@ class TestRing(unittest.TestCase):
             "https://api.ring.com/clients_api/doorbots/987652/health",
             text=load_fixture("ring_doorboot_health_attrs.json"),
         )
-        response = ring.setup(self.hass, self.config)
+        response = run_coroutine_threadsafe(
+            ring.async_setup(self.hass, self.config), self.hass.loop
+        ).result()
+
         assert response
 
     @requests_mock.Mocker()
