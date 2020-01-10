@@ -2,22 +2,10 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
+from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import ATTR_ATTRIBUTION
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_ENTITY_NAMESPACE,
-    CONF_MONITORED_CONDITIONS,
-)
-import homeassistant.helpers.config_validation as cv
-
-from . import (
-    ATTRIBUTION,
-    DATA_RING_DOORBELLS,
-    DATA_RING_STICKUP_CAMS,
-    DEFAULT_ENTITY_NAMESPACE,
-)
+from . import ATTRIBUTION, DATA_RING_DOORBELLS, DATA_RING_STICKUP_CAMS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,35 +17,24 @@ SENSOR_TYPES = {
     "motion": ["Motion", ["doorbell", "stickup_cams"], "motion"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(
-            CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE
-        ): cv.string,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
-        ),
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a sensor for a Ring device."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Ring binary sensors from a config entry."""
     ring_doorbells = hass.data[DATA_RING_DOORBELLS]
     ring_stickup_cams = hass.data[DATA_RING_STICKUP_CAMS]
 
     sensors = []
     for device in ring_doorbells:  # ring.doorbells is doing I/O
-        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
+        for sensor_type in SENSOR_TYPES:
             if "doorbell" in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass, device, sensor_type))
 
     for device in ring_stickup_cams:  # ring.stickup_cams is doing I/O
-        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
+        for sensor_type in SENSOR_TYPES:
             if "stickup_cams" in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass, device, sensor_type))
 
-    add_entities(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class RingBinarySensor(BinarySensorDevice):
