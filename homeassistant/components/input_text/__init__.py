@@ -117,7 +117,7 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Set up an input slider."""
+    """Set up an input text."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     id_manager = collection.IDManager()
 
