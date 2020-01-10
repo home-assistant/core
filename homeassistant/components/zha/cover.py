@@ -149,9 +149,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
         """Stop the window cover."""
         res = await self._cover_channel.stop()
         if isinstance(res, list) and res[1] is Status.SUCCESS:
-            self._state = (
-                STATE_OPEN if self._current_position > 0 else STATE_CLOSED
-            )
+            self._state = STATE_OPEN if self._current_position > 0 else STATE_CLOSED
             self.async_schedule_update_ha_state()
 
     async def async_update(self):
