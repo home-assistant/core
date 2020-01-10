@@ -834,11 +834,11 @@ async def test_purecool_update_state_filter_inv(devices, login, hass):
         "msg": "CURRENT-STATE",
         "product-state": {
             "fpwr": "OFF",
-            "fdir": "OFF",
-            "auto": "OFF",
+            "fdir": "ON",
+            "auto": "ON",
             "oscs": "ON",
             "oson": "ON",
-            "nmod": "OFF",
+            "nmod": "ON",
             "rhtm": "ON",
             "fnst": "FAN",
             "ercd": "11E1",
@@ -848,10 +848,10 @@ async def test_purecool_update_state_filter_inv(devices, login, hass):
             "bril": "0002",
             "corf": "ON",
             "cflr": "INV",
-            "hflr": "0095",
+            "hflr": "0075",
             "sltm": "OFF",
-            "osal": "0045",
-            "osau": "0095",
+            "osal": "0055",
+            "osau": "0105",
             "ancp": "CUST",
         },
     }
@@ -866,7 +866,19 @@ async def test_purecool_update_state_filter_inv(devices, login, hass):
     fan_state = hass.states.get("fan.living_room")
     attributes = fan_state.attributes
 
+    assert fan_state.state == "off"
+    assert attributes[dyson.ATTR_NIGHT_MODE] is True
+    assert attributes[dyson.ATTR_AUTO_MODE] is True
+    assert attributes[dyson.ATTR_ANGLE_LOW] == 55
+    assert attributes[dyson.ATTR_ANGLE_HIGH] == 105
+    assert attributes[dyson.ATTR_FLOW_DIRECTION_FRONT] is True
+    assert attributes[dyson.ATTR_TIMER] == "OFF"
+    assert attributes[dyson.ATTR_HEPA_FILTER] == 75
     assert attributes[dyson.ATTR_CARBON_FILTER] == "INV"
+    assert attributes[dyson.ATTR_DYSON_SPEED] == int(FanSpeed.FAN_SPEED_2.value)
+    assert attributes[ATTR_SPEED] is SPEED_LOW
+    assert attributes[ATTR_OSCILLATING] is False
+    assert attributes[dyson.ATTR_DYSON_SPEED_LIST] == _get_supported_speeds()
 
 
 @asynctest.patch("libpurecool.dyson.DysonAccount.login", return_value=True)
