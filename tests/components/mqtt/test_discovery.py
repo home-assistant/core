@@ -270,8 +270,8 @@ ABBREVIATIONS_WHITE_LIST = [
     # Undocumented device configuration
     "CONF_DEPRECATED_VIA_HUB",
     "CONF_VIA_DEVICE",
-    "CONF_COMMANDS",
     # Already short
+    "CONF_COMMANDS",
     "CONF_FAN_MODE_LIST",
     "CONF_HOLD_LIST",
     "CONF_HS",

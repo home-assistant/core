@@ -13,7 +13,9 @@ from homeassistant.const import (
     CONF_OPTIMISTIC,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    CONF_VALUE_TEMPLATE,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
@@ -22,6 +24,7 @@ from . import (
     CONF_COMMAND_TOPIC,
     CONF_QOS,
     CONF_RETAIN,
+    CONF_STATE_TOPIC,
     CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
@@ -32,6 +35,7 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "MQTT Remote"
+DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
 
@@ -47,8 +51,10 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
             vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
             vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+            vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_COMMANDS, default={}): cv.schema_with_slug_keys(
                 COMMAND_SCHEMA
             ),
@@ -99,6 +105,59 @@ class MqttRemote(
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
         await super().async_added_to_hass()
+        await self._subscribe_topics()
+
+    async def discovery_update(self, discovery_payload):
+        """Handle updated discovery message."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        self._config = config
+        await self.attributes_discovery_update(config)
+        await self.availability_discovery_update(config)
+        await self.device_info_discovery_update(config)
+        await self._subscribe_topics()
+        self.async_write_ha_state()
+
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        value_template = self._config.get(CONF_VALUE_TEMPLATE)
+        if value_template is not None:
+            value_template.hass = self.hass
+
+        @callback
+        def state_message_received(msg):
+            """Handle a new received MQTT state message."""
+            payload = msg.payload
+
+            value_template = self._config.get(CONF_VALUE_TEMPLATE)
+            if value_template is not None:
+                payload = value_template.async_render_with_possible_json_value(
+                    payload, variables={"entity_id": self.entity_id}
+                )
+            if payload == self._config[CONF_PAYLOAD_ON]:
+                self._state = True
+            elif payload == self._config[CONF_PAYLOAD_OFF]:
+                self._state = False
+            else:  # Payload is not for this entity
+                _LOGGER.warning(
+                    "No matching payload found" " for entity: %s with state_topic: %s",
+                    self._config[CONF_NAME],
+                    self._config[CONF_STATE_TOPIC],
+                )
+                return
+
+            self.async_write_ha_state()
+
+        self._sub_state = await subscription.async_subscribe_topics(
+            self.hass,
+            self._sub_state,
+            {
+                "state_topic": {
+                    "topic": self._config.get(CONF_STATE_TOPIC),
+                    "msg_callback": state_message_received,
+                    "qos": self._config[CONF_QOS],
+                }
+            },
+        )
 
     def _setup_from_config(self, config):
         """(Re)Setup the entity."""
@@ -149,11 +208,11 @@ class MqttRemote(
 
         This method is a coroutine.
         """
-        for cmd in command:
-            if cmd in self._commands:
-                self._publish_command(self._commands[cmd][CONF_COMMAND])
+        for single_command in command:
+            if single_command in self._commands:
+                self._publish_command(self._commands[single_command][CONF_COMMAND])
             else:
-                _LOGGER.warning("Unknown command: %s", cmd)
+                _LOGGER.warning("Unknown command: %s", single_command)
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
