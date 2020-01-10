@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
 )
+from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry, mock_coro_func
 
@@ -50,14 +51,14 @@ MOCK_SOUNDBAR_ENTRY = {
 }
 
 
-def init_config_flow(hass):
+def init_config_flow(hass: HomeAssistantType) -> config_flow.VizioConfigFlow:
     """Init a configuration flow."""
     flow = config_flow.VizioConfigFlow()
     flow.hass = hass
     return flow
 
 
-async def test_flow_works(hass):
+async def test_flow_works(hass: HomeAssistantType) -> None:
     """Test user config."""
     flow = init_config_flow(hass)
 
@@ -97,7 +98,7 @@ async def test_flow_works(hass):
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
 
 
-async def test_options(hass):
+async def test_options(hass: HomeAssistantType) -> None:
     """Test updating options."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -120,7 +121,7 @@ async def test_options(hass):
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
 
 
-async def test_user_host_already_configured(hass):
+async def test_user_host_already_configured(hass: HomeAssistantType) -> None:
     """Test host is already configured during user setup."""
     entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_SOUNDBAR_ENTRY, options={CONF_VOLUME_STEP: VOLUME_STEP}
@@ -135,7 +136,7 @@ async def test_user_host_already_configured(hass):
     assert result["errors"] == {CONF_HOST: "host_exists"}
 
 
-async def test_user_name_already_configured(hass):
+async def test_user_name_already_configured(hass: HomeAssistantType) -> None:
     """Test name is already configured during user setup."""
     entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_SOUNDBAR_ENTRY, options={CONF_VOLUME_STEP: VOLUME_STEP}
@@ -151,7 +152,7 @@ async def test_user_name_already_configured(hass):
     assert result["errors"] == {CONF_NAME: "name_exists"}
 
 
-async def test_user_error_on_invalid_setup(hass):
+async def test_user_error_on_invalid_setup(hass: HomeAssistantType) -> None:
     """Test with invalid_setup during user_setup."""
     flow = init_config_flow(hass)
 
@@ -161,7 +162,7 @@ async def test_user_error_on_invalid_setup(hass):
     assert result["errors"] == {"base": "invalid_setup"}
 
 
-async def test_user_error_on_tv_needs_token(hass):
+async def test_user_error_on_tv_needs_token(hass: HomeAssistantType) -> None:
     """Test when config fails custom validation for non null access token when device_class = tv during user setup."""
     flow = init_config_flow(hass)
 
@@ -170,7 +171,7 @@ async def test_user_error_on_tv_needs_token(hass):
     assert result["errors"] == {"base": "tv_needs_token"}
 
 
-async def test_import(hass):
+async def test_import(hass: HomeAssistantType) -> None:
     """Test import step."""
     flow = init_config_flow(hass)
 
@@ -202,7 +203,7 @@ async def test_import(hass):
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
 
 
-async def test_import_entity_already_configured(hass):
+async def test_import_entity_already_configured(hass: HomeAssistantType) -> None:
     """Test entity is already configured during import setup."""
     entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_SOUNDBAR_ENTRY, options={CONF_VOLUME_STEP: VOLUME_STEP}
