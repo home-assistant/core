@@ -1,11 +1,12 @@
 """Support for Lupusec Home Security system."""
 import logging
 
+import lupupy
+from lupupy.exceptions import LupusecException
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_NAME, CONF_IP_ADDRESS
+from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,8 +35,6 @@ LUPUSEC_PLATFORMS = ["alarm_control_panel", "binary_sensor", "switch"]
 
 def setup(hass, config):
     """Set up Lupusec component."""
-    from lupupy.exceptions import LupusecException
-
     conf = config[DOMAIN]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
@@ -67,8 +66,6 @@ class LupusecSystem:
 
     def __init__(self, username, password, ip_address, name):
         """Initialize the system."""
-        import lupupy
-
         self.lupusec = lupupy.Lupusec(username, password, ip_address)
         self.name = name
 

@@ -1,3 +1,3 @@
 [tool.black]
-target-version = ["py36", "py37", "py38"]
+target-version = ["py37", "py38"]
 exclude = 'generated'

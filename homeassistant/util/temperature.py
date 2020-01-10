@@ -2,8 +2,8 @@
 from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    UNIT_NOT_RECOGNIZED_TEMPLATE,
     TEMPERATURE,
+    UNIT_NOT_RECOGNIZED_TEMPLATE,
 )
 
 

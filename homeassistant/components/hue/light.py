@@ -2,8 +2,8 @@
 import asyncio
 from datetime import timedelta
 import logging
-from time import monotonic
 import random
+from time import monotonic
 
 import aiohue
 import async_timeout
@@ -14,21 +14,22 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_FLASH,
-    ATTR_TRANSITION,
     ATTR_HS_COLOR,
+    ATTR_TRANSITION,
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
     FLASH_LONG,
     FLASH_SHORT,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     SUPPORT_FLASH,
-    SUPPORT_COLOR,
     SUPPORT_TRANSITION,
     Light,
 )
 from homeassistant.util import color
+
 from .helpers import remove_devices
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -188,6 +189,9 @@ async def async_update_items(
     progress_waiting,
 ):
     """Update either groups or lights from the bridge."""
+    if not bridge.authorized:
+        return
+
     if is_group:
         api_type = "group"
         api = bridge.api.groups
@@ -198,7 +202,10 @@ async def async_update_items(
     try:
         start = monotonic()
         with async_timeout.timeout(4):
-            await api.update()
+            await bridge.async_request_call(api.update())
+    except aiohue.Unauthorized:
+        await bridge.handle_unauthorized_error()
+        return
     except (asyncio.TimeoutError, aiohue.AiohueException) as err:
         _LOGGER.debug("Failed to fetch %s: %s", api_type, err)
 
@@ -254,11 +261,13 @@ class HueLight(Light):
         if is_group:
             self.is_osram = False
             self.is_philips = False
+            self.is_innr = False
             self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
             self.gamut = None
         else:
             self.is_osram = light.manufacturername == "OSRAM"
             self.is_philips = light.manufacturername == "Philips"
+            self.is_innr = light.manufacturername == "innr"
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
             _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
@@ -270,7 +279,7 @@ class HueLight(Light):
                 _LOGGER.warning(err, self.name)
             if self.gamut:
                 if not color.check_valid_gamut(self.gamut):
-                    err = "Color gamut of %s: %s, not valid, " "setting gamut to None."
+                    err = "Color gamut of %s: %s, not valid, setting gamut to None."
                     _LOGGER.warning(err, self.name, str(self.gamut))
                     self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
                     self.gamut = None
@@ -336,10 +345,14 @@ class HueLight(Light):
     @property
     def available(self):
         """Return if light is available."""
-        return self.bridge.available and (
-            self.is_group
-            or self.bridge.allow_unreachable
-            or self.light.state["reachable"]
+        return (
+            self.bridge.available
+            and self.bridge.authorized
+            and (
+                self.is_group
+                or self.bridge.allow_unreachable
+                or self.light.state["reachable"]
+            )
         )
 
     @property
@@ -409,7 +422,7 @@ class HueLight(Light):
         elif flash == FLASH_SHORT:
             command["alert"] = "select"
             del command["on"]
-        else:
+        elif not self.is_innr:
             command["alert"] = "none"
 
         if ATTR_EFFECT in kwargs:
@@ -423,9 +436,9 @@ class HueLight(Light):
                 command["effect"] = "none"
 
         if self.is_group:
-            await self.light.set_action(**command)
+            await self.bridge.async_request_call(self.light.set_action(**command))
         else:
-            await self.light.set_state(**command)
+            await self.bridge.async_request_call(self.light.set_state(**command))
 
     async def async_turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
@@ -442,13 +455,13 @@ class HueLight(Light):
         elif flash == FLASH_SHORT:
             command["alert"] = "select"
             del command["on"]
-        else:
+        elif not self.is_innr:
             command["alert"] = "none"
 
         if self.is_group:
-            await self.light.set_action(**command)
+            await self.bridge.async_request_call(self.light.set_action(**command))
         else:
-            await self.light.set_state(**command)
+            await self.bridge.async_request_call(self.light.set_state(**command))
 
     async def async_update(self):
         """Synchronize state with bridge."""

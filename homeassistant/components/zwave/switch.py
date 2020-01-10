@@ -1,9 +1,11 @@
 """Support for Z-Wave switches."""
 import logging
 import time
-from homeassistant.core import callback
+
 from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from . import ZWaveDeviceEntity, workaround
 
 _LOGGER = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ from homeassistant.auth import auth_manager_from_config
 from homeassistant.components.auth import mfa_setup_flow
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockUser, CLIENT_ID, ensure_auth_manager_loaded
+from tests.common import CLIENT_ID, MockUser, ensure_auth_manager_loaded
 
 
 async def test_ws_setup_depose_mfa(hass, hass_ws_client):

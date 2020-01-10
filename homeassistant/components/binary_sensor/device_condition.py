@@ -1,10 +1,11 @@
 """Implemenet device conditions for binary sensor."""
 from typing import Dict, List
+
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
 from homeassistant.components.device_automation.const import CONF_IS_OFF, CONF_IS_ON
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
@@ -13,7 +14,6 @@ from homeassistant.helpers.entity_registry import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import (
-    DOMAIN,
     DEVICE_CLASS_BATTERY,
     DEVICE_CLASS_COLD,
     DEVICE_CLASS_CONNECTIVITY,
@@ -37,6 +37,7 @@ from . import (
     DEVICE_CLASS_SOUND,
     DEVICE_CLASS_VIBRATION,
     DEVICE_CLASS_WINDOW,
+    DOMAIN,
 )
 
 DEVICE_CLASS_NONE = "none"

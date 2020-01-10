@@ -10,6 +10,13 @@ from enum import Enum
 import logging
 import time
 
+from zigpy import types
+import zigpy.exceptions
+from zigpy.profiles import zha, zll
+import zigpy.quirks
+from zigpy.zcl.clusters.general import Groups
+import zigpy.zdo.types as zdo_types
+
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -87,9 +94,7 @@ class ZHADevice(LogMixin):
         self._unsub = async_dispatcher_connect(
             self.hass, self._available_signal, self.async_initialize
         )
-        from zigpy.quirks import CustomDevice
-
-        self.quirk_applied = isinstance(self._zigpy_device, CustomDevice)
+        self.quirk_applied = isinstance(self._zigpy_device, zigpy.quirks.CustomDevice)
         self.quirk_class = "{}.{}".format(
             self._zigpy_device.__class__.__module__,
             self._zigpy_device.__class__.__name__,
@@ -176,6 +181,17 @@ class ZHADevice(LogMixin):
     def is_end_device(self):
         """Return true if this device is an end device."""
         return self._zigpy_device.node_desc.is_end_device
+
+    @property
+    def is_groupable(self):
+        """Return true if this device has a group cluster."""
+        if not self.available:
+            return False
+        clusters = self.async_get_clusters()
+        for cluster_map in clusters.values():
+            for clusters in cluster_map.values():
+                if Groups.cluster_id in clusters:
+                    return True
 
     @property
     def gateway(self):
@@ -394,7 +410,6 @@ class ZHADevice(LogMixin):
     @callback
     def async_get_std_clusters(self):
         """Get ZHA and ZLL clusters for this device."""
-        from zigpy.profiles import zha, zll
 
         return {
             ep_id: {
@@ -448,8 +463,6 @@ class ZHADevice(LogMixin):
         if cluster is None:
             return None
 
-        from zigpy.exceptions import DeliveryError
-
         try:
             response = await cluster.write_attributes(
                 {attribute: value}, manufacturer=manufacturer
@@ -463,7 +476,7 @@ class ZHADevice(LogMixin):
                 response,
             )
             return response
-        except DeliveryError as exc:
+        except zigpy.exceptions.DeliveryError as exc:
             self.debug(
                 "failed to set attribute: %s %s %s %s %s",
                 f"{ATTR_VALUE}: {value}",
@@ -480,7 +493,7 @@ class ZHADevice(LogMixin):
         cluster_id,
         command,
         command_type,
-        args,
+        *args,
         cluster_type=CLUSTER_TYPE_IN,
         manufacturer=None,
     ):
@@ -488,7 +501,6 @@ class ZHADevice(LogMixin):
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
-        response = None
         if command_type == CLUSTER_COMMAND_SERVER:
             response = await cluster.command(
                 command, *args, manufacturer=manufacturer, expect_reply=True
@@ -508,8 +520,80 @@ class ZHADevice(LogMixin):
         )
         return response
 
+    async def async_add_to_group(self, group_id):
+        """Add this device to the provided zigbee group."""
+        await self._zigpy_device.add_to_group(group_id)
+
+    async def async_remove_from_group(self, group_id):
+        """Remove this device from the provided zigbee group."""
+        await self._zigpy_device.remove_from_group(group_id)
+
+    async def async_bind_to_group(self, group_id, cluster_bindings):
+        """Directly bind this device to a group for the given clusters."""
+        await self._async_group_binding_operation(
+            group_id, zdo_types.ZDOCmd.Bind_req, cluster_bindings
+        )
+
+    async def async_unbind_from_group(self, group_id, cluster_bindings):
+        """Unbind this device from a group for the given clusters."""
+        await self._async_group_binding_operation(
+            group_id, zdo_types.ZDOCmd.Unbind_req, cluster_bindings
+        )
+
+    async def _async_group_binding_operation(
+        self, group_id, operation, cluster_bindings
+    ):
+        """Create or remove a direct zigbee binding between a device and a group."""
+
+        zdo = self._zigpy_device.zdo
+        op_msg = "0x%04x: %s %s, ep: %s, cluster: %s to group: 0x%04x"
+        destination_address = zdo_types.MultiAddress()
+        destination_address.addrmode = types.uint8_t(1)
+        destination_address.nwk = types.uint16_t(group_id)
+
+        tasks = []
+
+        for cluster_binding in cluster_bindings:
+            if cluster_binding.endpoint_id == 0:
+                continue
+            if (
+                cluster_binding.id
+                in self._zigpy_device.endpoints[
+                    cluster_binding.endpoint_id
+                ].out_clusters
+            ):
+                op_params = (
+                    self.nwk,
+                    operation.name,
+                    str(self.ieee),
+                    cluster_binding.endpoint_id,
+                    cluster_binding.id,
+                    group_id,
+                )
+                zdo.debug("processing " + op_msg, *op_params)
+                tasks.append(
+                    (
+                        zdo.request(
+                            operation,
+                            self.ieee,
+                            cluster_binding.endpoint_id,
+                            cluster_binding.id,
+                            destination_address,
+                        ),
+                        op_msg,
+                        op_params,
+                    )
+                )
+        res = await asyncio.gather(*(t[0] for t in tasks), return_exceptions=True)
+        for outcome, log_msg in zip(res, tasks):
+            if isinstance(outcome, Exception):
+                fmt = log_msg[1] + " failed: %s"
+            else:
+                fmt = log_msg[1] + " completed: %s"
+            zdo.debug(fmt, *(log_msg[2] + (outcome,)))
+
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = "[%s](%s): " + msg
+        msg = f"[%s](%s): {msg}"
         args = (self.nwk, self.model) + args
         _LOGGER.log(level, msg, *args)

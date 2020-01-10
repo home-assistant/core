@@ -1,8 +1,8 @@
 """Support for the Mopar vehicle sensor platform."""
 from homeassistant.components.mopar import (
-    DOMAIN as MOPAR_DOMAIN,
-    DATA_UPDATED,
     ATTR_VEHICLE_INDEX,
+    DATA_UPDATED,
+    DOMAIN as MOPAR_DOMAIN,
 )
 from homeassistant.const import ATTR_ATTRIBUTION, LENGTH_KILOMETERS
 from homeassistant.core import callback

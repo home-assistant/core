@@ -1,19 +1,27 @@
 """The tests for the Input select component."""
 # pylint: disable=protected-access
-import asyncio
+from unittest.mock import patch
 
-from homeassistant.loader import bind_hass
+import pytest
+
 from homeassistant.components.input_select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
     DOMAIN,
-    SERVICE_SET_OPTIONS,
     SERVICE_SELECT_NEXT,
     SERVICE_SELECT_OPTION,
     SERVICE_SELECT_PREVIOUS,
+    SERVICE_SET_OPTIONS,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, ATTR_ICON
-from homeassistant.core import State, Context
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
+    SERVICE_RELOAD,
+)
+from homeassistant.core import Context, State
+from homeassistant.exceptions import Unauthorized
+from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
@@ -240,8 +248,7 @@ async def test_set_options_service(hass):
     assert "test2" == state.state
 
 
-@asyncio.coroutine
-def test_restore_state(hass):
+async def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -253,9 +260,7 @@ def test_restore_state(hass):
 
     options = {"options": ["first option", "middle option", "last option"]}
 
-    yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"s1": options, "s2": options}}
-    )
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"s1": options, "s2": options}})
 
     state = hass.states.get("input_select.s1")
     assert state
@@ -266,8 +271,7 @@ def test_restore_state(hass):
     assert state.state == "first option"
 
 
-@asyncio.coroutine
-def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass,
@@ -282,9 +286,7 @@ def test_initial_state_overrules_restore_state(hass):
         "initial": "middle option",
     }
 
-    yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"s1": options, "s2": options}}
-    )
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"s1": options, "s2": options}})
 
     state = hass.states.get("input_select.s1")
     assert state
@@ -322,3 +324,81 @@ async def test_input_select_context(hass, hass_admin_user):
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
+
+
+async def test_reload(hass, hass_admin_user, hass_read_only_user):
+    """Test reload service."""
+    count_start = len(hass.states.async_entity_ids())
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {
+                    "options": ["first option", "middle option", "last option"],
+                    "initial": "middle option",
+                },
+                "test_2": {
+                    "options": ["an option", "not an option"],
+                    "initial": "an option",
+                },
+            }
+        },
+    )
+
+    assert count_start + 2 == len(hass.states.async_entity_ids())
+
+    state_1 = hass.states.get("input_select.test_1")
+    state_2 = hass.states.get("input_select.test_2")
+    state_3 = hass.states.get("input_select.test_3")
+
+    assert state_1 is not None
+    assert state_2 is not None
+    assert state_3 is None
+    assert "middle option" == state_1.state
+    assert "an option" == state_2.state
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            DOMAIN: {
+                "test_2": {
+                    "options": ["an option", "reloaded option"],
+                    "initial": "reloaded option",
+                },
+                "test_3": {
+                    "options": ["new option", "newer option"],
+                    "initial": "newer option",
+                },
+            }
+        },
+    ):
+        with patch("homeassistant.config.find_config_file", return_value=""):
+            with pytest.raises(Unauthorized):
+                await hass.services.async_call(
+                    DOMAIN,
+                    SERVICE_RELOAD,
+                    blocking=True,
+                    context=Context(user_id=hass_read_only_user.id),
+                )
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_RELOAD,
+                blocking=True,
+                context=Context(user_id=hass_admin_user.id),
+            )
+            await hass.async_block_till_done()
+
+    assert count_start + 2 == len(hass.states.async_entity_ids())
+
+    state_1 = hass.states.get("input_select.test_1")
+    state_2 = hass.states.get("input_select.test_2")
+    state_3 = hass.states.get("input_select.test_3")
+
+    assert state_1 is None
+    assert state_2 is not None
+    assert state_3 is not None
+    assert "reloaded option" == state_2.state
+    assert "newer option" == state_3.state

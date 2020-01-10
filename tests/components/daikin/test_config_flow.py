@@ -1,6 +1,7 @@
-# pylint: disable=W0621
+# pylint: disable=redefined-outer-name
 """Tests for the Daikin config flow."""
 import asyncio
+from unittest.mock import patch
 
 import pytest
 
@@ -9,7 +10,7 @@ from homeassistant.components.daikin import config_flow
 from homeassistant.components.daikin.const import KEY_IP, KEY_MAC
 from homeassistant.const import CONF_HOST
 
-from tests.common import MockConfigEntry, MockDependency
+from tests.common import MockConfigEntry
 
 MAC = "AABBCCDDEEFF"
 HOST = "127.0.0.1"
@@ -30,10 +31,10 @@ def mock_daikin():
         """Mock the init function in pydaikin."""
         pass
 
-    with MockDependency("pydaikin.appliance") as mock_daikin_:
-        mock_daikin_.Appliance().values.get.return_value = "AABBCCDDEEFF"
-        mock_daikin_.Appliance().init = mock_daikin_init
-        yield mock_daikin_
+    with patch("homeassistant.components.daikin.config_flow.Appliance") as Appliance:
+        Appliance().values.get.return_value = "AABBCCDDEEFF"
+        Appliance().init = mock_daikin_init
+        yield Appliance
 
 
 async def test_user(hass, mock_daikin):
@@ -94,7 +95,7 @@ async def test_discovery(hass, mock_daikin):
 async def test_device_abort(hass, mock_daikin, s_effect, reason):
     """Test device abort."""
     flow = init_config_flow(hass)
-    mock_daikin.Appliance.side_effect = s_effect
+    mock_daikin.side_effect = s_effect
 
     result = await flow.async_step_user({CONF_HOST: HOST})
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT

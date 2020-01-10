@@ -144,8 +144,12 @@ async def async_unload_entry(hass, config_entry):
     cancel = hass.data[DOMAIN][DATA_LISTENER].pop(config_entry.entry_id)
     cancel()
 
-    for component in ("binary_sensor", "sensor"):
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(config_entry, component)
+        for component in ("binary_sensor", "sensor")
+    ]
+
+    await asyncio.gather(*tasks)
 
     return True
 

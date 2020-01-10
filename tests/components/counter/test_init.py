@@ -1,19 +1,23 @@
 """The tests for the counter component."""
 # pylint: disable=protected-access
-import asyncio
 import logging
 
 from homeassistant.components.counter import (
+    ATTR_INITIAL,
+    ATTR_STEP,
     CONF_ICON,
     CONF_INITIAL,
     CONF_NAME,
     CONF_RESTORE,
     CONF_STEP,
+    DEFAULT_INITIAL,
+    DEFAULT_STEP,
     DOMAIN,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import Context, CoreState, State
 from homeassistant.setup import async_setup_component
+
 from tests.common import mock_restore_cache
 from tests.components.counter.common import (
     async_decrement,
@@ -48,6 +52,7 @@ async def test_config_options(hass):
                 CONF_RESTORE: False,
                 CONF_STEP: 5,
             },
+            "test_3": None,
         }
     }
 
@@ -56,14 +61,16 @@ async def test_config_options(hass):
 
     _LOGGER.debug("ENTITIES: %s", hass.states.async_entity_ids())
 
-    assert count_start + 2 == len(hass.states.async_entity_ids())
+    assert count_start + 3 == len(hass.states.async_entity_ids())
     await hass.async_block_till_done()
 
     state_1 = hass.states.get("counter.test_1")
     state_2 = hass.states.get("counter.test_2")
+    state_3 = hass.states.get("counter.test_3")
 
     assert state_1 is not None
     assert state_2 is not None
+    assert state_3 is not None
 
     assert 0 == int(state_1.state)
     assert ATTR_ICON not in state_1.attributes
@@ -72,6 +79,9 @@ async def test_config_options(hass):
     assert 10 == int(state_2.state)
     assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
     assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
+
+    assert DEFAULT_INITIAL == state_3.attributes.get(ATTR_INITIAL)
+    assert DEFAULT_STEP == state_3.attributes.get(ATTR_STEP)
 
 
 async def test_methods(hass):
@@ -142,8 +152,7 @@ async def test_methods_with_config(hass):
     assert 15 == int(state.state)
 
 
-@asyncio.coroutine
-def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("counter.test1", "11"), State("counter.test2", "-22"))
@@ -151,7 +160,7 @@ def test_initial_state_overrules_restore_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         DOMAIN,
         {
@@ -171,17 +180,24 @@ def test_initial_state_overrules_restore_state(hass):
     assert int(state.state) == 10
 
 
-@asyncio.coroutine
-def test_restore_state_overrules_initial_state(hass):
+async def test_restore_state_overrules_initial_state(hass):
     """Ensure states are restored on startup."""
+
+    attr = {"initial": 6, "minimum": 1, "maximum": 8, "step": 2}
+
     mock_restore_cache(
-        hass, (State("counter.test1", "11"), State("counter.test2", "-22"))
+        hass,
+        (
+            State("counter.test1", "11"),
+            State("counter.test2", "-22"),
+            State("counter.test3", "5", attr),
+        ),
     )
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"test1": {}, "test2": {CONF_INITIAL: 10}}}
+    await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {"test1": {}, "test2": {CONF_INITIAL: 10}, "test3": {}}}
     )
 
     state = hass.states.get("counter.test1")
@@ -192,13 +208,20 @@ def test_restore_state_overrules_initial_state(hass):
     assert state
     assert int(state.state) == -22
 
+    state = hass.states.get("counter.test3")
+    assert state
+    assert int(state.state) == 5
+    assert state.attributes.get("initial") == 6
+    assert state.attributes.get("minimum") == 1
+    assert state.attributes.get("maximum") == 8
+    assert state.attributes.get("step") == 2
 
-@asyncio.coroutine
-def test_no_initial_state_and_no_restore_state(hass):
+
+async def test_no_initial_state_and_no_restore_state(hass):
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 
-    yield from async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_STEP: 5}}})
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_STEP: 5}}})
 
     state = hass.states.get("counter.test1")
     assert state
@@ -379,11 +402,45 @@ async def test_configure(hass, hass_admin_user):
     assert state.state == "5"
     assert 3 == state.attributes.get("step")
 
+    # update value
+    await hass.services.async_call(
+        "counter",
+        "configure",
+        {"entity_id": state.entity_id, "value": 6},
+        True,
+        Context(user_id=hass_admin_user.id),
+    )
+
+    state = hass.states.get("counter.test")
+    assert state is not None
+    assert state.state == "6"
+
+    # update initial
+    await hass.services.async_call(
+        "counter",
+        "configure",
+        {"entity_id": state.entity_id, "initial": 5},
+        True,
+        Context(user_id=hass_admin_user.id),
+    )
+
+    state = hass.states.get("counter.test")
+    assert state is not None
+    assert state.state == "6"
+    assert 5 == state.attributes.get("initial")
+
     # update all
     await hass.services.async_call(
         "counter",
         "configure",
-        {"entity_id": state.entity_id, "step": 5, "minimum": 0, "maximum": 9},
+        {
+            "entity_id": state.entity_id,
+            "step": 5,
+            "minimum": 0,
+            "maximum": 9,
+            "value": 5,
+            "initial": 6,
+        },
         True,
         Context(user_id=hass_admin_user.id),
     )
@@ -394,3 +451,4 @@ async def test_configure(hass, hass_admin_user):
     assert 5 == state.attributes.get("step")
     assert 0 == state.attributes.get("minimum")
     assert 9 == state.attributes.get("maximum")
+    assert 6 == state.attributes.get("initial")

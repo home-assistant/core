@@ -75,7 +75,7 @@ def _setup_controller(hass, controller_config, config):
     position = len(hass.data[DATA_RAINBIRD])
     try:
         controller.get_serial_number()
-    except Exception as exc:  # pylint: disable=W0703
+    except Exception as exc:  # pylint: disable=broad-except
         _LOGGER.error("Unable to setup controller: %s", exc)
         return False
     hass.data[DATA_RAINBIRD].append(controller)

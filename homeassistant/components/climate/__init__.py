@@ -1,4 +1,5 @@
 """Provides functionality to interact with climate devices."""
+from abc import abstractmethod
 from datetime import timedelta
 import functools as ft
 import logging
@@ -17,10 +18,10 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA,
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
+    make_entity_service_schema,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -35,7 +36,7 @@ from .const import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
     ATTR_HUMIDITY,
-    ATTR_HVAC_ACTIONS,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
     ATTR_MAX_HUMIDITY,
@@ -67,8 +68,8 @@ from .const import (
     SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_HUMIDITY,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
     SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 
 DEFAULT_MIN_TEMP = 7
@@ -83,38 +84,19 @@ CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEM
 
 _LOGGER = logging.getLogger(__name__)
 
-SET_AUX_HEAT_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_AUX_HEAT): cv.boolean}
-)
-SET_TEMPERATURE_SCHEMA = vol.Schema(
-    vol.All(
-        cv.has_at_least_one_key(
-            ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
-        ),
-        ENTITY_SERVICE_SCHEMA.extend(
-            {
-                vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
-                vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
-                vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
-                vol.Optional(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
-            }
-        ),
-    )
-)
-SET_FAN_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_FAN_MODE): cv.string}
-)
-SET_PRESET_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_PRESET_MODE): cv.string}
-)
-SET_HVAC_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_HVAC_MODE): vol.In(HVAC_MODES)}
-)
-SET_HUMIDITY_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_HUMIDITY): vol.Coerce(float)}
-)
-SET_SWING_MODE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_SWING_MODE): cv.string}
+
+SET_TEMPERATURE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(
+        ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
+    ),
+    make_entity_service_schema(
+        {
+            vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
+            vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
+            vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
+            vol.Optional(ATTR_HVAC_MODE): vol.In(HVAC_MODES),
+        }
+    ),
 )
 
 
@@ -125,32 +107,40 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
     await component.async_setup(config)
 
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(
-        SERVICE_TURN_ON, ENTITY_SERVICE_SCHEMA, "async_turn_on"
+        SERVICE_SET_HVAC_MODE,
+        {vol.Required(ATTR_HVAC_MODE): vol.In(HVAC_MODES)},
+        "async_set_hvac_mode",
     )
     component.async_register_entity_service(
-        SERVICE_TURN_OFF, ENTITY_SERVICE_SCHEMA, "async_turn_off"
+        SERVICE_SET_PRESET_MODE,
+        {vol.Required(ATTR_PRESET_MODE): cv.string},
+        "async_set_preset_mode",
     )
     component.async_register_entity_service(
-        SERVICE_SET_HVAC_MODE, SET_HVAC_MODE_SCHEMA, "async_set_hvac_mode"
+        SERVICE_SET_AUX_HEAT,
+        {vol.Required(ATTR_AUX_HEAT): cv.boolean},
+        async_service_aux_heat,
     )
     component.async_register_entity_service(
-        SERVICE_SET_PRESET_MODE, SET_PRESET_MODE_SCHEMA, "async_set_preset_mode"
+        SERVICE_SET_TEMPERATURE, SET_TEMPERATURE_SCHEMA, async_service_temperature_set,
     )
     component.async_register_entity_service(
-        SERVICE_SET_AUX_HEAT, SET_AUX_HEAT_SCHEMA, async_service_aux_heat
+        SERVICE_SET_HUMIDITY,
+        {vol.Required(ATTR_HUMIDITY): vol.Coerce(float)},
+        "async_set_humidity",
     )
     component.async_register_entity_service(
-        SERVICE_SET_TEMPERATURE, SET_TEMPERATURE_SCHEMA, async_service_temperature_set
+        SERVICE_SET_FAN_MODE,
+        {vol.Required(ATTR_FAN_MODE): cv.string},
+        "async_set_fan_mode",
     )
     component.async_register_entity_service(
-        SERVICE_SET_HUMIDITY, SET_HUMIDITY_SCHEMA, "async_set_humidity"
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_FAN_MODE, SET_FAN_MODE_SCHEMA, "async_set_fan_mode"
-    )
-    component.async_register_entity_service(
-        SERVICE_SET_SWING_MODE, SET_SWING_MODE_SCHEMA, "async_set_swing_mode"
+        SERVICE_SET_SWING_MODE,
+        {vol.Required(ATTR_SWING_MODE): cv.string},
+        "async_set_swing_mode",
     )
 
     return True
@@ -182,17 +172,11 @@ class ClimateDevice(Entity):
         return PRECISION_WHOLE
 
     @property
-    def state_attributes(self) -> Dict[str, Any]:
-        """Return the optional state attributes."""
+    def capability_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the capability attributes."""
         supported_features = self.supported_features
         data = {
             ATTR_HVAC_MODES: self.hvac_modes,
-            ATTR_CURRENT_TEMPERATURE: show_temp(
-                self.hass,
-                self.current_temperature,
-                self.temperature_unit,
-                self.precision,
-            ),
             ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temp, self.temperature_unit, self.precision
             ),
@@ -203,6 +187,34 @@ class ClimateDevice(Entity):
 
         if self.target_temperature_step:
             data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
+
+        if supported_features & SUPPORT_TARGET_HUMIDITY:
+            data[ATTR_MIN_HUMIDITY] = self.min_humidity
+            data[ATTR_MAX_HUMIDITY] = self.max_humidity
+
+        if supported_features & SUPPORT_FAN_MODE:
+            data[ATTR_FAN_MODES] = self.fan_modes
+
+        if supported_features & SUPPORT_PRESET_MODE:
+            data[ATTR_PRESET_MODES] = self.preset_modes
+
+        if supported_features & SUPPORT_SWING_MODE:
+            data[ATTR_SWING_MODES] = self.swing_modes
+
+        return data
+
+    @property
+    def state_attributes(self) -> Dict[str, Any]:
+        """Return the optional state attributes."""
+        supported_features = self.supported_features
+        data = {
+            ATTR_CURRENT_TEMPERATURE: show_temp(
+                self.hass,
+                self.current_temperature,
+                self.temperature_unit,
+                self.precision,
+            ),
+        }
 
         if supported_features & SUPPORT_TARGET_TEMPERATURE:
             data[ATTR_TEMPERATURE] = show_temp(
@@ -231,23 +243,18 @@ class ClimateDevice(Entity):
 
         if supported_features & SUPPORT_TARGET_HUMIDITY:
             data[ATTR_HUMIDITY] = self.target_humidity
-            data[ATTR_MIN_HUMIDITY] = self.min_humidity
-            data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
         if supported_features & SUPPORT_FAN_MODE:
             data[ATTR_FAN_MODE] = self.fan_mode
-            data[ATTR_FAN_MODES] = self.fan_modes
 
         if self.hvac_action:
-            data[ATTR_HVAC_ACTIONS] = self.hvac_action
+            data[ATTR_HVAC_ACTION] = self.hvac_action
 
         if supported_features & SUPPORT_PRESET_MODE:
             data[ATTR_PRESET_MODE] = self.preset_mode
-            data[ATTR_PRESET_MODES] = self.preset_modes
 
         if supported_features & SUPPORT_SWING_MODE:
             data[ATTR_SWING_MODE] = self.swing_mode
-            data[ATTR_SWING_MODES] = self.swing_modes
 
         if supported_features & SUPPORT_AUX_HEAT:
             data[ATTR_AUX_HEAT] = STATE_ON if self.is_aux_heat else STATE_OFF
@@ -270,20 +277,20 @@ class ClimateDevice(Entity):
         return None
 
     @property
+    @abstractmethod
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
-        raise NotImplementedError()
 
     @property
+    @abstractmethod
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
         """
-        raise NotImplementedError()
 
     @property
     def hvac_action(self) -> Optional[str]:

@@ -1,6 +1,7 @@
 """Support for Loop Energy sensors."""
 import logging
 
+import pyloopenergy
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -54,8 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Loop Energy sensors."""
-    import pyloopenergy
-
     elec_config = config.get(CONF_ELEC)
     gas_config = config.get(CONF_GAS, {})
 

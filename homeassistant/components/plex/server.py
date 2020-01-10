@@ -12,6 +12,7 @@ from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
+    CONF_CLIENT_IDENTIFIER,
     CONF_SERVER,
     CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
@@ -33,8 +34,6 @@ plexapi.X_PLEX_DEVICE_NAME = X_PLEX_DEVICE_NAME
 plexapi.X_PLEX_PLATFORM = X_PLEX_PLATFORM
 plexapi.X_PLEX_PRODUCT = X_PLEX_PRODUCT
 plexapi.X_PLEX_VERSION = X_PLEX_VERSION
-plexapi.myplex.BASE_HEADERS = plexapi.reset_base_headers()
-plexapi.server.BASE_HEADERS = plexapi.reset_base_headers()
 
 
 class PlexServer:
@@ -45,12 +44,19 @@ class PlexServer:
         self._hass = hass
         self._plex_server = None
         self._known_clients = set()
+        self._known_idle = set()
         self._url = server_config.get(CONF_URL)
         self._token = server_config.get(CONF_TOKEN)
         self._server_name = server_config.get(CONF_SERVER)
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         self.options = options
         self.server_choice = None
+
+        # Header conditionally added as it is not available in config entry v1
+        if CONF_CLIENT_IDENTIFIER in server_config:
+            plexapi.X_PLEX_IDENTIFIER = server_config[CONF_CLIENT_IDENTIFIER]
+        plexapi.myplex.BASE_HEADERS = plexapi.reset_base_headers()
+        plexapi.server.BASE_HEADERS = plexapi.reset_base_headers()
 
     def connect(self):
         """Connect to a Plex server directly, obtaining direct URL if necessary."""
@@ -71,7 +77,7 @@ class PlexServer:
             self.server_choice = (
                 self._server_name if self._server_name else available_servers[0][0]
             )
-            self._plex_server = account.resource(self.server_choice).connect()
+            self._plex_server = account.resource(self.server_choice).connect(timeout=10)
 
         def _connect_with_url():
             session = None
@@ -89,15 +95,19 @@ class PlexServer:
 
     def refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
+        unique_id = f"{self.machine_identifier}:{machine_identifier}"
+        _LOGGER.debug("Refreshing %s", unique_id)
         dispatcher_send(
             self._hass,
-            PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(machine_identifier),
+            PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(unique_id),
             device,
             session,
         )
 
     def update_platforms(self):
         """Update the platform entities."""
+        _LOGGER.debug("Updating devices")
+
         available_clients = {}
         new_clients = set()
 
@@ -114,6 +124,7 @@ class PlexServer:
             return
 
         for device in devices:
+            self._known_idle.discard(device.machineIdentifier)
             available_clients[device.machineIdentifier] = {"device": device}
 
             if device.machineIdentifier not in self._known_clients:
@@ -122,6 +133,7 @@ class PlexServer:
 
         for session in sessions:
             for player in session.players:
+                self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
                     player.machineIdentifier, {"device": player}
                 )
@@ -142,14 +154,30 @@ class PlexServer:
 
         self._known_clients.update(new_clients)
 
-        idle_clients = self._known_clients.difference(available_clients)
+        idle_clients = (self._known_clients - self._known_idle).difference(
+            available_clients
+        )
         for client_id in idle_clients:
             self.refresh_entity(client_id, None, None)
+            self._known_idle.add(client_id)
 
         if new_entity_configs:
-            dispatcher_send(self._hass, PLEX_NEW_MP_SIGNAL, new_entity_configs)
+            dispatcher_send(
+                self._hass,
+                PLEX_NEW_MP_SIGNAL.format(self.machine_identifier),
+                new_entity_configs,
+            )
 
-        dispatcher_send(self._hass, PLEX_UPDATE_SENSOR_SIGNAL, sessions)
+        dispatcher_send(
+            self._hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(self.machine_identifier),
+            sessions,
+        )
+
+    @property
+    def plex_server(self):
+        """Return the plexapi PlexServer instance."""
+        return self._plex_server
 
     @property
     def friendly_name(self):
@@ -164,7 +192,7 @@ class PlexServer:
     @property
     def url_in_use(self):
         """Return URL used for connected Plex server."""
-        return self._plex_server._baseurl  # pylint: disable=W0212
+        return self._plex_server._baseurl  # pylint: disable=protected-access
 
     @property
     def use_episode_art(self):

@@ -1,0 +1,1 @@
+"""Unifi LED Lights integration."""

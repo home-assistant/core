@@ -6,6 +6,12 @@ from voluptuous.humanize import humanize_error
 
 from .model import Integration
 
+SUPPORTED_QUALITY_SCALES = [
+    "gold",
+    "internal",
+    "platinum",
+    "silver",
+]
 
 MANIFEST_SCHEMA = vol.Schema(
     {
@@ -14,14 +20,11 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("config_flow"): bool,
         vol.Optional("zeroconf"): [str],
         vol.Optional("ssdp"): vol.Schema(
-            {
-                vol.Optional("st"): [str],
-                vol.Optional("manufacturer"): [str],
-                vol.Optional("device_type"): [str],
-            }
+            vol.All([vol.All(vol.Schema({}, extra=vol.ALLOW_EXTRA), vol.Length(min=1))])
         ),
         vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
         vol.Required("documentation"): str,
+        vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Required("requirements"): [str],
         vol.Required("dependencies"): [str],
         vol.Optional("after_dependencies"): [str],

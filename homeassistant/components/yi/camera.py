@@ -2,21 +2,24 @@
 import asyncio
 import logging
 
+from aioftp import Client, StatusCodeError
+from haffmpeg.camera import CameraMjpeg
+from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_PATH,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
     CONF_USERNAME,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.exceptions import PlatformNotReady
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,8 +85,6 @@ class YiCamera(Camera):
 
     async def _get_latest_video_url(self):
         """Retrieve the latest video file from the customized Yi FTP server."""
-        from aioftp import Client, StatusCodeError
-
         ftp = Client()
         try:
             await ftp.connect(self.host)
@@ -125,8 +126,6 @@ class YiCamera(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-        from haffmpeg.tools import ImageFrame, IMAGE_JPEG
-
         url = await self._get_latest_video_url()
         if url and url != self._last_url:
             ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
@@ -142,8 +141,6 @@ class YiCamera(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        from haffmpeg.camera import CameraMjpeg
-
         if not self._is_on:
             return
 

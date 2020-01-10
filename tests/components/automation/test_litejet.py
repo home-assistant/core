@@ -1,13 +1,14 @@
 """The tests for the litejet component."""
+from datetime import timedelta
 import logging
 from unittest import mock
-from datetime import timedelta
+
 import pytest
 
 from homeassistant import setup
-import homeassistant.util.dt as dt_util
 from homeassistant.components import litejet
 import homeassistant.components.automation as automation
+import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service
 
@@ -33,7 +34,7 @@ def get_switch_name(number):
 @pytest.fixture
 def mock_lj(hass):
     """Initialize components."""
-    with mock.patch("pylitejet.LiteJet") as mock_pylitejet:
+    with mock.patch("homeassistant.components.litejet.LiteJet") as mock_pylitejet:
         mock_lj = mock_pylitejet.return_value
 
         mock_lj.switch_pressed_callbacks = {}

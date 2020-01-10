@@ -13,24 +13,24 @@ import pathlib
 import sys
 from types import ModuleType
 from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    List,
     Optional,
     Set,
-    TYPE_CHECKING,
-    Callable,
-    Any,
     TypeVar,
-    List,
-    Dict,
     Union,
     cast,
 )
 
 # Typing imports that create a circular dependency
-# pylint: disable=using-constant-test,unused-import
+# pylint: disable=unused-import
 if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant  # noqa
+    from homeassistant.core import HomeAssistant
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # noqa pylint: disable=invalid-name
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 
 DEPENDENCY_BLACKLIST = {"config"}
 
@@ -64,7 +64,7 @@ def manifest_from_legacy_module(domain: str, module: ModuleType) -> Dict:
 
 
 async def _async_get_custom_components(
-    hass: "HomeAssistant"
+    hass: "HomeAssistant",
 ) -> Dict[str, "Integration"]:
     """Return list of custom integrations."""
     try:
@@ -102,7 +102,7 @@ async def _async_get_custom_components(
 
 
 async def async_get_custom_components(
-    hass: "HomeAssistant"
+    hass: "HomeAssistant",
 ) -> Dict[str, "Integration"]:
     """Return cached list of custom integrations."""
     reg_or_evt = hass.data.get(DATA_CUSTOM_COMPONENTS)
@@ -195,21 +195,54 @@ class Integration:
         hass: "HomeAssistant",
         pkg_path: str,
         file_path: pathlib.Path,
-        manifest: Dict,
+        manifest: Dict[str, Any],
     ):
         """Initialize an integration."""
         self.hass = hass
         self.pkg_path = pkg_path
         self.file_path = file_path
-        self.name: str = manifest["name"]
-        self.domain: str = manifest["domain"]
-        self.dependencies: List[str] = manifest["dependencies"]
-        self.after_dependencies: Optional[List[str]] = manifest.get(
-            "after_dependencies"
-        )
-        self.requirements: List[str] = manifest["requirements"]
-        self.config_flow: bool = manifest.get("config_flow", False)
+        self.manifest = manifest
         _LOGGER.info("Loaded %s from %s", self.domain, pkg_path)
+
+    @property
+    def name(self) -> str:
+        """Return name."""
+        return cast(str, self.manifest["name"])
+
+    @property
+    def domain(self) -> str:
+        """Return domain."""
+        return cast(str, self.manifest["domain"])
+
+    @property
+    def dependencies(self) -> List[str]:
+        """Return dependencies."""
+        return cast(List[str], self.manifest.get("dependencies", []))
+
+    @property
+    def after_dependencies(self) -> List[str]:
+        """Return after_dependencies."""
+        return cast(List[str], self.manifest.get("after_dependencies", []))
+
+    @property
+    def requirements(self) -> List[str]:
+        """Return requirements."""
+        return cast(List[str], self.manifest.get("requirements", []))
+
+    @property
+    def config_flow(self) -> bool:
+        """Return config_flow."""
+        return cast(bool, self.manifest.get("config_flow", False))
+
+    @property
+    def documentation(self) -> Optional[str]:
+        """Return documentation."""
+        return cast(str, self.manifest.get("documentation"))
+
+    @property
+    def quality_scale(self) -> Optional[str]:
+        """Return Integration Quality Scale."""
+        return cast(str, self.manifest.get("quality_scale"))
 
     @property
     def is_built_in(self) -> bool:
@@ -379,7 +412,7 @@ def _load_file(
 
             if str(err) not in white_listed_errors:
                 _LOGGER.exception(
-                    ("Error loading %s. Make sure all " "dependencies are installed"),
+                    ("Error loading %s. Make sure all dependencies are installed"),
                     path,
                 )
 

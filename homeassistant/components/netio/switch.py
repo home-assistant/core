@@ -1,22 +1,23 @@
 """The Netio switch component."""
-import logging
 from collections import namedtuple
 from datetime import timedelta
+import logging
 
+from pynetio import Netio
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant import util
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_HOST,
+    CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP,
     STATE_ON,
 )
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +51,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Netio platform."""
-    from pynetio import Netio
 
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)

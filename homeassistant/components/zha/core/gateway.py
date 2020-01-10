@@ -20,7 +20,6 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..api import async_get_device_info
 from .const import (
     ATTR_IEEE,
     ATTR_MANUFACTURER,
@@ -65,6 +64,7 @@ from .const import (
 )
 from .device import DeviceStatus, ZHADevice
 from .discovery import async_dispatch_discovery_info, async_process_endpoint
+from .helpers import async_get_device_info
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
 from .store import async_get_registry
@@ -108,9 +108,9 @@ class ZHAGateway:
         baudrate = self._config.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
         radio_type = self._config_entry.data.get(CONF_RADIO_TYPE)
 
-        radio_details = RADIO_TYPES[radio_type][ZHA_GW_RADIO]()
-        radio = radio_details[ZHA_GW_RADIO]
-        self.radio_description = RADIO_TYPES[radio_type][ZHA_GW_RADIO_DESCRIPTION]
+        radio_details = RADIO_TYPES[radio_type]
+        radio = radio_details[ZHA_GW_RADIO]()
+        self.radio_description = radio_details[ZHA_GW_RADIO_DESCRIPTION]
         await radio.connect(usb_path, baudrate)
 
         if CONF_DATABASE in self._config:
@@ -221,6 +221,10 @@ class ZHAGateway:
     def get_device(self, ieee):
         """Return ZHADevice for given ieee."""
         return self._devices.get(ieee)
+
+    def get_group(self, group_id):
+        """Return Group for given group id."""
+        return self.application_controller.groups[group_id]
 
     def get_entity_reference(self, entity_id):
         """Return entity reference for given entity_id if found."""

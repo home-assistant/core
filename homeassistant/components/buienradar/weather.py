@@ -28,13 +28,13 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_C
 from homeassistant.helpers import config_validation as cv
 
 # Reuse data and API logic from the sensor implementation
-from .sensor import BrData
+from .const import DEFAULT_TIMEFRAME
+from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_CONDITION = "buienradar_condition"
 
-DEFAULT_TIMEFRAME = 60
 
 CONF_FORECAST = "forecast"
 

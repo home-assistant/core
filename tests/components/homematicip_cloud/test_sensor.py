@@ -2,8 +2,20 @@
 from homematicip.base.enums import ValveState
 
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.components.homematicip_cloud.device import (
+    ATTR_CONFIG_PENDING,
+    ATTR_DEVICE_OVERHEATED,
+    ATTR_DEVICE_OVERLOADED,
+    ATTR_DEVICE_UNTERVOLTAGE,
+    ATTR_DUTY_CYCLE_REACHED,
+    ATTR_RSSI_DEVICE,
+    ATTR_RSSI_PEER,
+)
 from homeassistant.components.homematicip_cloud.sensor import (
+    ATTR_CURRENT_ILLUMINATION,
+    ATTR_HIGHEST_ILLUMINATION,
     ATTR_LEFT_COUNTER,
+    ATTR_LOWEST_ILLUMINATION,
     ATTR_RIGHT_COUNTER,
     ATTR_TEMPERATURE_OFFSET,
     ATTR_WIND_DIRECTION,
@@ -92,6 +104,9 @@ async def test_hmip_humidity_sensor(hass, default_mock_hap):
     await async_manipulate_test_data(hass, hmip_device, "humidity", 45)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "45"
+    # test common attributes
+    assert ha_state.attributes[ATTR_RSSI_DEVICE] == -76
+    assert ha_state.attributes[ATTR_RSSI_PEER] == -77
 
 
 async def test_hmip_temperature_sensor1(hass, default_mock_hap):
@@ -153,6 +168,23 @@ async def test_hmip_power_sensor(hass, default_mock_hap):
     await async_manipulate_test_data(hass, hmip_device, "currentPowerConsumption", 23.5)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "23.5"
+    # test common attributes
+    assert not ha_state.attributes.get(ATTR_DEVICE_OVERHEATED)
+    assert not ha_state.attributes.get(ATTR_DEVICE_OVERLOADED)
+    assert not ha_state.attributes.get(ATTR_DEVICE_UNTERVOLTAGE)
+    assert not ha_state.attributes.get(ATTR_DUTY_CYCLE_REACHED)
+    assert not ha_state.attributes.get(ATTR_CONFIG_PENDING)
+    await async_manipulate_test_data(hass, hmip_device, "deviceOverheated", True)
+    await async_manipulate_test_data(hass, hmip_device, "deviceOverloaded", True)
+    await async_manipulate_test_data(hass, hmip_device, "deviceUndervoltage", True)
+    await async_manipulate_test_data(hass, hmip_device, "dutyCycle", True)
+    await async_manipulate_test_data(hass, hmip_device, "configPending", True)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_DEVICE_OVERHEATED]
+    assert ha_state.attributes[ATTR_DEVICE_OVERLOADED]
+    assert ha_state.attributes[ATTR_DEVICE_UNTERVOLTAGE]
+    assert ha_state.attributes[ATTR_DUTY_CYCLE_REACHED]
+    assert ha_state.attributes[ATTR_CONFIG_PENDING]
 
 
 async def test_hmip_illuminance_sensor1(hass, default_mock_hap):
@@ -187,6 +219,9 @@ async def test_hmip_illuminance_sensor2(hass, default_mock_hap):
     await async_manipulate_test_data(hass, hmip_device, "averageIllumination", 231)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == "231"
+    assert ha_state.attributes[ATTR_CURRENT_ILLUMINATION] == 785.2
+    assert ha_state.attributes[ATTR_HIGHEST_ILLUMINATION] == 837.1
+    assert ha_state.attributes[ATTR_LOWEST_ILLUMINATION] == 785.2
 
 
 async def test_hmip_windspeed_sensor(hass, default_mock_hap):

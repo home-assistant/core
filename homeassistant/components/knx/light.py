@@ -2,6 +2,7 @@
 from enum import Enum
 
 import voluptuous as vol
+from xknx.devices import Light as XknxLight
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -98,8 +99,6 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up light for KNX platform configured within platform."""
-    import xknx
-
     group_address_tunable_white = None
     group_address_tunable_white_state = None
     group_address_color_temp = None
@@ -111,7 +110,7 @@ def async_add_entities_config(hass, config, async_add_entities):
         group_address_tunable_white = config.get(CONF_COLOR_TEMP_ADDRESS)
         group_address_tunable_white_state = config.get(CONF_COLOR_TEMP_STATE_ADDRESS)
 
-    light = xknx.devices.Light(
+    light = XknxLight(
         hass.data[DATA_KNX].xknx,
         name=config[CONF_NAME],
         group_address_switch=config[CONF_ADDRESS],
@@ -181,13 +180,9 @@ class KNXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if self.device.supports_brightness:
-            return self.device.current_brightness
-        if (
-            self.device.supports_color or self.device.supports_rgbw
-        ) and self.device.current_color:
-            return max(self.device.current_color)
-        return None
+        if not self.device.supports_brightness:
+            return None
+        return self.device.current_brightness
 
     @property
     def hs_color(self):

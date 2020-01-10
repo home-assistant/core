@@ -4,9 +4,9 @@ Enable ptvsd debugger to attach to HA.
 Attach ptvsd debugger by default to port 5678.
 """
 
+from asyncio import Event
 import logging
 from threading import Thread
-from asyncio import Event
 
 import voluptuous as vol
 
@@ -36,7 +36,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up ptvsd debugger."""
-    import ptvsd
+
+    # This is a local import, since importing this at the top, will cause
+    # ptvsd to hook into `sys.settrace`. So does `coverage` to generate
+    # coverage, resulting in a battle and incomplete code test coverage.
+    import ptvsd  # pylint: disable=import-outside-toplevel
 
     conf = config[DOMAIN]
     host = conf[CONF_HOST]

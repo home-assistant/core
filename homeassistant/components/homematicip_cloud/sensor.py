@@ -1,5 +1,6 @@
 """Support for HomematicIP Cloud sensors."""
 import logging
+from typing import Any, Dict
 
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
@@ -31,7 +32,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
 from .device import ATTR_IS_GROUP, ATTR_MODEL_TYPE
@@ -39,28 +40,39 @@ from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CURRENT_ILLUMINATION = "current_illumination"
+ATTR_LOWEST_ILLUMINATION = "lowest_illumination"
+ATTR_HIGHEST_ILLUMINATION = "highest_illumination"
 ATTR_LEFT_COUNTER = "left_counter"
 ATTR_RIGHT_COUNTER = "right_counter"
 ATTR_TEMPERATURE_OFFSET = "temperature_offset"
 ATTR_WIND_DIRECTION = "wind_direction"
 ATTR_WIND_DIRECTION_VARIATION = "wind_direction_variation_in_degree"
 
+ILLUMINATION_DEVICE_ATTRIBUTES = {
+    "currentIllumination": ATTR_CURRENT_ILLUMINATION,
+    "lowestIllumination": ATTR_LOWEST_ILLUMINATION,
+    "highestIllumination": ATTR_HIGHEST_ILLUMINATION,
+}
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+) -> None:
     """Set up the HomematicIP Cloud sensors devices."""
     pass
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP Cloud sensors from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
-    devices = [HomematicipAccesspointStatus(hap)]
+    entities = [HomematicipAccesspointStatus(hap)]
     for device in hap.home.devices:
         if isinstance(device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)):
-            devices.append(HomematicipHeatingThermostat(hap, device))
-            devices.append(HomematicipTemperatureSensor(hap, device))
+            entities.append(HomematicipHeatingThermostat(hap, device))
+            entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
             device,
             (
@@ -72,8 +84,8 @@ async def async_setup_entry(
                 AsyncWeatherSensorPro,
             ),
         ):
-            devices.append(HomematicipTemperatureSensor(hap, device))
-            devices.append(HomematicipHumiditySensor(hap, device))
+            entities.append(HomematicipTemperatureSensor(hap, device))
+            entities.append(HomematicipHumiditySensor(hap, device))
         if isinstance(
             device,
             (
@@ -87,7 +99,7 @@ async def async_setup_entry(
                 AsyncWeatherSensorPro,
             ),
         ):
-            devices.append(HomematicipIlluminanceSensor(hap, device))
+            entities.append(HomematicipIlluminanceSensor(hap, device))
         if isinstance(
             device,
             (
@@ -96,18 +108,18 @@ async def async_setup_entry(
                 AsyncFullFlushSwitchMeasuring,
             ),
         ):
-            devices.append(HomematicipPowerSensor(hap, device))
+            entities.append(HomematicipPowerSensor(hap, device))
         if isinstance(
             device, (AsyncWeatherSensor, AsyncWeatherSensorPlus, AsyncWeatherSensorPro)
         ):
-            devices.append(HomematicipWindspeedSensor(hap, device))
+            entities.append(HomematicipWindspeedSensor(hap, device))
         if isinstance(device, (AsyncWeatherSensorPlus, AsyncWeatherSensorPro)):
-            devices.append(HomematicipTodayRainSensor(hap, device))
+            entities.append(HomematicipTodayRainSensor(hap, device))
         if isinstance(device, AsyncPassageDetector):
-            devices.append(HomematicipPassageDetectorDeltaCounter(hap, device))
+            entities.append(HomematicipPassageDetectorDeltaCounter(hap, device))
 
-    if devices:
-        async_add_entities(devices)
+    if entities:
+        async_add_entities(entities)
 
 
 class HomematicipAccesspointStatus(HomematicipGenericDevice):
@@ -118,7 +130,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
         super().__init__(hap, hap.home)
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, Any]:
         """Return device specific attributes."""
         # Adds a sensor to the existing HAP device
         return {
@@ -149,7 +161,7 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
         return "%"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the access point."""
         state_attr = super().device_state_attributes
 
@@ -237,7 +249,7 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
         return TEMP_CELSIUS
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the windspeed sensor."""
         state_attr = super().device_state_attributes
 
@@ -272,6 +284,18 @@ class HomematicipIlluminanceSensor(HomematicipGenericDevice):
     def unit_of_measurement(self) -> str:
         """Return the unit this state is expressed in."""
         return "lx"
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return the state attributes of the wind speed sensor."""
+        state_attr = super().device_state_attributes
+
+        for attr, attr_key in ILLUMINATION_DEVICE_ATTRIBUTES.items():
+            attr_value = getattr(self._device, attr, None)
+            if attr_value:
+                state_attr[attr_key] = attr_value
+
+        return state_attr
 
 
 class HomematicipPowerSensor(HomematicipGenericDevice):
@@ -315,7 +339,7 @@ class HomematicipWindspeedSensor(HomematicipGenericDevice):
         return "km/h"
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the wind speed sensor."""
         state_attr = super().device_state_attributes
 
@@ -357,7 +381,7 @@ class HomematicipPassageDetectorDeltaCounter(HomematicipGenericDevice):
         return self._device.leftRightCounterDelta
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the delta counter."""
         state_attr = super().device_state_attributes
 

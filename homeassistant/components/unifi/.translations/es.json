@@ -35,8 +35,8 @@
             },
             "init": {
                 "data": {
-                    "one": "uno",
-                    "other": "otro"
+                    "one": "vac\u00edo",
+                    "other": "vac\u00edo"
                 }
             },
             "statistics_sensors": {

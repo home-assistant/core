@@ -4,19 +4,20 @@ Helpers for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
-import asyncio
 import collections
 import logging
+
+import zigpy.types
 
 from homeassistant.core import callback
 
 from .const import (
+    ATTR_NAME,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
     DATA_ZHA,
     DATA_ZHA_GATEWAY,
-    DEFAULT_BAUDRATE,
-    RadioType,
+    DOMAIN,
 )
 from .registries import BINDABLE_CLUSTERS
 
@@ -44,47 +45,6 @@ async def safe_read(
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
-
-
-async def check_zigpy_connection(usb_path, radio_type, database_path):
-    """Test zigpy radio connection."""
-    if radio_type == RadioType.ezsp.name:
-        import bellows.ezsp
-        from bellows.zigbee.application import ControllerApplication
-
-        radio = bellows.ezsp.EZSP()
-    elif radio_type == RadioType.xbee.name:
-        import zigpy_xbee.api
-        from zigpy_xbee.zigbee.application import ControllerApplication
-
-        radio = zigpy_xbee.api.XBee()
-    elif radio_type == RadioType.deconz.name:
-        import zigpy_deconz.api
-        from zigpy_deconz.zigbee.application import ControllerApplication
-
-        radio = zigpy_deconz.api.Deconz()
-    elif radio_type == RadioType.zigate.name:
-        import zigpy_zigate.api
-        from zigpy_zigate.zigbee.application import ControllerApplication
-
-        radio = zigpy_zigate.api.ZiGate()
-    try:
-        await radio.connect(usb_path, DEFAULT_BAUDRATE)
-        controller = ControllerApplication(radio, database_path)
-        await asyncio.wait_for(controller.startup(auto_form=True), timeout=30)
-        await controller.shutdown()
-    except Exception:  # pylint: disable=broad-except
-        return False
-    return True
-
-
-def convert_ieee(ieee_str):
-    """Convert given ieee string to EUI64."""
-    from zigpy.types import EUI64, uint8_t
-
-    if ieee_str is None:
-        return None
-    return EUI64([uint8_t(p, base=16) for p in ieee_str.split(":")])
 
 
 def get_attr_id_by_name(cluster, attr_name):
@@ -145,7 +105,7 @@ async def async_get_zha_device(hass, device_id):
     registry_device = device_registry.async_get(device_id)
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee_address = list(list(registry_device.identifiers)[0])[1]
-    ieee = convert_ieee(ieee_address)
+    ieee = zigpy.types.EUI64.convert(ieee_address)
     return zha_gateway.devices[ieee]
 
 
@@ -171,3 +131,28 @@ class LogMixin:
     def error(self, msg, *args):
         """Error level log."""
         return self.log(logging.ERROR, msg, *args)
+
+
+@callback
+def async_get_device_info(hass, device, ha_device_registry=None):
+    """Get ZHA device."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    ret_device = {}
+    ret_device.update(device.device_info)
+    ret_device["entities"] = [
+        {
+            "entity_id": entity_ref.reference_id,
+            ATTR_NAME: entity_ref.device_info[ATTR_NAME],
+        }
+        for entity_ref in zha_gateway.device_registry[device.ieee]
+    ]
+
+    if ha_device_registry is not None:
+        reg_device = ha_device_registry.async_get_device(
+            {(DOMAIN, str(device.ieee))}, set()
+        )
+        if reg_device is not None:
+            ret_device["user_given_name"] = reg_device.name_by_user
+            ret_device["device_reg_id"] = reg_device.id
+            ret_device["area_id"] = reg_device.area_id
+    return ret_device

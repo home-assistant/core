@@ -9,7 +9,7 @@
         },
         "step": {
             "user": {
-                "description": "Czy chcesz skonfigurowa\u0107 Geofency?",
+                "description": "Na pewno chcesz skonfigurowa\u0107 Geofency?",
                 "title": "Konfiguracja Geofency Webhook"
             }
         },
