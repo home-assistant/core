@@ -34,7 +34,7 @@ def x10_command(command):
 
 def get_unit_status(code):
     """Get on/off status for given unit."""
-    output = check_output("heyu onstate " + code, shell=True)
+    output = check_output(f"heyu onstate {code}", shell=True)
     return int(output.decode("utf-8")[0])
 
 
@@ -84,18 +84,18 @@ class X10Light(Light):
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
         if self._is_cm11a:
-            x10_command("on " + self._id)
+            x10_command(f"on {self._id}")
         else:
-            x10_command("fon " + self._id)
+            x10_command(f"fon {self._id}")
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         self._state = True
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         if self._is_cm11a:
-            x10_command("off " + self._id)
+            x10_command(f"off {self._id}")
         else:
-            x10_command("foff " + self._id)
+            x10_command(f"foff {self._id}")
         self._state = False
 
     def update(self):

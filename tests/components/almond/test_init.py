@@ -78,7 +78,7 @@ async def test_set_up_oauth_no_external_url(hass, aioclient_mock):
 
 
 async def test_set_up_hassio(hass, aioclient_mock):
-    """Test we do not set up Almond to connect to HA if we use hassio."""
+    """Test we do not set up Almond to connect to HA if we use Hass.io."""
     entry = MockConfigEntry(
         domain="almond",
         data={
@@ -97,7 +97,7 @@ async def test_set_up_hassio(hass, aioclient_mock):
 
 
 async def test_set_up_local(hass, aioclient_mock):
-    """Test we do not set up Almond to connect to HA if we use hassio."""
+    """Test we do not set up Almond to connect to HA if we use Hass.io."""
     entry = MockConfigEntry(
         domain="almond",
         data={"type": const.TYPE_LOCAL, "host": "http://localhost:9999"},

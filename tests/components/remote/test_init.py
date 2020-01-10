@@ -42,12 +42,6 @@ class TestRemote(unittest.TestCase):
         self.hass.states.set("remote.test", STATE_OFF)
         assert not remote.is_on(self.hass, "remote.test")
 
-        self.hass.states.set(remote.ENTITY_ID_ALL_REMOTES, STATE_ON)
-        assert remote.is_on(self.hass)
-
-        self.hass.states.set(remote.ENTITY_ID_ALL_REMOTES, STATE_OFF)
-        assert not remote.is_on(self.hass)
-
     def test_turn_on(self):
         """Test turn_on."""
         turn_on_calls = mock_service(self.hass, remote.DOMAIN, SERVICE_TURN_ON)

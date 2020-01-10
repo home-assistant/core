@@ -136,7 +136,7 @@ def get_homeassistant_version(hass):
 @callback
 @bind_hass
 def is_hassio(hass):
-    """Return true if hass.io is loaded.
+    """Return true if Hass.io is loaded.
 
     Async friendly.
     """
@@ -171,7 +171,7 @@ async def async_setup(hass, config):
         if user and user.refresh_tokens:
             refresh_token = list(user.refresh_tokens.values())[0]
 
-            # Migrate old hass.io users to be admin.
+            # Migrate old Hass.io users to be admin.
             if not user.is_admin:
                 await hass.auth.async_update_user(user, group_ids=[GROUP_ID_ADMIN])
 
@@ -219,7 +219,7 @@ async def async_setup(hass, config):
         snapshot = data.pop(ATTR_SNAPSHOT, None)
         payload = None
 
-        # Pass data to hass.io API
+        # Pass data to Hass.io API
         if service.service == SERVICE_ADDON_STDIN:
             payload = data[ATTR_INPUT]
         elif MAP_SERVICE_API[service.service][3]:

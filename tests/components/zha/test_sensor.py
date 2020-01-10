@@ -110,9 +110,9 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
             [],
             None,
             zha_gateway,
-            ieee="00:15:8d:00:02:32:4f:0{}".format(counter),
-            manufacturer="Fake{}".format(cluster_id),
-            model="FakeModel{}".format(cluster_id),
+            ieee=f"00:15:8d:00:02:32:4f:0{counter}",
+            manufacturer=f"Fake{cluster_id}",
+            model=f"FakeModel{cluster_id}",
         )
 
         counter += 1

@@ -155,7 +155,7 @@ async def test_minio_listen(hass, caplog, minio_client_event):
 
 
 async def test_queue_listener():
-    """Tests QueueListener firing events on Hass event bus."""
+    """Tests QueueListener firing events on Home Assistant event bus."""
     hass = MagicMock()
 
     queue_listener = QueueListener(hass)

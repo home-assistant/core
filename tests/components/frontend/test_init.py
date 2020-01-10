@@ -22,14 +22,14 @@ CONFIG_THEMES = {DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "red"}}}}
 
 @pytest.fixture
 def mock_http_client(hass, aiohttp_client):
-    """Start the Hass HTTP component."""
+    """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(async_setup_component(hass, "frontend", {}))
     return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @pytest.fixture
 def mock_http_client_with_themes(hass, aiohttp_client):
-    """Start the Hass HTTP component."""
+    """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(
         async_setup_component(
             hass,
@@ -42,7 +42,7 @@ def mock_http_client_with_themes(hass, aiohttp_client):
 
 @pytest.fixture
 def mock_http_client_with_urls(hass, aiohttp_client):
-    """Start the Hass HTTP component."""
+    """Start the Home Assistant HTTP component."""
     hass.loop.run_until_complete(
         async_setup_component(
             hass,

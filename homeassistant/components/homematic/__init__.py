@@ -173,6 +173,7 @@ HM_DEVICE_TYPES = {
         "IPMultiIO",
         "TiltIP",
         "IPShutterContactSabotage",
+        "IPContact",
     ],
     DISCOVER_COVER: ["Blind", "KeyBlind", "IPKeyBlind", "IPKeyBlindTilt"],
     DISCOVER_LOCKS: ["KeyMatic"],
@@ -412,7 +413,7 @@ def setup(hass, config):
     # Start server thread, connect to hosts, initialize to receive events
     homematic.start()
 
-    # Stops server when HASS is shutting down
+    # Stops server when Home Assistant is shutting down
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, hass.data[DATA_HOMEMATIC].stop)
 
     # Init homematic hubs
@@ -600,7 +601,7 @@ def _system_callback_handler(hass, config, src, *args):
             if hmdevice.EVENTNODE:
                 hmdevice.setEventCallback(callback=bound_event_callback, bequeath=True)
 
-        # Create HASS entities
+        # Create Home Assistant entities
         if addresses:
             for component_name, discovery_type in (
                 ("switch", DISCOVER_SWITCHES),
@@ -616,7 +617,7 @@ def _system_callback_handler(hass, config, src, *args):
                 found_devices = _get_devices(hass, discovery_type, addresses, interface)
 
                 # When devices of this type are found
-                # they are setup in HASS and a discovery event is fired
+                # they are setup in Home Assistant and a discovery event is fired
                 if found_devices:
                     discovery.load_platform(
                         hass,
@@ -969,7 +970,7 @@ class HMDevice(Entity):
             self._available = not self._hmdevice.UNREACH
             has_changed = True
 
-        # If it has changed data point, update HASS
+        # If it has changed data point, update Home Assistant
         if has_changed:
             self.schedule_update_ha_state()
 

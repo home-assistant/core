@@ -17,7 +17,7 @@ from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
 from .errors import AuthenticationRequired, CannotConnect
 
 HUE_MANUFACTURERURL = "http://www.philips.com"
-HUE_IGNORED_BRIDGE_NAMES = ["HASS Bridge", "Espalexa"]
+HUE_IGNORED_BRIDGE_NAMES = ["Home Assistant Bridge", "Espalexa"]
 
 
 class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -148,7 +148,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         # Filter out non-Hue bridges #1
-        if discovery_info[ssdp.ATTR_UPNP_MANUFACTURER_URL] != HUE_MANUFACTURERURL:
+        if discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL) != HUE_MANUFACTURERURL:
             return self.async_abort(reason="not_hue_bridge")
 
         # Filter out non-Hue bridges #2

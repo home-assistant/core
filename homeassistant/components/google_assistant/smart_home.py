@@ -78,7 +78,7 @@ async def async_devices_sync(hass, data, payload):
         EVENT_SYNC_RECEIVED, {"request_id": data.request_id}, context=data.context
     )
 
-    agent_user_id = data.context.user_id
+    agent_user_id = data.config.get_agent_user_id(data.context)
 
     devices = await asyncio.gather(
         *(

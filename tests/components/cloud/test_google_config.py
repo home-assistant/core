@@ -36,19 +36,20 @@ async def test_google_update_report_state(hass, cloud_prefs):
 
 async def test_sync_entities(aioclient_mock, hass, cloud_prefs):
     """Test sync devices."""
-    aioclient_mock.post("http://example.com", status=404)
     config = CloudGoogleConfig(
         hass,
         GACTIONS_SCHEMA({}),
         "mock-user-id",
         cloud_prefs,
-        Mock(
-            google_actions_sync_url="http://example.com",
-            auth=Mock(async_check_token=Mock(side_effect=mock_coro)),
-        ),
+        Mock(auth=Mock(async_check_token=Mock(side_effect=mock_coro)),),
     )
 
-    assert await config.async_sync_entities("user") == 404
+    with patch(
+        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
+        return_value=mock_coro(Mock(status=404)),
+    ) as mock_request_sync:
+        assert await config.async_sync_entities("user") == 404
+        assert len(mock_request_sync.mock_calls) == 1
 
 
 async def test_google_update_expose_trigger_sync(hass, cloud_prefs):
