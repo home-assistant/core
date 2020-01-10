@@ -27,6 +27,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
@@ -78,7 +79,7 @@ async def async_setup_entry(
             "is valid and available, device type is correct%s",
             fail_auth_msg,
         )
-        return
+        raise PlatformNotReady
 
     async_add_entities([VizioDevice(device, name, volume_step, device_type)], True)
 
