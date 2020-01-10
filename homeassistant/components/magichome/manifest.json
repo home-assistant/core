@@ -1,7 +1,7 @@
 {
   "domain": "magichome",
   "name": "MagicHome",
-  "documentation": "https://www.home-assistant.io/components/magichome",
+  "documentation": "https://www.home-assistant.io/integrations/magichome",
   "requirements": [
     "magichome==0.1.47"
   ],
