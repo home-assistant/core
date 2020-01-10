@@ -205,18 +205,28 @@ class FreeboxDevice:
         self._mac = device["l2ident"]["id"]
         self._manufacturer = device["vendor_name"]
         self._icon = icon_for_freebox_device(device)
-        self._reachable = device["reachable"]
 
+        self._active = device["active"]
+        self._reachable = device["reachable"]
         self._attrs = {
-            "last_time_reachable": datetime.fromtimestamp(device["last_time_reachable"])
+            "reachable": self._reachable,
+            "last_time_reachable": datetime.fromtimestamp(
+                device["last_time_reachable"]
+            ),
+            "last_time_activity": datetime.fromtimestamp(device["last_activity"]),
         }
 
     def update(self, device: Dict[str, any]) -> None:
         """Update the Freebox device."""
+        self._active = device["active"]
         self._reachable = device["reachable"]
-        self._attrs["last_time_reachable"] = datetime.fromtimestamp(
-            device["last_time_reachable"]
-        )
+        self._attrs = {
+            "reachable": self._reachable,
+            "last_time_reachable": datetime.fromtimestamp(
+                device["last_time_reachable"]
+            ),
+            "last_time_activity": datetime.fromtimestamp(device["last_activity"]),
+        }
 
     @property
     def name(self) -> str:
@@ -239,8 +249,13 @@ class FreeboxDevice:
         return self._icon
 
     @property
-    def reachable(self) -> str:
-        """Return the reachability (present or not on the network)."""
+    def active(self) -> bool:
+        """Return true if the host sends traffic to the Freebox."""
+        return self._active
+
+    @property
+    def reachable(self) -> bool:
+        """Return true if the host can receive traffic from the Freebox."""
         return self._reachable
 
     @property

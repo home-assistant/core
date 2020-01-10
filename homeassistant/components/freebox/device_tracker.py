@@ -50,14 +50,14 @@ class FreeboxTrackerEntity(TrackerEntity):
     @property
     def latitude(self):
         """Return latitude value of the device."""
-        if self._device.reachable:
+        if self._device.active:
             return self.hass.config.latitude
         return None
 
     @property
     def longitude(self):
         """Return longitude value of the device."""
-        if self._device.reachable:
+        if self._device.active:
             return self.hass.config.longitude
         return None
 
