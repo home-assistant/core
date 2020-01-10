@@ -503,6 +503,10 @@ class AlexaColorController(AlexaCapability):
         """Return what properties this entity supports."""
         return [{"name": "color"}]
 
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
         return True
@@ -548,6 +552,10 @@ class AlexaColorTemperatureController(AlexaCapability):
         """Return what properties this entity supports."""
         return [{"name": "colorTemperatureInKelvin"}]
 
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
         return True
@@ -589,6 +597,10 @@ class AlexaPercentageController(AlexaCapability):
     def properties_supported(self):
         """Return what properties this entity supports."""
         return [{"name": "percentage"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
 
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
