@@ -110,7 +110,7 @@ async def test_update_failed(hass):
 
     with patch.object(
         mikrotik.hub.MikrotikData, "command", side_effect=mikrotik.errors.CannotConnect
-    ), pytest.raises(mikrotik.errors.CannotConnect):
+    ):
         await hub.async_update()
 
     assert hub.api.available is False

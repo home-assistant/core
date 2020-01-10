@@ -73,7 +73,9 @@ def mock_api_authentication_error():
 @pytest.fixture(name="conn_error")
 def mock_api_connection_error():
     """Mock an api."""
-    with patch("librouteros.connect", side_effect=librouteros.exceptions.TrapError("")):
+    with patch(
+        "librouteros.connect", side_effect=librouteros.exceptions.ConnectionError
+    ):
         yield
 
 

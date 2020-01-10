@@ -128,7 +128,7 @@ class MikrotikData:
         data = self.command(MIKROTIK_SERVICES[cmd])
         return data[0].get(param) if data else None
 
-    def get_details(self):
+    def get_hub_details(self):
         """Get Hub info."""
         self.hostname = self.get_info(NAME)
         self.model = self.get_info(ATTR_MODEL)
@@ -177,6 +177,9 @@ class MikrotikData:
 
             if self.arp_enabled:
                 arp_devices = self.get_list_from_interface(ARP)
+
+            # get new hub firmware version if updated
+            self.firmware = self.get_info(ATTR_FIRMWARE)
 
         except CannotConnect:
             self.available = False
@@ -350,7 +353,6 @@ class MikrotikHub:
     async def async_update(self):
         """Update Mikrotik devices information."""
         await self.hass.async_add_executor_job(self._mk_data.update)
-        await self.hass.async_add_executor_job(self._mk_data.get_details)
         async_dispatcher_send(self.hass, self.signal_update)
 
     async def async_setup(self):
@@ -366,8 +368,8 @@ class MikrotikHub:
 
         self._mk_data = MikrotikData(self.hass, self.config_entry, api)
         await self.async_add_options()
-        await self.hass.async_add_executor_job(self._mk_data.get_details)
-        await self.hass.async_add_executor_job(self._mk_data.update_devices)
+        await self.hass.async_add_executor_job(self._mk_data.get_hub_details)
+        await self.hass.async_add_executor_job(self._mk_data.update)
 
         self.hass.async_create_task(
             self.hass.config_entries.async_forward_entry_setup(
