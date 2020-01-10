@@ -1,7 +1,6 @@
 """Test Mikrotik hub."""
 from asynctest import patch
 import librouteros
-import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import mikrotik
@@ -88,13 +87,13 @@ async def test_hub_setup_failed(hass):
         assert config_entry.state == config_entries.ENTRY_STATE_SETUP_RETRY
 
     # error when username or password is invalid
+    config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA)
+    config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
     ) as forward_entry_setup, patch(
         "librouteros.connect",
         side_effect=librouteros.exceptions.TrapError("invalid user name or password"),
-    ), pytest.raises(
-        config_entries.OperationNotAllowed
     ):
 
         result = await hass.config_entries.async_setup(config_entry.entry_id)
