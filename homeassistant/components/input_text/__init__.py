@@ -14,10 +14,14 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
 )
+from homeassistant.core import callback
+from homeassistant.helpers import collection, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +45,30 @@ ATTR_MAX = "max"
 ATTR_PATTERN = CONF_PATTERN
 
 SERVICE_SET_VALUE = "set_value"
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
+
+CREATE_FIELDS = {
+    vol.Optional(CONF_ID): cv.slug,
+    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
+    vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
+    vol.Optional(CONF_INITIAL, ""): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_PATTERN): cv.string,
+    vol.Optional(CONF_MODE, default=MODE_TEXT): vol.In([MODE_TEXT, MODE_PASSWORD]),
+}
+UPDATE_FIELDS = {
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_MIN): vol.Coerce(int),
+    vol.Optional(CONF_MAX): vol.Coerce(int),
+    vol.Optional(CONF_INITIAL): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_PATTERN): cv.string,
+    vol.Optional(CONF_MODE): vol.In([MODE_TEXT, MODE_PASSWORD]),
+}
 
 
 def _cv_input_text(cfg):
@@ -88,26 +116,57 @@ CONFIG_SCHEMA = vol.Schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
-async def async_setup(hass, config):
-    """Set up an input text box."""
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+    """Set up an input slider."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    id_manager = collection.IDManager()
 
-    entities = [
-        InputText.from_yaml({CONF_ID: id_, **(cfg or {})})
-        for id_, cfg in config[DOMAIN].items()
-    ]
+    yaml_collection = collection.YamlCollection(
+        logging.getLogger(f"{__name__}.yaml_collection"), id_manager
+    )
+    collection.attach_entity_component_collection(
+        component, yaml_collection, InputText.from_yaml
+    )
 
-    async def reload_service_handler(service_call):
-        """Remove all entities and load new ones from config."""
-        conf = await component.async_prepare_reload()
-        if conf is None:
+    storage_collection = InputTextStorageCollection(
+        Store(hass, STORAGE_VERSION, STORAGE_KEY),
+        logging.getLogger(f"{__name__}_storage_collection"),
+        id_manager,
+    )
+    collection.attach_entity_component_collection(
+        component, storage_collection, InputText
+    )
+
+    await yaml_collection.async_load(
+        [{CONF_ID: id_, **(conf or {})} for id_, conf in config[DOMAIN].items()]
+    )
+    await storage_collection.async_load()
+
+    collection.StorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+    ).async_setup(hass)
+
+    async def _collection_changed(
+        change_type: str, item_id: str, config: typing.Optional[typing.Dict]
+    ) -> None:
+        """Handle a collection change: clean up entity registry on removals."""
+        if change_type != collection.CHANGE_REMOVED:
             return
-        new_entities = [
-            InputText.from_yaml({CONF_ID: id_, **(cfg or {})})
-            for id_, cfg in conf[DOMAIN].items()
-        ]
-        if new_entities:
-            await component.async_add_entities(new_entities)
+
+        ent_reg = await entity_registry.async_get_registry(hass)
+        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
+
+    yaml_collection.async_add_listener(_collection_changed)
+    storage_collection.async_add_listener(_collection_changed)
+
+    async def reload_service_handler(service_call: ServiceCallType) -> None:
+        """Reload yaml entities."""
+        conf = await component.async_prepare_reload(skip_reset=True)
+        if conf is None:
+            conf = {DOMAIN: {}}
+        await yaml_collection.async_load(
+            [{CONF_ID: id_, **(cfg or {})} for id_, cfg in conf[DOMAIN].items()]
+        )
 
     homeassistant.helpers.service.async_register_admin_service(
         hass,
@@ -121,9 +180,28 @@ async def async_setup(hass, config):
         SERVICE_SET_VALUE, {vol.Required(ATTR_VALUE): cv.string}, "async_set_value"
     )
 
-    if entities:
-        await component.async_add_entities(entities)
     return True
+
+
+class InputTextStorageCollection(collection.StorageCollection):
+    """Input storage based collection."""
+
+    CREATE_SCHEMA = vol.Schema(vol.All(CREATE_FIELDS, _cv_input_text))
+    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+
+    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+        """Validate the config is valid."""
+        return self.CREATE_SCHEMA(data)
+
+    @callback
+    def _get_suggested_id(self, info: typing.Dict) -> str:
+        """Suggest an ID based on the config."""
+        return info[CONF_NAME]
+
+    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+        """Return a new updated data object."""
+        update_data = self.UPDATE_SCHEMA(update_data)
+        return self.CREATE_SCHEMA({**data, **update_data})
 
 
 class InputText(RestoreEntity):
@@ -140,7 +218,6 @@ class InputText(RestoreEntity):
         """Return entity instance initialized from yaml storage."""
         # set defaults for empty config
         config = {
-            CONF_INITIAL: "",
             CONF_MAX: CONF_MAX_VALUE,
             CONF_MIN: CONF_MIN_VALUE,
             CONF_MODE: MODE_TEXT,
@@ -227,3 +304,8 @@ class InputText(RestoreEntity):
             return
         self._current_value = value
         await self.async_update_ha_state()
+
+    async def async_update_config(self, config: typing.Dict) -> None:
+        """Handle when the config is updated."""
+        self._config = config
+        self.async_write_ha_state()
