@@ -3,17 +3,8 @@ from datetime import timedelta
 import functools
 import logging
 
-from homeassistant.const import (
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-)
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    DOMAIN,
-    CoverDevice,
-)
+from homeassistant.components.cover import ATTR_POSITION, DOMAIN, CoverDevice
+from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 

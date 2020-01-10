@@ -4,11 +4,7 @@ import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.cover import DOMAIN
-from homeassistant.const import (
-    STATE_CLOSED,
-    STATE_OPEN,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE
 
 from .common import (
     async_enable_traffic,
