@@ -1,4 +1,5 @@
 """Alexa capabilities."""
+import base64
 import logging
 
 from homeassistant.components import cover, fan, image_processing, input_number, light
@@ -1138,9 +1139,9 @@ class AlexaModeController(AlexaCapability):
             ):
                 return f"{cover.ATTR_POSITION}.{mode}"
 
-        if self.instance == f"{light.DOMAIN}.effect":
+        if self.instance == f"{light.DOMAIN}.{light.ATTR_EFFECT}":
             mode = self.entity.attributes.get(light.ATTR_EFFECT)
-            return f"{light.ATTR_EFFECT}.{mode}"
+            return base64.b64encode(f"{light.ATTR_EFFECT}.{mode}".encode())
 
         return None
 
@@ -1190,7 +1191,8 @@ class AlexaModeController(AlexaCapability):
             if effect_list:
                 for effect in effect_list:
                     self._resource.add_mode(
-                        f"{light.ATTR_EFFECT}.{effect}", [f"{effect}"]
+                        base64.b64encode(f"{light.ATTR_EFFECT}.{effect}".encode()),
+                        [f"{effect}"],
                     )
 
             return self._resource.serialize_capability_resources()

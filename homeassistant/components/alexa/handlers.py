@@ -1,4 +1,5 @@
 """Alexa message handlers."""
+import base64
 import logging
 import math
 
@@ -981,7 +982,7 @@ async def async_api_set_mode(hass, config, directive, context):
         elif position == "custom":
             service = cover.SERVICE_STOP_COVER
     elif instance == f"{light.DOMAIN}.{light.ATTR_EFFECT}":
-        _, effect = mode.split(".")
+        _, effect = base64.b64decode(mode).decode().split(".")
         service = light.SERVICE_TURN_ON
         data[light.ATTR_EFFECT] = effect
     else:
