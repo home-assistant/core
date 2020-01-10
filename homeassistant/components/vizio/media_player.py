@@ -116,9 +116,7 @@ class VizioDevice(MediaPlayerDevice):
 
         is_on = await self._device.get_power_state()
 
-        if is_on is None:
-            self._available = False
-        else:
+        if is_on is not None:
             self._available = True
 
             if not self._unique_id:
@@ -144,6 +142,8 @@ class VizioDevice(MediaPlayerDevice):
                 self._volume_level = None
                 self._current_input = None
                 self._available_inputs = None
+        else:
+            self._available = False
 
     @property
     def available(self) -> bool:
