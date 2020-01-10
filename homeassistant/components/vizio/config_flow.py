@@ -40,22 +40,24 @@ VIZIO_SCHEMA = {
 }
 
 
-def update_schema_defaults(input):
+def update_schema_defaults(input_dict: Dict[str, Any]) -> vol.Schema:
     """Update schema defaults based on user input/config dict. Retains info already provided for future form views."""
     return vol.Schema(
         {
-            vol.Optional(CONF_NAME, default=input.get(CONF_NAME, DEFAULT_NAME)): str,
-            vol.Required(CONF_HOST, default=input.get(CONF_HOST, "")): str,
+            vol.Optional(
+                CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
+            ): str,
+            vol.Required(CONF_HOST, default=input_dict.get(CONF_HOST, "")): str,
             vol.Optional(
                 CONF_DEVICE_CLASS,
-                default=input.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
+                default=input_dict.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
             ): vol.All(str, vol.Lower, vol.In(["tv", "soundbar"])),
             vol.Optional(
-                CONF_ACCESS_TOKEN, default=input.get(CONF_ACCESS_TOKEN, "")
+                CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
             ): str,
             vol.Optional(
                 CONF_VOLUME_STEP,
-                default=input.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP),
+                default=input_dict.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP),
             ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
         }
     )
@@ -67,14 +69,16 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    def __init__(self):
+    def __init__(self) -> config_entries.ConfigFlow:
         """Initialize config flow."""
         self.import_schema = None
         self.user_schema = None
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> config_entries.OptionsFlow:
         """Get the options flow for this handler."""
         return VizioOptionsConfigFlow(config_entry)
 
@@ -140,11 +144,15 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class VizioOptionsConfigFlow(config_entries.OptionsFlow):
     """Handle Transmission client options."""
 
-    def __init__(self, config_entry):
+    def __init__(
+        self, config_entry: config_entries.ConfigEntry
+    ) -> config_entries.OptionsFlow:
         """Initialize vizio options flow."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
         """Manage the vizio options."""
         if user_input is not None:
             return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
