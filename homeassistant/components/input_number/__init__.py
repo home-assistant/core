@@ -337,7 +337,7 @@ class InputNumber(RestoreEntity):
             )
             return
         self._current_value = new_value
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_update_config(self, config: typing.Dict) -> None:
         """Handle when the config is updated."""
