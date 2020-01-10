@@ -28,7 +28,7 @@ SERVICE_PULL_DEVICES = "pull_devices"
 MAGICHOME_TYPE_TO_HA = {
     "light": "light",
     "scene": "scene",
-    "switch": "switch",
+    "switch": "switch"
 }
 
 CONFIG_SCHEMA = vol.Schema(
