@@ -2,13 +2,12 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List
+from typing import Callable, List
 
 from pyvizio import VizioAsync
-import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -19,6 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -29,10 +29,9 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import VIZIO_SCHEMA, validate_auth
-from .const import CONF_VOLUME_STEP, DEVICE_ID, ICON
+from .const import CONF_VOLUME_STEP, DEVICE_ID, DOMAIN, ICON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,26 +53,22 @@ SUPPORTED_COMMANDS = {
 }
 
 
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA), validate_auth)
-
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistantType,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: Callable[[List[Entity], bool], None],
-    discovery_info: Dict[str, Any] = None,
-):
-    """Set up the Vizio media player platform."""
-
-    host = config[CONF_HOST]
-    token = config.get(CONF_ACCESS_TOKEN)
-    name = config[CONF_NAME]
-    volume_step = config[CONF_VOLUME_STEP]
-    device_type = config[CONF_DEVICE_CLASS]
+) -> bool:
+    """Set up a Vizio media player entry."""
+    host = entry.data[CONF_HOST]
+    token = entry.data.get(CONF_ACCESS_TOKEN)
+    name = entry.data[CONF_NAME]
+    volume_step = entry.data[CONF_VOLUME_STEP]
+    device_type = entry.data[CONF_DEVICE_CLASS]
 
     device = VizioAsync(
         DEVICE_ID, host, name, token, device_type, async_get_clientsession(hass, False)
     )
+
     if not await device.can_connect():
         fail_auth_msg = ""
         if token:
@@ -148,70 +143,67 @@ class VizioDevice(MediaPlayerDevice):
     @property
     def available(self) -> bool:
         """Return the availabiliity of the device."""
-
         return self._available
 
     @property
     def state(self) -> str:
         """Return the state of the device."""
-
         return self._state
 
     @property
     def name(self) -> str:
         """Return the name of the device."""
-
         return self._name
 
     @property
     def icon(self) -> str:
         """Return the icon of the device."""
-
         return self._icon
 
     @property
     def volume_level(self) -> float:
         """Return the volume level of the device."""
-
         return self._volume_level
 
     @property
     def source(self) -> str:
         """Return current input of the device."""
-
         return self._current_input
 
     @property
     def source_list(self) -> List:
         """Return list of available inputs of the device."""
-
         return self._available_inputs
 
     @property
     def supported_features(self) -> int:
         """Flag device features that are supported."""
-
         return self._supported_commands
 
     @property
     def unique_id(self) -> str:
         """Return the unique id of the device."""
-
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return device registry information."""
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "name": self.name,
+            "manufacturer": "VIZIO",
+        }
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
-
         await self._device.pow_on()
 
     async def async_turn_off(self) -> None:
         """Turn the device off."""
-
         await self._device.pow_off()
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
-
         if mute:
             await self._device.mute_on()
         else:
@@ -219,22 +211,18 @@ class VizioDevice(MediaPlayerDevice):
 
     async def async_media_previous_track(self) -> None:
         """Send previous channel command."""
-
         await self._device.ch_down()
 
     async def async_media_next_track(self) -> None:
         """Send next channel command."""
-
         await self._device.ch_up()
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-
         await self._device.input_switch(source)
 
     async def async_volume_up(self) -> None:
         """Increasing volume of the device."""
-
         await self._device.vol_up(self._volume_step)
 
         if self._volume_level is not None:
@@ -244,7 +232,6 @@ class VizioDevice(MediaPlayerDevice):
 
     async def async_volume_down(self) -> None:
         """Decreasing volume of the device."""
-
         await self._device.vol_down(self._volume_step)
 
         if self._volume_level is not None:
@@ -254,7 +241,6 @@ class VizioDevice(MediaPlayerDevice):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
-
         if self._volume_level is not None:
             if volume > self._volume_level:
                 num = int(self._max_volume * (volume - self._volume_level))

@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/vizio",
   "requirements": ["pyvizio==0.0.16"],
   "dependencies": [],
-  "codeowners": ["@raman325"]
+  "codeowners": ["@raman325"],
+  "config_flow": true
 }

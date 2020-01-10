@@ -1,0 +1,28 @@
+{
+    "config": {
+        "title": "Vizio SmartCast",
+        "step": {
+            "user": {
+                "title": "Setup Vizio SmartCast Client",
+                "data": {
+                    "name": "Name",
+                    "host": "<Host/IP>:<Port>",
+                    "device_class": "Device Type",
+                    "access_token": "Access Token",
+                    "volume_step": "Volume Step Size"
+                }
+            }
+        },
+        "error": {
+            "name_exists": "Name already configured.",
+            "host_exists": "Host already configured.",
+            "tv_needs_token": "When Device Type is `tv` then a valid Access Token is needed.",
+            "invalid_setup": "The configuration was unable to be validated succcessfully. [Review the docs](https://www.home-assistant.io/integrations/vizio/) and reverify that:\n- The device is powered on\n- The device is connected to the network\n- The values you filled in are accurate\nbefore attempting to resubmit."
+        },
+        "abort": {
+            "already_setup": "This entry has already been setup.",
+            "name_exists": "Vizio component with name already configured.",
+            "host_exists": "Vizio component with host already configured."
+        }
+    }
+}
