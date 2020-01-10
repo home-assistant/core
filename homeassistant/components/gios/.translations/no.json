@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "GIO\u015a-integrasjon for denne m\u00e5lestasjonen er allerede konfigurert."
+        },
         "error": {
             "cannot_connect": "Kan ikke koble til GIO\u015a-tjeneren",
             "invalid_sensors_data": "Ugyldig sensordata for denne m\u00e5lestasjonen",
