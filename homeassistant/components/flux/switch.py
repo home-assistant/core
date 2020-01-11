@@ -205,7 +205,9 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         self._interval = interval
         self._transition = transition
         self.unsub_tracker = None
-        self._attributes
+        self._attributes = {}
+        self._attributes['Brightness'] = 0
+        self._attributes['Colour Temperature'] = 0
 
     @property
     def name(self):
