@@ -1,4 +1,4 @@
-"""The tests for the virtual_thermostat."""
+"""The tests for the generic_thermostat."""
 # pylint: disable=redefined-outer-name
 import datetime
 from asynctest import mock
@@ -43,23 +43,23 @@ ENTITY_AC_IB = "input_boolean.test_ac"
 
 
 async def test_setup_totally_missing_conf(hass):
-    """Test set up virtual_thermostat with missing config values."""
+    """Test set up generic_thermostat with missing config values."""
     with assert_setup_component(0, "climate"):
         await async_setup_component(
             hass,
             "climate",
-            {"climate": {"platform": "virtual_thermostat", "name": "test"}},
+            {"climate": {"platform": "generic_thermostat", "name": "test"}},
         )
 
 
 async def test_setup_hvac_missing_conf(hass, caplog):
-    """Test set up virtual_thermostat with missing config values."""
+    """Test set up generic_thermostat with missing config values."""
     await async_setup_component(
         hass,
         "climate",
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
             }
@@ -69,13 +69,13 @@ async def test_setup_hvac_missing_conf(hass, caplog):
 
 
 async def test_setup_wrong_init_hvac_conf(hass, caplog):
-    """Test set up virtual_thermostat with missing config values."""
+    """Test set up generic_thermostat with missing config values."""
     await async_setup_component(
         hass,
         "climate",
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": ENTITY_HEATER},
@@ -90,13 +90,13 @@ async def test_setup_wrong_init_hvac_conf(hass, caplog):
 
 
 async def test_setup_missing_preset_away_conf(hass, caplog):
-    """Test set up virtual_thermostat with missing config values."""
+    """Test set up generic_thermostat with missing config values."""
     await async_setup_component(
         hass,
         "climate",
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": ENTITY_HEATER},
@@ -111,13 +111,13 @@ async def test_setup_missing_preset_away_conf(hass, caplog):
 
 
 async def test_setup_missing_preset_comfort_conf(hass, caplog):
-    """Test set up virtual_thermostat with missing config values."""
+    """Test set up generic_thermostat with missing config values."""
     await async_setup_component(
         hass,
         "climate",
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "cool": {"entity_id": ENTITY_AC},
@@ -132,13 +132,13 @@ async def test_setup_missing_preset_comfort_conf(hass, caplog):
 
 
 async def test_setup_missing_preset_eco_conf(hass, caplog):
-    """Test set up virtual_thermostat with missing config values."""
+    """Test set up generic_thermostat with missing config values."""
     await async_setup_component(
         hass,
         "climate",
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": ENTITY_AC},
@@ -153,14 +153,14 @@ async def test_setup_missing_preset_eco_conf(hass, caplog):
 
 
 async def test_setup_no_heat_device_conf(hass, caplog):
-    """Test set up virtual_thermostat with missing config values."""
+    """Test set up generic_thermostat with missing config values."""
     with assert_setup_component(0, "climate"):
         await async_setup_component(
             hass,
             "climate",
             {
                 "climate": {  # No heat device specified
-                    "platform": "virtual_thermostat",
+                    "platform": "generic_thermostat",
                     "sensor": ENTITY_SENSOR,
                     "heat": {"min_temp": 18},
                 }
@@ -169,14 +169,14 @@ async def test_setup_no_heat_device_conf(hass, caplog):
 
 
 async def test_setup_no_ac_device_conf(hass, caplog):
-    """Test set up virtual_thermostat with missing config values."""
+    """Test set up generic_thermostat with missing config values."""
     with assert_setup_component(0, "climate"):
         await async_setup_component(
             hass,
             "climate",
             {
                 "climate": {  # No cool device specified
-                    "platform": "virtual_thermostat",
+                    "platform": "generic_thermostat",
                     "sensor": ENTITY_SENSOR,
                     "cool": {"min_temp": 18},
                 }
@@ -185,13 +185,13 @@ async def test_setup_no_ac_device_conf(hass, caplog):
 
 
 async def test_setup_missing_preset_conf(hass, caplog):
-    """Test set up virtual_thermostat with missing config values."""
+    """Test set up generic_thermostat with missing config values."""
     await async_setup_component(
         hass,
         "climate",
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": "switch.test"},
@@ -206,7 +206,7 @@ async def test_setup_missing_preset_conf(hass, caplog):
 
 
 async def test_valid_conf(hass, caplog):
-    """Test set up virtual_thermostat with valid config values."""
+    """Test set up generic_thermostat with valid config values."""
     with assert_setup_component(2, "climate"):
         await async_setup_component(
             hass,
@@ -214,12 +214,12 @@ async def test_valid_conf(hass, caplog):
             {
                 "climate": [
                     {
-                        "platform": "virtual_thermostat",
+                        "platform": "generic_thermostat",
                         "sensor": ENTITY_SENSOR,
                         "heat": {"entity_id": ENTITY_HEATER},
                     },
                     {
-                        "platform": "virtual_thermostat",
+                        "platform": "generic_thermostat",
                         "name": "Test 2",
                         "sensor": ENTITY_SENSOR,
                         "initial_hvac_mode": HVAC_MODE_OFF,
@@ -302,7 +302,7 @@ async def test_heater_input_boolean(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 18},
@@ -340,7 +340,7 @@ async def test_ac_input_boolean(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "cool": {"entity_id": ENTITY_AC_IB},
@@ -382,7 +382,7 @@ async def test_change_hvac_mode(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": ENTITY_HEATER_IB},
@@ -427,7 +427,7 @@ async def test_set_wrong_hvac_mode(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "cool": {"entity_id": ENTITY_AC_IB},
@@ -454,7 +454,7 @@ async def test_set_wrong_preset_mode(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "cool": {"entity_id": ENTITY_AC_IB, "away_temp": 31},
@@ -499,7 +499,7 @@ async def test_restore_heat_state(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 21},
@@ -545,7 +545,7 @@ async def test_restore_cool_state(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 21},
@@ -574,7 +574,7 @@ async def test_preset_mode_away(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "cool": {"entity_id": ENTITY_AC_IB, "away_temp": 30},
@@ -648,7 +648,7 @@ async def test_set_wrong_temperature(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 25},
@@ -702,7 +702,7 @@ async def test_set_wrong_current_temperature(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": ENTITY_HEATER_IB},
@@ -734,7 +734,7 @@ async def test_set_wrong_switch_state(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 25},
@@ -761,7 +761,7 @@ async def test_normal_operate(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "heat": {"entity_id": ENTITY_HEATER_IB, "initial_target_temp": 21},
@@ -830,7 +830,7 @@ async def test_heat_hysteresis_tolerance(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0.5,
@@ -879,7 +879,7 @@ async def test_cool_hysteresis_tolerance(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0.5,
@@ -928,7 +928,7 @@ async def test_heat_comfort_eco(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0,
@@ -1007,7 +1007,7 @@ async def test_cool_comfort_eco(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0,
@@ -1073,7 +1073,7 @@ async def test_keep_alive_interval(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0,
@@ -1122,7 +1122,7 @@ async def test_min_cycle_duration_disabled(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0,
@@ -1213,7 +1213,7 @@ async def test_min_cycle_duration_enabled(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0,
@@ -1274,7 +1274,7 @@ async def test_off_min_cycle_duration_enabled(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0,
@@ -1316,7 +1316,7 @@ async def test_b4dpxl_case(hass, setup_comp_1, caplog):
         DOMAIN,
         {
             "climate": {
-                "platform": "virtual_thermostat",
+                "platform": "generic_thermostat",
                 "name": "test",
                 "sensor": ENTITY_SENSOR,
                 "hysteresis_tolerance_on": 0,
