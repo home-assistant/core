@@ -1,25 +1,14 @@
 """Support for OpenUV sensors."""
 import logging
 
-from datetime import timedelta
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from .const import (
     CONF_METER_ID,
-    TYPE_ZONE,
-    TYPE_CONSUMPTION_DAILY,
-    TYPE_CONSUMPTION_MONTHLY,
-    TYPE_CONSUMPTION_YEARLY,
+    SENSOR_TYPES,
 )
 from . import TauronAmiplusSensor
 
 _LOGGER = logging.getLogger(__name__)
-
-SENSOR_TYPES = {
-    # TYPE_ZONE: ("Strefa", "mdi:counter", timedelta(minutes=1), None),
-    TYPE_CONSUMPTION_DAILY: ("Dzienne zużycie energii", timedelta(hours=1), "kWh"),
-    TYPE_CONSUMPTION_MONTHLY: ("Miesięczne zużycie energii", timedelta(hours=1), "kWh"),
-    TYPE_CONSUMPTION_YEARLY: ("Roczne zużycie energii", timedelta(hours=1), "kWh"),
-}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -34,10 +23,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     meter_id = (entry.data[CONF_METER_ID],)
     sensors = []
     for sensor_type in SENSOR_TYPES:
-        name, interval, unit = SENSOR_TYPES[sensor_type]
-        sensors.append(
-            TauronSensor(name, user, password, meter_id, sensor_type, unit, interval)
-        )
+        # name, interval, unit, = SENSOR_TYPES[sensor_type]
+        sensors.append(TauronSensor(user, password, meter_id, sensor_type))
 
     async_add_entities(sensors, True)
 
@@ -45,6 +32,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class TauronSensor(TauronAmiplusSensor):
     """Define a sensor for TAURON."""
 
-    def __init__(self, name, user, password, meter_id, sensor_type, unit, interval):
+    def __init__(self, user, password, meter_id, sensor_type):
         """Initialize the sensor."""
-        super().__init__(name, user, password, meter_id, sensor_type, unit, interval)
+        super().__init__(user, password, meter_id, sensor_type)
