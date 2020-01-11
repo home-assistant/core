@@ -126,13 +126,13 @@ async def test_options(hass):
     entry.options[CONF_LIGHTS] = [1, 2, 3]
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.flow.async_init(
+    result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}, data=None
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.flow.async_init(
+    result = await hass.config_entries.options.async_init(
         entry.entry_id,
         context={"source": "test"},
         data={CONF_LIGHTS: "1,2;3  4 5_6bb7", CONF_EXCLUDE: "8,9;10  11 12_13bb14"},
