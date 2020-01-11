@@ -1,11 +1,11 @@
 """Tests for the Velbus config flow."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.velbus import config_flow
-from homeassistant.const import CONF_PORT, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 
 from tests.common import MockConfigEntry
 

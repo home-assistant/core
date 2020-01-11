@@ -13,11 +13,16 @@ from homeassistant.components.homekit.const import ATTR_VALUE
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    EVENT_HOMEASSISTANT_START,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import CoreState
+from homeassistant.helpers import entity_registry
 
 from tests.common import async_mock_service
 from tests.components.homekit.common import patch_debounce
@@ -138,11 +143,25 @@ async def test_window_set_cover_position(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 0
     assert acc.char_target_position.value == 0
+    assert acc.char_position_state.value == 2
+
+    hass.states.async_set(entity_id, STATE_OPENING, {ATTR_CURRENT_POSITION: 60})
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 60
+    assert acc.char_target_position.value == 60
+    assert acc.char_position_state.value == 1
+
+    hass.states.async_set(entity_id, STATE_CLOSING, {ATTR_CURRENT_POSITION: 50})
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 50
+    assert acc.char_target_position.value == 50
+    assert acc.char_position_state.value == 0
 
     hass.states.async_set(entity_id, STATE_OPEN, {ATTR_CURRENT_POSITION: 50})
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 50
     assert acc.char_target_position.value == 50
+    assert acc.char_position_state.value == 2
 
     # Set from HomeKit
     call_set_cover_position = async_mock_service(hass, DOMAIN, "set_cover_position")
@@ -189,11 +208,23 @@ async def test_window_open_close(hass, hk_driver, cls, events):
     assert acc.char_target_position.value == 0
     assert acc.char_position_state.value == 2
 
+    hass.states.async_set(entity_id, STATE_OPENING)
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 0
+    assert acc.char_target_position.value == 0
+    assert acc.char_position_state.value == 1
+
     hass.states.async_set(entity_id, STATE_OPEN)
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 100
     assert acc.char_target_position.value == 100
     assert acc.char_position_state.value == 2
+
+    hass.states.async_set(entity_id, STATE_CLOSING)
+    await hass.async_block_till_done()
+    assert acc.char_current_position.value == 100
+    assert acc.char_target_position.value == 100
+    assert acc.char_position_state.value == 0
 
     hass.states.async_set(entity_id, STATE_CLOSED)
     await hass.async_block_till_done()
@@ -280,3 +311,73 @@ async def test_window_open_close_stop(hass, hk_driver, cls, events):
     assert acc.char_position_state.value == 2
     assert len(events) == 3
     assert events[-1].data[ATTR_VALUE] is None
+
+
+async def test_window_basic_restore(hass, hk_driver, cls, events):
+    """Test setting up an entity from state in the event registry."""
+    hass.state = CoreState.not_running
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    registry.async_get_or_create(
+        "cover", "generic", "1234", suggested_object_id="simple",
+    )
+    registry.async_get_or_create(
+        "cover",
+        "generic",
+        "9012",
+        suggested_object_id="all_info_set",
+        capabilities={},
+        supported_features=SUPPORT_STOP,
+        device_class="mock-device-class",
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+
+    acc = cls.window_basic(hass, hk_driver, "Cover", "cover.simple", 2, None)
+    assert acc.category == 14
+    assert acc.char_current_position is not None
+    assert acc.char_target_position is not None
+    assert acc.char_position_state is not None
+
+    acc = cls.window_basic(hass, hk_driver, "Cover", "cover.all_info_set", 2, None)
+    assert acc.category == 14
+    assert acc.char_current_position is not None
+    assert acc.char_target_position is not None
+    assert acc.char_position_state is not None
+
+
+async def test_window_restore(hass, hk_driver, cls, events):
+    """Test setting up an entity from state in the event registry."""
+    hass.state = CoreState.not_running
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    registry.async_get_or_create(
+        "cover", "generic", "1234", suggested_object_id="simple",
+    )
+    registry.async_get_or_create(
+        "cover",
+        "generic",
+        "9012",
+        suggested_object_id="all_info_set",
+        capabilities={},
+        supported_features=SUPPORT_STOP,
+        device_class="mock-device-class",
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+
+    acc = cls.window(hass, hk_driver, "Cover", "cover.simple", 2, None)
+    assert acc.category == 14
+    assert acc.char_current_position is not None
+    assert acc.char_target_position is not None
+    assert acc.char_position_state is not None
+
+    acc = cls.window(hass, hk_driver, "Cover", "cover.all_info_set", 2, None)
+    assert acc.category == 14
+    assert acc.char_current_position is not None
+    assert acc.char_target_position is not None
+    assert acc.char_position_state is not None

@@ -38,17 +38,16 @@ def assert_state_equals(
     entity_id = get_entity_id(measure, profile)
     state_obj = hass.states.get(entity_id)
 
-    assert state_obj, "Expected entity {} to exist but it did not".format(entity_id)
+    assert state_obj, f"Expected entity {entity_id} to exist but it did not"
 
-    assert state_obj.state == str(
-        expected
-    ), "Expected {} but was {} for measure {}, {}".format(
-        expected, state_obj.state, measure, entity_id
+    assert state_obj.state == str(expected), (
+        f"Expected {expected} but was {state_obj.state} "
+        f"for measure {measure}, {entity_id}"
     )
 
 
 async def setup_hass(hass: HomeAssistant) -> dict:
-    """Configure home assistant."""
+    """Configure Home Assistant."""
     profiles = ["Person0", "Person1", "Person2", "Person3", "Person4"]
 
     hass_config = {

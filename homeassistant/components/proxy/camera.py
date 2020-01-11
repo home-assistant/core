@@ -7,7 +7,13 @@ import logging
 from PIL import Image
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA,
+    Camera,
+    async_get_image,
+    async_get_mjpeg_stream,
+    async_get_still_stream,
+)
 from homeassistant.const import CONF_ENTITY_ID, CONF_MODE, CONF_NAME
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -227,7 +233,7 @@ class ProxyCamera(Camera):
             return self._last_image
 
         self._last_image_time = now
-        image = await self.hass.components.camera.async_get_image(self._proxied_camera)
+        image = await async_get_image(self.hass, self._proxied_camera)
         if not image:
             _LOGGER.error("Error getting original camera image")
             return self._last_image
@@ -247,12 +253,12 @@ class ProxyCamera(Camera):
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from camera images."""
         if not self._stream_opts:
-            return await self.hass.components.camera.async_get_mjpeg_stream(
-                request, self._proxied_camera
+            return await async_get_mjpeg_stream(
+                self.hass, request, self._proxied_camera
             )
 
-        return await self.hass.components.camera.async_get_still_stream(
-            request, self._async_stream_image, self.content_type, self.frame_interval
+        return await async_get_still_stream(
+            request, self._async_stream_image, self.content_type, self.frame_interval,
         )
 
     @property
@@ -263,9 +269,7 @@ class ProxyCamera(Camera):
     async def _async_stream_image(self):
         """Return a still image response from the camera."""
         try:
-            image = await self.hass.components.camera.async_get_image(
-                self._proxied_camera
-            )
+            image = await async_get_image(self.hass, self._proxied_camera)
             if not image:
                 return None
         except HomeAssistantError:

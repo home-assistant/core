@@ -1,11 +1,11 @@
 """Support for Neato botvac connected vacuum cleaners."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
 from pybotvac import Account, Neato, Vorwerk
 from pybotvac.exceptions import NeatoException, NeatoLoginException, NeatoRobotException
+import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -21,7 +21,6 @@ from .const import (
     NEATO_MAP_DATA,
     NEATO_PERSISTENT_MAPS,
     NEATO_ROBOTS,
-    SCAN_INTERVAL_MINUTES,
     VALID_VENDORS,
 )
 
@@ -161,7 +160,7 @@ class NeatoHub:
         self.logged_in = True
         _LOGGER.debug("Successfully connected to Neato API")
 
-    @Throttle(timedelta(minutes=SCAN_INTERVAL_MINUTES))
+    @Throttle(timedelta(minutes=1))
     def update_robots(self):
         """Update the robot states."""
         _LOGGER.debug("Running HUB.update_robots %s", self._hass.data.get(NEATO_ROBOTS))

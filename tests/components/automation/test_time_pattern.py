@@ -1,13 +1,12 @@
 """The tests for the time_pattern automation."""
 import pytest
 
+import homeassistant.components.automation as automation
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
-import homeassistant.components.automation as automation
 
-from tests.common import async_fire_time_changed, mock_component
+from tests.common import async_fire_time_changed, async_mock_service, mock_component
 from tests.components.automation import common
-from tests.common import async_mock_service
 
 
 @pytest.fixture

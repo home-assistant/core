@@ -1,12 +1,7 @@
 """Support to control a Zehnder ComfoAir Q350/450/600 ventilation unit."""
 import logging
 
-from pycomfoconnect import (
-    SENSOR_TEMPERATURE_EXTRACT,
-    SENSOR_TEMPERATURE_OUTDOOR,
-    Bridge,
-    ComfoConnect,
-)
+from pycomfoconnect import Bridge, ComfoConnect
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -24,14 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "comfoconnect"
 
-SIGNAL_COMFOCONNECT_UPDATE_RECEIVED = "comfoconnect_update_received"
-
-ATTR_CURRENT_TEMPERATURE = "current_temperature"
-ATTR_CURRENT_HUMIDITY = "current_humidity"
-ATTR_OUTSIDE_TEMPERATURE = "outside_temperature"
-ATTR_OUTSIDE_HUMIDITY = "outside_humidity"
-ATTR_AIR_FLOW_SUPPLY = "air_flow_supply"
-ATTR_AIR_FLOW_EXHAUST = "air_flow_exhaust"
+SIGNAL_COMFOCONNECT_UPDATE_RECEIVED = "comfoconnect_update_received_{}"
 
 CONF_USER_AGENT = "user_agent"
 
@@ -105,6 +93,7 @@ class ComfoConnectBridge:
         self.data = {}
         self.name = name
         self.hass = hass
+        self.unique_id = bridge.uuid.hex()
 
         self.comfoconnect = ComfoConnect(
             bridge=bridge,
@@ -125,13 +114,8 @@ class ComfoConnectBridge:
         self.comfoconnect.disconnect()
 
     def sensor_callback(self, var, value):
-        """Call function for sensor updates."""
-        _LOGGER.debug("Got value from bridge: %d = %d", var, value)
-
-        if var in [SENSOR_TEMPERATURE_EXTRACT, SENSOR_TEMPERATURE_OUTDOOR]:
-            self.data[var] = value / 10
-        else:
-            self.data[var] = value
-
-        # Notify listeners that we have received an update
-        dispatcher_send(self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, var)
+        """Notify listeners that we have received an update."""
+        _LOGGER.debug("Received update for %s: %s", var, value)
+        dispatcher_send(
+            self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(var), value
+        )

@@ -3,16 +3,17 @@ from datetime import timedelta
 from ipaddress import ip_network
 from unittest.mock import patch
 
-import pytest
 from aiohttp import BasicAuth, web
 from aiohttp.web_exceptions import HTTPUnauthorized
+import pytest
 
 from homeassistant.auth.providers import trusted_networks
-from homeassistant.components.http.auth import setup_auth, async_sign_path
+from homeassistant.components.http.auth import async_sign_path, setup_auth
 from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.real_ip import setup_real_ip
 from homeassistant.setup import async_setup_component
-from . import mock_real_ip, HTTP_HEADER_HA_AUTH
+
+from . import HTTP_HEADER_HA_AUTH, mock_real_ip
 
 API_PASSWORD = "test-password"
 

@@ -1,20 +1,21 @@
 """Support for Sonarr."""
+from datetime import datetime
 import logging
 import time
-from datetime import datetime
 
+from pytz import timezone
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
-    CONF_PORT,
     CONF_MONITORED_CONDITIONS,
+    CONF_PORT,
     CONF_SSL,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +81,6 @@ class SonarrSensor(Entity):
 
     def __init__(self, hass, conf, sensor_type):
         """Create Sonarr entity."""
-        from pytz import timezone
 
         self.conf = conf
         self.host = conf.get(CONF_HOST)

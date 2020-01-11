@@ -1,16 +1,16 @@
 """Tests for OwnTracks config flow."""
 from unittest.mock import Mock, patch
+
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.components.owntracks import config_flow
 from homeassistant.components.owntracks.config_flow import CONF_CLOUDHOOK, CONF_SECRET
 from homeassistant.components.owntracks.const import DOMAIN
+from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro, MockConfigEntry
-
+from tests.common import MockConfigEntry, mock_coro
 
 CONF_WEBHOOK_URL = "webhook_url"
 
@@ -126,7 +126,7 @@ async def test_user_not_supports_encryption(hass, not_supports_encryption):
 async def test_unload(hass):
     """Test unloading a config flow."""
     with patch(
-        "homeassistant.config_entries.ConfigEntries" ".async_forward_entry_setup"
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
     ) as mock_forward:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "import"}, data={}
@@ -140,7 +140,7 @@ async def test_unload(hass):
     assert entry.data["webhook_id"] in hass.data["webhook"]
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries" ".async_forward_entry_unload",
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
         return_value=mock_coro(),
     ) as mock_unload:
         assert await hass.config_entries.async_unload(entry.entry_id)

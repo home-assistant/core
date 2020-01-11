@@ -4,15 +4,15 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
-    CONF_PORT,
-    CONF_PATH,
-    CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_PATH,
+    CONF_PORT,
     CONF_SWITCHES,
+    CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
 

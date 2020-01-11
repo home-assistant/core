@@ -5,25 +5,24 @@ This module exists of the following parts:
  - OAuth2 implementation that works with local provided client ID/secret
 
 """
+from abc import ABC, ABCMeta, abstractmethod
 import asyncio
-from abc import ABCMeta, ABC, abstractmethod
 import logging
-from typing import Optional, Any, Dict, cast, Awaitable, Callable
+import secrets
 import time
+from typing import Any, Awaitable, Callable, Dict, Optional, cast
 
+from aiohttp import client, web
 import async_timeout
-from aiohttp import web, client
 import jwt
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.auth.util import generate_secret
-from homeassistant.core import HomeAssistant, callback
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.core import HomeAssistant, callback
 
 from .aiohttp_client import async_get_clientsession
-
 
 DATA_JWT_SECRET = "oauth2_jwt_secret"
 DATA_VIEW_REGISTERED = "oauth2_view_reg"
@@ -442,7 +441,7 @@ def _encode_jwt(hass: HomeAssistant, data: dict) -> str:
     secret = hass.data.get(DATA_JWT_SECRET)
 
     if secret is None:
-        secret = hass.data[DATA_JWT_SECRET] = generate_secret()
+        secret = hass.data[DATA_JWT_SECRET] = secrets.token_hex()
 
     return jwt.encode(data, secret, algorithm="HS256").decode()
 

@@ -69,7 +69,7 @@ class LeafRangeSensor(LeafEntity):
     """Nissan Leaf Range Sensor."""
 
     def __init__(self, car, ac_on):
-        """Set-up range sensor. Store if AC on."""
+        """Set up range sensor. Store if AC on."""
         self._ac_on = ac_on
         super().__init__(car)
 
@@ -83,7 +83,7 @@ class LeafRangeSensor(LeafEntity):
     def log_registration(self):
         """Log registration."""
         _LOGGER.debug(
-            "Registered LeafRangeSensor integration with HASS for VIN %s",
+            "Registered LeafRangeSensor integration with Home Assistant for VIN %s",
             self.car.leaf.vin,
         )
 

@@ -2,6 +2,8 @@
 
 import logging
 
+from homeassistant.helpers import device_registry
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -63,6 +65,9 @@ async def test_sensor(hass, create_registrations, webhook_client):
 
     updated_entity = hass.states.get("sensor.battery_state")
     assert updated_entity.state == "123"
+
+    dev_reg = await device_registry.async_get_registry(hass)
+    assert len(dev_reg.devices) == len(create_registrations)
 
 
 async def test_sensor_must_register(hass, create_registrations, webhook_client):

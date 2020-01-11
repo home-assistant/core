@@ -1,15 +1,16 @@
 """Platform to retrieve Islamic prayer times information for Home Assistant."""
-import logging
 from datetime import datetime, timedelta
+import logging
 
+from prayer_times_calculator import PrayerTimesCalculator
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_time
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,7 +149,6 @@ class IslamicPrayerTimesData:
 
     def get_new_prayer_times(self):
         """Fetch prayer times for today."""
-        from prayer_times_calculator import PrayerTimesCalculator
 
         today = datetime.today().strftime("%Y-%m-%d")
 

@@ -27,7 +27,9 @@ def mock_connection_fixture() -> AsyncConnection:
     def _rest_call_side_effect(path, body=None):
         return path, body
 
-    connection._restCall.side_effect = _rest_call_side_effect  # pylint: disable=W0212
+    connection._restCall.side_effect = (  # pylint: disable=protected-access
+        _rest_call_side_effect
+    )
     connection.api_call.return_value = mock_coro(True)
     connection.init.side_effect = mock_coro(True)
 

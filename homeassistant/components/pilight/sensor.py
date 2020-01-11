@@ -3,11 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_PAYLOAD
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 from homeassistant.components import pilight
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME, CONF_PAYLOAD, CONF_UNIT_OF_MEASUREMENT
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 

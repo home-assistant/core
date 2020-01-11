@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry, DeconzEntityHandler
+from .gateway import DeconzEntityHandler, get_gateway_from_config_entry
 
 ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"
@@ -45,7 +45,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         )
     )
 
-    async_add_sensor(gateway.api.sensors.values())
+    async_add_sensor(
+        [gateway.api.sensors[key] for key in sorted(gateway.api.sensors, key=int)]
+    )
 
 
 class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):

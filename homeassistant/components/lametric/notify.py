@@ -1,6 +1,8 @@
 """Support for LaMetric notifications."""
 import logging
 
+from lmnotify import Model, SimpleFrame, Sound
+from oauthlib.oauth2 import TokenExpiredError
 from requests.exceptions import ConnectionError as RequestsConnectionError
 import voluptuous as vol
 
@@ -59,8 +61,6 @@ class LaMetricNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a message to some LaMetric device."""
-        from lmnotify import SimpleFrame, Sound, Model
-        from oauthlib.oauth2 import TokenExpiredError
 
         targets = kwargs.get(ATTR_TARGET)
         data = kwargs.get(ATTR_DATA)
@@ -113,7 +113,7 @@ class LaMetricNotificationService(BaseNotificationService):
             self._devices = lmn.get_devices()
         except RequestsConnectionError:
             _LOGGER.warning(
-                "Problem connecting to LaMetric, " "using cached devices instead"
+                "Problem connecting to LaMetric, using cached devices instead"
             )
         for dev in self._devices:
             if targets is None or dev["name"] in targets:

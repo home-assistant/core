@@ -3,9 +3,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import DEVICE_DEFAULT_NAME, CONF_HOST
-
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import CONF_HOST, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
 from . import CONF_INVERT_LOGIC, DEFAULT_INVERT_LOGIC
