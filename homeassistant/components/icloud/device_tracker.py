@@ -15,7 +15,7 @@ from .const import (
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
     DOMAIN,
-    TRACKER_UPDATE,
+    SERVICE_UPDATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -115,7 +115,7 @@ class IcloudTrackerEntity(TrackerEntity):
     async def async_added_to_hass(self):
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, TRACKER_UPDATE, self.async_write_ha_state
+            self.hass, SERVICE_UPDATE, self.async_write_ha_state
         )
 
     async def async_will_remove_from_hass(self):
