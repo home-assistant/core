@@ -18,20 +18,6 @@ async def test_show_config_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_show_config_form_default_values():
-    """Test show configuration form."""
-    hass = Mock()
-    flow = config_flow.MetFlowHandler()
-    flow.hass = hass
-
-    result = await flow._show_config_form(
-        name="test", latitude="0", longitude="0", elevation="0"
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-
 async def test_flow_with_home_location(hass):
     """Test config flow.
 
