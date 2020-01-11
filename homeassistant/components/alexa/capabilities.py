@@ -31,7 +31,6 @@ from .const import (
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
     PERCENTAGE_FAN_MAP,
-    RANGE_FAN_MAP,
     Inputs,
 )
 from .errors import UnsupportedProperty
@@ -503,6 +502,10 @@ class AlexaColorController(AlexaCapability):
         """Return what properties this entity supports."""
         return [{"name": "color"}]
 
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
         return True
@@ -548,6 +551,10 @@ class AlexaColorTemperatureController(AlexaCapability):
         """Return what properties this entity supports."""
         return [{"name": "colorTemperatureInKelvin"}]
 
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
         return True
@@ -589,6 +596,10 @@ class AlexaPercentageController(AlexaCapability):
     def properties_supported(self):
         """Return what properties this entity supports."""
         return [{"name": "percentage"}]
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
 
     def properties_retrievable(self):
         """Return True if properties can be retrieved."""
@@ -1261,8 +1272,12 @@ class AlexaRangeController(AlexaCapability):
 
         # Fan Speed
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-            speed = self.entity.attributes.get(fan.ATTR_SPEED)
-            return RANGE_FAN_MAP.get(speed, 0)
+            speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
+            speed = self.entity.attributes[fan.ATTR_SPEED]
+            speed_index = next(
+                (i for i, v in enumerate(speed_list) if v == speed), None
+            )
+            return speed_index
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
@@ -1290,24 +1305,22 @@ class AlexaRangeController(AlexaCapability):
 
         # Fan Speed Resources
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
+            speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
+            max_value = len(speed_list) - 1
             self._resource = AlexaPresetResource(
                 labels=[AlexaGlobalCatalog.SETTING_FAN_SPEED],
-                min_value=1,
-                max_value=3,
+                min_value=0,
+                max_value=max_value,
                 precision=1,
             )
-            self._resource.add_preset(
-                value=1,
-                labels=[AlexaGlobalCatalog.VALUE_LOW, AlexaGlobalCatalog.VALUE_MINIMUM],
-            )
-            self._resource.add_preset(value=2, labels=[AlexaGlobalCatalog.VALUE_MEDIUM])
-            self._resource.add_preset(
-                value=3,
-                labels=[
-                    AlexaGlobalCatalog.VALUE_HIGH,
-                    AlexaGlobalCatalog.VALUE_MAXIMUM,
-                ],
-            )
+            for index, speed in enumerate(speed_list):
+                labels = [speed.replace("_", " ")]
+                if index == 1:
+                    labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
+                if index == max_value:
+                    labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
+                self._resource.add_preset(value=index, labels=labels)
+
             return self._resource.serialize_capability_resources()
 
         # Cover Position Resources
@@ -1653,3 +1666,29 @@ class AlexaEqualizerController(AlexaCapability):
             configurations = {"modes": {"supported": supported_sound_modes}}
 
         return configurations
+
+
+class AlexaTimeHoldController(AlexaCapability):
+    """Implements Alexa.TimeHoldController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-timeholdcontroller.html
+    """
+
+    supported_locales = {"en-US"}
+
+    def __init__(self, entity, allow_remote_resume=False):
+        """Initialize the entity."""
+        super().__init__(entity)
+        self._allow_remote_resume = allow_remote_resume
+
+    def name(self):
+        """Return the Alexa API name of this interface."""
+        return "Alexa.TimeHoldController"
+
+    def configuration(self):
+        """Return configuration object.
+
+        Set allowRemoteResume to True if Alexa can restart the operation on the device.
+        When false, Alexa does not send the Resume directive.
+        """
+        return {"allowRemoteResume": self._allow_remote_resume}

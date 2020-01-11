@@ -146,7 +146,8 @@ class WLEDLight(Light, WLEDDeviceEntity):
         data = {ATTR_ON: False, ATTR_SEGMENT_ID: self._segment}
 
         if ATTR_TRANSITION in kwargs:
-            data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION] * 1000
+            # WLED uses 100ms per unit, so 10 = 1 second.
+            data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
 
         try:
             await self.wled.light(**data)
@@ -173,7 +174,8 @@ class WLEDLight(Light, WLEDDeviceEntity):
             data[ATTR_COLOR_PRIMARY] = color_util.color_hsv_to_RGB(hue, sat, 100)
 
         if ATTR_TRANSITION in kwargs:
-            data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION] * 1000
+            # WLED uses 100ms per unit, so 10 = 1 second.
+            data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_BRIGHTNESS in kwargs:
             data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]

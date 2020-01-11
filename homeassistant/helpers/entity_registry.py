@@ -445,6 +445,18 @@ def async_entries_for_device(
     ]
 
 
+@callback
+def async_entries_for_config_entry(
+    registry: EntityRegistry, config_entry_id: str
+) -> List[RegistryEntry]:
+    """Return entries that match a config entry."""
+    return [
+        entry
+        for entry in registry.entities.values()
+        if entry.config_entry_id == config_entry_id
+    ]
+
+
 async def _async_migrate(entities: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
     """Migrate the YAML config file to storage helper format."""
     return {
@@ -490,13 +502,13 @@ def async_setup_entity_restore(
 
             attrs: Dict[str, Any] = {ATTR_RESTORED: True}
 
-            if entry.capabilities:
+            if entry.capabilities is not None:
                 attrs.update(entry.capabilities)
 
-            if entry.supported_features:
+            if entry.supported_features is not None:
                 attrs[ATTR_SUPPORTED_FEATURES] = entry.supported_features
 
-            if entry.device_class:
+            if entry.device_class is not None:
                 attrs[ATTR_DEVICE_CLASS] = entry.device_class
 
             states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)

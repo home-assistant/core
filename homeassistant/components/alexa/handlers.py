@@ -10,6 +10,7 @@ from homeassistant.components import (
     input_number,
     light,
     media_player,
+    timer,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
@@ -50,8 +51,6 @@ from .const import (
     API_THERMOSTAT_MODES_CUSTOM,
     API_THERMOSTAT_PRESETS,
     PERCENTAGE_FAN_MAP,
-    RANGE_FAN_MAP,
-    SPEED_FAN_MAP,
     Cause,
     Inputs,
 )
@@ -1095,8 +1094,10 @@ async def async_api_set_range(hass, config, directive, context):
 
     # Fan Speed
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
+        range_value = int(range_value)
         service = fan.SERVICE_SET_SPEED
-        speed = SPEED_FAN_MAP.get(int(range_value))
+        speed_list = entity.attributes[fan.ATTR_SPEED_LIST]
+        speed = next((v for i, v in enumerate(speed_list) if i == range_value), None)
 
         if not speed:
             msg = "Entity does not support value"
@@ -1173,9 +1174,16 @@ async def async_api_adjust_range(hass, config, directive, context):
     if instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
         range_delta = int(range_delta)
         service = fan.SERVICE_SET_SPEED
-        current_range = RANGE_FAN_MAP.get(entity.attributes.get(fan.ATTR_SPEED), 0)
-        speed = SPEED_FAN_MAP.get(
-            min(3, max(0, range_delta + current_range)), fan.SPEED_OFF
+        speed_list = entity.attributes[fan.ATTR_SPEED_LIST]
+        current_speed = entity.attributes[fan.ATTR_SPEED]
+        current_speed_index = next(
+            (i for i, v in enumerate(speed_list) if v == current_speed), 0
+        )
+        new_speed_index = min(
+            len(speed_list) - 1, max(0, current_speed_index + range_delta)
+        )
+        speed = next(
+            (v for i, v in enumerate(speed_list) if i == new_speed_index), None
         )
 
         if speed == fan.SPEED_OFF:
@@ -1396,3 +1404,29 @@ async def async_api_bands_directive(hass, config, directive, context):
     # Currently bands directives are not supported.
     msg = "Entity does not support directive"
     raise AlexaInvalidDirectiveError(msg)
+
+
+@HANDLERS.register(("Alexa.TimeHoldController", "Hold"))
+async def async_api_hold(hass, config, directive, context):
+    """Process a TimeHoldController Hold request."""
+    entity = directive.entity
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    await hass.services.async_call(
+        entity.domain, timer.SERVICE_PAUSE, data, blocking=False, context=context
+    )
+
+    return directive.response()
+
+
+@HANDLERS.register(("Alexa.TimeHoldController", "Resume"))
+async def async_api_resume(hass, config, directive, context):
+    """Process a TimeHoldController Resume request."""
+    entity = directive.entity
+    data = {ATTR_ENTITY_ID: entity.entity_id}
+
+    await hass.services.async_call(
+        entity.domain, timer.SERVICE_START, data, blocking=False, context=context
+    )
+
+    return directive.response()

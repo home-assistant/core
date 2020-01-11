@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
+from homeassistant.components.homeassistant import scene as ha_scene
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_service
@@ -209,3 +210,51 @@ async def test_ensure_no_intersection(hass):
         await hass.async_block_till_done()
     assert "entities and snapshot_entities must not overlap" in str(ex.value)
     assert hass.states.get("scene.hallo") is None
+
+
+async def test_scenes_with_entity(hass):
+    """Test finding scenes with a specific entity."""
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {
+            "scene": [
+                {"name": "scene_1", "entities": {"light.kitchen": "on"}},
+                {"name": "scene_2", "entities": {"light.living_room": "off"}},
+                {
+                    "name": "scene_3",
+                    "entities": {"light.kitchen": "on", "light.living_room": "off"},
+                },
+            ]
+        },
+    )
+
+    assert ha_scene.scenes_with_entity(hass, "light.kitchen") == [
+        "scene.scene_1",
+        "scene.scene_3",
+    ]
+
+
+async def test_entities_in_scene(hass):
+    """Test finding entities in a scene."""
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {
+            "scene": [
+                {"name": "scene_1", "entities": {"light.kitchen": "on"}},
+                {"name": "scene_2", "entities": {"light.living_room": "off"}},
+                {
+                    "name": "scene_3",
+                    "entities": {"light.kitchen": "on", "light.living_room": "off"},
+                },
+            ]
+        },
+    )
+
+    for scene_id, entities in (
+        ("scene.scene_1", ["light.kitchen"]),
+        ("scene.scene_2", ["light.living_room"]),
+        ("scene.scene_3", ["light.kitchen", "light.living_room"]),
+    ):
+        assert ha_scene.entities_in_scene(hass, scene_id) == entities

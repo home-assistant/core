@@ -31,7 +31,7 @@ Adafruit-GPIO==1.0.3
 Adafruit-SHT31==1.0.2
 
 # homeassistant.components.bbb_gpio
-# Adafruit_BBIO==1.0.0
+# Adafruit_BBIO==1.1.1
 
 # homeassistant.components.homekit
 HAP-python==2.6.0
@@ -385,7 +385,7 @@ coinbase==2.1.0
 coinmarketcap==5.0.3
 
 # homeassistant.scripts.check_config
-colorlog==4.0.2
+colorlog==4.1.0
 
 # homeassistant.components.concord232
 concord232==0.15
@@ -510,7 +510,7 @@ eternalegypt==0.0.11
 # evdev==1.1.2
 
 # homeassistant.components.evohome
-evohome-async==0.3.4b1
+evohome-async==0.3.5.post1
 
 # homeassistant.components.dlib_face_detect
 # homeassistant.components.dlib_face_identify
@@ -679,7 +679,7 @@ hole==0.5.0
 holidays==0.9.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200107.0
+home-assistant-frontend==20200108.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.7
@@ -1028,7 +1028,7 @@ pocketcasts==0.1
 postnl_api==1.2.2
 
 # homeassistant.components.reddit
-praw==6.4.0
+praw==6.5.0
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
@@ -1098,7 +1098,7 @@ pyHS100==0.3.5
 pyMetno==0.4.6
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.24
+pyRFXtrx==0.25
 
 # homeassistant.components.switchmate
 # pySwitchmate==0.4.6
@@ -1122,7 +1122,7 @@ py_nextbusnext==0.1.4
 pyads==3.0.7
 
 # homeassistant.components.hisense_aehw4a1
-pyaehw4a1==0.3.1
+pyaehw4a1==0.3.4
 
 # homeassistant.components.aftership
 pyaftership==0.1.2
@@ -1140,7 +1140,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==3.1.0
+pyatmo==3.2.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1291,7 +1291,7 @@ pyhik==0.2.5
 pyhiveapi==0.2.19.3
 
 # homeassistant.components.homematic
-pyhomematic==0.1.62
+pyhomematic==0.1.63
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1330,7 +1330,7 @@ pykwb==0.0.8
 pylacrosse==0.4.0
 
 # homeassistant.components.lastfm
-pylast==3.1.0
+pylast==3.2.0
 
 # homeassistant.components.launch_library
 pylaunches==0.2.0
@@ -1699,7 +1699,7 @@ pyversasense==0.0.6
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.0.12
+pyvizio==0.0.15
 
 # homeassistant.components.velux
 pyvlx==0.2.12
@@ -1816,7 +1816,7 @@ sentry-sdk==0.13.5
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
-shodan==1.21.1
+shodan==1.21.2
 
 # homeassistant.components.simplepush
 simplepush==1.1.4
@@ -1904,6 +1904,9 @@ statsd==3.2.1
 
 # homeassistant.components.steam_online
 steamodd==4.21
+
+# homeassistant.components.stookalert
+stookalert==0.1.4
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
@@ -2035,7 +2038,6 @@ vtjp==0.1.14
 vultr==0.1.2
 
 # homeassistant.components.panasonic_viera
-# homeassistant.components.samsungtv
 # homeassistant.components.wake_on_lan
 wakeonlan==1.1.6
 

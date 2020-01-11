@@ -83,6 +83,7 @@ homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7
 homeassistant/components/dsmr_reader/* @depl0y
 homeassistant/components/dweet/* @fabaff
+homeassistant/components/dyson/* @etheralm
 homeassistant/components/ecobee/* @marthoc
 homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/egardia/* @jeroenterheerdt
@@ -90,7 +91,6 @@ homeassistant/components/eight_sleep/* @mezz64
 homeassistant/components/elgato/* @frenck
 homeassistant/components/elv/* @majuss
 homeassistant/components/emby/* @mezz64
-homeassistant/components/emulated_hue/* @NobleKangaroo
 homeassistant/components/enigma2/* @fbradyirl
 homeassistant/components/enocean/* @bdurrer
 homeassistant/components/entur_public_transport/* @hfurubotten
@@ -223,6 +223,7 @@ homeassistant/components/neato/* @dshokouhi @Santobert
 homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @awarecan
+homeassistant/components/netatmo/* @cgtobi
 homeassistant/components/netdata/* @fabaff
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nilu/* @hfurubotten
@@ -282,6 +283,7 @@ homeassistant/components/samsungtv/* @escoand
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/scrape/* @fabaff
 homeassistant/components/script/* @home-assistant/core
+homeassistant/components/search/* @home-assistant/core
 homeassistant/components/sense/* @kbickar
 homeassistant/components/sensibo/* @andrey-git
 homeassistant/components/sentry/* @dcramer
@@ -312,6 +314,7 @@ homeassistant/components/sql/* @dgomes
 homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
 homeassistant/components/stiebel_eltron/* @fucm
+homeassistant/components/stookalert/* @fwestenberg
 homeassistant/components/stream/* @hunterjm
 homeassistant/components/stt/* @pvizeli
 homeassistant/components/suez_water/* @ooii
