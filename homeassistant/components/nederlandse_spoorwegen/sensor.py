@@ -191,7 +191,7 @@ class NSDepartureSensor(Entity):
                 2,
             )
             if self._trips:
-                if self._trips[0].departure_delay:
+                if self._trips[0].departure_time_actual is not None:
                     actual_time = self._trips[0].departure_time_actual
                     self._state = actual_time.strftime("%H:%M")
                 else:
