@@ -49,7 +49,6 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 CREATE_FIELDS = {
-    vol.Optional(CONF_ID): cv.slug,
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_MIN, default=CONF_MIN_VALUE): vol.Coerce(int),
     vol.Optional(CONF_MAX, default=CONF_MAX_VALUE): vol.Coerce(int),
@@ -201,7 +200,7 @@ class InputTextStorageCollection(collection.StorageCollection):
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
-        return self.CREATE_SCHEMA({**data, **update_data})
+        return _cv_input_text({**data, **update_data})
 
 
 class InputText(RestoreEntity):
