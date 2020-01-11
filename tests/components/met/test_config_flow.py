@@ -2,18 +2,17 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components.met import config_flow
+from homeassistant.components.met.const import DOMAIN
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 
 from tests.common import MockConfigEntry, mock_coro
 
 
-async def test_show_config_form():
+async def test_show_config_form(hass):
     """Test show configuration form."""
-    hass = Mock()
-    flow = config_flow.MetFlowHandler()
-    flow.hass = hass
-
-    result = await flow._show_config_form()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
