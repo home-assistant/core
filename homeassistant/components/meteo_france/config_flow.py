@@ -48,7 +48,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is None:
-            return await self._show_setup_form(user_input, errors)
+            return await self._show_setup_form(user_input, None)
 
         city = user_input[CONF_CITY]
         monitored_conditions = user_input.get(

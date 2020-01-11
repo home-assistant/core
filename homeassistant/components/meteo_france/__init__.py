@@ -36,11 +36,11 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up Meteo-France from legacy config file."""
 
-    confs = config.get(DOMAIN)
-    if confs is None:
+    conf = config.get(DOMAIN)
+    if conf is None:
         return True
 
-    for city_conf in confs:
+    for city_conf in conf:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=city_conf.copy()
