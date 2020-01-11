@@ -13,6 +13,8 @@ from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
     ATTR_VALUE,
     DOMAIN as DOMAIN_HOMEKIT,
+    EVENT_HOMEKIT_STARTED,
+    EVENT_HOMEKIT_STOPPED,
     EVENT_HOMEKIT_CHANGED,
 )
 from homeassistant.components.http import HomeAssistantView
@@ -352,6 +354,26 @@ def humanify(hass, events):
                     "message": message,
                     "domain": DOMAIN_HOMEKIT,
                     "entity_id": entity_id,
+                    "context_id": event.context.id,
+                    "context_user_id": event.context.user_id,
+                }
+                
+            elif event.event_type == EVENT_HOMEKIT_STARTED:
+                yield {
+                    "when": event.time_fired,
+                    "name": "HomeKit",
+                    "message": "started",
+                    "domain": DOMAIN_HOMEKIT,
+                    "context_id": event.context.id,
+                    "context_user_id": event.context.user_id,
+                }
+                
+            elif event.event_type == EVENT_HOMEKIT_STOPPED:
+                yield {
+                    "when": event.time_fired,
+                    "name": "HomeKit",
+                    "message": "stopped",
+                    "domain": DOMAIN_HOMEKIT,
                     "context_id": event.context.id,
                     "context_user_id": event.context.user_id,
                 }
