@@ -5,6 +5,7 @@ from typing import Callable, Dict, NamedTuple, Tuple
 from mock import MagicMock
 import pyvera as pv
 
+from homeassistant import config_entries
 from homeassistant.components.vera.const import CONF_CONTROLLER, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -21,6 +22,8 @@ ControllerConfig = NamedTuple(
     "ControllerConfig",
     (
         ("config", Dict),
+        ("options", Dict),
+        ("config_from_file", bool),
         ("serial_number", str),
         ("devices", Tuple[pv.VeraDevice, ...]),
         ("scenes", Tuple[pv.VeraScene, ...]),
@@ -30,7 +33,9 @@ ControllerConfig = NamedTuple(
 
 
 def new_simple_controller_config(
-    base_url="http://127.0.0.1:123",
+    config: dict = None,
+    options: dict = None,
+    config_from_file=False,
     serial_number="1111",
     devices: Tuple[pv.VeraDevice, ...] = (),
     scenes: Tuple[pv.VeraScene, ...] = (),
@@ -38,7 +43,9 @@ def new_simple_controller_config(
 ) -> ControllerConfig:
     """Create simple contorller config."""
     return ControllerConfig(
-        config={CONF_CONTROLLER: base_url},
+        config=config or {CONF_CONTROLLER: "http://127.0.0.1:123"},
+        options=options,
+        config_from_file=config_from_file,
         serial_number=serial_number,
         devices=devices,
         scenes=scenes,
@@ -57,12 +64,13 @@ class ComponentFactory:
         self, hass: HomeAssistant, controller_config: ControllerConfig
     ) -> ComponentData:
         """Configure the component with specific mock data."""
-        hass_config = {
-            DOMAIN: controller_config.config,
+        component_config = {
+            **(controller_config.config or {}),
+            **(controller_config.options or {}),
         }
 
         controller = MagicMock(spec=pv.VeraController)  # type: pv.VeraController
-        controller.base_url = controller_config.config.get(CONF_CONTROLLER)
+        controller.base_url = component_config.get(CONF_CONTROLLER)
         controller.register = MagicMock()
         controller.start = MagicMock()
         controller.stop = MagicMock()
@@ -79,13 +87,28 @@ class ComponentFactory:
         controller.get_scenes.reset_mock()
 
         if controller_config.setup_callback:
-            controller_config.setup_callback(controller, hass_config)
+            controller_config.setup_callback(controller)
 
         self.vera_controller_class_mock.return_value = controller
+
+        hass_config = {}
+
+        # Setup component through config file import.
+        if controller_config.config_from_file:
+            hass_config[DOMAIN] = component_config
 
         # Setup Home Assistant.
         assert await async_setup_component(hass, DOMAIN, hass_config)
         await hass.async_block_till_done()
+
+        # Setup component through config flow.
+        if not controller_config.config_from_file:
+            await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": config_entries.SOURCE_USER},
+                data=component_config,
+            )
+            await hass.async_block_till_done()
 
         update_callback = (
             controller.register.call_args_list[0][0][1]

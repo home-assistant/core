@@ -1,7 +1,6 @@
 """Support for Vera devices."""
 import asyncio
 from collections import defaultdict
-from copy import deepcopy
 import logging
 
 import pyvera as veraApi
@@ -17,6 +16,7 @@ from homeassistant.const import (
     ATTR_TRIPPED,
     CONF_EXCLUDE,
     CONF_LIGHTS,
+    CONF_SOURCE,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
@@ -26,6 +26,7 @@ from homeassistant.util import convert, slugify
 from homeassistant.util.dt import utc_from_timestamp
 
 from .common import ControllerData, get_configured_platforms
+from .config_flow import new_options
 from .const import (
     ATTR_CURRENT_ENERGY_KWH,
     ATTR_CURRENT_POWER_W,
@@ -56,34 +57,62 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     """Set up for Vera controllers."""
     config = base_config.get(DOMAIN)
 
-    if config is None:
+    entries = hass.config_entries.async_entries(DOMAIN)
+    import_entries = [
+        entry
+        for entry in entries
+        if entry.data.get(CONF_SOURCE) == config_entries.SOURCE_IMPORT
+    ]
+
+    if not config:
+        for entry in import_entries:
+            _LOGGER.debug(
+                "Removing existing import config for %s",
+                entry.data.get(CONF_CONTROLLER),
+            )
+            await hass.config_entries.async_remove(entry.entry_id)
+
         return True
 
-    _LOGGER.debug("Creating new config for %s", config.get(CONF_CONTROLLER))
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config,
+    if import_entries:
+        _LOGGER.debug(
+            "Updating existing import config for %s", config.get(CONF_CONTROLLER)
         )
-    )
+        hass.config_entries.async_update_entry(
+            entry=import_entries[0],
+            data={
+                CONF_CONTROLLER: config.get(CONF_CONTROLLER),
+                CONF_SOURCE: config_entries.SOURCE_IMPORT,
+            },
+            options=new_options(
+                config.get(CONF_LIGHTS, []), config.get(CONF_EXCLUDE, [])
+            ),
+        )
+    else:
+        _LOGGER.debug("Creating new import config for %s", config.get(CONF_CONTROLLER))
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config,
+            )
+        )
 
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Do setup of vera."""
-    config = config_entry.data
-
-    # Copy the configuration.yml options into the options.
-    if CONF_LIGHTS in config or CONF_EXCLUDE in config:
-        options = deepcopy(config_entry.options)
-        options.setdefault(CONF_LIGHTS, config.get(CONF_LIGHTS, []))
-        options.setdefault(CONF_EXCLUDE, config.get(CONF_EXCLUDE, []))
-
+    # Use options entered during initial config flow or provided from configuration.yml
+    if config_entry.data.get(CONF_LIGHTS) or config_entry.data.get(CONF_EXCLUDE):
         hass.config_entries.async_update_entry(
-            entry=config_entry, data=config_entry.data, options=options
+            entry=config_entry,
+            data=config_entry.data,
+            options=new_options(
+                config_entry.data.get(CONF_LIGHTS, []),
+                config_entry.data.get(CONF_EXCLUDE, []),
+            ),
         )
 
-    base_url = config.get(CONF_CONTROLLER)
+    base_url = config_entry.data.get(CONF_CONTROLLER)
     light_ids = config_entry.options.get(CONF_LIGHTS, [])
     exclude_ids = config_entry.options.get(CONF_EXCLUDE, [])
 

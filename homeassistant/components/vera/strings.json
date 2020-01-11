@@ -10,12 +10,17 @@
         "title": "Setup Vera controller",
         "description": "Provide a Vera controller url below. It should look like this: http://192.168.1.161:3480.",
         "data": {
-          "vera_controller_url": "Controller URL"
+          "vera_controller_url": "Controller URL",
+          "lights": "Vera switch device ids to treat as lights in Home Assistant.",
+          "exclude": "Vera device ids to exclude from Home Assistant."
         }
       }
     }
   },
   "options": {
+    "abort": {
+      "file_based_config": "Configuration for this Vera controller is handled in configuration.yml. Please make changes there."
+    },
     "step": {
       "init": {
         "title": "Vera controller options",
@@ -24,6 +29,10 @@
           "lights": "Vera switch device ids to treat as lights in Home Assistant.",
           "exclude": "Vera device ids to exclude from Home Assistant."
         }
+      },
+      "from_config": {
+        "title": "UI config not supported",
+        "description": "Controller was configured using configuration.yml. Config changes should be made in the config file."
       }
     }
   }

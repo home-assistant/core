@@ -133,7 +133,7 @@ async def test_climate_f(
     vera_device.get_current_goal_temperature.return_value = 72
     entity_id = "climate.dev1_1"
 
-    def setup_callback(controller: pv.VeraController, hass_config: dict) -> None:
+    def setup_callback(controller: pv.VeraController) -> None:
         controller.temperature_units = "F"
 
     component_data = await vera_component_factory.configure_component(

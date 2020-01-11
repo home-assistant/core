@@ -7,7 +7,7 @@ from requests.exceptions import RequestException
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.vera import CONF_CONTROLLER, DOMAIN
 from homeassistant.components.vera.config_flow import VeraFlowHandler
-from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS
+from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -41,6 +41,7 @@ async def test_aync_step_user_success(hass: HomeAssistant) -> None:
         assert result.get("title") == "http://127.0.0.1:123"
         assert result.get("data") == {
             CONF_CONTROLLER: "http://127.0.0.1:123",
+            CONF_SOURCE: config_entries.SOURCE_USER,
         }
         assert result.get("result").unique_id == controller.serial_number
 
@@ -75,7 +76,10 @@ async def test_aync_step_import_success(hass: HomeAssistant) -> None:
 
         assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
         assert result.get("title") == "http://127.0.0.1:123"
-        assert result.get("data") == {CONF_CONTROLLER: "http://127.0.0.1:123"}
+        assert result.get("data") == {
+            CONF_CONTROLLER: "http://127.0.0.1:123",
+            CONF_SOURCE: config_entries.SOURCE_IMPORT,
+        }
         assert result.get("result").unique_id == controller.serial_number
 
 

@@ -50,7 +50,7 @@ async def test_temperature_sensor_f(
 ) -> None:
     """Test function."""
 
-    def setup_callback(controller: pv.VeraController, hass_config: dict) -> None:
+    def setup_callback(controller: pv.VeraController) -> None:
         controller.temperature_units = "F"
 
     await run_sensor_test(
@@ -137,7 +137,7 @@ async def test_trippable_sensor(
 ) -> None:
     """Test function."""
 
-    def setup_callback(controller: pv.VeraController, hass_config: dict) -> None:
+    def setup_callback(controller: pv.VeraController) -> None:
         controller.get_devices()[0].is_trippable = True
 
     await run_sensor_test(
@@ -155,7 +155,7 @@ async def test_unknown_sensor(
 ) -> None:
     """Test function."""
 
-    def setup_callback(controller: pv.VeraController, hass_config: dict) -> None:
+    def setup_callback(controller: pv.VeraController) -> None:
         controller.get_devices()[0].is_trippable = False
 
     await run_sensor_test(
