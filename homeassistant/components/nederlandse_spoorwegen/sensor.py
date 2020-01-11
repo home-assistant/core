@@ -191,12 +191,12 @@ class NSDepartureSensor(Entity):
                 2,
             )
             if self._trips:
-                if self._trips[0].departure_time_actual is not None:
-                    actual_time = self._trips[0].departure_time_actual
-                    self._state = actual_time.strftime("%H:%M")
-                else:
+                if self._trips[0].departure_time_actual is None:
                     planned_time = self._trips[0].departure_time_planned
                     self._state = planned_time.strftime("%H:%M")
+                else:
+                    actual_time = self._trips[0].departure_time_actual
+                    self._state = actual_time.strftime("%H:%M")
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.HTTPError,
