@@ -17,7 +17,9 @@ from homeassistant.components.notify import (
 CONF_TOPIC_NAME = "topic"
 
 PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend({vol.Required(CONF_TOPIC_NAME): valid_publish_topic,}),
+    PLATFORM_SCHEMA.extend(
+        {vol.Required(CONF_TOPIC_NAME): valid_publish_topic,}  # noqa: E231
+    ),
 )
 
 _LOGGER = logging.getLogger(__name__)
