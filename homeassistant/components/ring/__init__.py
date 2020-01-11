@@ -50,6 +50,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Ring component."""
+    if DOMAIN not in config:
+        return True
 
     def legacy_cleanup():
         """Clean up old tokens."""
@@ -58,9 +60,6 @@ async def async_setup(hass, config):
             old_cache.unlink()
 
     await hass.async_add_executor_job(legacy_cleanup)
-
-    if DOMAIN not in config:
-        return True
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(
