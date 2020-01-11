@@ -57,6 +57,7 @@ class FreeboxRouter:
         # Sensors
         self._temp_sensors: Dict[str, FreeboxSensor] = {}
         self._conn_sensors: Dict[str, FreeboxSensor] = {}
+        self._attrs = {}
 
     async def setup(self) -> None:
         """Set up a Freebox router."""
@@ -85,8 +86,8 @@ class FreeboxRouter:
 
     async def update_all(self, now=None) -> None:
         """Update all Freebox platforms."""
-        await self.update_devices()
         await self.update_sensors()
+        await self.update_devices()
 
     async def update_devices(self) -> None:
         """Update Freebox devices."""
@@ -94,6 +95,19 @@ class FreeboxRouter:
             return
 
         fbx_devices: Dict[str, any] = await self._api.lan.get_hosts_list()
+
+        # Adds the Freebox itself
+        fbx_devices.append(
+            {
+                "primary_name": self.name,
+                "l2ident": {"id": self.mac},
+                "vendor_name": self.manufacturer,
+                "host_type": "router",
+                "active": True,
+                "attrs": self._attrs,
+            }
+        )
+
         for fbx_device in fbx_devices:
             device_name = fbx_device["primary_name"]
             device_mac = fbx_device["l2ident"]["id"]
@@ -123,7 +137,6 @@ class FreeboxRouter:
         # According to the doc it is only temperature sensors in celsius degree, name and id of the sensors may vary under Freebox devices
 
         for sensor_key, sensor_attrs in temp_datas.items():
-
             if self._temp_sensors.get(sensor_key) is not None:
                 # Seen sensor -> updating
                 _LOGGER.debug("Updating Freebox sensor: %s", sensor_key)
@@ -155,6 +168,17 @@ class FreeboxRouter:
                 self._conn_sensors[sensor_key] = FreeboxSensor(sensor_attrs)
                 self._conn_sensors[sensor_key].update(conn_datas[sensor_key])
 
+        self._attrs = {
+            "IPv4": conn_datas.get("ipv4"),
+            "IPv6": conn_datas.get("ipv6"),
+            "connection_type": conn_datas["media"],
+            "uptime": datetime.fromtimestamp(
+                round(datetime.now().timestamp()) - syst_datas["uptime_val"]
+            ),
+            "firmware_version": self.firmware_version,
+            "serial": syst_datas["serial"],
+        }
+
         dispatcher_send(self.hass, SENSOR_UPDATE)
 
     async def reboot(self) -> None:
@@ -173,6 +197,11 @@ class FreeboxRouter:
         return self._name
 
     @property
+    def manufacturer(self) -> str:
+        """Return the router manufacturer."""
+        return "Freebox SAS"
+
+    @property
     def mac(self) -> str:
         """Return the router MAC address."""
         return self._mac
@@ -189,7 +218,7 @@ class FreeboxRouter:
             "connections": {(CONNECTION_NETWORK_MAC, self.mac)},
             "identifiers": {(DOMAIN, self.mac)},
             "name": self.name,
-            "manufacturer": "Freebox SAS",
+            "manufacturer": self.manufacturer,
             "sw_version": self.firmware_version,
         }
 
@@ -220,26 +249,32 @@ class FreeboxDevice:
         self._icon = icon_for_freebox_device(device)
 
         self._active = device["active"]
-        self._reachable = device["reachable"]
-        self._attrs = {
-            "reachable": self._reachable,
-            "last_time_reachable": datetime.fromtimestamp(
-                device["last_time_reachable"]
-            ),
-            "last_time_activity": datetime.fromtimestamp(device["last_activity"]),
-        }
+        if device.get("attrs") is None:
+            self._reachable = device["reachable"]
+            self._attrs = {
+                "reachable": self._reachable,
+                "last_time_reachable": datetime.fromtimestamp(
+                    device["last_time_reachable"]
+                ),
+                "last_time_activity": datetime.fromtimestamp(device["last_activity"]),
+            }
+        else:
+            self._attrs = device["attrs"]
 
     def update(self, device: Dict[str, any]) -> None:
         """Update the Freebox device."""
         self._active = device["active"]
-        self._reachable = device["reachable"]
-        self._attrs = {
-            "reachable": self._reachable,
-            "last_time_reachable": datetime.fromtimestamp(
-                device["last_time_reachable"]
-            ),
-            "last_time_activity": datetime.fromtimestamp(device["last_activity"]),
-        }
+        if device.get("attrs") is None:
+            self._reachable = device["reachable"]
+            self._attrs = {
+                "reachable": self._reachable,
+                "last_time_reachable": datetime.fromtimestamp(
+                    device["last_time_reachable"]
+                ),
+                "last_time_activity": datetime.fromtimestamp(device["last_activity"]),
+            }
+        else:
+            self._attrs = device["attrs"]
 
     @property
     def name(self) -> str:
@@ -335,6 +370,7 @@ def icon_for_freebox_device(device) -> str:
         "nas": "mdi:nas",
         "networking_device": "mdi:network",
         "printer": "mdi:printer",
+        "router": "mdi:router-wireless",
         "smartphone": "mdi:cellphone",
         "tablet": "mdi:tablet",
         "television": "mdi:television",

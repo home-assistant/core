@@ -40,18 +40,6 @@ CONN_SENSORS = {
         SENSOR_ICON: "mdi:upload-network",
         SENSOR_DEVICE_CLASS: None,
     },
-    "ipv4": {
-        SENSOR_NAME: "Freebox IPv4",
-        SENSOR_UNIT: None,
-        SENSOR_ICON: "mdi:ip",
-        SENSOR_DEVICE_CLASS: None,
-    },
-    "ipv6": {
-        SENSOR_NAME: "Freebox IPv6",
-        SENSOR_UNIT: None,
-        SENSOR_ICON: "mdi:ip",
-        SENSOR_DEVICE_CLASS: None,
-    },
 }
 
 TEMP_SENSOR_TEMPLATE = {
