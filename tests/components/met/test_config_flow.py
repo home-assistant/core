@@ -49,35 +49,21 @@ async def test_flow_with_home_location(hass):
     assert result["data"] == default_data
 
 
-async def test_flow_entry_created_from_user_input():
-    """Test that create data from user input.
-
-    Test when the form should show when no configurations exists
-    """
-    hass = Mock()
-    flow = config_flow.MetFlowHandler()
-    flow.hass = hass
-
+async def test_create_entry(hass):
+    """Test create entry from user input."""
     test_data = {
         "name": "home",
-        CONF_LONGITUDE: "0",
-        CONF_LATITUDE: "0",
-        CONF_ELEVATION: "0",
+        CONF_LONGITUDE: 0,
+        CONF_LATITUDE: 0,
+        CONF_ELEVATION: 0,
     }
 
-    # Test that entry created when user_input name not exists
-    with patch.object(
-        flow, "_show_config_form", return_value=mock_coro()
-    ) as config_form, patch.object(
-        flow.hass.config_entries, "async_entries", return_value=mock_coro()
-    ) as config_entries:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}, data=test_data
+    )
 
-        result = await flow.async_step_user(user_input=test_data)
-
-        assert result["type"] == "create_entry"
-        assert result["data"] == test_data
-        assert len(config_entries.mock_calls) == 1
-        assert not config_form.mock_calls
+    assert result["type"] == "create_entry"
+    assert result["data"] == test_data
 
 
 async def test_flow_entry_config_entry_already_exists():
