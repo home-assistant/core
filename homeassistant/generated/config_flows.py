@@ -57,6 +57,7 @@ FLOWS = [
     "mqtt",
     "neato",
     "nest",
+    "netatmo",
     "notion",
     "opentherm_gw",
     "openuv",

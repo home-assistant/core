@@ -1,15 +1,12 @@
 """Support for the Netatmo binary sensors."""
 import logging
 
-from pyatmo import NoDevice
-import voluptuous as vol
+import pyatmo
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
-from homeassistant.const import CONF_TIMEOUT
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from . import CameraData
-from .const import DATA_NETATMO_AUTH
+from .camera import CameraData
+from .const import AUTH, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,6 +24,8 @@ PRESENCE_SENSOR_TYPES = {
 }
 TAG_SENSOR_TYPES = {"Tag Vibration": "vibration", "Tag Open": "opening"}
 
+SENSOR_TYPES = {"NACamera": WELCOME_SENSOR_TYPES, "NOC": PRESENCE_SENSOR_TYPES}
+
 CONF_HOME = "home"
 CONF_CAMERAS = "cameras"
 CONF_WELCOME_SENSORS = "welcome_sensors"
@@ -35,130 +34,80 @@ CONF_TAG_SENSORS = "tag_sensors"
 
 DEFAULT_TIMEOUT = 90
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_CAMERAS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_HOME): cv.string,
-        vol.Optional(
-            CONF_PRESENCE_SENSORS, default=list(PRESENCE_SENSOR_TYPES)
-        ): vol.All(cv.ensure_list, [vol.In(PRESENCE_SENSOR_TYPES)]),
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-        vol.Optional(CONF_WELCOME_SENSORS, default=list(WELCOME_SENSOR_TYPES)): vol.All(
-            cv.ensure_list, [vol.In(WELCOME_SENSOR_TYPES)]
-        ),
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the access to Netatmo binary sensor."""
-    home = config.get(CONF_HOME)
-    timeout = config.get(CONF_TIMEOUT)
-    if timeout is None:
-        timeout = DEFAULT_TIMEOUT
+    auth = hass.data[DOMAIN][entry.entry_id][AUTH]
 
-    module_name = None
+    def get_entities():
+        """Retrieve Netatmo entities."""
+        entities = []
 
-    auth = hass.data[DATA_NETATMO_AUTH]
-
-    try:
-        data = CameraData(hass, auth, home)
-        if not data.get_camera_names():
+        def get_camera_home_id(data, camera_id):
+            """Return the home id for a given camera id."""
+            for home_id in data.camera_data.cameras:
+                for camera in data.camera_data.cameras[home_id].values():
+                    if camera["id"] == camera_id:
+                        return home_id
             return None
-    except NoDevice:
-        return None
 
-    welcome_sensors = config.get(CONF_WELCOME_SENSORS, WELCOME_SENSOR_TYPES)
-    presence_sensors = config.get(CONF_PRESENCE_SENSORS, PRESENCE_SENSOR_TYPES)
-    tag_sensors = config.get(CONF_TAG_SENSORS, TAG_SENSOR_TYPES)
+        try:
+            data = CameraData(hass, auth)
 
-    for camera_name in data.get_camera_names():
-        camera_type = data.get_camera_type(camera=camera_name, home=home)
-        if camera_type == "NACamera":
-            if CONF_CAMERAS in config:
-                if (
-                    config[CONF_CAMERAS] != []
-                    and camera_name not in config[CONF_CAMERAS]
-                ):
-                    continue
-            for variable in welcome_sensors:
-                add_entities(
-                    [
-                        NetatmoBinarySensor(
-                            data,
-                            camera_name,
-                            module_name,
-                            home,
-                            timeout,
-                            camera_type,
-                            variable,
-                        )
-                    ],
-                    True,
-                )
-        if camera_type == "NOC":
-            if CONF_CAMERAS in config:
-                if (
-                    config[CONF_CAMERAS] != []
-                    and camera_name not in config[CONF_CAMERAS]
-                ):
-                    continue
-            for variable in presence_sensors:
-                add_entities(
-                    [
-                        NetatmoBinarySensor(
-                            data,
-                            camera_name,
-                            module_name,
-                            home,
-                            timeout,
-                            camera_type,
-                            variable,
-                        )
-                    ],
-                    True,
-                )
+            for camera in data.get_all_cameras():
+                home_id = get_camera_home_id(data, camera_id=camera["id"])
 
-        for module_name in data.get_module_names(camera_name):
-            for variable in tag_sensors:
-                camera_type = None
-                add_entities(
-                    [
-                        NetatmoBinarySensor(
-                            data,
-                            camera_name,
-                            module_name,
-                            home,
-                            timeout,
-                            camera_type,
-                            variable,
-                        )
-                    ],
-                    True,
-                )
+                sensor_types = {}
+                sensor_types.update(SENSOR_TYPES[camera["type"]])
+
+                # Tags are only supported with Netatmo Welcome indoor cameras
+                if camera["type"] == "NACamera" and data.get_modules(camera["id"]):
+                    sensor_types.update(TAG_SENSOR_TYPES)
+
+                for sensor_name in sensor_types:
+                    entities.append(
+                        NetatmoBinarySensor(data, camera["id"], home_id, sensor_name)
+                    )
+        except pyatmo.NoDevice:
+            _LOGGER.debug("No camera entities to add")
+
+        return entities
+
+    async_add_entities(await hass.async_add_executor_job(get_entities), True)
+
+
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Set up the access to Netatmo binary sensor."""
+    pass
 
 
 class NetatmoBinarySensor(BinarySensorDevice):
     """Represent a single binary sensor in a Netatmo Camera device."""
 
-    def __init__(
-        self, data, camera_name, module_name, home, timeout, camera_type, sensor
-    ):
+    def __init__(self, data, camera_id, home_id, sensor_type, module_id=None):
         """Set up for access to the Netatmo camera events."""
         self._data = data
-        self._camera_name = camera_name
-        self._module_name = module_name
-        self._home = home
-        self._timeout = timeout
-        if home:
-            self._name = f"{home} / {camera_name}"
+        self._camera_id = camera_id
+        self._module_id = module_id
+        self._sensor_type = sensor_type
+        camera_info = data.camera_data.cameraById(cid=camera_id)
+        self._camera_name = camera_info["name"]
+        self._camera_type = camera_info["type"]
+        self._home_id = home_id
+        self._home_name = self._data.camera_data.getHomeName(home_id=home_id)
+        self._timeout = DEFAULT_TIMEOUT
+        if module_id:
+            self._module_name = data.camera_data.moduleById(mid=module_id)["name"]
+            self._name = (
+                f"{MANUFACTURER} {self._camera_name} {self._module_name} {sensor_type}"
+            )
+            self._unique_id = (
+                f"{self._camera_id}-{self._module_id}-"
+                f"{self._camera_type}-{sensor_type}"
+            )
         else:
-            self._name = camera_name
-        if module_name:
-            self._name += f" / {module_name}"
-        self._sensor_name = sensor
-        self._name += f" {sensor}"
-        self._cameratype = camera_type
+            self._name = f"{MANUFACTURER} {self._camera_name} {sensor_type}"
+            self._unique_id = f"{self._camera_id}-{self._camera_type}-{sensor_type}"
         self._state = None
 
     @property
@@ -167,13 +116,19 @@ class NetatmoBinarySensor(BinarySensorDevice):
         return self._name
 
     @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        if self._cameratype == "NACamera":
-            return WELCOME_SENSOR_TYPES.get(self._sensor_name)
-        if self._cameratype == "NOC":
-            return PRESENCE_SENSOR_TYPES.get(self._sensor_name)
-        return TAG_SENSOR_TYPES.get(self._sensor_name)
+    def unique_id(self):
+        """Return the unique ID for this sensor."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info for the sensor."""
+        return {
+            "identifiers": {(DOMAIN, self._camera_id)},
+            "name": self._camera_name,
+            "manufacturer": MANUFACTURER,
+            "model": self._camera_type,
+        }
 
     @property
     def is_on(self):
@@ -183,43 +138,43 @@ class NetatmoBinarySensor(BinarySensorDevice):
     def update(self):
         """Request an update from the Netatmo API."""
         self._data.update()
-        self._data.update_event()
+        self._data.update_event(camera_type=self._camera_type)
 
-        if self._cameratype == "NACamera":
-            if self._sensor_name == "Someone known":
-                self._state = self._data.camera_data.someoneKnownSeen(
-                    self._home, self._camera_name, self._timeout
+        if self._camera_type == "NACamera":
+            if self._sensor_type == "Someone known":
+                self._state = self._data.camera_data.someone_known_seen(
+                    cid=self._camera_id, exclude=self._timeout
                 )
-            elif self._sensor_name == "Someone unknown":
-                self._state = self._data.camera_data.someoneUnknownSeen(
-                    self._home, self._camera_name, self._timeout
+            elif self._sensor_type == "Someone unknown":
+                self._state = self._data.camera_data.someone_unknown_seen(
+                    cid=self._camera_id, exclude=self._timeout
                 )
-            elif self._sensor_name == "Motion":
-                self._state = self._data.camera_data.motionDetected(
-                    self._home, self._camera_name, self._timeout
+            elif self._sensor_type == "Motion":
+                self._state = self._data.camera_data.motion_detected(
+                    cid=self._camera_id, exclude=self._timeout
                 )
-        elif self._cameratype == "NOC":
-            if self._sensor_name == "Outdoor motion":
-                self._state = self._data.camera_data.outdoormotionDetected(
-                    self._home, self._camera_name, self._timeout
+        elif self._camera_type == "NOC":
+            if self._sensor_type == "Outdoor motion":
+                self._state = self._data.camera_data.outdoor_motion_detected(
+                    cid=self._camera_id, offset=self._timeout
                 )
-            elif self._sensor_name == "Outdoor human":
-                self._state = self._data.camera_data.humanDetected(
-                    self._home, self._camera_name, self._timeout
+            elif self._sensor_type == "Outdoor human":
+                self._state = self._data.camera_data.human_detected(
+                    cid=self._camera_id, offset=self._timeout
                 )
-            elif self._sensor_name == "Outdoor animal":
-                self._state = self._data.camera_data.animalDetected(
-                    self._home, self._camera_name, self._timeout
+            elif self._sensor_type == "Outdoor animal":
+                self._state = self._data.camera_data.animal_detected(
+                    cid=self._camera_id, offset=self._timeout
                 )
-            elif self._sensor_name == "Outdoor vehicle":
-                self._state = self._data.camera_data.carDetected(
-                    self._home, self._camera_name, self._timeout
+            elif self._sensor_type == "Outdoor vehicle":
+                self._state = self._data.camera_data.car_detected(
+                    cid=self._camera_id, offset=self._timeout
                 )
-        if self._sensor_name == "Tag Vibration":
-            self._state = self._data.camera_data.moduleMotionDetected(
-                self._home, self._module_name, self._camera_name, self._timeout
+        if self._sensor_type == "Tag Vibration":
+            self._state = self._data.camera_data.module_motion_detected(
+                mid=self._module_id, cid=self._camera_id, exclude=self._timeout
             )
-        elif self._sensor_name == "Tag Open":
-            self._state = self._data.camera_data.moduleOpened(
-                self._home, self._module_name, self._camera_name, self._timeout
+        elif self._sensor_type == "Tag Open":
+            self._state = self._data.camera_data.module_opened(
+                mid=self._module_id, cid=self._camera_id, exclude=self._timeout
             )
