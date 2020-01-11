@@ -478,7 +478,7 @@ pymodbus==1.5.2
 pymonoprice==0.3
 
 # homeassistant.components.nws
-pynws==0.8.1
+pynws==0.10.1
 
 # homeassistant.components.nx584
 pynx584==0.4
