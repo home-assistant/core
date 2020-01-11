@@ -3,6 +3,7 @@ import asyncio
 from unittest.mock import Mock, patch
 
 import aiohue
+from asynctest import CoroutineMock
 import pytest
 import voluptuous as vol
 
@@ -13,36 +14,54 @@ from homeassistant.components.hue import config_flow, const
 from tests.common import MockConfigEntry, mock_coro
 
 
-async def test_flow_works(hass):
-    """Test config flow ."""
+def get_mock_bridge(bridge_id="aabbccddeeff", host="1.2.3.4", mock_create_user=None):
+    """Return a mock bridge."""
     mock_bridge = Mock()
-    mock_bridge.host = "1.2.3.4"
+    mock_bridge.host = host
     mock_bridge.username = None
     mock_bridge.config.name = "Mock Bridge"
-    mock_bridge.id = "aabbccddeeff"
+    mock_bridge.id = bridge_id
 
-    async def mock_create_user(username):
-        mock_bridge.username = username
+    if not mock_create_user:
+
+        async def create_user(username):
+            mock_bridge.username = username
+
+        mock_create_user = create_user
 
     mock_bridge.create_user = mock_create_user
     mock_bridge.initialize.return_value = mock_coro()
 
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    return mock_bridge
+
+
+async def test_flow_works(hass):
+    """Test config flow ."""
+    mock_bridge = get_mock_bridge()
 
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
         return_value=mock_coro([mock_bridge]),
     ):
-        result = await flow.async_step_init()
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "link"
 
-    assert flow.context["unique_id"] == "aabbccddeeff"
+    flow = next(
+        (
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["flow_id"] == result["flow_id"]
+        )
+    )
+    assert flow["context"]["unique_id"] == "aabbccddeeff"
 
-    result = await flow.async_step_link(user_input={})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == "create_entry"
     assert result["title"] == "Mock Bridge"
@@ -57,10 +76,10 @@ async def test_flow_works(hass):
 async def test_flow_no_discovered_bridges(hass, aioclient_mock):
     """Test config flow discovers no bridges."""
     aioclient_mock.get(const.API_NUPNP, json=[])
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == "abort"
 
 
@@ -72,11 +91,10 @@ async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
     MockConfigEntry(
         domain="hue", unique_id="bla", data={"host": "1.2.3.4"}
     ).add_to_hass(hass)
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
 
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == "abort"
 
 
@@ -85,11 +103,10 @@ async def test_flow_one_bridge_discovered(hass, aioclient_mock):
     aioclient_mock.get(
         const.API_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}]
     )
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
 
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "link"
 
@@ -108,10 +125,10 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
             {"internalipaddress": "5.6.7.8", "id": "beer"},
         ],
     )
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "init"
 
@@ -134,38 +151,51 @@ async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
     MockConfigEntry(
         domain="hue", unique_id="bla", data={"host": "1.2.3.4"}
     ).add_to_hass(hass)
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
 
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "link"
-    assert flow.bridge.host == "5.6.7.8"
+    flow = next(
+        (
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["flow_id"] == result["flow_id"]
+        )
+    )
+    assert flow["context"]["unique_id"] == "beer"
 
 
 async def test_flow_timeout_discovery(hass):
     """Test config flow ."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
         side_effect=asyncio.TimeoutError,
     ):
-        result = await flow.async_step_init()
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
     assert result["type"] == "abort"
 
 
 async def test_flow_link_timeout(hass):
-    """Test config flow ."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.bridge = Mock()
+    """Test config flow."""
+    mock_bridge = get_mock_bridge(
+        mock_create_user=CoroutineMock(side_effect=asyncio.TimeoutError),
+    )
+    with patch(
+        "homeassistant.components.hue.config_flow.discover_nupnp",
+        return_value=mock_coro([mock_bridge]),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
-    with patch("aiohue.Bridge.create_user", side_effect=asyncio.TimeoutError):
-        result = await flow.async_step_link({})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "link"
