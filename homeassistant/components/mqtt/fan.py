@@ -252,7 +252,7 @@ class MqttFan(
             self._topic[CONF_OSCILLATION_STATE_TOPIC] is not None and SUPPORT_OSCILLATE
         )
         self._supported_features |= (
-            self._topic[CONF_SPEED_STATE_TOPIC] is not None and SUPPORT_SET_SPEED
+            self._topic[CONF_SPEED_COMMAND_TOPIC] is not None and SUPPORT_SET_SPEED
         )
 
     async def _subscribe_topics(self):
