@@ -269,20 +269,20 @@ class InputSelect(RestoreEntity):
             )
             return
         self._current_option = option
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_offset_index(self, offset):
         """Offset current index."""
         current_index = self._options.index(self._current_option)
         new_index = (current_index + offset) % len(self._options)
         self._current_option = self._options[new_index]
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_options(self, options):
         """Set options."""
         self._current_option = options[0]
         self._config[CONF_OPTIONS] = options
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_update_config(self, config: typing.Dict) -> None:
         """Handle when the config is updated."""
