@@ -4,7 +4,6 @@
             "already_configured": "Device is already configured"
         },
         "error": {
-            "cannot_connect": "Failed to connect, please try again",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
@@ -13,14 +12,14 @@
                 "data": {
                     "2fa": "Two-factor code"
                 },
-                "title": "Enter two-factor authentication"
+                "title": "Two-factor authentication"
             },
             "user": {
                 "data": {
                     "password": "Password",
                     "username": "Username"
                 },
-                "title": "Connect to the device"
+                "title": "Sign-in with Ring account"
             }
         },
         "title": "Ring"
