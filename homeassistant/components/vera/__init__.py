@@ -57,22 +57,15 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     """Set up for Vera controllers."""
     config = base_config.get(DOMAIN)
 
+    if not config:
+        return True
+
     entries = hass.config_entries.async_entries(DOMAIN)
     import_entries = [
         entry
         for entry in entries
         if entry.data.get(CONF_SOURCE) == config_entries.SOURCE_IMPORT
     ]
-
-    if not config:
-        for entry in import_entries:
-            _LOGGER.debug(
-                "Removing existing import config for %s",
-                entry.data.get(CONF_CONTROLLER),
-            )
-            await hass.config_entries.async_remove(entry.entry_id)
-
-        return True
 
     if import_entries:
         _LOGGER.debug(

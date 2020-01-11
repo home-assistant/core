@@ -58,10 +58,18 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Init object."""
         self.config_entry = config_entry
 
+    async def async_step_from_config(self):
+        """Manage empty options.
+
+        This should do nothing and not allow any action. This occurs when the user uses the UI
+        to attempt to change options for a config that was provided in configuration.yml.
+        """
+        return self.async_show_form(step_id="from_config")
+
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         if self.config_entry.data.get(CONF_SOURCE) == config_entries.SOURCE_IMPORT:
-            return self.async_show_form(step_id="from_config")
+            return await self.async_step_from_config()
 
         if user_input is not None:
             return self.async_create_entry(title="", data=options_data(user_input),)

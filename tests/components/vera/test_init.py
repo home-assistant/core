@@ -1,5 +1,5 @@
 """Vera tests."""
-from asynctest import CoroutineMock, MagicMock
+from asynctest import MagicMock
 import pyvera as pv
 from requests.exceptions import RequestException
 
@@ -7,7 +7,6 @@ from homeassistant import config_entries
 from homeassistant.components.vera import (
     CONF_CONTROLLER,
     DOMAIN,
-    async_setup,
     async_setup_entry,
     async_unload_entry,
 )
@@ -16,6 +15,8 @@ from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
+
+from tests.common import MockConfigEntry
 
 
 async def test_init(
@@ -71,45 +72,36 @@ async def test_init_from_file(
     assert entry1
 
 
-async def test_async_setup_remove_configs(hass: HomeAssistant) -> None:
+async def test_async_setup_update_configs(
+    hass: HomeAssistant, vera_component_factory: ComponentFactory
+) -> None:
     """Test function."""
-    entry1 = MagicMock(spec=ConfigEntry)
-    entry1.entry_id = "id1"
-    entry1.domain = DOMAIN
-    entry1.data = {CONF_CONTROLLER: "url1", CONF_SOURCE: config_entries.SOURCE_IMPORT}
+    entry1 = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_CONTROLLER: "http://url1:123",
+            CONF_SOURCE: config_entries.SOURCE_IMPORT,
+        },
+    )
+    entry1.add_to_hass(hass)
 
-    entry2 = MagicMock(spec=ConfigEntry)
-    entry2.entry_id = "id2"
-    entry2.domain = DOMAIN
-    entry2.data = {CONF_CONTROLLER: "url2", CONF_SOURCE: config_entries.SOURCE_USER}
-
-    hass.config_entries.async_entries = MagicMock(return_value=[entry1, entry2])
-    hass.config_entries.async_remove = remove_mock = CoroutineMock()
-
-    await async_setup(hass, {})
-    remove_mock.assert_called_with("id1")
-    assert remove_mock.call_count == 1
-
-
-async def test_async_setup_update_configs(hass: HomeAssistant) -> None:
-    """Test function."""
-    entry1 = MagicMock(spec=ConfigEntry)
-    entry1.entry_id = "id1"
-    entry1.domain = DOMAIN
-    entry1.data = {CONF_CONTROLLER: "url1", CONF_SOURCE: config_entries.SOURCE_IMPORT}
-
-    hass.config_entries.async_entries = MagicMock(return_value=[entry1])
-    hass.config_entries.async_update_entry = update_mock = MagicMock()
-
-    await async_setup(
+    await vera_component_factory.configure_component(
         hass,
-        {DOMAIN: {CONF_CONTROLLER: "url2", CONF_LIGHTS: [1, 2], CONF_EXCLUDE: [3, 4]}},
+        new_simple_controller_config(
+            config={CONF_CONTROLLER: "http://url2:123"},
+            options={CONF_LIGHTS: [1, 2], CONF_EXCLUDE: [3, 4]},
+            config_from_file=True,
+        ),
     )
-    update_mock.assert_called_with(
-        entry=entry1,
-        data={CONF_CONTROLLER: "url2", CONF_SOURCE: config_entries.SOURCE_IMPORT},
-        options={CONF_LIGHTS: [1, 2], CONF_EXCLUDE: [3, 4]},
-    )
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
+    entry = entries[0]
+    assert entry.data == {
+        CONF_CONTROLLER: "http://url2:123",
+        CONF_SOURCE: config_entries.SOURCE_IMPORT,
+    }
+    assert entry.options == {CONF_LIGHTS: [1, 2], CONF_EXCLUDE: [3, 4]}
 
 
 async def test_unload(
