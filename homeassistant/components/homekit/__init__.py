@@ -389,6 +389,7 @@ class HomeKit:
 
         _LOGGER.debug("Driver start")
         self.hass.add_job(self.driver.start)
+        self.hass.bus.async_fire('homekit_start')
         self.status = STATUS_RUNNING
 
     def stop(self, *args):
@@ -399,3 +400,4 @@ class HomeKit:
 
         _LOGGER.debug("Driver stop")
         self.hass.add_job(self.driver.stop)
+        self.hass.bus.async_fire('homekit_stop')
