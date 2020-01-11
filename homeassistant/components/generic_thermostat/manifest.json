@@ -7,7 +7,5 @@
         "sensor",
         "switch"
     ],
-    "codeowners": [
-        "@DB-CL"
-    ]
+    "codeowners": []
 }

@@ -367,7 +367,6 @@ homeassistant/components/versasense/* @flamm3blemuff1n
 homeassistant/components/version/* @fabaff
 homeassistant/components/vesync/* @markperdue @webdjoe
 homeassistant/components/vicare/* @oischinger
-homeassistant/components/virtual_thermostat/* @DB-CL
 homeassistant/components/vivotek/* @HarlemSquirrel
 homeassistant/components/vizio/* @raman325
 homeassistant/components/vlc_telnet/* @rodripf
