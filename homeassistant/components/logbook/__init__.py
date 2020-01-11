@@ -13,9 +13,9 @@ from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
     ATTR_VALUE,
     DOMAIN as DOMAIN_HOMEKIT,
+    EVENT_HOMEKIT_CHANGED,
     EVENT_HOMEKIT_STARTED,
     EVENT_HOMEKIT_STOPPED,
-    EVENT_HOMEKIT_CHANGED,
 )
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder.models import Events, States
