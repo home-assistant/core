@@ -391,7 +391,7 @@ colorlog==4.1.0
 concord232==0.15
 
 # homeassistant.components.coned
-coned==0.1.11
+coned==0.1.12
 
 # homeassistant.components.upc_connect
 connect-box==0.2.5
