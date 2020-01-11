@@ -34,6 +34,8 @@ FEATURE_TOGGLE_MUTE = "toggle_mute"
 
 # #### HomeKit Component Event ####
 EVENT_HOMEKIT_CHANGED = "homekit_state_change"
+EVENT_HOMEKIT_STARTED = "homekit_start"
+EVENT_HOMEKIT_STOPPED = "homekit_stop"
 
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = "start"
