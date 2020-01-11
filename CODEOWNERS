@@ -187,6 +187,7 @@ homeassistant/components/lcn/* @alengwenus
 homeassistant/components/life360/* @pnbruckner
 homeassistant/components/linky/* @Quentame
 homeassistant/components/linux_battery/* @fabaff
+homeassistant/components/livebox/* @cyr-ius
 homeassistant/components/liveboxplaytv/* @pschmitt
 homeassistant/components/local_ip/* @issacg
 homeassistant/components/logger/* @home-assistant/core

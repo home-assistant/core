@@ -46,6 +46,7 @@ FLOWS = [
     "life360",
     "lifx",
     "linky",
+    "livebox",
     "local_ip",
     "locative",
     "logi_circle",
