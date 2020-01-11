@@ -15,11 +15,9 @@ class BridgeData:
     async def async_get_devices(self):
         """Get all devices."""
         parameters = {
-            "parameters": {
-                "expression": {
-                    "wifi": 'wifi && (edev || hnid) and .PhysAddress!=""',
-                    "eth": 'eth && (edev || hnid) and .PhysAddress!=""',
-                }
+            "expression": {
+                "wifi": 'wifi && (edev || hnid) and .PhysAddress!=""',
+                "eth": 'eth && (edev || hnid) and .PhysAddress!=""',
             }
         }
         devices = await self._session.system.get_devices(parameters)
@@ -33,7 +31,7 @@ class BridgeData:
 
     async def async_get_device(self, unique_id):
         """Get device."""
-        parameters = {"parameters": {"expression": f'.PhysAddress=="{unique_id}"'}}
+        parameters = {"expression": f'.PhysAddress=="{unique_id}"'}
         device = await self._session.system.get_devices(parameters)
         if device is not None:
             device_status = device.get("status", [])
@@ -57,7 +55,7 @@ class BridgeData:
 
     async def async_get_dsl_status(self):
         """Get dsl status."""
-        parameters = {"parameters": {"mibs": "dsl", "flag": "", "traverse": "down"}}
+        parameters = {"mibs": "dsl", "flag": "", "traverse": "down"}
         dsl_status = await self._session.connection.get_data_MIBS(parameters)
         if dsl_status is not None:
             return dsl_status.get("status", {}).get("dsl", {}).get("dsl0", {})
