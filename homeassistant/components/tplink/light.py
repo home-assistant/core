@@ -241,8 +241,12 @@ class TPLinkSmartBulb(Light):
                 )
             self._is_available = False
 
+        # The local variables were updates asyncronousally,
+        # we need the entity registry to poll this object's properties for
+        # updated information. Calling schedule_update_ha_state will only
+        # cause a loop.
         if update_state_machine:
-            self.schedule_update_ha_state(True)
+            self._async_write_ha_state()
 
     @property
     def supported_features(self):
@@ -344,53 +348,54 @@ class TPLinkSmartBulb(Light):
 
     async def async_set_light_state_retry(
         self, old_light_state: LightState, new_light_state: LightState
-    ) -> bool:
+    ) -> None:
         """Set the light state with retry."""
         # Optimistically setting the light state.
         self._light_state = new_light_state
 
         # Tell the device to set the states.
         self._is_setting_light_state = True
-        self._is_available = await self.async_set_light_state(
-            old_light_state, new_light_state
-        ) or await self.async_set_light_state(old_light_state, new_light_state)
+        try:
+            await self.hass.async_add_executor_job(
+                self.set_light_state, old_light_state, new_light_state
+            )
+            self._is_available = True
+            self._is_setting_light_state = False
+            return
+        except (SmartDeviceException, OSError):
+            pass
+
+        try:
+            _LOGGER.debug("Retrying setting light state.")
+            await self.hass.async_add_executor_job(
+                self.set_light_state, old_light_state, new_light_state
+            )
+            self._is_available = True
+        except (SmartDeviceException, OSError) as ex:
+            self._is_available = False
+            _LOGGER.warning("Could not set data for %s: %s", self.smartbulb.host, ex)
+
         self._is_setting_light_state = False
-
-        return self._is_available
-
-    async def async_set_light_state(
-        self, old_light_state: LightState, new_light_state: LightState
-    ) -> bool:
-        """Set the light state in an async manner."""
-        return await self.hass.async_add_executor_job(
-            self.set_light_state, old_light_state, new_light_state
-        )
 
     def set_light_state(
         self, old_light_state: LightState, new_light_state: LightState
-    ) -> bool:
+    ) -> None:
         """Set the light state."""
-        try:
-            # Calling the API with the new state information.
-            if new_light_state.state != old_light_state.state:
-                if new_light_state.state:
-                    self.smartbulb.state = SmartBulb.BULB_STATE_ON
-                else:
-                    self.smartbulb.state = SmartBulb.BULB_STATE_OFF
-                    return True
+        # Calling the API with the new state information.
+        if new_light_state.state != old_light_state.state:
+            if new_light_state.state:
+                self.smartbulb.state = SmartBulb.BULB_STATE_ON
+            else:
+                self.smartbulb.state = SmartBulb.BULB_STATE_OFF
+                return
 
-            if new_light_state.color_temp != old_light_state.color_temp:
-                self.smartbulb.color_temp = mired_to_kelvin(new_light_state.color_temp)
+        if new_light_state.color_temp != old_light_state.color_temp:
+            self.smartbulb.color_temp = mired_to_kelvin(new_light_state.color_temp)
 
-            brightness_pct = brightness_to_percentage(new_light_state.brightness)
-            if new_light_state.hs != old_light_state.hs and len(new_light_state.hs) > 1:
-                hue, sat = new_light_state.hs
-                hsv = (int(hue), int(sat), brightness_pct)
-                self.smartbulb.hsv = hsv
-            elif new_light_state.brightness != old_light_state.brightness:
-                self.smartbulb.brightness = brightness_pct
-
-            return True
-        except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning("Could not read data for %s: %s", self.smartbulb.host, ex)
-            return False
+        brightness_pct = brightness_to_percentage(new_light_state.brightness)
+        if new_light_state.hs != old_light_state.hs and len(new_light_state.hs) > 1:
+            hue, sat = new_light_state.hs
+            hsv = (int(hue), int(sat), brightness_pct)
+            self.smartbulb.hsv = hsv
+        elif new_light_state.brightness != old_light_state.brightness:
+            self.smartbulb.brightness = brightness_pct
