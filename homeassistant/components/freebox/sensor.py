@@ -72,6 +72,11 @@ class FbxSensor(Entity):
         """Return the device information."""
         return self._fbx.device_info
 
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
     async def async_added_to_hass(self):
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(

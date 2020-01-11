@@ -62,11 +62,6 @@ class FreeboxTrackerEntity(TrackerEntity):
         return None
 
     @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
     def source_type(self) -> str:
         """Return the source type of the device."""
         return SOURCE_TYPE_ROUTER
@@ -90,6 +85,11 @@ class FreeboxTrackerEntity(TrackerEntity):
             "name": self.name,
             "manufacturer": self._device.manufacturer,
         }
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
 
     async def async_added_to_hass(self):
         """Register state update callback."""
