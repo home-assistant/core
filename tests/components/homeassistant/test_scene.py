@@ -229,7 +229,7 @@ async def test_scenes_with_entity(hass):
         },
     )
 
-    assert ha_scene.scenes_with_entity(hass, "light.kitchen") == [
+    assert sorted(ha_scene.scenes_with_entity(hass, "light.kitchen")) == [
         "scene.scene_1",
         "scene.scene_3",
     ]
