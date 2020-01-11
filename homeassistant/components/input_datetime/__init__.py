@@ -27,6 +27,8 @@ CONF_HAS_TIME = "has_time"
 CONF_INITIAL = "initial"
 
 DEFAULT_VALUE = "1970-01-01 00:00:00"
+DEFAULT_DATE = datetime.date(1970, 1, 1)
+DEFAULT_TIME = datetime.time(0, 0, 0)
 
 ATTR_DATETIME = "datetime"
 
@@ -151,36 +153,39 @@ class InputDatetime(RestoreEntity):
         self.has_date = has_date
         self.has_time = has_time
         self._icon = icon
-        self._initial = initial
         self._current_datetime = None
+        if initial:
+            if has_date and has_time:
+                self._current_datetime = dt_util.parse_datetime(initial)
+            elif has_date:
+                date = dt_util.parse_date(initial)
+                self._current_datetime = datetime.datetime.combine(date, DEFAULT_TIME)
+            else:
+                time = dt_util.parse_time(initial)
+                self._current_datetime = datetime.datetime.combine(DEFAULT_DATE, time)
 
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
-        restore_val = None
 
-        # Priority 1: Initial State
-        if self._initial is not None:
-            restore_val = self._initial
+        # Priority 1: Initial value
+        if self.state is not None:
+            return
 
         # Priority 2: Old state
-        if restore_val is None:
-            old_state = await self.async_get_last_state()
-            if old_state is not None:
-                restore_val = old_state.state
+        old_state = await self.async_get_last_state()
+        if old_state is None:
+            self._current_datetime = dt_util.parse_datetime(DEFAULT_VALUE)
+            return
 
-        if not self.has_date:
-            if not restore_val:
-                restore_val = DEFAULT_VALUE.split()[1]
-            self._current_datetime = dt_util.parse_time(restore_val)
-        elif not self.has_time:
-            if not restore_val:
-                restore_val = DEFAULT_VALUE.split()[0]
-            self._current_datetime = dt_util.parse_date(restore_val)
+        if self.has_date and self.has_time:
+            self._current_datetime = dt_util.parse_datetime(old_state.state)
+        elif self.has_date:
+            date = dt_util.parse_date(old_state.state)
+            self._current_datetime = datetime.datetime.combine(date, DEFAULT_TIME)
         else:
-            if not restore_val:
-                restore_val = DEFAULT_VALUE
-            self._current_datetime = dt_util.parse_datetime(restore_val)
+            time = dt_util.parse_time(old_state.state)
+            self._current_datetime = datetime.datetime.combine(DEFAULT_DATE, time)
 
     @property
     def should_poll(self):
@@ -200,7 +205,14 @@ class InputDatetime(RestoreEntity):
     @property
     def state(self):
         """Return the state of the component."""
-        return self._current_datetime
+        if self._current_datetime is None:
+            return None
+
+        if self.has_date and self.has_time:
+            return self._current_datetime
+        elif self.has_date:
+            return self._current_datetime.date()
+        return self._current_datetime.time()
 
     @property
     def state_attributes(self):
@@ -241,8 +253,12 @@ class InputDatetime(RestoreEntity):
         if self.has_date and self.has_time and date_val and time_val:
             self._current_datetime = datetime.datetime.combine(date_val, time_val)
         elif self.has_date and not self.has_time and date_val:
-            self._current_datetime = date_val
+            self._current_datetime = datetime.datetime.combine(
+                date_val, self._current_datetime.time()
+            )
         if self.has_time and not self.has_date and time_val:
-            self._current_datetime = time_val
+            self._current_datetime = datetime.datetime.combine(
+                self._current_datetime.date(), time_val
+            )
 
         self.async_schedule_update_ha_state()
