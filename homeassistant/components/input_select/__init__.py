@@ -39,7 +39,6 @@ STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
 CREATE_FIELDS = {
-    vol.Optional(CONF_ID): cv.slug,
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
     vol.Optional(CONF_INITIAL): cv.string,
@@ -193,7 +192,7 @@ class InputSelectStorageCollection(collection.StorageCollection):
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
-        return self.CREATE_SCHEMA({**data, **update_data})
+        return _cv_input_select({**data, **update_data})
 
 
 class InputSelect(RestoreEntity):
