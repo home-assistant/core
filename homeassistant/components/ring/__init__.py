@@ -5,8 +5,7 @@ from functools import partial
 import logging
 from pathlib import Path
 
-from requests.exceptions import ConnectTimeout, HTTPError
-from ring_doorbell import Ring
+from ring_doorbell import Auth, Ring
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -14,6 +13,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,6 @@ DATA_RING_CHIMES = "ring_chimes"
 DATA_TRACK_INTERVAL = "ring_track_interval"
 
 DOMAIN = "ring"
-DEFAULT_CACHEDB = ".ring_cache.pickle"
 DEFAULT_ENTITY_NAMESPACE = "ring"
 SIGNAL_UPDATE_RING = "ring_update"
 
@@ -51,6 +50,15 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Ring component."""
+
+    def legacy_cleanup():
+        """Clean up old tokens."""
+        old_cache = Path(hass.config.path(".ring_cache.pickle"))
+        if old_cache.is_file():
+            old_cache.unlink()
+
+    await hass.async_add_executor_job(legacy_cleanup)
+
     if DOMAIN not in config:
         return True
 
@@ -69,30 +77,20 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up a config entry."""
-    cache = hass.config.path(DEFAULT_CACHEDB)
-    try:
-        ring = await hass.async_add_executor_job(
-            partial(
-                Ring,
-                username=entry.data["username"],
-                password="invalid-password",
-                cache_file=cache,
-            )
-        )
-    except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Ring service: %s", str(ex))
-        hass.components.persistent_notification.async_create(
-            "Error: {}<br />"
-            "You will need to restart hass after fixing."
-            "".format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID,
-        )
-        return False
 
-    if not ring.is_connected:
-        _LOGGER.error("Unable to connect to Ring service")
-        return False
+    def token_updater(token):
+        """Handle from sync context when token is updated."""
+        run_callback_threadsafe(
+            hass.loop,
+            partial(
+                hass.config_entries.async_update_entry,
+                entry,
+                data={**entry.data, "token": token},
+            ),
+        ).result()
+
+    auth = Auth(entry.data["token"], token_updater)
+    ring = Ring(auth)
 
     await hass.async_add_executor_job(finish_setup_entry, hass, ring)
 
@@ -106,9 +104,10 @@ async def async_setup_entry(hass, entry):
 
 def finish_setup_entry(hass, ring):
     """Finish setting up entry."""
-    hass.data[DATA_RING_CHIMES] = chimes = ring.chimes
-    hass.data[DATA_RING_DOORBELLS] = doorbells = ring.doorbells
-    hass.data[DATA_RING_STICKUP_CAMS] = stickup_cams = ring.stickup_cams
+    devices = ring.devices
+    hass.data[DATA_RING_CHIMES] = chimes = devices["chimes"]
+    hass.data[DATA_RING_DOORBELLS] = doorbells = devices["doorbells"]
+    hass.data[DATA_RING_STICKUP_CAMS] = stickup_cams = devices["stickup_cams"]
 
     ring_devices = chimes + doorbells + stickup_cams
 
@@ -160,8 +159,3 @@ async def async_unload_entry(hass, entry):
     hass.data.pop(DATA_TRACK_INTERVAL)
 
     return unload_ok
-
-
-async def async_remove_entry(hass, entry):
-    """Act when an entry is removed."""
-    await hass.async_add_executor_job(Path(hass.config.path(DEFAULT_CACHEDB)).unlink)
