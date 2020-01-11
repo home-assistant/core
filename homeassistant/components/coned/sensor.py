@@ -2,14 +2,12 @@
 from datetime import timedelta
 import logging
 
+from coned import Meter, MeterError
 import voluptuous as vol
 
-from coned import Meter
-from coned import MeterError
-
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, ENERGY_KILO_WATT_HOUR
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION, ENERGY_KILO_WATT_HOUR
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
