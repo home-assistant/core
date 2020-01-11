@@ -357,7 +357,7 @@ def humanify(hass, events):
                     "context_id": event.context.id,
                     "context_user_id": event.context.user_id,
                 }
-                
+
             elif event.event_type == EVENT_HOMEKIT_STARTED:
                 yield {
                     "when": event.time_fired,
@@ -367,7 +367,7 @@ def humanify(hass, events):
                     "context_id": event.context.id,
                     "context_user_id": event.context.user_id,
                 }
-                
+
             elif event.event_type == EVENT_HOMEKIT_STOPPED:
                 yield {
                     "when": event.time_fired,
