@@ -6,8 +6,6 @@ from asynctest import Mock, patch
 from pysmartthings import APIResponseError
 
 from homeassistant import data_entry_flow
-from homeassistant.setup import async_setup_component
-from homeassistant.components import cloud
 from homeassistant.components.smartthings import smartapp
 from homeassistant.components.smartthings.config_flow import SmartThingsFlowHandler
 from homeassistant.components.smartthings.const import (
@@ -17,8 +15,9 @@ from homeassistant.components.smartthings.const import (
     CONF_REFRESH_TOKEN,
     DOMAIN,
 )
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_step_user(hass):
@@ -211,9 +210,11 @@ async def test_cloudhook_app_created_then_show_wait_form(
     await smartapp.unload_smartapp_endpoint(hass)
 
     with patch.object(
-        cloud, "async_active_subscription", return_value=True
+        hass.components.cloud, "async_active_subscription", return_value=True
     ), patch.object(
-        cloud, "async_create_cloudhook", return_value="http://cloud.test"
+        hass.components.cloud,
+        "async_create_cloudhook",
+        return_value=mock_coro("http://cloud.test"),
     ) as mock_create_cloudhook:
 
         await smartapp.setup_smartapp_endpoint(hass)

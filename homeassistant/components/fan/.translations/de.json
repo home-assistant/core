@@ -4,7 +4,7 @@
             "turn_off": "Schalte {entity_name} aus.",
             "turn_on": "Schalte {entity_name} ein."
         },
-        "condtion_type": {
+        "condition_type": {
             "is_off": "{entity_name} ist ausgeschaltet",
             "is_on": "{entity_name} ist eingeschaltet"
         },

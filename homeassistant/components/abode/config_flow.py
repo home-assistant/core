@@ -10,7 +10,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import DOMAIN, DEFAULT_CACHEDB  # pylint: disable=W0611
+from .const import DEFAULT_CACHEDB, DOMAIN  # pylint: disable=unused-import
 
 CONF_POLLING = "polling"
 

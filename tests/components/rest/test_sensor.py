@@ -1,20 +1,20 @@
 """The tests for the REST sensor platform."""
 import unittest
-from pytest import raises
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
+import pytest
+from pytest import raises
 import requests
-from requests.exceptions import Timeout, MissingSchema, RequestException
+from requests.exceptions import RequestException, Timeout
 import requests_mock
 
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.setup import setup_component
-import homeassistant.components.sensor as sensor
 import homeassistant.components.rest.sensor as rest
+import homeassistant.components.sensor as sensor
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.config_validation import template
+from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
-import pytest
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestRestSensorSetup(unittest.TestCase):
@@ -37,7 +37,7 @@ class TestRestSensorSetup(unittest.TestCase):
 
     def test_setup_missing_schema(self):
         """Test setup with resource missing schema."""
-        with pytest.raises(MissingSchema):
+        with pytest.raises(PlatformNotReady):
             rest.setup_platform(
                 self.hass,
                 {"platform": "rest", "resource": "localhost", "method": "GET"},
@@ -50,7 +50,7 @@ class TestRestSensorSetup(unittest.TestCase):
         with raises(PlatformNotReady):
             rest.setup_platform(
                 self.hass,
-                {"platform": "rest", "resource": "http://localhost"},
+                {"platform": "rest", "resource": "http://localhost", "method": "GET"},
                 lambda devices, update=True: None,
             )
 
@@ -60,7 +60,7 @@ class TestRestSensorSetup(unittest.TestCase):
         with raises(PlatformNotReady):
             rest.setup_platform(
                 self.hass,
-                {"platform": "rest", "resource": "http://localhost"},
+                {"platform": "rest", "resource": "http://localhost", "method": "GET"},
                 lambda devices, update=True: None,
             )
 
@@ -284,6 +284,26 @@ class TestRestSensor(unittest.TestCase):
         self.sensor.update()
         assert "some_json_value" == self.sensor.device_state_attributes["key"]
 
+    def test_update_with_json_attrs_list_dict(self):
+        """Test attributes get extracted from a JSON list[0] result."""
+        self.rest.update = Mock(
+            "rest.RestData.update",
+            side_effect=self.update_side_effect('[{ "key": "another_value" }]'),
+        )
+        self.sensor = rest.RestSensor(
+            self.hass,
+            self.rest,
+            self.name,
+            self.unit_of_measurement,
+            self.device_class,
+            None,
+            ["key"],
+            self.force_update,
+            self.resource_template,
+        )
+        self.sensor.update()
+        assert "another_value" == self.sensor.device_state_attributes["key"]
+
     @patch("homeassistant.components.rest.sensor._LOGGER")
     def test_update_with_json_attrs_no_data(self, mock_logger):
         """Test attributes when no JSON result fetched."""
@@ -397,7 +417,7 @@ class TestRestData(unittest.TestCase):
         self.rest.update()
         assert "test data" == self.rest.data
 
-    @patch("requests.Session", side_effect=RequestException)
+    @patch("requests.request", side_effect=RequestException)
     def test_update_request_exception(self, mock_req):
         """Test update when a request exception occurs."""
         self.rest.update()

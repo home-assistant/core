@@ -1,7 +1,7 @@
 """Define tests for the SimpliSafe config flow."""
-import json
 from datetime import timedelta
-from unittest.mock import mock_open, patch, MagicMock, PropertyMock
+import json
+from unittest.mock import MagicMock, PropertyMock, mock_open, patch
 
 from homeassistant import data_entry_flow
 from homeassistant.components.simplisafe import DOMAIN, config_flow

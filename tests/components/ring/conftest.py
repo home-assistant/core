@@ -1,8 +1,9 @@
 """Configuration for Ring tests."""
-import requests_mock
-import pytest
-from tests.common import load_fixture
 from asynctest import patch
+import pytest
+import requests_mock
+
+from tests.common import load_fixture
 
 
 @pytest.fixture(name="ring_mock")
@@ -34,6 +35,10 @@ def requests_mock_fixture(ring_mock):
         mock.get(
             "https://api.ring.com/clients_api/ring_devices",
             text=load_fixture("ring_devices.json"),
+        )
+        mock.get(
+            "https://api.ring.com/clients_api/dings/active",
+            text=load_fixture("ring_ding_active.json"),
         )
         # Mocks the response for getting the history of a device
         mock.get(

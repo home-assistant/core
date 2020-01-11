@@ -2,13 +2,14 @@
 import logging
 from urllib.parse import urljoin
 
+from pyzabbix import ZabbixAPI, ZabbixAPIException
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_PATH,
     CONF_HOST,
-    CONF_SSL,
     CONF_PASSWORD,
+    CONF_PATH,
+    CONF_SSL,
     CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +38,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Zabbix component."""
-    from pyzabbix import ZabbixAPI, ZabbixAPIException
 
     conf = config[DOMAIN]
     if conf[CONF_SSL]:

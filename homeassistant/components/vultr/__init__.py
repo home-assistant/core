@@ -1,12 +1,13 @@
 """Support for Vultr."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
+from vultr import Vultr as VultrAPI
 
 from homeassistant.const import CONF_API_KEY
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +70,6 @@ class Vultr:
 
     def __init__(self, api_key):
         """Initialize the Vultr connection."""
-        from vultr import Vultr as VultrAPI
 
         self._api_key = api_key
         self.data = None

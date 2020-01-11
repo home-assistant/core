@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Ta naprava je \u017ee nastavljena",
+            "already_configured": "Ta naprava je \u017ee konfigurirana",
             "already_in_progress": "Ta naprava se \u017ee nastavlja",
             "not_huawei_lte": "Ni naprava Huawei LTE"
         },
@@ -33,6 +33,7 @@
         "step": {
             "init": {
                 "data": {
+                    "name": "Ime storitve obve\u0161\u010danja (sprememba zahteva ponovni zagon)",
                     "recipient": "Prejemniki obvestil SMS",
                     "track_new_devices": "Sledi novim napravam"
                 }

@@ -1,5 +1,6 @@
 """Define tests for the Ambient PWS config flow."""
 import json
+from unittest.mock import patch
 
 import aioambient
 import pytest
@@ -8,7 +9,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.ambient_station import CONF_APP_KEY, DOMAIN, config_flow
 from homeassistant.const import CONF_API_KEY
 
-from tests.common import load_fixture, MockConfigEntry, MockDependency, mock_coro
+from tests.common import MockConfigEntry, load_fixture, mock_coro
 
 
 @pytest.fixture
@@ -20,9 +21,9 @@ def get_devices_response():
 @pytest.fixture
 def mock_aioambient(get_devices_response):
     """Mock the aioambient library."""
-    with MockDependency("aioambient") as mock_aioambient_:
-        mock_aioambient_.Client().api.get_devices.return_value = get_devices_response
-        yield mock_aioambient_
+    with patch("homeassistant.components.ambient_station.config_flow.Client") as Client:
+        Client().api.get_devices.return_value = get_devices_response
+        yield Client
 
 
 async def test_duplicate_error(hass):

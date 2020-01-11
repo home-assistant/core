@@ -1,9 +1,10 @@
 """This component provides HA switch support for Ring Door Bell/Chimes."""
-import logging
 from datetime import timedelta
+import logging
+
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
 from . import DATA_RING_STICKUP_CAMS, SIGNAL_UPDATE_RING
@@ -21,7 +22,7 @@ SIREN_ICON = "mdi:alarm-bell"
 SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the switches for the Ring devices."""
     cameras = hass.data[DATA_RING_STICKUP_CAMS]
     switches = []
@@ -29,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if device.has_capability("siren"):
             switches.append(SirenSwitch(device))
 
-    add_entities(switches, True)
+    async_add_entities(switches, True)
 
 
 class BaseRingSwitch(SwitchDevice):
@@ -40,10 +41,19 @@ class BaseRingSwitch(SwitchDevice):
         self._device = device
         self._device_type = device_type
         self._unique_id = f"{self._device.id}-{self._device_type}"
+        self._disp_disconnect = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_RING, self._update_callback)
+        self._disp_disconnect = async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_RING, self._update_callback
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks."""
+        if self._disp_disconnect:
+            self._disp_disconnect()
+            self._disp_disconnect = None
 
     @callback
     def _update_callback(self):
@@ -77,7 +87,7 @@ class SirenSwitch(BaseRingSwitch):
         self._siren_on = False
 
     def _set_switch(self, new_state):
-        """Update switch state, and causes HASS to correctly update."""
+        """Update switch state, and causes Home Assistant to correctly update."""
         self._device.siren = new_state
         self._siren_on = new_state > 0
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY

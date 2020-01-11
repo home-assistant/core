@@ -6,8 +6,8 @@ import aiohttp
 import pytest
 
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.setup import async_setup_component
 import homeassistant.helpers.aiohttp_client as client
+from homeassistant.setup import async_setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 
 from tests.common import get_test_home_assistant

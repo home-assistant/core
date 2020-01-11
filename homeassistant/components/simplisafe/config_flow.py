@@ -1,10 +1,11 @@
 """Config flow to configure the SimpliSafe component."""
 from collections import OrderedDict
 
+from simplipy import API
+from simplipy.errors import SimplipyError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_CODE,
     CONF_PASSWORD,
@@ -12,6 +13,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -53,8 +55,6 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        from simplipy import API
-        from simplipy.errors import SimplipyError
 
         if not user_input:
             return await self._show_form()

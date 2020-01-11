@@ -4,6 +4,7 @@ import logging
 
 from aiohttp import ClientError
 from async_timeout import timeout
+from pydaikin.appliance import Appliance
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,7 +33,6 @@ class FlowHandler(config_entries.ConfigFlow):
 
     async def _create_device(self, host):
         """Create device."""
-        from pydaikin.appliance import Appliance
 
         try:
             device = Appliance(

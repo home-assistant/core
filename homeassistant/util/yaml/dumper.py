@@ -1,9 +1,9 @@
 """Custom dumper and representers."""
 from collections import OrderedDict
+
 import yaml
 
 from .objects import NodeListClass
-
 
 # mypy: allow-untyped-calls, no-warn-return-any
 

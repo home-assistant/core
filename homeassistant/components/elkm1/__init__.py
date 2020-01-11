@@ -35,6 +35,11 @@ CONF_PREFIX = "prefix"
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_ALARM_DISPLAY_MESSAGE = "alarm_display_message"
+SERVICE_ALARM_ARM_VACATION = "alarm_arm_vacation"
+SERVICE_ALARM_ARM_HOME_INSTANT = "alarm_arm_home_instant"
+SERVICE_ALARM_ARM_NIGHT_INSTANT = "alarm_arm_night_instant"
+
 SUPPORTED_DOMAINS = [
     "alarm_control_panel",
     "climate",
