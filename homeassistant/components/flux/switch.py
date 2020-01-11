@@ -206,8 +206,8 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         self._transition = transition
         self.unsub_tracker = None
         self._attributes = {}
-        self._attributes['Brightness'] = ''
-        self._attributes['Colour Temperature'] = ''
+        self._attributes['Brightness'] = ""
+        self._attributes['Colour Temperature'] = ""
 
     @property
     def name(self):
@@ -353,8 +353,8 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
                 now,
             )
             self._attributes = {}
-            self._attributes['Brightness'] = (brightness/255) + '%' 
-            self._attributes['Colour Temperature'] = round(1000000 / mired,0) + 'K'
+            self._attributes['Brightness'] = str(round(brightness/255,1) + "%" 
+            self._attributes['Colour Temperature'] = str((round(1000000 / mired,0)) + "K"
 
     def find_start_time(self, now):
         """Return sunrise or start_time if given."""
