@@ -8,7 +8,7 @@ from homeassistant.components.weather import ATTR_FORECAST
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from .helpers.pynws import (
+from .const import (
     DEFAULT_FORECAST,
     DEFAULT_OBSERVATION,
     EXPECTED_FORECAST_IMPERIAL,
