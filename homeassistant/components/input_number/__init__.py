@@ -62,7 +62,6 @@ def _cv_input_number(cfg):
 
 
 CREATE_FIELDS = {
-    vol.Optional(CONF_ID): cv.slug,
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Required(CONF_MIN): vol.Coerce(float),
     vol.Required(CONF_MAX): vol.Coerce(float),
@@ -205,7 +204,7 @@ class NumberStorageCollection(collection.StorageCollection):
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
         update_data = self.UPDATE_SCHEMA(update_data)
-        return self.CREATE_SCHEMA({**data, **update_data})
+        return _cv_input_number({**data, **update_data})
 
 
 class InputNumber(RestoreEntity):
