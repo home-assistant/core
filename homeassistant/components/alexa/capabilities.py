@@ -31,7 +31,6 @@ from .const import (
     API_THERMOSTAT_PRESETS,
     DATE_FORMAT,
     PERCENTAGE_FAN_MAP,
-    RANGE_FAN_MAP,
     Inputs,
 )
 from .errors import UnsupportedProperty
@@ -1273,8 +1272,12 @@ class AlexaRangeController(AlexaCapability):
 
         # Fan Speed
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-            speed = self.entity.attributes.get(fan.ATTR_SPEED)
-            return RANGE_FAN_MAP.get(speed, 0)
+            speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
+            speed = self.entity.attributes[fan.ATTR_SPEED]
+            speed_index = next(
+                (i for i, v in enumerate(speed_list) if v == speed), None
+            )
+            return speed_index
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
@@ -1302,24 +1305,22 @@ class AlexaRangeController(AlexaCapability):
 
         # Fan Speed Resources
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
+            speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
+            max_value = len(speed_list) - 1
             self._resource = AlexaPresetResource(
                 labels=[AlexaGlobalCatalog.SETTING_FAN_SPEED],
-                min_value=1,
-                max_value=3,
+                min_value=0,
+                max_value=max_value,
                 precision=1,
             )
-            self._resource.add_preset(
-                value=1,
-                labels=[AlexaGlobalCatalog.VALUE_LOW, AlexaGlobalCatalog.VALUE_MINIMUM],
-            )
-            self._resource.add_preset(value=2, labels=[AlexaGlobalCatalog.VALUE_MEDIUM])
-            self._resource.add_preset(
-                value=3,
-                labels=[
-                    AlexaGlobalCatalog.VALUE_HIGH,
-                    AlexaGlobalCatalog.VALUE_MAXIMUM,
-                ],
-            )
+            for index, speed in enumerate(speed_list):
+                labels = [speed.replace("_", " ")]
+                if index == 1:
+                    labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
+                if index == max_value:
+                    labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
+                self._resource.add_preset(value=index, labels=labels)
+
             return self._resource.serialize_capability_resources()
 
         # Cover Position Resources
