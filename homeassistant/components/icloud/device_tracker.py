@@ -78,11 +78,6 @@ class IcloudTrackerEntity(TrackerEntity):
         return self._device.location[DEVICE_LOCATION_LONGITUDE]
 
     @property
-    def should_poll(self) -> bool:
-        """No polling needed."""
-        return False
-
-    @property
     def battery_level(self) -> int:
         """Return the battery level of the device."""
         return self._device.battery_level
@@ -111,6 +106,11 @@ class IcloudTrackerEntity(TrackerEntity):
             "manufacturer": "Apple",
             "model": self._device.device_model,
         }
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
 
     async def async_added_to_hass(self):
         """Register state update callback."""
