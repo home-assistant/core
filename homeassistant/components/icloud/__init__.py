@@ -46,9 +46,9 @@ from .const import (
     DEVICE_STATUS_SET,
     DOMAIN,
     ICLOUD_COMPONENTS,
+    SERVICE_UPDATE,
     STORAGE_KEY,
     STORAGE_VERSION,
-    TRACKER_UPDATE,
 )
 
 ATTRIBUTION = "Data provided by Apple iCloud"
@@ -336,7 +336,7 @@ class IcloudAccount:
                 self._devices[device_id] = IcloudDevice(self, device, status)
                 self._devices[device_id].update(status)
 
-        dispatcher_send(self.hass, TRACKER_UPDATE)
+        dispatcher_send(self.hass, SERVICE_UPDATE)
         self._fetch_interval = self._determine_interval()
         track_point_in_utc_time(
             self.hass,
