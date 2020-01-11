@@ -12,6 +12,7 @@ from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE
 from .common import (
     async_enable_traffic,
     async_init_zigpy_device,
+    async_test_device_join,
     find_entity_id,
     make_attribute,
     make_zcl_header,
@@ -116,3 +117,5 @@ async def test_cover(hass, config_entry, zha_gateway):
         assert cluster.request.call_args == call(
             False, 0x2, (), expect_reply=True, manufacturer=None
         )
+
+    await async_test_device_join(hass, zha_gateway, closures.WindowCovering.cluster_id, entity_id)
