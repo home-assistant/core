@@ -118,4 +118,6 @@ async def test_cover(hass, config_entry, zha_gateway):
             False, 0x2, (), expect_reply=True, manufacturer=None
         )
 
-    await async_test_device_join(hass, zha_gateway, closures.WindowCovering.cluster_id, entity_id)
+    await async_test_device_join(
+        hass, zha_gateway, closures.WindowCovering.cluster_id, entity_id
+    )
