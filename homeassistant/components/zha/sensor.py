@@ -12,9 +12,15 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
 )
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, POWER_WATT, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    POWER_WATT,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.temperature import fahrenheit_to_celsius
 
 from .core.const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
@@ -160,7 +166,6 @@ class Sensor(ZhaEntity):
     def async_restore_last_state(self, last_state):
         """Restore previous state."""
         self._state = last_state.state
-        self._unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     @callback
     async def async_state_attr_provider(self):
@@ -277,3 +282,14 @@ class Temperature(Sensor):
     _device_class = DEVICE_CLASS_TEMPERATURE
     _divisor = 100
     _unit = TEMP_CELSIUS
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        if last_state.state == STATE_UNKNOWN:
+            return
+        if last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) != TEMP_CELSIUS:
+            ftemp = float(last_state.state)
+            self._state = round(fahrenheit_to_celsius(ftemp), 1)
+            return
+        self._state = last_state.state
