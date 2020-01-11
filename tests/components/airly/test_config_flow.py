@@ -25,7 +25,9 @@ async def test_show_form(hass):
     flow = config_flow.AirlyFlowHandler()
     flow.hass = hass
 
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -41,7 +43,9 @@ async def test_invalid_api_key(hass):
         flow.hass = hass
         flow.context = {}
 
-        result = await flow.async_step_user(user_input=CONFIG)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
 
         assert result["errors"] == {"base": "auth"}
 
@@ -56,7 +60,9 @@ async def test_invalid_location(hass):
         flow.hass = hass
         flow.context = {}
 
-        result = await flow.async_step_user(user_input=CONFIG)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
 
         assert result["errors"] == {"base": "wrong_location"}
 
@@ -94,7 +100,9 @@ async def test_create_entry(hass):
         flow.hass = hass
         flow.context = {}
 
-        result = await flow.async_step_user(user_input=CONFIG)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == CONFIG[CONF_NAME]
