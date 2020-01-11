@@ -205,6 +205,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         self._interval = interval
         self._transition = transition
         self.unsub_tracker = None
+        self._attributes
 
     @property
     def name(self):
@@ -216,6 +217,11 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         """Return true if switch is on."""
         return self.unsub_tracker is not None
 
+    @property
+    def device_state_attributes(self):
+        """Return the attributes of the switch."""
+        return self._attributes
+    
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
         last_state = await self.async_get_last_state()
