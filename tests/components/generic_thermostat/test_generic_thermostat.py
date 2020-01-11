@@ -1,6 +1,7 @@
 """The tests for the generic_thermostat."""
 # pylint: disable=redefined-outer-name
 import datetime
+
 from asynctest import mock
 import pytest
 import pytz
@@ -8,16 +9,16 @@ import voluptuous as vol
 
 from homeassistant.components import input_boolean
 from homeassistant.components.climate.const import (
-    ATTR_PRESET_MODE,
     ATTR_HVAC_MODES,
+    ATTR_PRESET_MODE,
     DOMAIN,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_AWAY,
-    PRESET_NONE,
     PRESET_COMFORT,
     PRESET_ECO,
+    PRESET_NONE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
