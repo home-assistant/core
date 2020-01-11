@@ -14,7 +14,6 @@ APP_DESC = {
     "device_name": socket.gethostname(),
 }
 API_VERSION = "v6"
-CONFIG_FILE = "freebox.conf"
 
 PLATFORMS = ["device_tracker", "sensor", "switch"]
 

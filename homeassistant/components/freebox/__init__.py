@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONFIG_FILE, DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS
 from .router import FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,9 +59,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Freebox component."""
-    token_file = hass.config.path(CONFIG_FILE)
-
-    fbx = FreeboxRouter(hass, entry, token_file)
+    fbx = FreeboxRouter(hass, entry)
 
     try:
         await fbx.setup()

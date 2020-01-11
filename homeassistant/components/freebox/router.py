@@ -1,6 +1,7 @@
 """Represent the Freebox router and its devices and sensors."""
 from datetime import datetime, timedelta
 import logging
+import os
 from typing import Dict
 
 from aiofreepybox import Freepybox
@@ -12,6 +13,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import slugify
 
 from .const import (
     API_VERSION,
@@ -23,6 +25,8 @@ from .const import (
     SENSOR_NAME,
     SENSOR_UNIT,
     SENSOR_UPDATE,
+    STORAGE_KEY,
+    STORAGE_VERSION,
     TEMP_SENSOR_TEMPLATE,
     TRACKER_UPDATE,
 )
@@ -35,13 +39,12 @@ SCAN_INTERVAL = timedelta(seconds=30)
 class FreeboxRouter:
     """Representation of a Freebox router."""
 
-    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry, token_file: str):
+    def __init__(self, hass: HomeAssistantType, entry: ConfigEntry):
         """Initialize a Freebox router."""
         self.hass = hass
         self._entry = entry
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
-        self._token_file = token_file
 
         self._api: Freepybox = None
         self._name = None
@@ -57,7 +60,16 @@ class FreeboxRouter:
 
     async def setup(self) -> None:
         """Set up a Freebox router."""
-        self._api = Freepybox(APP_DESC, self._token_file, API_VERSION)
+        freebox_dir = self.hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+
+        if not os.path.exists(freebox_dir.path):
+            await self.hass.async_add_executor_job(os.makedirs, freebox_dir.path)
+
+        token_file = self.hass.config.path(
+            f"{freebox_dir.path}/{slugify(self._host)}.conf"
+        )
+
+        self._api = Freepybox(APP_DESC, token_file, API_VERSION)
 
         await self._api.open(self._host, self._port)
 
