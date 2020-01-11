@@ -5,6 +5,7 @@ import time
 
 from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
+from requests.exceptions import SSLError
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -17,6 +18,9 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
+# Disable constant logs of requests to Proxmox
+logging.getLogger("proxmoxer.core").setLevel(level=logging.WARNING)
 
 DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
@@ -93,6 +97,9 @@ def setup(hass, config):
             _LOGGER.warning(
                 "Invalid credentials for proxmox instance %s:%d", host, port
             )
+            continue
+        except SSLError:
+            _LOGGER.error("Unable to verify proxmox server SSL. try using \"verify_ssl: false\"")
             continue
 
         hass.data[PROXMOX_CLIENTS][f"{host}:{port}"] = proxmox_client
