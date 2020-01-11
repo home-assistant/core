@@ -455,8 +455,13 @@ omit =
     homeassistant/components/nederlandse_spoorwegen/sensor.py
     homeassistant/components/nello/lock.py
     homeassistant/components/nest/*
-    homeassistant/components/netatmo/*
-    homeassistant/components/netatmo_public/sensor.py
+    homeassistant/components/netatmo/__init__.py
+    homeassistant/components/netatmo/binary_sensor.py
+    homeassistant/components/netatmo/api.py
+    homeassistant/components/netatmo/camera.py
+    homeassistant/components/netatmo/climate.py
+    homeassistant/components/netatmo/const.py
+    homeassistant/components/netatmo/sensor.py
     homeassistant/components/netdata/sensor.py
     homeassistant/components/netgear/device_tracker.py
     homeassistant/components/netgear_lte/*
