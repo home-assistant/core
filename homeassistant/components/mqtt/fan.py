@@ -1,5 +1,4 @@
 """Support for MQTT fans."""
-import copy
 import logging
 
 import voluptuous as vol
@@ -70,56 +69,40 @@ OSCILLATE_OFF_PAYLOAD = "oscillate_off"
 
 OSCILLATION = "oscillation"
 
-
-def _speed_list_validator(config):
-    """Validate the speed list."""
-    config = copy.deepcopy(config)
-
-    if CONF_SPEED_COMMAND_TOPIC not in config or CONF_SPEED_STATE_TOPIC not in config:
-        config[CONF_SPEED_LIST] = None
-
-    return config
-
-
-PLATFORM_SCHEMA = vol.Schema(
-    vol.All(
-        mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
-            {
-                vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
-                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-                vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
-                vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
-                vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
-                vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
-                vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
-                vol.Optional(
-                    CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM
-                ): cv.string,
-                vol.Optional(CONF_PAYLOAD_OFF_SPEED, default=SPEED_OFF): cv.string,
-                vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
-                vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
-                vol.Optional(
-                    CONF_PAYLOAD_OSCILLATION_OFF, default=OSCILLATE_OFF_PAYLOAD
-                ): cv.string,
-                vol.Optional(
-                    CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
-                ): cv.string,
-                vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
-                vol.Optional(
-                    CONF_SPEED_LIST,
-                    default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
-                ): cv.ensure_list,
-                vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
-                vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
-                vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-                vol.Optional(CONF_UNIQUE_ID): cv.string,
-            }
-        )
-        .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
-        .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema),
-        _speed_list_validator,
+PLATFORM_SCHEMA = (
+    mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+        {
+            vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+            vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
+            vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
+            vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
+            vol.Optional(CONF_PAYLOAD_OFF_SPEED, default=SPEED_OFF): cv.string,
+            vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
+            vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
+            vol.Optional(
+                CONF_PAYLOAD_OSCILLATION_OFF, default=OSCILLATE_OFF_PAYLOAD
+            ): cv.string,
+            vol.Optional(
+                CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
+            ): cv.string,
+            vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(
+                CONF_SPEED_LIST,
+                default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
+            ): cv.ensure_list,
+            vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
+        }
     )
+    .extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
+    .extend(mqtt.MQTT_JSON_ATTRS_SCHEMA.schema)
 )
 
 
