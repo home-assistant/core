@@ -1,9 +1,9 @@
 """Tests for Philips Hue config flow."""
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import aiohue
-from asynctest import CoroutineMock
+from asynctest import CoroutineMock, patch
 import pytest
 import voluptuous as vol
 
@@ -11,7 +11,14 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.hue import config_flow, const
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="hue_setup", autouse=True)
+def hue_setup_fixture():
+    """Mock hue entry setup."""
+    with patch("homeassistant.components.hue.async_setup_entry", return_value=True):
+        yield
 
 
 def get_mock_bridge(bridge_id="aabbccddeeff", host="1.2.3.4", mock_create_user=None):
@@ -30,7 +37,7 @@ def get_mock_bridge(bridge_id="aabbccddeeff", host="1.2.3.4", mock_create_user=N
         mock_create_user = create_user
 
     mock_bridge.create_user = mock_create_user
-    mock_bridge.initialize.return_value = mock_coro()
+    mock_bridge.initialize = CoroutineMock()
 
     return mock_bridge
 
@@ -41,7 +48,7 @@ async def test_flow_works(hass):
 
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
-        return_value=mock_coro([mock_bridge]),
+        return_value=[mock_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN, context={"source": "user"}
@@ -187,7 +194,7 @@ async def test_flow_link_timeout(hass):
     )
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
-        return_value=mock_coro([mock_bridge]),
+        return_value=[mock_bridge],
     ):
         result = await hass.config_entries.flow.async_init(
             config_flow.DOMAIN, context={"source": "user"}
@@ -204,13 +211,20 @@ async def test_flow_link_timeout(hass):
 
 async def test_flow_link_button_not_pressed(hass):
     """Test config flow ."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.bridge = Mock(
-        username=None, create_user=Mock(side_effect=aiohue.LinkButtonNotPressed)
+    mock_bridge = get_mock_bridge(
+        mock_create_user=CoroutineMock(side_effect=aiohue.LinkButtonNotPressed),
     )
+    with patch(
+        "homeassistant.components.hue.config_flow.discover_nupnp",
+        return_value=[mock_bridge],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
-    result = await flow.async_step_link({})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "link"
@@ -219,12 +233,20 @@ async def test_flow_link_button_not_pressed(hass):
 
 async def test_flow_link_unknown_host(hass):
     """Test config flow ."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.bridge = Mock()
+    mock_bridge = get_mock_bridge(
+        mock_create_user=CoroutineMock(side_effect=aiohue.RequestError),
+    )
+    with patch(
+        "homeassistant.components.hue.config_flow.discover_nupnp",
+        return_value=[mock_bridge],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
-    with patch("aiohue.Bridge.create_user", side_effect=aiohue.RequestError):
-        result = await flow.async_step_link({})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "link"
@@ -233,16 +255,14 @@ async def test_flow_link_unknown_host(hass):
 
 async def test_bridge_ssdp(hass):
     """Test a bridge being discovered."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    result = await flow.async_step_ssdp(
-        {
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "ssdp"},
+        data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
             ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
             ssdp.ATTR_UPNP_SERIAL: "1234",
-        }
+        },
     )
 
     assert result["type"] == "form"
@@ -251,11 +271,10 @@ async def test_bridge_ssdp(hass):
 
 async def test_bridge_ssdp_discover_other_bridge(hass):
     """Test that discovery ignores other bridges."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_ssdp(
-        {ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.notphilips.com"}
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "ssdp"},
+        data={ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.notphilips.com"},
     )
 
     assert result["type"] == "abort"
@@ -365,13 +384,7 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "link"
 
-    with patch(
-        "homeassistant.components.hue.config_flow.authenticate_bridge",
-        return_value=mock_coro(),
-    ), patch(
-        "homeassistant.components.hue.async_setup_entry",
-        side_effect=lambda _, _2: mock_coro(True),
-    ):
+    with patch("homeassistant.components.hue.config_flow.authenticate_bridge"):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] == "create_entry"
