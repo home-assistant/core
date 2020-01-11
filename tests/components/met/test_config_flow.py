@@ -41,13 +41,6 @@ async def test_flow_with_home_location(hass):
     assert default_data["longitude"] == 2
     assert default_data["elevation"] == 3
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=default_data
-    )
-
-    assert result["type"] == "create_entry"
-    assert result["data"] == default_data
-
 
 async def test_create_entry(hass):
     """Test create entry from user input."""
