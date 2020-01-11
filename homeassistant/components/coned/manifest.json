@@ -4,5 +4,5 @@
     "documentation": "https://www.home-assistant.io/integrations/coned",
     "dependencies": [],
     "codeowners": ["@bvlaicu"],
-    "requirements": ["coned==0.1.11"]
+    "requirements": ["coned==0.1.12"]
 }
