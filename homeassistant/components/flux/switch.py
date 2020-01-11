@@ -118,9 +118,7 @@ async def async_set_lights_temp(hass, lights, mired, brightness, transition):
             if transition is not None:
                 service_data[ATTR_TRANSITION] = transition
             await hass.services.async_call(LIGHT_DOMAIN, SERVICE_TURN_ON, service_data)
-    self._attributes = {}
-    self._attributes['Brightness'] = brightness
-    self._attributes['Colour Temperature'] = round(1000000 / mired,0)
+
 
 async def async_set_lights_rgb(hass, lights, rgb, transition):
     """Set color of array of lights."""
@@ -346,6 +344,9 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
                 time_state,
                 now,
             )
+            self._attributes = {}
+            self._attributes['Brightness'] = brightness
+            self._attributes['Colour Temperature'] = round(1000000 / mired,0)
 
     def find_start_time(self, now):
         """Return sunrise or start_time if given."""
