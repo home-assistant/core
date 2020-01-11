@@ -502,13 +502,13 @@ def async_setup_entity_restore(
 
             attrs: Dict[str, Any] = {ATTR_RESTORED: True}
 
-            if entry.capabilities:
+            if entry.capabilities is not None:
                 attrs.update(entry.capabilities)
 
-            if entry.supported_features:
+            if entry.supported_features is not None:
                 attrs[ATTR_SUPPORTED_FEATURES] = entry.supported_features
 
-            if entry.device_class:
+            if entry.device_class is not None:
                 attrs[ATTR_DEVICE_CLASS] = entry.device_class
 
             states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)
