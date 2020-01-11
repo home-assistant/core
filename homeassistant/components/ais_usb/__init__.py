@@ -16,7 +16,7 @@ import homeassistant.components.ais_dom.ais_global as ais_global
 DOMAIN = "ais_usb"
 _LOGGER = logging.getLogger(__name__)
 G_ZIGBEE_ID = "0451:16a8"
-G_AIS_REMOTE_ID = "1d6b:0003"
+G_AIS_REMOTE_ID = "0c45:5102"
 
 
 def get_device_info(pathname):
@@ -207,7 +207,7 @@ def _lsusb():
                         # USB ais remote dongle
                         device[
                             "info"
-                        ] = "urządzenie Pilot radiowy, producent AI-Speaker"
+                        ] = "urządzenie Pilot radiowy z mikrofonem, producent AI-Speaker"
 
         except Exception as e:
             _LOGGER.info(str(e))
