@@ -2,7 +2,7 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components.met import config_flow
-from homeassistant.components.met.const import DOMAIN
+from homeassistant.components.met.const import DOMAIN, HOME_LOCATION_NAME
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 
 from tests.common import MockConfigEntry, mock_coro
@@ -33,38 +33,34 @@ async def test_show_config_form_default_values():
 
 
 async def test_flow_with_home_location(hass):
-    """Test config flow .
+    """Test config flow.
 
-    Tests the flow when a default location is configured
-    then it should return a form with default values
+    Test the flow when a default location is configured.
+    Then it should return a form with default values
     """
-    flow = config_flow.MetFlowHandler()
-    flow.hass = hass
-
-    hass.config.location_name = "Home"
     hass.config.latitude = 1
-    hass.config.longitude = 1
-    hass.config.elevation = 1
+    hass.config.longitude = 2
+    hass.config.elevation = 3
 
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
+    default_data = result["data_schema"]({})
+    assert default_data["name"] == HOME_LOCATION_NAME
+    assert default_data["latitude"] == 1
+    assert default_data["longitude"] == 2
+    assert default_data["elevation"] == 3
 
-async def test_flow_show_form():
-    """Test show form scenarios first time.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=default_data
+    )
 
-    Test when the form should show when no configurations exists
-    """
-    hass = Mock()
-    flow = config_flow.MetFlowHandler()
-    flow.hass = hass
-
-    with patch.object(
-        flow, "_show_config_form", return_value=mock_coro()
-    ) as config_form:
-        await flow.async_step_user()
-        assert len(config_form.mock_calls) == 1
+    assert result["type"] == "create_entry"
+    assert result["data"] == default_data
 
 
 async def test_flow_entry_created_from_user_input():
