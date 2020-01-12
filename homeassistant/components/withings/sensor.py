@@ -177,7 +177,11 @@ WITHINGS_ATTRIBUTES = [
         const.MEAS_SPO2_PCT, MeasureType.SP02, "SP02", const.UOM_PERCENT, None
     ),
     WithingsMeasureAttribute(
-        const.MEAS_HYDRATION, MeasureType.HYDRATION, "Hydration", "", "mdi:water"
+        const.MEAS_HYDRATION,
+        MeasureType.HYDRATION,
+        "Hydration",
+        const.UOM_PERCENT,
+        "mdi:water",
     ),
     WithingsMeasureAttribute(
         const.MEAS_PWV,
