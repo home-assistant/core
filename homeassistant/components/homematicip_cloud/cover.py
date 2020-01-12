@@ -58,7 +58,9 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
     @property
     def current_cover_position(self) -> int:
         """Return current position of cover."""
-        return int((1 - self._device.shutterLevel) * 100)
+        if self._device.shutterLevel is not None:
+            return int((1 - self._device.shutterLevel) * 100)
+        return None
 
     async def async_set_cover_position(self, **kwargs) -> None:
         """Move the cover to a specific position."""
@@ -93,7 +95,9 @@ class HomematicipCoverSlats(HomematicipCoverShutter, CoverDevice):
     @property
     def current_cover_tilt_position(self) -> int:
         """Return current tilt position of cover."""
-        return int((1 - self._device.slatsLevel) * 100)
+        if self._device.slatsLevel is not None:
+            return int((1 - self._device.slatsLevel) * 100)
+        return None
 
     async def async_set_cover_tilt_position(self, **kwargs) -> None:
         """Move the cover to a specific tilt position."""
