@@ -1,11 +1,18 @@
 """Tests for Met.no config flow."""
-from unittest.mock import Mock, patch
+from asynctest import patch
+import pytest
 
-from homeassistant.components.met import config_flow
 from homeassistant.components.met.const import DOMAIN, HOME_LOCATION_NAME
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="met_setup", autouse=True)
+def met_setup_fixture():
+    """Patch met setup entry."""
+    with patch("homeassistant.components.met.async_setup_entry", return_value=True):
+        yield
 
 
 async def test_show_config_form(hass):
@@ -56,55 +63,44 @@ async def test_create_entry(hass):
     )
 
     assert result["type"] == "create_entry"
+    assert result["title"] == "home"
     assert result["data"] == test_data
 
 
-async def test_flow_entry_config_entry_already_exists():
-    """Test that create data from user input and config_entry already exists.
+async def test_flow_entry_already_exists(hass):
+    """Test user input for config_entry that already exists.
 
     Test when the form should show when user puts existing location
-    in the config gui. Then the form should show with error
+    in the config gui. Then the form should show with error.
     """
-    hass = Mock()
-
-    flow = config_flow.MetFlowHandler()
-    flow.hass = hass
-
     first_entry = MockConfigEntry(domain="met")
     first_entry.data["name"] = "home"
-    first_entry.data[CONF_LONGITUDE] = "0"
-    first_entry.data[CONF_LATITUDE] = "0"
+    first_entry.data[CONF_LONGITUDE] = 0
+    first_entry.data[CONF_LATITUDE] = 0
+    first_entry.data[CONF_ELEVATION] = 0
     first_entry.add_to_hass(hass)
 
     test_data = {
         "name": "home",
-        CONF_LONGITUDE: "0",
-        CONF_LATITUDE: "0",
-        CONF_ELEVATION: "0",
+        CONF_LONGITUDE: 0,
+        CONF_LATITUDE: 0,
+        CONF_ELEVATION: 0,
     }
 
-    with patch.object(
-        flow, "_show_config_form", return_value=mock_coro()
-    ) as config_form, patch.object(
-        flow.hass.config_entries, "async_entries", return_value=[first_entry]
-    ) as config_entries:
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}, data=test_data
+    )
 
-        await flow.async_step_user(user_input=test_data)
-
-        assert len(config_form.mock_calls) == 1
-        assert len(config_entries.mock_calls) == 1
-        assert len(flow._errors) == 1
+    assert result["type"] == "form"
+    assert result["errors"]["name"] == "name_exists"
 
 
-async def test_onboarding_step(hass, mock_weather):
+async def test_onboarding_step(hass):
     """Test initializing via onboarding step."""
-    hass = Mock()
-
-    flow = config_flow.MetFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_onboarding({})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "onboarding"}, data={}
+    )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == "Home"
+    assert result["title"] == HOME_LOCATION_NAME
     assert result["data"] == {"track_home": True}
