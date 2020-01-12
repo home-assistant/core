@@ -109,7 +109,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_config: Dict[str, Any]) -> Dict[str, Any]:
         """Import a config entry from configuration.yaml."""
-        # Check if new config entry matches any existing config entries
+        # Abort flow if flow in progress or component with host as unique ID matches new config entry
         try:
             if await self.async_set_unique_id(
                 unique_id=import_config[CONF_HOST], raise_on_progress=True
@@ -118,7 +118,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except AbortFlow:
             return self.async_abort(reason="already_in_progress")
 
-        # Since unique ID is set to serial number after initialization, also need to check host and name
+        # Check if new config entry matches any existing config entries
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.data[CONF_HOST] == import_config[CONF_HOST] and entry.data[
                 CONF_NAME
