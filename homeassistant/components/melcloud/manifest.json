@@ -1,0 +1,14 @@
+{
+  "domain": "melcloud",
+  "name": "MELCloud",
+  "config_flow": true,
+  "documentation": "",
+  "requirements": ["pymelcloud==0.7.0"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@vilppuvuorinen"
+  ]
+}
