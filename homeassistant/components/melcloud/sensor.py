@@ -19,9 +19,7 @@ SENSORS = [
     {
         ATTR_MEASUREMENT: "Inside Temperature",
         ATTR_ICON: "mdi:thermometer",
-        ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(
-            x.device.temp_unit, TEMP_CELSIUS
-        ),
+        ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(x.device.temp_unit, TEMP_CELSIUS),
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_VALUE_FN: lambda x: x.device.temperature,
     },
