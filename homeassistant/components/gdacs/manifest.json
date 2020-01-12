@@ -1,6 +1,6 @@
 {
   "domain": "gdacs",
-  "name": "Global Disaster Alert and Coordination System",
+  "name": "Global Disaster Alert and Coordination System (GDACS)",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/gdacs",
   "requirements": [

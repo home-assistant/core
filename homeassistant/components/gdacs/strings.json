@@ -1,6 +1,6 @@
 {
   "config": {
-    "title": "Global Disaster Alert and Coordination System",
+    "title": "Global Disaster Alert and Coordination System (GDACS)",
     "step": {
       "user": {
         "title": "Fill in your filter details.",
