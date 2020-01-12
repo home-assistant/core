@@ -414,7 +414,6 @@ omit =
     homeassistant/components/media_extractor/*
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/message_bird/notify.py
-    homeassistant/components/met/weather.py
     homeassistant/components/meteo_france/*
     homeassistant/components/meteoalarm/*
     homeassistant/components/metoffice/sensor.py
