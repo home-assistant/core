@@ -1524,7 +1524,7 @@ pytradfri[async]==6.0.1
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.1.5.9
+pytrafikverket==0.1.6.1
 
 # homeassistant.components.ubee
 pyubee==0.7
