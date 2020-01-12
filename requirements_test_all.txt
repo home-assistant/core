@@ -69,7 +69,7 @@ aiohue==1.10.1
 aionotion==1.1.0
 
 # homeassistant.components.webostv
-aiopylgtv==0.2.4
+aiopylgtv==0.2.5
 
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
