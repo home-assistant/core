@@ -1,7 +1,5 @@
 """Test the NEW_NAME config flow."""
-from unittest.mock import patch
-
-from asynctest import patch as asyncpatch
+from asynctest import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.NEW_DOMAIN.config_flow import CannotConnect, InvalidAuth
@@ -17,12 +15,12 @@ async def test_form(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with asyncpatch(
+    with patch(
         "homeassistant.components.NEW_DOMAIN.config_flow.PlaceholderHub.authenticate",
         return_value=True,
-    ), asyncpatch(
+    ), patch(
         "homeassistant.components.NEW_DOMAIN.async_setup", return_value=True
-    ) as mock_setup, asyncpatch(
+    ) as mock_setup, patch(
         "homeassistant.components.NEW_DOMAIN.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(

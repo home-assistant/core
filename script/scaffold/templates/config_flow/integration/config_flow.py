@@ -16,7 +16,7 @@ DATA_SCHEMA = vol.Schema({"host": str, "username": str, "password": str})
 class PlaceholderHub:
     """Placeholder class to make tests pass.
 
-    TODO Remove this placeholder class and replace with things from your PyPI pacakge.
+    TODO Remove this placeholder class and replace with things from your PyPI package.
     """
 
     def __init__(self, host):
