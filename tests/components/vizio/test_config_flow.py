@@ -187,7 +187,7 @@ async def test_user_error_on_could_not_connect(hass: HomeAssistantType) -> None:
             result["flow_id"], MOCK_USER_VALID_TV_ENTRY
         )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "no_connect"}
+    assert result["errors"] == {"base": "cant_connect"}
 
 
 async def test_user_error_on_tv_needs_token(hass: HomeAssistantType) -> None:
