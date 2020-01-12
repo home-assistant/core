@@ -94,7 +94,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         user_input.get(CONF_ACCESS_TOKEN),
                         user_input[CONF_DEVICE_CLASS],
                     ):
-                        errors["base"] = "no_connect"
+                        errors["base"] = "cant_connect"
                 except vol.Invalid:
                     errors["base"] = "tv_needs_token"
 
