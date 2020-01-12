@@ -21,6 +21,7 @@ import zigpy_zigate.api
 import zigpy_zigate.zigbee.application
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
@@ -63,6 +64,7 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     SMARTTHINGS_ACCELERATION_CLUSTER: BINARY_SENSOR,
     SMARTTHINGS_HUMIDITY_CLUSTER: SENSOR,
     zcl.clusters.closures.DoorLock: LOCK,
+    zcl.clusters.closures.WindowCovering: COVER,
     zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
     zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
     zcl.clusters.general.OnOff: SWITCH,
