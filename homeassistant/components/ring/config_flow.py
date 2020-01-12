@@ -1,7 +1,7 @@
 """Config flow for Ring integration."""
 import logging
 
-from oauthlib.oauth2 import AccessDeniedError
+from oauthlib.oauth2 import AccessDeniedError, MissingTokenError
 from ring_doorbell import Auth
 import voluptuous as vol
 
@@ -15,18 +15,14 @@ _LOGGER = logging.getLogger(__name__)
 async def validate_input(hass: core.HomeAssistant, data):
     """Validate the user input allows us to connect."""
 
-    def otp_callback():
-        if "2fa" in data:
-            return data["2fa"]
-
-        raise Require2FA
-
     auth = Auth()
 
     try:
         token = await hass.async_add_executor_job(
-            auth.fetch_token, data["username"], data["password"], otp_callback,
+            auth.fetch_token, data["username"], data["password"], data.get("2fa"),
         )
+    except MissingTokenError:
+        raise Require2FA
     except AccessDeniedError:
         raise InvalidAuth
 
