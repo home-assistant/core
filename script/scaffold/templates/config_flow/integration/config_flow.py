@@ -55,7 +55,7 @@ async def validate_input(hass: core.HomeAssistant, data):
     return {"title": "Name of the device"}
 
 
-class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NEW_NAME."""
 
     VERSION = 1
