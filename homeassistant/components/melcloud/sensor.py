@@ -20,17 +20,17 @@ SENSORS = [
         ATTR_MEASUREMENT: "Inside Temperature",
         ATTR_ICON: "mdi:thermometer",
         ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(
-            x._api.device.temp_unit, TEMP_CELSIUS
+            x.device.temp_unit, TEMP_CELSIUS
         ),
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_VALUE_FN: lambda x: x._api.device.temperature,
+        ATTR_VALUE_FN: lambda x: x.device.temperature,
     },
     {
         ATTR_MEASUREMENT: "Energy",
         ATTR_ICON: "mdi:factory",
         ATTR_UNIT_FN: lambda x: "kWh",
         ATTR_DEVICE_CLASS: None,
-        ATTR_VALUE_FN: lambda x: x._api.device.total_energy_consumed,
+        ATTR_VALUE_FN: lambda x: x.device.total_energy_consumed,
     },
 ]
 
@@ -82,12 +82,12 @@ class MelCloudSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._def[ATTR_VALUE_FN](self)
+        return self._def[ATTR_VALUE_FN](self._api)
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return self._def[ATTR_UNIT_FN](self)
+        return self._def[ATTR_UNIT_FN](self._api)
 
     @property
     def device_class(self):

@@ -61,8 +61,7 @@ class FlowHandler(config_entries.ConfigFlow):
         except ClientResponseError as err:
             if err.status == 401 or err.status == 403:
                 return self.async_abort(reason="invalid_auth")
-            else:
-                return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="cannot_connect")
         except ClientError:
             _LOGGER.exception("ClientError")
             return self.async_abort(reason="cannot_connect")
