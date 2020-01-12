@@ -3,7 +3,7 @@
   "name": "Trafikverket train information",
   "documentation": "https://www.home-assistant.io/components/trafikverket_train",
   "requirements": [
-    "pytrafikverket==0.1.5.9"
+    "pytrafikverket==0.1.6.1"
   ],
   "dependencies": [],
   "codeowners": [
