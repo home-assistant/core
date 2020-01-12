@@ -21,14 +21,25 @@ def init_config_flow(hass):
 
 
 @pytest.fixture
-def mock_login():
+def mock_client():
     """Mock Client in pymelcloud."""
+    with async_patch("pymelcloud.Client") as mock:
+        type(mock.return_value).token = PropertyMock(return_value="test-token")
+        mock.return_value.update_confs.return_value = mock_coro()
+        mock.return_value.get_devices.return_value = mock_coro([])
+
+        yield mock
+
+
+@pytest.fixture
+def mock_login():
+    """Mock login in pymelcloud."""
     with async_patch("pymelcloud.Client") as mock, async_patch(
         "pymelcloud.login"
     ) as login_mock:
-        type(mock()).token = PropertyMock(return_value="test-token")
-        mock().update_confs.return_value = mock_coro()
-        mock().get_devices.return_value = mock_coro([])
+        type(mock.return_value).token = PropertyMock(return_value="test-token")
+        mock.return_value.update_confs.return_value = mock_coro()
+        mock.return_value.get_devices.return_value = mock_coro([])
 
         login_mock.return_value = mock_coro(mock())
         yield login_mock
@@ -72,8 +83,15 @@ async def test_form(hass, mock_login):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize("error", [(ClientError()), (asyncio.TimeoutError())])
-async def test_form_errors(hass, mock_login, error):
+@pytest.mark.parametrize(
+    "error,reason",
+    [
+        (ClientError(), "cannot_connect"),
+        (asyncio.TimeoutError(), "cannot_connect"),
+        (Exception(), "unknown"),
+    ],
+)
+async def test_form_errors(hass, mock_login, error, reason):
     """Test we handle cannot connect error."""
     mock_login.return_value = mock_coro(exception=error)
 
@@ -94,7 +112,7 @@ async def test_form_errors(hass, mock_login, error):
 
     assert len(mock_login.mock_calls) == 1
     assert result2["type"] == "abort"
-    assert result2["reason"] == "cannot_connect"
+    assert result2["reason"] == reason
 
 
 @pytest.mark.parametrize(
@@ -126,6 +144,40 @@ async def test_form_response_errors(
 
     assert result2["type"] == "abort"
     assert result2["reason"] == message
+
+
+async def test_failed_import_form(hass, mock_login):
+    """Test we get the form if imported without token."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={},
+    )
+    assert result["type"] == "form"
+    assert result["errors"] is None
+
+
+async def test_import_with_token(hass, mock_login, mock_client):
+    """Test successful import."""
+    with async_patch(
+        "homeassistant.components.melcloud.async_setup", return_value=mock_coro(True)
+    ) as mock_setup, async_patch(
+        "homeassistant.components.melcloud.async_setup_entry",
+        return_value=mock_coro(True),
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={"email": "test-email@test-domain.com", "token": "test-token"},
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "test-email@test-domain.com"
+    assert result["data"] == {
+        "email": "test-email@test-domain.com",
+        "token": "test-token",
+    }
+    await hass.async_block_till_done()
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_token_refresh(hass, mock_login):
