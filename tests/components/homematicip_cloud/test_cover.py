@@ -7,7 +7,7 @@ from homeassistant.components.cover import (
     DOMAIN as COVER_DOMAIN,
 )
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
-from homeassistant.const import STATE_CLOSED, STATE_OPEN
+from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNKNOWN
 from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
@@ -87,7 +87,7 @@ async def test_hmip_cover_shutter(hass, default_mock_hap):
 
     await async_manipulate_test_data(hass, hmip_device, "shutterLevel", None)
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_CLOSED
+    assert ha_state.state == STATE_UNKNOWN
 
 
 async def test_hmip_cover_slats(hass, default_mock_hap):
@@ -154,7 +154,7 @@ async def test_hmip_cover_slats(hass, default_mock_hap):
 
     await async_manipulate_test_data(hass, hmip_device, "shutterLevel", None)
     ha_state = hass.states.get(entity_id)
-    assert ha_state.state == STATE_OPEN
+    assert ha_state.state == STATE_UNKNOWN
 
 
 async def test_hmip_garage_door_tormatic(hass, default_mock_hap):
