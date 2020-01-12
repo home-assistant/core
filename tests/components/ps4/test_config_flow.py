@@ -241,18 +241,19 @@ async def test_multiple_flow_implementation(hass):
 
 async def test_port_bind_abort(hass):
     """Test that flow aborted when cannot bind to ports 987, 997."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
-
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=MOCK_UDP_PORT):
         reason = "port_987_bind_error"
-        result = await flow.async_step_user(user_input=None)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == reason
 
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=MOCK_TCP_PORT):
         reason = "port_997_bind_error"
-        result = await flow.async_step_user(user_input=None)
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == reason
 
