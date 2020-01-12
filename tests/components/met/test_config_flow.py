@@ -29,7 +29,7 @@ async def test_flow_with_home_location(hass):
     """Test config flow.
 
     Test the flow when a default location is configured.
-    Then it should return a form with default values
+    Then it should return a form with default values.
     """
     hass.config.latitude = 1
     hass.config.longitude = 2
