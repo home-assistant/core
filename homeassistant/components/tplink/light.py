@@ -225,7 +225,7 @@ class TPLinkSmartBulb(Light):
         else:
             self.hass.add_job(self.do_update_retry, True)
 
-    def do_update_retry(self, update_state_machine: bool) -> None:
+    def do_update_retry(self, update_state: bool) -> None:
         """Update state data with retry.""" ""
         try:
             # Update light features only once.
@@ -245,8 +245,8 @@ class TPLinkSmartBulb(Light):
         # we need the entity registry to poll this object's properties for
         # updated information. Calling schedule_update_ha_state will only
         # cause a loop.
-        if update_state_machine:
-            self._async_write_ha_state()
+        if update_state:
+            self.schedule_update_ha_state()
 
     @property
     def supported_features(self):
@@ -260,7 +260,7 @@ class TPLinkSmartBulb(Light):
         except (SmartDeviceException, OSError):
             pass
 
-        _LOGGER.debug("Retrying getting light features.")
+        _LOGGER.debug("Retrying getting light features")
         return self.get_light_features()
 
     def get_light_features(self):
@@ -299,7 +299,7 @@ class TPLinkSmartBulb(Light):
         except (SmartDeviceException, OSError):
             pass
 
-        _LOGGER.debug("Retrying getting light state.")
+        _LOGGER.debug("Retrying getting light state")
         return self.get_light_state(light_features)
 
     def get_light_state(self, light_features: LightFeatures) -> LightState:
@@ -366,7 +366,7 @@ class TPLinkSmartBulb(Light):
             pass
 
         try:
-            _LOGGER.debug("Retrying setting light state.")
+            _LOGGER.debug("Retrying setting light state")
             await self.hass.async_add_executor_job(
                 self.set_light_state, old_light_state, new_light_state
             )
