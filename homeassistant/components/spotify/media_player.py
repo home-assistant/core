@@ -1,14 +1,14 @@
 """Support for interacting with Spotify Connect."""
+from asyncio import run_coroutine_threadsafe
 from datetime import timedelta
 import logging
 import random
+from typing import Any, Callable, Dict, List, Optional
 
 import spotipy
-import spotipy.oauth2
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_ID,
     MEDIA_TYPE_MUSIC,
@@ -22,29 +22,25 @@ from homeassistant.components.media_player.const import (
     SUPPORT_SHUFFLE_SET,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.const import CONF_NAME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_ID,
+    CONF_NAME,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+
+from .const import CONF_ALIASES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-AUTH_CALLBACK_NAME = "api:spotify"
-AUTH_CALLBACK_PATH = "/api/spotify"
-
-CONF_ALIASES = "aliases"
-CONF_CACHE_PATH = "cache_path"
-CONF_CLIENT_ID = "client_id"
-CONF_CLIENT_SECRET = "client_secret"
-
-CONFIGURATOR_DESCRIPTION = (
-    "To link your Spotify account, click the link, login, and authorize:"
-)
-CONFIGURATOR_LINK_NAME = "Link Spotify account"
-CONFIGURATOR_SUBMIT_CAPTION = "I authorized successfully"
-
-DEFAULT_CACHE_PATH = ".spotify-token-cache"
-DEFAULT_NAME = "Spotify"
-DOMAIN = "spotify"
 
 SERVICE_PLAY_PLAYLIST = "play_playlist"
 ATTR_RANDOM_SONG = "random_song"
@@ -60,8 +56,6 @@ ICON = "mdi:spotify"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-SCOPE = "user-read-playback-state user-modify-playback-state user-read-private"
-
 SUPPORT_SPOTIFY = (
     SUPPORT_VOLUME_SET
     | SUPPORT_PAUSE
@@ -73,98 +67,50 @@ SUPPORT_SPOTIFY = (
     | SUPPORT_SHUFFLE_SET
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CLIENT_SECRET): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_CACHE_PATH): cv.string,
-        vol.Optional(CONF_ALIASES, default={}): {cv.string: cv.string},
-    }
-)
-
-
-def request_configuration(hass, config, add_entities, oauth):
-    """Request Spotify authorization."""
-    configurator = hass.components.configurator
-    hass.data[DOMAIN] = configurator.request_config(
-        DEFAULT_NAME,
-        lambda _: None,
-        link_name=CONFIGURATOR_LINK_NAME,
-        link_url=oauth.get_authorize_url(),
-        description=CONFIGURATOR_DESCRIPTION,
-        submit_caption=CONFIGURATOR_SUBMIT_CAPTION,
-    )
-
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Spotify platform."""
+    # def play_playlist_service(service):
+    #     media_content_id = service.data[ATTR_MEDIA_CONTENT_ID]
+    #     random_song = service.data.get(ATTR_RANDOM_SONG)
+    #     player.play_playlist(media_content_id, random_song)
 
-    callback_url = f"{hass.config.api.base_url}{AUTH_CALLBACK_PATH}"
-    cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
-    oauth = spotipy.oauth2.SpotifyOAuth(
-        config.get(CONF_CLIENT_ID),
-        config.get(CONF_CLIENT_SECRET),
-        callback_url,
-        scope=SCOPE,
-        cache_path=cache,
-    )
-    token_info = oauth.get_cached_token()
-    if not token_info:
-        _LOGGER.info("no token; requesting authorization")
-        hass.http.register_view(SpotifyAuthCallbackView(config, add_entities, oauth))
-        request_configuration(hass, config, add_entities, oauth)
-        return
-    if hass.data.get(DOMAIN):
-        configurator = hass.components.configurator
-        configurator.request_done(hass.data.get(DOMAIN))
-        del hass.data[DOMAIN]
+    # hass.services.register(
+    #     DOMAIN,
+    #     SERVICE_PLAY_PLAYLIST,
+    #     play_playlist_service,
+    #     schema=PLAY_PLAYLIST_SCHEMA,
+    # )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up Spotify based on a config entry."""
+    implementation = await async_get_config_entry_implementation(hass, entry)
+
+    session = OAuth2Session(hass, entry, implementation)
+
     player = SpotifyMediaPlayer(
-        oauth, config.get(CONF_NAME, DEFAULT_NAME), config[CONF_ALIASES]
-    )
-    add_entities([player], True)
-
-    def play_playlist_service(service):
-        media_content_id = service.data[ATTR_MEDIA_CONTENT_ID]
-        random_song = service.data.get(ATTR_RANDOM_SONG)
-        player.play_playlist(media_content_id, random_song)
-
-    hass.services.register(
-        DOMAIN,
-        SERVICE_PLAY_PLAYLIST,
-        play_playlist_service,
-        schema=PLAY_PLAYLIST_SCHEMA,
+        session,
+        entry.data[CONF_ID],
+        entry.data[CONF_NAME],
+        hass.data[DOMAIN][CONF_ALIASES],
     )
 
-
-class SpotifyAuthCallbackView(HomeAssistantView):
-    """Spotify Authorization Callback View."""
-
-    requires_auth = False
-    url = AUTH_CALLBACK_PATH
-    name = AUTH_CALLBACK_NAME
-
-    def __init__(self, config, add_entities, oauth):
-        """Initialize."""
-        self.config = config
-        self.add_entities = add_entities
-        self.oauth = oauth
-
-    @callback
-    def get(self, request):
-        """Receive authorization token."""
-        hass = request.app["hass"]
-        self.oauth.get_access_token(request.query["code"])
-        hass.async_add_job(setup_platform, hass, self.config, self.add_entities)
+    async_add_entities([player], True)
 
 
 class SpotifyMediaPlayer(MediaPlayerDevice):
     """Representation of a Spotify controller."""
 
-    def __init__(self, oauth, name, aliases):
+    def __init__(self, session, user_id, name, aliases):
         """Initialize."""
-        self._name = name
-        self._oauth = oauth
+        self._name = f"Spotify {name}"
+        self._id = user_id
+        self._session = session
         self._album = None
         self._title = None
         self._artist = None
@@ -178,37 +124,19 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._player = None
         self._user = None
         self._aliases = aliases
-        self._token_info = self._oauth.get_cached_token()
 
-    def refresh_spotify_instance(self):
-        """Fetch a new spotify instance."""
-
-        token_refreshed = False
-        need_token = self._token_info is None or self._oauth.is_token_expired(
-            self._token_info
-        )
-        if need_token:
-            new_token = self._oauth.refresh_access_token(
-                self._token_info["refresh_token"]
-            )
-            # skip when refresh failed
-            if new_token is None:
-                return
-
-            self._token_info = new_token
-            token_refreshed = True
-        if self._player is None or token_refreshed:
-            self._player = spotipy.Spotify(auth=self._token_info.get("access_token"))
+    def refresh_spotify_instance(self) -> None:
+        """Refresh a new Spotify instance."""
+        if not self._session.valid_token or self._player is None:
+            run_coroutine_threadsafe(
+                self._session.async_ensure_token_valid(), self.hass.loop
+            ).result()
+            self._player = spotipy.Spotify(auth=self._session.token["access_token"])
             self._user = self._player.me()
 
-    def update(self):
+    def update(self) -> None:
         """Update state and attributes."""
         self.refresh_spotify_instance()
-
-        # Don't true update when token is expired
-        if self._oauth.is_token_expired(self._token_info):
-            _LOGGER.warning("Spotify failed to update, token expired.")
-            return
 
         # Available devices
         player_devices = self._player.devices()
@@ -229,11 +157,13 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                 }
                 if device_diff:
                     _LOGGER.info("New Devices: %s", str(device_diff))
+
         # Current playback state
         current = self._player.current_playback()
         if current is None:
             self._state = STATE_IDLE
             return
+
         # Track metadata
         item = current.get("item")
         if item:
@@ -245,6 +175,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             self._uri = item.get("uri")
             images = item.get("album").get("images")
             self._image_url = images[0].get("url") if images else None
+
         # Playing state
         self._state = STATE_PAUSED
         if current.get("is_playing"):
@@ -259,38 +190,38 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             if device.get("name"):
                 self._current_device = device.get("name")
 
-    def set_volume_level(self, volume):
+    def set_volume_level(self, volume: int) -> None:
         """Set the volume level."""
         self._player.volume(int(volume * 100))
 
-    def set_shuffle(self, shuffle):
+    def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         self._player.shuffle(shuffle)
 
-    def media_next_track(self):
+    def media_next_track(self) -> None:
         """Skip to next track."""
         self._player.next_track()
 
-    def media_previous_track(self):
+    def media_previous_track(self) -> None:
         """Skip to previous track."""
         self._player.previous_track()
 
-    def media_play(self):
+    def media_play(self) -> None:
         """Start or resume playback."""
         self._player.start_playback()
 
-    def media_pause(self):
+    def media_pause(self) -> None:
         """Pause playback."""
         self._player.pause_playback()
 
-    def select_source(self, source):
+    def select_source(self, source: str) -> None:
         """Select playback device."""
         if self._devices:
             self._player.transfer_playback(
                 self._devices[source], self._state == STATE_PLAYING
             )
 
-    def play_media(self, media_type, media_id, **kwargs):
+    def play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
         kwargs = {}
         if media_type == MEDIA_TYPE_MUSIC:
@@ -305,7 +236,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             return
         self._player.start_playback(**kwargs)
 
-    def play_playlist(self, media_id, random_song):
+    def play_playlist(self, media_id, random_song) -> None:
         """Play random music in a playlist."""
         if not media_id.startswith("spotify:"):
             _LOGGER.error("media id must be spotify playlist uri")
@@ -318,74 +249,93 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._player.start_playback(**kwargs)
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name."""
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon."""
         return ICON
 
     @property
-    def state(self):
+    def state(self) -> Optional[str]:
         """Return the playback state."""
         return self._state
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> int:
         """Return the device volume."""
         return self._volume
 
     @property
-    def shuffle(self):
+    def shuffle(self) -> bool:
         """Shuffling state."""
         return self._shuffle
 
     @property
-    def source_list(self):
+    def source_list(self) -> List[str]:
         """Return a list of source devices."""
         if self._devices:
             return list(self._devices.keys())
 
     @property
-    def source(self):
+    def source(self) -> str:
         """Return the current playback device."""
         return self._current_device
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str:
         """Return the media URL."""
         return self._uri
 
     @property
-    def media_image_url(self):
+    def media_image_url(self) -> str:
         """Return the media image URL."""
         return self._image_url
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str:
         """Return the media artist."""
         return self._artist
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str:
         """Return the media album."""
         return self._album
 
     @property
-    def media_title(self):
+    def media_title(self) -> str:
         """Return the media title."""
         return self._title
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the media player features that are supported."""
         if self._user is not None and self._user["product"] == "premium":
             return SUPPORT_SPOTIFY
         return None
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> str:
         """Return the media type."""
         return MEDIA_TYPE_MUSIC
+
+    @property
+    def unique_id(self) -> str:
+        """Return the unique ID."""
+        return self._id
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information about this entity."""
+        model = ""
+        if self._user is not None:
+            model = self._user["product"]
+
+        return {
+            "identifiers": {(DOMAIN, self._id)},
+            "manufacturer": "Spotify AB",
+            "model": f"Spotify {model}",
+            "name": self._name,
+        }
