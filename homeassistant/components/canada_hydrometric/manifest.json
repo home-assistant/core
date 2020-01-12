@@ -3,7 +3,7 @@
   "name": "Canada Hydrometric",
   "documentation": "https://www.home-assistant.io/integrations/canada_hydrometric",
   "requirements": [
-    "env_canada==0.0.33"
+    "env_canada==0.0.34"
   ],
   "dependencies": [],
   "codeowners": [
