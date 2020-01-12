@@ -567,7 +567,7 @@ restrictedpython==5.0
 rflink==0.0.50
 
 # homeassistant.components.ring
-ring_doorbell==0.2.9
+ring_doorbell==0.4.0
 
 # homeassistant.components.yamaha
 rxv==0.6.0
