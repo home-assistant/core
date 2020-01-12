@@ -1,6 +1,4 @@
 """Tests for Vizio config flow."""
-import logging
-
 from asynctest import patch
 import voluptuous as vol
 
@@ -21,8 +19,6 @@ from homeassistant.const import (
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 NAME = "Vizio"
 NAME2 = "Vizio2"
@@ -61,8 +57,8 @@ MOCK_SOUNDBAR_ENTRY = {
 }
 
 
-async def test_flow_works(hass: HomeAssistantType) -> None:
-    """Test user config."""
+async def test_user_flow(hass: HomeAssistantType) -> None:
+    """Test user config flow."""
 
     # test form shows
     result = await hass.config_entries.flow.async_init(
@@ -207,8 +203,8 @@ async def test_user_error_on_tv_needs_token(hass: HomeAssistantType) -> None:
     assert result["errors"] == {"base": "tv_needs_token"}
 
 
-async def test_import(hass: HomeAssistantType) -> None:
-    """Test import step."""
+async def test_import_flow(hass: HomeAssistantType) -> None:
+    """Test import config flow."""
     # import with minimum fields only
     with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True):
         result = await hass.config_entries.flow.async_init(
