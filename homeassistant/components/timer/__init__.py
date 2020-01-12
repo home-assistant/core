@@ -184,7 +184,7 @@ class Timer(RestoreEntity):
             event = EVENT_TIMER_RESTARTED
 
         self._state = STATUS_ACTIVE
-        start = dt_util.utcnow()
+        start = dt_util.utcnow().replace(microsecond=0)
         if self._remaining and newduration is None:
             self._end = start + self._remaining
         else:
@@ -209,7 +209,7 @@ class Timer(RestoreEntity):
 
         self._listener()
         self._listener = None
-        self._remaining = self._end - dt_util.utcnow()
+        self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
         self._state = STATUS_PAUSED
         self._end = None
         self._hass.bus.async_fire(EVENT_TIMER_PAUSED, {"entity_id": self.entity_id})
