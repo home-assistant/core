@@ -1,6 +1,7 @@
 """Define tests for the PlayStation 4 config flow."""
 from asynctest import patch
 from pyps4_2ndscreen.errors import CredentialTimeout
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import ps4
@@ -73,22 +74,40 @@ MOCK_LOCATION = location.LocationInfo(
 )
 
 
+@pytest.fixture(name="location_info", autouse=True)
+def location_info_fixture():
+    """Mock location info."""
+    with patch(
+        "homeassistant.components.ps4.config_flow.location.async_detect_location_info",
+        return_value=MOCK_LOCATION,
+    ):
+        yield
+
+
+@pytest.fixture(name="ps4_setup", autouse=True)
+def ps4_setup_fixture():
+    """Patch ps4 setup entry."""
+    with patch(
+        "homeassistant.components.ps4.async_setup_entry", return_value=True,
+    ):
+        yield
+
+
 async def test_full_flow_implementation(hass):
     """Test registering an implementation and flow works."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
-    flow.location = MOCK_LOCATION
-    manager = hass.config_entries
-
     # User Step Started, results in Step Creds
     with patch("pyps4_2ndscreen.Helper.port_bind", return_value=None):
-        result = await flow.async_step_user()
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "creds"
 
     # Step Creds results with form in Step Mode.
     with patch("pyps4_2ndscreen.Helper.get_creds", return_value=MOCK_CREDS):
-        result = await flow.async_step_creds({})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "mode"
 
@@ -96,7 +115,9 @@ async def test_full_flow_implementation(hass):
     with patch(
         "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
     ):
-        result = await flow.async_step_mode(MOCK_AUTO)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_AUTO
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
@@ -104,26 +125,13 @@ async def test_full_flow_implementation(hass):
     with patch("pyps4_2ndscreen.Helper.link", return_value=(True, True)), patch(
         "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
     ):
-        result = await flow.async_step_link(MOCK_CONFIG)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_CONFIG
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"][CONF_TOKEN] == MOCK_CREDS
     assert result["data"]["devices"] == [MOCK_DEVICE]
     assert result["title"] == MOCK_TITLE
-
-    await hass.async_block_till_done()
-
-    # Add entry using result data.
-    mock_data = {
-        CONF_TOKEN: result["data"][CONF_TOKEN],
-        "devices": result["data"]["devices"],
-    }
-    entry = MockConfigEntry(domain=ps4.DOMAIN, data=mock_data)
-    entry.add_to_manager(manager)
-
-    # Check if entry exists.
-    assert len(manager.async_entries()) == 1
-    # Check if there is a device config in entry.
-    assert len(entry.data["devices"]) == 1
 
 
 async def test_multiple_flow_implementation(hass):
