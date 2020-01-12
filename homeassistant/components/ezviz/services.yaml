@@ -1,0 +1,83 @@
+ezviz_ptz:
+  description: Moves the camera to the direction, with defined speed
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.c6n_d12345678'
+    direction:
+      description: Direction (up, down, left, right).
+      example: 'up'
+    speed:
+      description: Speed of the movement (from 1 to 9).
+      example: 5
+
+ezviz_switch_audio_on:
+  description: Switch the camera audio on.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.c6n_d12345678'
+
+ezviz_switch_audio_off:
+  description: Switch the camera audio off.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.c6n_d12345678'
+
+ezviz_switch_ir_off:
+  description: Switch the camera infra red led off.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.c6n_d12345678'
+
+ezviz_switch_ir_on:
+  description: Switch the camera infra red led on.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.c6n_d12345678'
+
+ezviz_switch_privacy_on:
+  description: Switch the camera privacy on.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.c6n_d12345678'
+
+ezviz_switch_privacy_off:
+  description: Switch the camera privacy off.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.c6n_d12345678'
+
+ezviz_switch_state_on:
+  description: Switch the camera state led on.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.c6n_d12345678'
+
+ezviz_switch_state_off:
+  description: Switch the camera state led off.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.c6n_d12345678'
+
+      
+ezviz_switch_follow_move_on:
+  description: Switch the camera movement following on.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.c6n_d12345678'
+
+ezviz_switch_follow_move_off:
+  description: Switch the camera movement following off.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.c6n_d12345678'
