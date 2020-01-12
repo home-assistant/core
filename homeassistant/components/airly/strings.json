@@ -18,7 +18,7 @@
       "auth": "API key is not correct."
     },
     "abort": {
-      "already_configured": "Airly integration for this coordinates is already configured."
+      "already_configured": "Airly integration for these coordinates is already configured."
     }
   }
 }
