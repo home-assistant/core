@@ -5,7 +5,7 @@ import logging
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_ATTRIBUTION
 
-from . import ATTRIBUTION, DATA_RING_DOORBELLS, DATA_RING_STICKUP_CAMS
+from . import ATTRIBUTION, DATA_RING_DOORBELLS, DATA_RING_STICKUP_CAMS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,13 +73,22 @@ class RingBinarySensor(BinarySensorDevice):
         return self._unique_id
 
     @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._data.id)},
+            "sw_version": self._data.firmware,
+            "name": self._data.name,
+            "model": self._data.kind,
+            "manufacturer": "Ring",
+        }
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
-        attrs["device_id"] = self._data.id
-        attrs["firmware"] = self._data.firmware
         attrs["timezone"] = self._data.timezone
 
         if self._data.alert and self._data.alert_expires_at:
