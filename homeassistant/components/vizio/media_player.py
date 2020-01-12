@@ -69,7 +69,12 @@ async def async_setup_entry(
     device_type = entry.data[CONF_DEVICE_CLASS]
 
     device = VizioAsync(
-        DEVICE_ID, host, name, token, device_type, async_get_clientsession(hass, False)
+        DEVICE_ID,
+        host,
+        name,
+        token,
+        device_type,
+        session=async_get_clientsession(hass, False),
     )
 
     if not await device.can_connect():
@@ -114,34 +119,35 @@ class VizioDevice(MediaPlayerDevice):
 
         is_on = await self._device.get_power_state()
 
-        if is_on is not None:
-            self._available = True
-
-            if not self._unique_id:
-                self._unique_id = await self._device.get_esn()
-
-            if is_on:
-                self._state = STATE_ON
-
-                volume = await self._device.get_current_volume()
-                if volume is not None:
-                    self._volume_level = float(volume) / self._max_volume
-
-                input_ = await self._device.get_current_input()
-                if input_ is not None:
-                    self._current_input = input_.meta_name
-
-                inputs = await self._device.get_inputs()
-                if inputs is not None:
-                    self._available_inputs = [input_.name for input_ in inputs]
-
-            else:
-                self._state = STATE_OFF
-                self._volume_level = None
-                self._current_input = None
-                self._available_inputs = None
-        else:
+        if is_on is None:
             self._available = False
+            return
+
+        self._available = True
+
+        if not self._unique_id:
+            self._unique_id = await self._device.get_esn()
+
+        if not is_on:
+            self._state = STATE_OFF
+            self._volume_level = None
+            self._current_input = None
+            self._available_inputs = None
+            return
+
+        self._state = STATE_ON
+
+        volume = await self._device.get_current_volume()
+        if volume is not None:
+            self._volume_level = float(volume) / self._max_volume
+
+        input_ = await self._device.get_current_input()
+        if input_ is not None:
+            self._current_input = input_.meta_name
+
+        inputs = await self._device.get_inputs()
+        if inputs is not None:
+            self._available_inputs = [input_.name for input_ in inputs]
 
     @property
     def available(self) -> bool:

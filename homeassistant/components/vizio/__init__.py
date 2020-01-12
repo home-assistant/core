@@ -46,12 +46,17 @@ VIZIO_SCHEMA = {
 }
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: [vol.All(vol.Schema(VIZIO_SCHEMA), validate_auth)]}, extra=vol.ALLOW_EXTRA
+    {
+        DOMAIN: vol.All(
+            cv.ensure_list, [vol.All(vol.Schema(VIZIO_SCHEMA), validate_auth)]
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Platform setup, run import config flow for each entry in config."""
+    """Component setup, run import config flow for each entry in config."""
     if DOMAIN in config:
         for entry in config[DOMAIN]:
             hass.async_create_task(
@@ -74,8 +79,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_unload(entry, "media_player")
-    )
+    await hass.config_entries.async_forward_entry_unload(entry, "media_player")
 
     return True
