@@ -18,6 +18,7 @@ from . import (
     ATTRIBUTION,
     DATA_RING_DOORBELLS,
     DATA_RING_STICKUP_CAMS,
+    DOMAIN,
     SIGNAL_UPDATE_RING,
 )
 
@@ -87,15 +88,22 @@ class RingCam(Camera):
         return self._camera.id
 
     @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._camera.id)},
+            "sw_version": self._camera.firmware,
+            "name": self._camera.name,
+            "model": self._camera.kind,
+            "manufacturer": "Ring",
+        }
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            "device_id": self._camera.id,
-            "firmware": self._camera.firmware,
-            "kind": self._camera.kind,
             "timezone": self._camera.timezone,
-            "type": self._camera.family,
             "video_url": self._video_url,
             "last_video_id": self._last_video_id,
         }
