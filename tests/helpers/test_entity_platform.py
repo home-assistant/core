@@ -834,3 +834,17 @@ async def test_override_restored_entities(hass):
 
     state = hass.states.get("test_domain.world")
     assert state.state == "on"
+
+
+async def test_platform_with_no_setup(hass, caplog):
+    """Test setting up a platform that doesnt' support setup."""
+    entity_platform = MockEntityPlatform(
+        hass, domain="mock-integration", platform_name="mock-platform", platform=None
+    )
+
+    await entity_platform.async_setup(None)
+
+    assert (
+        "The mock-platform platform for the mock-integration integration does not support platform setup."
+        in caplog.text
+    )
