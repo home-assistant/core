@@ -62,6 +62,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE), PLATFORM_SCHEMA
 )
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the REST binary sensor."""
     name = config.get(CONF_NAME)
@@ -99,17 +100,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # No need to update the sensor now because it will determine its state
     # based in the rest resource that has just been retrieved.
-    add_entities(
-        [
-            RestBinarySensor(
-                hass, 
-                rest, 
-                name, 
-                device_class, 
-                value_template,
-            )
-        ]
-    )
+    add_entities([RestBinarySensor(hass, rest, name, device_class, value_template,)])
 
 
 class RestBinarySensor(BinarySensorDevice):
