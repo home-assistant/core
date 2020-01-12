@@ -25,11 +25,13 @@ ATTR_TARGET = "destination"
 ATTR_TRAIN_NUMBER = "train_number"
 ATTR_TRANSFERS = "transfers"
 ATTR_DELAY = "delay"
+ATTR_CONNECTIONS = "connections"
 
 ATTRIBUTION = "Data provided by transport.opendata.ch"
 
 CONF_DESTINATION = "to"
 CONF_START = "from"
+CONF_LIMIT = "limit"
 
 DEFAULT_NAME = "Next Departure"
 
@@ -41,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DESTINATION): cv.string,
         vol.Required(CONF_START): cv.string,
+        vol.Optional(CONF_LIMIT): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -52,9 +55,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     start = config.get(CONF_START)
     destination = config.get(CONF_DESTINATION)
+    limit = config.get(CONF_LIMIT, 5)
 
     session = async_get_clientsession(hass)
-    opendata = OpendataTransport(start, destination, hass.loop, session)
+    opendata = OpendataTransport(start, destination, hass.loop, session, limit)
 
     try:
         await opendata.async_get_data()
@@ -101,6 +105,9 @@ class SwissPublicTransportSensor(Entity):
             self._opendata.connections[0]["departure"]
         ) - dt_util.as_local(dt_util.utcnow())
 
+        # Convert to a list since this is more approprate
+        connections = [c[1] for c in sorted(self._opendata.connections.items())]
+
         attr = {
             ATTR_TRAIN_NUMBER: self._opendata.connections[0]["number"],
             ATTR_PLATFORM: self._opendata.connections[0]["platform"],
@@ -113,6 +120,7 @@ class SwissPublicTransportSensor(Entity):
             ATTR_REMAINING_TIME: f"{self._remaining_time}",
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_DELAY: self._opendata.connections[0]["delay"],
+            ATTR_CONNECTIONS: connections,
         }
         return attr
 
