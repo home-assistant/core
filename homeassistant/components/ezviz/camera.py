@@ -106,15 +106,8 @@ def setup_platform(hass, config, add_entities, disc_info=None):
 
     async def async_switch_handler(call):
         """Handle switch call."""
-        _LOGGER.debug(
-            "Service handler invoked with service=%s and data=%s. Call: %s",
-            call.service,
-            call.data,
-            call,
-        )
         service = call.service
         entity_id = call.data["entity_id"][0]
-        _LOGGER.debug("Dispatched to %s", f"{service}_{entity_id}")
         async_dispatcher_send(hass, f"{service}_{entity_id}")
 
     hass.services.async_register(
@@ -236,6 +229,27 @@ class HassEzvizCamera(Camera):
 
         self._ffmpeg = None
 
+    def update(self):
+        """Update the camera states."""
+
+        self._ezviz_camera._loaded = 0
+        data = self._ezviz_camera.status()
+
+        self._name = data["name"]
+        self._status = data["status"]
+        self._privacy = data["privacy"]
+        self._audio = data["audio"]
+        self._ir_led = data["ir_led"]
+        self._state_led = data["state_led"]
+        self._follow_move = data["follow_move"]
+        self._alarm_notify = data["alarm_notify"]
+        self._alarm_sound_mod = data["alarm_sound_mod"]
+        self._encrypted = data["encrypted"]
+        self._local_ip = data["local_ip"]
+        self._detection_sensibility = data["detection_sensibility"]
+        self._device_sub_category = data["device_sub_category"]
+        self._local_rtsp_port = data["local_rtsp_port"]
+
     async def async_added_to_hass(self):
         """Subscribe to ffmpeg and add camera to list."""
         self._ffmpeg = self.hass.data[DATA_FFMPEG]
@@ -255,7 +269,7 @@ class HassEzvizCamera(Camera):
             self.hass, f"ezviz_switch_audio_on_{self.entity_id}", self.switch_audio_on
         )
         async_dispatcher_connect(
-            self.hass, f"ezviz_switch_audio_off_{self.entity_id}", self.switch_audio_on
+            self.hass, f"ezviz_switch_audio_off_{self.entity_id}", self.switch_audio_off
         )
         async_dispatcher_connect(
             self.hass,
