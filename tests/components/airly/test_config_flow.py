@@ -25,9 +25,7 @@ async def test_show_form(hass):
     flow = config_flow.AirlyFlowHandler()
     flow.hass = hass
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
-    )
+    result = await flow.async_step_user(user_input=None)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -39,9 +37,6 @@ async def test_invalid_api_key(hass):
         "airly._private._RequestsHandler.get",
         side_effect=AirlyError(403, {"message": "Invalid authentication credentials"}),
     ):
-        flow = config_flow.AirlyFlowHandler()
-        flow.hass = hass
-        flow.context = {}
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -56,9 +51,6 @@ async def test_invalid_location(hass):
         "airly._private._RequestsHandler.get",
         return_value=json.loads(load_fixture("airly_no_station.json")),
     ):
-        flow = config_flow.AirlyFlowHandler()
-        flow.hass = hass
-        flow.context = {}
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -77,9 +69,6 @@ async def test_duplicate_error(hass):
         MockConfigEntry(domain=DOMAIN, unique_id="123-456", data=CONFIG).add_to_hass(
             hass
         )
-        flow = config_flow.AirlyFlowHandler()
-        flow.hass = hass
-        flow.context = {}
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
@@ -96,9 +85,6 @@ async def test_create_entry(hass):
         "airly._private._RequestsHandler.get",
         return_value=json.loads(load_fixture("airly_valid_station.json")),
     ):
-        flow = config_flow.AirlyFlowHandler()
-        flow.hass = hass
-        flow.context = {}
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
