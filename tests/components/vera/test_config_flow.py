@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock
 
 from mock import patch
+import pytest
 from requests.exceptions import RequestException
 
 from homeassistant import config_entries, data_entry_flow
@@ -35,15 +36,24 @@ async def test_aync_step_user_success(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data={CONF_CONTROLLER: "http://127.0.0.1:123/"},
+            data={
+                CONF_CONTROLLER: "http://127.0.0.1:123/",
+                CONF_LIGHTS: "12 13",
+                CONF_EXCLUDE: "14 15",
+            },
         )
         assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
         assert result.get("title") == "http://127.0.0.1:123"
         assert result.get("data") == {
             CONF_CONTROLLER: "http://127.0.0.1:123",
             CONF_SOURCE: config_entries.SOURCE_USER,
+            CONF_LIGHTS: ["12", "13"],
+            CONF_EXCLUDE: ["14", "15"],
         }
         assert result.get("result").unique_id == controller.serial_number
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
 
 
 async def test_async_step_user_already_setup(hass: HomeAssistant) -> None:
@@ -117,6 +127,47 @@ async def test_async_step_finish_error(hass: HomeAssistant) -> None:
         }
 
 
+async def test_options_not_available_for_file_config(hass: HomeAssistant) -> None:
+    """Test function."""
+    with patch("pyvera.VeraController") as vera_controller_class_mock:
+        controller = MagicMock()
+        controller.refresh_data = MagicMock()
+        controller.serial_number = "serial_number_1"
+        vera_controller_class_mock.return_value = controller
+
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={CONF_CONTROLLER: "http://127.0.0.1:123/"},
+        )
+        entries = hass.config_entries.async_entries(DOMAIN)
+
+        with pytest.raises(data_entry_flow.UnknownHandler):
+            await hass.config_entries.options.async_init(
+                entries[0].entry_id, context={}, data={}
+            )
+
+
+async def test_options_available_ui_config(hass: HomeAssistant) -> None:
+    """Test function."""
+    with patch("pyvera.VeraController") as vera_controller_class_mock:
+        controller = MagicMock()
+        controller.refresh_data = MagicMock()
+        controller.serial_number = "serial_number_1"
+        vera_controller_class_mock.return_value = controller
+
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_CONTROLLER: "http://127.0.0.1:123/"},
+        )
+        entries = hass.config_entries.async_entries(DOMAIN)
+
+        await hass.config_entries.options.async_init(
+            entries[0].entry_id, context={}, data={}
+        )
+
+
 async def test_options(hass):
     """Test updating options."""
     base_url = "http://127.0.0.1/"
@@ -139,6 +190,6 @@ async def test_options(hass):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result.get("data") == {
-        CONF_LIGHTS: [1, 2, 3, 4, 5, 6, 7],
-        CONF_EXCLUDE: [8, 9, 10, 11, 12, 13, 14],
+        CONF_LIGHTS: ["1", "2", "3", "4", "5", "6", "7"],
+        CONF_EXCLUDE: ["8", "9", "10", "11", "12", "13", "14"],
     }

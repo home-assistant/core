@@ -6,7 +6,7 @@ import pyvera as pv
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
 
@@ -15,17 +15,20 @@ from .const import CONF_CONTROLLER, DOMAIN
 LIST_REGEX = re.compile("[^0-9]+")
 
 
-def str_to_int_list(data: str) -> List[int]:
+def str_to_int_list(data: str) -> List[str]:
     """Convert a string to an int list."""
-    return [int(s) for s in LIST_REGEX.split(data) if len(s) > 0]
+    if isinstance(str, list):
+        return data
+
+    return [s for s in LIST_REGEX.split(data) if len(s) > 0]
 
 
-def int_list_to_str(data: List[int]) -> str:
+def int_list_to_str(data: List[str]) -> str:
     """Convert an int list to a string."""
     return " ".join([str(i) for i in data])
 
 
-def new_options(lights: List[int], exclude: List[int]) -> dict:
+def new_options(lights: List[str], exclude: List[str]) -> dict:
     """Create a standard options object."""
     return {CONF_LIGHTS: lights, CONF_EXCLUDE: exclude}
 
@@ -58,19 +61,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_from_config(self):
-        """Manage empty options.
-
-        This should do nothing and not allow any action. This occurs when the user uses the UI
-        to attempt to change options for a config that was provided in configuration.yml.
-        """
-        return self.async_show_form(step_id="from_config")
-
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        if self.config_entry.data.get(CONF_SOURCE) == config_entries.SOURCE_IMPORT:
-            return await self.async_step_from_config()
-
         if user_input is not None:
             return self.async_create_entry(title="", data=options_data(user_input),)
 
@@ -87,6 +79,9 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry) -> OptionsFlowHandler:
         """Get the options flow."""
+        if config_entry.data.get(CONF_SOURCE) == config_entries.SOURCE_IMPORT:
+            raise data_entry_flow.UnknownHandler
+
         return OptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input: dict = None):
@@ -96,7 +91,11 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             return await self.async_step_finish(
-                {**user_input, **{CONF_SOURCE: config_entries.SOURCE_USER}}
+                {
+                    **user_input,
+                    **options_data(user_input),
+                    **{CONF_SOURCE: config_entries.SOURCE_USER},
+                }
             )
 
         return self.async_show_form(

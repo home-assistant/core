@@ -29,10 +29,6 @@
           "lights": "Vera switch device ids to treat as lights in Home Assistant.",
           "exclude": "Vera device ids to exclude from Home Assistant."
         }
-      },
-      "from_config": {
-        "title": "UI config not supported",
-        "description": "Controller was configured using configuration.yml. Config changes should be made in the config file."
       }
     }
   }
