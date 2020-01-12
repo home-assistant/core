@@ -284,23 +284,11 @@ class HassEzvizCamera(Camera):
             self.switch_follow_move_off,
         )
 
-    async def async_perform_ptz(self, direction, speed):
+    async def async_perform_ptz(self, direction, sleep):
         """Perform a PTZ action on the camera."""
-
-        _LOGGER.debug(
-            "Calling PTZ | direction = %s | Speed = %s | Camera %s",
-            direction,
-            speed,
-            self._ezviz_camera,
+        await self.hass.async_add_executor_job(
+            self._ezviz_camera.move, direction, sleep
         )
-        # self._ezviz_camera.move(direction, speed)
-
-        params = [direction, speed]
-        ret, _ = await self.hass.async_add_executor_job(self._ezviz_camera.move, params)
-
-        if ret != 0:
-            _LOGGER.error("Error movingcamera %s': %s", self._name, ret)
-            return
 
     @property
     def should_poll(self) -> bool:
