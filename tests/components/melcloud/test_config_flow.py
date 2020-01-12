@@ -1,9 +1,9 @@
 """Test the MELCloud config flow."""
-from aiohttp import ClientError, ClientResponseError
 import asyncio
-from asynctest import patch as async_patch
 from unittest.mock import PropertyMock
 
+from aiohttp import ClientError, ClientResponseError
+from asynctest import patch as async_patch
 import pytest
 
 from homeassistant import config_entries

@@ -3,18 +3,11 @@ import logging
 
 from pymelcloud import Device
 
-from homeassistant.const import (
-    DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS,
-)
+from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.unit_system import UnitSystem
 
-from .const import (
-    DOMAIN,
-    TEMP_UNIT_LOOKUP,
-)
-
+from .const import DOMAIN, TEMP_UNIT_LOOKUP
 
 ATTR_MEASUREMENT = "measurement"
 ATTR_ICON = "icon"

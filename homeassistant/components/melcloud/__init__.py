@@ -10,10 +10,7 @@ from pymelcloud import Client, Device
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_EMAIL,
-    CONF_TOKEN,
-)
+from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle

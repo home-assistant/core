@@ -7,27 +7,18 @@ from pymelcloud import Device
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    DEFAULT_MIN_TEMP,
     DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.const import (
-    PRECISION_TENTHS,
-    PRECISION_WHOLE,
-    TEMP_CELSIUS,
-)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.temperature import convert as convert_temperature
 
-from .const import (
-    DOMAIN,
-    HVAC_MODE_LOOKUP,
-    HVAC_MODE_REVERSE_LOOKUP,
-    TEMP_UNIT_LOOKUP,
-)
+from .const import DOMAIN, HVAC_MODE_LOOKUP, HVAC_MODE_REVERSE_LOOKUP, TEMP_UNIT_LOOKUP
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=60)
