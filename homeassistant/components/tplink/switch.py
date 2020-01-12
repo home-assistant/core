@@ -2,7 +2,7 @@
 import logging
 import time
 
-from pyHS100 import SmartDeviceException, SmartPlug
+from kasa import SmartDeviceException, SmartPlug
 
 from homeassistant.components.switch import (
     ATTR_CURRENT_POWER_W,
@@ -24,12 +24,12 @@ ATTR_TOTAL_ENERGY_KWH = "total_energy_kwh"
 ATTR_CURRENT_A = "current_a"
 
 
-def add_entity(device: SmartPlug, async_add_entities):
+async def add_entity(device: SmartPlug, async_add_entities):
     """Check if device is online and add the entity."""
     # Attempt to get the sysinfo. If it fails, it will raise an
     # exception that is caught by async_add_entities_retry which
     # will try again later.
-    device.get_sysinfo()
+    await device.update()
 
     async_add_entities([SmartPlugSwitch(device)], update_before_add=True)
 
@@ -77,6 +77,7 @@ class SmartPlugSwitch(SwitchEntity):
             "name": self._alias,
             "model": self._model,
             "manufacturer": "TP-Link",
+            # FIXME: should this be the MAC even for subdevices?
             "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
             "sw_version": self._sysinfo["sw_ver"],
         }
@@ -91,46 +92,34 @@ class SmartPlugSwitch(SwitchEntity):
         """Return true if switch is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.smartplug.turn_on()
+        await self.smartplug.turn_on()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        self.smartplug.turn_off()
+        await self.smartplug.turn_off()
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._emeter_params
 
-    @property
-    def _plug_from_context(self):
-        """Return the plug from the context."""
-        children = self.smartplug.sys_info["children"]
-        return next(c for c in children if c["id"] == self.smartplug.context)
-
-    def update(self):
+    async def async_update(self):
         """Update the TP-Link switch's state."""
         try:
+            await self.smartplug.update()
             if not self._sysinfo:
                 self._sysinfo = self.smartplug.sys_info
                 self._mac = self.smartplug.mac
                 self._model = self.smartplug.model
-                if self.smartplug.context is None:
-                    self._alias = self.smartplug.alias
-                    self._device_id = self._mac
-                else:
-                    self._alias = self._plug_from_context["alias"]
-                    self._device_id = self.smartplug.context
+                self._alias = self.smartplug.alias
+                self._device_id = self.smartplug.device_id
 
-            if self.smartplug.context is None:
-                self._state = self.smartplug.state == self.smartplug.SWITCH_STATE_ON
-            else:
-                self._state = self._plug_from_context["state"] == 1
+            self._state = self.smartplug.is_on
 
             if self.smartplug.has_emeter:
-                emeter_readings = self.smartplug.get_emeter_realtime()
+                emeter_readings = await self.smartplug.get_emeter_realtime()
 
                 self._emeter_params[ATTR_CURRENT_POWER_W] = "{:.2f}".format(
                     emeter_readings["power"]
@@ -145,7 +134,7 @@ class SmartPlugSwitch(SwitchEntity):
                     emeter_readings["current"]
                 )
 
-                emeter_statics = self.smartplug.get_emeter_daily()
+                emeter_statics = await self.smartplug.get_emeter_daily()
                 try:
                     self._emeter_params[ATTR_TODAY_ENERGY_KWH] = "{:.3f}".format(
                         emeter_statics[int(time.strftime("%e"))]

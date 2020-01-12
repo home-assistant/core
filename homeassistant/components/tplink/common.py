@@ -2,9 +2,9 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Any, Callable, List
+from typing import Callable, List, Any, Awaitable
 
-from pyHS100 import (
+from kasa import (
     Discover,
     SmartBulb,
     SmartDevice,
@@ -57,12 +57,7 @@ class SmartDevices:
 
 async def async_get_discoverable_devices(hass):
     """Return if there are devices that can be discovered."""
-
-    def discover():
-        devs = Discover.discover()
-        return devs
-
-    return await hass.async_add_executor_job(discover)
+    return await Discover.discover()
 
 
 async def async_discover_devices(
@@ -76,30 +71,29 @@ async def async_discover_devices(
     lights = []
     switches = []
 
-    def process_devices():
-        for dev in devices.values():
-            # If this device already exists, ignore dynamic setup.
-            if existing_devices.has_device_with_host(dev.host):
-                continue
+    for dev in devices.values():
+        await dev.update()
+        # If this device already exists, ignore dynamic setup.
+        if existing_devices.has_device_with_host(dev.host):
+            continue
 
-            if isinstance(dev, SmartStrip):
-                for plug in dev.plugs.values():
-                    switches.append(plug)
-            elif isinstance(dev, SmartPlug):
-                try:
-                    if dev.is_dimmable:  # Dimmers act as lights
-                        lights.append(dev)
-                    else:
-                        switches.append(dev)
-                except SmartDeviceException as ex:
-                    _LOGGER.error("Unable to connect to device %s: %s", dev.host, ex)
+        if dev.is_strip:
+            for plug in dev.plugs:
+                switches.append(plug)
+        elif dev.is_plug:
+            try:
+                if dev.is_dimmable:  # Dimmers act as lights
+                    lights.append(dev)
+                else:
+                    switches.append(dev)
+            except SmartDeviceException as ex:
+                _LOGGER.error("Unable to connect to device %s: %s", dev.host, ex)
 
-            elif isinstance(dev, SmartBulb):
-                lights.append(dev)
-            else:
-                _LOGGER.error("Unknown smart device type: %s", type(dev))
+        elif dev.is_bulb:
+            lights.append(dev)
+        else:
+            _LOGGER.error("Unknown smart device type: %s", type(dev))
 
-    await hass.async_add_executor_job(process_devices)
 
     return SmartDevices(lights, switches)
 
@@ -119,7 +113,7 @@ def get_static_devices(config_data) -> SmartDevices:
             elif type_ == CONF_SWITCH:
                 switches.append(SmartPlug(host))
             elif type_ == CONF_STRIP:
-                for plug in SmartStrip(host).plugs.values():
+                for plug in SmartStrip(host).plugs:
                     switches.append(plug)
             # Dimmers need to be defined as smart plugs to work correctly.
             elif type_ == CONF_DIMMER:
@@ -128,11 +122,16 @@ def get_static_devices(config_data) -> SmartDevices:
     return SmartDevices(lights, switches)
 
 
+AsyncAddEntities = Callable[[List[Any], bool], None]
+AddEntitiesCallable = Callable[[Any, AsyncAddEntities], Awaitable[bool]]
+
+
+
 async def async_add_entities_retry(
     hass: HomeAssistantType,
-    async_add_entities: Callable[[List[Any], bool], None],
+    async_add_entities: AsyncAddEntities,
     objects: List[Any],
-    callback: Callable[[Any, Callable], None],
+    callback: AddEntitiesCallable,
     interval: timedelta = timedelta(seconds=60),
 ):
     """
@@ -176,9 +175,7 @@ async def async_add_entities_retry(
             # Call the individual item callback.
             try:
                 _LOGGER.debug("Attempting to add object of type %s", type(add_object))
-                result = await hass.async_add_job(
-                    callback, add_object, async_add_entities
-                )
+                result = await callback(add_object, async_add_entities)
             except SmartDeviceException as ex:
                 _LOGGER.debug(str(ex))
                 result = False
