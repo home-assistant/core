@@ -83,6 +83,16 @@ class EntityPlatform:
         platform = self.platform
         hass = self.hass
 
+        if not hasattr(platform, "async_setup_platform") and not hasattr(
+            platform, "setup_platform"
+        ):
+            self.logger.error(
+                "The %s platform for the %s integration does not support platform setup. Please remove it from your config.",
+                self.platform_name,
+                self.domain,
+            )
+            return
+
         @callback
         def async_create_setup_task():
             """Get task to set up platform."""
