@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
+    CONF_RESOURCE_TEMPLATE,
     CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -39,7 +40,8 @@ DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_RESOURCE): cv.url,
+        vol.Exclusive(CONF_RESOURCE, CONF_RESOURCE): cv.url,
+        vol.Exclusive(CONF_RESOURCE_TEMPLATE, CONF_RESOURCE): cv.template,
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
@@ -56,11 +58,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_RESOURCE, CONF_RESOURCE_TEMPLATE), PLATFORM_SCHEMA
+)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the REST binary sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
+    resource_template = config.get(CONF_RESOURCE_TEMPLATE)
     method = config.get(CONF_METHOD)
     payload = config.get(CONF_PAYLOAD)
     verify_ssl = config.get(CONF_VERIFY_SSL)
@@ -70,6 +76,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     headers = config.get(CONF_HEADERS)
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
+
+    if resource_template is not None:
+        resource_template.hass = hass
+        resource = resource_template.render()
+
     if value_template is not None:
         value_template.hass = hass
 
@@ -88,7 +99,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # No need to update the sensor now because it will determine its state
     # based in the rest resource that has just been retrieved.
-    add_entities([RestBinarySensor(hass, rest, name, device_class, value_template)])
+    add_entities(
+        [
+            RestBinarySensor(
+                hass, 
+                rest, 
+                name, 
+                device_class, 
+                value_template,
+            )
+        ]
+    )
 
 
 class RestBinarySensor(BinarySensorDevice):
