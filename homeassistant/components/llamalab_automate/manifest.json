@@ -1,7 +1,7 @@
 {
   "domain": "llamalab_automate",
-  "name": "Llamalab automate",
-  "documentation": "https://www.home-assistant.io/components/llamalab_automate",
+  "name": "LlamaLab Automate",
+  "documentation": "https://www.home-assistant.io/integrations/llamalab_automate",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

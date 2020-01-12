@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan bare konfigurere en enkelt Nest konto.",
+            "already_setup": "Du kan bare konfigurere en Nest konto.",
             "authorize_url_fail": "Ukjent feil ved generering av autoriseringsadresse.",
             "authorize_url_timeout": "Tidsavbrudd ved generering av autoriseringsadresse.",
             "no_flows": "Du m\u00e5 konfigurere Nest f\u00f8r du kan autentisere med den. [Vennligst les instruksjonene](https://www.home-assistant.io/components/nest/)."

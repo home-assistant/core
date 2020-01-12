@@ -8,6 +8,7 @@
             "invalid_password": "Password non valida!",
             "resolve_error": "Impossibile risolvere l'indirizzo dell'ESP. Se questo errore persiste, impostare un indirizzo IP statico: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {
@@ -15,6 +16,10 @@
                 },
                 "description": "Inserisci la password per {name} che hai impostato nella tua configurazione.",
                 "title": "Inserisci la password"
+            },
+            "discovery_confirm": {
+                "description": "Vuoi aggiungere il nodo ESPHome `{name}` a Home Assistant?",
+                "title": "Trovato nodo ESPHome"
             },
             "user": {
                 "data": {

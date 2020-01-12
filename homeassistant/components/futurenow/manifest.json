@@ -1,10 +1,8 @@
 {
   "domain": "futurenow",
-  "name": "Futurenow",
-  "documentation": "https://www.home-assistant.io/components/futurenow",
-  "requirements": [
-    "pyfnip==0.2"
-  ],
+  "name": "P5 FutureNow",
+  "documentation": "https://www.home-assistant.io/integrations/futurenow",
+  "requirements": ["pyfnip==0.2"],
   "dependencies": [],
   "codeowners": []
 }

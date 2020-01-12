@@ -4,13 +4,14 @@ import unittest
 from unittest.mock import patch
 
 import forecastio
+from requests.exceptions import ConnectionError
 import requests_mock
 
 from homeassistant.components import weather
-from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.setup import setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import load_fixture, get_test_home_assistant
+from tests.common import get_test_home_assistant, load_fixture
 
 
 class TestDarkSky(unittest.TestCase):
@@ -28,24 +29,36 @@ class TestDarkSky(unittest.TestCase):
         self.hass.stop()
 
     @requests_mock.Mocker()
-    @patch('forecastio.api.get_forecast', wraps=forecastio.api.get_forecast)
+    @patch("forecastio.api.get_forecast", wraps=forecastio.api.get_forecast)
     def test_setup(self, mock_req, mock_get_forecast):
         """Test for successfully setting up the forecast.io platform."""
-        uri = (r'https://api.(darksky.net|forecast.io)\/forecast\/(\w+)\/'
-               r'(-?\d+\.?\d*),(-?\d+\.?\d*)')
-        mock_req.get(re.compile(uri),
-                     text=load_fixture('darksky.json'))
+        uri = (
+            r"https://api.(darksky.net|forecast.io)\/forecast\/(\w+)\/"
+            r"(-?\d+\.?\d*),(-?\d+\.?\d*)"
+        )
+        mock_req.get(re.compile(uri), text=load_fixture("darksky.json"))
 
-        assert setup_component(self.hass, weather.DOMAIN, {
-            'weather': {
-                'name': 'test',
-                'platform': 'darksky',
-                'api_key': 'foo',
-            }
-        })
+        assert setup_component(
+            self.hass,
+            weather.DOMAIN,
+            {"weather": {"name": "test", "platform": "darksky", "api_key": "foo"}},
+        )
 
         assert mock_get_forecast.called
         assert mock_get_forecast.call_count == 1
 
-        state = self.hass.states.get('weather.test')
-        assert state.state == 'sunny'
+        state = self.hass.states.get("weather.test")
+        assert state.state == "sunny"
+
+    @patch("forecastio.load_forecast", side_effect=ConnectionError())
+    def test_failed_setup(self, mock_load_forecast):
+        """Test to ensure that a network error does not break component state."""
+
+        assert setup_component(
+            self.hass,
+            weather.DOMAIN,
+            {"weather": {"name": "test", "platform": "darksky", "api_key": "foo"}},
+        )
+
+        state = self.hass.states.get("weather.test")
+        assert state.state == "unavailable"

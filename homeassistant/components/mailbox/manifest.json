@@ -1,10 +1,8 @@
 {
   "domain": "mailbox",
   "name": "Mailbox",
-  "documentation": "https://www.home-assistant.io/components/mailbox",
+  "documentation": "https://www.home-assistant.io/integrations/mailbox",
   "requirements": [],
-  "dependencies": [
-    "http"
-  ],
+  "dependencies": ["http"],
   "codeowners": []
 }

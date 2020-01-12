@@ -1,7 +1,7 @@
 {
   "domain": "marytts",
-  "name": "Marytts",
-  "documentation": "https://www.home-assistant.io/components/marytts",
+  "name": "MaryTTS",
+  "documentation": "https://www.home-assistant.io/integrations/marytts",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

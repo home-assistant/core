@@ -1,10 +1,8 @@
 {
   "domain": "zhong_hong",
-  "name": "Zhong hong",
-  "documentation": "https://www.home-assistant.io/components/zhong_hong",
-  "requirements": [
-    "zhong_hong_hvac==1.0.9"
-  ],
+  "name": "ZhongHong",
+  "documentation": "https://www.home-assistant.io/integrations/zhong_hong",
+  "requirements": ["zhong_hong_hvac==1.0.9"],
   "dependencies": [],
   "codeowners": []
 }

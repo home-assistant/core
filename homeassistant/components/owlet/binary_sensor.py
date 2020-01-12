@@ -10,14 +10,8 @@ from .const import SENSOR_BASE_STATION, SENSOR_MOVEMENT
 SCAN_INTERVAL = timedelta(seconds=120)
 
 BINARY_CONDITIONS = {
-    SENSOR_BASE_STATION: {
-        'name': 'Base Station',
-        'device_class': 'power'
-    },
-    SENSOR_MOVEMENT: {
-        'name': 'Movement',
-        'device_class': 'motion'
-    }
+    SENSOR_BASE_STATION: {"name": "Base Station", "device_class": "power"},
+    SENSOR_MOVEMENT: {"name": "Movement", "device_class": "motion"},
 }
 
 
@@ -51,8 +45,9 @@ class OwletBinarySensor(BinarySensorDevice):
     @property
     def name(self):
         """Return sensor name."""
-        return '{} {}'.format(self._device.name,
-                              BINARY_CONDITIONS[self._condition]['name'])
+        return "{} {}".format(
+            self._device.name, BINARY_CONDITIONS[self._condition]["name"]
+        )
 
     @property
     def is_on(self):
@@ -62,7 +57,7 @@ class OwletBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the device class."""
-        return BINARY_CONDITIONS[self._condition]['device_class']
+        return BINARY_CONDITIONS[self._condition]["device_class"]
 
     def update(self):
         """Update state of sensor."""
@@ -75,7 +70,7 @@ class OwletBinarySensor(BinarySensorDevice):
             self._state = False
             return
 
-        if self._condition == 'movement':
+        if self._condition == "movement":
             if not self._base_on or self._is_charging:
                 return False
 

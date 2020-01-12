@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bryggan \u00e4r redan konfigurerad"
+            "already_configured": "Bryggan \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurations fl\u00f6det f\u00f6r bryggan p\u00e5g\u00e5r redan."
         },
         "error": {
             "cannot_connect": "Det gick inte att ansluta till gatewayen.",

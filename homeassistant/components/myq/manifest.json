@@ -1,10 +1,8 @@
 {
   "domain": "myq",
-  "name": "Myq",
-  "documentation": "https://www.home-assistant.io/components/myq",
-  "requirements": [
-    "pymyq==1.2.1"
-  ],
+  "name": "MyQ",
+  "documentation": "https://www.home-assistant.io/integrations/myq",
+  "requirements": ["pymyq==2.0.1"],
   "dependencies": [],
   "codeowners": []
 }

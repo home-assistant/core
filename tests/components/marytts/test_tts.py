@@ -3,15 +3,15 @@ import asyncio
 import os
 import shutil
 
+from homeassistant.components.media_player.const import (
+    DOMAIN as DOMAIN_MP,
+    SERVICE_PLAY_MEDIA,
+)
 import homeassistant.components.tts as tts
 from homeassistant.setup import setup_component
-from homeassistant.components.media_player.const import (
-    SERVICE_PLAY_MEDIA, DOMAIN as DOMAIN_MP)
 
-from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_service)
-
-from tests.components.tts.test_init import mutagen_mock  # noqa
+from tests.common import assert_setup_component, get_test_home_assistant, mock_service
+from tests.components.tts.test_init import mutagen_mock  # noqa: F401
 
 
 class TestTTSMaryTTSPlatform:
@@ -23,12 +23,12 @@ class TestTTSMaryTTSPlatform:
 
         self.url = "http://localhost:59125/process?"
         self.url_param = {
-            'INPUT_TEXT': 'HomeAssistant',
-            'INPUT_TYPE': 'TEXT',
-            'AUDIO': 'WAVE',
-            'VOICE': 'cmu-slt-hsmm',
-            'OUTPUT_TYPE': 'AUDIO',
-            'LOCALE': 'en_US'
+            "INPUT_TEXT": "HomeAssistant",
+            "INPUT_TYPE": "TEXT",
+            "AUDIO": "WAVE",
+            "VOICE": "cmu-slt-hsmm",
+            "OUTPUT_TYPE": "AUDIO",
+            "LOCALE": "en_US",
         }
 
     def teardown_method(self):
@@ -41,11 +41,7 @@ class TestTTSMaryTTSPlatform:
 
     def test_setup_component(self):
         """Test setup component."""
-        config = {
-            tts.DOMAIN: {
-                'platform': 'marytts'
-            }
-        }
+        config = {tts.DOMAIN: {"platform": "marytts"}}
 
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
@@ -54,21 +50,16 @@ class TestTTSMaryTTSPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        aioclient_mock.get(
-            self.url, params=self.url_param, status=200, content=b'test')
+        aioclient_mock.get(self.url, params=self.url_param, status=200, content=b"test")
 
-        config = {
-            tts.DOMAIN: {
-                'platform': 'marytts',
-            }
-        }
+        config = {tts.DOMAIN: {"platform": "marytts"}}
 
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        self.hass.services.call(tts.DOMAIN, 'marytts_say', {
-            tts.ATTR_MESSAGE: "HomeAssistant",
-        })
+        self.hass.services.call(
+            tts.DOMAIN, "marytts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+        )
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
@@ -79,21 +70,17 @@ class TestTTSMaryTTSPlatform:
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         aioclient_mock.get(
-            self.url, params=self.url_param, status=200,
-            exc=asyncio.TimeoutError())
+            self.url, params=self.url_param, status=200, exc=asyncio.TimeoutError()
+        )
 
-        config = {
-            tts.DOMAIN: {
-                'platform': 'marytts',
-            }
-        }
+        config = {tts.DOMAIN: {"platform": "marytts"}}
 
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        self.hass.services.call(tts.DOMAIN, 'marytts_say', {
-            tts.ATTR_MESSAGE: "HomeAssistant",
-        })
+        self.hass.services.call(
+            tts.DOMAIN, "marytts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+        )
         self.hass.block_till_done()
 
         assert len(calls) == 0
@@ -103,21 +90,16 @@ class TestTTSMaryTTSPlatform:
         """Test service call say."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
-        aioclient_mock.get(
-            self.url, params=self.url_param, status=403, content=b'test')
+        aioclient_mock.get(self.url, params=self.url_param, status=403, content=b"test")
 
-        config = {
-            tts.DOMAIN: {
-                'platform': 'marytts',
-            }
-        }
+        config = {tts.DOMAIN: {"platform": "marytts"}}
 
         with assert_setup_component(1, tts.DOMAIN):
             setup_component(self.hass, tts.DOMAIN, config)
 
-        self.hass.services.call(tts.DOMAIN, 'marytts_say', {
-            tts.ATTR_MESSAGE: "HomeAssistant",
-        })
+        self.hass.services.call(
+            tts.DOMAIN, "marytts_say", {tts.ATTR_MESSAGE: "HomeAssistant"}
+        )
         self.hass.block_till_done()
 
         assert len(calls) == 0

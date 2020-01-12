@@ -1,7 +1,7 @@
 """Constants for broadlink platform."""
-CONF_PACKET = 'packet'
+CONF_PACKET = "packet"
 
-DOMAIN = 'broadlink'
+DOMAIN = "broadlink"
 
-SERVICE_LEARN = 'learn'
-SERVICE_SEND = 'send'
+SERVICE_LEARN = "learn"
+SERVICE_SEND = "send"

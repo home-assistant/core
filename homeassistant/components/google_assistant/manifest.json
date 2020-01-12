@@ -1,10 +1,9 @@
 {
   "domain": "google_assistant",
-  "name": "Google assistant",
-  "documentation": "https://www.home-assistant.io/components/google_assistant",
+  "name": "Google Assistant",
+  "documentation": "https://www.home-assistant.io/integrations/google_assistant",
   "requirements": [],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": []
+  "dependencies": ["http"],
+  "after_dependencies": ["camera"],
+  "codeowners": ["@home-assistant/cloud"]
 }

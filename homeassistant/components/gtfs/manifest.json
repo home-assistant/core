@@ -1,12 +1,8 @@
 {
   "domain": "gtfs",
-  "name": "Gtfs",
-  "documentation": "https://www.home-assistant.io/components/gtfs",
-  "requirements": [
-    "pygtfs==0.1.5"
-  ],
+  "name": "General Transit Feed Specification (GTFS)",
+  "documentation": "https://www.home-assistant.io/integrations/gtfs",
+  "requirements": ["pygtfs==0.1.5"],
   "dependencies": [],
-  "codeowners": [
-    "@robbiet480"
-  ]
+  "codeowners": ["@robbiet480"]
 }

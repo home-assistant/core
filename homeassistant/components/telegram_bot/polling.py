@@ -1,11 +1,14 @@
 """Support for Telegram bot using polling."""
 import logging
 
-from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from telegram import Update
+from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
+from telegram.ext import Handler, Updater
+
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 
-from . import (CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, initialize_bot)
+from . import CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, initialize_bot
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,9 +36,6 @@ async def async_setup_platform(hass, config):
 
 def process_error(bot, update, error):
     """Telegram bot error handler."""
-    from telegram.error import (
-        TelegramError, TimedOut, NetworkError, RetryAfter)
-
     try:
         raise error
     except (TimedOut, NetworkError, RetryAfter):
@@ -47,8 +47,6 @@ def process_error(bot, update, error):
 
 def message_handler(handler):
     """Create messages handler."""
-    from telegram import Update
-    from telegram.ext import Handler
 
     class MessageHandler(Handler):
         """Telegram bot message handler."""
@@ -57,7 +55,7 @@ def message_handler(handler):
             """Initialize the messages handler instance."""
             super().__init__(handler)
 
-        def check_update(self, update):  # pylint: disable=no-self-use
+        def check_update(self, update):
             """Check is update valid."""
             return isinstance(update, Update)
 
@@ -74,7 +72,6 @@ class TelegramPoll(BaseTelegramBotEntity):
 
     def __init__(self, bot, hass, allowed_chat_ids):
         """Initialize the polling instance."""
-        from telegram.ext import Updater
 
         BaseTelegramBotEntity.__init__(self, hass, allowed_chat_ids)
 

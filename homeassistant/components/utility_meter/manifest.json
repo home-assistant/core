@@ -1,10 +1,9 @@
 {
   "domain": "utility_meter",
-  "name": "Utility meter",
-  "documentation": "https://www.home-assistant.io/components/utility_meter",
+  "name": "Utility Meter",
+  "documentation": "https://www.home-assistant.io/integrations/utility_meter",
   "requirements": [],
   "dependencies": [],
-  "codeowners": [
-    "@dgomes"
-  ]
+  "codeowners": ["@dgomes"],
+  "quality_scale": "internal"
 }

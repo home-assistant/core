@@ -1,12 +1,8 @@
 {
   "domain": "nissan_leaf",
-  "name": "Nissan leaf",
-  "documentation": "https://www.home-assistant.io/components/nissan_leaf",
-  "requirements": [
-    "pycarwings2==2.8"
-  ],
+  "name": "Nissan Leaf",
+  "documentation": "https://www.home-assistant.io/integrations/nissan_leaf",
+  "requirements": ["pycarwings2==2.9"],
   "dependencies": [],
-  "codeowners": [
-    "@filcole"
-  ]
+  "codeowners": ["@filcole"]
 }

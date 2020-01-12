@@ -1,15 +1,10 @@
 {
   "domain": "point",
-  "name": "Point",
+  "name": "Minut Point",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/point",
-  "requirements": [
-    "pypoint==1.1.1"
-  ],
-  "dependencies": [
-    "webhook"
-  ],
-  "codeowners": [
-    "@fredrike"
-  ]
+  "documentation": "https://www.home-assistant.io/integrations/point",
+  "requirements": ["pypoint==1.1.2"],
+  "dependencies": ["webhook", "http"],
+  "codeowners": ["@fredrike"],
+  "quality_scale": "gold"
 }

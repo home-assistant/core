@@ -11,8 +11,9 @@ from .const import CONF_LISTEN_PORT, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 @callback
 def configured_servers(hass):
     """Return a set of the configured servers."""
-    return set(entry.data[CONF_NAME] for entry
-               in hass.config_entries.async_entries(DOMAIN))
+    return set(
+        entry.data[CONF_NAME] for entry in hass.config_entries.async_entries(DOMAIN)
+    )
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -30,12 +31,9 @@ class EmulatedRokuFlowHandler(config_entries.ConfigFlow):
             name = user_input[CONF_NAME]
 
             if name in configured_servers(self.hass):
-                return self.async_abort(reason='name_exists')
+                return self.async_abort(reason="name_exists")
 
-            return self.async_create_entry(
-                title=name,
-                data=user_input
-            )
+            return self.async_create_entry(title=name, data=user_input)
 
         servers_num = len(configured_servers(self.hass))
 
@@ -47,14 +45,16 @@ class EmulatedRokuFlowHandler(config_entries.ConfigFlow):
             default_port = DEFAULT_PORT
 
         return self.async_show_form(
-            step_id='user',
-            data_schema=vol.Schema({
-                vol.Required(CONF_NAME,
-                             default=default_name): str,
-                vol.Required(CONF_LISTEN_PORT,
-                             default=default_port): vol.Coerce(int)
-            }),
-            errors=errors
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default=default_name): str,
+                    vol.Required(CONF_LISTEN_PORT, default=default_port): vol.Coerce(
+                        int
+                    ),
+                }
+            ),
+            errors=errors,
         )
 
     async def async_step_import(self, import_config):

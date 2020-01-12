@@ -1,37 +1,36 @@
 """Support to select a date and/or a time."""
-import logging
 import datetime
+import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
+from homeassistant.const import (
+    ATTR_DATE,
+    ATTR_TIME,
+    CONF_ICON,
+    CONF_NAME,
+    SERVICE_RELOAD,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.helpers.service
 from homeassistant.util import dt as dt_util
-
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'input_datetime'
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
+DOMAIN = "input_datetime"
+ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-CONF_HAS_DATE = 'has_date'
-CONF_HAS_TIME = 'has_time'
-CONF_INITIAL = 'initial'
+CONF_HAS_DATE = "has_date"
+CONF_HAS_TIME = "has_time"
+CONF_INITIAL = "initial"
 
-DEFAULT_VALUE = '1970-01-01 00:00:00'
+DEFAULT_VALUE = "1970-01-01 00:00:00"
 
-ATTR_DATE = 'date'
-ATTR_TIME = 'time'
+ATTR_DATETIME = "datetime"
 
-SERVICE_SET_DATETIME = 'set_datetime'
-
-SERVICE_SET_DATETIME_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_DATE): cv.date,
-    vol.Optional(ATTR_TIME): cv.time,
-})
+SERVICE_SET_DATETIME = "set_datetime"
 
 
 def has_date_or_time(conf):
@@ -39,26 +38,94 @@ def has_date_or_time(conf):
     if conf[CONF_HAS_DATE] or conf[CONF_HAS_TIME]:
         return conf
 
-    raise vol.Invalid('Entity needs at least a date or a time')
+    raise vol.Invalid("Entity needs at least a date or a time")
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.schema_with_slug_keys(
-        vol.All({
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_HAS_DATE, default=False): cv.boolean,
-            vol.Optional(CONF_HAS_TIME, default=False): cv.boolean,
-            vol.Optional(CONF_ICON): cv.icon,
-            vol.Optional(CONF_INITIAL): cv.string,
-        }, has_date_or_time)
-    )
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: cv.schema_with_slug_keys(
+            vol.All(
+                {
+                    vol.Optional(CONF_NAME): cv.string,
+                    vol.Optional(CONF_HAS_DATE, default=False): cv.boolean,
+                    vol.Optional(CONF_HAS_TIME, default=False): cv.boolean,
+                    vol.Optional(CONF_ICON): cv.icon,
+                    vol.Optional(CONF_INITIAL): cv.string,
+                },
+                has_date_or_time,
+            )
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 async def async_setup(hass, config):
     """Set up an input datetime."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
+    entities = await _async_process_config(config)
+
+    async def reload_service_handler(service_call):
+        """Remove all entities and load new ones from config."""
+        conf = await component.async_prepare_reload()
+        if conf is None:
+            return
+        new_entities = await _async_process_config(conf)
+        if new_entities:
+            await component.async_add_entities(new_entities)
+
+    homeassistant.helpers.service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_service_handler,
+        schema=RELOAD_SERVICE_SCHEMA,
+    )
+
+    async def async_set_datetime_service(entity, call):
+        """Handle a call to the input datetime 'set datetime' service."""
+        time = call.data.get(ATTR_TIME)
+        date = call.data.get(ATTR_DATE)
+        dttm = call.data.get(ATTR_DATETIME)
+        if (
+            dttm
+            and (date or time)
+            or entity.has_date
+            and not (date or dttm)
+            or entity.has_time
+            and not (time or dttm)
+        ):
+            _LOGGER.error(
+                "Invalid service data for %s input_datetime.set_datetime: %s",
+                entity.entity_id,
+                str(call.data),
+            )
+            return
+
+        if dttm:
+            date = dttm.date()
+            time = dttm.time()
+        entity.async_set_datetime(date, time)
+
+    component.async_register_entity_service(
+        SERVICE_SET_DATETIME,
+        {
+            vol.Optional(ATTR_DATE): cv.date,
+            vol.Optional(ATTR_TIME): cv.time,
+            vol.Optional(ATTR_DATETIME): cv.datetime,
+        },
+        async_set_datetime_service,
+    )
+
+    if entities:
+        await component.async_add_entities(entities)
+    return True
+
+
+async def _async_process_config(config):
+    """Process config and create list of entities."""
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
@@ -67,31 +134,11 @@ async def async_setup(hass, config):
         has_date = cfg.get(CONF_HAS_DATE)
         icon = cfg.get(CONF_ICON)
         initial = cfg.get(CONF_INITIAL)
-        entities.append(InputDatetime(object_id, name,
-                                      has_date, has_time, icon, initial))
+        entities.append(
+            InputDatetime(object_id, name, has_date, has_time, icon, initial)
+        )
 
-    if not entities:
-        return False
-
-    async def async_set_datetime_service(entity, call):
-        """Handle a call to the input datetime 'set datetime' service."""
-        time = call.data.get(ATTR_TIME)
-        date = call.data.get(ATTR_DATE)
-        if (entity.has_date and not date) or (entity.has_time and not time):
-            _LOGGER.error("Invalid service data for %s "
-                          "input_datetime.set_datetime: %s",
-                          entity.entity_id, str(call.data))
-            return
-
-        entity.async_set_datetime(date, time)
-
-    component.async_register_entity_service(
-        SERVICE_SET_DATETIME, SERVICE_SET_DATETIME_SCHEMA,
-        async_set_datetime_service
-    )
-
-    await component.async_add_entities(entities)
-    return True
+    return entities
 
 
 class InputDatetime(RestoreEntity):
@@ -158,42 +205,41 @@ class InputDatetime(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        attrs = {
-            'has_date': self.has_date,
-            'has_time': self.has_time,
-        }
+        attrs = {"has_date": self.has_date, "has_time": self.has_time}
 
         if self._current_datetime is None:
             return attrs
 
         if self.has_date and self._current_datetime is not None:
-            attrs['year'] = self._current_datetime.year
-            attrs['month'] = self._current_datetime.month
-            attrs['day'] = self._current_datetime.day
+            attrs["year"] = self._current_datetime.year
+            attrs["month"] = self._current_datetime.month
+            attrs["day"] = self._current_datetime.day
 
         if self.has_time and self._current_datetime is not None:
-            attrs['hour'] = self._current_datetime.hour
-            attrs['minute'] = self._current_datetime.minute
-            attrs['second'] = self._current_datetime.second
+            attrs["hour"] = self._current_datetime.hour
+            attrs["minute"] = self._current_datetime.minute
+            attrs["second"] = self._current_datetime.second
 
         if not self.has_date:
-            attrs['timestamp'] = self._current_datetime.hour * 3600 + \
-                                    self._current_datetime.minute * 60 + \
-                                    self._current_datetime.second
+            attrs["timestamp"] = (
+                self._current_datetime.hour * 3600
+                + self._current_datetime.minute * 60
+                + self._current_datetime.second
+            )
         elif not self.has_time:
-            extended = datetime.datetime.combine(self._current_datetime,
-                                                 datetime.time(0, 0))
-            attrs['timestamp'] = extended.timestamp()
+            extended = datetime.datetime.combine(
+                self._current_datetime, datetime.time(0, 0)
+            )
+            attrs["timestamp"] = extended.timestamp()
         else:
-            attrs['timestamp'] = self._current_datetime.timestamp()
+            attrs["timestamp"] = self._current_datetime.timestamp()
 
         return attrs
 
     def async_set_datetime(self, date_val, time_val):
         """Set a new date / time."""
         if self.has_date and self.has_time and date_val and time_val:
-            self._current_datetime = datetime.datetime.combine(date_val,
-                                                               time_val)
+            self._current_datetime = datetime.datetime.combine(date_val, time_val)
         elif self.has_date and not self.has_time and date_val:
             self._current_datetime = date_val
         if self.has_time and not self.has_date and time_val:

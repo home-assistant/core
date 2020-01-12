@@ -6,8 +6,9 @@ import logging
 import aiohttp
 import async_timeout
 
-from homeassistant.components.camera import Camera, SUPPORT_STREAM
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.util.dt as dt_util
 
 from . import DOMAIN as DOORBIRD_DOMAIN
 
@@ -21,26 +22,30 @@ _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 10  # seconds
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the DoorBird camera platform."""
     for doorstation in hass.data[DOORBIRD_DOMAIN]:
         device = doorstation.device
-        async_add_entities([
-            DoorBirdCamera(
-                device.live_image_url,
-                _CAMERA_LIVE.format(doorstation.name),
-                _LIVE_INTERVAL,
-                device.rtsp_live_video_url),
-            DoorBirdCamera(
-                device.history_image_url(1, 'doorbell'),
-                _CAMERA_LAST_VISITOR.format(doorstation.name),
-                _LAST_VISITOR_INTERVAL),
-            DoorBirdCamera(
-                device.history_image_url(1, 'motionsensor'),
-                _CAMERA_LAST_MOTION.format(doorstation.name),
-                _LAST_MOTION_INTERVAL),
-        ])
+        async_add_entities(
+            [
+                DoorBirdCamera(
+                    device.live_image_url,
+                    _CAMERA_LIVE.format(doorstation.name),
+                    _LIVE_INTERVAL,
+                    device.rtsp_live_video_url,
+                ),
+                DoorBirdCamera(
+                    device.history_image_url(1, "doorbell"),
+                    _CAMERA_LAST_VISITOR.format(doorstation.name),
+                    _LAST_VISITOR_INTERVAL,
+                ),
+                DoorBirdCamera(
+                    device.history_image_url(1, "motionsensor"),
+                    _CAMERA_LAST_MOTION.format(doorstation.name),
+                    _LAST_MOTION_INTERVAL,
+                ),
+            ]
+        )
 
 
 class DoorBirdCamera(Camera):
@@ -57,8 +62,7 @@ class DoorBirdCamera(Camera):
         self._last_update = datetime.datetime.min
         super().__init__()
 
-    @property
-    def stream_source(self):
+    async def stream_source(self):
         """Return the stream source."""
         return self._stream_url
 
@@ -74,14 +78,14 @@ class DoorBirdCamera(Camera):
 
     async def async_camera_image(self):
         """Pull a still image from the camera."""
-        now = datetime.datetime.now()
+        now = dt_util.utcnow()
 
         if self._last_image and now - self._last_update < self._interval:
             return self._last_image
 
         try:
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(_TIMEOUT, loop=self.hass.loop):
+            with async_timeout.timeout(_TIMEOUT):
                 response = await websession.get(self._url)
 
             self._last_image = await response.read()

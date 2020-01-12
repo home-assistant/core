@@ -1,10 +1,8 @@
 {
   "domain": "dyson",
   "name": "Dyson",
-  "documentation": "https://www.home-assistant.io/components/dyson",
-  "requirements": [
-    "libpurecool==0.5.0"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/dyson",
+  "requirements": ["libpurecool==0.6.0"],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@etheralm"]
 }

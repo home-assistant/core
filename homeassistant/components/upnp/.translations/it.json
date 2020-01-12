@@ -8,6 +8,10 @@
             "no_sensors_or_port_mapping": "Abilita almeno i sensori o la mappatura delle porte",
             "single_instance_allowed": "\u00c8 necessaria una sola configurazione di UPnP/IGD."
         },
+        "error": {
+            "one": "Vuoto",
+            "other": "Vuoto"
+        },
         "step": {
             "confirm": {
                 "description": "Vuoi configurare UPnP/IGD?",

@@ -1,10 +1,9 @@
 {
   "domain": "abode",
   "name": "Abode",
-  "documentation": "https://www.home-assistant.io/components/abode",
-  "requirements": [
-    "abodepy==0.15.0"
-  ],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/abode",
+  "requirements": ["abodepy==0.16.7"],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@shred86"]
 }

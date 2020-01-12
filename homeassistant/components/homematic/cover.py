@@ -2,7 +2,10 @@
 import logging
 
 from homeassistant.components.cover import (
-    ATTR_POSITION, ATTR_TILT_POSITION, CoverDevice)
+    ATTR_POSITION,
+    ATTR_TILT_POSITION,
+    CoverDevice,
+)
 from homeassistant.const import STATE_UNKNOWN
 
 from . import ATTR_DISCOVER_DEVICES, HMDevice
@@ -48,6 +51,7 @@ class HMCover(HMDevice, CoverDevice):
         """Return if the cover is closed."""
         if self.current_cover_position is not None:
             return self.current_cover_position == 0
+        return None
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -66,8 +70,7 @@ class HMCover(HMDevice, CoverDevice):
         self._state = "LEVEL"
         self._data.update({self._state: STATE_UNKNOWN})
         if "LEVEL_2" in self._hmdevice.WRITENODE:
-            self._data.update(
-                {'LEVEL_2': STATE_UNKNOWN})
+            self._data.update({"LEVEL_2": STATE_UNKNOWN})
 
     @property
     def current_cover_tilt_position(self):
@@ -75,10 +78,10 @@ class HMCover(HMDevice, CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if 'LEVEL_2' not in self._data:
+        if "LEVEL_2" not in self._data:
             return None
 
-        return int(self._data.get('LEVEL_2', 0) * 100)
+        return int(self._data.get("LEVEL_2", 0) * 100)
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""

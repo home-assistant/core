@@ -1,0 +1,71 @@
+# Describes the format for available SimpliSafe services
+
+---
+remove_pin:
+  description: Remove a PIN by its label or value.
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect.
+      example: 123987
+    label_or_pin:
+      description: The label/value to remove.
+      example: Test PIN
+set_alarm_duration:
+  description: "Set the duration (in seconds) of an active alarm"
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    seconds:
+      description: The number of seconds to sound the alarm
+      example: 120
+set_delay:
+  description: >
+    Set a duration for how long the base station should delay when transitioning
+    between states
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    arrival_state:
+      description: The target "arrival" state (away, home)
+      example: away
+    transition:
+      description: The system state transition to affect (entry, exit)
+      example: exit
+    seconds:
+      description: "The number of seconds to delay"
+      example: 120
+set_light:
+  description: "Turn the base station light on/off"
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    armed_light_state:
+      description: "True for on, False for off"
+      example: "True"
+set_pin:
+  description: Set/update a PIN
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    label:
+      description: The label of the PIN
+      example: Test PIN
+    pin:
+      description: The value of the PIN
+      example: 1256
+set_volume_property:
+  description: Set a level for one of the base station's various volumes
+  fields:
+    system_id:
+      description: The SimpliSafe system ID to affect
+      example: 123987
+    volume_property:
+      description: The volume property to set (alarm, chime, voice_prompt)
+      example: voice_prompt
+    volume:
+      description: "A volume (off, low, medium, high)"
+      example: low

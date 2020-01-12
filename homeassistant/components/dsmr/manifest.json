@@ -1,10 +1,8 @@
 {
   "domain": "dsmr",
-  "name": "Dsmr",
-  "documentation": "https://www.home-assistant.io/components/dsmr",
-  "requirements": [
-    "dsmr_parser==0.12"
-  ],
+  "name": "DSMR Slimme Meter",
+  "documentation": "https://www.home-assistant.io/integrations/dsmr",
+  "requirements": ["dsmr_parser==0.12"],
   "dependencies": [],
   "codeowners": []
 }

@@ -1,13 +1,8 @@
 {
   "domain": "aws",
-  "name": "Aws",
-  "documentation": "https://www.home-assistant.io/components/aws",
-  "requirements": [
-    "aiobotocore==0.10.2"
-  ],
+  "name": "Amazon Web Services (AWS)",
+  "documentation": "https://www.home-assistant.io/integrations/aws",
+  "requirements": ["aiobotocore==0.10.4"],
   "dependencies": [],
-  "codeowners": [
-    "@awarecan",
-    "@robbiet480"
-  ]
+  "codeowners": ["@awarecan", "@robbiet480"]
 }

@@ -1,14 +1,7 @@
 Home Assistant |Chat Status|
 =================================================================================
 
-Home Assistant is a home automation platform running on Python 3. It is able to track and control all devices at home and offer a platform for automating control.
-
-To get started:
-
-.. code:: bash
-
-    python3 -m pip install homeassistant
-    hass --open-ui
+Open source home automation that puts local control and privacy first. Powered by a worldwide community of tinkerers and DIY enthusiasts. Perfect to run on a Raspberry Pi or a local server.
 
 Check out `home-assistant.io <https://home-assistant.io>`__ for `a
 demo <https://home-assistant.io/demo/>`__, `installation instructions <https://home-assistant.io/getting-started/>`__,
@@ -32,4 +25,4 @@ of a component, check the `Home Assistant help section <https://home-assistant.i
 .. |screenshot-states| image:: https://raw.github.com/home-assistant/home-assistant/master/docs/screenshots.png
    :target: https://home-assistant.io/demo/
 .. |screenshot-components| image:: https://raw.github.com/home-assistant/home-assistant/dev/docs/screenshot-components.png
-   :target: https://home-assistant.io/components/
+   :target: https://home-assistant.io/integrations/

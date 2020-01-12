@@ -12,11 +12,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
     devices = []
     for name, device in discovery_info.items():
-        ihc_id = device['ihc_id']
-        product_cfg = device['product_cfg']
-        product = device['product']
+        ihc_id = device["ihc_id"]
+        product_cfg = device["product_cfg"]
+        product = device["product"]
         # Find controller that corresponds with device id
-        ctrl_id = device['ctrl_id']
+        ctrl_id = device["ctrl_id"]
         ihc_key = IHC_DATA.format(ctrl_id)
         info = hass.data[ihc_key][IHC_INFO]
         ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
@@ -29,8 +29,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class IHCSensor(IHCDevice, Entity):
     """Implementation of the IHC sensor."""
 
-    def __init__(self, ihc_controller, name, ihc_id: int, info: bool,
-                 unit, product=None) -> None:
+    def __init__(
+        self, ihc_controller, name, ihc_id: int, info: bool, unit, product=None
+    ) -> None:
         """Initialize the IHC sensor."""
         super().__init__(ihc_controller, name, ihc_id, info, product)
         self._state = None

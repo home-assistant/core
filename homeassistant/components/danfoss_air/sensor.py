@@ -2,8 +2,11 @@
 import logging
 
 from homeassistant.const import (
-    DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS)
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as DANFOSS_AIR_DOMAIN
@@ -18,33 +21,47 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = hass.data[DANFOSS_AIR_DOMAIN]
 
     sensors = [
-        ["Danfoss Air Exhaust Temperature", TEMP_CELSIUS,
-         ReadCommand.exhaustTemperature, DEVICE_CLASS_TEMPERATURE],
-        ["Danfoss Air Outdoor Temperature", TEMP_CELSIUS,
-         ReadCommand.outdoorTemperature, DEVICE_CLASS_TEMPERATURE],
-        ["Danfoss Air Supply Temperature", TEMP_CELSIUS,
-         ReadCommand.supplyTemperature, DEVICE_CLASS_TEMPERATURE],
-        ["Danfoss Air Extract Temperature", TEMP_CELSIUS,
-         ReadCommand.extractTemperature, DEVICE_CLASS_TEMPERATURE],
-        ["Danfoss Air Remaining Filter", '%',
-         ReadCommand.filterPercent, None],
-        ["Danfoss Air Humidity", '%',
-         ReadCommand.humidity, DEVICE_CLASS_HUMIDITY],
-        ["Danfoss Air Fan Step", '%',
-         ReadCommand.fan_step, None],
-        ["Dandoss Air Exhaust Fan Speed", 'RPM',
-         ReadCommand.exhaust_fan_speed, None],
-        ["Dandoss Air Supply Fan Speed", 'RPM',
-         ReadCommand.supply_fan_speed, None],
-        ["Dandoss Air Dial Battery", '%',
-         ReadCommand.battery_percent, DEVICE_CLASS_BATTERY]
-        ]
+        [
+            "Danfoss Air Exhaust Temperature",
+            TEMP_CELSIUS,
+            ReadCommand.exhaustTemperature,
+            DEVICE_CLASS_TEMPERATURE,
+        ],
+        [
+            "Danfoss Air Outdoor Temperature",
+            TEMP_CELSIUS,
+            ReadCommand.outdoorTemperature,
+            DEVICE_CLASS_TEMPERATURE,
+        ],
+        [
+            "Danfoss Air Supply Temperature",
+            TEMP_CELSIUS,
+            ReadCommand.supplyTemperature,
+            DEVICE_CLASS_TEMPERATURE,
+        ],
+        [
+            "Danfoss Air Extract Temperature",
+            TEMP_CELSIUS,
+            ReadCommand.extractTemperature,
+            DEVICE_CLASS_TEMPERATURE,
+        ],
+        ["Danfoss Air Remaining Filter", "%", ReadCommand.filterPercent, None],
+        ["Danfoss Air Humidity", "%", ReadCommand.humidity, DEVICE_CLASS_HUMIDITY],
+        ["Danfoss Air Fan Step", "%", ReadCommand.fan_step, None],
+        ["Dandoss Air Exhaust Fan Speed", "RPM", ReadCommand.exhaust_fan_speed, None],
+        ["Dandoss Air Supply Fan Speed", "RPM", ReadCommand.supply_fan_speed, None],
+        [
+            "Dandoss Air Dial Battery",
+            "%",
+            ReadCommand.battery_percent,
+            DEVICE_CLASS_BATTERY,
+        ],
+    ]
 
     dev = []
 
     for sensor in sensors:
-        dev.append(DanfossAir(
-            data, sensor[0], sensor[1], sensor[2], sensor[3]))
+        dev.append(DanfossAir(data, sensor[0], sensor[1], sensor[2], sensor[3]))
 
     add_entities(dev, True)
 

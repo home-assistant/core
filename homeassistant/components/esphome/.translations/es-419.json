@@ -8,6 +8,7 @@
             "invalid_password": "\u00a1Contrase\u00f1a invalida!",
             "resolve_error": "No se puede resolver la direcci\u00f3n de la ESP. Si este error persiste, configure una direcci\u00f3n IP est\u00e1tica: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {
@@ -17,6 +18,7 @@
                 "title": "Escriba la contrase\u00f1a"
             },
             "discovery_confirm": {
+                "description": "\u00bfDesea agregar el nodo ESPHome `{name}` a Home Assistant?",
                 "title": "Nodo ESPHome descubierto"
             },
             "user": {

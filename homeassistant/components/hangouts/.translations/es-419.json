@@ -9,6 +9,9 @@
         },
         "step": {
             "2fa": {
+                "data": {
+                    "2fa": "Pin 2FA"
+                },
                 "title": "Autenticaci\u00f3n de 2 factores"
             },
             "user": {

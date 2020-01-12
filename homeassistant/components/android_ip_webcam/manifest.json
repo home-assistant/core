@@ -1,10 +1,8 @@
 {
   "domain": "android_ip_webcam",
-  "name": "Android ip webcam",
-  "documentation": "https://www.home-assistant.io/components/android_ip_webcam",
-  "requirements": [
-    "pydroid-ipcam==0.8"
-  ],
+  "name": "Android IP Webcam",
+  "documentation": "https://www.home-assistant.io/integrations/android_ip_webcam",
+  "requirements": ["pydroid-ipcam==0.8"],
   "dependencies": [],
   "codeowners": []
 }

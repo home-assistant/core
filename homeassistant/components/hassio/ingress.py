@@ -1,8 +1,8 @@
 """Hass.io Add-on ingress service."""
 import asyncio
+from ipaddress import ip_address
 import logging
 import os
-from ipaddress import ip_address
 from typing import Dict, Union
 
 import aiohttp
@@ -42,10 +42,10 @@ class HassIOIngress(HomeAssistantView):
 
     def _create_url(self, token: str, path: str) -> str:
         """Create URL to service."""
-        return "http://{}/ingress/{}/{}".format(self._host, token, path)
+        return f"http://{self._host}/ingress/{token}/{path}"
 
     async def _handle(
-            self, request: web.Request, token: str, path: str
+        self, request: web.Request, token: str, path: str
     ) -> Union[web.Response, web.StreamResponse, web.WebSocketResponse]:
         """Route data to Hass.io ingress service."""
         try:
@@ -69,14 +69,13 @@ class HassIOIngress(HomeAssistantView):
     options = _handle
 
     async def _handle_websocket(
-            self, request: web.Request, token: str, path: str
+        self, request: web.Request, token: str, path: str
     ) -> web.WebSocketResponse:
         """Ingress route for websocket."""
         if hdrs.SEC_WEBSOCKET_PROTOCOL in request.headers:
             req_protocols = [
                 str(proto.strip())
-                for proto in
-                request.headers[hdrs.SEC_WEBSOCKET_PROTOCOL].split(",")
+                for proto in request.headers[hdrs.SEC_WEBSOCKET_PROTOCOL].split(",")
             ]
         else:
             req_protocols = ()
@@ -92,12 +91,15 @@ class HassIOIngress(HomeAssistantView):
 
         # Support GET query
         if request.query_string:
-            url = "{}?{}".format(url, request.query_string)
+            url = f"{url}?{request.query_string}"
 
         # Start proxy
         async with self._websession.ws_connect(
-                url, headers=source_header, protocols=req_protocols,
-                autoclose=False, autoping=False,
+            url,
+            headers=source_header,
+            protocols=req_protocols,
+            autoclose=False,
+            autoping=False,
         ) as ws_client:
             # Proxy requests
             await asyncio.wait(
@@ -105,13 +107,13 @@ class HassIOIngress(HomeAssistantView):
                     _websocket_forward(ws_server, ws_client),
                     _websocket_forward(ws_client, ws_server),
                 ],
-                return_when=asyncio.FIRST_COMPLETED
+                return_when=asyncio.FIRST_COMPLETED,
             )
 
         return ws_server
 
     async def _handle_request(
-            self, request: web.Request, token: str, path: str
+        self, request: web.Request, token: str, path: str
     ) -> Union[web.Response, web.StreamResponse]:
         """Ingress route for request."""
         url = self._create_url(token, path)
@@ -119,26 +121,31 @@ class HassIOIngress(HomeAssistantView):
         source_header = _init_header(request, token)
 
         async with self._websession.request(
-                request.method, url, headers=source_header,
-                params=request.query, data=data
+            request.method,
+            url,
+            headers=source_header,
+            params=request.query,
+            allow_redirects=False,
+            data=data,
         ) as result:
             headers = _response_header(result)
 
             # Simple request
-            if hdrs.CONTENT_LENGTH in result.headers and \
-                    int(result.headers.get(hdrs.CONTENT_LENGTH, 0)) < 4194000:
+            if (
+                hdrs.CONTENT_LENGTH in result.headers
+                and int(result.headers.get(hdrs.CONTENT_LENGTH, 0)) < 4194000
+            ):
                 # Return Response
                 body = await result.read()
                 return web.Response(
                     headers=headers,
                     status=result.status,
                     content_type=result.content_type,
-                    body=body
+                    body=body,
                 )
 
             # Stream response
-            response = web.StreamResponse(
-                status=result.status, headers=headers)
+            response = web.StreamResponse(status=result.status, headers=headers)
             response.content_type = result.content_type
 
             try:
@@ -153,30 +160,37 @@ class HassIOIngress(HomeAssistantView):
 
 
 def _init_header(
-        request: web.Request, token: str
+    request: web.Request, token: str
 ) -> Union[CIMultiDict, Dict[str, str]]:
     """Create initial header."""
     headers = {}
 
     # filter flags
     for name, value in request.headers.items():
-        if name in (hdrs.CONTENT_LENGTH, hdrs.CONTENT_ENCODING):
+        if name in (
+            hdrs.CONTENT_LENGTH,
+            hdrs.CONTENT_ENCODING,
+            hdrs.SEC_WEBSOCKET_EXTENSIONS,
+            hdrs.SEC_WEBSOCKET_PROTOCOL,
+            hdrs.SEC_WEBSOCKET_VERSION,
+            hdrs.SEC_WEBSOCKET_KEY,
+        ):
             continue
         headers[name] = value
 
     # Inject token / cleanup later on Supervisor
-    headers[X_HASSIO] = os.environ.get('HASSIO_TOKEN', "")
+    headers[X_HASSIO] = os.environ.get("HASSIO_TOKEN", "")
 
     # Ingress information
-    headers[X_INGRESS_PATH] = "/api/hassio_ingress/{}".format(token)
+    headers[X_INGRESS_PATH] = f"/api/hassio_ingress/{token}"
 
     # Set X-Forwarded-For
     forward_for = request.headers.get(hdrs.X_FORWARDED_FOR)
-    connected_ip = ip_address(request.transport.get_extra_info('peername')[0])
+    connected_ip = ip_address(request.transport.get_extra_info("peername")[0])
     if forward_for:
-        forward_for = "{}, {!s}".format(forward_for, connected_ip)
+        forward_for = f"{forward_for}, {connected_ip!s}"
     else:
-        forward_for = "{!s}".format(connected_ip)
+        forward_for = f"{connected_ip!s}"
     headers[hdrs.X_FORWARDED_FOR] = forward_for
 
     # Set X-Forwarded-Host
@@ -199,8 +213,12 @@ def _response_header(response: aiohttp.ClientResponse) -> Dict[str, str]:
     headers = {}
 
     for name, value in response.headers.items():
-        if name in (hdrs.TRANSFER_ENCODING, hdrs.CONTENT_LENGTH,
-                    hdrs.CONTENT_TYPE, hdrs.CONTENT_ENCODING):
+        if name in (
+            hdrs.TRANSFER_ENCODING,
+            hdrs.CONTENT_LENGTH,
+            hdrs.CONTENT_TYPE,
+            hdrs.CONTENT_ENCODING,
+        ):
             continue
         headers[name] = value
 
@@ -211,8 +229,10 @@ def _is_websocket(request: web.Request) -> bool:
     """Return True if request is a websocket."""
     headers = request.headers
 
-    if "upgrade" in headers.get(hdrs.CONNECTION, "").lower() and \
-            headers.get(hdrs.UPGRADE, "").lower() == "websocket":
+    if (
+        "upgrade" in headers.get(hdrs.CONNECTION, "").lower()
+        and headers.get(hdrs.UPGRADE, "").lower() == "websocket"
+    ):
         return True
     return False
 

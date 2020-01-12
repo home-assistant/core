@@ -1,7 +1,7 @@
 {
   "domain": "worldtidesinfo",
-  "name": "Worldtidesinfo",
-  "documentation": "https://www.home-assistant.io/components/worldtidesinfo",
+  "name": "World Tides",
+  "documentation": "https://www.home-assistant.io/integrations/worldtidesinfo",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

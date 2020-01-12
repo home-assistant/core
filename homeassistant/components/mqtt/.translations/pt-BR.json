@@ -10,6 +10,7 @@
             "broker": {
                 "data": {
                     "broker": "Broker",
+                    "discovery": "Ativar descoberta",
                     "password": "Senha",
                     "port": "Porta",
                     "username": "Nome de usu\u00e1rio"
@@ -21,7 +22,8 @@
                 "data": {
                     "discovery": "Ativar descoberta"
                 },
-                "description": "Deseja configurar o Home Assistant para se conectar ao broker MQTT fornecido pelo complemento hass.io {addon}?"
+                "description": "Deseja configurar o Home Assistant para se conectar ao broker MQTT fornecido pelo complemento hass.io {addon}?",
+                "title": "MQTT Broker via add-on Hass.io"
             }
         },
         "title": "MQTT"

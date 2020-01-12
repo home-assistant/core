@@ -1,10 +1,9 @@
 {
   "domain": "otp",
-  "name": "Otp",
-  "documentation": "https://www.home-assistant.io/components/otp",
-  "requirements": [
-    "pyotp==2.2.7"
-  ],
+  "name": "One-Time Password (OTP)",
+  "documentation": "https://www.home-assistant.io/integrations/otp",
+  "requirements": ["pyotp==2.3.0"],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

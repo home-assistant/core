@@ -29,5 +29,10 @@
             }
         },
         "title": "deCONZ Zigbee gateway"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "close": "Bez\u00e1r\u00e1s"
+        }
     }
 }

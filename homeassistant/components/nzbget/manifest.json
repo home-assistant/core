@@ -1,8 +1,8 @@
 {
   "domain": "nzbget",
-  "name": "Nzbget",
-  "documentation": "https://www.home-assistant.io/components/nzbget",
-  "requirements": [],
+  "name": "NZBGet",
+  "documentation": "https://www.home-assistant.io/integrations/nzbget",
+  "requirements": ["pynzbgetapi==0.2.0"],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@chriscla"]
 }

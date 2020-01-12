@@ -1,10 +1,8 @@
 {
   "domain": "volvooncall",
-  "name": "Volvooncall",
-  "documentation": "https://www.home-assistant.io/components/volvooncall",
-  "requirements": [
-    "volvooncall==0.8.7"
-  ],
+  "name": "Volvo On Call",
+  "documentation": "https://www.home-assistant.io/integrations/volvooncall",
+  "requirements": ["volvooncall==0.8.7"],
   "dependencies": [],
   "codeowners": []
 }

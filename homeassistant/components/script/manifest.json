@@ -1,12 +1,9 @@
 {
   "domain": "script",
-  "name": "Script",
-  "documentation": "https://www.home-assistant.io/components/script",
+  "name": "Scripts",
+  "documentation": "https://www.home-assistant.io/integrations/script",
   "requirements": [],
-  "dependencies": [
-    "group"
-  ],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "dependencies": ["group"],
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
 }

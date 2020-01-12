@@ -1,10 +1,8 @@
 {
   "domain": "fido",
   "name": "Fido",
-  "documentation": "https://www.home-assistant.io/components/fido",
-  "requirements": [
-    "pyfido==2.1.1"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/fido",
+  "requirements": ["pyfido==2.1.1"],
   "dependencies": [],
   "codeowners": []
 }

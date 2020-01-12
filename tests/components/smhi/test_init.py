@@ -9,7 +9,7 @@ TEST_CONFIG = {
     "config": {
         "name": "0123456789ABCDEF",
         "longitude": "62.0022",
-        "latitude": "17.0022"
+        "latitude": "17.0022",
     }
 }
 

@@ -4,18 +4,17 @@ import glob
 import json
 import os
 import re
-from typing import Union, List, Dict
+from typing import Dict, List, Union
 
-FILENAME_FORMAT = re.compile(r'strings\.(?P<suffix>\w+)\.json')
+FILENAME_FORMAT = re.compile(r"strings\.(?P<suffix>\w+)\.json")
 
 
-def load_json(filename: str) \
-        -> Union[List, Dict]:
+def load_json(filename: str) -> Union[List, Dict]:
     """Load JSON data from a file and return as dict or list.
 
     Defaults to returning empty dict if file is not found.
     """
-    with open(filename, encoding='utf-8') as fdesc:
+    with open(filename, encoding="utf-8") as fdesc:
         return json.loads(fdesc.read())
     return {}
 
@@ -26,7 +25,7 @@ def save_json(filename: str, data: Union[List, Dict]):
     Returns True on success.
     """
     data = json.dumps(data, sort_keys=True, indent=4)
-    with open(filename, 'w', encoding='utf-8') as fdesc:
+    with open(filename, "w", encoding="utf-8") as fdesc:
         fdesc.write(data)
         return True
     return False
@@ -41,38 +40,46 @@ def get_component_path(lang, component):
     """Get the component translation path."""
     if os.path.isdir(os.path.join("homeassistant", "components", component)):
         return os.path.join(
-            "homeassistant", "components", component, ".translations",
-            "{}.json".format(lang))
+            "homeassistant", "components", component, ".translations", f"{lang}.json"
+        )
     else:
         return os.path.join(
-            "homeassistant", "components", ".translations",
-            "{}.{}.json".format(component, lang))
+            "homeassistant", "components", ".translations", f"{component}.{lang}.json"
+        )
 
 
 def get_platform_path(lang, component, platform):
     """Get the platform translation path."""
-    if os.path.isdir(os.path.join(
-            "homeassistant", "components", component, platform)):
+    if os.path.isdir(os.path.join("homeassistant", "components", component, platform)):
         return os.path.join(
-            "homeassistant", "components", component, platform,
-            ".translations", "{}.json".format(lang))
+            "homeassistant",
+            "components",
+            component,
+            platform,
+            ".translations",
+            f"{lang}.json",
+        )
     else:
         return os.path.join(
-            "homeassistant", "components", component, ".translations",
-            "{}.{}.json".format(platform, lang))
+            "homeassistant",
+            "components",
+            component,
+            ".translations",
+            f"{platform}.{lang}.json",
+        )
 
 
 def get_component_translations(translations):
     """Get the component level translations."""
     translations = translations.copy()
-    translations.pop('platform', None)
+    translations.pop("platform", None)
 
     return translations
 
 
 def save_language_translations(lang, translations):
     """Distribute the translations for this language."""
-    components = translations.get('component', {})
+    components = translations.get("component", {})
     for component, component_translations in components.items():
         base_translations = get_component_translations(component_translations)
         if base_translations:
@@ -81,7 +88,8 @@ def save_language_translations(lang, translations):
             save_json(path, base_translations)
 
         for platform, platform_translations in component_translations.get(
-                'platform', {}).items():
+            "platform", {}
+        ).items():
             path = get_platform_path(lang, component, platform)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             save_json(path, platform_translations)
@@ -100,5 +108,5 @@ def main():
         save_language_translations(lang, translations)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

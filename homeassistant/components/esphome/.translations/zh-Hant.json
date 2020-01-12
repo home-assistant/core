@@ -8,16 +8,17 @@
             "invalid_password": "\u5bc6\u78bc\u7121\u6548\uff01",
             "resolve_error": "\u7121\u6cd5\u89e3\u6790 ESP \u4f4d\u5740\uff0c\u5047\u5982\u6b64\u932f\u8aa4\u6301\u7e8c\u767c\u751f\uff0c\u8acb\u53c3\u8003\u8aaa\u660e\u8a2d\u5b9a\u70ba\u975c\u614b\u56fa\u5b9a IP \uff1a https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome\uff1a{name}",
         "step": {
             "authenticate": {
                 "data": {
                     "password": "\u5bc6\u78bc"
                 },
-                "description": "\u8acb\u8f38\u5165\u8a2d\u5b9a\u5167\u6240\u8a2d\u5b9a\u4e4b\u5bc6\u78bc\u3002",
+                "description": "\u8acb\u8f38\u5165 {name} \u8a2d\u5b9a\u5167\u6240\u8a2d\u5b9a\u4e4b\u5bc6\u78bc\u3002",
                 "title": "\u8f38\u5165\u5bc6\u78bc"
             },
             "discovery_confirm": {
-                "description": "\u662f\u5426\u8981\u5c07 ESPHome \u7bc0\u9ede\u300c{name}\u300d\u65b0\u589e\u81f3 Home Assistant\uff1f",
+                "description": "\u662f\u5426\u8981\u5c07 ESPHome \u7bc0\u9ede `{name}` \u65b0\u589e\u81f3 Home Assistant\uff1f",
                 "title": "\u767c\u73fe\u5230 ESPHome \u7bc0\u9ede"
             },
             "user": {

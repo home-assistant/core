@@ -1,38 +1,40 @@
 """Support for the Twitch stream status."""
 import logging
 
+from requests.exceptions import HTTPError
+from twitch import TwitchClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_GAME = 'game'
-ATTR_TITLE = 'title'
+ATTR_GAME = "game"
+ATTR_TITLE = "title"
 
-CONF_CHANNELS = 'channels'
-CONF_CLIENT_ID = 'client_id'
-ICON = 'mdi:twitch'
+CONF_CHANNELS = "channels"
+CONF_CLIENT_ID = "client_id"
 
-STATE_OFFLINE = 'offline'
-STATE_STREAMING = 'streaming'
+ICON = "mdi:twitch"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CLIENT_ID): cv.string,
-    vol.Required(CONF_CHANNELS, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
-})
+STATE_OFFLINE = "offline"
+STATE_STREAMING = "streaming"
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_CLIENT_ID): cv.string,
+        vol.Required(CONF_CHANNELS): vol.All(cv.ensure_list, [cv.string]),
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Twitch platform."""
-    from twitch import TwitchClient
-    from requests.exceptions import HTTPError
-
-    channels = config.get(CONF_CHANNELS, [])
-    client = TwitchClient(client_id=config.get(CONF_CLIENT_ID))
+    channels = config[CONF_CHANNELS]
+    client_id = config[CONF_CLIENT_ID]
+    client = TwitchClient(client_id=client_id)
 
     try:
         client.ingests.get_server_list()
@@ -54,8 +56,7 @@ class TwitchSensor(Entity):
         self._user = user
         self._channel = self._user.name
         self._id = self._user.id
-        self._state = STATE_OFFLINE
-        self._preview = self._game = self._title = None
+        self._state = self._preview = self._game = self._title = None
 
     @property
     def should_poll(self):
@@ -81,10 +82,12 @@ class TwitchSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         if self._state == STATE_STREAMING:
-            return {
-                ATTR_GAME: self._game,
-                ATTR_TITLE: self._title,
-            }
+            return {ATTR_GAME: self._game, ATTR_TITLE: self._title}
+
+    @property
+    def unique_id(self):
+        """Return unique ID for this sensor."""
+        return self._id
 
     @property
     def icon(self):
@@ -96,10 +99,10 @@ class TwitchSensor(Entity):
         """Update device state."""
         stream = self._client.streams.get_stream_by_user(self._id)
         if stream:
-            self._game = stream.get('channel').get('game')
-            self._title = stream.get('channel').get('status')
-            self._preview = stream.get('preview').get('medium')
+            self._game = stream.get("channel").get("game")
+            self._title = stream.get("channel").get("status")
+            self._preview = stream.get("preview").get("medium")
             self._state = STATE_STREAMING
         else:
-            self._preview = self._client.users.get_by_id(self._id).get('logo')
+            self._preview = self._client.users.get_by_id(self._id).get("logo")
             self._state = STATE_OFFLINE

@@ -8,7 +8,7 @@
             "unknown_auth_fail": "Uventet feil oppstod under autentisering."
         },
         "error": {
-            "credentials": "De oppgitte legitimasjonene er ugyldige.",
+            "credentials": "Den oppgitte kontoinformasjonen er ugyldig.",
             "display_exists": "Den valgte skjermen er allerede konfigurert."
         },
         "step": {
@@ -18,7 +18,7 @@
                     "tenant": "Leietaker",
                     "username": "Brukernavn"
                 },
-                "description": "Godkjen med Eneco Toon kontoen din (ikke utviklerkontoen).",
+                "description": "Godkjenn med Eneco Toon kontoen din (ikke utviklerkontoen).",
                 "title": "Linken din Toon konto"
             },
             "display": {

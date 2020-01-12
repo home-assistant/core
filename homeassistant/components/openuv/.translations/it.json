@@ -10,7 +10,7 @@
                     "api_key": "API Key di OpenUV",
                     "elevation": "Altitudine",
                     "latitude": "Latitudine",
-                    "longitude": "Logitudine"
+                    "longitude": "Longitudine"
                 },
                 "title": "Inserisci i tuoi dati"
             }

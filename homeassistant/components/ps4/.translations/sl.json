@@ -8,6 +8,7 @@
             "port_997_bind_error": "Ne morem se povezati z vrati 997. Dodatne informacije najdete v [dokumentaciji] (https://www.home-assistant.io/components/ps4/)."
         },
         "error": {
+            "credential_timeout": "Storitev poverilnic je potekla. Pritisnite Po\u0161lji za ponovni zagon.",
             "login_failed": "Neuspelo seznanjanje s PlayStation 4. Preverite, ali je koda PIN pravilna.",
             "no_ipaddress": "Vnesite IP naslov PlayStation-a 4, ki ga \u017eelite konfigurirati.",
             "not_ready": "PlayStation 4 ni vklopljen ali povezan z omre\u017ejem."

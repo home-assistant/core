@@ -4,8 +4,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from . import DOMAIN as ZONEMINDER_DOMAIN
 
 
-async def async_setup_platform(
-        hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder binary sensor platform."""
     sensors = []
     for host_name, zm_client in hass.data[ZONEMINDER_DOMAIN].items():
@@ -36,7 +35,7 @@ class ZMAvailabilitySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'connectivity'
+        return "connectivity"
 
     def update(self):
         """Update the state of this sensor (availability of ZoneMinder)."""

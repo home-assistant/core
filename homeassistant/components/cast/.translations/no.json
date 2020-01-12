@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "no_devices_found": "Ingen Google Cast enheter funnet p\u00e5 nettverket.",
-            "single_instance_allowed": "Kun en enkelt konfigurasjon av Google Cast er n\u00f8dvendig."
+            "single_instance_allowed": "Kun en konfigurasjon av Google Cast er n\u00f8dvendig."
         },
         "step": {
             "confirm": {

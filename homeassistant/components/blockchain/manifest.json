@@ -1,10 +1,8 @@
 {
   "domain": "blockchain",
-  "name": "Blockchain",
-  "documentation": "https://www.home-assistant.io/components/blockchain",
-  "requirements": [
-    "python-blockchain-api==0.0.2"
-  ],
+  "name": "Blockchain.info",
+  "documentation": "https://www.home-assistant.io/integrations/blockchain",
+  "requirements": ["python-blockchain-api==0.0.2"],
   "dependencies": [],
   "codeowners": []
 }

@@ -1,10 +1,8 @@
 {
   "domain": "todoist",
   "name": "Todoist",
-  "documentation": "https://www.home-assistant.io/components/todoist",
-  "requirements": [
-    "todoist-python==7.0.17"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/todoist",
+  "requirements": ["todoist-python==8.0.0"],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@boralyl"]
 }

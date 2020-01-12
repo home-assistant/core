@@ -1,12 +1,8 @@
 {
   "domain": "qwikswitch",
-  "name": "Qwikswitch",
-  "documentation": "https://www.home-assistant.io/components/qwikswitch",
-  "requirements": [
-    "pyqwikswitch==0.93"
-  ],
+  "name": "QwikSwitch QSUSB",
+  "documentation": "https://www.home-assistant.io/integrations/qwikswitch",
+  "requirements": ["pyqwikswitch==0.93"],
   "dependencies": [],
-  "codeowners": [
-    "@kellerza"
-  ]
+  "codeowners": ["@kellerza"]
 }

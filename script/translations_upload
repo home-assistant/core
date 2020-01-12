@@ -26,8 +26,8 @@ LANG_ISO=en
 
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-# Check Travis and CircleCI environment as well
-if [ "${CURRENT_BRANCH-}" != "dev" ] && [ "${TRAVIS_BRANCH-}" != "dev" ] && [ "${CIRCLE_BRANCH-}" != "dev" ]; then
+# Check Travis and Azure environment as well
+if [ "${CURRENT_BRANCH-}" != "dev" ] && [ "${AZURE_BRANCH-}" != "dev" ]; then
   echo "Please only run the translations upload script from a clean checkout of dev."
   exit 1
 fi

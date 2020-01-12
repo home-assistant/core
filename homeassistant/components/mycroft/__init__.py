@@ -9,17 +9,15 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'mycroft'
+DOMAIN = "mycroft"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_HOST): cv.string})}, extra=vol.ALLOW_EXTRA
+)
 
 
 def setup(hass, config):
     """Set up the Mycroft component."""
     hass.data[DOMAIN] = config[DOMAIN][CONF_HOST]
-    discovery.load_platform(hass, 'notify', DOMAIN, {}, config)
+    discovery.load_platform(hass, "notify", DOMAIN, {}, config)
     return True

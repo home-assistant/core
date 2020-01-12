@@ -1,10 +1,8 @@
 {
   "domain": "datadog",
   "name": "Datadog",
-  "documentation": "https://www.home-assistant.io/components/datadog",
-  "requirements": [
-    "datadog==0.15.0"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/datadog",
+  "requirements": ["datadog==0.15.0"],
   "dependencies": [],
   "codeowners": []
 }

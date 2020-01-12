@@ -13,19 +13,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
     devices = []
     for name, device in discovery_info.items():
-        ihc_id = device['ihc_id']
-        product_cfg = device['product_cfg']
-        product = device['product']
+        ihc_id = device["ihc_id"]
+        product_cfg = device["product_cfg"]
+        product = device["product"]
         # Find controller that corresponds with device id
-        ctrl_id = device['ctrl_id']
+        ctrl_id = device["ctrl_id"]
         ihc_key = IHC_DATA.format(ctrl_id)
         info = hass.data[ihc_key][IHC_INFO]
         ihc_controller = hass.data[ihc_key][IHC_CONTROLLER]
         ihc_off_id = product_cfg.get(CONF_OFF_ID)
         ihc_on_id = product_cfg.get(CONF_ON_ID)
 
-        switch = IHCSwitch(ihc_controller, name, ihc_id, ihc_off_id, ihc_on_id,
-                           info, product)
+        switch = IHCSwitch(
+            ihc_controller, name, ihc_id, ihc_off_id, ihc_on_id, info, product
+        )
         devices.append(switch)
     add_entities(devices)
 
@@ -33,8 +34,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class IHCSwitch(IHCDevice, SwitchDevice):
     """Representation of an IHC switch."""
 
-    def __init__(self, ihc_controller, name: str, ihc_id: int, ihc_off_id: int,
-                 ihc_on_id: int, info: bool, product=None) -> None:
+    def __init__(
+        self,
+        ihc_controller,
+        name: str,
+        ihc_id: int,
+        ihc_off_id: int,
+        ihc_on_id: int,
+        info: bool,
+        product=None,
+    ) -> None:
         """Initialize the IHC switch."""
         super().__init__(ihc_controller, name, ihc_id, product)
         self._ihc_off_id = ihc_off_id
@@ -51,16 +60,14 @@ class IHCSwitch(IHCDevice, SwitchDevice):
         if self._ihc_on_id:
             await async_pulse(self.hass, self.ihc_controller, self._ihc_on_id)
         else:
-            await async_set_bool(self.hass, self.ihc_controller,
-                                 self.ihc_id, True)
+            await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, True)
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         if self._ihc_off_id:
             await async_pulse(self.hass, self.ihc_controller, self._ihc_off_id)
         else:
-            await async_set_bool(self.hass, self.ihc_controller,
-                                 self.ihc_id, False)
+            await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC resource change."""

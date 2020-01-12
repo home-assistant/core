@@ -8,8 +8,13 @@ from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
 from . import (
-    DOMAIN as MYCHEVY_DOMAIN, ERROR_TOPIC, MYCHEVY_ERROR, MYCHEVY_SUCCESS,
-    UPDATE_TOPIC, EVSensorConfig)
+    DOMAIN as MYCHEVY_DOMAIN,
+    ERROR_TOPIC,
+    MYCHEVY_ERROR,
+    MYCHEVY_SUCCESS,
+    UPDATE_TOPIC,
+    EVSensorConfig,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,12 +22,10 @@ BATTERY_SENSOR = "batteryLevel"
 
 SENSORS = [
     EVSensorConfig("Mileage", "totalMiles", "miles", "mdi:speedometer"),
-    EVSensorConfig("Electric Range", "electricRange", "miles",
-                   "mdi:speedometer"),
+    EVSensorConfig("Electric Range", "electricRange", "miles", "mdi:speedometer"),
     EVSensorConfig("Charged By", "estimatedFullChargeBy"),
     EVSensorConfig("Charge Mode", "chargeMode"),
-    EVSensorConfig("Battery Level", BATTERY_SENSOR, "%", "mdi:battery",
-                   ["charging"])
+    EVSensorConfig("Battery Level", BATTERY_SENSOR, "%", "mdi:battery", ["charging"]),
 ]
 
 
@@ -44,7 +47,7 @@ class MyChevyStatus(Entity):
     """A string representing the charge mode."""
 
     _name = "MyChevy Status"
-    _icon = 'mdi:car-connected'
+    _icon = "mdi:car-connected"
 
     def __init__(self):
         """Initialize sensor with car connection."""
@@ -53,10 +56,10 @@ class MyChevyStatus(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.success)
+            UPDATE_TOPIC, self.success
+        )
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            ERROR_TOPIC, self.error)
+        self.hass.helpers.dispatcher.async_dispatcher_connect(ERROR_TOPIC, self.error)
 
     @callback
     def success(self):
@@ -71,7 +74,8 @@ class MyChevyStatus(Entity):
         """Update state, trigger updates."""
         _LOGGER.error(
             "Connection to mychevy website failed. "
-            "This probably means the mychevy to OnStar link is down")
+            "This probably means the mychevy to OnStar link is down"
+        )
         self._state = MYCHEVY_ERROR
         self.async_schedule_update_ha_state()
 
@@ -117,13 +121,16 @@ class EVSensor(Entity):
         self._car_vid = car_vid
 
         self.entity_id = ENTITY_ID_FORMAT.format(
-            '{}_{}_{}'.format(
-                MYCHEVY_DOMAIN, slugify(self._car.name), slugify(self._name)))
+            "{}_{}_{}".format(
+                MYCHEVY_DOMAIN, slugify(self._car.name), slugify(self._name)
+            )
+        )
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_update_callback)
+            UPDATE_TOPIC, self.async_update_callback
+        )
 
     @property
     def _car(self):

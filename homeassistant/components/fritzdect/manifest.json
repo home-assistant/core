@@ -1,10 +1,8 @@
 {
   "domain": "fritzdect",
-  "name": "Fritzdect",
-  "documentation": "https://www.home-assistant.io/components/fritzdect",
-  "requirements": [
-    "fritzhome==1.0.4"
-  ],
+  "name": "AVM FRITZ!DECT",
+  "documentation": "https://www.home-assistant.io/integrations/fritzdect",
+  "requirements": ["fritzhome==1.0.4"],
   "dependencies": [],
   "codeowners": []
 }
