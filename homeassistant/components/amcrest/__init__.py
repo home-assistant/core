@@ -132,8 +132,6 @@ class AmcrestChecker(Http):
                 offline = not self.available
             if offline and was_online:
                 _LOGGER.error("%s camera offline: Too many errors", self._wrap_name)
-                with self._token_lock:
-                    self._token = None
                 dispatcher_send(
                     self._hass, service_signal(SERVICE_UPDATE, self._wrap_name)
                 )
