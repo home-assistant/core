@@ -112,6 +112,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
 
         api = SynoApi(host, port, username, password, unit, use_ssl)
+        api.update()
 
         sensors = [
             SynoNasUtilSensor(api, name, variable, _UTILISATION_MON_COND[variable])
