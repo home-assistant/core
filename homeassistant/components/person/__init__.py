@@ -214,7 +214,7 @@ class PersonStorageCollection(collection.StorageCollection):
 
         user_id = update_data.get(CONF_USER_ID)
 
-        if user_id is not None:
+        if user_id is not None and user_id != data.get(CONF_USER_ID):
             await self._validate_user_id(user_id)
 
         return {**data, **update_data}
