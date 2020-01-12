@@ -18,8 +18,10 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.ring.config_flow.Ring",
-        return_value=Mock(is_connected=True),
+        "homeassistant.components.ring.config_flow.Auth",
+        return_value=Mock(
+            fetch_token=Mock(return_value={"access_token": "mock-token"})
+        ),
     ), patch(
         "homeassistant.components.ring.async_setup", return_value=mock_coro(True)
     ) as mock_setup, patch(
@@ -34,6 +36,7 @@ async def test_form(hass):
     assert result2["title"] == "hello@home-assistant.io"
     assert result2["data"] == {
         "username": "hello@home-assistant.io",
+        "token": {"access_token": "mock-token"},
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -47,7 +50,8 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.ring.config_flow.Ring", side_effect=InvalidAuth,
+        "homeassistant.components.ring.config_flow.Auth.fetch_token",
+        side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

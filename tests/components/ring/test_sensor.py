@@ -1,6 +1,5 @@
 """The tests for the Ring sensor platform."""
 from asyncio import run_coroutine_threadsafe
-import os
 import unittest
 from unittest.mock import patch
 
@@ -10,12 +9,7 @@ from homeassistant.components import ring as base_ring
 import homeassistant.components.ring.sensor as ring
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from tests.common import (
-    get_test_config_dir,
-    get_test_home_assistant,
-    load_fixture,
-    mock_storage,
-)
+from tests.common import get_test_home_assistant, load_fixture, mock_storage
 from tests.components.ring.test_init import ATTRIBUTION, VALID_CONFIG
 
 
@@ -29,15 +23,9 @@ class TestRingSensorSetup(unittest.TestCase):
         for device in devices:
             self.DEVICES.append(device)
 
-    def cleanup(self):
-        """Cleanup any data created from the tests."""
-        if os.path.isfile(self.cache):
-            os.remove(self.cache)
-
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.cache = get_test_config_dir(base_ring.DEFAULT_CACHEDB)
         self.config = {
             "username": "foo",
             "password": "bar",
@@ -55,7 +43,6 @@ class TestRingSensorSetup(unittest.TestCase):
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
-        self.cleanup()
 
     @requests_mock.Mocker()
     def test_sensor(self, mock):
@@ -97,6 +84,13 @@ class TestRingSensorSetup(unittest.TestCase):
             ).result()
 
         for device in self.DEVICES:
+            # Mimick add to hass
+            device.hass = self.hass
+            run_coroutine_threadsafe(
+                device.async_added_to_hass(), self.hass.loop,
+            ).result()
+
+            # Entity update data from ring data
             device.update()
             if device.name == "Front Battery":
                 expected_icon = icon_for_battery_level(
@@ -104,18 +98,12 @@ class TestRingSensorSetup(unittest.TestCase):
                 )
                 assert device.icon == expected_icon
                 assert 80 == device.state
-                assert "hp_cam_v1" == device.device_state_attributes["kind"]
-                assert "stickup_cams" == device.device_state_attributes["type"]
             if device.name == "Front Door Battery":
                 assert 100 == device.state
-                assert "lpd_v1" == device.device_state_attributes["kind"]
-                assert "chimes" != device.device_state_attributes["type"]
             if device.name == "Downstairs Volume":
                 assert 2 == device.state
-                assert "1.2.3" == device.device_state_attributes["firmware"]
                 assert "ring_mock_wifi" == device.device_state_attributes["wifi_name"]
                 assert "mdi:bell-ring" == device.icon
-                assert "chimes" == device.device_state_attributes["type"]
             if device.name == "Front Door Last Activity":
                 assert not device.device_state_attributes["answered"]
                 assert "America/New_York" == device.device_state_attributes["timezone"]
