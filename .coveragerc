@@ -822,7 +822,6 @@ omit =
     homeassistant/components/yeelight/*
     homeassistant/components/yeelightsunflower/light.py
     homeassistant/components/yi/camera.py
-    homeassistant/components/yr/__init__.py
     homeassistant/components/zabbix/*
     homeassistant/components/zamg/sensor.py
     homeassistant/components/zamg/weather.py
