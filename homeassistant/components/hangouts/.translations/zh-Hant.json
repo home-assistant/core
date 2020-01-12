@@ -5,7 +5,7 @@
             "unknown": "\u767c\u751f\u672a\u77e5\u932f\u8aa4\u3002"
         },
         "error": {
-            "invalid_2fa": "\u5169\u6b65\u9a5f\u9a57\u8b49\u7121\u6548\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
+            "invalid_2fa": "\u96d9\u91cd\u9a57\u8b49\u7121\u6548\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
             "invalid_2fa_method": "\u8a8d\u8b49\u65b9\u5f0f\u7121\u6548\uff08\u65bc\u96fb\u8a71\u4e0a\u9a57\u8b49\uff09\u3002",
             "invalid_login": "\u767b\u5165\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002"
         },
@@ -15,7 +15,7 @@
                     "2fa": "\u8a8d\u8b49\u78bc"
                 },
                 "description": "\u7a7a\u767d",
-                "title": "\u5169\u6b65\u9a5f\u9a57\u8b49"
+                "title": "\u96d9\u91cd\u9a57\u8b49"
             },
             "user": {
                 "data": {
