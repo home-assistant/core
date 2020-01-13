@@ -69,18 +69,33 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors = []
     for device in ring_chimes:
         for sensor_type in SENSOR_TYPES:
-            if "chime" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass, device, sensor_type))
+            if "chime" not in SENSOR_TYPES[sensor_type][1]:
+                continue
+
+            if sensor_type in ("wifi_signal_category", "wifi_signal_strength"):
+                await hass.async_add_executor_job(device.update)
+
+            sensors.append(RingSensor(hass, device, sensor_type))
 
     for device in ring_doorbells:
         for sensor_type in SENSOR_TYPES:
-            if "doorbell" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass, device, sensor_type))
+            if "doorbell" not in SENSOR_TYPES[sensor_type][1]:
+                continue
+
+            if sensor_type in ("wifi_signal_category", "wifi_signal_strength"):
+                await hass.async_add_executor_job(device.update)
+
+            sensors.append(RingSensor(hass, device, sensor_type))
 
     for device in ring_stickup_cams:
         for sensor_type in SENSOR_TYPES:
-            if "stickup_cams" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass, device, sensor_type))
+            if "stickup_cams" not in SENSOR_TYPES[sensor_type][1]:
+                continue
+
+            if sensor_type in ("wifi_signal_category", "wifi_signal_strength"):
+                await hass.async_add_executor_job(device.update)
+
+            sensors.append(RingSensor(hass, device, sensor_type))
 
     async_add_entities(sensors, True)
 
