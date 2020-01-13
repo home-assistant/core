@@ -88,6 +88,7 @@ SRV_ALL_LINK_MODE = "mode"
 SRV_LOAD_DB_RELOAD = "reload"
 SRV_CONTROLLER = "controller"
 SRV_RESPONDER = "responder"
+SRV_BOTH = "both"
 SRV_HOUSECODE = "housecode"
 SRV_SCENE_ON = "scene_on"
 SRV_SCENE_OFF = "scene_off"
@@ -201,7 +202,9 @@ CONFIG_SCHEMA = vol.Schema(
 ADD_ALL_LINK_SCHEMA = vol.Schema(
     {
         vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255),
-        vol.Required(SRV_ALL_LINK_MODE): vol.In([SRV_CONTROLLER, SRV_RESPONDER]),
+        vol.Required(SRV_ALL_LINK_MODE): vol.In(
+            [SRV_CONTROLLER, SRV_RESPONDER, SRV_BOTH]
+        ),
     }
 )
 
@@ -324,7 +327,15 @@ async def async_setup(hass, config):
         """Add an INSTEON All-Link between two devices."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
         mode = service.data.get(SRV_ALL_LINK_MODE)
-        link_mode = 1 if mode.lower() == SRV_CONTROLLER else 0
+        if mode.lower() == SRV_CONTROLLER:
+            link_mode = 1
+        elif mode.lower() == SRV_BOTH:
+            link_mode = 3
+        # link_mode = 2 is undefined
+        else:
+            # this module defaults to mode 0 (SRV_RESPONDER)
+            # insteon_modem defaults to 1 (SRV_CONTROLLER)
+            link_mode = 0
         insteon_modem.start_all_linking(link_mode, group)
 
     def del_all_link(service):

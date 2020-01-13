@@ -2,16 +2,16 @@ add_all_link:
   description: Tells the Insteom Modem (IM) start All-Linking mode. Once the the IM is in All-Linking mode, press the link button on the device to complete All-Linking.
   fields:
     group:
-      description: All-Link group number.
+      description: All-Link group number (0-255).
       example: 1
     mode:
-      description: Linking mode   controller - IM is controller   responder - IM is responder
+      description: Linking mode:   controller - IM is controller   responder - IM is responder    both - IM is both controller and responder
       example: 'controller'
 delete_all_link:
   description: Tells the Insteon Modem (IM) to remove an All-Link record from the All-Link Database of the IM and a device. Once the IM is set to delete the link, press the link button on the corresponding device to complete the process.
   fields:
     group:
-      description: All-Link group number.
+      description: All-Link group number (0-255).
       example: 1
 load_all_link_database:
   description: Load the All-Link Database for a device. WARNING - Loading a device All-LInk database is very time consuming and inconsistent. This may take a LONG time and may need to be repeated to obtain all records.
