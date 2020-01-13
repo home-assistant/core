@@ -14,8 +14,6 @@ from homeassistant.components.homekit.const import (
     ATTR_VALUE,
     DOMAIN as DOMAIN_HOMEKIT,
     EVENT_HOMEKIT_CHANGED,
-    EVENT_HOMEKIT_STARTED,
-    EVENT_HOMEKIT_STOPPED,
 )
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.recorder.models import Events, States
@@ -33,8 +31,6 @@ from homeassistant.const import (
     CONF_EXCLUDE,
     CONF_INCLUDE,
     EVENT_AUTOMATION_TRIGGERED,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY,
     EVENT_SCRIPT_STARTED,
     EVENT_STATE_CHANGED,
@@ -94,8 +90,6 @@ ALL_EVENT_TYPES = [
     EVENT_HOMEASSISTANT_STOP,
     EVENT_ALEXA_SMART_HOME,
     EVENT_HOMEKIT_CHANGED,
-    EVENT_HOMEKIT_STARTED,
-    EVENT_HOMEKIT_STOPPED,
     EVENT_AUTOMATION_TRIGGERED,
     EVENT_SCRIPT_STARTED,
 ]
@@ -356,26 +350,6 @@ def humanify(hass, events):
                     "message": message,
                     "domain": DOMAIN_HOMEKIT,
                     "entity_id": entity_id,
-                    "context_id": event.context.id,
-                    "context_user_id": event.context.user_id,
-                }
-
-            elif event.event_type == EVENT_HOMEKIT_STARTED:
-                yield {
-                    "when": event.time_fired,
-                    "name": "HomeKit",
-                    "message": "started",
-                    "domain": DOMAIN_HOMEKIT,
-                    "context_id": event.context.id,
-                    "context_user_id": event.context.user_id,
-                }
-
-            elif event.event_type == EVENT_HOMEKIT_STOPPED:
-                yield {
-                    "when": event.time_fired,
-                    "name": "HomeKit",
-                    "message": "stopped",
-                    "domain": DOMAIN_HOMEKIT,
                     "context_id": event.context.id,
                     "context_user_id": event.context.user_id,
                 }
