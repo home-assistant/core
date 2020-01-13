@@ -77,7 +77,7 @@ HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
     MEDIA_TYPE_EPISODE: "object.item.videoItem",
     MEDIA_TYPE_CHANNEL: "object.item.videoItem",
     MEDIA_TYPE_IMAGE: "object.item.imageItem",
-    MEDIA_TYPE_PLAYLIST: "object.item.playlist",
+    MEDIA_TYPE_PLAYLIST: "object.item.playlistItem",
 }
 UPNP_CLASS_DEFAULT = "object.item"
 HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING = {
