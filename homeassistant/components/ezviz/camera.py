@@ -115,6 +115,12 @@ def setup_platform(hass, config, add_entities, disc_info=None):
     )
 
     hass.services.async_register(
+        DOMAIN, "ezviz_switch_ir_on", async_switch_handler, CAMERA_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, "ezviz_switch_ir_off", async_switch_handler, CAMERA_SERVICE_SCHEMA
+    )
+    hass.services.async_register(
         DOMAIN, "ezviz_switch_audio_on", async_switch_handler, CAMERA_SERVICE_SCHEMA
     )
     hass.services.async_register(
