@@ -1,4 +1,6 @@
 """Tests for Vizio config flow."""
+import logging
+
 from asynctest import patch
 import voluptuous as vol
 
@@ -20,6 +22,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
 
+_LOGGER = logging.getLogger(__name__)
+
 NAME = "Vizio"
 NAME2 = "Vizio2"
 HOST = "192.168.1.1:9000"
@@ -28,6 +32,8 @@ DEVICE_CLASS_TV = "tv"
 DEVICE_CLASS_SOUNDBAR = "soundbar"
 ACCESS_TOKEN = "deadbeef"
 VOLUME_STEP = 2
+UNIQUE_ID = "testid"
+UNIQUE_ID2 = "testid2"
 
 MOCK_USER_VALID_TV_ENTRY = {
     CONF_NAME: NAME2,
@@ -68,14 +74,15 @@ async def test_user_flow(hass: HomeAssistantType) -> None:
     assert result["step_id"] == "user"
 
     # test valid options
-    with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True):
+    with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True), patch(
+        "pyvizio.VizioAsync.get_unique_id", return_value=UNIQUE_ID
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
                 CONF_NAME: NAME,
                 CONF_HOST: HOST,
                 CONF_DEVICE_CLASS: DEVICE_CLASS_SOUNDBAR,
-                CONF_VOLUME_STEP: DEFAULT_VOLUME_STEP,
             },
         )
 
@@ -84,7 +91,6 @@ async def test_user_flow(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SOUNDBAR
-    assert result["data"][CONF_VOLUME_STEP] == DEFAULT_VOLUME_STEP
     await hass.config_entries.async_unload(result["result"].entry_id)
 
     # test with all provided
@@ -95,7 +101,9 @@ async def test_user_flow(hass: HomeAssistantType) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True):
+    with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True), patch(
+        "pyvizio.VizioAsync.get_unique_id", return_value=UNIQUE_ID2
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
@@ -103,7 +111,6 @@ async def test_user_flow(hass: HomeAssistantType) -> None:
                 CONF_HOST: HOST2,
                 CONF_DEVICE_CLASS: DEVICE_CLASS_TV,
                 CONF_ACCESS_TOKEN: ACCESS_TOKEN,
-                CONF_VOLUME_STEP: VOLUME_STEP,
             },
         )
 
@@ -113,7 +120,6 @@ async def test_user_flow(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_HOST] == HOST2
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
-    assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
 
 
 async def test_user_host_already_configured(hass: HomeAssistantType) -> None:
@@ -206,7 +212,9 @@ async def test_user_error_on_tv_needs_token(hass: HomeAssistantType) -> None:
 async def test_import_flow(hass: HomeAssistantType) -> None:
     """Test import config flow."""
     # import with minimum fields only
-    with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True):
+    with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True), patch(
+        "pyvizio.VizioAsync.get_unique_id", return_value=UNIQUE_ID
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "import"},
@@ -223,7 +231,9 @@ async def test_import_flow(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_VOLUME_STEP] == DEFAULT_VOLUME_STEP
 
     # import with all
-    with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True):
+    with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True), patch(
+        "pyvizio.VizioAsync.get_unique_id", return_value=UNIQUE_ID2
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "import"},

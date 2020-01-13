@@ -32,7 +32,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_VOLUME_STEP, DEVICE_ID, DOMAIN, ICON
+from .const import CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP, DEVICE_ID, DOMAIN, ICON
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,8 +65,14 @@ async def async_setup_entry(
     host = entry.data[CONF_HOST]
     token = entry.data.get(CONF_ACCESS_TOKEN)
     name = entry.data[CONF_NAME]
-    volume_step = entry.data[CONF_VOLUME_STEP]
     device_type = entry.data[CONF_DEVICE_CLASS]
+    unique_id = entry.data.get("unique_id")
+
+    volume_step = entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
+    if not entry.options:
+        hass.config_entries.async_update_entry(
+            entry, options={CONF_VOLUME_STEP: volume_step}
+        )
 
     device = VizioAsync(
         DEVICE_ID,
@@ -88,17 +94,36 @@ async def async_setup_entry(
         )
         raise PlatformNotReady
 
-    async_add_entities([VizioDevice(device, name, volume_step, device_type)], True)
+    entity = VizioDevice(device, name, volume_step, device_type, unique_id)
+    entry.add_update_listener(async_entry_updated)
+
+    # Add entity to hass.data so that update listener can access it
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][entry.unique_id] = entity
+
+    async_add_entities([entity], True)
+
+
+async def async_entry_updated(hass: HomeAssistantType, entry: ConfigEntry) -> None:
+    """Call when Vizio config entry is updated."""
+    hass.data[DOMAIN][entry.unique_id].set_volume_step(
+        entry.options.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
+    )
 
 
 class VizioDevice(MediaPlayerDevice):
     """Media Player implementation which performs REST requests to device."""
 
     def __init__(
-        self, device: VizioAsync, name: str, volume_step: int, device_type: str
+        self,
+        device: VizioAsync,
+        name: str,
+        volume_step: int,
+        device_type: str,
+        unique_id: str,
     ) -> None:
         """Initialize Vizio device."""
-
         self._name = name
         self._state = None
         self._volume_level = None
@@ -109,14 +134,13 @@ class VizioDevice(MediaPlayerDevice):
         self._supported_commands = SUPPORTED_COMMANDS[device_type]
         self._device = device
         self._max_volume = float(self._device.get_max_volume())
-        self._unique_id = None
+        self._unique_id = unique_id
         self._icon = ICON[device_type]
         self._available = True
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-
         is_on = await self._device.get_power_state()
 
         if is_on is None:
@@ -148,6 +172,10 @@ class VizioDevice(MediaPlayerDevice):
         inputs = await self._device.get_inputs()
         if inputs is not None:
             self._available_inputs = [input_.name for input_ in inputs]
+
+    def set_volume_step(self, new_volume_step):
+        """Set new volume step."""
+        self._volume_step = new_volume_step
 
     @property
     def available(self) -> bool:

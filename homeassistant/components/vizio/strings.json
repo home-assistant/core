@@ -8,8 +8,7 @@
                     "name": "Name",
                     "host": "<Host/IP>:<Port>",
                     "device_class": "Device Type",
-                    "access_token": "Access Token",
-                    "volume_step": "Volume Step Size"
+                    "access_token": "Access Token"
                 }
             }
         },
@@ -24,6 +23,17 @@
             "already_setup": "This entry has already been setup.",
             "host_exists": "Vizio component with host already configured.",
             "name_exists": "Vizio component with name already configured."
+        }
+    },
+    "options": {
+        "title": "Update Vizo SmartCast Options",
+        "step": {
+            "init": {
+                "title": "Update Vizo SmartCast Options",
+                "data": {
+                    "volume_step": "Volume Step Size"
+                }
+            }
         }
     }
 }
