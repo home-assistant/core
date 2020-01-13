@@ -451,7 +451,7 @@ pyhomematic==0.1.63
 pyicloud==0.9.1
 
 # homeassistant.components.ipma
-pyipma==1.2.1
+pyipma==2.0.0
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
