@@ -232,7 +232,6 @@ class HassEzvizCamera(Camera):
     def update(self):
         """Update the camera states."""
 
-        self._ezviz_camera._loaded = 0
         data = self._ezviz_camera.status()
 
         self._name = data["name"]
