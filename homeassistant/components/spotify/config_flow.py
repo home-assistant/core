@@ -40,7 +40,11 @@ class SpotifyFlowHandler(
     async def async_oauth_create_entry(self, data: dict) -> dict:
         """Create an entry for Spotify."""
         spotify = Spotify(auth=data["token"]["access_token"])
-        current_user = await self.hass.async_add_executor_job(spotify.current_user)
+
+        try:
+            current_user = await self.hass.async_add_executor_job(spotify.current_user)
+        except Exception:  # pylint: disable=broad-except
+            return self.async_abort(reason="connection_error")
 
         name = data["id"] = current_user["id"]
 
