@@ -226,35 +226,34 @@ def get_default_config_dir() -> str:
     return os.path.join(data_dir, CONFIG_DIR_NAME)  # type: ignore
 
 
-async def async_ensure_config_exists(
-    hass: HomeAssistant, config_dir: str
-) -> Optional[str]:
+async def async_ensure_config_exists(hass: HomeAssistant) -> bool:
     """Ensure a configuration file exists in given configuration directory.
 
     Creating a default one if needed.
-    Return path to the configuration file.
+    Return boolean if configuration dir is ready to go.
     """
-    config_path = find_config_file(config_dir)
+    config_path = hass.config.path(YAML_CONFIG_FILE)
 
-    if config_path is None:
-        print("Unable to find configuration. Creating default one in", config_dir)
-        config_path = await async_create_default_config(hass, config_dir)
+    if os.path.isfile(config_path):
+        return True
 
-    return config_path
+    print(
+        "Unable to find configuration. Creating default one in", hass.config.config_dir
+    )
+    return await async_create_default_config(hass)
 
 
-async def async_create_default_config(
-    hass: HomeAssistant, config_dir: str
-) -> Optional[str]:
+async def async_create_default_config(hass: HomeAssistant) -> bool:
     """Create a default configuration file in given configuration directory.
 
-    Return path to new config file if success, None if failed.
-    This method needs to run in an executor.
+    Return if creation was successful.
     """
-    return await hass.async_add_executor_job(_write_default_config, config_dir)
+    return await hass.async_add_executor_job(
+        _write_default_config, hass.config.config_dir
+    )
 
 
-def _write_default_config(config_dir: str) -> Optional[str]:
+def _write_default_config(config_dir: str) -> bool:
     """Write the default config."""
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     secret_path = os.path.join(config_dir, SECRET_YAML)
@@ -288,11 +287,11 @@ def _write_default_config(config_dir: str) -> Optional[str]:
         with open(scene_yaml_path, "wt"):
             pass
 
-        return config_path
+        return True
 
     except OSError:
         print("Unable to create default configuration file", config_path)
-        return None
+        return False
 
 
 async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
@@ -300,33 +299,14 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
 
     This function allow a component inside the asyncio loop to reload its
     configuration by itself. Include package merge.
-
-    This method is a coroutine.
     """
-
-    def _load_hass_yaml_config() -> Dict:
-        path = find_config_file(hass.config.config_dir)
-        if path is None:
-            raise HomeAssistantError(
-                f"Config file not found in: {hass.config.config_dir}"
-            )
-        config = load_yaml_config_file(path)
-        return config
-
     # Not using async_add_executor_job because this is an internal method.
-    config = await hass.loop.run_in_executor(None, _load_hass_yaml_config)
+    config = await hass.loop.run_in_executor(
+        None, load_yaml_config_file, hass.config.path(YAML_CONFIG_FILE)
+    )
     core_config = config.get(CONF_CORE, {})
     await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
     return config
-
-
-def find_config_file(config_dir: Optional[str]) -> Optional[str]:
-    """Look in given directory for supported configuration files."""
-    if config_dir is None:
-        return None
-    config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
-
-    return config_path if os.path.isfile(config_path) else None
 
 
 def load_yaml_config_file(config_path: str) -> Dict[Any, Any]:
@@ -382,8 +362,7 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
 
     if version_obj < LooseVersion("0.92"):
         # 0.92 moved google/tts.py to google_translate/tts.py
-        config_path = find_config_file(hass.config.config_dir)
-        assert config_path is not None
+        config_path = hass.config.path(YAML_CONFIG_FILE)
 
         with open(config_path, "rt", encoding="utf-8") as config_file:
             config_raw = config_file.read()
