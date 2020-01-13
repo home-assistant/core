@@ -5,6 +5,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.components.spotify import config_flow
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_CREDENTIALS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -15,8 +16,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_CLIENT_ID): cv.string,
-                vol.Optional(CONF_CLIENT_SECRET): cv.string,
+                vol.Inclusive(CONF_CLIENT_ID, ATTR_CREDENTIALS): cv.string,
+                vol.Inclusive(CONF_CLIENT_SECRET, ATTR_CREDENTIALS): cv.string,
                 vol.Optional(CONF_ALIASES, default={}): {cv.string: cv.string},
             }
         )
@@ -33,7 +34,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][CONF_ALIASES] = config[DOMAIN].get(CONF_ALIASES)
 
-    if all(conf in config[DOMAIN] for conf in (CONF_CLIENT_ID, CONF_CLIENT_SECRET)):
+    if CONF_CLIENT_ID in config[DOMAIN]:
         config_flow.SpotifyFlowHandler.async_register_implementation(
             hass,
             config_entry_oauth2_flow.LocalOAuth2Implementation(
