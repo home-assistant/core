@@ -235,7 +235,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.2
+apprise==0.8.3
 
 # homeassistant.components.aprs
 aprslib==0.6.46
