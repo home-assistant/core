@@ -3,7 +3,7 @@ add_all_link:
   fields:
     group:
       description: All-Link group number (0-255).
-      example: 1
+      example: 0
     mode:
       description: 'Linking mode. "controller" - IM is controller; "responder" - IM is responder; "both" - IM is both controller and responder'
       example: 'controller'
