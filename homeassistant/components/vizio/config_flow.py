@@ -1,5 +1,4 @@
 """Config flow for Vizio."""
-
 import logging
 from typing import Any, Dict
 

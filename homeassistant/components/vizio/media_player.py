@@ -1,5 +1,4 @@
 """Vizio SmartCast Device support."""
-
 from datetime import timedelta
 import logging
 from typing import Callable, List

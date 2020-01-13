@@ -1,5 +1,4 @@
 """Constants used by vizio component."""
-
 CONF_UNIQUE_ID = "unique_id"
 CONF_VOLUME_STEP = "volume_step"
 
