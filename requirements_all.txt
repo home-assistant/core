@@ -366,9 +366,6 @@ caldav==0.6.1
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.3
 
-# homeassistant.components.ciscospark
-ciscosparkapi==0.4.2
-
 # homeassistant.components.cppm_tracker
 clearpasspy==1.0.2
 
