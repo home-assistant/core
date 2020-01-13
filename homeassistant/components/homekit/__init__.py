@@ -6,6 +6,7 @@ from zlib import adler32
 import voluptuous as vol
 
 from homeassistant.components import cover
+from homeassistant.components.logbook import async_log_entry
 from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -392,6 +393,7 @@ class HomeKit:
         _LOGGER.debug("Driver start")
         self.hass.add_job(self.driver.start)
         self.hass.bus.async_fire(EVENT_HOMEKIT_STARTED)
+        async_log_entry(self.hass, "HomeKit", "started", DOMAIN)
         self.status = STATUS_RUNNING
 
     def stop(self, *args):
@@ -403,3 +405,4 @@ class HomeKit:
         _LOGGER.debug("Driver stop")
         self.hass.add_job(self.driver.stop)
         self.hass.bus.async_fire(EVENT_HOMEKIT_STOPPED)
+        async_log_entry(self.hass, "HomeKit", "stopped", DOMAIN)
