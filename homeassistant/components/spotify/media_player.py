@@ -336,6 +336,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         return {
             "identifiers": {(DOMAIN, self._id)},
             "manufacturer": "Spotify AB",
-            "model": f"Spotify {model}",
+            "model": f"Spotify {model}".rstrip(),
             "name": self._name,
         }
