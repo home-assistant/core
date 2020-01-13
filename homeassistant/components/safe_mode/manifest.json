@@ -7,6 +7,6 @@
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
-  "dependencies": ["frontend", "config", "persistent_notification"],
+  "dependencies": ["frontend", "config", "persistent_notification", "cloud"],
   "codeowners": ["@home-assistant/core"]
 }
