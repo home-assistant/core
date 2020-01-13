@@ -5,7 +5,6 @@ from airly.exceptions import AirlyError
 from asynctest import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.components.airly import config_flow
 from homeassistant.components.airly.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
@@ -22,13 +21,12 @@ CONFIG = {
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
-    flow = config_flow.AirlyFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == SOURCE_USER
 
 
 async def test_invalid_api_key(hass):
