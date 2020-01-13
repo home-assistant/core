@@ -116,7 +116,6 @@ omit =
     homeassistant/components/cisco_ios/device_tracker.py
     homeassistant/components/cisco_mobility_express/device_tracker.py
     homeassistant/components/cisco_webex_teams/notify.py
-    homeassistant/components/ciscospark/notify.py
     homeassistant/components/citybikes/sensor.py
     homeassistant/components/clementine/media_player.py
     homeassistant/components/clickatell/notify.py
