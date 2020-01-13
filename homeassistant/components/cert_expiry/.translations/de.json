@@ -18,7 +18,7 @@
                     "name": "Der Name des Zertifikats",
                     "port": "Der Port des Zertifikats"
                 },
-                "title": "Definieren Sie das zu testende Zertifikat"
+                "title": "Definiere das zu testende Zertifikat"
             }
         },
         "title": "Zertifikatsablauf"
