@@ -204,7 +204,7 @@ class IPMAWeather(WeatherEntity):
         if not self._observation:
             return None
 
-        return self._observation.wind_intensity
+        return self._observation.wind_intensity_km
 
     @property
     def wind_bearing(self):
@@ -222,25 +222,25 @@ class IPMAWeather(WeatherEntity):
     @property
     def forecast(self):
         """Return the forecast array."""
-        if self._forecast:
-            fcdata_out = []
-            for data_in in self._forecast:
-                data_out = {}
-                data_out[ATTR_FORECAST_TIME] = data_in.forecast_date
-                data_out[ATTR_FORECAST_CONDITION] = next(
+        if not self._forecast:
+            return []
+
+        fcdata_out = [
+            {
+                ATTR_FORECAST_TIME: data_in.forecast_date,
+                ATTR_FORECAST_CONDITION: next(
                     (
                         k
                         for k, v in CONDITION_CLASSES.items()
                         if int(data_in.weather_type) in v
                     ),
                     None,
-                )
-                data_out[ATTR_FORECAST_TEMP_LOW] = data_in.min_temperature
-                data_out[ATTR_FORECAST_TEMP] = data_in.max_temperature
-                data_out[
-                    ATTR_FORECAST_PRECIPITATION
-                ] = data_in.precipitation_probability
+                ),
+                ATTR_FORECAST_TEMP_LOW: data_in.min_temperature,
+                ATTR_FORECAST_TEMP: data_in.max_temperature,
+                ATTR_FORECAST_PRECIPITATION: data_in.precipitation_probability,
+            }
+            for data_in in self._forecast
+        ]
 
-                fcdata_out.append(data_out)
-
-            return fcdata_out
+        return fcdata_out
