@@ -10,3 +10,5 @@ DEVICE_ID = "pyvizio"
 DOMAIN = "vizio"
 
 ICON = {"tv": "mdi:television", "soundbar": "mdi:speaker"}
+
+UPDATE_OPTIONS_SIGNAL = f"{DOMAIN}_options_update"

@@ -26,8 +26,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -38,6 +43,7 @@ from .const import (
     DEVICE_ID,
     DOMAIN,
     ICON,
+    UPDATE_OPTIONS_SIGNAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,21 +70,24 @@ SUPPORTED_COMMANDS = {
 
 async def async_setup_entry(
     hass: HomeAssistantType,
-    entry: ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> bool:
     """Set up a Vizio media player entry."""
-    host = entry.data[CONF_HOST]
-    token = entry.data.get(CONF_ACCESS_TOKEN)
-    name = entry.data[CONF_NAME]
-    device_type = entry.data[CONF_DEVICE_CLASS]
-    unique_id = entry.data.get(CONF_UNIQUE_ID)
+    host = config_entry.data[CONF_HOST]
+    token = config_entry.data.get(CONF_ACCESS_TOKEN)
+    name = config_entry.data[CONF_NAME]
+    device_type = config_entry.data[CONF_DEVICE_CLASS]
+    unique_id = config_entry.data.get(CONF_UNIQUE_ID)
 
-    volume_step = entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
-    if not entry.options:
+    # If config entry options not set up, set them up, otherwise assign values managed in options
+    if not config_entry.options or CONF_VOLUME_STEP not in config_entry.options:
+        volume_step = config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
         hass.config_entries.async_update_entry(
-            entry, options={CONF_VOLUME_STEP: volume_step}
+            config_entry, options={CONF_VOLUME_STEP: volume_step}
         )
+    else:
+        volume_step = config_entry.options[CONF_VOLUME_STEP]
 
     device = VizioAsync(
         DEVICE_ID,
@@ -100,28 +109,11 @@ async def async_setup_entry(
         )
         raise PlatformNotReady
 
-    entity = VizioDevice(device, name, volume_step, device_type, unique_id)
-    entry.add_update_listener(async_entry_updated)
-
-    # Add entity to hass.data so that update listener can access it
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.unique_id] = entity
+    entity = VizioDevice(
+        hass, config_entry, device, name, volume_step, device_type, unique_id
+    )
 
     async_add_entities([entity], True)
-
-
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
-    """Unload Vizio media player entry."""
-    hass[DOMAIN][entry.unique_id].pop()
-    return True
-
-
-async def async_entry_updated(hass: HomeAssistantType, entry: ConfigEntry) -> None:
-    """Call when Vizio config entry is updated."""
-    hass.data[DOMAIN][entry.unique_id].set_volume_step(
-        entry.options.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
-    )
 
 
 class VizioDevice(MediaPlayerDevice):
@@ -129,6 +121,8 @@ class VizioDevice(MediaPlayerDevice):
 
     def __init__(
         self,
+        hass: HomeAssistantType,
+        config_entry: ConfigEntry,
         device: VizioAsync,
         name: str,
         volume_step: int,
@@ -136,6 +130,10 @@ class VizioDevice(MediaPlayerDevice):
         unique_id: str,
     ) -> None:
         """Initialize Vizio device."""
+        self._hass = hass
+        self._config_entry = config_entry
+        self._async_unsub_listeners = []
+
         self._name = name
         self._state = None
         self._volume_level = None
@@ -185,9 +183,38 @@ class VizioDevice(MediaPlayerDevice):
         if inputs is not None:
             self._available_inputs = [input_.name for input_ in inputs]
 
-    def set_volume_step(self, new_volume_step):
-        """Set new volume step."""
-        self._volume_step = new_volume_step
+    @callback
+    @staticmethod
+    async def _async_config_entry_updated(
+        hass: HomeAssistantType, config_entry: ConfigEntry
+    ) -> None:
+        """Send update event when when Vizio config entry is updated."""
+        async_dispatcher_send(hass, UPDATE_OPTIONS_SIGNAL, config_entry)
+
+    async def _async_maybe_update(self, config_entry: ConfigEntry) -> None:
+        """Update options if the update signal comes from this entity."""
+        if config_entry.unique_id == self._unique_id:
+            self._volume_step = config_entry.options[CONF_VOLUME_STEP]
+
+    async def async_added_to_hass(self):
+        """Register callbacks when entity is added."""
+        # Register callback for when config entry is updated.
+        self._async_unsub_listeners.append(
+            self._config_entry.add_update_listener(self._async_config_entry_updated)
+        )
+
+        # Register callback for update event
+        self._async_unsub_listeners.append(
+            async_dispatcher_connect(
+                self._hass, UPDATE_OPTIONS_SIGNAL, self._async_maybe_update
+            )
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks when entity is removed."""
+        if len(self._async_unsub_listeners) > 0:
+            for listener in self._async_unsub_listeners:
+                listener()
 
     @property
     def available(self) -> bool:

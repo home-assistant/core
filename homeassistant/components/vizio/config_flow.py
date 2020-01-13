@@ -14,7 +14,6 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
 
 from . import validate_auth
 from .const import (
@@ -44,7 +43,8 @@ def update_schema_defaults(input_dict: Dict[str, Any]) -> vol.Schema:
             vol.Optional(
                 CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
             ): str,
-        }
+        },
+        extra=vol.REMOVE_EXTRA,
     )
 
 
@@ -72,8 +72,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(unique_id=user_input[CONF_HOST])
-
             # Store current values in case setup fails and user needs to edit
             self.user_schema = update_schema_defaults(user_input)
 
@@ -110,13 +108,10 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
                 # Abort flow if flow in progress or component with same unique ID matches new config entry
-                try:
-                    if unique_id and await self.async_set_unique_id(
-                        unique_id=unique_id, raise_on_progress=True
-                    ):
-                        return self.async_abort(reason="already_setup")
-                except AbortFlow:
-                    return self.async_abort(reason="already_in_progress")
+                if unique_id and await self.async_set_unique_id(
+                    unique_id=unique_id, raise_on_progress=True
+                ):
+                    return self.async_abort(reason="already_setup")
 
                 user_input[CONF_UNIQUE_ID] = unique_id
 
