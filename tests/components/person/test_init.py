@@ -753,7 +753,7 @@ async def test_reload(hass, hass_admin_user):
                 {"name": "Person 3", "id": "id-3"},
             ]
         },
-    ), patch("homeassistant.config.find_config_file", return_value=""):
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RELOAD,

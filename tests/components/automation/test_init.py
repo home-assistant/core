@@ -496,14 +496,13 @@ async def test_reload_config_service(hass, calls, hass_admin_user, hass_read_onl
             }
         },
     ):
-        with patch("homeassistant.config.find_config_file", return_value=""):
-            with pytest.raises(Unauthorized):
-                await common.async_reload(hass, Context(user_id=hass_read_only_user.id))
-                await hass.async_block_till_done()
-            await common.async_reload(hass, Context(user_id=hass_admin_user.id))
+        with pytest.raises(Unauthorized):
+            await common.async_reload(hass, Context(user_id=hass_read_only_user.id))
             await hass.async_block_till_done()
-            # De-flake ?!
-            await hass.async_block_till_done()
+        await common.async_reload(hass, Context(user_id=hass_admin_user.id))
+        await hass.async_block_till_done()
+        # De-flake ?!
+        await hass.async_block_till_done()
 
     assert hass.states.get("automation.hello") is None
     assert hass.states.get("automation.bye") is not None
@@ -551,9 +550,8 @@ async def test_reload_config_when_invalid_config(hass, calls):
         autospec=True,
         return_value={automation.DOMAIN: "not valid"},
     ):
-        with patch("homeassistant.config.find_config_file", return_value=""):
-            await common.async_reload(hass)
-            await hass.async_block_till_done()
+        await common.async_reload(hass)
+        await hass.async_block_till_done()
 
     assert hass.states.get("automation.hello") is None
 
@@ -590,9 +588,8 @@ async def test_reload_config_handles_load_fails(hass, calls):
         "homeassistant.config.load_yaml_config_file",
         side_effect=HomeAssistantError("bla"),
     ):
-        with patch("homeassistant.config.find_config_file", return_value=""):
-            await common.async_reload(hass)
-            await hass.async_block_till_done()
+        await common.async_reload(hass)
+        await hass.async_block_till_done()
 
     assert hass.states.get("automation.hello") is not None
 

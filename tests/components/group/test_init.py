@@ -429,9 +429,8 @@ class TestComponentsGroup(unittest.TestCase):
                 }
             },
         ):
-            with patch("homeassistant.config.find_config_file", return_value=""):
-                common.reload(self.hass)
-                self.hass.block_till_done()
+            common.reload(self.hass)
+            self.hass.block_till_done()
 
         assert sorted(self.hass.states.entity_ids()) == [
             "group.all_tests",
