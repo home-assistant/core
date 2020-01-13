@@ -49,37 +49,28 @@ class SmartPlugSwitch(SwitchEntity):
     def __init__(self, smartplug: SmartPlug):
         """Initialize the switch."""
         self.smartplug = smartplug
-        self._sysinfo = None
-        self._state = None
         self._available = False
-        # Set up emeter cache
         self._emeter_params = {}
-
-        self._mac = None
-        self._alias = None
-        self._model = None
-        self._device_id = None
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._device_id
+        return self.smartplug.device_id
 
     @property
     def name(self):
         """Return the name of the Smart Plug."""
-        return self._alias
+        return self.smartplug.alias
 
     @property
     def device_info(self):
         """Return information about the device."""
         return {
-            "name": self._alias,
-            "model": self._model,
+            "name": self.smartplug.alias,
+            "model": self.smartplug.model,
             "manufacturer": "TP-Link",
-            # FIXME: should this be the MAC even for subdevices?
-            "connections": {(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            "sw_version": self._sysinfo["sw_ver"],
+            "connections": {(dr.CONNECTION_NETWORK_MAC, self.smartplug.mac)},
+            "sw_version": self.smartplug.sys_info["sw_ver"],
         }
 
     @property
@@ -90,15 +81,17 @@ class SmartPlugSwitch(SwitchEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._state
+        return self.smartplug.is_on
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         await self.smartplug.turn_on()
+        await self.async_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         await self.smartplug.turn_off()
+        await self.async_update_ha_state()
 
     @property
     def device_state_attributes(self):
@@ -109,14 +102,6 @@ class SmartPlugSwitch(SwitchEntity):
         """Update the TP-Link switch's state."""
         try:
             await self.smartplug.update()
-            if not self._sysinfo:
-                self._sysinfo = self.smartplug.sys_info
-                self._mac = self.smartplug.mac
-                self._model = self.smartplug.model
-                self._alias = self.smartplug.alias
-                self._device_id = self.smartplug.device_id
-
-            self._state = self.smartplug.is_on
 
             if self.smartplug.has_emeter:
                 emeter_readings = await self.smartplug.get_emeter_realtime()
