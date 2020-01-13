@@ -68,6 +68,7 @@ PTZ_NONE = "NONE"
 
 SERVICE_PTZ = "onvif_ptz"
 
+DOMAIN = "onvif"
 ONVIF_DATA = "onvif"
 ENTITIES = "entities"
 
