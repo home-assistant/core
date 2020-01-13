@@ -113,9 +113,9 @@ class TankerkoenigData:
         _LOGGER.debug("Received data: %s", data)
         if not data["ok"]:
             _LOGGER.error(
-                "Error fetching data from tankerkoenig.de:\n%s", data["message"]
+                "Error fetching data from tankerkoenig.de:\n%s\nCould not setup sensors",
+                data["message"],
             )
-            _LOGGER.error("Could not setup sensors")
             return
 
         # Add stations found via location + radius

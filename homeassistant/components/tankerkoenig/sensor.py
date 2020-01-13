@@ -23,7 +23,7 @@ ATTR_IS_OPEN = "is_open"
 ATTR_STATION_NAME = "station_name"
 ATTRIBUTION = "Data provided by https://creativecommons.tankerkoenig.de"
 
-ICON = "mdi:fuel"
+ICON = "mdi:gas-station"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
