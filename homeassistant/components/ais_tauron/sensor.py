@@ -2,10 +2,7 @@
 import logging
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from .const import (
-    CONF_METER_ID,
-    SENSOR_TYPES,
-)
+from .const import CONF_METER_ID, SENSOR_TYPES
 from . import TauronAmiplusSensor
 
 _LOGGER = logging.getLogger(__name__)
