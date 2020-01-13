@@ -5,7 +5,7 @@ add_all_link:
       description: All-Link group number (0-255).
       example: 1
     mode:
-      description: "Linking mode:  controller - IM is controller   responder - IM is responder    both - IM is both controller and responder"
+      description: 'Linking mode. "controller" - IM is controller; "responder" - IM is responder; "both" - IM is both controller and responder'
       example: 'controller'
 delete_all_link:
   description: Tells the Insteon Modem (IM) to remove an All-Link record from the All-Link Database of the IM and a device. Once the IM is set to delete the link, press the link button on the corresponding device to complete the process.
