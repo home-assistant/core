@@ -662,7 +662,6 @@ omit =
     homeassistant/components/speedtestdotnet/*
     homeassistant/components/spider/*
     homeassistant/components/spotcrime/sensor.py
-    homeassistant/components/spotify/media_player.py
     homeassistant/components/squeezebox/*
     homeassistant/components/starline/*
     homeassistant/components/starlingbank/sensor.py
