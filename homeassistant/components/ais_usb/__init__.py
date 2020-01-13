@@ -101,26 +101,36 @@ async def async_setup(hass, config):
             ais_global.G_USB_DEVICES = _lsusb()
             device_info = get_device_info(event.pathname)
             if device_info is not None:
-                hass.async_add_job(
-                    hass.services.async_call(
-                        "ais_ai_service",
-                        "say_it",
-                        {"text": "Dodano: " + device_info["info"]},
+                if (
+                    device_info["id"] != G_AIS_REMOTE_ID
+                    or ais_global.G_USB_INTERNAL_MIC_RESET is False
+                ):
+                    hass.async_add_job(
+                        hass.services.async_call(
+                            "ais_ai_service",
+                            "say_it",
+                            {"text": "Dodano: " + device_info["info"]},
+                        )
                     )
-                )
+                # reset flag
+                ais_global.G_USB_INTERNAL_MIC_RESET = False
                 # prepare device
                 prepare_usb_device(hass, device_info)
 
         def process_IN_DELETE(self, event):
             device_info = get_device_info(event.pathname)
             if device_info is not None:
-                hass.async_add_job(
-                    hass.services.async_call(
-                        "ais_ai_service",
-                        "say_it",
-                        {"text": "Usunięto: " + device_info["info"]},
+                if (
+                    device_info["id"] != G_AIS_REMOTE_ID
+                    or ais_global.G_USB_INTERNAL_MIC_RESET is False
+                ):
+                    hass.async_add_job(
+                        hass.services.async_call(
+                            "ais_ai_service",
+                            "say_it",
+                            {"text": "Usunięto: " + device_info["info"]},
+                        )
                     )
-                )
                 # remove device
                 remove_usb_device(hass, device_info)
 

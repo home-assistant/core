@@ -456,6 +456,7 @@ def _execute_script(hass, call):
         # take the full path
         script = str(os.path.dirname(__file__))
         script += "/scripts/reset_usb.sh"
+        ais_global.G_USB_INTERNAL_MIC_RESET = True
 
     import subprocess
 

@@ -101,6 +101,7 @@ G_HTTP_REST_SERVICE_BASE_URL = "http://{}:8122"
 
 #
 G_USB_DEVICES = []
+G_USB_INTERNAL_MIC_RESET = False
 
 
 def get_pass_for_ssid(ssid):
