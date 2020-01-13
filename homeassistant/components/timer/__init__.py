@@ -12,11 +12,15 @@ from homeassistant.const import (
     CONF_NAME,
     SERVICE_RELOAD,
 )
+from homeassistant.core import callback
+from homeassistant.helpers import collection, entity_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,6 +47,21 @@ SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_CANCEL = "cancel"
 SERVICE_FINISH = "finish"
+
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
+
+CREATE_FIELDS = {
+    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
+}
+UPDATE_FIELDS = {
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_DURATION): cv.time_period,
+}
 
 
 def _none_to_empty_dict(value):
@@ -72,24 +91,55 @@ CONFIG_SCHEMA = vol.Schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
-async def async_setup(hass, config):
-    """Set up a timer."""
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+    """Set up an input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    id_manager = collection.IDManager()
 
-    entities = [
-        Timer.from_yaml({CONF_ID: id_, **cfg}) for id_, cfg in config[DOMAIN].items()
-    ]
+    yaml_collection = collection.YamlCollection(
+        logging.getLogger(f"{__name__}.yaml_collection"), id_manager
+    )
+    collection.attach_entity_component_collection(
+        component, yaml_collection, Timer.from_yaml
+    )
 
-    async def reload_service_handler(service_call):
-        """Remove all input booleans and load new ones from config."""
-        conf = await component.async_prepare_reload()
-        if conf is None:
+    storage_collection = TimerStorageCollection(
+        Store(hass, STORAGE_VERSION, STORAGE_KEY),
+        logging.getLogger(f"{__name__}.storage_collection"),
+        id_manager,
+    )
+    collection.attach_entity_component_collection(component, storage_collection, Timer)
+
+    await yaml_collection.async_load(
+        [{CONF_ID: id_, **cfg} for id_, cfg in config[DOMAIN].items()]
+    )
+    await storage_collection.async_load()
+
+    collection.StorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+    ).async_setup(hass)
+
+    async def _collection_changed(
+        change_type: str, item_id: str, config: typing.Optional[typing.Dict]
+    ) -> None:
+        """Handle a collection change: clean up entity registry on removals."""
+        if change_type != collection.CHANGE_REMOVED:
             return
-        new_entities = [
-            Timer.from_yaml({CONF_ID: id_, **cfg}) for id_, cfg in conf[DOMAIN].items()
-        ]
-        if new_entities:
-            await component.async_add_entities(new_entities)
+
+        ent_reg = await entity_registry.async_get_registry(hass)
+        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
+
+    yaml_collection.async_add_listener(_collection_changed)
+    storage_collection.async_add_listener(_collection_changed)
+
+    async def reload_service_handler(service_call: ServiceCallType) -> None:
+        """Reload yaml entities."""
+        conf = await component.async_prepare_reload(skip_reset=True)
+        if conf is None:
+            conf = {DOMAIN: {}}
+        await yaml_collection.async_load(
+            [{CONF_ID: id_, **cfg} for id_, cfg in conf[DOMAIN].items()]
+        )
 
     homeassistant.helpers.service.async_register_admin_service(
         hass,
@@ -107,9 +157,28 @@ async def async_setup(hass, config):
     component.async_register_entity_service(SERVICE_CANCEL, {}, "async_cancel")
     component.async_register_entity_service(SERVICE_FINISH, {}, "async_finish")
 
-    if entities:
-        await component.async_add_entities(entities)
     return True
+
+
+class TimerStorageCollection(collection.StorageCollection):
+    """Timer storage based collection."""
+
+    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
+
+    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+        """Validate the config is valid."""
+        return self.CREATE_SCHEMA(data)
+
+    @callback
+    def _get_suggested_id(self, info: typing.Dict) -> str:
+        """Suggest an ID based on the config."""
+        return info[CONF_NAME]
+
+    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+        """Return a new updated data object."""
+        update_data = self.UPDATE_SCHEMA(update_data)
+        return {**data, **update_data}
 
 
 class Timer(RestoreEntity):
@@ -161,6 +230,11 @@ class Timer(RestoreEntity):
             ATTR_REMAINING: str(self._remaining),
         }
 
+    @property
+    def unique_id(self) -> typing.Optional[str]:
+        """Return unique id for the entity."""
+        return self._config[CONF_ID]
+
     async def async_added_to_hass(self):
         """Call when entity is about to be added to Home Assistant."""
         # If not None, we got an initial value.
@@ -200,7 +274,7 @@ class Timer(RestoreEntity):
         self._listener = async_track_point_in_utc_time(
             self.hass, self.async_finished, self._end
         )
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_pause(self):
         """Pause a timer."""
@@ -213,7 +287,7 @@ class Timer(RestoreEntity):
         self._state = STATUS_PAUSED
         self._end = None
         self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {"entity_id": self.entity_id})
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_cancel(self):
         """Cancel a timer."""
@@ -224,7 +298,7 @@ class Timer(RestoreEntity):
         self._end = None
         self._remaining = timedelta()
         self.hass.bus.async_fire(EVENT_TIMER_CANCELLED, {"entity_id": self.entity_id})
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_finish(self):
         """Reset and updates the states, fire finished event."""
@@ -235,7 +309,7 @@ class Timer(RestoreEntity):
         self._state = STATUS_IDLE
         self._remaining = timedelta()
         self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_finished(self, time):
         """Reset and updates the states, fire finished event."""
@@ -246,4 +320,9 @@ class Timer(RestoreEntity):
         self._state = STATUS_IDLE
         self._remaining = timedelta()
         self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
+
+    async def async_update_config(self, config: typing.Dict) -> None:
+        """Handle when the config is updated."""
+        self._config = config
+        self.async_write_ha_state()
