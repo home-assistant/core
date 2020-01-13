@@ -220,9 +220,7 @@ class TPLinkSmartBulb(LightEntity):
 
         try:
             # Update light features only once.
-            self._light_features = (
-                self._light_features or self.get_light_features()
-            )
+            self._light_features = self._light_features or self.get_light_features()
             self._light_state = await self.get_light_state()
             self._is_available = True
         except (SmartDeviceException, OSError) as ex:
@@ -349,7 +347,9 @@ class TPLinkSmartBulb(LightEntity):
                 return
 
         if new_light_state.color_temp != old_light_state.color_temp:
-            await self.smartbulb.set_color_temp(int(mired_to_kelvin(new_light_state.color_temp)))
+            await self.smartbulb.set_color_temp(
+                int(mired_to_kelvin(new_light_state.color_temp))
+            )
 
         brightness_pct = brightness_to_percentage(new_light_state.brightness)
         if new_light_state.hs != old_light_state.hs and len(new_light_state.hs) > 1:

@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Callable, List, Any, Awaitable
+from typing import Any, Awaitable, Callable, List
 
 from kasa import (
     Discover,
@@ -94,7 +94,6 @@ async def async_discover_devices(
         else:
             _LOGGER.error("Unknown smart device type: %s", type(dev))
 
-
     return SmartDevices(lights, switches)
 
 
@@ -124,7 +123,6 @@ def get_static_devices(config_data) -> SmartDevices:
 
 AsyncAddEntities = Callable[[List[Any], bool], None]
 AddEntitiesCallable = Callable[[Any, AsyncAddEntities], Awaitable[bool]]
-
 
 
 async def async_add_entities_retry(
