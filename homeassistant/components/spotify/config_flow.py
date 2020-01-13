@@ -32,7 +32,7 @@ class SpotifyFlowHandler(
             "user-modify-playback-state",
             # Needed in order to read available devices
             "user-read-playback-state",
-            # Needed to determin if the user has Spotify Premium
+            # Needed to determine if the user has Spotify Premium
             "user-read-private",
         ]
         return {"scope": ",".join(scopes)}
