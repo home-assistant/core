@@ -281,48 +281,65 @@ class TestHomeAssistant(unittest.TestCase):
             self.hass.add_job(None, "test_arg")
 
 
-class TestEvent(unittest.TestCase):
-    """A Test Event class."""
+def test_event_fields():
+    """Test event fields."""
+    now = dt_util.utcnow()
+    context = ha.Context()
 
-    def test_eq(self):
-        """Test events."""
-        now = dt_util.utcnow()
-        data = {"some": "attr"}
-        context = ha.Context()
-        event1, event2 = [
-            ha.Event("some_type", data, time_fired=now, context=context)
-            for _ in range(2)
-        ]
+    event = ha.Event(
+        "test-event-type", {"data": "read-only"}, ha.EventOrigin.remote, now, context
+    )
+    assert event.event_type == "test-event-type"
+    assert event.data == {"data": "read-only"}
 
-        assert event1 == event2
+    with pytest.raises(TypeError):
+        event.data["write"] = "not-allowed"
 
-    def test_repr(self):
-        """Test that repr method works."""
-        assert "<Event TestEvent[L]>" == str(ha.Event("TestEvent"))
+    assert event.origin == ha.EventOrigin.remote
+    assert event.time_fired == now
+    assert event.context is context
 
-        assert "<Event TestEvent[R]: beer=nice>" == str(
-            ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote)
-        )
 
-    def test_as_dict(self):
-        """Test as dictionary."""
-        event_type = "some_type"
-        now = dt_util.utcnow()
-        data = {"some": "attr"}
+def test_event_eq():
+    """Test events."""
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+    context = ha.Context()
+    event1, event2 = [
+        ha.Event("some_type", data, time_fired=now, context=context) for _ in range(2)
+    ]
 
-        event = ha.Event(event_type, data, ha.EventOrigin.local, now)
-        expected = {
-            "event_type": event_type,
-            "data": data,
-            "origin": "LOCAL",
-            "time_fired": now,
-            "context": {
-                "id": event.context.id,
-                "parent_id": None,
-                "user_id": event.context.user_id,
-            },
-        }
-        assert expected == event.as_dict()
+    assert event1 == event2
+
+
+def test_event_repr():
+    """Test that repr method works."""
+    assert "<Event TestEvent[L]>" == str(ha.Event("TestEvent"))
+
+    assert "<Event TestEvent[R]: beer=nice>" == str(
+        ha.Event("TestEvent", {"beer": "nice"}, ha.EventOrigin.remote)
+    )
+
+
+def test_event_as_dict():
+    """Test as dictionary."""
+    event_type = "some_type"
+    now = dt_util.utcnow()
+    data = {"some": "attr"}
+
+    event = ha.Event(event_type, data, ha.EventOrigin.local, now)
+    expected = {
+        "event_type": event_type,
+        "data": data,
+        "origin": "LOCAL",
+        "time_fired": now,
+        "context": {
+            "id": event.context.id,
+            "parent_id": None,
+            "user_id": event.context.user_id,
+        },
+    }
+    assert expected == event.as_dict()
 
 
 class TestEventBus(unittest.TestCase):

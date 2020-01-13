@@ -470,7 +470,7 @@ class Event:
     ) -> None:
         """Initialize a new event."""
         self.event_type = event_type
-        self.data = data or {}
+        self.data = MappingProxyType(data or {})
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
         self.context: Context = context or Context()
