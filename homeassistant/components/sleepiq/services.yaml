@@ -1,0 +1,22 @@
+set_sleep_number:
+  description: Changes the Sleep Number of a bed.
+  fields:
+    sleep_number:
+      description: The new sleep number, as a multiple of 5 between 5 and 100.
+      example: 45
+    bed:
+      description: The name of the bed. If unspecified, affects all beds.
+      example: 'Master Bedroom'
+    side:
+      description: The side to change. If unspecified, both sides will change.
+      example: 'right'
+
+set_to_favorite_sleep_number:
+  description: Changes a bed's Sleep Number to the "favorite" preset.
+  fields:
+    bed:
+      description: The name of the bed. If unspecified, affects all beds.
+      example: 'Master Bedroom'
+    side:
+      description: The side to change. If unspecified, both sides will change.
+      example: 'right'

@@ -295,6 +295,7 @@ homeassistant/components/shodan/* @fabaff
 homeassistant/components/signal_messenger/* @bbernhard
 homeassistant/components/simplisafe/* @bachya
 homeassistant/components/sinch/* @bendikrb
+homeassistant/components/sleepiq/* @Jay2645
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc
