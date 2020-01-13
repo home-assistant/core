@@ -262,7 +262,6 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     async def async_step_discovery(self, user_input: dict = None) -> dict:
         """Handle a flow initialized by discovery."""
         await self.async_set_unique_id(self.DOMAIN)
-        self._abort_if_unique_id_configured()
 
         assert self.hass is not None
         if self.hass.config_entries.async_entries(self.DOMAIN):
