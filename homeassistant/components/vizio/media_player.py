@@ -105,6 +105,12 @@ async def async_setup_entry(
     async_add_entities([entity], True)
 
 
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+    """Unload Vizio media player entry."""
+    hass[DOMAIN][entry.unique_id].pop()
+    return True
+
+
 async def async_entry_updated(hass: HomeAssistantType, entry: ConfigEntry) -> None:
     """Call when Vizio config entry is updated."""
     hass.data[DOMAIN][entry.unique_id].set_volume_step(
