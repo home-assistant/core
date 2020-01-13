@@ -41,6 +41,12 @@ async def async_setup_entry(hass, config_entry):
     latitude = config_entry.data[CONF_LATITUDE]
     longitude = config_entry.data[CONF_LONGITUDE]
 
+    # For backwards compat, set unique ID
+    if config_entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=f"{latitude}-{longitude}"
+        )
+
     websession = async_get_clientsession(hass)
 
     airly = AirlyData(websession, api_key, latitude, longitude)
