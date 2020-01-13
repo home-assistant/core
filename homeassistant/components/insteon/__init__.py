@@ -327,9 +327,9 @@ async def async_setup(hass, config):
         """Add an INSTEON All-Link between two devices."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
         mode = service.data.get(SRV_ALL_LINK_MODE)
-        if mode.lower() == SRV_CONTROLLER:
+        if mode == SRV_CONTROLLER:
             link_mode = 1
-        elif mode.lower() == SRV_BOTH:
+        elif mode == SRV_BOTH:
             link_mode = 3
         # link_mode = 2 is undefined
         else:
