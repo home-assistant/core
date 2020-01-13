@@ -120,6 +120,7 @@ async def test_user_flow(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_HOST] == HOST2
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
+    await hass.config_entries.async_unload(result["result"].entry_id)
 
 
 async def test_user_host_already_configured(hass: HomeAssistantType) -> None:
@@ -229,6 +230,7 @@ async def test_import_flow(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SOUNDBAR
     assert result["data"][CONF_VOLUME_STEP] == DEFAULT_VOLUME_STEP
+    await hass.config_entries.async_unload(result["result"].entry_id)
 
     # import with all
     with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True), patch(
@@ -247,6 +249,7 @@ async def test_import_flow(hass: HomeAssistantType) -> None:
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
+    await hass.config_entries.async_unload(result["result"].entry_id)
 
 
 async def test_import_entity_already_configured(hass: HomeAssistantType) -> None:
