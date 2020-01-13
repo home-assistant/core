@@ -19,6 +19,7 @@ from homeassistant.data_entry_flow import AbortFlow
 
 from . import validate_auth
 from .const import (
+    CONF_UNIQUE_ID,
     CONF_VOLUME_STEP,
     DEFAULT_DEVICE_CLASS,
     DEFAULT_NAME,
@@ -118,7 +119,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 except AbortFlow:
                     return self.async_abort(reason="already_in_progress")
 
-                user_input["unique_id"] = unique_id
+                user_input[CONF_UNIQUE_ID] = unique_id
 
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input

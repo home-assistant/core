@@ -32,7 +32,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP, DEVICE_ID, DOMAIN, ICON
+from .const import (
+    CONF_UNIQUE_ID,
+    CONF_VOLUME_STEP,
+    DEFAULT_VOLUME_STEP,
+    DEVICE_ID,
+    DOMAIN,
+    ICON,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +73,7 @@ async def async_setup_entry(
     token = entry.data.get(CONF_ACCESS_TOKEN)
     name = entry.data[CONF_NAME]
     device_type = entry.data[CONF_DEVICE_CLASS]
-    unique_id = entry.data.get("unique_id")
+    unique_id = entry.data.get(CONF_UNIQUE_ID)
 
     volume_step = entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
     if not entry.options:
