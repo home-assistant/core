@@ -1,10 +1,17 @@
 """Support for Timers."""
 from datetime import timedelta
 import logging
+import typing
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ICON, CONF_NAME, SERVICE_RELOAD
+from homeassistant.const import (
+    ATTR_EDITABLE,
+    CONF_ICON,
+    CONF_ID,
+    CONF_NAME,
+    SERVICE_RELOAD,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -69,14 +76,18 @@ async def async_setup(hass, config):
     """Set up a timer."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    entities = await _async_process_config(hass, config)
+    entities = [
+        Timer.from_yaml({CONF_ID: id_, **cfg}) for id_, cfg in config[DOMAIN].items()
+    ]
 
     async def reload_service_handler(service_call):
         """Remove all input booleans and load new ones from config."""
         conf = await component.async_prepare_reload()
         if conf is None:
             return
-        new_entities = await _async_process_config(hass, conf)
+        new_entities = [
+            Timer.from_yaml({CONF_ID: id_, **cfg}) for id_, cfg in conf[DOMAIN].items()
+        ]
         if new_entities:
             await component.async_add_entities(new_entities)
 
@@ -101,37 +112,25 @@ async def async_setup(hass, config):
     return True
 
 
-async def _async_process_config(hass, config):
-    """Process config and create list of entities."""
-    entities = []
-
-    for object_id, cfg in config[DOMAIN].items():
-        if not cfg:
-            cfg = {}
-
-        name = cfg.get(CONF_NAME)
-        icon = cfg.get(CONF_ICON)
-        duration = cfg[CONF_DURATION]
-
-        entities.append(Timer(hass, object_id, name, icon, duration))
-
-    return entities
-
-
 class Timer(RestoreEntity):
     """Representation of a timer."""
 
-    def __init__(self, hass, object_id, name, icon, duration):
+    def __init__(self, config: typing.Dict):
         """Initialize a timer."""
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._name = name
+        self._config = config
+        self.editable = True
         self._state = STATUS_IDLE
-        self._duration = duration
-        self._remaining = self._duration
-        self._icon = icon
-        self._hass = hass
+        self._remaining = config[CONF_DURATION]
         self._end = None
         self._listener = None
+
+    @classmethod
+    def from_yaml(cls, config: typing.Dict) -> "Timer":
+        """Return entity instance initialized from yaml storage."""
+        timer = cls(config)
+        timer.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        timer.editable = False
+        return timer
 
     @property
     def should_poll(self):
@@ -141,12 +140,12 @@ class Timer(RestoreEntity):
     @property
     def name(self):
         """Return name of the timer."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def icon(self):
         """Return the icon to be used for this entity."""
-        return self._icon
+        return self._config.get(CONF_ICON)
 
     @property
     def state(self):
@@ -157,7 +156,8 @@ class Timer(RestoreEntity):
     def state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_DURATION: str(self._duration),
+            ATTR_DURATION: str(self._config[CONF_DURATION]),
+            ATTR_EDITABLE: self.editable,
             ATTR_REMAINING: str(self._remaining),
         }
 
@@ -189,16 +189,16 @@ class Timer(RestoreEntity):
             self._end = start + self._remaining
         else:
             if newduration:
-                self._duration = newduration
+                self._config[CONF_DURATION] = newduration
                 self._remaining = newduration
             else:
-                self._remaining = self._duration
-            self._end = start + self._duration
+                self._remaining = self._config[CONF_DURATION]
+            self._end = start + self._config[CONF_DURATION]
 
-        self._hass.bus.async_fire(event, {"entity_id": self.entity_id})
+        self.hass.bus.async_fire(event, {"entity_id": self.entity_id})
 
         self._listener = async_track_point_in_utc_time(
-            self._hass, self.async_finished, self._end
+            self.hass, self.async_finished, self._end
         )
         await self.async_update_ha_state()
 
@@ -212,7 +212,7 @@ class Timer(RestoreEntity):
         self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
         self._state = STATUS_PAUSED
         self._end = None
-        self._hass.bus.async_fire(EVENT_TIMER_PAUSED, {"entity_id": self.entity_id})
+        self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {"entity_id": self.entity_id})
         await self.async_update_ha_state()
 
     async def async_cancel(self):
@@ -223,7 +223,7 @@ class Timer(RestoreEntity):
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = timedelta()
-        self._hass.bus.async_fire(EVENT_TIMER_CANCELLED, {"entity_id": self.entity_id})
+        self.hass.bus.async_fire(EVENT_TIMER_CANCELLED, {"entity_id": self.entity_id})
         await self.async_update_ha_state()
 
     async def async_finish(self):
@@ -234,7 +234,7 @@ class Timer(RestoreEntity):
         self._listener = None
         self._state = STATUS_IDLE
         self._remaining = timedelta()
-        self._hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
+        self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
         await self.async_update_ha_state()
 
     async def async_finished(self, time):
@@ -245,5 +245,5 @@ class Timer(RestoreEntity):
         self._listener = None
         self._state = STATUS_IDLE
         self._remaining = timedelta()
-        self._hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
+        self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
         await self.async_update_ha_state()
