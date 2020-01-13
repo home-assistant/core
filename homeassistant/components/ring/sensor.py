@@ -106,6 +106,8 @@ class RingSensor(Entity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
+        if self._sensor_type in ("wifi_signal_category", "wifi_signal_strength"):
+            await self.hass.async_add_executor_job(self._data.update)
         self._disp_disconnect = async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_RING, self._update_callback
         )
