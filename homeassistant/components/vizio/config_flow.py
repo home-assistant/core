@@ -107,7 +107,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input[CONF_DEVICE_CLASS],
                 )
 
-                # Abort flow if flow in progress or component with same unique ID matches new config entry
+                # Abort flow if existing component with same unique ID matches new config entry
                 if unique_id and await self.async_set_unique_id(
                     unique_id=unique_id, raise_on_progress=True
                 ):
