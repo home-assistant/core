@@ -59,7 +59,6 @@ homeassistant/components/cert_expiry/* @Cereal2nd @jjlawren
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
-homeassistant/components/ciscospark/* @fbradyirl
 homeassistant/components/cloud/* @home-assistant/cloud
 homeassistant/components/cloudflare/* @ludeeus
 homeassistant/components/comfoconnect/* @michaelarnauts
