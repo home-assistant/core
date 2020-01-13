@@ -32,6 +32,9 @@ ZEROCONF = {
 HOMEKIT = {
     "BSB002": "hue",
     "LIFX": "lifx",
+    "Netatmo Relay": "netatmo",
+    "Presence": "netatmo",
     "TRADFRI": "tradfri",
+    "Welcome": "netatmo",
     "Wemo": "wemo"
 }

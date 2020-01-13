@@ -59,7 +59,6 @@ homeassistant/components/cert_expiry/* @Cereal2nd @jjlawren
 homeassistant/components/cisco_ios/* @fbradyirl
 homeassistant/components/cisco_mobility_express/* @fbradyirl
 homeassistant/components/cisco_webex_teams/* @fbradyirl
-homeassistant/components/ciscospark/* @fbradyirl
 homeassistant/components/cloud/* @home-assistant/cloud
 homeassistant/components/cloudflare/* @ludeeus
 homeassistant/components/comfoconnect/* @michaelarnauts
@@ -82,6 +81,7 @@ homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7
 homeassistant/components/dsmr_reader/* @depl0y
 homeassistant/components/dweet/* @fabaff
+homeassistant/components/dyson/* @etheralm
 homeassistant/components/ecobee/* @marthoc
 homeassistant/components/ecovacs/* @OverloadUT
 homeassistant/components/egardia/* @jeroenterheerdt
@@ -218,9 +218,11 @@ homeassistant/components/msteams/* @peroyvind
 homeassistant/components/mysensors/* @MartinHjelmare
 homeassistant/components/mystrom/* @fabaff
 homeassistant/components/neato/* @dshokouhi @Santobert
+homeassistant/components/nederlandse_spoorwegen/* @YarmoM
 homeassistant/components/nello/* @pschmitt
 homeassistant/components/ness_alarm/* @nickw444
 homeassistant/components/nest/* @awarecan
+homeassistant/components/netatmo/* @cgtobi
 homeassistant/components/netdata/* @fabaff
 homeassistant/components/nextbus/* @vividboarder
 homeassistant/components/nilu/* @hfurubotten

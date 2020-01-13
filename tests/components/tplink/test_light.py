@@ -1,9 +1,15 @@
 """Tests for light platform."""
-from unittest.mock import patch
+from typing import Callable, NamedTuple
+from unittest.mock import Mock, patch
 
-from pyHS100 import SmartBulb
+from pyHS100 import SmartDeviceException
+import pytest
 
 from homeassistant.components import tplink
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -20,9 +26,25 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+LightMockData = NamedTuple(
+    "LightMockData",
+    (
+        ("sys_info", dict),
+        ("light_state", dict),
+        ("set_light_state", Callable[[dict], None]),
+        ("set_light_state_mock", Mock),
+        ("get_light_state_mock", Mock),
+        ("current_consumption_mock", Mock),
+        ("get_sysinfo_mock", Mock),
+        ("get_emeter_daily_mock", Mock),
+        ("get_emeter_monthly_mock", Mock),
+    ),
+)
 
-async def test_light(hass: HomeAssistant) -> None:
-    """Test function."""
+
+@pytest.fixture(name="light_mock_data")
+def light_mock_data_fixture() -> None:
+    """Create light mock data."""
     sys_info = {
         "sw_ver": "1.2.3",
         "hw_ver": "2.3.4",
@@ -44,22 +66,26 @@ async def test_light(hass: HomeAssistant) -> None:
     }
 
     light_state = {
-        "on_off": SmartBulb.BULB_STATE_ON,
+        "on_off": True,
         "dft_on_state": {
             "brightness": 12,
             "color_temp": 3200,
-            "hue": 100,
-            "saturation": 200,
+            "hue": 110,
+            "saturation": 90,
         },
         "brightness": 13,
         "color_temp": 3300,
         "hue": 110,
-        "saturation": 210,
+        "saturation": 90,
     }
 
-    def set_light_state(state):
+    def set_light_state(state) -> None:
         nonlocal light_state
+        drt_on_state = light_state["dft_on_state"]
+        drt_on_state.update(state.get("dft_on_state", {}))
+
         light_state.update(state)
+        light_state["dft_on_state"] = drt_on_state
 
     set_light_state_patch = patch(
         "homeassistant.components.tplink.common.SmartBulb.set_light_state",
@@ -112,109 +138,209 @@ async def test_light(hass: HomeAssistant) -> None:
         },
     )
 
-    with set_light_state_patch, get_light_state_patch, current_consumption_patch, get_sysinfo_patch, get_emeter_daily_patch, get_emeter_monthly_patch:
-        await async_setup_component(
-            hass,
-            tplink.DOMAIN,
-            {
-                tplink.DOMAIN: {
-                    CONF_DISCOVERY: False,
-                    CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.light1"},
-            blocking=True,
+    with set_light_state_patch as set_light_state_mock, get_light_state_patch as get_light_state_mock, current_consumption_patch as current_consumption_mock, get_sysinfo_patch as get_sysinfo_mock, get_emeter_daily_patch as get_emeter_daily_mock, get_emeter_monthly_patch as get_emeter_monthly_mock:
+        yield LightMockData(
+            sys_info=sys_info,
+            light_state=light_state,
+            set_light_state=set_light_state,
+            set_light_state_mock=set_light_state_mock,
+            get_light_state_mock=get_light_state_mock,
+            current_consumption_mock=current_consumption_mock,
+            get_sysinfo_mock=get_sysinfo_mock,
+            get_emeter_daily_mock=get_emeter_daily_mock,
+            get_emeter_monthly_mock=get_emeter_monthly_mock,
         )
 
-        assert hass.states.get("light.light1").state == "off"
-        assert light_state["on_off"] == 0
 
-        await hass.async_block_till_done()
+async def update_entity(hass: HomeAssistant, entity_id: str) -> None:
+    """Run an update action for an entity."""
+    await hass.services.async_call(
+        HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id}, blocking=True,
+    )
+    await hass.async_block_till_done()
 
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {
-                ATTR_ENTITY_ID: "light.light1",
-                ATTR_COLOR_TEMP: 312,
-                ATTR_BRIGHTNESS: 50,
-            },
-            blocking=True,
-        )
 
-        await hass.async_block_till_done()
+async def test_light(hass: HomeAssistant, light_mock_data: LightMockData) -> None:
+    """Test function."""
+    light_state = light_mock_data.light_state
+    set_light_state = light_mock_data.set_light_state
 
-        state = hass.states.get("light.light1")
-        assert state.state == "on"
-        assert state.attributes["brightness"] == 48.45
-        assert state.attributes["hs_color"] == (110, 210)
-        assert state.attributes["color_temp"] == 312
-        assert light_state["on_off"] == 1
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.async_block_till_done()
 
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {
-                ATTR_ENTITY_ID: "light.light1",
-                ATTR_BRIGHTNESS: 55,
-                ATTR_HS_COLOR: (23, 27),
-            },
-            blocking=True,
-        )
+    await async_setup_component(
+        hass,
+        tplink.DOMAIN,
+        {
+            tplink.DOMAIN: {
+                CONF_DISCOVERY: False,
+                CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
+            }
+        },
+    )
+    await hass.async_block_till_done()
 
-        await hass.async_block_till_done()
+    assert hass.states.get("light.light1")
 
-        state = hass.states.get("light.light1")
-        assert state.state == "on"
-        assert state.attributes["brightness"] == 53.55
-        assert state.attributes["hs_color"] == (23, 27)
-        assert state.attributes["color_temp"] == 312
-        assert light_state["brightness"] == 21
-        assert light_state["hue"] == 23
-        assert light_state["saturation"] == 27
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.light1"}, blocking=True,
+    )
+    await hass.async_block_till_done()
+    await update_entity(hass, "light.light1")
 
-        light_state["on_off"] = 0
-        light_state["dft_on_state"]["on_off"] = 0
-        light_state["brightness"] = 66
-        light_state["dft_on_state"]["brightness"] = 66
-        light_state["color_temp"] = 6400
-        light_state["dft_on_state"]["color_temp"] = 123
-        light_state["hue"] = 77
-        light_state["dft_on_state"]["hue"] = 77
-        light_state["saturation"] = 78
-        light_state["dft_on_state"]["saturation"] = 78
+    assert hass.states.get("light.light1").state == "off"
+    assert light_state["on_off"] == 0
 
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.light1"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.light1", ATTR_COLOR_TEMP: 222, ATTR_BRIGHTNESS: 50},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    await update_entity(hass, "light.light1")
 
-        await hass.async_block_till_done()
+    state = hass.states.get("light.light1")
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 48.45
+    assert state.attributes["hs_color"] == (110, 90)
+    assert state.attributes["color_temp"] == 222
+    assert light_state["on_off"] == 1
 
-        state = hass.states.get("light.light1")
-        assert state.state == "off"
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.light1", ATTR_BRIGHTNESS: 55, ATTR_HS_COLOR: (23, 27)},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    await update_entity(hass, "light.light1")
 
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "light.light1"},
-            blocking=True,
-        )
+    state = hass.states.get("light.light1")
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 53.55
+    assert state.attributes["hs_color"] == (23, 27)
+    assert light_state["brightness"] == 21
+    assert light_state["hue"] == 23
+    assert light_state["saturation"] == 27
 
-        await hass.async_block_till_done()
+    light_state["on_off"] = 0
+    light_state["dft_on_state"]["on_off"] = 0
+    light_state["brightness"] = 66
+    light_state["dft_on_state"]["brightness"] = 66
+    light_state["color_temp"] = 6400
+    light_state["dft_on_state"]["color_temp"] = 123
+    light_state["hue"] = 77
+    light_state["dft_on_state"]["hue"] = 77
+    light_state["saturation"] = 78
+    light_state["dft_on_state"]["saturation"] = 78
 
-        state = hass.states.get("light.light1")
-        assert state.attributes["brightness"] == 168.3
-        assert state.attributes["hs_color"] == (77, 78)
-        assert state.attributes["color_temp"] == 156
-        assert light_state["brightness"] == 66
-        assert light_state["hue"] == 77
-        assert light_state["saturation"] == 78
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.light1"}, blocking=True,
+    )
+    await hass.async_block_till_done()
+    await update_entity(hass, "light.light1")
+
+    state = hass.states.get("light.light1")
+    assert state.state == "off"
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "light.light1"}, blocking=True,
+    )
+    await hass.async_block_till_done()
+    await update_entity(hass, "light.light1")
+
+    state = hass.states.get("light.light1")
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 168.3
+    assert state.attributes["hs_color"] == (77, 78)
+    assert state.attributes["color_temp"] == 156
+    assert light_state["brightness"] == 66
+    assert light_state["hue"] == 77
+    assert light_state["saturation"] == 78
+
+    set_light_state({"brightness": 91, "dft_on_state": {"brightness": 91}})
+    await update_entity(hass, "light.light1")
+
+    state = hass.states.get("light.light1")
+    assert state.attributes["brightness"] == 232.05
+
+
+async def test_get_light_state_retry(
+    hass: HomeAssistant, light_mock_data: LightMockData
+) -> None:
+    """Test function."""
+    # Setup test for retries for sysinfo.
+    get_sysinfo_call_count = 0
+
+    def get_sysinfo_side_effect():
+        nonlocal get_sysinfo_call_count
+        get_sysinfo_call_count += 1
+
+        # Need to fail on the 2nd call because the first call is used to
+        # determine if the device is online during the light platform's
+        # setup hook.
+        if get_sysinfo_call_count == 2:
+            raise SmartDeviceException()
+
+        return light_mock_data.sys_info
+
+    light_mock_data.get_sysinfo_mock.side_effect = get_sysinfo_side_effect
+
+    # Setup test for retries of getting state information.
+    get_state_call_count = 0
+
+    def get_light_state_side_effect():
+        nonlocal get_state_call_count
+        get_state_call_count += 1
+
+        if get_state_call_count == 1:
+            raise SmartDeviceException()
+
+        return light_mock_data.light_state
+
+    light_mock_data.get_light_state_mock.side_effect = get_light_state_side_effect
+
+    # Setup test for retries of setting state information.
+    set_state_call_count = 0
+
+    def set_light_state_side_effect(state_data: dict):
+        nonlocal set_state_call_count, light_mock_data
+        set_state_call_count += 1
+
+        if set_state_call_count == 1:
+            raise SmartDeviceException()
+
+        light_mock_data.set_light_state(state_data)
+
+    light_mock_data.set_light_state_mock.side_effect = set_light_state_side_effect
+
+    # Setup component.
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        tplink.DOMAIN,
+        {
+            tplink.DOMAIN: {
+                CONF_DISCOVERY: False,
+                CONF_LIGHT: [{CONF_HOST: "123.123.123.123"}],
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: "light.light1"}, blocking=True,
+    )
+    await hass.async_block_till_done()
+    await update_entity(hass, "light.light1")
+
+    assert light_mock_data.get_sysinfo_mock.call_count > 1
+    assert light_mock_data.get_light_state_mock.call_count > 1
+    assert light_mock_data.set_light_state_mock.call_count > 1
+
+    assert light_mock_data.get_sysinfo_mock.call_count < 40
+    assert light_mock_data.get_light_state_mock.call_count < 40
+    assert light_mock_data.set_light_state_mock.call_count < 10

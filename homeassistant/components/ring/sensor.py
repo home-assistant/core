@@ -12,6 +12,7 @@ from . import (
     DATA_RING_CHIMES,
     DATA_RING_DOORBELLS,
     DATA_RING_STICKUP_CAMS,
+    DOMAIN,
     SIGNAL_UPDATE_RING,
 )
 
@@ -68,18 +69,33 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     sensors = []
     for device in ring_chimes:
         for sensor_type in SENSOR_TYPES:
-            if "chime" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass, device, sensor_type))
+            if "chime" not in SENSOR_TYPES[sensor_type][1]:
+                continue
+
+            if sensor_type in ("wifi_signal_category", "wifi_signal_strength"):
+                await hass.async_add_executor_job(device.update)
+
+            sensors.append(RingSensor(hass, device, sensor_type))
 
     for device in ring_doorbells:
         for sensor_type in SENSOR_TYPES:
-            if "doorbell" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass, device, sensor_type))
+            if "doorbell" not in SENSOR_TYPES[sensor_type][1]:
+                continue
+
+            if sensor_type in ("wifi_signal_category", "wifi_signal_strength"):
+                await hass.async_add_executor_job(device.update)
+
+            sensors.append(RingSensor(hass, device, sensor_type))
 
     for device in ring_stickup_cams:
         for sensor_type in SENSOR_TYPES:
-            if "stickup_cams" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass, device, sensor_type))
+            if "stickup_cams" not in SENSOR_TYPES[sensor_type][1]:
+                continue
+
+            if sensor_type in ("wifi_signal_category", "wifi_signal_strength"):
+                await hass.async_add_executor_job(device.update)
+
+            sensors.append(RingSensor(hass, device, sensor_type))
 
     async_add_entities(sensors, True)
 
@@ -108,6 +124,7 @@ class RingSensor(Entity):
         self._disp_disconnect = async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_RING, self._update_callback
         )
+        await self.hass.async_add_executor_job(self._data.update)
 
     async def async_will_remove_from_hass(self):
         """Disconnect callbacks."""
@@ -141,16 +158,23 @@ class RingSensor(Entity):
         return self._unique_id
 
     @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._data.id)},
+            "sw_version": self._data.firmware,
+            "name": self._data.name,
+            "model": self._data.kind,
+            "manufacturer": "Ring",
+        }
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
 
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
-        attrs["device_id"] = self._data.id
-        attrs["firmware"] = self._data.firmware
-        attrs["kind"] = self._data.kind
         attrs["timezone"] = self._data.timezone
-        attrs["type"] = self._data.family
         attrs["wifi_name"] = self._data.wifi_name
 
         if self._extra and self._sensor_type.startswith("last_"):

@@ -4,11 +4,11 @@
             "one_instance_allowed": "Nur eine einzige Instanz ist notwendig."
         },
         "create_entry": {
-            "default": "\n\n\u00d6ffnen Sie unter Android [die OwnTracks-App]({android_url}) und gehen Sie zu {android_url} - > Verbindung. \u00c4ndern Sie die folgenden Einstellungen: \n - Modus: Privates HTTP \n - Host: {webhook_url} \n - Identifizierung: \n - Benutzername: ` <Your name> ` \n - Ger\u00e4te-ID: ` <Your device name> ` \n\n\u00d6ffnen Sie unter iOS [die OwnTracks-App]({ios_url}) und tippen Sie auf das Symbol (i) oben links - > Einstellungen. \u00c4ndern Sie die folgenden Einstellungen: \n - Modus: HTTP \n - URL: {webhook_url} \n - Aktivieren Sie die Authentifizierung \n - UserID: ` <Your name> ` \n\n {secret} \n \n Weitere Informationen finden Sie in der [Dokumentation]({docs_url})."
+            "default": "\n\n\u00d6ffnen unter Android [die OwnTracks-App]({android_url}) und gehe zu {android_url} - > Verbindung. \u00c4nder die folgenden Einstellungen: \n - Modus: Privates HTTP \n - Host: {webhook_url} \n - Identifizierung: \n - Benutzername: ` <Your name> ` \n - Ger\u00e4te-ID: ` <Your device name> ` \n\n\u00d6ffnen unter iOS [die OwnTracks-App]({ios_url}) und tippe auf das Symbol (i) oben links - > Einstellungen. \u00c4nder die folgenden Einstellungen: \n - Modus: HTTP \n - URL: {webhook_url} \n - Aktivieren Sie die Authentifizierung \n - UserID: ` <Your name> ` \n\n {secret} \n \n Weitere Informationen findest du in der [Dokumentation]({docs_url})."
         },
         "step": {
             "user": {
-                "description": "M\u00f6chten Sie OwnTracks wirklich einrichten?",
+                "description": "M\u00f6chtest du OwnTracks wirklich einrichten?",
                 "title": "OwnTracks einrichten"
             }
         },

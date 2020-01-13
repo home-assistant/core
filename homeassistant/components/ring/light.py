@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from . import DATA_RING_STICKUP_CAMS, SIGNAL_UPDATE_RING
+from . import DATA_RING_STICKUP_CAMS, DOMAIN, SIGNAL_UPDATE_RING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,6 +83,17 @@ class RingLight(Light):
     def is_on(self):
         """If the switch is currently on or off."""
         return self._light_on
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._device.id)},
+            "sw_version": self._device.firmware,
+            "name": self._device.name,
+            "model": self._device.kind,
+            "manufacturer": "Ring",
+        }
 
     def _set_light(self, new_state):
         """Update light state, and causes Home Assistant to correctly update."""
