@@ -223,7 +223,7 @@ class TPLinkSmartBulb(LightEntity):
             self._light_features = (
                 self._light_features or self.get_light_features()
             )
-            self._light_state = self.get_light_state()
+            self._light_state = await self.get_light_state()
             self._is_available = True
         except (SmartDeviceException, OSError) as ex:
             if self._is_available:
@@ -332,7 +332,6 @@ class TPLinkSmartBulb(LightEntity):
                 return
             except (SmartDeviceException, OSError) as ex:
                 _LOGGER.debug("Got error while setting the state, retrying: %s", ex)
-
 
         _LOGGER.warning("Could not set state for %s", self.smartbulb.host)
         self._is_setting_light_state = False
