@@ -229,9 +229,8 @@ class TestScriptComponent(unittest.TestCase):
                 "script": {"test2": {"sequence": [{"delay": {"seconds": 5}}]}}
             },
         ):
-            with patch("homeassistant.config.find_config_file", return_value=""):
-                reload(self.hass)
-                self.hass.block_till_done()
+            reload(self.hass)
+            self.hass.block_till_done()
 
         assert self.hass.states.get(ENTITY_ID) is None
         assert not self.hass.services.has_service(script.DOMAIN, "test")
@@ -262,7 +261,6 @@ async def test_service_descriptions(hass):
     assert not descriptions[DOMAIN]["test"]["fields"]
 
     # Test 2: has "fields" but no "description"
-    await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
     with patch(
         "homeassistant.config.load_yaml_config_file",
         return_value={
@@ -279,8 +277,7 @@ async def test_service_descriptions(hass):
             }
         },
     ):
-        with patch("homeassistant.config.find_config_file", return_value=""):
-            await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
 
     descriptions = await async_get_all_descriptions(hass)
 
