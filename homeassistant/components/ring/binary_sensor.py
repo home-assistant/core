@@ -30,12 +30,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for device in chain(devices["doorbots"], devices["authorized_doorbots"]):
         for sensor_type in SENSOR_TYPES:
             if "doorbell" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(hass, ring, device, sensor_type))
+                sensors.append(RingBinarySensor(ring, device, sensor_type))
 
     for device in devices["stickup_cams"]:
         for sensor_type in SENSOR_TYPES:
             if "stickup_cams" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(hass, ring, device, sensor_type))
+                sensors.append(RingBinarySensor(ring, device, sensor_type))
 
     async_add_entities(sensors, True)
 
@@ -43,9 +43,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RingBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Ring device."""
 
-    def __init__(self, hass, ring, device, sensor_type):
+    def __init__(self, ring, device, sensor_type):
         """Initialize a sensor for Ring device."""
-        super().__init__()
         self._sensor_type = sensor_type
         self._ring = ring
         self._device = device

@@ -76,21 +76,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if "chime" not in SENSOR_TYPES[sensor_type][1]:
                 continue
 
-            sensors.append(RingSensor(hass, config_entry.entry_id, device, sensor_type))
+            sensors.append(RingSensor(config_entry.entry_id, device, sensor_type))
 
     for device in chain(devices["doorbots"], devices["authorized_doorbots"]):
         for sensor_type in SENSOR_TYPES:
             if "doorbell" not in SENSOR_TYPES[sensor_type][1]:
                 continue
 
-            sensors.append(RingSensor(hass, config_entry.entry_id, device, sensor_type))
+            sensors.append(RingSensor(config_entry.entry_id, device, sensor_type))
 
     for device in devices["stickup_cams"]:
         for sensor_type in SENSOR_TYPES:
             if "stickup_cams" not in SENSOR_TYPES[sensor_type][1]:
                 continue
 
-            sensors.append(RingSensor(hass, config_entry.entry_id, device, sensor_type))
+            sensors.append(RingSensor(config_entry.entry_id, device, sensor_type))
 
     async_add_entities(sensors, True)
 
@@ -98,9 +98,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RingSensor(Entity):
     """A sensor implementation for Ring device."""
 
-    def __init__(self, hass, config_entry_id, device, sensor_type):
+    def __init__(self, config_entry_id, device, sensor_type):
         """Initialize a sensor for Ring device."""
-        super().__init__()
         self._config_entry_id = config_entry_id
         self._sensor_type = sensor_type
         self._device = device

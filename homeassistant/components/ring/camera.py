@@ -34,7 +34,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if not camera.has_subscription:
             continue
 
-        camera = await hass.async_add_executor_job(RingCam, hass, camera)
+        camera = await hass.async_add_executor_job(
+            RingCam, hass.data[DATA_FFMPEG], camera
+        )
         cams.append(camera)
 
     async_add_entities(cams, True)
@@ -43,13 +45,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RingCam(Camera):
     """An implementation of a Ring Door Bell camera."""
 
-    def __init__(self, hass, device):
+    def __init__(self, ffmpeg, device):
         """Initialize a Ring Door Bell camera."""
         super().__init__()
         self._device = device
-        self._hass = hass
         self._name = self._device.name
-        self._ffmpeg = hass.data[DATA_FFMPEG]
+        self._ffmpeg = ffmpeg
         self._last_video_id = self._device.last_recording_id
         self._video_url = self._device.recording_url(self._last_video_id)
         self._utcnow = dt_util.utcnow()
@@ -73,11 +74,6 @@ class RingCam(Camera):
         """Call update method."""
         self.async_schedule_update_ha_state(True)
         _LOGGER.debug("Updating Ring camera %s (callback)", self.name)
-
-    @property
-    def should_poll(self):
-        """Return False, updates are controlled via the hub."""
-        return False
 
     @property
     def name(self):

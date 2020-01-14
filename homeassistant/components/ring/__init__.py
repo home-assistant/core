@@ -155,7 +155,7 @@ class HealthDataUpdater:
     """Data storage for health data."""
 
     def __init__(self, hass):
-        """Track devices that need healh data updated."""
+        """Track devices that need health data updated."""
         self.hass = hass
         self.devices = {}
         self._unsub_interval = None

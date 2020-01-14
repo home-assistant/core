@@ -31,7 +31,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     lights = []
 
     for device in devices["stickup_cams"]:
-        print(device, device.has_capability("light"))
         if device.has_capability("light"):
             lights.append(RingLight(device))
 
