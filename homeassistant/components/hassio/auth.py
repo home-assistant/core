@@ -5,9 +5,9 @@ import os
 
 from aiohttp import web
 from aiohttp.web_exceptions import (
-    HTTPUnauthorized,
     HTTPInternalServerError,
     HTTPNotFound,
+    HTTPUnauthorized,
 )
 import voluptuous as vol
 
