@@ -1,6 +1,7 @@
 {
   "domain": "sun",
   "name": "Sun",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sun",
   "requirements": [],
   "dependencies": [],

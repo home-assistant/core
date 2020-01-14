@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_ELEVATION,
     EVENT_CORE_CONFIG_UPDATE,
@@ -17,11 +18,12 @@ from homeassistant.helpers.sun import (
 )
 from homeassistant.util import dt as dt_util
 
+from .config_flow import configured_instances
+from .const import DOMAIN
+
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "sun"
 
 ENTITY_ID = "sun.sun"
 
@@ -74,12 +76,25 @@ _PHASE_UPDATES = {
 
 async def async_setup(hass, config):
     """Track the state of the sun."""
+    if configured_instances(hass):
+        return True
+
     if config.get(CONF_ELEVATION) is not None:
         _LOGGER.warning(
             "Elevation is now configured in Home Assistant core. "
             "See https://home-assistant.io/docs/configuration/basic/"
         )
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    )
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up the sun integration as a config entry."""
     Sun(hass)
+
     return True
 
 

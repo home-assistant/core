@@ -1,0 +1,8 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of the sun integration is allowed."
+        },
+        "title": "Sun"
+    }
+}
