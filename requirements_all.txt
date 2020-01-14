@@ -546,7 +546,7 @@ freesms==0.1.2
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
-# fritzconnection==0.8.4
+fritzconnection==1.2.0
 
 # homeassistant.components.fritzdect
 fritzhome==1.0.4
