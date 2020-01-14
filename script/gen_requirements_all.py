@@ -25,7 +25,6 @@ COMMENT_REQUIREMENTS = (
     "envirophat",
     "evdev",
     "face_recognition",
-    "fritzconnection",
     "i2csense",
     "opencv-python-headless",
     "py_noaa",
