@@ -9,9 +9,9 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SMOKE,
     BinarySensorDevice,
 )
-from homeassistant.components.homematic import ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
 
-from . import ATTR_DISCOVER_DEVICES, HMDevice
+from .const import ATTR_DISCOVER_DEVICES, ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             devices.append(HMBinarySensor(conf))
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMBinarySensor(HMDevice, BinarySensorDevice):

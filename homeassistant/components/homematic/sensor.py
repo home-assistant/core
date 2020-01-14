@@ -8,10 +8,10 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_WATT_HOUR,
     POWER_WATT,
-    STATE_UNKNOWN,
 )
 
-from . import ATTR_DISCOVER_DEVICES, HMDevice
+from .const import ATTR_DISCOVER_DEVICES
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMSensor(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMSensor(HMDevice):
@@ -117,6 +117,6 @@ class HMSensor(HMDevice):
     def _init_data_struct(self):
         """Generate a data dictionary (self._data) from metadata."""
         if self._state:
-            self._data.update({self._state: STATE_UNKNOWN})
+            self._data.update({self._state: None})
         else:
             _LOGGER.critical("Unable to initialize sensor: %s", self._name)
