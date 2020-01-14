@@ -17,7 +17,6 @@ from homeassistant.core import callback
 
 from . import validate_auth
 from .const import (
-    CONF_UNIQUE_ID,
     CONF_VOLUME_STEP,
     DEFAULT_DEVICE_CLASS,
     DEFAULT_NAME,
@@ -108,12 +107,10 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
                 # Abort flow if existing component with same unique ID matches new config entry
-                if unique_id and await self.async_set_unique_id(
+                if await self.async_set_unique_id(
                     unique_id=unique_id, raise_on_progress=True
                 ):
                     return self.async_abort(reason="already_setup")
-
-                user_input[CONF_UNIQUE_ID] = unique_id
 
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input
