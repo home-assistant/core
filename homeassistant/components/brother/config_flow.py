@@ -64,6 +64,73 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
+    async def async_step_zeroconf(self, user_input=None):
+        """Handle zeroconf discovery."""
+        if user_input is None:
+            return self.async_abort(reason="connection_error")
+
+        if "Brother" not in user_input["name"]:
+            return self.async_abort(reason="not_brother_printer")
+
+        # Hostname is format: brother.local.
+        host = user_input["hostname"].rstrip(".")
+
+        try:
+            brother = Brother(host)
+            await brother.async_update()
+        except (ConnectionError, SnmpError, UnsupportedModel):
+            return self.async_abort(reason="connection_error")
+
+        # Check if already configured
+        await self.async_set_unique_id(brother.serial.lower())
+        self._abort_if_unique_id_configured()
+
+        self.context.update(
+            {
+                CONF_HOST: host,
+                "title_placeholders": {
+                    "serial_number": brother.serial,
+                    "model": brother.model,
+                },
+            }
+        )
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={
+                "serial_number": brother.serial,
+                "model": brother.model,
+            },
+        )
+
+    async def async_step_zeroconf_confirm(self, user_input=None):
+        """Handle a flow initiated by zeroconf."""
+        try:
+            brother = Brother(self.context.get(CONF_HOST))
+            await brother.async_update()
+        except (ConnectionError, SnmpError, UnsupportedModel):
+            return self.async_abort(reason="connection_error")
+        if user_input is not None:
+
+            # Check if already configured
+            await self.async_set_unique_id(brother.serial.lower())
+            self._abort_if_unique_id_configured()
+
+            title = f"{brother.model} {brother.serial}"
+            return self.async_create_entry(
+                title=title,
+                data={CONF_HOST: self.context.get(CONF_HOST), CONF_TYPE: "laser"},
+            )
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            data_schema=vol.Schema(
+                {vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES)}
+            ),
+            description_placeholders={
+                "serial_number": brother.serial,
+                "model": brother.model,
+            },
+        )
+
 
 class InvalidHost(exceptions.HomeAssistantError):
     """Error to indicate that hostname/IP address is invalid."""
