@@ -124,3 +124,66 @@ async def test_login_success_extra(hass, hassio_client_supervisor):
         # Check we got right response
         assert resp.status == 200
         mock_login.assert_called_with("test", "123456")
+
+
+async def test_password_success(hass, hassio_client_supervisor):
+    """Test no auth needed for ."""
+    with patch(
+        "homeassistant.components.hassio.auth.HassIOPasswordReset._change_password"
+    ) as mock_change:
+        resp = await hassio_client_supervisor.post(
+            "/api/hassio_auth/password_reset",
+            json={"username": "test", "password": "123456"},
+        )
+
+        # Check we got right response
+        assert resp.status == 200
+        mock_change.assert_called_with("test", "123456")
+
+
+async def test_password_fails_no_supervisor(hass, hassio_client):
+    """Test if only supervisor can access."""
+    with patch(
+        "homeassistant.auth.providers.homeassistant.Data.async_save",
+        Mock(return_value=mock_coro()),
+    ) as mock_save:
+        resp = await hassio_client.post(
+            "/api/hassio_auth/password_reset",
+            json={"username": "test", "password": "123456"},
+        )
+
+        # Check we got right response
+        assert resp.status == 403
+        assert not mock_save.called
+
+
+async def test_password_fails_no_auth(hass, hassio_noauth_client):
+    """Test if only supervisor can access."""
+    with patch(
+        "homeassistant.auth.providers.homeassistant.Data.async_save",
+        Mock(return_value=mock_coro()),
+    ) as mock_save:
+        resp = await hassio_noauth_client.post(
+            "/api/hassio_auth/password_reset",
+            json={"username": "test", "password": "123456"},
+        )
+
+        # Check we got right response
+        assert resp.status == 401
+        assert not mock_save.called
+
+
+async def test_password_no_user(hass, hassio_client_supervisor):
+    """Test no auth needed for ."""
+    with patch(
+        "homeassistant.auth.providers.homeassistant.Data.async_save",
+        Mock(return_value=mock_coro()),
+    ) as mock_save:
+        resp = await hassio_client_supervisor.post(
+            "/api/hassio_auth/password_reset",
+            json={"username": "test", "password": "123456"},
+        )
+
+        # Check we got right response
+        assert resp.status == 500
+        assert not mock_save.called
