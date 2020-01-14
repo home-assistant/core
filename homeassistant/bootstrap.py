@@ -79,7 +79,7 @@ async def async_setup_hass(
             config_dict = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(
-                "Failed to parse configuration.yaml: %s. Falling back to safe mode.",
+                "Failed to parse configuration.yaml: %s. Falling back to safe mode",
                 err,
             )
         else:
@@ -91,7 +91,7 @@ async def async_setup_hass(
             clear_secret_cache()
 
     if safe_mode or config_dict is None:
-        _LOGGER.info("Starting in safe mode.")
+        _LOGGER.info("Starting in safe mode")
 
         http_conf = (await http.async_get_last_config(hass)) or {}
 
