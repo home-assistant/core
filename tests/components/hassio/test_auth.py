@@ -129,7 +129,8 @@ async def test_login_success_extra(hass, hassio_client_supervisor):
 async def test_password_success(hass, hassio_client_supervisor):
     """Test no auth needed for ."""
     with patch(
-        "homeassistant.components.hassio.auth.HassIOPasswordReset._change_password"
+        "homeassistant.components.hassio.auth.HassIOPasswordReset._change_password",
+        Mock(return_value=mock_coro()),
     ) as mock_change:
         resp = await hassio_client_supervisor.post(
             "/api/hassio_auth/password_reset",

@@ -42,7 +42,7 @@ def hassio_stubs(hassio_env, hass, hass_client, aioclient_mock):
         hass.state = CoreState.starting
         hass.loop.run_until_complete(async_setup_component(hass, "hassio", {}))
 
-    return hass_api.call_args.args[1]
+    return hass_api.call_args[0][1]
 
 
 @pytest.fixture
