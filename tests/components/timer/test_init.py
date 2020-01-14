@@ -503,7 +503,7 @@ async def test_update(hass, hass_ws_client, storage_setup):
     assert resp["success"]
 
     state = hass.states.get(timer_entity_id)
-    assert state.attributes[ATTR_DURATION] == cv.time_period(33)
+    assert state.attributes[ATTR_DURATION] == str(cv.time_period(33))
 
 
 async def test_ws_create(hass, hass_ws_client, storage_setup):
@@ -533,5 +533,5 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
 
     state = hass.states.get(timer_entity_id)
     assert state.state == STATUS_IDLE
-    assert state.attributes[ATTR_DURATION] == cv.time_period(42)
+    assert state.attributes[ATTR_DURATION] == str(cv.time_period(42))
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id) == timer_entity_id

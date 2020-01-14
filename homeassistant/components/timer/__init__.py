@@ -168,7 +168,10 @@ class TimerStorageCollection(collection.StorageCollection):
 
     async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
         """Validate the config is valid."""
-        return self.CREATE_SCHEMA(data)
+        data = self.CREATE_SCHEMA(data)
+        # make duration JSON serializeable
+        data[CONF_DURATION] = str(data[CONF_DURATION])
+        return data
 
     @callback
     def _get_suggested_id(self, info: typing.Dict) -> str:
@@ -177,8 +180,10 @@ class TimerStorageCollection(collection.StorageCollection):
 
     async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
         """Return a new updated data object."""
-        update_data = self.UPDATE_SCHEMA(update_data)
-        return {**data, **update_data}
+        data = {**data, **self.UPDATE_SCHEMA(update_data)}
+        # make duration JSON serializeable
+        data[CONF_DURATION] = str(data[CONF_DURATION])
+        return data
 
 
 class Timer(RestoreEntity):
