@@ -201,7 +201,7 @@ async def async_setup(hass, config):
             require_admin=True,
         )
 
-    await hassio.update_hass_api(config.get("http", {}), refresh_token.token)
+    await hassio.update_hass_api(config.get("http", {}), refresh_token)
 
     async def push_config(_):
         """Push core config to Hass.io."""
