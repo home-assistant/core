@@ -3,7 +3,6 @@ from asynctest import MagicMock
 import pyvera as pv
 from requests.exceptions import RequestException
 
-from homeassistant import config_entries
 from homeassistant.components.vera import (
     CONF_CONTROLLER,
     DOMAIN,
@@ -11,12 +10,9 @@ from homeassistant.components.vera import (
     async_unload_entry,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
-
-from tests.common import MockConfigEntry
 
 
 async def test_init(
@@ -70,38 +66,6 @@ async def test_init_from_file(
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
     entry1 = entity_registry.async_get(entity1_id)
     assert entry1
-
-
-async def test_async_setup_update_configs(
-    hass: HomeAssistant, vera_component_factory: ComponentFactory
-) -> None:
-    """Test function."""
-    entry1 = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_CONTROLLER: "http://url1:123",
-            CONF_SOURCE: config_entries.SOURCE_IMPORT,
-        },
-    )
-    entry1.add_to_hass(hass)
-
-    await vera_component_factory.configure_component(
-        hass,
-        new_simple_controller_config(
-            config={CONF_CONTROLLER: "http://url2:123"},
-            options={CONF_LIGHTS: [1, 2], CONF_EXCLUDE: [3, 4]},
-            config_from_file=True,
-        ),
-    )
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert entries
-    entry = entries[0]
-    assert entry.data == {
-        CONF_CONTROLLER: "http://url2:123",
-        CONF_SOURCE: config_entries.SOURCE_IMPORT,
-    }
-    assert entry.options == {CONF_LIGHTS: [1, 2], CONF_EXCLUDE: [3, 4]}
 
 
 async def test_unload(

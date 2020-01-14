@@ -1,4 +1,5 @@
 """Config flow for Vera."""
+import logging
 import re
 from typing import List
 
@@ -6,13 +7,14 @@ import pyvera as pv
 from requests.exceptions import RequestException
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
 
 from .const import CONF_CONTROLLER, DOMAIN
 
 LIST_REGEX = re.compile("[^0-9]+")
+_LOGGER = logging.getLogger(__name__)
 
 
 def str_to_int_list(data: str) -> List[str]:
@@ -79,9 +81,6 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry) -> OptionsFlowHandler:
         """Get the options flow."""
-        if config_entry.data.get(CONF_SOURCE) == config_entries.SOURCE_IMPORT:
-            raise data_entry_flow.UnknownHandler
-
         return OptionsFlowHandler(config_entry)
 
     async def async_step_user(self, user_input: dict = None):
@@ -107,9 +106,6 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, config: dict):
         """Handle a flow initialized by import."""
-        if self.hass.config_entries.async_entries(DOMAIN):
-            return self.async_abort(reason="already_setup")
-
         return await self.async_step_finish(
             {**config, **{CONF_SOURCE: config_entries.SOURCE_IMPORT}}
         )
@@ -119,12 +115,39 @@ class VeraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         base_url = config[CONF_CONTROLLER] = config.get(CONF_CONTROLLER).rstrip("/")
         controller = pv.VeraController(base_url)
 
+        # Verify the controller is online and get the serial number.
         try:
             await self.hass.async_add_executor_job(controller.refresh_data)
         except RequestException:
+            _LOGGER.error("Failed to connect to vera controller %s", base_url)
             return self.async_abort(
                 reason="cannot_connect", description_placeholders={"base_url": base_url}
             )
+
+        domain_entries = self.hass.config_entries.async_entries(DOMAIN)
+        existing_config_entry = next(
+            iter(
+                [
+                    entry
+                    for entry in domain_entries
+                    if entry.unique_id == controller.serial_number
+                ]
+            ),
+            None,
+        )
+
+        if existing_config_entry:
+            _LOGGER.debug(
+                "Updating existing import config for %s", controller.serial_number
+            )
+            # Note: the options get updated in async_setup_entry()
+            self.hass.config_entries.async_update_entry(
+                entry=existing_config_entry, data=config,
+            )
+
+        # Integration does not support multiple controllers yet.
+        if domain_entries:
+            return self.async_abort(reason="already_setup")
 
         await self.async_set_unique_id(controller.serial_number)
 

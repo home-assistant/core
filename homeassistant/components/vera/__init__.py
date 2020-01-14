@@ -16,7 +16,6 @@ from homeassistant.const import (
     ATTR_TRIPPED,
     CONF_EXCLUDE,
     CONF_LIGHTS,
-    CONF_SOURCE,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
@@ -60,34 +59,11 @@ async def async_setup(hass: HomeAssistant, base_config: dict) -> bool:
     if not config:
         return True
 
-    entries = hass.config_entries.async_entries(DOMAIN)
-    import_entries = [
-        entry
-        for entry in entries
-        if entry.data.get(CONF_SOURCE) == config_entries.SOURCE_IMPORT
-    ]
-
-    if import_entries:
-        _LOGGER.debug(
-            "Updating existing import config for %s", config.get(CONF_CONTROLLER)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config,
         )
-        hass.config_entries.async_update_entry(
-            entry=import_entries[0],
-            data={
-                CONF_CONTROLLER: config.get(CONF_CONTROLLER),
-                CONF_SOURCE: config_entries.SOURCE_IMPORT,
-            },
-            options=new_options(
-                config.get(CONF_LIGHTS, []), config.get(CONF_EXCLUDE, [])
-            ),
-        )
-    else:
-        _LOGGER.debug("Creating new import config for %s", config.get(CONF_CONTROLLER))
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=config,
-            )
-        )
+    )
 
     return True
 
