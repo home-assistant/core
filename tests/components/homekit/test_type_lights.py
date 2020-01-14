@@ -177,6 +177,25 @@ async def test_light_color_temperature(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] == "color temperature at 250"
 
 
+async def test_light_color_temperature_and_rgb_color(hass, hk_driver, cls, events):
+    """Test light with color temperature and rgb color not exposing temperature."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP | SUPPORT_COLOR,
+            ATTR_COLOR_TEMP: 190,
+            ATTR_HS_COLOR: (260, 90),
+        },
+    )
+    await hass.async_block_till_done()
+    acc = cls.light(hass, hk_driver, "Light", entity_id, 2, None)
+
+    assert not hasattr(acc, "char_color_temperature")
+
+
 async def test_light_rgb_color(hass, hk_driver, cls, events):
     """Test light with rgb_color."""
     entity_id = "light.demo"
