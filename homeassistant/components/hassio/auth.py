@@ -4,17 +4,17 @@ import logging
 import os
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
+from aiohttp.web_exceptions import HTTPForbidden, HTTPInternalServerError, HTTPNotFound
 import voluptuous as vol
 
+from homeassistant.auth.models import User
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.const import KEY_REAL_IP, KEY_HASS_USER
+from homeassistant.components.http.const import KEY_HASS_USER, KEY_REAL_IP
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.auth.models import User
 
 from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME
 
@@ -40,10 +40,10 @@ SCHEMA_API_PASSWORD_RESET = vol.Schema(
 def async_setup_auth_view(hass: HomeAssistantType, user: User):
     """Auth setup."""
     hassio_auth = HassIOAuth(hass, user)
-    hassio_passwort_reset = HassIOPasswordReset(hass, user)
+    hassio_password_reset = HassIOPasswordReset(hass, user)
 
     hass.http.register_view(hassio_auth)
-    hass.http.register_view(hassio_passwort_reset)
+    hass.http.register_view(hassio_password_reset)
 
 
 class HassIOBaseAuth(HomeAssistantView):
@@ -85,7 +85,7 @@ class HassIOAuth(HassIOBaseAuth):
 
     @RequestDataValidator(SCHEMA_API_AUTH)
     async def post(self, request, data):
-        """Handle new discovery requests."""
+        """Handle auth requests."""
         self._check_access(request)
 
         await self._check_login(data[ATTR_USERNAME], data[ATTR_PASSWORD])
@@ -109,7 +109,7 @@ class HassIOPasswordReset(HassIOBaseAuth):
 
     @RequestDataValidator(SCHEMA_API_PASSWORD_RESET)
     async def post(self, request, data):
-        """Handle new discovery requests."""
+        """Handle password reset requests."""
         self._check_access(request)
 
         await self._change_password(data[ATTR_USERNAME], data[ATTR_PASSWORD])
@@ -125,4 +125,4 @@ class HassIOPasswordReset(HassIOBaseAuth):
             )
             await provider.data.async_save()
         except HomeAssistantError:
-            raise HTTPForbidden() from None
+            raise HTTPInternalServerError()
