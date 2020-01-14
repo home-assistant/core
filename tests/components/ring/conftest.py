@@ -1,4 +1,6 @@
 """Configuration for Ring tests."""
+import re
+
 import pytest
 import requests_mock
 
@@ -33,17 +35,19 @@ def requests_mock_fixture():
         )
         # Mocks the response for getting the history of a device
         mock.get(
-            "https://api.ring.com/clients_api/doorbots/987652/history",
+            re.compile(
+                r"https:\/\/api\.ring\.com\/clients_api\/doorbots\/\d+\/history"
+            ),
             text=load_fixture("ring_doorbots.json"),
         )
         # Mocks the response for getting the health of a device
         mock.get(
-            "https://api.ring.com/clients_api/doorbots/987652/health",
+            re.compile(r"https:\/\/api\.ring\.com\/clients_api\/doorbots\/\d+\/health"),
             text=load_fixture("ring_doorboot_health_attrs.json"),
         )
         # Mocks the response for getting a chimes health
         mock.get(
-            "https://api.ring.com/clients_api/chimes/999999/health",
+            re.compile(r"https:\/\/api\.ring\.com\/clients_api\/chimes\/\d+\/health"),
             text=load_fixture("ring_chime_health_attrs.json"),
         )
 
