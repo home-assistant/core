@@ -96,6 +96,9 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="zeroconf_confirm",
+            data_schema=vol.Schema(
+                {vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES)}
+            ),
             description_placeholders={
                 "serial_number": brother.serial,
                 "model": brother.model,
@@ -118,7 +121,10 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             title = f"{brother.model} {brother.serial}"
             return self.async_create_entry(
                 title=title,
-                data={CONF_HOST: self.context.get(CONF_HOST), CONF_TYPE: "laser"},
+                data={
+                    CONF_HOST: self.context.get(CONF_HOST),
+                    CONF_TYPE: user_input[CONF_TYPE],
+                },
             )
         return self.async_show_form(
             step_id="zeroconf_confirm",
