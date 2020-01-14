@@ -151,7 +151,7 @@ class VizioDevice(MediaPlayerDevice):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-        is_on = await self._device.get_power_state()
+        is_on = await self._device.get_power_state(False)
 
         if is_on is None:
             self._available = False
@@ -160,7 +160,7 @@ class VizioDevice(MediaPlayerDevice):
         self._available = True
 
         if not self._unique_id:
-            self._unique_id = await self._device.get_esn()
+            self._unique_id = await self._device.get_esn(False)
 
         if not is_on:
             self._state = STATE_OFF
@@ -171,15 +171,15 @@ class VizioDevice(MediaPlayerDevice):
 
         self._state = STATE_ON
 
-        volume = await self._device.get_current_volume()
+        volume = await self._device.get_current_volume(False)
         if volume is not None:
             self._volume_level = float(volume) / self._max_volume
 
-        input_ = await self._device.get_current_input()
+        input_ = await self._device.get_current_input(False)
         if input_ is not None:
             self._current_input = input_.meta_name
 
-        inputs = await self._device.get_inputs()
+        inputs = await self._device.get_inputs(False)
         if inputs is not None:
             self._available_inputs = [input_.name for input_ in inputs]
 
