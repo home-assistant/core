@@ -18,8 +18,7 @@
     "sun",
     "system_health",
     "updater",
-    "zeroconf",
-    "search"
+    "zeroconf"
   ],
   "codeowners": []
 }
