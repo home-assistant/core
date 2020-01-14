@@ -28,6 +28,7 @@ CONF_SENSORS = "sensors"
 CONF_SENSOR_TYPE = "sensor_type"
 CONF_TEMPERATURE_SENSORS = "temperature_sensors"
 CONF_TIME_UNIT = "time_unit"
+CONF_VOLTAGE_SENSORS = "voltage"
 
 DATA_GREENEYE_MONITOR = "greeneye_monitor"
 DOMAIN = "greeneye_monitor"
@@ -35,6 +36,7 @@ DOMAIN = "greeneye_monitor"
 SENSOR_TYPE_CURRENT = "current_sensor"
 SENSOR_TYPE_PULSE_COUNTER = "pulse_counter"
 SENSOR_TYPE_TEMPERATURE = "temperature_sensor"
+SENSOR_TYPE_VOLTAGE = "voltage_sensor"
 
 TEMPERATURE_UNIT_CELSIUS = "C"
 
@@ -54,6 +56,12 @@ TEMPERATURE_SENSORS_SCHEMA = vol.Schema(
         ),
     }
 )
+
+VOLTAGE_SENSOR_SCHEMA = vol.Schema(
+    {vol.Required(CONF_NUMBER): vol.Range(1, 48), vol.Required(CONF_NAME): cv.string}
+)
+
+VOLTAGE_SENSORS_SCHEMA = vol.All(cv.ensure_list, [VOLTAGE_SENSOR_SCHEMA])
 
 PULSE_COUNTER_SCHEMA = vol.Schema(
     {
@@ -97,6 +105,7 @@ MONITOR_SCHEMA = vol.Schema(
             default={CONF_TEMPERATURE_UNIT: TEMPERATURE_UNIT_CELSIUS, CONF_SENSORS: []},
         ): TEMPERATURE_SENSORS_SCHEMA,
         vol.Optional(CONF_PULSE_COUNTERS, default=[]): PULSE_COUNTERS_SCHEMA,
+        vol.Optional(CONF_VOLTAGE_SENSORS, default=[]): VOLTAGE_SENSORS_SCHEMA,
     }
 )
 
@@ -140,6 +149,16 @@ async def async_setup(hass, config):
                 }
             )
 
+        voltage_configs = monitor_config[CONF_VOLTAGE_SENSORS]
+        for voltage_config in voltage_configs:
+            all_sensors.append(
+                {
+                    CONF_SENSOR_TYPE: SENSOR_TYPE_VOLTAGE,
+                    **monitor_serial_number,
+                    **voltage_config,
+                }
+            )
+
         sensor_configs = monitor_config[CONF_TEMPERATURE_SENSORS]
         if sensor_configs:
             temperature_unit = {
@@ -168,7 +187,7 @@ async def async_setup(hass, config):
     if not all_sensors:
         _LOGGER.error(
             "Configuration must specify at least one "
-            "channel, pulse counter or temperature sensor"
+            "channel, voltage, pulse counter or temperature sensor"
         )
         return False
 
