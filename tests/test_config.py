@@ -82,7 +82,7 @@ def teardown():
 
 async def test_create_default_config(hass):
     """Test creation of default config."""
-    await config_util.async_create_default_config(hass, CONFIG_DIR)
+    await config_util.async_create_default_config(hass)
 
     assert os.path.isfile(YAML_PATH)
     assert os.path.isfile(SECRET_PATH)
@@ -91,20 +91,13 @@ async def test_create_default_config(hass):
     assert os.path.isfile(AUTOMATIONS_PATH)
 
 
-def test_find_config_file_yaml():
-    """Test if it finds a YAML config file."""
-    create_file(YAML_PATH)
-
-    assert YAML_PATH == config_util.find_config_file(CONFIG_DIR)
-
-
 async def test_ensure_config_exists_creates_config(hass):
     """Test that calling ensure_config_exists.
 
     If not creates a new config file.
     """
     with mock.patch("builtins.print") as mock_print:
-        await config_util.async_ensure_config_exists(hass, CONFIG_DIR)
+        await config_util.async_ensure_config_exists(hass)
 
     assert os.path.isfile(YAML_PATH)
     assert mock_print.called
@@ -113,7 +106,7 @@ async def test_ensure_config_exists_creates_config(hass):
 async def test_ensure_config_exists_uses_existing_config(hass):
     """Test that calling ensure_config_exists uses existing config."""
     create_file(YAML_PATH)
-    await config_util.async_ensure_config_exists(hass, CONFIG_DIR)
+    await config_util.async_ensure_config_exists(hass)
 
     with open(YAML_PATH) as f:
         content = f.read()
@@ -172,13 +165,9 @@ async def test_create_default_config_returns_none_if_write_error(hass):
 
     Non existing folder returns None.
     """
+    hass.config.config_dir = os.path.join(CONFIG_DIR, "non_existing_dir/")
     with mock.patch("builtins.print") as mock_print:
-        assert (
-            await config_util.async_create_default_config(
-                hass, os.path.join(CONFIG_DIR, "non_existing_dir/")
-            )
-            is None
-        )
+        assert await config_util.async_create_default_config(hass) is False
     assert mock_print.called
 
 
@@ -331,7 +320,6 @@ def test_config_upgrade_same_version(hass):
         assert opened_file.write.call_count == 0
 
 
-@mock.patch("homeassistant.config.find_config_file", mock.Mock())
 def test_config_upgrade_no_file(hass):
     """Test update of version on upgrade, with no version file."""
     mock_open = mock.mock_open()

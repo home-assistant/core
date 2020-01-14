@@ -24,6 +24,7 @@ from tests.common import (
     get_test_home_assistant,
     get_test_instance_port,
     mock_service,
+    mock_storage,
 )
 
 
@@ -45,6 +46,8 @@ class TestTTS:
         self.hass = get_test_home_assistant()
         self.demo_provider = DemoProvider("en")
         self.default_tts_cache = self.hass.config.path(tts.DEFAULT_CACHE_DIR)
+        self.mock_storage = mock_storage()
+        self.mock_storage.__enter__()
 
         setup_component(
             self.hass,
@@ -55,6 +58,7 @@ class TestTTS:
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
+        self.mock_storage.__exit__(None, None, None)
 
         if os.path.isdir(self.default_tts_cache):
             shutil.rmtree(self.default_tts_cache)

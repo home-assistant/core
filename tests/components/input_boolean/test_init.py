@@ -240,14 +240,13 @@ async def test_reload(hass, hass_admin_user):
             }
         },
     ):
-        with patch("homeassistant.config.find_config_file", return_value=""):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_RELOAD,
-                blocking=True,
-                context=Context(user_id=hass_admin_user.id),
-            )
-            await hass.async_block_till_done()
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
 
     assert count_start + 2 == len(hass.states.async_entity_ids())
 

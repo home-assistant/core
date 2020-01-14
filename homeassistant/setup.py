@@ -55,7 +55,7 @@ async def _async_process_dependencies(
     """Ensure all dependencies are set up."""
     blacklisted = [dep for dep in dependencies if dep in loader.DEPENDENCY_BLACKLIST]
 
-    if blacklisted and name != "default_config":
+    if blacklisted and name not in ("default_config", "safe_mode"):
         _LOGGER.error(
             "Unable to set up dependencies of %s: "
             "found blacklisted dependencies: %s",
