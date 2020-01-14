@@ -8,12 +8,13 @@ from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.http.const import KEY_REAL_IP
+from homeassistant.components.http.const import KEY_REAL_IP, KEY_HASS_USER
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.auth.models import User
 
 from .const import ATTR_ADDON, ATTR_PASSWORD, ATTR_USERNAME
 
@@ -36,35 +37,35 @@ SCHEMA_API_PASSWORD_RESET = vol.Schema(
 
 
 @callback
-def async_setup_auth_view(hass: HomeAssistantType):
+def async_setup_auth_view(hass: HomeAssistantType, user: User):
     """Auth setup."""
-    hassio_auth = HassIOAuth(hass)
-    hassio_passwort_reset = HassIOPasswordReset(hass)
+    hassio_auth = HassIOAuth(hass, user)
+    hassio_passwort_reset = HassIOPasswordReset(hass, user)
 
     hass.http.register_view(hassio_auth)
     hass.http.register_view(hassio_passwort_reset)
 
 
-class HassIOAuth(HomeAssistantView):
+class HassIOBaseAuth(HomeAssistantView):
     """Hass.io view to handle auth requests."""
 
-    name = "api:hassio:auth"
-    url = "/api/hassio_auth"
-
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistantType, user: User):
         """Initialize WebView."""
         self.hass = hass
+        self.user = user
 
-    @RequestDataValidator(SCHEMA_API_AUTH)
-    async def post(self, request, data):
-        """Handle new discovery requests."""
+    def _check_access(self, request: web.Request):
+        """Check if this call is from Supervisor."""
+        # Check caller IP
         hassio_ip = os.environ["HASSIO"].split(":")[0]
         if request[KEY_REAL_IP] != ip_address(hassio_ip):
             _LOGGER.error("Invalid auth request from %s", request[KEY_REAL_IP])
             raise HTTPForbidden()
 
-        await self._check_login(data[ATTR_USERNAME], data[ATTR_PASSWORD])
-        return web.Response(status=200)
+        # Check caller token
+        if request[KEY_HASS_USER].id != self.user.id:
+            _LOGGER.error("Invalid auth request from %s", request[KEY_HASS_USER].name)
+            raise HTTPForbidden()
 
     def _get_provider(self):
         """Return Homeassistant auth provider."""
@@ -74,6 +75,21 @@ class HassIOAuth(HomeAssistantView):
 
         _LOGGER.error("Can't find Home Assistant auth.")
         raise HTTPNotFound()
+
+
+class HassIOAuth(HassIOBaseAuth):
+    """Hass.io view to handle auth requests."""
+
+    name = "api:hassio:auth"
+    url = "/api/hassio_auth"
+
+    @RequestDataValidator(SCHEMA_API_AUTH)
+    async def post(self, request, data):
+        """Handle new discovery requests."""
+        self._check_access(request)
+
+        await self._check_login(data[ATTR_USERNAME], data[ATTR_PASSWORD])
+        return web.Response(status=200)
 
     async def _check_login(self, username, password):
         """Check User credentials."""
@@ -85,35 +101,19 @@ class HassIOAuth(HomeAssistantView):
             raise HTTPForbidden() from None
 
 
-class HassIOPasswordReset(HomeAssistantView):
+class HassIOPasswordReset(HassIOBaseAuth):
     """Hass.io view to handle password reset requests."""
 
     name = "api:hassio:auth:password:reset"
     url = "/api/hassio_auth/password_reset"
 
-    def __init__(self, hass):
-        """Initialize WebView."""
-        self.hass = hass
-
     @RequestDataValidator(SCHEMA_API_PASSWORD_RESET)
     async def post(self, request, data):
         """Handle new discovery requests."""
-        hassio_ip = os.environ["HASSIO"].split(":")[0]
-        if request[KEY_REAL_IP] != ip_address(hassio_ip):
-            _LOGGER.error("Invalid auth request from %s", request[KEY_REAL_IP])
-            raise HTTPForbidden()
+        self._check_access(request)
 
         await self._change_password(data[ATTR_USERNAME], data[ATTR_PASSWORD])
         return web.Response(status=200)
-
-    def _get_provider(self):
-        """Return Homeassistant auth provider."""
-        prv = self.hass.auth.get_auth_provider("homeassistant", None)
-        if prv is not None:
-            return prv
-
-        _LOGGER.error("Can't find Home Assistant auth.")
-        raise HTTPNotFound()
 
     async def _change_password(self, username, password):
         """Check User credentials."""

@@ -290,7 +290,7 @@ async def async_setup(hass, config):
     async_setup_discovery_view(hass, hassio)
 
     # Init auth Hass.io feature
-    async_setup_auth_view(hass)
+    async_setup_auth_view(hass, user)
 
     # Init ingress Hass.io feature
     async_setup_ingress_view(hass, host)
