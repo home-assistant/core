@@ -18,7 +18,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
         devices.append(HMLock(conf))
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMLock(HMDevice, LockDevice):
