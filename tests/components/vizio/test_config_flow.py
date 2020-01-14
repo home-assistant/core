@@ -109,7 +109,6 @@ async def test_user_flow_minimum_fields(hass: HomeAssistantType, vizio_connect) 
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SOUNDBAR
-    await hass.config_entries.async_unload(result["result"].entry_id)
 
 
 async def test_user_flow_all_fields(hass: HomeAssistantType, vizio_connect) -> None:
@@ -138,7 +137,6 @@ async def test_user_flow_all_fields(hass: HomeAssistantType, vizio_connect) -> N
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
-    await hass.config_entries.async_unload(result["result"].entry_id)
 
 
 async def test_user_host_already_configured(
@@ -208,10 +206,9 @@ async def test_user_error_on_could_not_connect(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    with patch("pyvizio.vizio.VizioAsync.can_connect", return_value=False):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_USER_VALID_TV_ENTRY
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], MOCK_USER_VALID_TV_ENTRY
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cant_connect"}
 
@@ -253,7 +250,6 @@ async def test_import_flow_minimum_fields(
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SOUNDBAR
     assert result["data"][CONF_VOLUME_STEP] == DEFAULT_VOLUME_STEP
-    await hass.config_entries.async_unload(result["result"].entry_id)
 
 
 async def test_import_flow_all_fields(hass: HomeAssistantType, vizio_connect) -> None:
@@ -271,7 +267,6 @@ async def test_import_flow_all_fields(hass: HomeAssistantType, vizio_connect) ->
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
-    await hass.config_entries.async_unload(result["result"].entry_id)
 
 
 async def test_import_entity_already_configured(

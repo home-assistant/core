@@ -26,7 +26,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -81,7 +80,7 @@ async def async_setup_entry(
     unique_id = config_entry.data.get(CONF_UNIQUE_ID)
 
     # If config entry options not set up, set them up, otherwise assign values managed in options
-    if not config_entry.options or CONF_VOLUME_STEP not in config_entry.options:
+    if CONF_VOLUME_STEP not in config_entry.options:
         volume_step = config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
         hass.config_entries.async_update_entry(
             config_entry, options={CONF_VOLUME_STEP: volume_step}
@@ -110,7 +109,7 @@ async def async_setup_entry(
         raise PlatformNotReady
 
     entity = VizioDevice(
-        hass, config_entry, device, name, volume_step, device_type, unique_id
+        config_entry, device, name, volume_step, device_type, unique_id
     )
 
     async_add_entities([entity], True)
@@ -121,7 +120,6 @@ class VizioDevice(MediaPlayerDevice):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
         config_entry: ConfigEntry,
         device: VizioAsync,
         name: str,
@@ -130,7 +128,6 @@ class VizioDevice(MediaPlayerDevice):
         unique_id: str,
     ) -> None:
         """Initialize Vizio device."""
-        self._hass = hass
         self._config_entry = config_entry
         self._async_unsub_listeners = []
 
@@ -183,7 +180,6 @@ class VizioDevice(MediaPlayerDevice):
         if inputs is not None:
             self._available_inputs = [input_.name for input_ in inputs]
 
-    @callback
     @staticmethod
     async def _async_config_entry_updated(
         hass: HomeAssistantType, config_entry: ConfigEntry
@@ -206,15 +202,15 @@ class VizioDevice(MediaPlayerDevice):
         # Register callback for update event
         self._async_unsub_listeners.append(
             async_dispatcher_connect(
-                self._hass, UPDATE_OPTIONS_SIGNAL, self._async_maybe_update
+                self.hass, UPDATE_OPTIONS_SIGNAL, self._async_maybe_update
             )
         )
 
     async def async_will_remove_from_hass(self):
         """Disconnect callbacks when entity is removed."""
-        if len(self._async_unsub_listeners) > 0:
-            for listener in self._async_unsub_listeners:
-                listener()
+        for listener in self._async_unsub_listeners:
+            listener()
+        listener = []
 
     @property
     def available(self) -> bool:
