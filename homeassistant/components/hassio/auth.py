@@ -31,7 +31,7 @@ SCHEMA_API_AUTH = vol.Schema(
 )
 
 SCHEMA_API_PASSWORD_RESET = vol.Schema(
-    {vol.Required(ATTR_USERNAME): cv.string, vol.Required(ATTR_PASSWORD): cv.string,},
+    {vol.Required(ATTR_USERNAME): cv.string, vol.Required(ATTR_PASSWORD): cv.string},
     extra=vol.ALLOW_EXTRA,
 )
 
