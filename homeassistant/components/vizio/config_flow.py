@@ -127,6 +127,13 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_HOST] == import_config[CONF_HOST] and entry.data[
                 CONF_NAME
             ] == import_config.get(CONF_NAME):
+                if (
+                    CONF_VOLUME_STEP in import_config
+                    and entry.options[CONF_VOLUME_STEP]
+                    != import_config[CONF_VOLUME_STEP]
+                ):
+                    entry.options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
+                    return self.async_abort(reason="updated_volume_step")
                 return self.async_abort(reason="already_setup")
 
         # Store import values in case setup fails so user can see error
