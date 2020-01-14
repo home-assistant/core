@@ -4,6 +4,7 @@ from datetime import timedelta
 from functools import partial
 import logging
 from pathlib import Path
+from time import time
 
 from ring_doorbell import Auth, Ring
 import voluptuous as vol
@@ -23,6 +24,7 @@ ATTRIBUTION = "Data provided by Ring.com"
 NOTIFICATION_ID = "ring_notification"
 NOTIFICATION_TITLE = "Ring Setup"
 
+DATA_HISTORY = "ring_history"
 DATA_HEALTH_DATA_TRACKER = "ring_health_data"
 DATA_TRACK_INTERVAL = "ring_track_interval"
 
@@ -121,6 +123,7 @@ async def async_setup_entry(hass, entry):
         hass, refresh_all, SCAN_INTERVAL
     )
     hass.data[DATA_HEALTH_DATA_TRACKER] = HealthDataUpdater(hass)
+    hass.data[DATA_HISTORY] = HistoryCache(hass)
 
     return True
 
@@ -146,6 +149,7 @@ async def async_unload_entry(hass, entry):
     # Last entry unloaded, clean up
     hass.data.pop(DATA_TRACK_INTERVAL)()
     hass.data.pop(DATA_HEALTH_DATA_TRACKER)
+    hass.data.pop(DATA_HISTORY)
     hass.services.async_remove(DOMAIN, "update")
 
     return True
@@ -198,3 +202,42 @@ class HealthDataUpdater:
             info["device"].update_health_data()
 
         dispatcher_send(self.hass, SIGNAL_UPDATE_HEALTH_RING)
+
+
+class HistoryCache:
+    """Helper to fetch history."""
+
+    STALE_AFTER = 10  # seconds
+
+    def __init__(self, hass):
+        """Initialize history cache."""
+        self.hass = hass
+        self.cache = {}
+
+    async def async_get_history(self, config_entry_id, device):
+        """Get history of a device."""
+        key = (config_entry_id, device.device_id)
+
+        if key in self.cache:
+            info = self.cache[key]
+
+            # We're already fetching data, join that task
+            if "task" in info:
+                return await info["task"]
+
+            # We have valid cache info, return that
+            if time() - info["created_at"] < self.STALE_AFTER:
+                return info["data"]
+
+            self.cache.pop(key)
+
+        # Fetch data
+        task = self.hass.async_add_executor_job(partial(device.history, limit=10))
+
+        self.cache[key] = {"task": task}
+
+        data = await task
+
+        self.cache[key] = {"created_at": time(), "data": data}
+
+        return data

@@ -1,6 +1,8 @@
 """The tests for the Ring sensor platform."""
 from .common import setup_platform
 
+WIFI_ENABLED = False
+
 
 async def test_sensor(hass, requests_mock):
     """Test the Ring sensors."""
@@ -24,6 +26,10 @@ async def test_sensor(hass, requests_mock):
     downstairs_wifi_signal_strength_state = hass.states.get(
         "sensor.downstairs_wifi_signal_strength"
     )
+
+    if not WIFI_ENABLED:
+        return
+
     assert downstairs_wifi_signal_strength_state is not None
     assert downstairs_wifi_signal_strength_state.state == "-39"
 

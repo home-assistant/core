@@ -1,6 +1,5 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
 from datetime import timedelta
-from itertools import chain
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -16,8 +15,8 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
-    "ding": ["Ding", ["doorbell"], "occupancy"],
-    "motion": ["Motion", ["doorbell", "stickup_cams"], "motion"],
+    "ding": ["Ding", ["doorbots", "authorized_doorbots"], "occupancy"],
+    "motion": ["Motion", ["doorbots", "authorized_doorbots", "stickup_cams"], "motion"],
 }
 
 
@@ -27,14 +26,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     devices = ring.devices()
 
     sensors = []
-    for device in chain(devices["doorbots"], devices["authorized_doorbots"]):
-        for sensor_type in SENSOR_TYPES:
-            if "doorbell" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(ring, device, sensor_type))
 
-    for device in devices["stickup_cams"]:
+    for device_type in ("doorbots", "authorized_doorbots", "stickup_cams"):
         for sensor_type in SENSOR_TYPES:
-            if "stickup_cams" in SENSOR_TYPES[sensor_type][1]:
+            if device_type not in SENSOR_TYPES[sensor_type][1]:
+                continue
+
+            for device in devices[device_type]:
                 sensors.append(RingBinarySensor(ring, device, sensor_type))
 
     async_add_entities(sensors, True)
@@ -104,7 +102,6 @@ class RingBinarySensor(BinarySensorDevice):
         """Return device info."""
         return {
             "identifiers": {(DOMAIN, self._device.device_id)},
-            "sw_version": self._device.firmware,
             "name": self._device.name,
             "model": self._device.model,
             "manufacturer": "Ring",

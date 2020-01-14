@@ -83,7 +83,6 @@ class BaseRingSwitch(SwitchDevice):
         """Return device info."""
         return {
             "identifiers": {(DOMAIN, self._device.device_id)},
-            "sw_version": self._device.firmware,
             "name": self._device.name,
             "model": self._device.model,
             "manufacturer": "Ring",
