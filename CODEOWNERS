@@ -275,8 +275,10 @@ homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
 homeassistant/components/repetier/* @MTrab
 homeassistant/components/rfxtrx/* @danielhiversen
+homeassistant/components/ring/* @balloob
 homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roomba/* @pschmitt
+homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
 homeassistant/components/samsungtv/* @escoand
 homeassistant/components/scene/* @home-assistant/core

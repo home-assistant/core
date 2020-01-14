@@ -4,8 +4,10 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import ATTRIBUTION, DATA_RING_DOORBELLS, DATA_RING_STICKUP_CAMS, DOMAIN
+from . import ATTRIBUTION, DOMAIN, SIGNAL_UPDATE_RING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,26 +15,25 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
-    "ding": ["Ding", ["doorbell"], "occupancy"],
-    "motion": ["Motion", ["doorbell", "stickup_cams"], "motion"],
+    "ding": ["Ding", ["doorbots", "authorized_doorbots"], "occupancy"],
+    "motion": ["Motion", ["doorbots", "authorized_doorbots", "stickup_cams"], "motion"],
 }
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Ring binary sensors from a config entry."""
-    ring_doorbells = hass.data[DATA_RING_DOORBELLS]
-    ring_stickup_cams = hass.data[DATA_RING_STICKUP_CAMS]
+    ring = hass.data[DOMAIN][config_entry.entry_id]
+    devices = ring.devices()
 
     sensors = []
-    for device in ring_doorbells:  # ring.doorbells is doing I/O
-        for sensor_type in SENSOR_TYPES:
-            if "doorbell" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(hass, device, sensor_type))
 
-    for device in ring_stickup_cams:  # ring.stickup_cams is doing I/O
+    for device_type in ("doorbots", "authorized_doorbots", "stickup_cams"):
         for sensor_type in SENSOR_TYPES:
-            if "stickup_cams" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(hass, device, sensor_type))
+            if device_type not in SENSOR_TYPES[sensor_type][1]:
+                continue
+
+            for device in devices[device_type]:
+                sensors.append(RingBinarySensor(ring, device, sensor_type))
 
     async_add_entities(sensors, True)
 
@@ -40,17 +41,41 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RingBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Ring device."""
 
-    def __init__(self, hass, data, sensor_type):
+    def __init__(self, ring, device, sensor_type):
         """Initialize a sensor for Ring device."""
-        super().__init__()
         self._sensor_type = sensor_type
-        self._data = data
+        self._ring = ring
+        self._device = device
         self._name = "{0} {1}".format(
-            self._data.name, SENSOR_TYPES.get(self._sensor_type)[0]
+            self._device.name, SENSOR_TYPES.get(self._sensor_type)[0]
         )
         self._device_class = SENSOR_TYPES.get(self._sensor_type)[2]
         self._state = None
-        self._unique_id = f"{self._data.id}-{self._sensor_type}"
+        self._unique_id = f"{self._device.id}-{self._sensor_type}"
+        self._disp_disconnect = None
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        self._disp_disconnect = async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_RING, self._update_callback
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks."""
+        if self._disp_disconnect:
+            self._disp_disconnect()
+            self._disp_disconnect = None
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)
+        _LOGGER.debug("Updating Ring binary sensor %s (callback)", self.name)
+
+    @property
+    def should_poll(self):
+        """Return False, updates are controlled via the hub."""
+        return False
 
     @property
     def name(self):
@@ -76,10 +101,9 @@ class RingBinarySensor(BinarySensorDevice):
     def device_info(self):
         """Return device info."""
         return {
-            "identifiers": {(DOMAIN, self._data.id)},
-            "sw_version": self._data.firmware,
-            "name": self._data.name,
-            "model": self._data.kind,
+            "identifiers": {(DOMAIN, self._device.device_id)},
+            "name": self._device.name,
+            "model": self._device.model,
             "manufacturer": "Ring",
         }
 
@@ -89,22 +113,16 @@ class RingBinarySensor(BinarySensorDevice):
         attrs = {}
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
 
-        attrs["timezone"] = self._data.timezone
-
-        if self._data.alert and self._data.alert_expires_at:
-            attrs["expires_at"] = self._data.alert_expires_at
-            attrs["state"] = self._data.alert.get("state")
+        if self._device.alert and self._device.alert_expires_at:
+            attrs["expires_at"] = self._device.alert_expires_at
+            attrs["state"] = self._device.alert.get("state")
 
         return attrs
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data and updates the state."""
-        self._data.check_alerts()
-
-        if self._data.alert:
-            if self._sensor_type == self._data.alert.get(
-                "kind"
-            ) and self._data.account_id == self._data.alert.get("doorbot_id"):
-                self._state = True
-        else:
-            self._state = False
+        self._state = any(
+            alert["kind"] == self._sensor_type
+            and alert["doorbot_id"] == self._device.id
+            for alert in self._ring.active_alerts()
+        )

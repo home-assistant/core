@@ -146,7 +146,8 @@ class EntityPlatform:
         warn_task = hass.loop.call_later(
             SLOW_SETUP_WARNING,
             logger.warning,
-            "Setup of platform %s is taking over %s seconds.",
+            "Setup of %s platform %s is taking over %s seconds.",
+            self.domain,
             self.platform_name,
             SLOW_SETUP_WARNING,
         )

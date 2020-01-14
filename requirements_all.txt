@@ -172,7 +172,7 @@ aioimaplib==0.7.15
 aiokafka==0.5.1
 
 # homeassistant.components.kef
-aiokef==0.2.2
+aiokef==0.2.5
 
 # homeassistant.components.lifx
 aiolifx==0.6.7
@@ -546,7 +546,7 @@ freesms==0.1.2
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
-# fritzconnection==0.8.4
+fritzconnection==1.2.0
 
 # homeassistant.components.fritzdect
 fritzhome==1.0.4
@@ -1750,7 +1750,7 @@ rfk101py==0.0.1
 rflink==0.0.50
 
 # homeassistant.components.ring
-ring_doorbell==0.5.0
+ring_doorbell==0.6.0
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
@@ -1954,7 +1954,7 @@ temperusb==1.5.3
 # tensorflow==1.13.2
 
 # homeassistant.components.tesla
-teslajsonpy==0.2.2
+teslajsonpy==0.2.3
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8

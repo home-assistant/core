@@ -338,21 +338,20 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
             }
         },
     ):
-        with patch("homeassistant.config.find_config_file", return_value=""):
-            with pytest.raises(Unauthorized):
-                await hass.services.async_call(
-                    DOMAIN,
-                    SERVICE_RELOAD,
-                    blocking=True,
-                    context=Context(user_id=hass_read_only_user.id),
-                )
+        with pytest.raises(Unauthorized):
             await hass.services.async_call(
                 DOMAIN,
                 SERVICE_RELOAD,
                 blocking=True,
-                context=Context(user_id=hass_admin_user.id),
+                context=Context(user_id=hass_read_only_user.id),
             )
-            await hass.async_block_till_done()
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
 
     assert count_start + 2 == len(hass.states.async_entity_ids())
 
