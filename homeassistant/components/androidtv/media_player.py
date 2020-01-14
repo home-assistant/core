@@ -252,14 +252,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def adb_decorator(override_available=False):
-    """Send an ADB command if the device is available and catch exceptions."""
+    """Wrap ADB methods and catch exceptions.
+
+    Allows for overriding the available status of the ADB connection via the
+    `override_available` parameter.
+    """
 
     def _adb_decorator(func):
-        """Wait if previous ADB commands haven't finished."""
+        """Wrap the provided ADB method and catch exceptions."""
 
         @functools.wraps(func)
         def _adb_exception_catcher(self, *args, **kwargs):
-            # If the device is unavailable, don't do anything
+            """Call an ADB-related method and catch exceptions."""
             if not self.available and not override_available:
                 return None
 
@@ -319,7 +323,7 @@ class ADBDevice(MediaPlayerDevice):
 
         # Property attributes
         self._adb_response = None
-        self._available = self.aftv.available
+        self._available = True
         self._current_app = None
         self._state = None
 

@@ -7,6 +7,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from pilight import pilight
+
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 import homeassistant.helpers.config_validation as cv
@@ -59,7 +61,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Pilight component."""
-    from pilight import pilight
 
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]

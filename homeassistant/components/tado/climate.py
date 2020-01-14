@@ -1,20 +1,20 @@
 """Support for Tado to create a climate device for each zone."""
 import logging
-from typing import Optional, List
+from typing import List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_OFF,
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     FAN_HIGH,
     FAN_LOW,
     FAN_MIDDLE,
     FAN_OFF,
     HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
     HVAC_MODE_COOL,
+    HVAC_MODE_HEAT,
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     PRESET_AWAY,
@@ -48,22 +48,22 @@ FAN_MAP_TADO = {"HIGH": FAN_HIGH, "MIDDLE": FAN_MIDDLE, "LOW": FAN_LOW}
 
 HVAC_MAP_TADO_HEAT = {
     "MANUAL": HVAC_MODE_HEAT,
-    "TIMER": HVAC_MODE_AUTO,
-    "TADO_MODE": HVAC_MODE_AUTO,
+    "TIMER": HVAC_MODE_HEAT,
+    "TADO_MODE": HVAC_MODE_HEAT,
     "SMART_SCHEDULE": HVAC_MODE_AUTO,
     "OFF": HVAC_MODE_OFF,
 }
 HVAC_MAP_TADO_COOL = {
     "MANUAL": HVAC_MODE_COOL,
-    "TIMER": HVAC_MODE_AUTO,
-    "TADO_MODE": HVAC_MODE_AUTO,
+    "TIMER": HVAC_MODE_COOL,
+    "TADO_MODE": HVAC_MODE_COOL,
     "SMART_SCHEDULE": HVAC_MODE_AUTO,
     "OFF": HVAC_MODE_OFF,
 }
 HVAC_MAP_TADO_HEAT_COOL = {
     "MANUAL": HVAC_MODE_HEAT_COOL,
-    "TIMER": HVAC_MODE_AUTO,
-    "TADO_MODE": HVAC_MODE_AUTO,
+    "TIMER": HVAC_MODE_HEAT_COOL,
+    "TADO_MODE": HVAC_MODE_HEAT_COOL,
     "SMART_SCHEDULE": HVAC_MODE_AUTO,
     "OFF": HVAC_MODE_OFF,
 }
@@ -103,6 +103,7 @@ def create_climate_device(tado, hass, zone, name, zone_id):
 
     unit = TEMP_CELSIUS
     ac_device = capabilities["type"] == "AIR_CONDITIONING"
+    hot_water_device = capabilities["type"] == "HOT_WATER"
     ac_support_heat = False
 
     if ac_device:
@@ -134,6 +135,7 @@ def create_climate_device(tado, hass, zone, name, zone_id):
         hass.config.units.temperature(max_temp, unit),
         step,
         ac_device,
+        hot_water_device,
         ac_support_heat,
     )
 
@@ -157,6 +159,7 @@ class TadoClimate(ClimateDevice):
         max_temp,
         step,
         ac_device,
+        hot_water_device,
         ac_support_heat,
         tolerance=0.3,
     ):
@@ -168,6 +171,7 @@ class TadoClimate(ClimateDevice):
         self.zone_id = zone_id
 
         self._ac_device = ac_device
+        self._hot_water_device = hot_water_device
         self._ac_support_heat = ac_support_heat
         self._cooling = False
 
@@ -325,7 +329,7 @@ class TadoClimate(ClimateDevice):
         if temperature is None:
             return
 
-        self._current_operation = CONST_OVERLAY_MANUAL
+        self._current_operation = CONST_OVERLAY_TADO_MODE
         self._overlay_mode = None
         self._target_temp = temperature
         self._control_heating()
@@ -339,11 +343,11 @@ class TadoClimate(ClimateDevice):
         elif hvac_mode == HVAC_MODE_AUTO:
             mode = CONST_MODE_SMART_SCHEDULE
         elif hvac_mode == HVAC_MODE_HEAT:
-            mode = CONST_OVERLAY_MANUAL
+            mode = CONST_OVERLAY_TADO_MODE
         elif hvac_mode == HVAC_MODE_COOL:
-            mode = CONST_OVERLAY_MANUAL
+            mode = CONST_OVERLAY_TADO_MODE
         elif hvac_mode == HVAC_MODE_HEAT_COOL:
-            mode = CONST_OVERLAY_MANUAL
+            mode = CONST_OVERLAY_TADO_MODE
 
         self._current_operation = mode
         self._overlay_mode = None
@@ -493,6 +497,15 @@ class TadoClimate(ClimateDevice):
                 self._store.set_zone_off(
                     self.zone_id, CONST_OVERLAY_MANUAL, "AIR_CONDITIONING"
                 )
+            elif self._hot_water_device:
+                _LOGGER.info(
+                    "Switching mytado.com to OFF for zone %s (%d) - HOT_WATER",
+                    self.zone_name,
+                    self.zone_id,
+                )
+                self._store.set_zone_off(
+                    self.zone_id, CONST_OVERLAY_MANUAL, "HOT_WATER"
+                )
             else:
                 _LOGGER.info(
                     "Switching mytado.com to OFF for zone %s (%d) - HEATING",
@@ -518,6 +531,21 @@ class TadoClimate(ClimateDevice):
                 None,
                 "AIR_CONDITIONING",
                 "COOL",
+            )
+        elif self._hot_water_device:
+            _LOGGER.info(
+                "Switching mytado.com to %s mode for zone %s (%d). Temp (%s) - HOT_WATER",
+                self._current_operation,
+                self.zone_name,
+                self.zone_id,
+                self._target_temp,
+            )
+            self._store.set_zone_overlay(
+                self.zone_id,
+                self._current_operation,
+                self._target_temp,
+                None,
+                "HOT_WATER",
             )
         else:
             _LOGGER.info(

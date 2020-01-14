@@ -1,18 +1,20 @@
 """Support for Wireless Sensor Tags."""
 import logging
 
-from requests.exceptions import HTTPError, ConnectTimeout
+from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
+from wirelesstagpy import NotificationConfig as NC
+
+from homeassistant import util
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_VOLTAGE,
-    CONF_USERNAME,
     CONF_PASSWORD,
+    CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant import util
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +98,6 @@ class WirelessTagPlatform:
             configs.extend(bi_sensor.event.build_notifications(bi_url, mac))
 
         update_url = self.update_callback_url
-        from wirelesstagpy import NotificationConfig as NC
 
         update_config = NC.make_config_for_update_event(update_url, mac)
 

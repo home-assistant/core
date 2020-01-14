@@ -52,7 +52,7 @@ class TestEmulatedHue(unittest.TestCase):
 
     def test_description_xml(self):
         """Test the description."""
-        import xml.etree.ElementTree as ET
+        import defusedxml.ElementTree as ET
 
         result = requests.get(BRIDGE_URL_BASE.format("/description.xml"), timeout=5)
 

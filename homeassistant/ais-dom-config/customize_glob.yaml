@@ -1,0 +1,28 @@
+sun.sun:
+  friendly_name: "Pozycja słońca"
+sensor.time:
+  friendly_name: "Godzina"
+sensor.date:
+  friendly_name: "Dzień"
+sensor.ais_connect_iot_device_info:
+  friendly_name: "Instrukcja"
+media_player.wbudowany_glosnik:
+  friendly_name: "Podłączony głośnik"
+sensor.dark_sky_hourly_summary:
+  friendly_name: "Pogoda dzisiaj"
+sensor.dark_sky_daily_summary:
+  friendly_name: "Prognoza pogody"
+sensor.dark_sky_temperature:
+    friendly_name: "Temperatura"
+sensor.dark_sky_apparent_temperature:
+      friendly_name: "Temperatura odczuwalna"
+sensor.dark_sky_wind_speed:
+    friendly_name: "Prędkość wiatru"
+sensor.dark_sky_humidity:
+    friendly_name: "Wilgotność"
+sensor.dark_sky_pressure:
+    friendly_name: "Ciśnienie"
+sensor.dark_sky_visibility:
+    friendly_name: "Widoczność"
+camera.remote_access:
+  friendly_name: "Adres aplikacji w Internecie"

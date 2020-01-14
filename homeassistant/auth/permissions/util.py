@@ -21,8 +21,9 @@ def lookup_all(
 
 def compile_policy(
     policy: CategoryType, subcategories: SubCatLookupType, perm_lookup: PermissionLookup
-) -> Callable[[str, str], bool]:  # noqa
+) -> Callable[[str, str], bool]:
     """Compile policy into a function that tests policy.
+
     Subcategories are mapping key -> lookup function, ordered by highest
     priority first.
     """
@@ -80,7 +81,7 @@ def compile_policy(
 
 def _gen_dict_test_func(
     perm_lookup: PermissionLookup, lookup_func: LookupFunc, lookup_dict: SubCategoryDict
-) -> Callable[[str, str], Optional[bool]]:  # noqa
+) -> Callable[[str, str], Optional[bool]]:
     """Generate a lookup function."""
 
     def test_value(object_id: str, key: str) -> Optional[bool]:

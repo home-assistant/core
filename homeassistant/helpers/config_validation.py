@@ -489,8 +489,9 @@ def template_complex(value):
         for key, element in return_value.items():
             return_value[key] = template_complex(element)
         return return_value
-
-    return template(value)
+    if isinstance(value, str):
+        return template(value)
+    return value
 
 
 def datetime(value):
@@ -715,12 +716,23 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
-ENTITY_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-        vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
-    }
-)
+
+def make_entity_service_schema(
+    schema: dict, *, extra: int = vol.PREVENT_EXTRA
+) -> vol.All:
+    """Create an entity service schema."""
+    return vol.All(
+        vol.Schema(
+            {
+                **schema,
+                vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
+                vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
+            },
+            extra=extra,
+        ),
+        has_at_least_one_key(ATTR_ENTITY_ID, ATTR_AREA_ID),
+    )
+
 
 EVENT_SCHEMA = vol.Schema(
     {

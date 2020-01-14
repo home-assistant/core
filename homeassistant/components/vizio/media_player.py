@@ -2,11 +2,12 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
 from pyvizio import Vizio
+from requests.packages import urllib3
+import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -110,8 +111,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     if config[CONF_SUPPRESS_WARNING]:
-        from requests.packages import urllib3
-
         _LOGGER.warning(
             "InsecureRequestWarning is disabled "
             "because of Vizio platform configuration"

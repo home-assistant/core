@@ -2,6 +2,7 @@
 import logging
 from datetime import timedelta
 
+from geizhals import Device, Geizhals
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -45,7 +46,6 @@ class Geizwatch(Entity):
 
     def __init__(self, name, description, product_id, domain):
         """Initialize the sensor."""
-        from geizhals import Device, Geizhals
 
         # internal
         self._name = name

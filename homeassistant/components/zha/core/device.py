@@ -479,7 +479,7 @@ class ZHADevice(LogMixin):
         cluster_id,
         command,
         command_type,
-        args,
+        *args,
         cluster_type=CLUSTER_TYPE_IN,
         manufacturer=None,
     ):
@@ -487,7 +487,6 @@ class ZHADevice(LogMixin):
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
-        response = None
         if command_type == CLUSTER_COMMAND_SERVER:
             response = await cluster.command(
                 command, *args, manufacturer=manufacturer, expect_reply=True

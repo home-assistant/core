@@ -4,7 +4,7 @@ browse_path:
   fields:
     path:
       description: Śeieżka
-      example: '/sdcard/dom/Muzyka/Zalewski/Zelig'
+      example: '"dyski-zdalne:"'
 
 sync_locations:
   description: Synchronizacja folderu źródłowego i docelowego, modyfikowane jest tylko miejsce docelowe

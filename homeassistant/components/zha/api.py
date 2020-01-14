@@ -57,6 +57,7 @@ RESPONSE = "response"
 DEVICE_INFO = "device_info"
 
 ATTR_DURATION = "duration"
+ATTR_GROUP = "group"
 ATTR_IEEE_ADDRESS = "ieee_address"
 ATTR_IEEE = "ieee"
 ATTR_SOURCE_IEEE = "source_ieee"
@@ -68,6 +69,7 @@ SERVICE_PERMIT = "permit"
 SERVICE_REMOVE = "remove"
 SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE = "set_zigbee_cluster_attribute"
 SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND = "issue_zigbee_cluster_command"
+SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND = "issue_zigbee_group_command"
 SERVICE_DIRECT_ZIGBEE_BIND = "issue_direct_zigbee_bind"
 SERVICE_DIRECT_ZIGBEE_UNBIND = "issue_direct_zigbee_unbind"
 SERVICE_WARNING_DEVICE_SQUAWK = "warning_device_squawk"
@@ -139,7 +141,17 @@ SERVICE_SCHEMAS = {
             vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
             vol.Required(ATTR_COMMAND): cv.positive_int,
             vol.Required(ATTR_COMMAND_TYPE): cv.string,
-            vol.Optional(ATTR_ARGS, default=""): cv.string,
+            vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
+            vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
+        }
+    ),
+    SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND: vol.Schema(
+        {
+            vol.Required(ATTR_GROUP): cv.positive_int,
+            vol.Required(ATTR_CLUSTER_ID): cv.positive_int,
+            vol.Optional(ATTR_CLUSTER_TYPE, default=CLUSTER_TYPE_IN): cv.string,
+            vol.Required(ATTR_COMMAND): cv.positive_int,
+            vol.Optional(ATTR_ARGS, default=[]): cv.ensure_list,
             vol.Optional(ATTR_MANUFACTURER): cv.positive_int,
         }
     ),
@@ -637,7 +649,7 @@ def async_load_api(hass):
                 cluster_id,
                 command,
                 command_type,
-                args,
+                *args,
                 cluster_type=cluster_type,
                 manufacturer=manufacturer,
             )
@@ -658,6 +670,38 @@ def async_load_api(hass):
         SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND,
         issue_zigbee_cluster_command,
         schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND],
+    )
+
+    async def issue_zigbee_group_command(service):
+        """Issue command on zigbee cluster on a zigbee group."""
+        group_id = service.data.get(ATTR_GROUP)
+        cluster_id = service.data.get(ATTR_CLUSTER_ID)
+        command = service.data.get(ATTR_COMMAND)
+        args = service.data.get(ATTR_ARGS)
+        manufacturer = service.data.get(ATTR_MANUFACTURER) or None
+        group = zha_gateway.get_group(group_id)
+        if cluster_id >= MFG_CLUSTER_ID_START and manufacturer is None:
+            _LOGGER.error("Missing manufacturer attribute for cluster: %d", cluster_id)
+        response = None
+        if group is not None:
+            cluster = group.endpoint[cluster_id]
+            response = await cluster.command(
+                command, *args, manufacturer=manufacturer, expect_reply=True
+            )
+        _LOGGER.debug(
+            "Issue group command for: %s %s %s %s %s",
+            f"{ATTR_CLUSTER_ID}: [{cluster_id}]",
+            f"{ATTR_COMMAND}: [{command}]",
+            f"{ATTR_ARGS}: [{args}]",
+            f"{ATTR_MANUFACTURER}: [{manufacturer}]",
+            f"{RESPONSE}: [{response}]",
+        )
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN,
+        SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND,
+        issue_zigbee_group_command,
+        schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND],
     )
 
     async def warning_device_squawk(service):
@@ -758,5 +802,6 @@ def async_unload_api(hass):
     hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
     hass.services.async_remove(DOMAIN, SERVICE_SET_ZIGBEE_CLUSTER_ATTRIBUTE)
     hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_CLUSTER_COMMAND)
+    hass.services.async_remove(DOMAIN, SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND)
     hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_SQUAWK)
     hass.services.async_remove(DOMAIN, SERVICE_WARNING_DEVICE_WARN)

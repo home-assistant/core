@@ -1,0 +1,25 @@
+{
+    "config": {
+        "error": {
+            "error_auth_mfa": "Ung\u00fcltiger Code"
+        },
+        "step": {
+            "auth_captcha": {
+                "title": "Captcha"
+            },
+            "auth_mfa": {
+                "data": {
+                    "mfa_code": "SMS Code"
+                },
+                "title": "2-Faktor-Authentifizierung"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "title": "Anmeldeinformationen"
+            }
+        }
+    }
+}

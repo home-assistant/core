@@ -2,10 +2,9 @@
 import asyncio
 
 import async_timeout
-import voluptuous as vol
-
-from pydeconz.errors import ResponseError, RequestError
+from pydeconz.errors import RequestError, ResponseError
 from pydeconz.utils import async_discovery, async_get_api_key, async_get_gateway_config
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
@@ -159,17 +158,28 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             title="deCONZ-" + self.deconz_config[CONF_BRIDGEID], data=self.deconz_config
         )
 
-    async def _update_entry(self, entry, host):
+    def _update_entry(self, entry, host, port, api_key=None):
         """Update existing entry."""
-        if entry.data[CONF_HOST] == host:
+        if (
+            entry.data[CONF_HOST] == host
+            and entry.data[CONF_PORT] == port
+            and (api_key is None or entry.data[CONF_API_KEY] == api_key)
+        ):
             return self.async_abort(reason="already_configured")
 
         entry.data[CONF_HOST] = host
+        entry.data[CONF_PORT] = port
+
+        if api_key is not None:
+            entry.data[CONF_API_KEY] = api_key
+
         self.hass.config_entries.async_update_entry(entry)
         return self.async_abort(reason="updated_instance")
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
+        # Import it here, because only now do we know ssdp integration loaded.
+        # pylint: disable=import-outside-toplevel
         from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
 
         if discovery_info[ATTR_MANUFACTURERURL] != DECONZ_MANUFACTURERURL:
@@ -181,7 +191,11 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
             if uuid == entry.data.get(CONF_UUID):
-                return await self._update_entry(entry, discovery_info[CONF_HOST])
+                if entry.source == "hassio":
+                    return self.async_abort(reason="already_configured")
+                return self._update_entry(
+                    entry, discovery_info[CONF_HOST], entry.data.get(CONF_PORT)
+                )
 
         bridgeid = discovery_info[ATTR_SERIAL]
         if any(
@@ -211,7 +225,12 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if bridgeid in gateway_entries:
             entry = gateway_entries[bridgeid]
-            return await self._update_entry(entry, user_input[CONF_HOST])
+            return self._update_entry(
+                entry,
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+                user_input[CONF_API_KEY],
+            )
 
         self._hassio_discovery = user_input
 

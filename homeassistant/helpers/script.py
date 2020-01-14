@@ -231,7 +231,6 @@ class Script:
 
         Should only be called on exceptions raised by this scripts async_run.
         """
-        # pylint: disable=protected-access
         step = self._exception_step
         action = self.sequence[step]
         action_type = _determine_action(action)
@@ -281,7 +280,6 @@ class Script:
         @callback
         def async_script_delay(now):
             """Handle delay."""
-            # pylint: disable=cell-var-from-loop
             with suppress(ValueError):
                 self._async_listener.remove(unsub)
 

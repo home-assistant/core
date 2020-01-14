@@ -1,8 +1,12 @@
 """Support for Dyson Pure Cool Link Sensors."""
 import logging
 
+from libpurecool.dyson_pure_cool import DysonPureCool
+from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
+
 from homeassistant.const import STATE_OFF, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+
 from . import DYSON_DEVICES
 
 SENSOR_UNITS = {
@@ -27,8 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson Sensors."""
-    from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
-    from libpurecool.dyson_pure_cool import DysonPureCool
 
     if discovery_info is None:
         return

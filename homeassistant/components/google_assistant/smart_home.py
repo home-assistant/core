@@ -79,18 +79,19 @@ async def async_devices_sync(hass, data, payload):
         EVENT_SYNC_RECEIVED, {"request_id": data.request_id}, context=data.context
     )
 
+    agent_user_id = data.config.get_agent_user_id(data.context)
+
     devices = await asyncio.gather(
         *(
-            entity.sync_serialize()
+            entity.sync_serialize(agent_user_id)
             for entity in async_get_entities(hass, data.config)
             if entity.should_expose()
         )
     )
 
-    response = {
-        "agentUserId": data.config.agent_user_id or data.context.user_id,
-        "devices": devices,
-    }
+    response = {"agentUserId": agent_user_id, "devices": devices}
+
+    await data.config.async_connect_agent_user(agent_user_id)
 
     return response
 
@@ -197,7 +198,7 @@ async def async_devices_disconnect(hass, data: RequestData, payload):
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#DISCONNECT
     """
-    await data.config.async_deactivate_report_state()
+    await data.config.async_disconnect_agent_user(data.context.user_id)
     return None
 
 
@@ -209,7 +210,7 @@ async def async_devices_identify(hass, data: RequestData, payload):
     """
     return {
         "device": {
-            "id": data.config.agent_user_id,
+            "id": data.context.user_id,
             "isLocalOnly": True,
             "isProxy": True,
             "deviceInfo": {

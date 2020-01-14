@@ -99,6 +99,10 @@ G_AIS_NEW_DEVICE_START_ADD_TIME = None
 G_AIS_DAY_MEDIA_VOLUME_LEVEL = None
 G_HTTP_REST_SERVICE_BASE_URL = "http://{}:8122"
 
+#
+G_USB_DEVICES = []
+G_USB_INTERNAL_MIC_RESET = False
+
 
 def get_pass_for_ssid(ssid):
     for item in GLOBAL_SCAN_WIFI_ANSWER["ScanResult"]:
@@ -122,7 +126,7 @@ def say_direct(text):
             timeout=1,
         )
     except Exception as e:
-        _LOGGER.info("problem to send the text to speech via http: " + str(e))
+        _LOGGER.debug("problem to send the text to speech via http: " + str(e))
 
 
 def get_sercure_android_id_dom():

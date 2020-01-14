@@ -7,7 +7,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -39,11 +38,8 @@ ATTR_TARIFFS = "tariffs"
 
 DEFAULT_OFFSET = timedelta(hours=0)
 
-SERVICE_SELECT_TARIFF_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_TARIFF): cv.string}
-)
 
-METER_CONFIG_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+METER_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
         vol.Optional(CONF_NAME): cv.string,
@@ -110,16 +106,16 @@ async def async_setup(hass, config):
             register_services = True
 
     if register_services:
+        component.async_register_entity_service(SERVICE_RESET, {}, "async_reset_meters")
+
         component.async_register_entity_service(
-            SERVICE_RESET, ENTITY_SERVICE_SCHEMA, "async_reset_meters"
+            SERVICE_SELECT_TARIFF,
+            {vol.Required(ATTR_TARIFF): cv.string},
+            "async_select_tariff",
         )
 
         component.async_register_entity_service(
-            SERVICE_SELECT_TARIFF, SERVICE_SELECT_TARIFF_SCHEMA, "async_select_tariff"
-        )
-
-        component.async_register_entity_service(
-            SERVICE_SELECT_NEXT_TARIFF, ENTITY_SERVICE_SCHEMA, "async_next_tariff"
+            SERVICE_SELECT_NEXT_TARIFF, {}, "async_next_tariff"
         )
 
     return True

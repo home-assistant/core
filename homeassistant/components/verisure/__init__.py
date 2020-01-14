@@ -2,6 +2,7 @@
 import logging
 import threading
 from datetime import timedelta
+
 from jsonpath import jsonpath
 import verisure
 

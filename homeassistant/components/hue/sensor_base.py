@@ -101,7 +101,7 @@ class SensorManager:
         try:
             start = monotonic()
             with async_timeout.timeout(4):
-                await api.update()
+                await self.bridge.async_request_call(api.update())
         except Unauthorized:
             await self.bridge.handle_unauthorized_error()
             return

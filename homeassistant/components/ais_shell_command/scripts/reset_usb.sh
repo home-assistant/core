@@ -4,8 +4,7 @@ for X in /sys/bus/usb/devices/*; do
     then
     	idVendor=$(cat "$X/idVendor")  || idVendor=""
     	idProduct=$(cat "$X/idProduct") || idProduct=""
-    	#if [ $idVendor == "1d6b" ] && [ $idProduct == "0003" ]
-    	if [ $idVendor != "" ] && [ $idProduct != "" ]
+    	if [ $idVendor == "0c45" ] && [ $idProduct == "5102" ]
     	then
     		$(su -c "log -p i 'reset_usb resetUsb device idVendor $idVendor idProduct $idProduct'")
         	command="echo 0 > $X/authorized"

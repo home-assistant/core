@@ -1,6 +1,7 @@
 """Provides a binary sensor which is a collection of ffmpeg tools."""
 import logging
 
+import haffmpeg.sensor as ffmpeg_sensor
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -87,10 +88,11 @@ class FFmpegMotion(FFmpegBinarySensor):
 
     def __init__(self, hass, manager, config):
         """Initialize FFmpeg motion binary sensor."""
-        from haffmpeg.sensor import SensorMotion
 
         super().__init__(config)
-        self.ffmpeg = SensorMotion(manager.binary, hass.loop, self._async_callback)
+        self.ffmpeg = ffmpeg_sensor.SensorMotion(
+            manager.binary, hass.loop, self._async_callback
+        )
 
     async def _async_start_ffmpeg(self, entity_ids):
         """Start a FFmpeg instance.

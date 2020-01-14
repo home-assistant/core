@@ -8,8 +8,8 @@ import voluptuous as vol
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA,
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    make_entity_service_schema,
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
@@ -40,7 +40,7 @@ GROUP_NAME_ALL_LOCKS = "all locks"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-LOCK_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({vol.Optional(ATTR_CODE): cv.string})
+LOCK_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.string})
 
 # Bitfield of features supported by the lock entity
 SUPPORT_OPEN = 1

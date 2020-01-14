@@ -42,7 +42,7 @@ class MultiFactorAuthModule:
         self.config = config
 
     @property
-    def id(self) -> str:  # pylint: disable=invalid-name
+    def id(self) -> str:
         """Return id of the auth module.
 
         Default is same as type

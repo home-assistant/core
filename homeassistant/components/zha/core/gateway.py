@@ -222,6 +222,10 @@ class ZHAGateway:
         """Return ZHADevice for given ieee."""
         return self._devices.get(ieee)
 
+    def get_group(self, group_id):
+        """Return Group for given group id."""
+        return self.application_controller.groups[group_id]
+
     def get_entity_reference(self, entity_id):
         """Return entity reference for given entity_id if found."""
         for entity_reference in itertools.chain.from_iterable(

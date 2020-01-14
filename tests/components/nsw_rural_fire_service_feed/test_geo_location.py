@@ -1,5 +1,8 @@
-"""The tests for the geojson platform."""
+"""The tests for the NSW Rural Fire Service Feeds platform."""
 import datetime
+from unittest.mock import ANY
+
+from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
 from asynctest.mock import patch, MagicMock, call
 
 from homeassistant.components import geo_location
@@ -20,6 +23,7 @@ from homeassistant.components.nsw_rural_fire_service_feed.geo_location import (
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -27,7 +31,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     EVENT_HOMEASSISTANT_START,
-    ATTR_ICON,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.setup import async_setup_component
 from tests.common import assert_setup_component, async_fire_time_changed
@@ -110,12 +114,12 @@ async def test_setup(hass):
     mock_entry_3 = _generate_mock_feed_entry("3456", "Title 3", 25.5, (-31.2, 150.2))
     mock_entry_4 = _generate_mock_feed_entry("4567", "Title 4", 12.5, (-31.3, 150.3))
 
-    utcnow = dt_util.utcnow()
     # Patching 'utcnow' to gain more control over the timed update.
+    utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "geojson_client.nsw_rural_fire_service_feed." "NswRuralFireServiceFeed"
-    ) as mock_feed:
-        mock_feed.return_value.update.return_value = (
+        "aio_geojson_client.feed.GeoJsonFeed.update"
+    ) as mock_feed_update:
+        mock_feed_update.return_value = (
             "OK",
             [mock_entry_1, mock_entry_2, mock_entry_3],
         )
@@ -187,7 +191,7 @@ async def test_setup(hass):
 
             # Simulate an update - one existing, one new entry,
             # one outdated entry
-            mock_feed.return_value.update.return_value = (
+            mock_feed_update.return_value = (
                 "OK",
                 [mock_entry_1, mock_entry_4, mock_entry_3],
             )
@@ -199,7 +203,7 @@ async def test_setup(hass):
 
             # Simulate an update - empty data, but successful update,
             # so no changes to entities.
-            mock_feed.return_value.update.return_value = "OK_NO_DATA", None
+            mock_feed_update.return_value = "OK_NO_DATA", None
             async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
             await hass.async_block_till_done()
 
@@ -207,12 +211,17 @@ async def test_setup(hass):
             assert len(all_states) == 3
 
             # Simulate an update - empty data, removes all entities
-            mock_feed.return_value.update.return_value = "ERROR", None
+            mock_feed_update.return_value = "ERROR", None
             async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
             await hass.async_block_till_done()
 
             all_states = hass.states.async_all()
             assert len(all_states) == 0
+
+            # Artificially trigger update.
+            hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+            # Collect events.
+            await hass.async_block_till_done()
 
 
 async def test_setup_with_custom_location(hass):
@@ -221,9 +230,12 @@ async def test_setup_with_custom_location(hass):
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (-31.1, 150.1))
 
     with patch(
-        "geojson_client.nsw_rural_fire_service_feed." "NswRuralFireServiceFeed"
-    ) as mock_feed:
-        mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
+        "aio_geojson_nsw_rfs_incidents.feed_manager.NswRuralFireServiceIncidentsFeed",
+        wraps=NswRuralFireServiceIncidentsFeed,
+    ) as mock_feed_manager, patch(
+        "aio_geojson_client.feed.GeoJsonFeed.update"
+    ) as mock_feed_update:
+        mock_feed_update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(
@@ -238,6 +250,6 @@ async def test_setup_with_custom_location(hass):
             all_states = hass.states.async_all()
             assert len(all_states) == 1
 
-            assert mock_feed.call_args == call(
-                (15.1, 25.2), filter_categories=[], filter_radius=200.0
+            assert mock_feed_manager.call_args == call(
+                ANY, (15.1, 25.2), filter_categories=[], filter_radius=200.0
             )

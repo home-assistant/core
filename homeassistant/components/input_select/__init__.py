@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -22,23 +21,12 @@ ATTR_OPTIONS = "options"
 
 SERVICE_SELECT_OPTION = "select_option"
 
-SERVICE_SELECT_OPTION_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_OPTION): cv.string}
-)
 
 SERVICE_SELECT_NEXT = "select_next"
 
 SERVICE_SELECT_PREVIOUS = "select_previous"
 
 SERVICE_SET_OPTIONS = "set_options"
-
-SERVICE_SET_OPTIONS_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_OPTIONS): vol.All(
-            cv.ensure_list, vol.Length(min=1), [cv.string]
-        )
-    }
-)
 
 
 def _cv_input_select(cfg):
@@ -92,23 +80,27 @@ async def async_setup(hass, config):
         return False
 
     component.async_register_entity_service(
-        SERVICE_SELECT_OPTION, SERVICE_SELECT_OPTION_SCHEMA, "async_select_option"
+        SERVICE_SELECT_OPTION,
+        {vol.Required(ATTR_OPTION): cv.string},
+        "async_select_option",
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT,
-        ENTITY_SERVICE_SCHEMA,
-        lambda entity, call: entity.async_offset_index(1),
+        SERVICE_SELECT_NEXT, {}, lambda entity, call: entity.async_offset_index(1),
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS,
-        ENTITY_SERVICE_SCHEMA,
-        lambda entity, call: entity.async_offset_index(-1),
+        SERVICE_SELECT_PREVIOUS, {}, lambda entity, call: entity.async_offset_index(-1),
     )
 
     component.async_register_entity_service(
-        SERVICE_SET_OPTIONS, SERVICE_SET_OPTIONS_SCHEMA, "async_set_options"
+        SERVICE_SET_OPTIONS,
+        {
+            vol.Required(ATTR_OPTIONS): vol.All(
+                cv.ensure_list, vol.Length(min=1), [cv.string]
+            )
+        },
+        "async_set_options",
     )
 
     await component.async_add_entities(entities)

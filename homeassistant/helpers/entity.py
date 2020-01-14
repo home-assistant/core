@@ -1,5 +1,5 @@
 """An abstract class for entities."""
-
+from abc import ABC
 import asyncio
 from datetime import datetime, timedelta
 import logging
@@ -85,7 +85,7 @@ def async_generate_entity_id(
     return ensure_unique_string(entity_id_format.format(slugify(name)), current_ids)
 
 
-class Entity:
+class Entity(ABC):
     """An abstract class for Home Assistant entities."""
 
     # SAFE TO OVERWRITE
@@ -143,6 +143,17 @@ class Entity:
     def state(self) -> Union[None, str, int, float]:
         """Return the state of the entity."""
         return STATE_UNKNOWN
+
+    @property
+    def capability_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the capability attributes.
+
+        Attributes that explain the capabilities of an entity.
+
+        Implemented by component base class. Convention for attribute names
+        is lowercase snake_case.
+        """
+        return None
 
     @property
     def state_attributes(self) -> Optional[Dict[str, Any]]:
@@ -302,7 +313,7 @@ class Entity:
 
         start = timer()
 
-        attr = {}
+        attr = self.capability_attributes or {}
         if not self.available:
             state = STATE_UNAVAILABLE
         else:

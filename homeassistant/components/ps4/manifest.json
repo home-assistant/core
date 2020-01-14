@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ps4",
   "requirements": [
-    "pyps4-2ndscreen==1.0.1"
+    "pyps4-2ndscreen==1.0.3"
   ],
   "dependencies": [],
   "codeowners": [

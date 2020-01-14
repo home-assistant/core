@@ -28,6 +28,16 @@
                     "email": "login - email",
                     "password": "password"
                 }
+            },
+            "ftp": {
+                "description": "To attach a remote drive FTP to the Home Assistant: \n Fill this form then click **SUBMIT**. \n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "title": "Attach a remote FTP drive",
+                "data": {
+                    "host": "host",
+                    "port": "port",
+                    "username": "username",
+                    "password": "password"
+                }
             }
         },
         "error": {

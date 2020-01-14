@@ -2,9 +2,7 @@
   "domain": "starlingbank",
   "name": "Starlingbank",
   "documentation": "https://www.home-assistant.io/integrations/starlingbank",
-  "requirements": [
-    "starlingbank==3.1"
-  ],
+  "requirements": ["starlingbank==3.2"],
   "dependencies": [],
   "codeowners": []
 }

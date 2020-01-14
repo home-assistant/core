@@ -11,7 +11,6 @@ from homeassistant.components.remote import (
     ATTR_DELAY_SECS,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
-    DOMAIN,
     PLATFORM_SCHEMA,
     RemoteDevice,
 )
@@ -28,9 +27,10 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
+from .const import DOMAIN, SERVICE_LEARN
+
 _LOGGER = logging.getLogger(__name__)
 
-SERVICE_LEARN = "xiaomi_miio_learn_command"
 DATA_KEY = "remote.xiaomi_miio"
 
 CONF_SLOT = "slot"

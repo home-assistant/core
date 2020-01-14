@@ -13,7 +13,7 @@ from homeassistant.helpers import device_registry as dr
 from .config_flow import HomekitControllerFlowHandler  # noqa: F401
 from .connection import get_accessory_information, HKDevice
 from .const import CONTROLLER, ENTITY_MAP, KNOWN_DEVICES
-from .const import DOMAIN  # noqa: pylint: disable=unused-import
+from .const import DOMAIN
 from .storage import EntityMapStorage
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +109,6 @@ class HomeKitEntity(Entity):
         setup_fn = getattr(self, f"_setup_{setup_fn_name}", None)
         if not setup_fn:
             return
-        # pylint: disable=not-callable
         setup_fn(char)
 
     @callback
@@ -132,7 +131,6 @@ class HomeKitEntity(Entity):
             if not update_fn:
                 continue
 
-            # pylint: disable=not-callable
             update_fn(result["value"])
 
         self.async_write_ha_state()

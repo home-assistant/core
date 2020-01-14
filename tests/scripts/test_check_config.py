@@ -1,6 +1,5 @@
 """Test check_config script."""
 import logging
-import os  # noqa: F401 pylint: disable=unused-import
 from unittest.mock import patch
 
 import homeassistant.scripts.check_config as check_config

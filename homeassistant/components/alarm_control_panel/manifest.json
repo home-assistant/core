@@ -4,7 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/alarm_control_panel",
   "requirements": [],
   "dependencies": [],
-  "codeowners": [
-    "@colinodell"
-  ]
+  "codeowners": []
 }

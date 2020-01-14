@@ -1,13 +1,14 @@
 """Support for the (unofficial) Tado API."""
+from datetime import timedelta
 import logging
 import urllib
-from datetime import timedelta
 
+from PyTado.interface import Tado
 import voluptuous as vol
 
-from homeassistant.helpers.discovery import load_platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,8 +37,6 @@ def setup(hass, config):
     """Set up of the Tado component."""
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
-
-    from PyTado.interface import Tado
 
     try:
         tado = Tado(username, password)
@@ -117,7 +116,7 @@ class TadoDataStore:
         return self.tado.getCapabilities(tado_id)
 
     def get_me(self):
-        """Wrap for getMet()."""
+        """Wrap for getMe()."""
         return self.tado.getMe()
 
     def reset_zone_overlay(self, zone_id):

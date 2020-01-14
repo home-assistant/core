@@ -3,10 +3,7 @@
   "name": "Auth",
   "documentation": "https://www.home-assistant.io/integrations/auth",
   "requirements": [],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "dependencies": ["http"],
+  "after_dependencies": ["onboarding"],
+  "codeowners": ["@home-assistant/core"]
 }

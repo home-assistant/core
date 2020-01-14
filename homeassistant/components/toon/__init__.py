@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
 
-from . import config_flow  # noqa  pylint_disable=unused-import
+from . import config_flow  # noqa: F401
 from .const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -139,7 +139,7 @@ class ToonData:
         """Update all Toon data and notify entities."""
         # Ignore the TTL meganism from client library
         # It causes a lots of issues, hence we take control over caching
-        self._toon._clear_cache()  # noqa  pylint: disable=W0212
+        self._toon._clear_cache()  # pylint: disable=protected-access
 
         # Gather data from client library (single API call)
         self.gas = self._toon.gas

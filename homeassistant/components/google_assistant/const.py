@@ -135,8 +135,11 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (media_player.DOMAIN, media_player.DEVICE_CLASS_TV): TYPE_TV,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE): TYPE_SENSOR,
+    (sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY): TYPE_SENSOR,
 }
 
 CHALLENGE_ACK_NEEDED = "ackNeeded"
 CHALLENGE_PIN_NEEDED = "pinNeeded"
 CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
+
+STORE_AGENT_USER_IDS = "agent_user_ids"

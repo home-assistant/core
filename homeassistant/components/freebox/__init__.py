@@ -2,6 +2,8 @@
 import logging
 import socket
 
+from aiofreepybox import Freepybox
+from aiofreepybox.exceptions import HttpRequestError
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_FREEBOX
@@ -49,8 +51,6 @@ async def async_setup(hass, config):
 
 async def async_setup_freebox(hass, config, host, port):
     """Start up the Freebox component platforms."""
-    from aiofreepybox import Freepybox
-    from aiofreepybox.exceptions import HttpRequestError
 
     app_desc = {
         "app_id": "hass",

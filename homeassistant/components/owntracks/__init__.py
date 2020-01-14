@@ -118,7 +118,7 @@ async def async_unload_entry(hass, entry):
 
 async def async_remove_entry(hass, entry):
     """Remove an OwnTracks config entry."""
-    if not entry.data.get("cloudhook") or "cloud" not in hass.config.components:
+    if not entry.data.get("cloudhook"):
         return
 
     await hass.components.cloud.async_delete_cloudhook(entry.data[CONF_WEBHOOK_ID])

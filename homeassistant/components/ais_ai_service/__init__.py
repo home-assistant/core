@@ -12,14 +12,18 @@ import datetime
 import requests
 from homeassistant import core
 from homeassistant.loader import bind_hass
+from homeassistant.components import conversation
+from homeassistant.core import HomeAssistant, Context
+from typing import Optional
 
-# from homeassistant.helpers import template
+
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_OPEN_COVER,
+    SERVICE_CLOSE_COVER,
     STATE_ON,
     STATE_OFF,
     STATE_HOME,
@@ -106,8 +110,7 @@ INTENT_PREV = "AisPrev"
 INTENT_SCENE = "AisSceneActive"
 INTENT_SAY_IT = "AisSayIt"
 INTENT_CLIMATE_SET_TEMPERATURE = "AisClimateSetTemperature"
-INTENT_CLIMATE_SET_AWAY = "AisClimateSetAway"
-INTENT_CLIMATE_UNSET_AWAY = "AisClimateUnSetAway"
+INTENT_CLIMATE_SET_PRESENT_MODE = "AisClimateSetPresentMode"
 INTENT_CLIMATE_SET_ALL_ON = "AisClimateSetAllOn"
 INTENT_CLIMATE_SET_ALL_OFF = "AisClimateSetAllOff"
 INTENT_SPELL_STATUS = "AisSpellStatusInfo"
@@ -457,6 +460,14 @@ def translate_state(state):
         info_data = "powyżej horyzontu"
     elif info_data == "below_horizon":
         info_data = "poniżej horyzontu"
+    elif info_data == "heat":
+        info_data = "grzanie"
+    elif info_data == "cleaning":
+        info_data = "sprzątanie"
+    elif info_data == "docked":
+        info_data = "w stacji dokującej"
+    elif info_data == "returning":
+        info_data = "powrót do stacji dokującej"
 
     return info_data
 
@@ -738,6 +749,15 @@ def get_curr_group():
     return CURR_GROUP
 
 
+def get_group_from_group(entity_id):
+    global CURR_GROUP
+    for group in GROUP_ENTITIES:
+        if group["entity_id"] == entity_id:
+            CURR_GROUP = group
+            break
+    return CURR_GROUP
+
+
 def get_curr_group_idx():
     idx = 0
     for group in GROUP_ENTITIES:
@@ -782,7 +802,7 @@ def set_curr_group(hass, group):
     else:
         CURR_GROUP_VIEW = group["remote_group_view"]
         CURR_GROUP = group
-    # set display context for mega audio plauer
+    # set display context for mega audio player
     if CURR_GROUP["entity_id"] in (
         "group.radio_player",
         "group.podcast_player",
@@ -1363,6 +1383,7 @@ def select_entity(hass, long_press):
     # OK on remote
     if CURR_GROUP_VIEW is None:
         # no group view was selected
+        get_groups(hass)
         set_curr_group_view()
         say_curr_group_view(hass)
         return
@@ -1370,6 +1391,13 @@ def select_entity(hass, long_press):
         # no group is selected - we need to select the first one
         # from the group view
         set_curr_group(hass, None)
+        say_curr_group(hass)
+        return
+    # group in group
+    if CURR_GROUP["entity_id"] == "group.all_ais_devices":
+        get_groups(hass)
+        gg = CURR_GROUP["entities"]
+        set_curr_group(hass, get_group_from_group(gg[0]))
         say_curr_group(hass)
         return
     if CURR_ENTITIE is None:
@@ -1619,6 +1647,7 @@ def can_entity_be_entered(hass, entity):
             "script.",
             "light.",
             "automation.",
+            "group.",
         )
     ):
         return False
@@ -1902,8 +1931,14 @@ def go_up_in_menu(hass):
                 go_home(hass)
         elif not CURR_ENTITIE_ENTERED:
             # go up in the group menu
-            set_curr_group(hass, None)
-            say_curr_group(hass)
+            # check if we have group in group
+            if CURR_GROUP is not None:
+                if CURR_GROUP["remote_group_view"].startswith("group."):
+                    set_curr_group(hass, CURR_GROUP)
+                    say_curr_group(hass)
+                    return
+                set_curr_group(hass, None)
+                say_curr_group(hass)
         else:
             CURR_ENTITIE_ENTERED = False
             if CURR_ENTITIE.startswith("input_text."):
@@ -1927,9 +1962,16 @@ def go_up_in_menu(hass):
     # no entity is selected, check if the group is selected
     elif CURR_GROUP is not None:
         # go up in the group view menu
-        set_curr_group_view()
-        say_curr_group_view(hass)
-        return
+        # check if group in group
+        if CURR_GROUP["remote_group_view"].startswith("group."):
+            gg = get_group_from_group(CURR_GROUP["remote_group_view"])
+            set_curr_group(hass, gg)
+            say_curr_group(hass)
+            return
+        else:
+            set_curr_group_view()
+            say_curr_group_view(hass)
+            return
     # can't go up, beep
     _beep_it(hass, 33)
 
@@ -2028,19 +2070,25 @@ def get_groups(hass):
     global GROUP_ENTITIES
     all_ais_sensors = []
     all_ais_persons = []
+    all_ais_automations = []
+    all_ais_scenes = []
+    all_ais_switches = []
+    all_ais_lights = []
+    all_ais_climates = []
+    all_ais_covers = []
+    all_ais_locks = []
+    all_ais_vacuums = []
+    all_ais_cameras = []
+    all_ais_fans = []
     entities = hass.states.async_all()
     GROUP_ENTITIES = []
 
     def add_menu_item(l_entity):
-        l_entities = l_entity.attributes.get("entity_id")
-        if l_entity.entity_id == "group.all_automations":
-            l_entities = [e for e in l_entities if not e.startswith("automation.ais_")]
-
         l_group = {
             "friendly_name": l_entity.attributes.get("friendly_name"),
             "order": l_entity.attributes.get("order"),
             "entity_id": l_entity.entity_id,
-            "entities": l_entities,
+            "entities": l_entity.attributes.get("entity_id"),
             "context_key_words": l_entity.attributes.get("context_key_words"),
             "context_answer": l_entity.attributes.get("context_answer"),
             "context_suffix": l_entity.attributes.get("context_suffix"),
@@ -2049,7 +2097,7 @@ def get_groups(hass):
         }
         GROUP_ENTITIES.append(l_group)
 
-    def getKey(item):
+    def get_key(item):
         return item["order"]
 
     for entity in entities:
@@ -2058,45 +2106,93 @@ def get_groups(hass):
             if remote is not None:
                 add_menu_item(entity)
         elif entity.entity_id.startswith("sensor."):
-            # add sensors to the all_ais_sensors group
             device_class = entity.attributes.get("device_class", None)
             if device_class is not None:
                 all_ais_sensors.append(entity.entity_id)
         elif entity.entity_id.startswith("person."):
             all_ais_persons.append(entity.entity_id)
+        elif entity.entity_id.startswith(
+            "automation."
+        ) and not entity.entity_id.startswith("automation.ais_"):
+            all_ais_automations.append(entity.entity_id)
+        elif entity.entity_id.startswith("scene."):
+            all_ais_scenes.append(entity.entity_id)
+        elif (
+            entity.entity_id.startswith("switch.")
+            and entity.entity_id != "switch.zigbee_tryb_parowania"
+        ):
+            all_ais_switches.append(entity.entity_id)
+        elif entity.entity_id.startswith("light."):
+            all_ais_lights.append(entity.entity_id)
+        elif entity.entity_id.startswith("climate."):
+            all_ais_climates.append(entity.entity_id)
+        elif entity.entity_id.startswith("cover."):
+            all_ais_covers.append(entity.entity_id)
+        elif entity.entity_id.startswith("lock."):
+            all_ais_locks.append(entity.entity_id)
+        elif entity.entity_id.startswith("vacuum."):
+            all_ais_vacuums.append(entity.entity_id)
+        elif (
+            entity.entity_id.startswith("camera.")
+            and entity.entity_id != "camera.remote_access"
+        ):
+            all_ais_cameras.append(entity.entity_id)
+        elif entity.entity_id.startswith("fan."):
+            all_ais_fans.append(entity.entity_id)
 
     # update group on remote
     all_unique_sensors = list(set(all_ais_sensors))
     all_unique_sensors.sort()
     all_unique_persons = list(set(all_ais_persons))
     all_unique_persons.sort()
+    all_unique_automations = list(set(all_ais_automations))
+    all_unique_automations.sort()
+    all_unique_scenes = list(set(all_ais_scenes))
+    all_unique_scenes.sort()
+    all_unique_switches = list(set(all_ais_switches))
+    all_unique_switches.sort()
+    all_unique_lights = list(set(all_ais_lights))
+    all_unique_lights.sort()
+    all_unique_climates = list(set(all_ais_climates))
+    all_unique_climates.sort()
+    all_unique_covers = list(set(all_ais_covers))
+    all_unique_covers.sort()
+    all_unique_locks = list(set(all_ais_locks))
+    all_unique_locks.sort()
+    all_unique_vacuums = list(set(all_ais_vacuums))
+    all_unique_vacuums.sort()
+    all_unique_cameras = list(set(all_ais_cameras))
+    all_unique_cameras.sort()
+    all_unique_fans = list(set(all_ais_fans))
+    all_unique_fans.sort()
+
+    GROUP_ENTITIES = sorted(GROUP_ENTITIES, key=get_key)
+
     for group in GROUP_ENTITIES:
-        if group["entity_id"] == "group.all_ais_persons":
-            group["entities"] = tuple(all_unique_persons)
+        if group["entity_id"] == "group.all_ais_automations":
+            group["entities"] = all_unique_automations
+        elif group["entity_id"] == "group.all_ais_scenes":
+            group["entities"] = all_unique_scenes
+        elif group["entity_id"] == "group.all_ais_persons":
+            group["entities"] = all_unique_persons
         elif group["entity_id"] == "group.all_ais_sensors":
-            if len(all_unique_sensors) == 0:
-                # remove group sensors from remote if empty and exists
-                if group in GROUP_ENTITIES:
-                    GROUP_ENTITIES.remove(group)
-            else:
-                group["entities"] = tuple(all_unique_sensors)
-
-    hass.async_add_job(
-        hass.services.async_call(
-            "group",
-            "set",
-            {"object_id": "all_ais_persons", "entities": all_unique_persons},
-        )
-    )
-    hass.async_add_job(
-        hass.services.async_call(
-            "group",
-            "set",
-            {"object_id": "all_ais_sensors", "entities": all_unique_sensors},
-        )
-    )
-
-    GROUP_ENTITIES = sorted(GROUP_ENTITIES, key=getKey)
+            group["entities"] = all_unique_sensors
+        elif group["entity_id"] == "group.all_ais_switches":
+            group["entities"] = all_unique_switches
+        elif group["entity_id"] == "group.all_ais_lights":
+            group["entities"] = all_unique_lights
+        elif group["entity_id"] == "group.all_ais_climates":
+            group["entities"] = all_unique_climates
+        elif group["entity_id"] == "group.all_ais_covers":
+            group["entities"] = all_unique_covers
+        elif group["entity_id"] == "group.all_ais_locks":
+            group["entities"] = all_unique_locks
+        elif group["entity_id"] == "group.all_ais_vacuums":
+            group["entities"] = all_unique_vacuums
+        elif group["entity_id"] == "group.all_ais_cameras":
+            group["entities"] = all_unique_cameras
+        elif group["entity_id"] == "group.all_ais_fans":
+            group["entities"] = all_unique_fans
 
 
 @asyncio.coroutine
@@ -2139,8 +2235,9 @@ async def async_setup(hass, config):
         #         return
         if "img" in service.data:
             img = service.data["img"]
-            if len(img) < 3:
-                img = None
+            if img is not None:
+                if len(img) < 3:
+                    img = None
         else:
             img = None
         _say_it(hass, text, img)
@@ -2451,8 +2548,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(GetTimeIntent())
     hass.helpers.intent.async_register(GetDateIntent())
     hass.helpers.intent.async_register(AisClimateSetTemperature())
-    hass.helpers.intent.async_register(AisClimateSetAway())
-    hass.helpers.intent.async_register(AisClimateUnSetAway())
+    hass.helpers.intent.async_register(AisClimateSetPresentMode())
     hass.helpers.intent.async_register(AisClimateSetAllOn())
     hass.helpers.intent.async_register(AisClimateSetAllOff())
     hass.helpers.intent.async_register(TurnOnIntent())
@@ -2493,29 +2589,13 @@ async def async_setup(hass, config):
         hass,
         INTENT_CLIMATE_SET_TEMPERATURE,
         [
-            "Ustaw temperaturę [ogrzewania] [na] {temp} stopni [w] {item} ",
-            "Temperatura ogrzewania {temp} stopni [w] {item}",
-            "Ogrzewanie [w] {item} {temp} stopni",
-            "Ogrzewanie [w] {item} temperatura {temp} stopni",
-            "Ogrzewanie temperatura w {item} {temp} stopni",
+            "Ogrzewanie [w] {item} {temp} stopni[e]",
+            "Ogrzewanie [w] {item} temperatura {temp} stopni[e]",
         ],
     )
-    async_register(
-        hass,
-        INTENT_CLIMATE_SET_AWAY,
-        ["Ogrzewanie [na] [w] [tryb] poza domem", "Ogrzewanie włącz [tryb] poza domem"],
-    )
-    async_register(
-        hass,
-        INTENT_CLIMATE_UNSET_AWAY,
-        ["Ogrzewanie [na] [w] [tryb] w domu", "Ogrzewanie wyłącz [tryb] poza domem"],
-    )
-    async_register(
-        hass, INTENT_CLIMATE_SET_ALL_OFF, ["Wyłącz całe ogrzewnie", "Wyłącz ogrzewnie"]
-    )
-    async_register(
-        hass, INTENT_CLIMATE_SET_ALL_ON, ["Włącz całe ogrzewnie", "Włącz ogrzewnie"]
-    )
+    async_register(hass, INTENT_CLIMATE_SET_PRESENT_MODE, ["Ogrzewanie tryb {item}"])
+    async_register(hass, INTENT_CLIMATE_SET_ALL_OFF, ["Wyłącz całe ogrzewanie"])
+    async_register(hass, INTENT_CLIMATE_SET_ALL_ON, ["Włącz całe ogrzewanie"])
     async_register(
         hass,
         INTENT_LAMPS_ON,
@@ -2701,6 +2781,10 @@ async def async_setup(hass, config):
     # run each minute at first second
     _dt = dt_util.utcnow()
     event.async_track_utc_time_change(hass, ais_run_each_minute, second=1)
+
+    # AIS agent
+    agent = AisAgent(hass)
+    conversation.async_set_agent(hass, agent)
     return True
 
 
@@ -3215,7 +3299,7 @@ def _post_message(message, hass):
             timeout=1,
         )
     except Exception as e:
-        _LOGGER.info("problem to send the text to speech via http: " + str(e))
+        _LOGGER.debug("problem to send the text to speech via http: " + str(e))
 
 
 def _beep_it(hass, tone):
@@ -3314,7 +3398,6 @@ def _process_code(hass, data):
         if CURR_BUTTON_LONG_PRESS is True:
             CURR_BUTTON_LONG_PRESS = False
 
-    _LOGGER.info("KeyCode: -> " + str(code))
     # set the code in global variable
     CURR_BUTTON_CODE = code
     # show the code in web app
@@ -3608,10 +3691,13 @@ def _process(hass, text):
         _LOGGER.warning("_process: " + str(e))
         m = "Przepraszam, ale mam problem ze zrozumieniem: " + text
     # return response to the ais dom
-    if m != "DO_NOT_SAY":
+    if m.startswith("DO_NOT_SAY"):
+        m = m.replace("DO_NOT_SAY", "")
+    else:
         _say_it(hass, m)
     # return response to the hass conversation
     intent_resp = intent.IntentResponse()
+    # intent_resp.async_set_card("Beer ordered", "You chose a XXX")
     intent_resp.async_set_speech(m)
     intent_resp.hass = hass
     return intent_resp
@@ -3922,16 +4008,13 @@ class AskQuestionIntent(intent.IntentHandler):
         item = slots["item"]["value"]
         question = item
         if not question:
-            message = "Nie wiem o co zapytać, " + question
+            message = "Nie wiem o co zapytać"
             return message, False
         else:
-            yield from hass.services.async_call(
-                "ais_knowledge_service",
-                "ask",
-                {"text": question, "say_it": True},
-                blocking=True,
-            )
-        return "DO_NOT_SAY", True
+            from homeassistant.components import ais_knowledge_service
+
+            message = yield from ais_knowledge_service.process_ask_async(hass, question)
+        return "DO_NOT_SAY " + message, True
 
 
 class AskWikiQuestionIntent(intent.IntentHandler):
@@ -3948,16 +4031,16 @@ class AskWikiQuestionIntent(intent.IntentHandler):
         item = slots["item"]["value"]
         question = item
         if not question:
-            message = "Nie wiem o co zapytać, " + question
+            message = "Nie wiem o co zapytać"
             return message, False
         else:
-            yield from hass.services.async_call(
-                "ais_knowledge_service",
-                "ask_wiki",
-                {"text": question, "say_it": True},
-                blocking=True,
+            from homeassistant.components import ais_knowledge_service
+
+            message = yield from ais_knowledge_service.process_ask_wiki_async(
+                hass, question
             )
-        return "DO_NOT_SAY", True
+
+        return "DO_NOT_SAY " + message, True
 
 
 class ChangeContextIntent(intent.IntentHandler):
@@ -4014,9 +4097,6 @@ class GetTimeIntent(intent.IntentHandler):
     @asyncio.coroutine
     def async_handle(self, intent_obj):
         """Handle the intent."""
-        # hass = intent_obj.hass
-        # time = hass.states.get('sensor.time').state
-        # message = 'Jest godzina ' + time
         import babel.dates
 
         now = datetime.datetime.now()
@@ -4171,12 +4251,12 @@ class AisOpenCover(intent.IntentHandler):
                     message = "Urządzenie " + name + " jest niedostępne"
                 else:
                     yield from hass.services.async_call(
-                        core.DOMAIN,
+                        "cover",
                         SERVICE_OPEN_COVER,
                         {ATTR_ENTITY_ID: entity.entity_id},
                         blocking=True,
                     )
-                    message = "OK, włączono {}".format(entity.name)
+                    message = "OK, otwieram {}".format(entity.name)
                 success = True
             else:
                 message = "Urządzenia " + name + " nie można otworzyć"
@@ -4209,12 +4289,12 @@ class AisCloseCover(intent.IntentHandler):
                     msg = "Urządzenie {} jest niedostępne".format(entity.name)
                 else:
                     yield from hass.services.async_call(
-                        core.DOMAIN,
-                        SERVICE_TURN_OFF,
+                        "cover",
+                        SERVICE_CLOSE_COVER,
                         {ATTR_ENTITY_ID: entity.entity_id},
                         blocking=True,
                     )
-                    msg = "OK, zamknięto {}".format(entity.name)
+                    msg = "OK, zamykam {}".format(entity.name)
                     success = True
             else:
                 msg = "Urządzenia " + name + " nie można zamknąć"
@@ -4421,7 +4501,7 @@ class AisClimateSetTemperature(intent.IntentHandler):
     """Handle AisClimateSetTemperature intents."""
 
     intent_type = INTENT_CLIMATE_SET_TEMPERATURE
-    slot_schema = {"temp": cv.positive_int, "item": cv.string}
+    slot_schema = {"temp": cv.string, "item": cv.string}
 
     @asyncio.coroutine
     def async_handle(self, intent_obj):
@@ -4429,8 +4509,16 @@ class AisClimateSetTemperature(intent.IntentHandler):
         try:
             hass = intent_obj.hass
             slots = self.async_validate_slots(intent_obj.slots)
-            temp = slots["temp"]["value"]
+            test = slots["temp"]["value"]
             name = slots["item"]["value"]
+            # get name from temp
+            m = re.search(r"\d+$", test)
+            if m:
+                temp = m.group()
+                name = name + "" + test.replace(temp, "")
+            else:
+                temp = test
+
             entity = _match_entity(hass, name)
         except Exception:
             text = None
@@ -4443,56 +4531,70 @@ class AisClimateSetTemperature(intent.IntentHandler):
                 # check if the device has already this temperature
                 attr = hass.states.get(entity.entity_id).attributes
                 if attr.get("temperature") == temp:
-                    msg = "{} ma już ustawioną temperaturę {}".format(entity.name, temp)
+                    msg = "{} ma już ustawioną temperaturę {} {}".format(
+                        entity.name, temp, "stopni"
+                    )
                 else:
                     yield from hass.services.async_call(
                         "climate",
                         "set_temperature",
-                        {
-                            ATTR_ENTITY_ID: entity.entity_id,
-                            "temperature": temp,
-                            "target_temp_high": temp + 2,
-                            "target_temp_low": temp - 6,
-                            "operation_mode": "Heat",
-                        },
+                        {ATTR_ENTITY_ID: entity.entity_id, "temperature": temp},
                         blocking=True,
                     )
-                    msg = "OK, ustawiono temperaturę {} w {}".format(temp, entity.name)
+                    msg = "OK, ustawiono temperaturę {} {} w {}".format(
+                        temp, "stopni", entity.name
+                    )
                     success = True
             else:
                 msg = "Na urządzeniu " + name + " nie można zmieniać temperatury."
         return msg, success
 
 
-class AisClimateSetAway(intent.IntentHandler):
-    """Handle AisClimateSetAway intents."""
+class AisClimateSetPresentMode(intent.IntentHandler):
+    """Handle AisClimateSetPresentMode intents."""
 
-    intent_type = INTENT_CLIMATE_SET_AWAY
-
-    @asyncio.coroutine
-    def async_handle(self, intent_obj):
-        """Handle the intent."""
-        hass = intent_obj.hass
-        yield from hass.services.async_call(
-            "climate", "set_away_mode", {"entity_id": "all", "away_mode": True}
-        )
-        message = "ok, tryb poza domem włączony"
-        return message, True
-
-
-class AisClimateUnSetAway(intent.IntentHandler):
-    """Handle AisClimateUnSetAway intents."""
-
-    intent_type = INTENT_CLIMATE_UNSET_AWAY
+    intent_type = INTENT_CLIMATE_SET_PRESENT_MODE
+    slot_schema = {"item": cv.string}
 
     @asyncio.coroutine
     def async_handle(self, intent_obj):
         """Handle the intent."""
+        slots = self.async_validate_slots(intent_obj.slots)
         hass = intent_obj.hass
-        yield from hass.services.async_call(
-            "climate", "set_away_mode", {"entity_id": "all", "away_mode": False}
-        )
-        message = "ok, tryb poza domem wyłączony"
+        mode = slots["item"]["value"]
+
+        present_mode = ""
+        if mode in ["poza domem", "za domem", "domem"]:
+            # Device is in away mode
+            present_mode = "away"
+        elif mode in ["w domu", "domu", "dom"]:
+            # Device is in home mode - No preset is active
+            present_mode = "none"
+        elif mode in ["eko", "eco", "oszczędzanie", "oszczędny"]:
+            # Device is running an energy-saving mode
+            present_mode = "eco"
+        elif mode in ["podgrzanie", "podgrzewanie"]:
+            # Device turn all valve full up
+            present_mode = "boost"
+        elif mode in ["comfort", "komfort", "wygoda"]:
+            #  Device is in comfort mode
+            present_mode = "comfort"
+        elif mode in ["spanie", "noc"]:
+            # Device is prepared for sleep
+            present_mode = "sleep"
+        elif mode in ["aktywność", "ruch"]:
+            # Device is reacting to activity (e.g. movement sensors)
+            present_mode = "activity"
+
+        if present_mode != "":
+            yield from hass.services.async_call(
+                "climate",
+                "set_preset_mode",
+                {"entity_id": "all", "preset_mode": present_mode},
+            )
+            message = "ok, ogrzewanie w trybie " + mode
+        else:
+            message = "nie znajduje trybu ogrzewania " + mode
         return message, True
 
 
@@ -4506,9 +4608,7 @@ class AisClimateSetAllOn(intent.IntentHandler):
         """Handle the intent."""
         hass = intent_obj.hass
         yield from hass.services.async_call(
-            "climate",
-            "set_operation_mode",
-            {"entity_id": "all", "operation_mode": "heat"},
+            "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "heat"}
         )
         message = "ok, całe ogrzewanie włączone"
         return message, True
@@ -4524,9 +4624,7 @@ class AisClimateSetAllOff(intent.IntentHandler):
         """Handle the intent."""
         hass = intent_obj.hass
         yield from hass.services.async_call(
-            "climate",
-            "set_operation_mode",
-            {"entity_id": "all", "operation_mode": "off"},
+            "climate", "set_hvac_mode", {"entity_id": "all", "hvac_mode": "off"}
         )
         message = "ok, całe ogrzewanie wyłączone"
         return message, True
@@ -4610,3 +4708,47 @@ class AisClimateSetAllOff(intent.IntentHandler):
 #             else:
 #                 msg = 'Na urządzeniu ' + name + ' nie można wyłączyć ogrzwania.'
 #             return msg, success
+
+
+class AisAgent(conversation.AbstractConversationAgent):
+    """Almond conversation agent."""
+
+    def __init__(self, hass: HomeAssistant):
+        """Initialize the agent."""
+        self.hass = hass
+
+    @property
+    def attribution(self):
+        """Return the attribution."""
+        return {
+            "name": "",
+            "url": "https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration.html",
+        }
+
+    async def async_get_onboarding(self):
+        """Get onboard url if not onboarded."""
+        # return {
+        #     "text": "Would you like to opt-in to share your anonymized commands with Stanford to improve Almond's responses?",
+        #     "url": f"{host}/conversation",
+        # }
+        return None
+
+    async def async_set_onboarding(self, shown):
+        """Set onboarding status."""
+        # TODO
+        return True
+
+    async def async_process(
+        self, text: str, context: Context, conversation_id: Optional[str] = None
+    ) -> intent.IntentResponse:
+        """Process a sentence."""
+        from homeassistant.components import ais_ai_service as ais_ai
+
+        intent_result = await ais_ai._process(self.hass, text)
+        if intent_result is None:
+            intent_result = intent.IntentResponse()
+            intent_result.async_set_speech(
+                "Przepraszam, jeszcze tego nie potrafię zrozumieć."
+            )
+
+        return intent_result

@@ -15,7 +15,6 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     CONF_ENTITY_ID,
     CONF_NAME,
-    DOMAIN,
 )
 from homeassistant.const import (
     CONF_IP_ADDRESS,
@@ -26,6 +25,8 @@ from homeassistant.const import (
     HTTP_OK,
     HTTP_UNAUTHORIZED,
 )
+
+from .const import DOMAIN, SERVICE_TEACH_FACE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +39,6 @@ FACEBOX_NAME = "name"
 CLASSIFIER = "facebox"
 DATA_FACEBOX = "facebox_classifiers"
 FILE_PATH = "file_path"
-SERVICE_TEACH_FACE = "facebox_teach_face"
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

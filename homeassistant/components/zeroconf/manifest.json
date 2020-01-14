@@ -3,7 +3,7 @@
   "name": "Zeroconf",
   "documentation": "https://www.home-assistant.io/integrations/zeroconf",
   "requirements": [
-    "zeroconf==0.23.0"
+    "zeroconf==0.24.0"
   ],
   "dependencies": [
     "api"

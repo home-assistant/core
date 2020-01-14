@@ -59,14 +59,15 @@ async def async_get_actions(hass: HomeAssistant, device_id: str) -> List[dict]:
                 CONF_TYPE: "set_hvac_mode",
             }
         )
-        actions.append(
-            {
-                CONF_DEVICE_ID: device_id,
-                CONF_DOMAIN: DOMAIN,
-                CONF_ENTITY_ID: entry.entity_id,
-                CONF_TYPE: "set_preset_mode",
-            }
-        )
+        if state.attributes["supported_features"] & const.SUPPORT_PRESET_MODE:
+            actions.append(
+                {
+                    CONF_DEVICE_ID: device_id,
+                    CONF_DOMAIN: DOMAIN,
+                    CONF_ENTITY_ID: entry.entity_id,
+                    CONF_TYPE: "set_preset_mode",
+                }
+            )
 
     return actions
 

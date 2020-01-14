@@ -1,14 +1,18 @@
 """Support for exposing Home Assistant via Zeroconf."""
-# PyLint bug confuses absolute/relative imports
-# https://github.com/PyCQA/pylint/issues/1931
-# pylint: disable=no-name-in-module
+
 import logging
 import socket
 
 import ipaddress
 import voluptuous as vol
 
-from zeroconf import ServiceBrowser, ServiceInfo, ServiceStateChange, Zeroconf
+from zeroconf import (
+    ServiceBrowser,
+    ServiceInfo,
+    ServiceStateChange,
+    Zeroconf,
+    NonUniqueNameException,
+)
 
 from homeassistant import util
 from homeassistant.const import (
@@ -43,7 +47,7 @@ def setup(hass, config):
     params = {
         "version": __version__,
         "base_url": hass.config.api.base_url,
-        # always needs authentication
+        # Always needs authentication
         "requires_api_password": True,
     }
 
@@ -69,7 +73,12 @@ def setup(hass, config):
         Wait till started or otherwise HTTP is not up and running.
         """
         _LOGGER.info("Starting Zeroconf broadcast")
-        zeroconf.register_service(info)
+        try:
+            zeroconf.register_service(info)
+        except NonUniqueNameException:
+            _LOGGER.error(
+                "Home Assistant instance with identical name present in the local network"
+            )
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, zeroconf_hass_start)
 

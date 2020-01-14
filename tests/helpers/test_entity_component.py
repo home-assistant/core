@@ -9,6 +9,7 @@ import asynctest
 import pytest
 
 import homeassistant.core as ha
+from homeassistant.const import ENTITY_MATCH_ALL
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.components import group
 from homeassistant.helpers.entity_component import EntityComponent
@@ -194,7 +195,7 @@ async def test_extract_from_service_available_device(hass):
         ]
     )
 
-    call_1 = ha.ServiceCall("test", "service")
+    call_1 = ha.ServiceCall("test", "service", data={"entity_id": ENTITY_MATCH_ALL})
 
     assert ["test_domain.test_1", "test_domain.test_3"] == sorted(
         ent.entity_id for ent in (await component.async_extract_from_service(call_1))
@@ -250,7 +251,7 @@ async def test_platform_not_ready(hass):
         assert "test_domain.mod1" in hass.config.components
 
 
-async def test_extract_from_service_returns_all_if_no_entity_id(hass):
+async def test_extract_from_service_fails_if_no_entity_id(hass):
     """Test the extraction of everything from service."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     await component.async_add_entities(
@@ -259,7 +260,7 @@ async def test_extract_from_service_returns_all_if_no_entity_id(hass):
 
     call = ha.ServiceCall("test", "service")
 
-    assert ["test_domain.test_1", "test_domain.test_2"] == sorted(
+    assert [] == sorted(
         ent.entity_id for ent in (await component.async_extract_from_service(call))
     )
 
@@ -445,12 +446,9 @@ async def test_extract_all_omit_entity_id(hass, caplog):
 
     call = ha.ServiceCall("test", "service")
 
-    assert ["test_domain.test_1", "test_domain.test_2"] == sorted(
+    assert [] == sorted(
         ent.entity_id for ent in await component.async_extract_from_service(call)
     )
-    assert (
-        "Not passing an entity ID to a service to target all entities is " "deprecated"
-    ) in caplog.text
 
 
 async def test_extract_all_use_match_all(hass, caplog):

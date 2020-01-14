@@ -59,13 +59,12 @@
    - service: ais_cloud.get_rss_news_category
    - service: ais_yt_service.search
    - service: ais_audiobooks_service.get_authors
-   - delay: '1'
-   - service: ais_ai_service.prepare_remote_menu
    - service: ais_shell_command.change_remote_access
    - service: ais_shell_command.disable_irda_remote
    - service: ais_ai_service.check_local_ip
    - service: ais_amplifier_service.get_audio_mono
    - service: ais_shell_command.hdmi_control_disable
+   - service: ais_usb.lsusb
    - service: mqtt.publish
      data:
        payload: 1
@@ -81,8 +80,6 @@
      data:
        entity_id: camera.remote_access
        filename: "/data/data/pl.sviete.dom/files/home/AIS/www/dom_access_code.png"
-   - delay: '10'
-   - service: ais_ai_service.prepare_remote_menu
    - delay: '6000'
    - service: ais_updater.check_version
      data:
@@ -286,8 +283,6 @@
       data:
         payload: 1
         topic: dom/cmnd/SetOption19
-    - delay: '10'
-    - service: ais_ai_service.prepare_remote_menu
 
 - id: '201905201824123'
   alias: 'AIS Check WiFi Connection'

@@ -160,9 +160,7 @@ class HoneywellUSThermostat(ClimateDevice):
         self._username = username
         self._password = password
 
-        _LOGGER.debug(
-            "latestData = %s ", device._data  # pylint: disable=protected-access
-        )
+        _LOGGER.debug("latestData = %s ", device._data)
 
         # not all honeywell HVACs support all modes
         mappings = [v for k, v in HVAC_MODE_TO_HW_MODE.items() if device.raw_ui_data[k]]
@@ -174,13 +172,13 @@ class HoneywellUSThermostat(ClimateDevice):
             | SUPPORT_TARGET_TEMPERATURE_RANGE
         )
 
-        if device._data["canControlHumidification"]:  # pylint: disable=protected-access
+        if device._data["canControlHumidification"]:
             self._supported_features |= SUPPORT_TARGET_HUMIDITY
 
         if device.raw_ui_data["SwitchEmergencyHeatAllowed"]:
             self._supported_features |= SUPPORT_AUX_HEAT
 
-        if not device._data["hasFan"]:  # pylint: disable=protected-access
+        if not device._data["hasFan"]:
             return
 
         # not all honeywell fans support all modes

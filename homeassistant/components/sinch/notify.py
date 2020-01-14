@@ -61,7 +61,7 @@ class SinchNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         targets = kwargs.get(ATTR_TARGET, self.default_recipients)
-        data = kwargs.get(ATTR_DATA, {})
+        data = kwargs.get(ATTR_DATA) or {}
 
         clx_args = {ATTR_MESSAGE: message, ATTR_SENDER: self.sender}
 

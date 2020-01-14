@@ -19,7 +19,6 @@ from homeassistant.components.remote import (
     ATTR_HOLD_SECS,
     ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS,
-    DOMAIN,
     PLATFORM_SCHEMA,
 )
 from homeassistant.const import (
@@ -33,6 +32,8 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 
+from .const import DOMAIN, SERVICE_CHANGE_CHANNEL, SERVICE_SYNC
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CHANNEL = "channel"
@@ -41,9 +42,6 @@ ATTR_CURRENT_ACTIVITY = "current_activity"
 DEFAULT_PORT = 8088
 DEVICES = []
 CONF_DEVICE_CACHE = "harmony_device_cache"
-
-SERVICE_SYNC = "harmony_sync"
-SERVICE_CHANGE_CHANNEL = "harmony_change_channel"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -316,7 +314,6 @@ class HarmonyRemote(remote.RemoteDevice):
         except aioexc.TimeOut:
             _LOGGER.error("%s: Powering off timed-out", self.name)
 
-    # pylint: disable=arguments-differ
     async def async_send_command(self, command, **kwargs):
         """Send a list of commands to one device."""
         _LOGGER.debug("%s: Send Command", self.name)

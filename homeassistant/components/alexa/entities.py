@@ -33,6 +33,7 @@ from homeassistant.components import (
 
 from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
 from .capabilities import (
+    Alexa,
     AlexaBrightnessController,
     AlexaChannelController,
     AlexaColorController,
@@ -261,6 +262,7 @@ class GenericCapabilities(AlexaEntity):
         return [
             AlexaPowerController(self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
+            Alexa(self.hass),
         ]
 
 
@@ -270,6 +272,10 @@ class SwitchCapabilities(AlexaEntity):
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
+        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        if device_class == switch.DEVICE_CLASS_OUTLET:
+            return [DisplayCategory.SMARTPLUG]
+
         return [DisplayCategory.SWITCH]
 
     def interfaces(self):
@@ -277,6 +283,7 @@ class SwitchCapabilities(AlexaEntity):
         return [
             AlexaPowerController(self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
+            Alexa(self.hass),
         ]
 
 
@@ -299,6 +306,7 @@ class ClimateCapabilities(AlexaEntity):
         yield AlexaThermostatController(self.hass, self.entity)
         yield AlexaTemperatureSensor(self.hass, self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
 
 
 @ENTITY_ADAPTERS.register(cover.DOMAIN)
@@ -307,7 +315,10 @@ class CoverCapabilities(AlexaEntity):
 
     def default_display_categories(self):
         """Return the display categories for this entity."""
-        return [DisplayCategory.DOOR]
+        device_class = self.entity.attributes.get(ATTR_DEVICE_CLASS)
+        if device_class in (cover.DEVICE_CLASS_GARAGE, cover.DEVICE_CLASS_DOOR):
+            return [DisplayCategory.DOOR]
+        return [DisplayCategory.OTHER]
 
     def interfaces(self):
         """Yield the supported interfaces."""
@@ -315,7 +326,12 @@ class CoverCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & cover.SUPPORT_SET_POSITION:
             yield AlexaPercentageController(self.entity)
+        if supported & (cover.SUPPORT_CLOSE | cover.SUPPORT_OPEN):
+            yield AlexaModeController(
+                self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_POSITION}"
+            )
         yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
 
 
 @ENTITY_ADAPTERS.register(light.DOMAIN)
@@ -338,6 +354,7 @@ class LightCapabilities(AlexaEntity):
         if supported & light.SUPPORT_COLOR_TEMP:
             yield AlexaColorTemperatureController(self.entity)
         yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
 
 
 @ENTITY_ADAPTERS.register(fan.DOMAIN)
@@ -369,6 +386,7 @@ class FanCapabilities(AlexaEntity):
             )
 
         yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
 
 
 @ENTITY_ADAPTERS.register(lock.DOMAIN)
@@ -384,6 +402,7 @@ class LockCapabilities(AlexaEntity):
         return [
             AlexaLockController(self.entity),
             AlexaEndpointHealth(self.hass, self.entity),
+            Alexa(self.hass),
         ]
 
 
@@ -401,7 +420,6 @@ class MediaPlayerCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-        yield AlexaEndpointHealth(self.hass, self.entity)
         yield AlexaPowerController(self.entity)
 
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -435,6 +453,9 @@ class MediaPlayerCapabilities(AlexaEntity):
         if supported & media_player.const.SUPPORT_PLAY_MEDIA:
             yield AlexaChannelController(self.entity)
 
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
 
 @ENTITY_ADAPTERS.register(scene.DOMAIN)
 class SceneCapabilities(AlexaEntity):
@@ -453,7 +474,10 @@ class SceneCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
-        return [AlexaSceneController(self.entity, supports_deactivation=False)]
+        return [
+            AlexaSceneController(self.entity, supports_deactivation=False),
+            Alexa(self.hass),
+        ]
 
 
 @ENTITY_ADAPTERS.register(script.DOMAIN)
@@ -467,7 +491,10 @@ class ScriptCapabilities(AlexaEntity):
     def interfaces(self):
         """Yield the supported interfaces."""
         can_cancel = bool(self.entity.attributes.get("can_cancel"))
-        return [AlexaSceneController(self.entity, supports_deactivation=can_cancel)]
+        return [
+            AlexaSceneController(self.entity, supports_deactivation=can_cancel),
+            Alexa(self.hass),
+        ]
 
 
 @ENTITY_ADAPTERS.register(sensor.DOMAIN)
@@ -486,6 +513,7 @@ class SensorCapabilities(AlexaEntity):
         if attrs.get(ATTR_UNIT_OF_MEASUREMENT) in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
             yield AlexaTemperatureSensor(self.hass, self.entity)
             yield AlexaEndpointHealth(self.hass, self.entity)
+            yield Alexa(self.hass)
 
 
 @ENTITY_ADAPTERS.register(binary_sensor.DOMAIN)
@@ -515,8 +543,13 @@ class BinarySensorCapabilities(AlexaEntity):
         if CONF_DISPLAY_CATEGORIES in entity_conf:
             if entity_conf[CONF_DISPLAY_CATEGORIES] == DisplayCategory.DOORBELL:
                 yield AlexaDoorbellEventSource(self.entity)
+            elif entity_conf[CONF_DISPLAY_CATEGORIES] == DisplayCategory.CONTACT_SENSOR:
+                yield AlexaContactSensor(self.hass, self.entity)
+            elif entity_conf[CONF_DISPLAY_CATEGORIES] == DisplayCategory.MOTION_SENSOR:
+                yield AlexaMotionSensor(self.hass, self.entity)
 
         yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
 
     def get_type(self):
         """Return the type of binary sensor."""
@@ -540,3 +573,4 @@ class AlarmControlPanelCapabilities(AlexaEntity):
         if not self.entity.attributes.get("code_arm_required"):
             yield AlexaSecurityPanelController(self.hass, self.entity)
             yield AlexaEndpointHealth(self.hass, self.entity)
+            yield Alexa(self.hass)

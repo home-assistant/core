@@ -1,19 +1,7 @@
-binary_sensor:
-  - platform: mqtt
-    state_topic: ais/button/sensor
-    name: ais_remote_button
-  - platform: mqtt
-    state_topic: ais/button/sensor
-    name: selected_entity
-
 sensor:
   - platform: ais_device_search_mqtt
     name: network_devices_info_value
     state_topic: "+/stat/#"
-
-input_text:
-  buttons_ais_remote:
-    name: Buttons AIS Remote
 
 input_boolean:
   ais_quiet_mode:
@@ -59,16 +47,7 @@ input_number:
     step: 0.1
     initial: 1
 
-
-group:
-  ais_tts_configuration:
-    name: Wybór głosu Asystenta
-    control: hidden
-    entities:
-      - input_select.assistant_voice
-      - input_number.assistant_rate
-      - input_number.assistant_tone
-      - input_boolean.ais_quiet_mode
-      - input_datetime.ais_quiet_mode_start
-      - input_datetime.ais_quiet_mode_stop
-
+timer:
+  ais_dom_pin_join:
+    name: Parowanie z bramką za pomocą PIN
+    duration: 120

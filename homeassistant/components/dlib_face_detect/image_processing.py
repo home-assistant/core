@@ -12,7 +12,7 @@ from homeassistant.components.image_processing import (
 )
 
 # pylint: disable=unused-import
-from homeassistant.components.image_processing import PLATFORM_SCHEMA  # noqa
+from homeassistant.components.image_processing import PLATFORM_SCHEMA  # noqa: F401
 from homeassistant.core import split_entity_id
 
 _LOGGER = logging.getLogger(__name__)

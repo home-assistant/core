@@ -34,9 +34,11 @@ _LOGGER = logging.getLogger(__name__)
 
 TYPE_DRIVE = "drive"
 TYPE_MEGA = "mega"
+TYPE_FTP = "ftp"
 DRIVES_TYPES = {
     TYPE_DRIVE: ("Google Drive", "mdi:google-drive"),
     TYPE_MEGA: ("Mega", "mdi:cloud"),
+    TYPE_FTP: ("FTP", "mdi:nas"),
 }
 
 
@@ -118,6 +120,10 @@ async def async_setup_entry(hass, config_entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     )
+    if ais_global.G_AIS_START_IS_DONE:
+        hass.async_create_task(
+            hass.services.async_call(DOMAIN, "browse_path", {"path": G_CLOUD_PREFIX})
+        )
     return True
 
 
@@ -307,6 +313,73 @@ def rclone_set_auth_mega(drive_name, user, passwd):
         child.expect("password:", timeout=10)
         _LOGGER.info(str(child.before, "utf-8"))
         child.sendline(passwd)
+        # Edit advanced config? (y/n)
+        child.expect("y/n>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("n")
+        # Yes this is OK
+        child.expect("y/e/d>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("y")
+        # Quit config
+        child.expect("e/n/d/r/c/s/q>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("q")
+        #
+        child.kill(0)
+        return "ok"
+    except Exception as e:
+        return "ERROR: " + str(e)
+
+
+def rclone_set_auth_ftp(drive_name, host, port, user_name, password):
+    try:
+        import pexpect
+
+        if len(password) == 0:
+            password = "guest"
+        rclone_cmd = "rclone config " + G_RCLONE_CONF
+        child = pexpect.spawn(rclone_cmd)
+        # Current remotes:
+        child.expect("/q>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("n")
+        # name
+        child.expect("name>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(drive_name)
+        # storage
+        child.expect("Storage>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("ftp")
+        # host
+        child.expect("host>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(host)
+        # anonymous or username
+        child.expect("user>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(user_name)
+        # port
+        child.expect("port>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(str(port))
+        # Yes type in my own password
+        child.expect("y/g>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("y")
+        # password
+        child.expect("password:", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(password)
+        # confirm password
+        child.expect("password:", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline(password)
+        # tls
+        child.expect("tls>", timeout=10)
+        _LOGGER.info(str(child.before, "utf-8"))
+        child.sendline("false")
         # Edit advanced config? (y/n)
         child.expect("y/n>", timeout=10)
         _LOGGER.info(str(child.before, "utf-8"))
@@ -517,13 +590,15 @@ class LocalData:
         for i in remotes:
             if i["type"] == "drive":
                 icon = "folder-google-drive"
+            elif i["type"] == "ftp":
+                icon = "nas"
             else:
                 icon = "onedrive"
             items_info.append(
                 {
                     "name": i["name"],
                     "icon": icon,
-                    "path": self.current_path + i["name"] + ":",
+                    "path": self.current_path + i["name"] + ":/",
                 }
             )
         self.hass.states.set(
@@ -539,7 +614,7 @@ class LocalData:
 
         if self.current_path.endswith(":"):
             for remote in G_RCLONE_REMOTES_LONG:
-                if "dyski-zdalne:" + remote["name"] + ":" == self.current_path:
+                if "dyski-zdalne:" + remote["name"] + ":/" == self.current_path:
                     if remote["type"] == "drive":
                         items_info.append(
                             {
@@ -551,10 +626,7 @@ class LocalData:
                         )
                         break
         for item in self.folders_json:
-            if self.current_path.endswith(":"):
-                path = self.current_path + item["Path"]
-            else:
-                path = self.current_path + "/" + item["Path"]
+            path = self.current_path + "/" + item["Path"]
 
             l_icon = "file-outline"
             if item["IsDir"]:
@@ -615,8 +687,8 @@ class LocalData:
             if self.is_rclone_path(self.current_path):
                 if self.current_path == G_CLOUD_PREFIX:
                     self.current_path = G_LOCAL_FILES_ROOT
-                elif self.current_path == G_CLOUD_PREFIX + self.rclone_remote_from_path(
-                    self.current_path
+                elif self.current_path.endswith("://") or self.current_path.endswith(
+                    ":/"
                 ):
                     self.current_path = G_CLOUD_PREFIX
                 elif self.current_path.count("/") == 0:
@@ -670,12 +742,6 @@ class LocalData:
         if path.startswith(G_CLOUD_PREFIX):
             return True
         return False
-
-    def rclone_remote_from_path(self, path):
-        remote = path.replace(G_CLOUD_PREFIX, "")
-        k = remote.find(":")
-        remote = remote[: k + 1]
-        return remote
 
     def rclone_fix_permissions(self):
         command = 'su -c "chmod -R 777 /sdcard/rclone"'
@@ -865,15 +931,11 @@ class LocalData:
         else:
             self.dispalay_current_path()
             # file was selected, check the MimeType
-            # "MimeType":"audio/mp3" and "text/plain" are supported
+            # "MimeType audio/mp3" and "text/plain" are supported
             path = path.replace(G_CLOUD_PREFIX, "")
             if mime_type is None:
                 mime_type = ""
-            if (
-                mime_type.startswith("audio/")
-                or mime_type.startswith("video/")
-                or mime_type.startswith("application/")
-            ):
+            if mime_type.startswith("audio/") or mime_type.startswith("video/"):
                 # StreamTask().execute(fileItem);
                 self.say("Pobieram i odtwarzam: " + str(item_name))
                 self.rclone_serve_and_play_the_stream(path, item_path)
@@ -955,6 +1017,7 @@ class LocalData:
         self._browse_path(files[l_idx]["path"], True)
 
     def get_item_name(self, path):
+        path = path.rstrip("/")
         path = path.rstrip(":")
         if path.count("/") > 0:
             name = path.split("/").pop()

@@ -32,7 +32,7 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.typing import HomeAssistantType
 
 
@@ -62,28 +62,6 @@ SERVICE_SET = "set"
 SERVICE_REMOVE = "remove"
 
 CONTROL_TYPES = vol.In(["hidden", None])
-
-SET_VISIBILITY_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_VISIBLE): cv.boolean}
-)
-
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
-
-SET_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_OBJECT_ID): cv.slug,
-        vol.Optional(ATTR_NAME): cv.string,
-        vol.Optional(ATTR_VIEW): cv.boolean,
-        vol.Optional(ATTR_ICON): cv.string,
-        vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
-        vol.Optional(ATTR_VISIBLE): cv.boolean,
-        vol.Optional(ATTR_ALL): cv.boolean,
-        vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
-        vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
-    }
-)
-
-REMOVE_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -229,7 +207,7 @@ async def async_setup(hass, config):
         await component.async_add_entities(auto)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=RELOAD_SERVICE_SCHEMA
+        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
 
     service_lock = asyncio.Lock()
@@ -321,11 +299,29 @@ async def async_setup(hass, config):
             await component.async_remove_entity(entity_id)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET, locked_service_handler, schema=SET_SERVICE_SCHEMA
+        DOMAIN,
+        SERVICE_SET,
+        locked_service_handler,
+        schema=vol.Schema(
+            {
+                vol.Required(ATTR_OBJECT_ID): cv.slug,
+                vol.Optional(ATTR_NAME): cv.string,
+                vol.Optional(ATTR_VIEW): cv.boolean,
+                vol.Optional(ATTR_ICON): cv.string,
+                vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
+                vol.Optional(ATTR_VISIBLE): cv.boolean,
+                vol.Optional(ATTR_ALL): cv.boolean,
+                vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
+                vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
+            }
+        ),
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_REMOVE, groups_service_handler, schema=REMOVE_SERVICE_SCHEMA
+        DOMAIN,
+        SERVICE_REMOVE,
+        groups_service_handler,
+        schema=vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug}),
     )
 
     async def visibility_service_handler(service):
@@ -346,7 +342,7 @@ async def async_setup(hass, config):
         DOMAIN,
         SERVICE_SET_VISIBILITY,
         visibility_service_handler,
-        schema=SET_VISIBILITY_SERVICE_SCHEMA,
+        schema=make_entity_service_schema({vol.Required(ATTR_VISIBLE): cv.boolean}),
     )
 
     return True
@@ -658,7 +654,6 @@ class Group(Entity):
         if gr_on is None:
             return
 
-        # pylint: disable=too-many-boolean-expressions
         if tr_state is None or (
             (gr_state == gr_on and tr_state.state == gr_off)
             or (gr_state == gr_off and tr_state.state == gr_on)

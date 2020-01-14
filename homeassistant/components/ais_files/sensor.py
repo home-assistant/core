@@ -14,7 +14,7 @@ DEFAULT_SORT = "date"
 
 DOMAIN = "ais_files"
 
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(minutes=60)
 
 
 def get_files_list(folder_path, filter_term, sort):

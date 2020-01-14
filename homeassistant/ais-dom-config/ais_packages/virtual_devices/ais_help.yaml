@@ -4,12 +4,6 @@ sensor:
       ais_connect_iot_device_info:
         value_template: "Podłącz urządzenie do prądu. Upewnij się, że urządzenie znajduje się w zasięgu routera WiFi oraz bramki AIS dom.
                          Żeby uruchomić tryb parowania naciśnij szybko 4 razy przycisk na urządzeniu i poczekaj aż jego dioda zacznie mrugać."
-  - platform: mqtt
-    name: local_host_name
-    state_topic: ais/local_host_name/sensor
-  - platform: mqtt
-    name: internal_ip_address
-    state_topic: ais/internal_ip_address/sensor
 
 input_text:
   ais_android_wifi_password:
@@ -51,41 +45,3 @@ input_select:
     initial: "-"
     icon: mdi:home-plus
 
-group:
-  Internet Status:
-    name: Ustawienia sieci
-    control: hidden
-    entities:
-      - sensor.local_host_name
-      - sensor.internal_ip_address
-      - sensor.ais_wifi_service_current_network_info
-      - script.ais_scan_android_wifi_network
-      - input_select.ais_android_wifi_network
-      - input_text.ais_android_wifi_password
-      - script.ais_connect_android_wifi_network
-  AIS add IOT device:
-    name: Dodaj nowe urządzenia
-    control: hidden
-    entities:
-      - sensor.ais_connect_iot_device_info
-      - script.ais_scan_iot_devices_in_network
-      - input_select.ais_iot_devices_in_network
-      - input_select.ais_android_wifi_network
-      - input_text.ais_iot_device_wifi_password
-      - input_text.ais_iot_device_name
-      - script.ais_connect_iot_device_to_network
-  AIS Configurator:
-    name: Konfiguracja
-    entities:
-      - configurator.ais_dom_host
-  ais_rss_help:
-    control: hidden
-    name: Instrukcja
-    entities:
-      - input_select.ais_rss_help_topic
-      - sensor.aisrsshelptext
-  ais_rss_help_remote:
-    control: hidden
-    name: Instrukcja
-    entities:
-      - input_select.ais_rss_help_topic

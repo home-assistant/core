@@ -23,10 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 class CloudGoogleConfig(AbstractConfig):
     """HA Cloud Configuration for Google Assistant."""
 
-    def __init__(self, hass, config, prefs, cloud):
+    def __init__(self, hass, config, cloud_user, prefs, cloud):
         """Initialize the Google config."""
         super().__init__(hass)
         self._config = config
+        self._user = cloud_user
         self._prefs = prefs
         self._cloud = cloud
         self._cur_entity_prefs = self._prefs.google_entity_configs
@@ -41,12 +42,7 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def enabled(self):
         """Return if Google is enabled."""
-        return self._prefs.google_enabled
-
-    @property
-    def agent_user_id(self):
-        """Return Agent User Id to use for query responses."""
-        return self._cloud.claims["cognito:username"]
+        return self._cloud.is_logged_in and self._prefs.google_enabled
 
     @property
     def entity_config(self):
@@ -61,7 +57,7 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def should_report_state(self):
         """Return if states should be proactively reported."""
-        return self._prefs.google_report_state
+        return self._cloud.is_logged_in and self._prefs.google_report_state
 
     @property
     def local_sdk_webhook_id(self):
@@ -74,7 +70,18 @@ class CloudGoogleConfig(AbstractConfig):
     @property
     def local_sdk_user_id(self):
         """Return the user ID to be used for actions received via the local SDK."""
-        return self._prefs.cloud_user
+        return self._user
+
+    @property
+    def cloud_user(self):
+        """Return Cloud User account."""
+        return self._user
+
+    async def async_initialize(self):
+        """Perform async initialization of config."""
+        await super().async_initialize()
+        # Remove bad data that was there until 0.103.6 - Jan 6, 2020
+        self._store.pop_agent_user_id(self._user)
 
     def should_expose(self, state):
         """If a state object should be exposed."""
@@ -92,20 +99,29 @@ class CloudGoogleConfig(AbstractConfig):
         entity_config = entity_configs.get(entity_id, {})
         return entity_config.get(PREF_SHOULD_EXPOSE, DEFAULT_SHOULD_EXPOSE)
 
+    @property
+    def agent_user_id(self):
+        """Return Agent User Id to use for query responses."""
+        return self._cloud.username
+
+    def get_agent_user_id(self, context):
+        """Get agent user ID making request."""
+        return self.agent_user_id
+
     def should_2fa(self, state):
         """If an entity should be checked for 2FA."""
         entity_configs = self._prefs.google_entity_configs
         entity_config = entity_configs.get(state.entity_id, {})
         return not entity_config.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 
-    async def async_report_state(self, message):
+    async def async_report_state(self, message, agent_user_id: str):
         """Send a state report to Google."""
         try:
             await self._cloud.google_report_state.async_send_message(message)
         except ErrorResponse as err:
             _LOGGER.warning("Error reporting state - %s: %s", err.code, err.message)
 
-    async def _async_request_sync_devices(self):
+    async def _async_request_sync_devices(self, agent_user_id: str):
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
             return 200
@@ -126,13 +142,6 @@ class CloudGoogleConfig(AbstractConfig):
                 _LOGGER.debug("Finished requesting syncing: %s", req.status)
                 return req.status
 
-    async def async_deactivate_report_state(self):
-        """Turn off report state and disable further state reporting.
-
-        Called when the user disconnects their account from Google.
-        """
-        await self._prefs.async_update(google_report_state=False)
-
     async def _async_prefs_updated(self, prefs):
         """Handle updated preferences."""
         if self.should_report_state != self.is_reporting_state:
@@ -143,7 +152,7 @@ class CloudGoogleConfig(AbstractConfig):
 
             # State reporting is reported as a property on entities.
             # So when we change it, we need to sync all entities.
-            await self.async_sync_entities()
+            await self.async_sync_entities_all()
 
         # If entity prefs are the same or we have filter in config.yaml,
         # don't sync.
@@ -151,7 +160,7 @@ class CloudGoogleConfig(AbstractConfig):
             self._cur_entity_prefs is not prefs.google_entity_configs
             and self._config["filter"].empty_filter
         ):
-            self.async_schedule_google_sync()
+            self.async_schedule_google_sync_all()
 
         if self.enabled and not self.is_local_sdk_active:
             self.async_enable_local_sdk()
@@ -167,4 +176,4 @@ class CloudGoogleConfig(AbstractConfig):
 
         # Schedule a sync if a change was made to an entity that Google knows about
         if self._should_expose_entity_id(entity_id):
-            await self.async_sync_entities()
+            await self.async_sync_entities_all()

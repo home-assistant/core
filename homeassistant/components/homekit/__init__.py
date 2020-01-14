@@ -303,6 +303,7 @@ class HomeKit:
 
     def setup(self):
         """Set up bridge and accessory driver."""
+        # pylint: disable=import-outside-toplevel
         from .accessories import HomeBridge, HomeDriver
 
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
@@ -362,8 +363,7 @@ class HomeKit:
             return
         self.status = STATUS_WAIT
 
-        # pylint: disable=unused-import
-        from . import (  # noqa F401
+        from . import (  # noqa: F401 pylint: disable=unused-import
             type_covers,
             type_fans,
             type_lights,

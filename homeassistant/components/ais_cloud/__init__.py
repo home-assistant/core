@@ -41,12 +41,6 @@ def async_setup(hass, config):
     _LOGGER.info("Initialize the radio station list.")
     data = hass.data[DOMAIN] = AisColudData(hass)
     yield from data.get_types_async()
-
-    # add "Console" panel to the menu list
-    # my_ip = ais_global.get_my_global_ip()
-    # hass.components.frontend.async_register_built_in_panel(
-    #         'iframe', "Konsola", "mdi:console",
-    #         "console", {'url': 'http://' + my_ip + ':8888'}, require_admin=True)
     #
     hass.states.async_set("sensor.radiolist", -1, {})
     hass.states.async_set("sensor.podcastlist", -1, {})
@@ -113,6 +107,22 @@ def async_setup(hass, config):
         _LOGGER.info("select_rss_news_item")
         data.select_rss_news_item(call)
 
+    def get_backup_info(call):
+        _LOGGER.info("get_backup_info")
+        data.get_backup_info(call)
+
+    def set_backup_step(call):
+        _LOGGER.info("set_backup_step")
+        data.set_backup_step(call)
+
+    def restore_backup(call):
+        _LOGGER.info("restore_backup")
+        data.restore_backup(call)
+
+    def do_backup(call):
+        _LOGGER.info("do_backup")
+        data.do_backup(call)
+
     def select_rss_help_item(call):
         _LOGGER.info("select_rss_help_item")
         data.select_rss_help_item(call)
@@ -133,6 +143,10 @@ def async_setup(hass, config):
         _LOGGER.info("send_audio_to_speaker")
         data.send_audio_to_speaker(call)
 
+    def enable_gate_pairing_by_pin(call):
+        _LOGGER.info("enable_gate_pairing_by_pin")
+        data.enable_gate_pairing_by_pin(call)
+
     # register services
     hass.services.async_register(DOMAIN, "get_radio_types", get_radio_types)
     hass.services.async_register(DOMAIN, "get_radio_names", get_radio_names)
@@ -152,6 +166,13 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "play_next", play_next)
     hass.services.async_register(DOMAIN, "change_audio_service", change_audio_service)
     hass.services.async_register(DOMAIN, "send_audio_to_speaker", send_audio_to_speaker)
+    hass.services.async_register(DOMAIN, "get_backup_info", get_backup_info)
+    hass.services.async_register(DOMAIN, "set_backup_step", set_backup_step)
+    hass.services.async_register(DOMAIN, "do_backup", do_backup)
+    hass.services.async_register(DOMAIN, "restore_backup", restore_backup)
+    hass.services.async_register(
+        DOMAIN, "enable_gate_pairing_by_pin", enable_gate_pairing_by_pin
+    )
 
     def device_discovered(service):
         """ Called when a device has been discovered. """
@@ -192,15 +213,7 @@ def async_setup(hass, config):
     def state_changed(state_event):
         """ Called on state change """
         entity_id = state_event.data.get("entity_id")
-        if entity_id in (
-            "group.all_automations",
-            "group.all_switches",
-            "group.all_lights",
-        ):
-            hass.async_add_job(
-                hass.services.async_call("ais_ai_service", "prepare_remote_menu")
-            )
-        elif entity_id.startswith("media_player."):
+        if entity_id.startswith("media_player."):
             _new = state_event.data["new_state"].attributes
             if state_event.data["old_state"] is None:
                 _old = {"friendly_name": "new ais dome device"}
@@ -414,6 +427,36 @@ class AisCloudWS:
         self.setCloudToken()
         rest_url = self.url + "key?service=" + service
         ws_resp = requests.delete(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+        return ws_resp
+
+    def get_backup_info(self):
+        self.setCloudToken()
+        rest_url = self.url + "backup_info"
+        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
+        return ws_resp
+
+    def post_backup(self, file):
+        self.setCloudToken()
+        rest_url = self.url + "backup"
+        with open(file, "rb") as payload:
+            ws_resp = requests.post(
+                rest_url, headers=CLOUD_WS_HEADER, data=payload, timeout=60
+            )
+        return ws_resp
+
+    def download_backup(self, file):
+        self.setCloudToken()
+        rest_url = self.url + "backup"
+        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=60)
+        with open(file, "wb") as f:
+            for chunk in ws_resp.iter_content(1024):
+                f.write(chunk)
+        return ws_resp
+
+    def get_gate_parring_pin(self):
+        self.setCloudToken()
+        rest_url = self.url + "gate_id_from_pin"
+        ws_resp = requests.post(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
         return ws_resp
 
 
@@ -1521,3 +1564,199 @@ class AisColudData:
                 "say_it",
                 {"text": "Czytam stronę pomocy. " + rss_help_text},
             )
+
+    def get_backup_info(
+        self,
+        call,
+        step=0,
+        backup_error=None,
+        backup_info=None,
+        restore_error=None,
+        restore_info=None,
+    ):
+        ws_resp = self.cloud.get_backup_info()
+        json_ws_resp = ws_resp.json()
+        if backup_error is not None:
+            json_ws_resp["backup_error"] = backup_error
+        if backup_info is not None:
+            json_ws_resp["backup_info"] = backup_info
+        if restore_error is not None:
+            json_ws_resp["restore_error"] = restore_error
+        if restore_info is not None:
+            json_ws_resp["restore_info"] = restore_info
+        self.hass.states.async_set(
+            "sensor.aisbackupinfo", step, json_ws_resp,
+        )
+        info_text = ""
+        if backup_error is not None:
+            info_text = info_text + backup_error
+        if backup_info is not None:
+            info_text = info_text + backup_info
+        if restore_error is not None:
+            info_text = info_text + restore_error
+        if restore_info is not None:
+            info_text = info_text + restore_info
+        if info_text != "":
+            self.hass.services.call("ais_ai_service", "say_it", {"text": info_text})
+
+    def set_backup_step(self, call):
+        step = call.data["step"]
+        backup_error = ""
+        backup_info = ""
+        restore_error = ""
+        restore_info = ""
+        if "backup_error" in call.data:
+            backup_error = call.data["backup_error"]
+        if "backup_info" in call.data:
+            backup_info = call.data["backup_info"]
+        if "restore_error" in call.data:
+            restore_error = call.data["restore_error"]
+        if "restore_info" in call.data:
+            restore_info = call.data["restore_info"]
+        self.get_backup_info(
+            call, step, backup_error, backup_info, restore_error, restore_info
+        )
+
+    def do_backup(self, call):
+        import subprocess
+
+        password = ""
+        info_text = "kompresuje"
+        home_dir = "/data/data/pl.sviete.dom/files/home/"
+        if "password" in call.data:
+            password = call.data["password"]
+        if password != "":
+            info_text += " i szyfruje"
+            password = "-p" + password
+
+        # 1. zip files
+        self.get_backup_info(
+            call, 1, None, info_text + " bieżącą konfigurację", None, None
+        )
+        try:
+            ret = subprocess.check_output("rm " + home_dir + "backup.zip", shell=True)
+        except Exception as e:
+            pass
+        try:
+            ret = subprocess.check_output(
+                "7za a -mmt=2 "
+                + password
+                + " -xr\!deps"
+                + " -xr\!*.log"
+                + " -xr\!*.db"
+                + " -xr\!home-assistant* "
+                + home_dir
+                + "backup.zip "
+                + home_dir
+                + "AIS/.",
+                shell=True,
+            )
+        except Exception as e:
+            # try again - sqllite problems
+            try:
+                ret = subprocess.check_output(
+                    "7za a -mmt=2 "
+                    + password
+                    + " -xr\!deps"
+                    + " -xr\!*.log"
+                    + " -xr\!*.db"
+                    + " -xr\!home-assistant* "
+                    + home_dir
+                    + "backup.zip "
+                    + home_dir
+                    + "AIS/.",
+                    shell=True,
+                )
+            except Exception as e:
+                self.get_backup_info(call, 0, str(e))
+                return
+        # 2. upload
+        self.get_backup_info(
+            call,
+            1,
+            None,
+            "Wysyłam kopie konfiguracji do panelu integratora",
+            None,
+            None,
+        )
+        try:
+            ws_resp = self.cloud.post_backup(home_dir + "backup.zip")
+        except Exception as e:
+            self.get_backup_info(call, 0, str(e))
+            return
+
+        # refresh
+        self.get_backup_info(call, 0, "", "Kopia zapasowa konfiguracji wykonana")
+
+    def restore_backup(self, call):
+        import subprocess
+
+        home_dir = "/data/data/pl.sviete.dom/files/home/"
+        password = ""
+        info_text = ""
+        if "password" in call.data:
+            password = call.data["password"]
+        if password != "":
+            info_text = " i deszyfruje"
+        # we need to use password even if it's empty - to prevent the prompt
+        password = "-p" + password
+        # 1. download
+        self.get_backup_info(call, 1, None, None, None, "Pobieram kopie konfiguracji")
+        try:
+            ws_resp = self.cloud.download_backup(home_dir + "backup.zip")
+        except Exception as e:
+            self.get_backup_info(call, 0, str(e))
+            return
+        # 2. extract
+        self.get_backup_info(call, 1, None, None, None, "Rozpakowuje" + info_text)
+        try:
+            ret = subprocess.check_output(
+                "7z x -mmt=2 "
+                + password
+                + " -o"
+                + home_dir
+                + "AIS_BACKUP "
+                + home_dir
+                + "backup.zip "
+                + "-y",
+                shell=True,
+            )
+        except Exception as e:
+            self.get_backup_info(call, 0, None, None, str(e), None)
+            return
+        # 3. copy files to AIS
+        self.get_backup_info(call, 1, None, None, None, "Podmieniam konfigurację ")
+        try:
+            ret = subprocess.check_output(
+                "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS", shell=True,
+            )
+            ret = subprocess.check_output("rm " + home_dir + "backup.zip", shell=True,)
+            ret = subprocess.check_output(
+                "rm -rf " + home_dir + "AIS_BACKUP", shell=True,
+            )
+
+        except Exception as e:
+            self.get_backup_info(call, 0, None, None, str(e), None)
+            return
+
+        # refresh
+        self.get_backup_info(
+            call, 0, None, None, None, "OK, przywrucono konfigurację z  kopii"
+        )
+
+    def enable_gate_pairing_by_pin(self, call):
+        ws_resp = self.cloud.get_gate_parring_pin()
+        json_ws_resp = ws_resp.json()
+        pin = json_ws_resp["pin"]
+        # set gate_parring_pin
+        self.hass.states.set("sensor.gate_pairing_pin", pin)
+        # run timer
+        self.hass.services.call(
+            "timer", "start", {"entity_id": "timer.ais_dom_pin_join", "duration": "120"}
+        )
+        # voice info
+        self.hass.services.call(
+            "ais_ai_service",
+            "say_it",
+            {"text": "Parowanie z bramką za pomocą PIN włączone"},
+        )

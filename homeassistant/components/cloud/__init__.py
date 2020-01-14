@@ -4,7 +4,6 @@ import logging
 from hass_nabucasa import Cloud
 import voluptuous as vol
 
-from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.components.alexa import const as alexa_const
 from homeassistant.components.google_assistant import const as ga_c
 from homeassistant.const import (
@@ -185,19 +184,6 @@ async def async_setup(hass, config):
     # Cloud settings
     prefs = CloudPreferences(hass)
     await prefs.async_initialize()
-
-    # Cloud user
-    user = None
-    if prefs.cloud_user:
-        # Fetch the user. It can happen that the user no longer exists if
-        # an image was restored without restoring the cloud prefs.
-        user = await hass.auth.async_get_user(prefs.cloud_user)
-
-    if user is None:
-        user = await hass.auth.async_create_system_user(
-            "Home Assistant Cloud", [GROUP_ID_ADMIN]
-        )
-        await prefs.async_update(cloud_user=user.id)
 
     # Initialize Cloud
     websession = hass.helpers.aiohttp_client.async_get_clientsession()

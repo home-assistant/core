@@ -17,6 +17,7 @@ PREF_DISABLE_2FA = "disable_2fa"
 PREF_ALIASES = "aliases"
 PREF_SHOULD_EXPOSE = "should_expose"
 PREF_GOOGLE_LOCAL_WEBHOOK_ID = "google_local_webhook_id"
+PREF_USERNAME = "username"
 DEFAULT_SHOULD_EXPOSE = True
 DEFAULT_DISABLE_2FA = False
 DEFAULT_ALEXA_REPORT_STATE = False

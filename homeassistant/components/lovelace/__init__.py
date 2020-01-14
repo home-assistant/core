@@ -128,11 +128,12 @@ class LovelaceStorage:
             _LOGGER.debug("Processing " + aisview["path"])
             view_found = False
             for idx, view in enumerate(config["views"]):
-                if aisview["path"] == view["path"]:
-                    _LOGGER.debug(aisview["path"] + " -> COPY")
-                    config["views"][idx] = aisview
-                    view_found = True
-                    break
+                if "path" in view:
+                    if aisview["path"] == view["path"]:
+                        _LOGGER.debug(aisview["path"] + " -> COPY")
+                        config["views"][idx] = aisview
+                        view_found = True
+                        break
             if not view_found:
                 _LOGGER.debug(aisview["path"] + " -> ADD")
                 config["views"].append(aisview)

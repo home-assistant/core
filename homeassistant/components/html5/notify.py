@@ -34,16 +34,15 @@ from homeassistant.components.notify import (
     ATTR_TARGET,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    DOMAIN,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 
+from .const import DOMAIN, SERVICE_DISMISS
+
 _LOGGER = logging.getLogger(__name__)
 
 REGISTRATIONS_FILE = "html5_push_registrations.conf"
-
-SERVICE_DISMISS = "html5_dismiss"
 
 ATTR_GCM_SENDER_ID = "gcm_sender_id"
 ATTR_GCM_API_KEY = "gcm_api_key"

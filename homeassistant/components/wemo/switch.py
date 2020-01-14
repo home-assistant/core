@@ -12,7 +12,8 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import convert
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
 
-from . import SUBSCRIPTION_REGISTRY, DOMAIN as WEMO_DOMAIN
+from . import SUBSCRIPTION_REGISTRY
+from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -96,7 +97,7 @@ class WemoSwitch(SwitchDevice):
     @property
     def device_info(self):
         """Return the device info."""
-        return {"name": self._name, "identifiers": {(WEMO_DOMAIN, self._serialnumber)}}
+        return {"name": self._name, "identifiers": {(DOMAIN, self._serialnumber)}}
 
     @property
     def device_state_attributes(self):

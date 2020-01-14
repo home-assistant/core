@@ -3,7 +3,7 @@
   "name": "Recorder",
   "documentation": "https://www.home-assistant.io/integrations/recorder",
   "requirements": [
-    "sqlalchemy==1.3.10"
+    "sqlalchemy==1.3.11"
   ],
   "dependencies": [],
   "codeowners": []

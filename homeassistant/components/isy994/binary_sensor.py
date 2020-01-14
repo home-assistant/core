@@ -110,7 +110,6 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         self._negative_node = None
         self._heartbeat_device = None
         self._device_class_from_type = _detect_device_type(self._node)
-        # pylint: disable=protected-access
         if _is_val_unknown(self._node.status._val):
             self._computed_state = None
             self._status_was_unknown = True

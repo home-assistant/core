@@ -27,7 +27,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 
 # importing channels updates registries
-from . import channels  # noqa pylint: disable=wrong-import-position,unused-import
+from . import channels  # noqa: F401 pylint: disable=unused-import
 from .const import (
     CONTROLLER,
     SENSOR_ACCELERATION,

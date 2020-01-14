@@ -62,10 +62,14 @@ async def test_turn_off(hass):
 
 async def test_turn_off_without_entity_id(hass):
     """Test light turn off all lights."""
-    await hass.services.async_call("light", "turn_on", {}, blocking=True)
+    await hass.services.async_call(
+        "light", "turn_on", {"entity_id": "all"}, blocking=True
+    )
 
     assert light.is_on(hass, ENTITY_LIGHT)
 
-    await hass.services.async_call("light", "turn_off", {}, blocking=True)
+    await hass.services.async_call(
+        "light", "turn_off", {"entity_id": "all"}, blocking=True
+    )
 
     assert not light.is_on(hass, ENTITY_LIGHT)

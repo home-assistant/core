@@ -1,7 +1,9 @@
 """Support for the Fibaro devices."""
-import logging
 from collections import defaultdict
+import logging
 from typing import Optional
+
+from fiblary3.client.v4.client import Client as FibaroClient, StateHandler
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -109,7 +111,6 @@ class FibaroController:
 
     def __init__(self, config):
         """Initialize the Fibaro controller."""
-        from fiblary3.client.v4.client import Client as FibaroClient
 
         self._client = FibaroClient(
             config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
@@ -148,8 +149,6 @@ class FibaroController:
 
     def enable_state_handler(self):
         """Start StateHandler thread for monitoring updates."""
-        from fiblary3.client.v4.client import StateHandler
-
         self._state_handler = StateHandler(self._client, self._on_state_change)
 
     def disable_state_handler(self):

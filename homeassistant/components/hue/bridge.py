@@ -3,6 +3,7 @@ import asyncio
 
 import aiohue
 import async_timeout
+import slugify as unicode_slug
 import voluptuous as vol
 
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -32,6 +33,7 @@ class HueBridge:
         self.available = True
         self.authorized = False
         self.api = None
+        self.parallel_updates_semaphore = None
 
     @property
     def host(self):
@@ -77,8 +79,18 @@ class HueBridge:
             DOMAIN, SERVICE_HUE_SCENE, self.hue_activate_scene, schema=SCENE_SCHEMA
         )
 
+        self.parallel_updates_semaphore = asyncio.Semaphore(
+            3 if self.api.config.modelid == "BSB001" else 10
+        )
+
         self.authorized = True
         return True
+
+    async def async_request_call(self, coro):
+        """Process request batched."""
+
+        async with self.parallel_updates_semaphore:
+            return await coro
 
     async def async_reset(self):
         """Reset this bridge to default state.
@@ -173,7 +185,11 @@ async def get_bridge(hass, host, username=None):
         with async_timeout.timeout(10):
             # Create username if we don't have one
             if not username:
-                await bridge.create_user(f"home-assistant#{hass.config.location_name}")
+                device_name = unicode_slug.slugify(
+                    hass.config.location_name, max_length=19
+                )
+                await bridge.create_user(f"home-assistant#{device_name}")
+
             # Initialize bridge (and validate our username)
             await bridge.initialize()
 

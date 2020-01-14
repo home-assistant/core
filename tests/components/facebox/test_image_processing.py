@@ -261,7 +261,7 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
 
@@ -275,7 +275,7 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
         assert "AuthenticationError on facebox" in caplog.text
@@ -290,7 +290,7 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
         assert MOCK_ERROR_NO_FACE in caplog.text
@@ -305,7 +305,7 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
         assert "ConnectionError: Is facebox running?" in caplog.text

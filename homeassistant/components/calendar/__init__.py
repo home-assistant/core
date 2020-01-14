@@ -7,7 +7,7 @@ from aiohttp import web
 
 from homeassistant.components import http
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
     time_period_str,
