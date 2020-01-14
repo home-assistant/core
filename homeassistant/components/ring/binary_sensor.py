@@ -123,7 +123,7 @@ class RingBinarySensor(BinarySensorDevice):
 
         return attrs
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data and updates the state."""
         self._state = any(
             alert["kind"] == self._sensor_type
