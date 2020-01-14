@@ -30,12 +30,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for device in chain(devices["doorbots"], devices["authorized_doorbots"]):
         for sensor_type in SENSOR_TYPES:
             if "doorbell" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(hass, device, sensor_type))
+                sensors.append(RingBinarySensor(hass, ring, device, sensor_type))
 
     for device in devices["stickup_cams"]:
         for sensor_type in SENSOR_TYPES:
             if "stickup_cams" in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingBinarySensor(hass, device, sensor_type))
+                sensors.append(RingBinarySensor(hass, ring, device, sensor_type))
 
     async_add_entities(sensors, True)
 
@@ -43,10 +43,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RingBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Ring device."""
 
-    def __init__(self, hass, device, sensor_type):
+    def __init__(self, hass, ring, device, sensor_type):
         """Initialize a sensor for Ring device."""
         super().__init__()
         self._sensor_type = sensor_type
+        self._ring = ring
         self._device = device
         self._name = "{0} {1}".format(
             self._device.name, SENSOR_TYPES.get(self._sensor_type)[0]
@@ -124,13 +125,8 @@ class RingBinarySensor(BinarySensorDevice):
 
     def update(self):
         """Get the latest data and updates the state."""
-        # alert = ASDASDASD
-        return
-
-        if self._device.alert:
-            if self._sensor_type == self._device.alert.get(
-                "kind"
-            ) and self._device.device_id == self._device.alert.get("doorbot_id"):
-                self._state = True
-        else:
-            self._state = False
+        self._state = any(
+            alert["kind"] == self._sensor_type
+            and alert["doorbot_id"] == self._device.id
+            for alert in self._ring.active_alerts()
+        )

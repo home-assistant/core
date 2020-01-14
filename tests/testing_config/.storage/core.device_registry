@@ -4,10 +4,30 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "b4f6e366c71940e590e36409e07784ff"
+                    "cbeb54faff4d402799c63bcceaa19ff4"
                 ],
                 "connections": [],
-                "id": "eab14d1f4248477aa2bb39212d59d0c5",
+                "id": "5ae8479a933f4565bfc31295f24dabfc",
+                "identifiers": [
+                    [
+                        "ring",
+                        "aacdef123"
+                    ]
+                ],
+                "manufacturer": "Ring",
+                "model": "Doorbell Pro",
+                "name": "Front Door",
+                "name_by_user": null,
+                "sw_version": "1.4.26",
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "cbeb54faff4d402799c63bcceaa19ff4"
+                ],
+                "connections": [],
+                "id": "2f8578274082490da54a9e55b97e3847",
                 "identifiers": [
                     [
                         "ring",
@@ -17,26 +37,6 @@
                 "manufacturer": "Ring",
                 "model": "Floodlight Cam",
                 "name": "Internal",
-                "name_by_user": null,
-                "sw_version": "1.9.3",
-                "via_device_id": null
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "b4f6e366c71940e590e36409e07784ff"
-                ],
-                "connections": [],
-                "id": "451d9befa57249a0954283257f26de14",
-                "identifiers": [
-                    [
-                        "ring",
-                        "aacdef123"
-                    ]
-                ],
-                "manufacturer": "Ring",
-                "model": "Floodlight Cam",
-                "name": "Front",
                 "name_by_user": null,
                 "sw_version": "1.9.3",
                 "via_device_id": null
