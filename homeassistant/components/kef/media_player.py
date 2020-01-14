@@ -40,7 +40,6 @@ DEFAULT_INVERSE_SPEAKER_MODE = False
 DOMAIN = "kef"
 
 SCAN_INTERVAL = timedelta(seconds=30)
-PARALLEL_UPDATES = 0
 
 SOURCES = {"LSX": ["Wifi", "Bluetooth", "Aux", "Opt"]}
 SOURCES["LS50"] = SOURCES["LSX"] + ["Usb"]
