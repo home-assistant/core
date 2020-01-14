@@ -19,7 +19,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
             }
-        ),
+        )
     },
     extra=vol.ALLOW_EXTRA,
 )

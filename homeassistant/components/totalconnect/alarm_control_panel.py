@@ -3,13 +3,20 @@ import logging
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY, SUPPORT_ALARM_ARM_HOME, SUPPORT_ALARM_ARM_NIGHT)
-from homeassistant.const import (STATE_ALARM_ARMED_AWAY,
-                                 STATE_ALARM_ARMED_CUSTOM_BYPASS,
-                                 STATE_ALARM_ARMED_HOME,
-                                 STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMING,
-                                 STATE_ALARM_DISARMED, STATE_ALARM_DISARMING,
-                                 STATE_ALARM_TRIGGERED)
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
+from homeassistant.const import (
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_DISARMING,
+    STATE_ALARM_TRIGGERED,
+)
 
 from . import DOMAIN as TOTALCONNECT_DOMAIN
 
