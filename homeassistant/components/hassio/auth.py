@@ -4,7 +4,11 @@ import logging
 import os
 
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPForbidden, HTTPInternalServerError, HTTPNotFound
+from aiohttp.web_exceptions import (
+    HTTPUnauthorized,
+    HTTPInternalServerError,
+    HTTPNotFound,
+)
 import voluptuous as vol
 
 from homeassistant.auth.models import User
@@ -60,12 +64,12 @@ class HassIOBaseAuth(HomeAssistantView):
         hassio_ip = os.environ["HASSIO"].split(":")[0]
         if request[KEY_REAL_IP] != ip_address(hassio_ip):
             _LOGGER.error("Invalid auth request from %s", request[KEY_REAL_IP])
-            raise HTTPForbidden()
+            raise HTTPUnauthorized()
 
         # Check caller token
         if request[KEY_HASS_USER].id != self.user.id:
             _LOGGER.error("Invalid auth request from %s", request[KEY_HASS_USER].name)
-            raise HTTPForbidden()
+            raise HTTPUnauthorized()
 
     def _get_provider(self):
         """Return Homeassistant auth provider."""
@@ -98,7 +102,7 @@ class HassIOAuth(HassIOBaseAuth):
         try:
             await provider.async_validate_login(username, password)
         except HomeAssistantError:
-            raise HTTPForbidden() from None
+            raise HTTPUnauthorized() from None
 
 
 class HassIOPasswordReset(HassIOBaseAuth):

@@ -36,7 +36,7 @@ async def test_auth_fails_no_supervisor(hass, hassio_client):
         )
 
         # Check we got right response
-        assert resp.status == 403
+        assert resp.status == 401
         assert not mock_login.called
 
 
@@ -70,7 +70,7 @@ async def test_login_error(hass, hassio_client_supervisor):
         )
 
         # Check we got right response
-        assert resp.status == 403
+        assert resp.status == 401
         mock_login.assert_called_with("test", "123456")
 
 
@@ -153,7 +153,7 @@ async def test_password_fails_no_supervisor(hass, hassio_client):
         )
 
         # Check we got right response
-        assert resp.status == 403
+        assert resp.status == 401
         assert not mock_save.called
 
 
