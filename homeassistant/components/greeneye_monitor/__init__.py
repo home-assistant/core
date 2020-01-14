@@ -58,7 +58,7 @@ TEMPERATURE_SENSORS_SCHEMA = vol.Schema(
 )
 
 VOLTAGE_SENSOR_SCHEMA = vol.Schema(
-    {vol.Required(CONF_NUMBER): vol.Range(1, 1), vol.Required(CONF_NAME): cv.string}
+    {vol.Required(CONF_NUMBER): vol.Range(1, 48), vol.Required(CONF_NAME): cv.string}
 )
 
 VOLTAGE_SENSORS_SCHEMA = vol.All(cv.ensure_list, [VOLTAGE_SENSOR_SCHEMA])
