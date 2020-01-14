@@ -98,7 +98,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
             for device in devices[device_type]:
                 if device_type == "battery" and device.battery_life is None:
-                    print("SKIPPING BATTERY", device)
                     continue
 
                 sensors.append(RingSensor(config_entry.entry_id, device, sensor_type))
