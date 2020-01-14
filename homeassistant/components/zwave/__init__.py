@@ -213,7 +213,7 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
         ): cv.boolean,
         vol.Optional(
             CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY
-        ): cv.positive_int
+        ): cv.positive_int,
     }
 )
 
