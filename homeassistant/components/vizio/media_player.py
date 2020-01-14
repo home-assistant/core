@@ -210,7 +210,7 @@ class VizioDevice(MediaPlayerDevice):
         """Disconnect callbacks when entity is removed."""
         for listener in self._async_unsub_listeners:
             listener()
-        listener = []
+        self._async_unsub_listeners = []
 
     @property
     def available(self) -> bool:
