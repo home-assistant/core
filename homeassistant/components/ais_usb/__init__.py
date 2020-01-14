@@ -105,11 +105,13 @@ async def async_setup(hass, config):
                     device_info["id"] != G_AIS_REMOTE_ID
                     or ais_global.G_USB_INTERNAL_MIC_RESET is False
                 ):
+                    if "info" in device_info:
+                        text = "Dodano: " + device_info["info"]
+                    else:
+                        text = "Dodano urządzenie"
                     hass.async_add_job(
                         hass.services.async_call(
-                            "ais_ai_service",
-                            "say_it",
-                            {"text": "Dodano: " + device_info["info"]},
+                            "ais_ai_service", "say_it", {"text": text}
                         )
                     )
                 # reset flag
@@ -124,11 +126,13 @@ async def async_setup(hass, config):
                     device_info["id"] != G_AIS_REMOTE_ID
                     or ais_global.G_USB_INTERNAL_MIC_RESET is False
                 ):
+                    if "info" in device_info:
+                        text = "Usunięto: " + device_info["info"]
+                    else:
+                        text = "Usunięto urządzenie"
                     hass.async_add_job(
                         hass.services.async_call(
-                            "ais_ai_service",
-                            "say_it",
-                            {"text": "Usunięto: " + device_info["info"]},
+                            "ais_ai_service", "say_it", {"text": text}
                         )
                     )
                 # remove device
@@ -168,6 +172,8 @@ def _lsusb():
 
     di = subprocess.check_output("ls /sys/bus/usb/devices", shell=True)
     for d in di.decode("utf-8").split("\n"):
+        manufacturer = ""
+        product = ""
         try:
             id_vendor = (
                 subprocess.check_output(
@@ -204,22 +210,27 @@ def _lsusb():
 
             _LOGGER.info("id_vendor: " + id_vendor)
             _LOGGER.info("id_product: " + id_product)
+            _LOGGER.info("product: " + product)
+            _LOGGER.info("manufacturer: " + manufacturer)
             for device in devices:
                 if device["id"] == id_vendor + ":" + id_product:
                     device["product"] = product
                     device["manufacturer"] = manufacturer
-                    device["info"] = "urządzenie " + product + manufacturer
                     # special cases
                     if device["id"] == G_ZIGBEE_ID:
                         # USB zigbee dongle
                         device["info"] = "urządzenie Zigbee" + product + manufacturer
-                    if device["id"] == G_AIS_REMOTE_ID:
+                    elif device["id"] == G_AIS_REMOTE_ID:
                         # USB ais remote dongle
                         device[
                             "info"
                         ] = "urządzenie Pilot radiowy z mikrofonem, producent AI-Speaker"
+                    else:
+                        device["info"] = (
+                            "urządzenie " + str(product) + str(manufacturer)
+                        )
 
         except Exception as e:
-            _LOGGER.info(str(e))
+            _LOGGER.info("no info about usb in: /sys/bus/usb/devices/" + d)
 
     return devices
