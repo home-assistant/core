@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "timer"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-DEFAULT_DURATION = timedelta(0)
+DEFAULT_DURATION = 0
 ATTR_DURATION = "duration"
 ATTR_REMAINING = "remaining"
 CONF_DURATION = "duration"
