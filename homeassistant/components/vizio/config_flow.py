@@ -133,8 +133,8 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     }
                     self.hass.config_entries.async_update_entry(
                         entry=entry,
-                        data=entry.data.update(new_volume_step),
-                        options=entry.options.update(new_volume_step),
+                        data=entry.data.copy().update(new_volume_step),
+                        options=entry.options.copy().update(new_volume_step),
                     )
                     return self.async_abort(reason="updated_volume_step")
                 return self.async_abort(reason="already_setup")
