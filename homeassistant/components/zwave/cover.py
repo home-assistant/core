@@ -3,7 +3,6 @@ import logging
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    ATTR_TILT_POSITION,
     DOMAIN,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
