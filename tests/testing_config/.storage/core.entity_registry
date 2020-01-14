@@ -1,0 +1,56 @@
+{
+    "data": {
+        "entities": [
+            {
+                "capabilities": null,
+                "config_entry_id": "b4f6e366c71940e590e36409e07784ff",
+                "device_class": "motion",
+                "device_id": "eab14d1f4248477aa2bb39212d59d0c5",
+                "disabled_by": null,
+                "entity_id": "binary_sensor.internal_motion",
+                "name": null,
+                "platform": "ring",
+                "supported_features": 0,
+                "unique_id": "345678-motion"
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "b4f6e366c71940e590e36409e07784ff",
+                "device_class": "motion",
+                "device_id": "451d9befa57249a0954283257f26de14",
+                "disabled_by": null,
+                "entity_id": "binary_sensor.front_door_motion",
+                "name": null,
+                "platform": "ring",
+                "supported_features": 0,
+                "unique_id": "987654-motion"
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "b4f6e366c71940e590e36409e07784ff",
+                "device_class": "occupancy",
+                "device_id": "451d9befa57249a0954283257f26de14",
+                "disabled_by": null,
+                "entity_id": "binary_sensor.front_door_ding",
+                "name": null,
+                "platform": "ring",
+                "supported_features": 0,
+                "unique_id": "987654-ding"
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "b4f6e366c71940e590e36409e07784ff",
+                "device_class": "motion",
+                "device_id": "451d9befa57249a0954283257f26de14",
+                "disabled_by": null,
+                "entity_id": "binary_sensor.front_motion",
+                "name": null,
+                "platform": "ring",
+                "supported_features": 0,
+                "unique_id": "765432-motion"
+            }
+        ]
+    },
+    "key": "core.entity_registry",
+    "version": 1
+}

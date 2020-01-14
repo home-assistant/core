@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from . import DATA_RING_STICKUP_CAMS, DOMAIN, SIGNAL_UPDATE_RING
+from . import DOMAIN, SIGNAL_UPDATE_RING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,9 +24,11 @@ SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the switches for the Ring devices."""
-    cameras = hass.data[DATA_RING_STICKUP_CAMS]
+    ring = hass.data[DOMAIN][config_entry.entry_id]
+    devices = ring.devices()
     switches = []
-    for device in cameras:
+
+    for device in devices["stickup_cams"]:
         if device.has_capability("siren"):
             switches.append(SirenSwitch(device))
 
@@ -58,8 +60,13 @@ class BaseRingSwitch(SwitchDevice):
     @callback
     def _update_callback(self):
         """Call update method."""
-        _LOGGER.debug("Updating Ring sensor %s (callback)", self.name)
+        _LOGGER.debug("Updating Ring switch %s (callback)", self.name)
         self.async_schedule_update_ha_state(True)
+
+    @property
+    def should_poll(self):
+        """Update controlled via the hub."""
+        return False
 
     @property
     def name(self):
@@ -72,18 +79,13 @@ class BaseRingSwitch(SwitchDevice):
         return self._unique_id
 
     @property
-    def should_poll(self):
-        """Update controlled via the hub."""
-        return False
-
-    @property
     def device_info(self):
         """Return device info."""
         return {
-            "identifiers": {(DOMAIN, self._device.id)},
+            "identifiers": {(DOMAIN, self._device.device_id)},
             "sw_version": self._device.firmware,
             "name": self._device.name,
-            "model": self._device.kind,
+            "model": self._device.model,
             "manufacturer": "Ring",
         }
 
@@ -122,7 +124,7 @@ class SirenSwitch(BaseRingSwitch):
         """Return the icon."""
         return SIREN_ICON
 
-    def update(self):
+    async def async_update(self):
         """Update state of the siren."""
         if self._no_updates_until > dt_util.utcnow():
             _LOGGER.debug("Skipping update...")

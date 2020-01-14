@@ -1,6 +1,7 @@
 """This component provides support to the Ring Door Bell camera."""
 import asyncio
 from datetime import timedelta
+from itertools import chain
 import logging
 
 from haffmpeg.camera import CameraMjpeg
@@ -14,13 +15,7 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 
-from . import (
-    ATTRIBUTION,
-    DATA_RING_DOORBELLS,
-    DATA_RING_STICKUP_CAMS,
-    DOMAIN,
-    SIGNAL_UPDATE_RING,
-)
+from . import ATTRIBUTION, DOMAIN, SIGNAL_UPDATE_RING
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
 
@@ -29,11 +24,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Ring Door Bell and StickUp Camera."""
-    ring_doorbell = hass.data[DATA_RING_DOORBELLS]
-    ring_stickup_cams = hass.data[DATA_RING_STICKUP_CAMS]
+    ring = hass.data[DOMAIN][config_entry.entry_id]
+    devices = ring.devices()
 
     cams = []
-    for camera in ring_doorbell + ring_stickup_cams:
+    for camera in chain(
+        devices["doorbots"], devices["authorized_doorbots"], devices["stickup_cams"]
+    ):
         if not camera.has_subscription:
             continue
 
@@ -46,15 +43,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class RingCam(Camera):
     """An implementation of a Ring Door Bell camera."""
 
-    def __init__(self, hass, camera):
+    def __init__(self, hass, device):
         """Initialize a Ring Door Bell camera."""
         super().__init__()
-        self._camera = camera
+        self._device = device
         self._hass = hass
-        self._name = self._camera.name
+        self._name = self._device.name
         self._ffmpeg = hass.data[DATA_FFMPEG]
-        self._last_video_id = self._camera.last_recording_id
-        self._video_url = self._camera.recording_url(self._last_video_id)
+        self._last_video_id = self._device.last_recording_id
+        self._video_url = self._device.recording_url(self._last_video_id)
         self._utcnow = dt_util.utcnow()
         self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow
         self._disp_disconnect = None
@@ -78,6 +75,11 @@ class RingCam(Camera):
         _LOGGER.debug("Updating Ring camera %s (callback)", self.name)
 
     @property
+    def should_poll(self):
+        """Return False, updates are controlled via the hub."""
+        return False
+
+    @property
     def name(self):
         """Return the name of this camera."""
         return self._name
@@ -85,16 +87,16 @@ class RingCam(Camera):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._camera.id
+        return self._device.id
 
     @property
     def device_info(self):
         """Return device info."""
         return {
-            "identifiers": {(DOMAIN, self._camera.id)},
-            "sw_version": self._camera.firmware,
-            "name": self._camera.name,
-            "model": self._camera.kind,
+            "identifiers": {(DOMAIN, self._device.device_id)},
+            "sw_version": self._device.firmware,
+            "name": self._device.name,
+            "model": self._device.model,
             "manufacturer": "Ring",
         }
 
@@ -103,7 +105,6 @@ class RingCam(Camera):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            "timezone": self._camera.timezone,
             "video_url": self._video_url,
             "last_video_id": self._last_video_id,
         }
@@ -123,7 +124,6 @@ class RingCam(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-
         if self._video_url is None:
             return
 
@@ -141,11 +141,6 @@ class RingCam(Camera):
         finally:
             await stream.close()
 
-    @property
-    def should_poll(self):
-        """Return False, updates are controlled via the hub."""
-        return False
-
     def update(self):
         """Update camera entity and refresh attributes."""
         _LOGGER.debug("Checking if Ring DoorBell needs to refresh video_url")
@@ -153,7 +148,7 @@ class RingCam(Camera):
         self._utcnow = dt_util.utcnow()
 
         try:
-            last_event = self._camera.history(limit=1)[0]
+            last_event = self._device.history(limit=1)[0]
         except (IndexError, TypeError):
             return
 
@@ -164,7 +159,7 @@ class RingCam(Camera):
             self._last_video_id != last_recording_id or self._utcnow >= self._expires_at
         ):
 
-            video_url = self._camera.recording_url(last_recording_id)
+            video_url = self._device.recording_url(last_recording_id)
             if video_url:
                 _LOGGER.info("Ring DoorBell properties refreshed")
 

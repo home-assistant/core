@@ -6,7 +6,6 @@ from unittest.mock import patch
 import requests_mock
 
 from homeassistant.components import ring as base_ring
-from homeassistant.components.ring import binary_sensor as ring
 
 from tests.common import get_test_home_assistant, load_fixture, mock_storage
 from tests.components.ring.test_init import ATTRIBUTION, VALID_CONFIG
@@ -62,17 +61,13 @@ class TestRingBinarySensorSetup(unittest.TestCase):
             text=load_fixture("ring_chime_health_attrs.json"),
         )
 
-        with mock_storage(), patch("homeassistant.components.ring.PLATFORMS", []):
+        with mock_storage(), patch(
+            "homeassistant.components.ring.PLATFORMS", ["binary_sensor"]
+        ):
             run_coroutine_threadsafe(
                 base_ring.async_setup(self.hass, VALID_CONFIG), self.hass.loop
             ).result()
-            run_coroutine_threadsafe(
-                self.hass.async_block_till_done(), self.hass.loop
-            ).result()
-            run_coroutine_threadsafe(
-                ring.async_setup_entry(self.hass, None, self.add_entities),
-                self.hass.loop,
-            ).result()
+            self.hass.block_till_done()
 
         for device in self.DEVICES:
             device.update()

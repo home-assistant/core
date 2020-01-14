@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from . import DATA_RING_STICKUP_CAMS, DOMAIN, SIGNAL_UPDATE_RING
+from . import DOMAIN, SIGNAL_UPDATE_RING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,10 +25,13 @@ OFF_STATE = "off"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the lights for the Ring devices."""
-    cameras = hass.data[DATA_RING_STICKUP_CAMS]
+    ring = hass.data[DOMAIN][config_entry.entry_id]
+
+    devices = ring.devices()
     lights = []
 
-    for device in cameras:
+    for device in devices["stickup_cams"]:
+        print(device, device.has_capability("light"))
         if device.has_capability("light"):
             lights.append(RingLight(device))
 
@@ -65,6 +68,11 @@ class RingLight(Light):
         self.async_schedule_update_ha_state(True)
 
     @property
+    def should_poll(self):
+        """Update controlled via the hub."""
+        return False
+
+    @property
     def name(self):
         """Name of the light."""
         return f"{self._device.name} light"
@@ -75,11 +83,6 @@ class RingLight(Light):
         return self._unique_id
 
     @property
-    def should_poll(self):
-        """Update controlled via the hub."""
-        return False
-
-    @property
     def is_on(self):
         """If the switch is currently on or off."""
         return self._light_on
@@ -88,10 +91,10 @@ class RingLight(Light):
     def device_info(self):
         """Return device info."""
         return {
-            "identifiers": {(DOMAIN, self._device.id)},
+            "identifiers": {(DOMAIN, self._device.device_id)},
             "sw_version": self._device.firmware,
             "name": self._device.name,
-            "model": self._device.kind,
+            "model": self._device.model,
             "manufacturer": "Ring",
         }
 
@@ -110,7 +113,7 @@ class RingLight(Light):
         """Turn the light off."""
         self._set_light(OFF_STATE)
 
-    def update(self):
+    async def async_update(self):
         """Update current state of the light."""
         if self._no_updates_until > dt_util.utcnow():
             _LOGGER.debug("Skipping update...")

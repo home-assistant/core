@@ -1,0 +1,48 @@
+{
+    "data": {
+        "devices": [
+            {
+                "area_id": null,
+                "config_entries": [
+                    "b4f6e366c71940e590e36409e07784ff"
+                ],
+                "connections": [],
+                "id": "eab14d1f4248477aa2bb39212d59d0c5",
+                "identifiers": [
+                    [
+                        "ring",
+                        "aacdef124"
+                    ]
+                ],
+                "manufacturer": "Ring",
+                "model": "Floodlight Cam",
+                "name": "Internal",
+                "name_by_user": null,
+                "sw_version": "1.9.3",
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "b4f6e366c71940e590e36409e07784ff"
+                ],
+                "connections": [],
+                "id": "451d9befa57249a0954283257f26de14",
+                "identifiers": [
+                    [
+                        "ring",
+                        "aacdef123"
+                    ]
+                ],
+                "manufacturer": "Ring",
+                "model": "Floodlight Cam",
+                "name": "Front",
+                "name_by_user": null,
+                "sw_version": "1.9.3",
+                "via_device_id": null
+            }
+        ]
+    },
+    "key": "core.device_registry",
+    "version": 1
+}
