@@ -54,17 +54,16 @@ class SectorAlarmPanel(alarm.AlarmControlPanel):
         if self._state == "ON":
             return STATE_ALARM_ARMED_AWAY
 
-        elif self._state == "PARTIAL":
+        if self._state == "PARTIAL":
             return STATE_ALARM_ARMED_HOME
 
-        elif self._state == "OFF":
+        if self._state == "OFF":
             return STATE_ALARM_DISARMED
 
-        elif self._state == "pending":
+        if self._state == "pending":
             return STATE_ALARM_PENDING
 
-        else:
-            return None
+        return None
 
     async def async_alarm_disarm(self, code=None):
         """Turn off the alarm."""
