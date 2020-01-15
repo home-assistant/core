@@ -105,7 +105,8 @@ async def async_setup_entry(hass, config_entry):
     hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, sun.async_update_location)
 
     # Create the "sun.sun" entity for backwards compatibility:
-    LegacySunEntity(hass, sun)
+    legacy_entity = LegacySunEntity(hass, sun)
+    legacy_entity.update()
 
     return True
 
@@ -257,8 +258,6 @@ class LegacySunEntity(Entity):
         self._sun = sun
         self.hass = hass
 
-        self._update()
-
     @property
     def name(self):
         """Return the name."""
@@ -286,19 +285,18 @@ class LegacySunEntity(Entity):
             STATE_ATTR_RISING: self._sun.rising,
         }
 
-    @callback
-    def _update(self):
-        """Update the entity."""
-        self.schedule_update_ha_state(True)
-
     async def async_added_to_hass(self):
         """Register callbacks."""
-
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_DATA_UPDATE, self._update
+            self.hass, TOPIC_DATA_UPDATE, self.update
         )
 
     async def async_will_remove_fromhass(self):
         """Disconnect dispatcher listener when removed."""
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
+
+    @callback
+    def update(self):
+        """Update the entity."""
+        self.schedule_update_ha_state(True)
