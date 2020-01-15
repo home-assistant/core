@@ -131,17 +131,14 @@ class IPMAWeather(WeatherEntity):
                 _LOGGER.warning("Could not update weather observation")
 
             if new_forecast:
-                self._forecast = list(
-                    filter(lambda x: x.forecasted_hours == 24, new_forecast)
-                )
+                self._forecast = [f for f in new_forecast if f.forecasted_hours == 24]
             else:
                 _LOGGER.warning("Could not update weather forecast")
 
             _LOGGER.debug(
-                "Updated location %s, observation %s, forecast %s",
+                "Updated location %s, observation %s",
                 self._location.name,
                 self._observation,
-                self._forecast,
             )
 
     @property
