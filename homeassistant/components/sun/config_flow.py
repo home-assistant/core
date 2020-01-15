@@ -26,5 +26,4 @@ class SunFlowHandler(config_entries.ConfigFlow):
         """Handle the start of the config flow."""
         if configured_instances(self.hass):  # type: ignore
             return self.async_abort(reason="single_instance_allowed")
-
         return self.async_create_entry(title="Default", data={})
