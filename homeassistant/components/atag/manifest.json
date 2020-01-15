@@ -1,0 +1,13 @@
+{
+  "domain": "atag",
+  "name": "Atag",
+  "config_flow": true,
+  "documentation": "https://pypi.org/project/pyatag",
+  "requirements": [
+    "pyatag==0.2.13"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@MatsNL"
+  ]
+}
