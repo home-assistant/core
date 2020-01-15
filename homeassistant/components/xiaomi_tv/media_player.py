@@ -32,6 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Xiaomi TV platform."""
 
@@ -45,22 +46,34 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if not pymitv.Discover().check_ip(host):
             _LOGGER.error("Could not find Xiaomi TV with specified IP: %s", host)
         else:
+            # Initialize the Xiaomi TV.
+            xiaomi_tv = pymitv.TV(host, assume_state=assume_state)
             # Register TV with Home Assistant.
-            add_entities([XiaomiTV(host, name)])
+            add_entities([XiaomiTV(xiaomi_tv, host, name, assume_state)])
     else:
         # Otherwise, discover TVs on network.
-        add_entities(XiaomiTV(tv, DEFAULT_NAME) for tv in pymitv.Discover().scan())
+        # Initialize the Xiaomi TVs.
+        xiaomi_tvs = [
+            pymitv.TV(xiaomi_tv, assume_state=assume_state)
+            for xiaomi_tv in pymitv.Discover().scan()
+        ]
+        # Register TVs with Home Assistant.
+        add_entities(
+            [
+                XiaomiTV(xiaomi_tv, xiaomi_tv.ip_address, DEFAULT_NAME, assume_state)
+                for xiaomi_tv in xiaomi_tvs
+            ]
+        )
 
 
 class XiaomiTV(MediaPlayerDevice):
     """Represent the Xiaomi TV for Home Assistant."""
 
-    def __init__(self, ip, name, assume_state):
+    def __init__(self, tv, ip, name, assume_state):
         """Receive IP address and name to construct class."""
 
-        # Initialize the Xiaomi TV.
-        self._tv = pymitv.TV(ip, assume_state=assume_state)
         # Default name value, only to be overridden by user.
+        self._tv = tv
         self._name = name
         self._state = STATE_ON
         self._volume_level = None
