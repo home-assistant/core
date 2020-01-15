@@ -1,13 +1,12 @@
 """Test Home Assistant ruamel.yaml loader."""
 import os
 from tempfile import mkdtemp
-import pytest
 
+import pytest
 from ruamel.yaml import YAML
 
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.ruamel_yaml as util_yaml
-
 
 TEST_YAML_A = """\
 title: My Awesome Home

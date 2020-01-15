@@ -4,25 +4,25 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    PLATFORM_SCHEMA,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
-    SUPPORT_STOP,
-    SUPPORT_SET_POSITION,
     ATTR_POSITION,
     DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
+    SUPPORT_STOP,
     CoverDevice,
 )
-from homeassistant.const import CONF_NAME, CONF_DEVICE_CLASS
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from . import (
     CONF_ADS_VAR,
     CONF_ADS_VAR_POSITION,
     DATA_ADS,
-    AdsEntity,
-    STATE_KEY_STATE,
     STATE_KEY_POSITION,
+    STATE_KEY_STATE,
+    AdsEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)

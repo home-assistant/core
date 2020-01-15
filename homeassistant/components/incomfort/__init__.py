@@ -44,12 +44,13 @@ async def async_setup(hass, hass_config):
     )
 
     try:
-        heater = incomfort_data["heater"] = list(await client.heaters)[0]
+        heaters = incomfort_data["heaters"] = list(await client.heaters)
     except ClientResponseError as err:
         _LOGGER.warning("Setup failed, check your configuration, message is: %s", err)
         return False
 
-    await heater.update()
+    for heater in heaters:
+        await heater.update()
 
     for platform in ["water_heater", "binary_sensor", "sensor", "climate"]:
         hass.async_create_task(

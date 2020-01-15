@@ -1,7 +1,7 @@
 """Provide configuration end points for Groups."""
 from homeassistant.components.group import DOMAIN, GROUP_SCHEMA
-from homeassistant.const import SERVICE_RELOAD
 from homeassistant.config import GROUP_CONFIG_PATH
+from homeassistant.const import SERVICE_RELOAD
 import homeassistant.helpers.config_validation as cv
 
 from . import EditKeyBasedConfigView

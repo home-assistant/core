@@ -3,91 +3,116 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.components.hue import bridge, errors
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from tests.common import mock_coro
 
 
-async def test_bridge_setup():
+async def test_bridge_setup(hass):
     """Test a successful setup."""
-    hass = Mock()
     entry = Mock()
-    api = Mock()
+    api = Mock(initialize=mock_coro)
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
     hue_bridge = bridge.HueBridge(hass, entry, False, False)
 
-    with patch.object(bridge, "get_bridge", return_value=mock_coro(api)):
+    with patch("aiohue.Bridge", return_value=api), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as mock_forward:
         assert await hue_bridge.async_setup() is True
 
     assert hue_bridge.api is api
-    forward_entries = set(
-        c[1][1] for c in hass.config_entries.async_forward_entry_setup.mock_calls
-    )
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 3
+    assert len(mock_forward.mock_calls) == 3
+    forward_entries = set(c[1][1] for c in mock_forward.mock_calls)
     assert forward_entries == set(["light", "binary_sensor", "sensor"])
 
 
-async def test_bridge_setup_invalid_username():
+async def test_bridge_setup_invalid_username(hass):
     """Test we start config flow if username is no longer whitelisted."""
-    hass = Mock()
-    entry = Mock()
-    entry.data = {"host": "1.2.3.4", "username": "mock-username"}
-    hue_bridge = bridge.HueBridge(hass, entry, False, False)
-
-    with patch.object(bridge, "get_bridge", side_effect=errors.AuthenticationRequired):
-        assert await hue_bridge.async_setup() is False
-
-    assert len(hass.async_create_task.mock_calls) == 1
-    assert len(hass.config_entries.flow.async_init.mock_calls) == 1
-    assert hass.config_entries.flow.async_init.mock_calls[0][2]["data"] == {
-        "host": "1.2.3.4"
-    }
-
-
-async def test_bridge_setup_timeout(hass):
-    """Test we retry to connect if we cannot connect."""
-    hass = Mock()
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
     hue_bridge = bridge.HueBridge(hass, entry, False, False)
 
     with patch.object(
-        bridge, "get_bridge", side_effect=errors.CannotConnect
+        bridge, "authenticate_bridge", side_effect=errors.AuthenticationRequired
+    ), patch.object(
+        hass.config_entries.flow, "async_init", return_value=mock_coro()
+    ) as mock_init:
+        assert await hue_bridge.async_setup() is False
+
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][2]["data"] == {"host": "1.2.3.4"}
+
+
+async def test_bridge_setup_timeout(hass):
+    """Test we retry to connect if we cannot connect."""
+    entry = Mock()
+    entry.data = {"host": "1.2.3.4", "username": "mock-username"}
+    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+
+    with patch.object(
+        bridge, "authenticate_bridge", side_effect=errors.CannotConnect
     ), pytest.raises(ConfigEntryNotReady):
         await hue_bridge.async_setup()
 
 
-async def test_reset_if_entry_had_wrong_auth():
+async def test_reset_if_entry_had_wrong_auth(hass):
     """Test calling reset when the entry contained wrong auth."""
-    hass = Mock()
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
     hue_bridge = bridge.HueBridge(hass, entry, False, False)
 
-    with patch.object(bridge, "get_bridge", side_effect=errors.AuthenticationRequired):
+    with patch.object(
+        bridge, "authenticate_bridge", side_effect=errors.AuthenticationRequired
+    ), patch.object(bridge, "create_config_flow") as mock_create:
         assert await hue_bridge.async_setup() is False
 
-    assert len(hass.async_create_task.mock_calls) == 1
+    assert len(mock_create.mock_calls) == 1
 
     assert await hue_bridge.async_reset()
 
 
-async def test_reset_unloads_entry_if_setup():
+async def test_reset_unloads_entry_if_setup(hass):
     """Test calling reset while the entry has been setup."""
-    hass = Mock()
     entry = Mock()
     entry.data = {"host": "1.2.3.4", "username": "mock-username"}
     hue_bridge = bridge.HueBridge(hass, entry, False, False)
 
-    with patch.object(bridge, "get_bridge", return_value=mock_coro(Mock())):
+    with patch.object(
+        bridge, "authenticate_bridge", return_value=mock_coro(Mock())
+    ), patch("aiohue.Bridge", return_value=Mock()), patch.object(
+        hass.config_entries, "async_forward_entry_setup"
+    ) as mock_forward:
         assert await hue_bridge.async_setup() is True
 
-    assert len(hass.services.async_register.mock_calls) == 1
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 3
+    assert len(hass.services.async_services()) == 1
+    assert len(mock_forward.mock_calls) == 3
 
-    hass.config_entries.async_forward_entry_unload.return_value = mock_coro(True)
-    assert await hue_bridge.async_reset()
+    with patch.object(
+        hass.config_entries, "async_forward_entry_unload", return_value=mock_coro(True)
+    ) as mock_forward:
+        assert await hue_bridge.async_reset()
 
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 3
-    assert len(hass.services.async_remove.mock_calls) == 1
+    assert len(mock_forward.mock_calls) == 3
+    assert len(hass.services.async_services()) == 0
+
+
+async def test_handle_unauthorized(hass):
+    """Test handling an unauthorized error on update."""
+    entry = Mock()
+    entry.data = {"host": "1.2.3.4", "username": "mock-username"}
+    hue_bridge = bridge.HueBridge(hass, entry, False, False)
+
+    with patch.object(
+        bridge, "authenticate_bridge", return_value=mock_coro(Mock())
+    ), patch("aiohue.Bridge", return_value=Mock()):
+        assert await hue_bridge.async_setup() is True
+
+    assert hue_bridge.authorized is True
+
+    with patch.object(bridge, "create_config_flow") as mock_create:
+        await hue_bridge.handle_unauthorized_error()
+
+    assert hue_bridge.authorized is False
+    assert len(mock_create.mock_calls) == 1
+    assert mock_create.mock_calls[0][1][1] == "1.2.3.4"

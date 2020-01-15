@@ -9,7 +9,7 @@
         },
         "step": {
             "user": {
-                "description": "Czy chcesz skonfigurowa\u0107 Dialogflow?",
+                "description": "Na pewno chcesz skonfigurowa\u0107 Dialogflow?",
                 "title": "Konfiguracja Dialogflow Webhook"
             }
         },

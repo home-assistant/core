@@ -1,8 +1,8 @@
 """The test for the bayesian sensor platform."""
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.components.bayesian import binary_sensor as bayesian
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 

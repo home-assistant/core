@@ -1,39 +1,39 @@
 """Test config utils."""
 # pylint: disable=protected-access
 import asyncio
+from collections import OrderedDict
 import copy
 import os
 import unittest.mock as mock
-from collections import OrderedDict
 
 import asynctest
 import pytest
-from voluptuous import MultipleInvalid, Invalid
+from voluptuous import Invalid, MultipleInvalid
 import yaml
 
-from homeassistant.core import SOURCE_STORAGE, HomeAssistantError
 import homeassistant.config as config_util
-from homeassistant.loader import async_get_integration
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
-    ATTR_ASSUMED_STATE,
+    CONF_AUTH_MFA_MODULES,
+    CONF_AUTH_PROVIDERS,
+    CONF_CUSTOMIZE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_UNIT_SYSTEM,
     CONF_NAME,
-    CONF_CUSTOMIZE,
-    __version__,
-    CONF_UNIT_SYSTEM_METRIC,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_TEMPERATURE_UNIT,
-    CONF_AUTH_PROVIDERS,
-    CONF_AUTH_MFA_MODULES,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
+    __version__,
 )
+from homeassistant.core import SOURCE_STORAGE, HomeAssistantError
+import homeassistant.helpers.check_config as check_config
+from homeassistant.helpers.entity import Entity
+from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.check_config as check_config
 
 from tests.common import get_test_config_dir, patch_yaml_files
 
@@ -44,6 +44,7 @@ VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
 GROUP_PATH = os.path.join(CONFIG_DIR, config_util.GROUP_CONFIG_PATH)
 AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, config_util.AUTOMATION_CONFIG_PATH)
 SCRIPTS_PATH = os.path.join(CONFIG_DIR, config_util.SCRIPT_CONFIG_PATH)
+SCENES_PATH = os.path.join(CONFIG_DIR, config_util.SCENE_CONFIG_PATH)
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
@@ -74,6 +75,9 @@ def teardown():
 
     if os.path.isfile(SCRIPTS_PATH):
         os.remove(SCRIPTS_PATH)
+
+    if os.path.isfile(SCENES_PATH):
+        os.remove(SCENES_PATH)
 
 
 async def test_create_default_config(hass):
@@ -728,9 +732,7 @@ async def test_merge_id_schema(hass):
         integration = await async_get_integration(hass, domain)
         module = integration.get_component()
         typ, _ = config_util._identify_config_schema(module)
-        assert typ == expected_type, "{} expected {}, got {}".format(
-            domain, expected_type, typ
-        )
+        assert typ == expected_type, f"{domain} expected {expected_type}, got {typ}"
 
 
 async def test_merge_duplicate_keys(merge_log_err, hass):

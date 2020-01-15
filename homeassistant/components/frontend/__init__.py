@@ -7,7 +7,6 @@ import pathlib
 from typing import Any, Dict, Optional, Set, Tuple
 
 from aiohttp import hdrs, web, web_urldispatcher
-import hass_frontend
 import jinja2
 import voluptuous as vol
 from yarl import URL
@@ -53,6 +52,7 @@ MANIFEST_JSON = {
             "src": "/static/icons/favicon-{size}x{size}.png".format(size=size),
             "sizes": "{size}x{size}".format(size=size),
             "type": "image/png",
+            "purpose": "maskable any",
         }
         for size in (192, 384, 512, 1024)
     ],
@@ -241,6 +241,9 @@ def _frontend_root(dev_repo_path):
     """Return root path to the frontend files."""
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
+    # Keep import here so that we can import frontend without installing reqs
+    # pylint: disable=import-outside-toplevel
+    import hass_frontend
 
     return hass_frontend.where()
 

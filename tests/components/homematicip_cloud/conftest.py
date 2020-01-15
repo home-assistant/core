@@ -12,7 +12,7 @@ from homeassistant.components.homematicip_cloud import (
     const as hmipc,
     hap as hmip_hap,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeTemplate
 
@@ -20,14 +20,16 @@ from tests.common import MockConfigEntry, mock_coro
 
 
 @pytest.fixture(name="mock_connection")
-def mock_connection_fixture():
+def mock_connection_fixture() -> AsyncConnection:
     """Return a mocked connection."""
     connection = MagicMock(spec=AsyncConnection)
 
     def _rest_call_side_effect(path, body=None):
         return path, body
 
-    connection._restCall.side_effect = _rest_call_side_effect  # pylint: disable=W0212
+    connection._restCall.side_effect = (  # pylint: disable=protected-access
+        _rest_call_side_effect
+    )
     connection.api_call.return_value = mock_coro(True)
     connection.init.side_effect = mock_coro(True)
 
@@ -35,7 +37,7 @@ def mock_connection_fixture():
 
 
 @pytest.fixture(name="hmip_config_entry")
-def hmip_config_entry_fixture():
+def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
     """Create a mock config entriy for homematic ip cloud."""
     entry_data = {
         hmipc.HMIPC_HAPID: HAPID,
@@ -57,20 +59,24 @@ def hmip_config_entry_fixture():
 
 
 @pytest.fixture(name="default_mock_home")
-def default_mock_home_fixture(mock_connection):
+def default_mock_home_fixture(mock_connection) -> AsyncHome:
     """Create a fake homematic async home."""
     return HomeTemplate(connection=mock_connection).init_home().get_async_home_mock()
 
 
 @pytest.fixture(name="default_mock_hap")
 async def default_mock_hap_fixture(
-    hass: HomeAssistant, mock_connection, hmip_config_entry
-):
+    hass: HomeAssistantType, mock_connection, hmip_config_entry
+) -> hmip_hap.HomematicipHAP:
     """Create a mocked homematic access point."""
     return await get_mock_hap(hass, mock_connection, hmip_config_entry)
 
 
-async def get_mock_hap(hass: HomeAssistant, mock_connection, hmip_config_entry):
+async def get_mock_hap(
+    hass: HomeAssistantType,
+    mock_connection,
+    hmip_config_entry: config_entries.ConfigEntry,
+) -> hmip_hap.HomematicipHAP:
     """Create a mocked homematic access point."""
     hass.config.components.add(HMIPC_DOMAIN)
     hap = hmip_hap.HomematicipHAP(hass, hmip_config_entry)
@@ -81,7 +87,7 @@ async def get_mock_hap(hass: HomeAssistant, mock_connection, hmip_config_entry):
         .get_async_home_mock()
     )
     with patch.object(hap, "get_hap", return_value=mock_coro(mock_home)):
-        assert await hap.async_setup() is True
+        assert await hap.async_setup()
     mock_home.on_update(hap.async_update)
     mock_home.on_create(hap.async_create_entity)
 
@@ -93,7 +99,7 @@ async def get_mock_hap(hass: HomeAssistant, mock_connection, hmip_config_entry):
 
 
 @pytest.fixture(name="hmip_config")
-def hmip_config_fixture():
+def hmip_config_fixture() -> ConfigType:
     """Create a config for homematic ip cloud."""
 
     entry_data = {
@@ -107,15 +113,15 @@ def hmip_config_fixture():
 
 
 @pytest.fixture(name="dummy_config")
-def dummy_config_fixture():
+def dummy_config_fixture() -> ConfigType:
     """Create a dummy config."""
     return {"blabla": None}
 
 
 @pytest.fixture(name="mock_hap_with_service")
 async def mock_hap_with_service_fixture(
-    hass: HomeAssistant, default_mock_hap, dummy_config
-):
+    hass: HomeAssistantType, default_mock_hap, dummy_config
+) -> hmip_hap.HomematicipHAP:
     """Create a fake homematic access point with hass services."""
     await hmip_async_setup(hass, dummy_config)
     await hass.async_block_till_done()
@@ -124,7 +130,7 @@ async def mock_hap_with_service_fixture(
 
 
 @pytest.fixture(name="simple_mock_home")
-def simple_mock_home_fixture():
+def simple_mock_home_fixture() -> AsyncHome:
     """Return a simple AsyncHome Mock."""
     return Mock(
         spec=AsyncHome,
@@ -139,6 +145,6 @@ def simple_mock_home_fixture():
 
 
 @pytest.fixture(name="simple_mock_auth")
-def simple_mock_auth_fixture():
+def simple_mock_auth_fixture() -> AsyncAuth:
     """Return a simple AsyncAuth Mock."""
     return Mock(spec=AsyncAuth, pin=HAPPIN, create=True)

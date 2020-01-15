@@ -3,6 +3,9 @@ from typing import List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_ACTIVITY,
@@ -12,7 +15,7 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from . import DOMAIN, GeniusZone
+from . import DOMAIN, GeniusHeatingZone
 
 # GeniusHub Zones support: Off, Timer, Override/Boost, Footprint & Linked modes
 HA_HVAC_TO_GH = {HVAC_MODE_OFF: "off", HVAC_MODE_HEAT: "timer"}
@@ -42,7 +45,7 @@ async def async_setup_platform(
     )
 
 
-class GeniusClimateZone(GeniusZone, ClimateDevice):
+class GeniusClimateZone(GeniusHeatingZone, ClimateDevice):
     """Representation of a Genius Hub climate device."""
 
     def __init__(self, broker, zone) -> None:
@@ -67,6 +70,17 @@ class GeniusClimateZone(GeniusZone, ClimateDevice):
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
         return list(HA_HVAC_TO_GH)
+
+    @property
+    def hvac_action(self) -> Optional[str]:
+        """Return the current running hvac operation if supported."""
+        if "_state" in self._zone.data:  # only for v3 API
+            if not self._zone.data["_state"].get("bIsActive"):
+                return CURRENT_HVAC_OFF
+            if self._zone.data["_state"].get("bOutRequestHeat"):
+                return CURRENT_HVAC_HEAT
+            return CURRENT_HVAC_IDLE
+        return None
 
     @property
     def preset_mode(self) -> Optional[str]:

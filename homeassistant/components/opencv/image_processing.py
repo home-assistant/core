@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import numpy
 import requests
 import voluptuous as vol
 
@@ -14,6 +15,15 @@ from homeassistant.components.image_processing import (
 )
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
+
+try:
+    # Verify that the OpenCV python package is pre-installed
+    import cv2
+
+    CV2_IMPORTED = True
+except ImportError:
+    CV2_IMPORTED = False
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,11 +96,7 @@ def _get_default_classifier(dest_path):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenCV image processing platform."""
-    try:
-        # Verify that the OpenCV python package is pre-installed
-        # pylint: disable=unused-import,unused-variable
-        import cv2  # noqa
-    except ImportError:
+    if not CV2_IMPORTED:
         _LOGGER.error(
             "No OpenCV library found! Install or compile for your system "
             "following instructions here: http://opencv.org/releases.html"
@@ -154,9 +160,6 @@ class OpenCVImageProcessor(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        import cv2  # pylint: disable=import-error
-        import numpy
-
         cv_image = cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
         for name, classifier in self._classifiers.items():

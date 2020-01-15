@@ -1,16 +1,17 @@
 """Test Home Assistant yaml loader."""
 import io
+import logging
 import os
 import unittest
-import logging
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.yaml import loader as yaml_loader
-import homeassistant.util.yaml as yaml
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
+from homeassistant.exceptions import HomeAssistantError
+import homeassistant.util.yaml as yaml
+from homeassistant.util.yaml import loader as yaml_loader
+
 from tests.common import get_test_config_dir, patch_yaml_files
 
 
@@ -39,7 +40,7 @@ def test_simple_dict():
 
 
 def test_unhashable_key():
-    """Test an unhasable key."""
+    """Test an unhashable key."""
     files = {YAML_CONFIG_FILE: "message:\n  {{ states.state }}"}
     with pytest.raises(HomeAssistantError), patch_yaml_files(files):
         load_yaml_config_file(YAML_CONFIG_FILE)
@@ -391,7 +392,7 @@ class TestSecrets(unittest.TestCase):
         with pytest.raises(HomeAssistantError):
             load_yaml(
                 os.path.join(self._sub_folder_path, "sub.yaml"),
-                "http:\n" "  api_password: !secret test",
+                "http:\n  api_password: !secret test",
             )
 
     def test_secrets_keyring(self):
@@ -430,9 +431,9 @@ class TestSecrets(unittest.TestCase):
 
     def test_secrets_are_not_dict(self):
         """Did secrets handle non-dict file."""
-        FILES[self._secret_path] = (
-            "- http_pw: pwhttp\n" "  comp1_un: un1\n" "  comp1_pw: pw1\n"
-        )
+        FILES[
+            self._secret_path
+        ] = "- http_pw: pwhttp\n  comp1_un: un1\n  comp1_pw: pw1\n"
         yaml.clear_secret_cache()
         with pytest.raises(HomeAssistantError):
             load_yaml(

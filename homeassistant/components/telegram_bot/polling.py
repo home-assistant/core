@@ -2,8 +2,8 @@
 import logging
 
 from telegram import Update
-from telegram.error import TelegramError, TimedOut, NetworkError, RetryAfter
-from telegram.ext import Updater, Handler
+from telegram.error import NetworkError, RetryAfter, TelegramError, TimedOut
+from telegram.ext import Handler, Updater
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
@@ -55,7 +55,7 @@ def message_handler(handler):
             """Initialize the messages handler instance."""
             super().__init__(handler)
 
-        def check_update(self, update):  # pylint: disable=no-self-use
+        def check_update(self, update):
             """Check is update valid."""
             return isinstance(update, Update)
 

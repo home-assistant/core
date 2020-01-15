@@ -22,9 +22,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     client = hass.data[DOMAIN]["client"]
-    heater = hass.data[DOMAIN]["heater"]
+    heaters = hass.data[DOMAIN]["heaters"]
 
-    async_add_entities([IncomfortWaterHeater(client, heater)])
+    async_add_entities([IncomfortWaterHeater(client, h) for h in heaters])
 
 
 class IncomfortWaterHeater(IncomfortEntity, WaterHeaterDevice):

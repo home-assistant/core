@@ -1,24 +1,24 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
+from datetime import datetime, timedelta
 import logging
 import socket
 import ssl
-from datetime import datetime, timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    CONF_NAME,
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, DEFAULT_NAME, DEFAULT_PORT
+from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 from .helper import get_cert
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,6 +70,7 @@ class SSLCertificate(Entity):
         self._name = sensor_name
         self._state = None
         self._available = False
+        self._valid = False
 
     @property
     def name(self):
@@ -122,16 +123,17 @@ class SSLCertificate(Entity):
         except socket.gaierror:
             _LOGGER.error("Cannot resolve hostname: %s", self.server_name)
             self._available = False
+            self._valid = False
             return
         except socket.timeout:
             _LOGGER.error("Connection timeout with server: %s", self.server_name)
             self._available = False
+            self._valid = False
             return
-        except OSError:
-            _LOGGER.error(
-                "Cannot fetch certificate from %s", self.server_name, exc_info=1
-            )
-            self._available = False
+        except (ssl.CertificateError, ssl.SSLError):
+            self._available = True
+            self._state = 0
+            self._valid = False
             return
 
         ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
@@ -139,3 +141,11 @@ class SSLCertificate(Entity):
         expiry = timestamp - datetime.today()
         self._available = True
         self._state = expiry.days
+        self._valid = True
+
+    @property
+    def device_state_attributes(self):
+        """Return additional sensor state attributes."""
+        attr = {"is_valid": self._valid}
+
+        return attr

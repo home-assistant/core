@@ -8,6 +8,11 @@
         "create_entry": {
             "default": "Vellykket autentisering med Somfy."
         },
+        "step": {
+            "pick_implementation": {
+                "title": "Velg autentiseringsmetode"
+            }
+        },
         "title": "Somfy"
     }
 }

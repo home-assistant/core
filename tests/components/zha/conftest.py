@@ -1,13 +1,21 @@
 """Test configuration for the ZHA component."""
+from unittest import mock
 from unittest.mock import patch
+
 import pytest
+import zigpy
+from zigpy.application import ControllerApplication
+
 from homeassistant import config_entries
-from homeassistant.components.zha.core.const import DOMAIN, DATA_ZHA, COMPONENTS
-from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
+from homeassistant.components.zha.core.const import COMPONENTS, DATA_ZHA, DOMAIN
 from homeassistant.components.zha.core.gateway import ZHAGateway
-from homeassistant.components.zha.core.registries import establish_device_mappings
-from .common import async_setup_entry
 from homeassistant.components.zha.core.store import async_get_registry
+from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
+
+from .common import async_setup_entry
+
+FIXTURE_GRP_ID = 0x1001
+FIXTURE_GRP_NAME = "fixture group"
 
 
 @pytest.fixture(name="config_entry")
@@ -32,7 +40,6 @@ async def zha_gateway_fixture(hass, config_entry):
     Create a ZHAGateway object that can be used to interact with as if we
     had a real zigbee network running.
     """
-    establish_device_mappings()
     for component in COMPONENTS:
         hass.data[DATA_ZHA][component] = hass.data[DATA_ZHA].get(component, {})
     zha_storage = await async_get_registry(hass)
@@ -40,6 +47,11 @@ async def zha_gateway_fixture(hass, config_entry):
     gateway = ZHAGateway(hass, {}, config_entry)
     gateway.zha_storage = zha_storage
     gateway.ha_device_registry = dev_reg
+    gateway.application_controller = mock.MagicMock(spec_set=ControllerApplication)
+    groups = zigpy.group.Groups(gateway.application_controller)
+    groups.listener_event = mock.MagicMock()
+    groups.add_group(FIXTURE_GRP_ID, FIXTURE_GRP_NAME, suppress_event=True)
+    gateway.application_controller.groups = groups
     return gateway
 
 

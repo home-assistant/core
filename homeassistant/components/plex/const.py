@@ -9,18 +9,21 @@ DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
 DISPATCHERS = "dispatchers"
-PLATFORMS = ["media_player", "sensor"]
-REFRESH_LISTENERS = "refresh_listeners"
+PLATFORMS = frozenset(["media_player", "sensor"])
+PLATFORMS_COMPLETED = "platforms_completed"
 SERVERS = "servers"
+WEBSOCKETS = "websockets"
 
 PLEX_CONFIG_FILE = "plex.conf"
 PLEX_MEDIA_PLAYER_OPTIONS = "plex_mp_options"
 PLEX_SERVER_CONFIG = "server_config"
 
-PLEX_NEW_MP_SIGNAL = "plex_new_mp_signal"
+PLEX_NEW_MP_SIGNAL = "plex_new_mp_signal.{}"
 PLEX_UPDATE_MEDIA_PLAYER_SIGNAL = "plex_update_mp_signal.{}"
-PLEX_UPDATE_SENSOR_SIGNAL = "plex_update_sensor_signal"
+PLEX_UPDATE_PLATFORMS_SIGNAL = "plex_update_platforms_signal.{}"
+PLEX_UPDATE_SENSOR_SIGNAL = "plex_update_sensor_signal.{}"
 
+CONF_CLIENT_IDENTIFIER = "client_id"
 CONF_SERVER = "server"
 CONF_SERVER_IDENTIFIER = "server_id"
 CONF_USE_EPISODE_ART = "use_episode_art"

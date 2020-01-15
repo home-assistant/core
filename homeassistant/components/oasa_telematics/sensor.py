@@ -1,13 +1,14 @@
 """Support for OASA Telematics from telematics.oasa.gr."""
-import logging
 from datetime import timedelta
+import logging
 from operator import itemgetter
 
+import oasatelematics
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 
@@ -128,8 +129,6 @@ class OASATelematicsData:
 
     def __init__(self, stop_id, route_id):
         """Initialize the data object."""
-        import oasatelematics
-
         self.stop_id = stop_id
         self.route_id = route_id
         self.info = self.empty_result()

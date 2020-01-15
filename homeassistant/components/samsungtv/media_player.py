@@ -1,12 +1,12 @@
 """Support for interface with an Samsung TV."""
 import asyncio
 from datetime import timedelta
-import logging
-import socket
 
+from samsungctl import Remote as SamsungRemote, exceptions as samsung_exceptions
 import voluptuous as vol
+from websocket import WebSocketException
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -22,24 +22,19 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
+    CONF_ID,
+    CONF_METHOD,
     CONF_PORT,
-    CONF_TIMEOUT,
     STATE_OFF,
     STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "Samsung TV Remote"
-DEFAULT_PORT = 55000
-DEFAULT_TIMEOUT = 1
+from .const import CONF_MANUFACTURER, CONF_MODEL, CONF_ON_ACTION, DOMAIN, LOGGER
 
 KEY_PRESS_TIMEOUT = 1.2
-KNOWN_DEVICES_KEY = "samsungtv_known_devices"
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
 
 SUPPORT_SAMSUNGTV = (
@@ -54,74 +49,33 @@ SUPPORT_SAMSUNGTV = (
     | SUPPORT_PLAY_MEDIA
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_MAC): cv.string,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, add_entities, discovery_info=None
+):  # pragma: no cover
     """Set up the Samsung TV platform."""
-    known_devices = hass.data.get(KNOWN_DEVICES_KEY)
-    if known_devices is None:
-        known_devices = set()
-        hass.data[KNOWN_DEVICES_KEY] = known_devices
+    pass
 
-    uuid = None
-    # Is this a manual configuration?
-    if config.get(CONF_HOST) is not None:
-        host = config.get(CONF_HOST)
-        port = config.get(CONF_PORT)
-        name = config.get(CONF_NAME)
-        mac = config.get(CONF_MAC)
-        timeout = config.get(CONF_TIMEOUT)
-    elif discovery_info is not None:
-        tv_name = discovery_info.get("name")
-        model = discovery_info.get("model_name")
-        host = discovery_info.get("host")
-        name = f"{tv_name} ({model})"
-        port = DEFAULT_PORT
-        timeout = DEFAULT_TIMEOUT
-        mac = None
-        udn = discovery_info.get("udn")
-        if udn and udn.startswith("uuid:"):
-            uuid = udn[len("uuid:") :]
-    else:
-        _LOGGER.warning("Cannot determine device")
-        return
 
-    # Only add a device once, so discovered devices do not override manual
-    # config.
-    ip_addr = socket.gethostbyname(host)
-    if ip_addr not in known_devices:
-        known_devices.add(ip_addr)
-        add_entities([SamsungTVDevice(host, port, name, timeout, mac, uuid)])
-        _LOGGER.info("Samsung TV %s:%d added as '%s'", host, port, name)
-    else:
-        _LOGGER.info("Ignoring duplicate Samsung TV %s:%d", host, port)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Samsung TV from a config entry."""
+    turn_on_action = config_entry.data.get(CONF_ON_ACTION)
+    on_script = Script(hass, turn_on_action) if turn_on_action else None
+    async_add_entities([SamsungTVDevice(config_entry, on_script)])
 
 
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, host, port, name, timeout, mac, uuid):
+    def __init__(self, config_entry, on_script):
         """Initialize the Samsung device."""
-        from samsungctl import exceptions
-        from samsungctl import Remote
-        import wakeonlan
-
-        # Save a reference to the imported classes
-        self._exceptions_class = exceptions
-        self._remote_class = Remote
-        self._name = name
-        self._mac = mac
-        self._uuid = uuid
-        self._wol = wakeonlan
+        self._config_entry = config_entry
+        self._name = config_entry.title
+        self._uuid = config_entry.data.get(CONF_ID)
+        self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
+        self._model = config_entry.data.get(CONF_MODEL)
+        self._on_script = on_script
+        self._update_listener = None
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -134,17 +88,13 @@ class SamsungTVDevice(MediaPlayerDevice):
         # Generate a configuration for the Samsung library
         self._config = {
             "name": "HomeAssistant",
-            "description": name,
+            "description": self._name,
             "id": "ha.component.samsung",
-            "port": port,
-            "host": host,
-            "timeout": timeout,
+            "method": config_entry.data[CONF_METHOD],
+            "port": config_entry.data.get(CONF_PORT),
+            "host": config_entry.data[CONF_HOST],
+            "timeout": 1,
         }
-
-        if self._config["port"] in (8001, 8002):
-            self._config["method"] = "websocket"
-        else:
-            self._config["method"] = "legacy"
 
     def update(self):
         """Update state of device."""
@@ -154,14 +104,14 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
-            self._remote = self._remote_class(self._config)
+            self._remote = SamsungRemote(self._config.copy())
 
         return self._remote
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
         if self._power_off_in_progress() and key not in ("KEY_POWER", "KEY_POWEROFF"):
-            _LOGGER.info("TV is powering off, not sending command: %s", key)
+            LOGGER.info("TV is powering off, not sending command: %s", key)
             return
         try:
             # recreate connection if connection was dead
@@ -170,20 +120,23 @@ class SamsungTVDevice(MediaPlayerDevice):
                 try:
                     self.get_remote().control(key)
                     break
-                except (self._exceptions_class.ConnectionClosed, BrokenPipeError):
+                except (
+                    samsung_exceptions.ConnectionClosed,
+                    BrokenPipeError,
+                    WebSocketException,
+                ):
                     # BrokenPipe can occur when the commands is sent to fast
+                    # WebSocketException can occur when timed out
                     self._remote = None
             self._state = STATE_ON
-        except (
-            self._exceptions_class.UnhandledResponse,
-            self._exceptions_class.AccessDenied,
-        ):
+        except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
             # We got a response so it's on.
             self._state = STATE_ON
             self._remote = None
-            _LOGGER.debug("Failed sending command %s", key, exc_info=True)
+            LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return
         except OSError:
+            # Different reasons, e.g. hostname not resolveable
             self._state = STATE_OFF
             self._remote = None
         if self._power_off_in_progress():
@@ -211,6 +164,16 @@ class SamsungTVDevice(MediaPlayerDevice):
         return self._state
 
     @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "manufacturer": self._manufacturer,
+            "model": self._model,
+        }
+
+    @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
@@ -223,9 +186,14 @@ class SamsungTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._mac:
+        if self._on_script:
             return SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
         return SUPPORT_SAMSUNGTV
+
+    @property
+    def device_class(self):
+        """Set the device class to TV."""
+        return DEVICE_CLASS_TV
 
     def turn_off(self):
         """Turn off media player."""
@@ -240,7 +208,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             self.get_remote().close()
             self._remote = None
         except OSError:
-            _LOGGER.debug("Could not establish connection.")
+            LOGGER.debug("Could not establish connection.")
 
     def volume_up(self):
         """Volume up the media player."""
@@ -273,41 +241,39 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send next track command."""
-        self.send_key("KEY_FF")
+        self.send_key("KEY_CHUP")
 
     def media_previous_track(self):
         """Send the previous track command."""
-        self.send_key("KEY_REWIND")
+        self.send_key("KEY_CHDOWN")
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Support changing a channel."""
         if media_type != MEDIA_TYPE_CHANNEL:
-            _LOGGER.error("Unsupported media type")
+            LOGGER.error("Unsupported media type")
             return
 
         # media_id should only be a channel number
         try:
             cv.positive_int(media_id)
         except vol.Invalid:
-            _LOGGER.error("Media ID must be positive integer")
+            LOGGER.error("Media ID must be positive integer")
             return
 
         for digit in media_id:
-            await self.hass.async_add_job(self.send_key, "KEY_" + digit)
+            await self.hass.async_add_executor_job(self.send_key, f"KEY_{digit}")
             await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
-        await self.hass.async_add_job(self.send_key, "KEY_ENTER")
+        await self.hass.async_add_executor_job(self.send_key, "KEY_ENTER")
 
-    def turn_on(self):
+    async def async_turn_on(self):
         """Turn the media player on."""
-        if self._mac:
-            self._wol.send_magic_packet(self._mac)
-        else:
-            self.send_key("KEY_POWERON")
+        if self._on_script:
+            await self._on_script.async_run()
 
-    async def async_select_source(self, source):
+    def select_source(self, source):
         """Select input source."""
         if source not in SOURCES:
-            _LOGGER.error("Unsupported source")
+            LOGGER.error("Unsupported source")
             return
 
-        await self.hass.async_add_job(self.send_key, SOURCES[source])
+        self.send_key(SOURCES[source])

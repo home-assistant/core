@@ -20,12 +20,11 @@ from homeassistant.util import ssl as ssl_util
 
 from .auth import setup_auth
 from .ban import setup_bans
-from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER, KEY_REAL_IP  # noqa
+from .const import KEY_AUTHENTICATED, KEY_HASS, KEY_HASS_USER, KEY_REAL_IP  # noqa: F401
 from .cors import setup_cors
 from .real_ip import setup_real_ip
 from .static import CACHE_HEADERS, CachingStaticResource
-from .view import HomeAssistantView  # noqa
-
+from .view import HomeAssistantView  # noqa: F401
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -54,6 +53,8 @@ DEFAULT_DEVELOPMENT = "0"
 # To be able to load custom cards.
 DEFAULT_CORS = "https://cast.home-assistant.io"
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
+
+MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
 
 
 HTTP_SCHEMA = vol.Schema(
@@ -189,7 +190,9 @@ class HomeAssistantHTTP:
         ssl_profile,
     ):
         """Initialize the HTTP Home Assistant server."""
-        app = self.app = web.Application(middlewares=[])
+        app = self.app = web.Application(
+            middlewares=[], client_max_size=MAX_CLIENT_SIZE
+        )
         app[KEY_HASS] = hass
 
         # This order matters

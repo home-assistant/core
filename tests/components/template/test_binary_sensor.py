@@ -3,24 +3,24 @@ from datetime import timedelta
 import unittest
 from unittest import mock
 
-from homeassistant.const import (
-    MATCH_ALL,
-    EVENT_HOMEASSISTANT_START,
-    STATE_UNAVAILABLE,
-    STATE_ON,
-    STATE_OFF,
-)
 from homeassistant import setup
 from homeassistant.components.template import binary_sensor as template
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_hlpr
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    get_test_home_assistant,
     assert_setup_component,
     async_fire_time_changed,
+    get_test_home_assistant,
 )
 
 
@@ -576,22 +576,22 @@ async def test_no_update_template_match_all(hass, caplog):
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 5
     assert (
-        "Template binary sensor all_state has no entity ids "
+        "Template binary sensor 'all_state' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the value template"
     ) in caplog.text
     assert (
-        "Template binary sensor all_icon has no entity ids "
+        "Template binary sensor 'all_icon' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the icon template"
     ) in caplog.text
     assert (
-        "Template binary sensor all_entity_picture has no entity ids "
+        "Template binary sensor 'all_entity_picture' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the entity_picture template"
     ) in caplog.text
     assert (
-        "Template binary sensor all_attribute has no entity ids "
+        "Template binary sensor 'all_attribute' has no entity ids "
         "configured to track nor were we able to extract the entities to "
         "track from the test_attribute template"
     ) in caplog.text

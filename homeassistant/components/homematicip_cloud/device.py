@@ -1,20 +1,23 @@
 """Generic device for the HomematicIP Cloud component."""
 import logging
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
 
-from homeassistant.components import homematicip_cloud
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import Entity
 
+from .const import DOMAIN as HMIPC_DOMAIN
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MODEL_TYPE = "model_type"
+ATTR_LOW_BATTERY = "low_battery"
+ATTR_CONFIG_PENDING = "config_pending"
+ATTR_DUTY_CYCLE_REACHED = "duty_cycle_reached"
 ATTR_ID = "id"
 ATTR_IS_GROUP = "is_group"
 # RSSI HAP -> Device
@@ -26,27 +29,40 @@ ATTR_GROUP_MEMBER_UNREACHABLE = "group_member_unreachable"
 ATTR_DEVICE_OVERHEATED = "device_overheated"
 ATTR_DEVICE_OVERLOADED = "device_overloaded"
 ATTR_DEVICE_UNTERVOLTAGE = "device_undervoltage"
+ATTR_EVENT_DELAY = "event_delay"
 
 DEVICE_ATTRIBUTE_ICONS = {
     "lowBat": "mdi:battery-outline",
-    "sabotage": "mdi:alert",
+    "sabotage": "mdi:shield-alert",
+    "dutyCycle": "mdi:alert",
     "deviceOverheated": "mdi:alert",
     "deviceOverloaded": "mdi:alert",
     "deviceUndervoltage": "mdi:alert",
+    "configPending": "mdi:alert-circle",
 }
 
 DEVICE_ATTRIBUTES = {
     "modelType": ATTR_MODEL_TYPE,
     "sabotage": ATTR_SABOTAGE,
+    "dutyCycle": ATTR_DUTY_CYCLE_REACHED,
     "rssiDeviceValue": ATTR_RSSI_DEVICE,
     "rssiPeerValue": ATTR_RSSI_PEER,
     "deviceOverheated": ATTR_DEVICE_OVERHEATED,
     "deviceOverloaded": ATTR_DEVICE_OVERLOADED,
     "deviceUndervoltage": ATTR_DEVICE_UNTERVOLTAGE,
+    "configPending": ATTR_CONFIG_PENDING,
+    "eventDelay": ATTR_EVENT_DELAY,
     "id": ATTR_ID,
 }
 
-GROUP_ATTRIBUTES = {"modelType": ATTR_MODEL_TYPE}
+GROUP_ATTRIBUTES = {
+    "modelType": ATTR_MODEL_TYPE,
+    "lowBat": ATTR_LOW_BATTERY,
+    "sabotage": ATTR_SABOTAGE,
+    "dutyCycle": ATTR_DUTY_CYCLE_REACHED,
+    "configPending": ATTR_CONFIG_PENDING,
+    "unreach": ATTR_GROUP_MEMBER_UNREACHABLE,
+}
 
 
 class HomematicipGenericDevice(Entity):
@@ -63,31 +79,31 @@ class HomematicipGenericDevice(Entity):
         _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, Any]:
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
             return {
                 "identifiers": {
                     # Serial numbers of Homematic IP device
-                    (homematicip_cloud.DOMAIN, self._device.id)
+                    (HMIPC_DOMAIN, self._device.id)
                 },
                 "name": self._device.label,
                 "manufacturer": self._device.oem,
                 "model": self._device.modelType,
                 "sw_version": self._device.firmwareVersion,
-                "via_device": (homematicip_cloud.DOMAIN, self._device.homeId),
+                "via_device": (HMIPC_DOMAIN, self._device.homeId),
             }
         return None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._hap.hmip_device_by_entity_id[self.entity_id] = self._device
         self._device.on_update(self._async_device_changed)
         self._device.on_remove(self._async_device_removed)
 
     @callback
-    def _async_device_changed(self, *args, **kwargs):
+    def _async_device_changed(self, *args, **kwargs) -> None:
         """Handle device state changes."""
         # Don't update disabled entities
         if self.enabled:
@@ -136,7 +152,7 @@ class HomematicipGenericDevice(Entity):
                     entity_registry.async_remove(entity_id)
 
     @callback
-    def _async_device_removed(self, *args, **kwargs):
+    def _async_device_removed(self, *args, **kwargs) -> None:
         """Handle hmip device removal."""
         # Set marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = True
@@ -177,7 +193,7 @@ class HomematicipGenericDevice(Entity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the generic device."""
         state_attr = {}
 

@@ -24,7 +24,7 @@ CONF_HOST_PASSWORD = "host_password"
 DOMAIN = "smappee"
 DATA_SMAPPEE = "SMAPPEE"
 
-_SENSOR_REGEX = re.compile(r"(?P<key>([A-Za-z]+))\=" + r"(?P<value>([0-9\.]+))")
+_SENSOR_REGEX = re.compile(r"(?P<key>([A-Za-z]+))\=(?P<value>([0-9\.]+))")
 
 CONFIG_SCHEMA = vol.Schema(
     {

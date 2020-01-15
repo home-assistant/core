@@ -3,10 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.lock import DOMAIN, LockDevice
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
 from . import ZWaveDeviceEntity, const
 
 _LOGGER = logging.getLogger(__name__)
@@ -269,7 +270,7 @@ class ZwaveLock(ZWaveDeviceEntity, LockDevice):
                 workaround = DEVICE_MAPPINGS[specific_sensor_key]
                 if workaround & WORKAROUND_V2BTZE:
                     self._v2btze = 1
-                    _LOGGER.debug("Polycontrol Danalock v2 BTZE " "workaround enabled")
+                    _LOGGER.debug("Polycontrol Danalock v2 BTZE workaround enabled")
                 if workaround & WORKAROUND_DEVICE_STATE:
                     self._state_workaround = True
                     _LOGGER.debug("Notification device state workaround enabled")
@@ -298,7 +299,7 @@ class ZwaveLock(ZWaveDeviceEntity, LockDevice):
                 ):
                     self._state = LOCK_STATUS.get(str(notification_data))
                     _LOGGER.debug(
-                        "Lock state set from Access Control value and is %s, " "get=%s",
+                        "Lock state set from Access Control value and is %s, get=%s",
                         str(notification_data),
                         self.state,
                     )

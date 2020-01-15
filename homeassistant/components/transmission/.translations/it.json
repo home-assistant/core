@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
+            "already_configured": "L'host \u00e8 gi\u00e0 configurato.",
             "one_instance_allowed": "\u00c8 necessaria solo una singola istanza."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi all'host",
+            "name_exists": "Il nome \u00e8 gi\u00e0 esistente",
             "wrong_credentials": "Nome utente o password non validi"
         },
         "step": {
@@ -33,7 +35,8 @@
                 "data": {
                     "scan_interval": "Frequenza di aggiornamento"
                 },
-                "description": "Configurare le opzioni per Trasmissione"
+                "description": "Configurare le opzioni per Trasmissione",
+                "title": "Configurare le opzioni per Transmission"
             }
         }
     }

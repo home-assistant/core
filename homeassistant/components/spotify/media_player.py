@@ -37,7 +37,7 @@ CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 
 CONFIGURATOR_DESCRIPTION = (
-    "To link your Spotify account, " "click the link, login, and authorize:"
+    "To link your Spotify account, click the link, login, and authorize:"
 )
 CONFIGURATOR_LINK_NAME = "Link Spotify account"
 CONFIGURATOR_SUBMIT_CAPTION = "I authorized successfully"
@@ -307,7 +307,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
     def play_playlist(self, media_id, random_song):
         """Play random music in a playlist."""
-        if not media_id.startswith("spotify:playlist:"):
+        if not media_id.startswith("spotify:"):
             _LOGGER.error("media id must be spotify playlist uri")
             return
         kwargs = {"context_uri": media_id}

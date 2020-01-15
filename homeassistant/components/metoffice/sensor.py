@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+import datapoint as dp
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -92,8 +93,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Met Office sensor platform."""
-    import datapoint as dp
-
     api_key = config.get(CONF_API_KEY)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -193,8 +192,6 @@ class MetOfficeCurrentData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Datapoint."""
-        import datapoint as dp
-
         try:
             forecast = self._datapoint.get_forecast_for_site(self._site.id, "3hourly")
             self.data = forecast.now()
