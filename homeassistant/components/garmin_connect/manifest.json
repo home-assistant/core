@@ -1,7 +1,7 @@
 {
   "domain": "garmin_connect",
   "name": "Garmin Connect",
-  "documentation": "https://github.com/cyberjunky/home-assistant-garmin_connect/",
+  "documentation": "",
   "dependencies": [],
   "requirements": ["garminconnect==0.1.4"],
   "codeowners": ["@cyberjunky"]
