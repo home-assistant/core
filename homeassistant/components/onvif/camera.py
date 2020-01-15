@@ -19,7 +19,6 @@ import voluptuous as vol
 from zeep.exceptions import Fault
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.components.camera.const import DOMAIN
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, DATA_FFMPEG
 from homeassistant.const import (
     ATTR_ENTITY_ID,
