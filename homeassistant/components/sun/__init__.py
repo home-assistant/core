@@ -291,7 +291,7 @@ class LegacySunEntity(Entity):
         """Update the entity."""
         self.schedule_update_ha_state(True)
 
-    async def async_added_tohass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
 
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
