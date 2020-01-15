@@ -10,6 +10,10 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.sun import (
@@ -19,13 +23,16 @@ from homeassistant.helpers.sun import (
 from homeassistant.util import dt as dt_util
 
 from .config_flow import configured_instances
-from .const import DOMAIN
+from .const import DOMAIN, TOPIC_DATA_UPDATE
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
-ENTITY_ID = "sun.sun"
+LEGACY_ENTITY_ID = "sun.sun"
+
+# 0.8333 is the same value as astral uses
+HORIZON_ELEVATION = -0.833
 
 STATE_ABOVE_HORIZON = "above_horizon"
 STATE_BELOW_HORIZON = "below_horizon"
@@ -93,64 +100,32 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up the sun integration as a config entry."""
-    Sun(hass)
+    sun = hass.data[DOMAIN] = Sun(hass)
+    sun.async_update_location()
+    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, sun.async_update_location)
+
+    # Create the "sun.sun" entity for backwards compatibility:
+    LegacySunEntity(hass, sun)
 
     return True
 
 
-class Sun(Entity):
-    """Representation of the Sun."""
-
-    entity_id = ENTITY_ID
+class Sun:
+    """A representation of the sun."""
 
     def __init__(self, hass):
-        """Initialize the sun."""
+        """Initialize."""
+        self._next_change = None
         self.hass = hass
         self.location = None
-        self._state = self.next_rising = self.next_setting = None
         self.next_dawn = self.next_dusk = None
         self.next_midnight = self.next_noon = None
-        self.solar_elevation = self.solar_azimuth = None
+        self.next_rising = self.next_setting = None
         self.rising = self.phase = None
-        self._next_change = None
+        self.solar_elevation = self.solar_azimuth = None
 
-        def update_location(event):
-            self.location = get_astral_location(self.hass)
-            self.update_events(dt_util.utcnow())
-
-        update_location(None)
-        self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_location)
-
-    @property
-    def name(self):
-        """Return the name."""
-        return "Sun"
-
-    @property
-    def state(self):
-        """Return the state of the sun."""
-        # 0.8333 is the same value as astral uses
-        if self.solar_elevation > -0.833:
-            return STATE_ABOVE_HORIZON
-
-        return STATE_BELOW_HORIZON
-
-    @property
-    def state_attributes(self):
-        """Return the state attributes of the sun."""
-        return {
-            STATE_ATTR_NEXT_DAWN: self.next_dawn.isoformat(),
-            STATE_ATTR_NEXT_DUSK: self.next_dusk.isoformat(),
-            STATE_ATTR_NEXT_MIDNIGHT: self.next_midnight.isoformat(),
-            STATE_ATTR_NEXT_NOON: self.next_noon.isoformat(),
-            STATE_ATTR_NEXT_RISING: self.next_rising.isoformat(),
-            STATE_ATTR_NEXT_SETTING: self.next_setting.isoformat(),
-            STATE_ATTR_ELEVATION: self.solar_elevation,
-            STATE_ATTR_AZIMUTH: self.solar_azimuth,
-            STATE_ATTR_RISING: self.rising,
-        }
-
-    def _check_event(self, utc_point_in_time, event, before):
+    def _get_next_astral_event(self, utc_point_in_time, event, before):
+        """Return the next datetime of a particular astral event."""
         next_utc = get_location_astral_event_next(
             self.location, event, utc_point_in_time
         )
@@ -160,37 +135,45 @@ class Sun(Entity):
         return next_utc
 
     @callback
-    def update_events(self, utc_point_in_time):
+    def _update_events(self, utc_point_in_time):
         """Update the attributes containing solar events."""
         self._next_change = utc_point_in_time + timedelta(days=400)
 
         # Work our way around the solar cycle, figure out the next
         # phase. Some of these are stored.
         self.location.solar_depression = "astronomical"
-        self._check_event(utc_point_in_time, "dawn", PHASE_NIGHT)
+        self._get_next_astral_event(utc_point_in_time, "dawn", PHASE_NIGHT)
         self.location.solar_depression = "nautical"
-        self._check_event(utc_point_in_time, "dawn", PHASE_ASTRONOMICAL_TWILIGHT)
+        self._get_next_astral_event(
+            utc_point_in_time, "dawn", PHASE_ASTRONOMICAL_TWILIGHT
+        )
         self.location.solar_depression = "civil"
-        self.next_dawn = self._check_event(
+        self.next_dawn = self._get_next_astral_event(
             utc_point_in_time, "dawn", PHASE_NAUTICAL_TWILIGHT
         )
-        self.next_rising = self._check_event(
+        self.next_rising = self._get_next_astral_event(
             utc_point_in_time, SUN_EVENT_SUNRISE, PHASE_TWILIGHT
         )
         self.location.solar_depression = -10
-        self._check_event(utc_point_in_time, "dawn", PHASE_SMALL_DAY)
-        self.next_noon = self._check_event(utc_point_in_time, "solar_noon", None)
-        self._check_event(utc_point_in_time, "dusk", PHASE_DAY)
-        self.next_setting = self._check_event(
+        self._get_next_astral_event(utc_point_in_time, "dawn", PHASE_SMALL_DAY)
+        self.next_noon = self._get_next_astral_event(
+            utc_point_in_time, "solar_noon", None
+        )
+        self._get_next_astral_event(utc_point_in_time, "dusk", PHASE_DAY)
+        self.next_setting = self._get_next_astral_event(
             utc_point_in_time, SUN_EVENT_SUNSET, PHASE_SMALL_DAY
         )
         self.location.solar_depression = "civil"
-        self.next_dusk = self._check_event(utc_point_in_time, "dusk", PHASE_TWILIGHT)
+        self.next_dusk = self._get_next_astral_event(
+            utc_point_in_time, "dusk", PHASE_TWILIGHT
+        )
         self.location.solar_depression = "nautical"
-        self._check_event(utc_point_in_time, "dusk", PHASE_NAUTICAL_TWILIGHT)
+        self._get_next_astral_event(utc_point_in_time, "dusk", PHASE_NAUTICAL_TWILIGHT)
         self.location.solar_depression = "astronomical"
-        self._check_event(utc_point_in_time, "dusk", PHASE_ASTRONOMICAL_TWILIGHT)
-        self.next_midnight = self._check_event(
+        self._get_next_astral_event(
+            utc_point_in_time, "dusk", PHASE_ASTRONOMICAL_TWILIGHT
+        )
+        self.next_midnight = self._get_next_astral_event(
             utc_point_in_time, "solar_midnight", None
         )
         self.location.solar_depression = "civil"
@@ -219,14 +202,17 @@ class Sun(Entity):
         _LOGGER.debug(
             "sun phase_update@%s: phase=%s", utc_point_in_time.isoformat(), self.phase
         )
-        self.update_sun_position(utc_point_in_time)
+        self._update_sun_position(utc_point_in_time)
+
+        async_dispatcher_send(self.hass, TOPIC_DATA_UPDATE)
 
         # Set timer for the next solar event
-        async_track_point_in_utc_time(self.hass, self.update_events, self._next_change)
+        async_track_point_in_utc_time(self.hass, self._update_events, self._next_change)
+
         _LOGGER.debug("next time: %s", self._next_change.isoformat())
 
     @callback
-    def update_sun_position(self, utc_point_in_time):
+    def _update_sun_position(self, utc_point_in_time):
         """Calculate the position of the sun."""
         self.solar_azimuth = round(self.location.solar_azimuth(utc_point_in_time), 2)
         self.solar_elevation = round(
@@ -239,7 +225,6 @@ class Sun(Entity):
             self.solar_elevation,
             self.solar_azimuth,
         )
-        self.async_write_ha_state()
 
         # Next update as per the current phase
         delta = _PHASE_UPDATES[self.phase]
@@ -248,5 +233,72 @@ class Sun(Entity):
         if utc_point_in_time + delta * 1.25 > self._next_change:
             return
         async_track_point_in_utc_time(
-            self.hass, self.update_sun_position, utc_point_in_time + delta
+            self.hass, self._update_sun_position, utc_point_in_time + delta
         )
+
+    @callback
+    def async_update_location(self):
+        """Update astral data."""
+        self.location = get_astral_location(self.hass)
+        self._update_events(dt_util.utcnow())
+
+
+class LegacySunEntity(Entity):
+    """An entity to show all Sun data in one ("sun.sun").
+
+    This is kept in place for backwards compatibility.
+    """
+
+    entity_id = LEGACY_ENTITY_ID
+
+    def __init__(self, hass, sun):
+        """Initialize."""
+        self._async_unsub_dispatcher_connect = None
+        self._sun = sun
+        self.hass = hass
+
+        self._update()
+
+    @property
+    def name(self):
+        """Return the name."""
+        return "Sun"
+
+    @property
+    def state(self):
+        """Return the state of the sun."""
+        if self._sun.solar_elevation > HORIZON_ELEVATION:
+            return STATE_ABOVE_HORIZON
+        return STATE_BELOW_HORIZON
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the sun."""
+        return {
+            STATE_ATTR_NEXT_DAWN: self._sun.next_dawn.isoformat(),
+            STATE_ATTR_NEXT_DUSK: self._sun.next_dusk.isoformat(),
+            STATE_ATTR_NEXT_MIDNIGHT: self._sun.next_midnight.isoformat(),
+            STATE_ATTR_NEXT_NOON: self._sun.next_noon.isoformat(),
+            STATE_ATTR_NEXT_RISING: self._sun.next_rising.isoformat(),
+            STATE_ATTR_NEXT_SETTING: self._sun.next_setting.isoformat(),
+            STATE_ATTR_ELEVATION: self._sun.solar_elevation,
+            STATE_ATTR_AZIMUTH: self._sun.solar_azimuth,
+            STATE_ATTR_RISING: self._sun.rising,
+        }
+
+    @callback
+    def _update(self):
+        """Update the entity."""
+        self.schedule_update_ha_state(True)
+
+    async def async_added_tohass(self):
+        """Register callbacks."""
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_DATA_UPDATE, self._update
+        )
+
+    async def async_will_remove_fromhass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
