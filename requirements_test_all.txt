@@ -171,7 +171,7 @@ eebrightbox==0.0.4
 elgato==0.2.0
 
 # homeassistant.components.emulated_roku
-emulated_roku==0.1.8
+emulated_roku==0.1.9
 
 # homeassistant.components.season
 ephem==3.7.7.0
