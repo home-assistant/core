@@ -275,11 +275,11 @@ async def test_import_entity_already_configured(
     """Test entity is already configured during import setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_SOUNDBAR_ENTRY,
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SOUNDBAR_ENTRY),
         options={CONF_VOLUME_STEP: VOLUME_STEP},
     )
     entry.add_to_hass(hass)
-    fail_entry = MOCK_SOUNDBAR_ENTRY.copy()
+    fail_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SOUNDBAR_ENTRY.copy())
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "import"}, data=fail_entry
