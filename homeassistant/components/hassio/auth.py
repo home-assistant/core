@@ -123,6 +123,10 @@ class HassIOPasswordReset(HassIOBaseAuth):
         """Check User credentials."""
         provider = self._get_provider()
 
+        # Load data if not allready done
+        if provider.data is None:
+            await provider.async_initialize()
+
         try:
             await self.hass.async_add_executor_job(
                 provider.data.change_password, username, password
