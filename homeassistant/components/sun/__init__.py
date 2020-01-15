@@ -304,7 +304,7 @@ class LegacySunEntity(Entity):
             }
         )
 
-    async def async_will_remove_fromhass(self):
+    async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
