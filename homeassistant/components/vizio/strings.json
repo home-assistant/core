@@ -32,7 +32,8 @@
             "init": {
                 "title": "Update Vizo SmartCast Options",
                 "data": {
-                    "volume_step": "Volume Step Size"
+                    "volume_step": "Volume Step Size",
+                    "timeout": "API Request Timeout (seconds)"
                 }
             }
         }

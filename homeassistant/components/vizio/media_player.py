@@ -4,9 +4,17 @@ import logging
 from typing import Callable, List
 
 from pyvizio import VizioAsync
+from pyvizio.const import (
+    DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
+    DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,
+)
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import (
+    DEVICE_CLASS_SPEAKER,
+    DEVICE_CLASS_TV,
+    MediaPlayerDevice,
+)
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
@@ -23,6 +31,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
+    CONF_TIMEOUT,
     STATE_OFF,
     STATE_ON,
 )
@@ -35,7 +44,14 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP, DEVICE_ID, DOMAIN, ICON
+from . import ICON
+from .const import (
+    CONF_VOLUME_STEP,
+    DEFAULT_TIMEOUT,
+    DEFAULT_VOLUME_STEP,
+    DEVICE_ID,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,8 +70,16 @@ COMMON_SUPPORTED_COMMANDS = (
 )
 
 SUPPORTED_COMMANDS = {
-    "soundbar": COMMON_SUPPORTED_COMMANDS,
-    "tv": (COMMON_SUPPORTED_COMMANDS | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK),
+    DEVICE_CLASS_SPEAKER: COMMON_SUPPORTED_COMMANDS,
+    DEVICE_CLASS_TV: (
+        COMMON_SUPPORTED_COMMANDS | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+    ),
+}
+
+# Since Vizio component relies on device class, this dict will ensure that changes to the values of DEVICE_CLASS_SPEAKER or DEVICE_CLASS_TV don't require changes to pyvizio.
+VIZIO_DEVICE_CLASS = {
+    DEVICE_CLASS_SPEAKER: VIZIO_DEVICE_CLASS_SPEAKER,
+    DEVICE_CLASS_TV: VIZIO_DEVICE_CLASS_TV,
 }
 
 
@@ -68,16 +92,18 @@ async def async_setup_entry(
     host = config_entry.data[CONF_HOST]
     token = config_entry.data.get(CONF_ACCESS_TOKEN)
     name = config_entry.data[CONF_NAME]
-    device_type = config_entry.data[CONF_DEVICE_CLASS]
+    device_type = VIZIO_DEVICE_CLASS[config_entry.data[CONF_DEVICE_CLASS]]
 
     # If config entry options not set up, set them up, otherwise assign values managed in options
-    if CONF_VOLUME_STEP not in config_entry.options:
+    if not config_entry.options:
         volume_step = config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
+        timeout = config_entry.data.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
         hass.config_entries.async_update_entry(
-            config_entry, options={CONF_VOLUME_STEP: volume_step}
+            config_entry, options={CONF_VOLUME_STEP: volume_step, CONF_TIMEOUT: timeout}
         )
     else:
         volume_step = config_entry.options[CONF_VOLUME_STEP]
+        timeout = config_entry.options[CONF_TIMEOUT]
 
     device = VizioAsync(
         DEVICE_ID,
@@ -99,7 +125,7 @@ async def async_setup_entry(
         )
         raise PlatformNotReady
 
-    entity = VizioDevice(config_entry, device, name, volume_step, device_type)
+    entity = VizioDevice(config_entry, device, name, volume_step, timeout, device_type)
 
     async_add_entities([entity], True)
 
@@ -113,6 +139,7 @@ class VizioDevice(MediaPlayerDevice):
         device: VizioAsync,
         name: str,
         volume_step: int,
+        timeout: int,
         device_type: str,
     ) -> None:
         """Initialize Vizio device."""
@@ -123,6 +150,7 @@ class VizioDevice(MediaPlayerDevice):
         self._state = None
         self._volume_level = None
         self._volume_step = volume_step
+        self._timeout = timeout
         self._current_input = None
         self._available_inputs = None
         self._device_type = device_type
@@ -135,7 +163,7 @@ class VizioDevice(MediaPlayerDevice):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-        is_on = await self._device.get_power_state(False)
+        is_on = await self._device.get_power_state(self._timeout, False)
 
         if is_on is None:
             self._available = False
@@ -152,15 +180,15 @@ class VizioDevice(MediaPlayerDevice):
 
         self._state = STATE_ON
 
-        volume = await self._device.get_current_volume(False)
+        volume = await self._device.get_current_volume(self._timeout, False)
         if volume is not None:
             self._volume_level = float(volume) / self._max_volume
 
-        input_ = await self._device.get_current_input(False)
+        input_ = await self._device.get_current_input(self._timeout, False)
         if input_ is not None:
             self._current_input = input_.meta_name
 
-        inputs = await self._device.get_inputs(False)
+        inputs = await self._device.get_inputs(self._timeout, False)
         if inputs is not None:
             self._available_inputs = [input_.name for input_ in inputs]
 
@@ -175,6 +203,7 @@ class VizioDevice(MediaPlayerDevice):
     async def _async_update_options(self, config_entry: ConfigEntry) -> None:
         """Update options if the update signal comes from this entity."""
         self._volume_step = config_entry.options[CONF_VOLUME_STEP]
+        self._timeout = config_entry.options[CONF_TIMEOUT]
 
     async def async_added_to_hass(self):
         """Register callbacks when entity is added."""
@@ -255,34 +284,34 @@ class VizioDevice(MediaPlayerDevice):
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
-        await self._device.pow_on()
+        await self._device.pow_on(self._timeout)
 
     async def async_turn_off(self) -> None:
         """Turn the device off."""
-        await self._device.pow_off()
+        await self._device.pow_off(self._timeout)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
-            await self._device.mute_on()
+            await self._device.mute_on(self._timeout)
         else:
-            await self._device.mute_off()
+            await self._device.mute_off(self._timeout)
 
     async def async_media_previous_track(self) -> None:
         """Send previous channel command."""
-        await self._device.ch_down()
+        await self._device.ch_down(self._timeout)
 
     async def async_media_next_track(self) -> None:
         """Send next channel command."""
-        await self._device.ch_up()
+        await self._device.ch_up(self._timeout)
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self._device.input_switch(source)
+        await self._device.input_switch(source, self._timeout)
 
     async def async_volume_up(self) -> None:
         """Increasing volume of the device."""
-        await self._device.vol_up(self._volume_step)
+        await self._device.vol_up(self._volume_step, self._timeout)
 
         if self._volume_level is not None:
             self._volume_level = min(
@@ -291,7 +320,7 @@ class VizioDevice(MediaPlayerDevice):
 
     async def async_volume_down(self) -> None:
         """Decreasing volume of the device."""
-        await self._device.vol_down(self._volume_step)
+        await self._device.vol_down(self._volume_step, self._timeout)
 
         if self._volume_level is not None:
             self._volume_level = max(
@@ -303,9 +332,9 @@ class VizioDevice(MediaPlayerDevice):
         if self._volume_level is not None:
             if volume > self._volume_level:
                 num = int(self._max_volume * (volume - self._volume_level))
-                await self._device.vol_up(num)
+                await self._device.vol_up(num, self._timeout)
                 self._volume_level = volume
             elif volume < self._volume_level:
                 num = int(self._max_volume * (self._volume_level - volume))
-                await self._device.vol_down(num)
+                await self._device.vol_down(num, self._timeout)
                 self._volume_level = volume

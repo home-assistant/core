@@ -2,10 +2,8 @@
 CONF_VOLUME_STEP = "volume_step"
 
 DEFAULT_NAME = "Vizio SmartCast"
+DEFAULT_TIMEOUT = 5
 DEFAULT_VOLUME_STEP = 1
-DEFAULT_DEVICE_CLASS = "tv"
 DEVICE_ID = "pyvizio"
 
 DOMAIN = "vizio"
-
-ICON = {"tv": "mdi:television", "soundbar": "mdi:speaker"}

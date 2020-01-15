@@ -6,20 +6,22 @@ from pyvizio import VizioAsync
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
+    CONF_TIMEOUT,
 )
 from homeassistant.core import callback
 
-from . import validate_auth
+from . import DEFAULT_DEVICE_CLASS, validate_auth
 from .const import (
     CONF_VOLUME_STEP,
-    DEFAULT_DEVICE_CLASS,
     DEFAULT_NAME,
+    DEFAULT_TIMEOUT,
     DEFAULT_VOLUME_STEP,
     DOMAIN,
 )
@@ -38,7 +40,7 @@ def update_schema_defaults(input_dict: Dict[str, Any]) -> vol.Schema:
             vol.Optional(
                 CONF_DEVICE_CLASS,
                 default=input_dict.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
-            ): vol.All(str, vol.Lower, vol.In(["tv", "soundbar"])),
+            ): vol.All(str, vol.Lower, vol.In([DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER])),
             vol.Optional(
                 CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
             ): str,
@@ -127,16 +129,25 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_HOST] == import_config[CONF_HOST] and entry.data[
                 CONF_NAME
             ] == import_config.get(CONF_NAME):
+                new_options = {}
+                options_changed = False
+
                 if entry.data[CONF_VOLUME_STEP] != import_config[CONF_VOLUME_STEP]:
-                    new_volume_step = {
-                        CONF_VOLUME_STEP: import_config[CONF_VOLUME_STEP]
-                    }
+                    options_changed = True
+                    new_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
+
+                if entry.data[CONF_TIMEOUT] != import_config[CONF_TIMEOUT]:
+                    options_changed = True
+                    new_options[CONF_TIMEOUT] = import_config[CONF_TIMEOUT]
+
+                if options_changed:
                     self.hass.config_entries.async_update_entry(
                         entry=entry,
-                        data=entry.data.copy().update(new_volume_step),
-                        options=entry.options.copy().update(new_volume_step),
+                        data=entry.data.copy().update(options_changed),
+                        options=entry.options.copy().update(options_changed),
                     )
                     return self.async_abort(reason="updated_volume_step")
+
                 return self.async_abort(reason="already_setup")
 
         # Store import values in case setup fails so user can see error
@@ -165,7 +176,11 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
                 default=self.config_entry.options.get(
                     CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
                 ),
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10))
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
+            vol.Optional(
+                CONF_TIMEOUT,
+                default=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
