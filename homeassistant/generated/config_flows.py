@@ -92,6 +92,7 @@ FLOWS = [
     "upnp",
     "velbus",
     "vesync",
+    "vizio",
     "wemo",
     "withings",
     "wled",
