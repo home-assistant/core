@@ -7,8 +7,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 
 from .const import (
-    CONF_USB_STICK_PATH,
     CONF_NETWORK_KEY,
+    CONF_USB_STICK_PATH,
     DEFAULT_CONF_USB_STICK_PATH,
     DOMAIN,
 )

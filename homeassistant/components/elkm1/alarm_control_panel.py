@@ -3,8 +3,8 @@ from elkm1_lib.const import AlarmState, ArmedStatus, ArmLevel, ArmUpState
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanel,
     FORMAT_NUMBER,
+    AlarmControlPanel,
 )
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -29,13 +29,13 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from . import (
-    create_elk_entities,
     DOMAIN,
-    ElkEntity,
     SERVICE_ALARM_ARM_HOME_INSTANT,
     SERVICE_ALARM_ARM_NIGHT_INSTANT,
     SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISPLAY_MESSAGE,
+    ElkEntity,
+    create_elk_entities,
 )
 
 SIGNAL_ARM_ENTITY = "elkm1_arm"

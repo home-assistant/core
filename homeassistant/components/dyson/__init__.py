@@ -89,7 +89,7 @@ def setup(hass, config):
         # Not yet reliable
         for device in dyson_devices:
             _LOGGER.info(
-                "Trying to connect to device %s with timeout=%i " "and retry=%i",
+                "Trying to connect to device %s with timeout=%i and retry=%i",
                 device,
                 timeout,
                 retry,

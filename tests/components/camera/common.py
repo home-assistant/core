@@ -9,15 +9,15 @@ from homeassistant.components.camera import (
     SERVICE_SNAPSHOT,
 )
 from homeassistant.components.camera.const import (
-    DOMAIN,
     DATA_CAMERA_PREFS,
+    DOMAIN,
     PREF_PRELOAD_STREAM,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    ENTITY_MATCH_ALL,
 )
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass

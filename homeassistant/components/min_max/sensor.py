@@ -3,16 +3,16 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
-    STATE_UNKNOWN,
-    STATE_UNAVAILABLE,
-    CONF_TYPE,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_NAME,
+    CONF_TYPE,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
 
@@ -153,7 +153,7 @@ class MinMaxSensor(Entity):
                 self.last = float(new_state.state)
             except ValueError:
                 _LOGGER.warning(
-                    "Unable to store state. " "Only numerical states are supported"
+                    "Unable to store state. Only numerical states are supported"
                 )
 
             hass.async_add_job(self.async_update_ha_state, True)

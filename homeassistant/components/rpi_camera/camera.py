@@ -1,14 +1,14 @@
 """Camera platform that has a Raspberry Pi camera."""
-import os
-import subprocess
 import logging
+import os
 import shutil
+import subprocess
 from tempfile import NamedTemporaryFile
 
 import voluptuous as vol
 
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_FILE_PATH, EVENT_HOMEASSISTANT_STOP
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.const import CONF_FILE_PATH, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

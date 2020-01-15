@@ -2,18 +2,18 @@
 import pytest
 
 from homeassistant.components.NEW_DOMAIN import DOMAIN
-from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
 )
 
 

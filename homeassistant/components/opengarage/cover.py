@@ -5,22 +5,22 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.cover import (
-    CoverDevice,
     DEVICE_CLASS_GARAGE,
     PLATFORM_SCHEMA,
-    SUPPORT_OPEN,
     SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    CoverDevice,
 )
 from homeassistant.const import (
-    CONF_NAME,
-    STATE_CLOSED,
-    STATE_OPEN,
     CONF_COVERS,
     CONF_HOST,
+    CONF_NAME,
     CONF_PORT,
     CONF_SSL,
     CONF_VERIFY_SSL,
+    STATE_CLOSED,
     STATE_CLOSING,
+    STATE_OPEN,
     STATE_OPENING,
 )
 import homeassistant.helpers.config_validation as cv
