@@ -804,6 +804,7 @@ async def test_entity_info_added_to_entity_registry(hass):
         capability_attributes={"max": 100},
         supported_features=5,
         device_class="mock-device-class",
+        unit_of_measurement="%",
     )
 
     await component.async_add_entities([entity_default])
@@ -815,6 +816,7 @@ async def test_entity_info_added_to_entity_registry(hass):
     assert entry_default.capabilities == {"max": 100}
     assert entry_default.supported_features == 5
     assert entry_default.device_class == "mock-device-class"
+    assert entry_default.unit_of_measurement == "%"
 
 
 async def test_override_restored_entities(hass):
