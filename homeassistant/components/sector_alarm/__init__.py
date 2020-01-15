@@ -2,7 +2,6 @@
 import logging
 
 import sectoralarmlib.sector as sectorlib
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_NAME, CONF_PASSWORD
@@ -13,7 +12,7 @@ DOMAIN = "sector_alarm"
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ALARM_ID = "alarm_id"
+CONF_ID = "alarm_id"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -21,7 +20,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_EMAIL): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_ALARM_ID): cv.string,
+                vol.Required(CONF_ID): cv.string,
                 vol.Required(CONF_CODE): cv.string,
             }
         )
@@ -36,7 +35,7 @@ async def async_setup(hass, config):
         alarm = sectorlib.SectorAlarm(
             config[DOMAIN][CONF_EMAIL],
             config[DOMAIN][CONF_PASSWORD],
-            config[DOMAIN][CONF_ALARM_ID],
+            config[DOMAIN][CONF_ID],
             config[DOMAIN][CONF_CODE],
         )
     except RuntimeError:
@@ -51,10 +50,7 @@ async def async_setup(hass, config):
         hass,
         "alarm_control_panel",
         DOMAIN,
-        {
-            CONF_CODE: config[DOMAIN][CONF_CODE],
-            CONF_ALARM_ID: config[DOMAIN][CONF_ALARM_ID],
-        },
+        {CONF_CODE: config[DOMAIN][CONF_CODE], CONF_ID: config[DOMAIN][CONF_ID]},
         config,
     )
 

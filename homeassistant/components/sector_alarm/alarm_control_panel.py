@@ -2,6 +2,10 @@
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 import homeassistant.components.sector_alarm as sector_alarm
 from homeassistant.components.sector_alarm import DOMAIN as SECTOR_DOMAIN
 from homeassistant.const import (
@@ -19,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sector_connection = hass.data.get(SECTOR_DOMAIN)
 
     code = discovery_info[sector_alarm.CONF_CODE]
-    panel_id = discovery_info[sector_alarm.CONF_ALARM_ID]
+    panel_id = discovery_info[sector_alarm.CONF_ID]
 
     async_add_entities([SectorAlarmPanel(sector_connection, panel_id, code)])
 
@@ -27,17 +31,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SectorAlarmPanel(alarm.AlarmControlPanel):
     """Get the alarm status, and arm/disarm alarm."""
 
-    def __init__(self, sectorConnect, alarmId, code):
+    def __init__(self, sector_connect, alarm_id, code):
         """Initialize the service."""
-        self._alarmid = alarmId
+        self._alarm_id = alarm_id
         self._code = code
-        self._sectorconnect = sectorConnect
+        self._sector_connect = sector_connect
         self._state = None
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"Sector Alarm {self._alarmid}"
+        return f"Sector Alarm {self._alarm_id}"
 
     @property
     def state(self):
@@ -45,38 +54,39 @@ class SectorAlarmPanel(alarm.AlarmControlPanel):
         if self._state == "ON":
             return STATE_ALARM_ARMED_AWAY
 
-        if self._state == "PARTIAL":
+        elif self._state == "PARTIAL":
             return STATE_ALARM_ARMED_HOME
 
-        if self._state == "OFF":
+        elif self._state == "OFF":
             return STATE_ALARM_DISARMED
 
-        if self._state == "pending":
+        elif self._state == "pending":
             return STATE_ALARM_PENDING
 
-        return None
+        else:
+            return None
 
     async def async_alarm_disarm(self, code=None):
         """Turn off the alarm."""
         _LOGGER.debug("Trying to disarm Sector Alarm")
-        status = self._sectorconnect.Disarm()
+        status = self._sector_connect.Disarm()
         if status:
             _LOGGER.debug("Disarmed Sector Alarm")
 
     async def async_alarm_arm_home(self, code=None):
         """Partial turn on the alarm."""
         _LOGGER.debug("Trying to partial arm Sector Alarm")
-        status = self._sectorconnect.ArmPartial()
+        status = self._sector_connect.ArmPartial()
         if status:
             _LOGGER.debug("Sector Alarm partial armed")
 
     async def async_alarm_arm_away(self, code=None):
         """Fully turn on the alarm."""
         _LOGGER.debug("Trying to arm Sector Alarm")
-        status = self._sectorconnect.Arm()
+        status = self._sector_connect.Arm()
         if status:
             _LOGGER.debug("Sector Alarm armed")
 
     async def async_update(self):
         """Update function for alarm status."""
-        self._state = self._sectorconnect.AlarmStatus()
+        self._state = self._sector_connect.AlarmStatus()
