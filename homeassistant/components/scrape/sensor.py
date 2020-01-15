@@ -4,6 +4,8 @@ import logging
 from bs4 import BeautifulSoup
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
+from lxml import html as lxml
+import html5lib
 
 from homeassistant.components.rest.sensor import RestData
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -11,6 +13,7 @@ from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_HEADERS,
     CONF_NAME,
+    CONF_PARSER,
     CONF_PASSWORD,
     CONF_RESOURCE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -31,6 +34,7 @@ CONF_SELECT = "select"
 CONF_INDEX = "index"
 
 DEFAULT_NAME = "Web scrape"
+DEFAULT_PARSER = "html.parser"
 DEFAULT_VERIFY_SSL = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -44,6 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_PARSER, default=DEFAULT_PARSER): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
@@ -59,6 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     resource = config.get(CONF_RESOURCE)
     method = "GET"
     payload = None
+    parser = config.get(CONF_PARSER)
     headers = config.get(CONF_HEADERS)
     verify_ssl = config.get(CONF_VERIFY_SSL)
     select = config.get(CONF_SELECT)
@@ -85,19 +91,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         raise PlatformNotReady
 
     add_entities(
-        [ScrapeSensor(rest, name, select, attr, index, value_template, unit)], True
+        [ScrapeSensor(rest, name, select, parser, attr, index, value_template, unit)], True
     )
 
 
 class ScrapeSensor(Entity):
     """Representation of a web scrape sensor."""
 
-    def __init__(self, rest, name, select, attr, index, value_template, unit):
+    def __init__(self, rest, name, select, parser, attr, index, value_template, unit):
         """Initialize a web scrape sensor."""
         self.rest = rest
         self._name = name
         self._state = None
         self._select = select
+        self._parser = parser
         self._attr = attr
         self._index = index
         self._value_template = value_template
@@ -125,7 +132,7 @@ class ScrapeSensor(Entity):
             _LOGGER.error("Unable to retrieve data")
             return
 
-        raw_data = BeautifulSoup(self.rest.data, "html.parser")
+        raw_data = BeautifulSoup(self.rest.data, self._parser)
         _LOGGER.debug(raw_data)
 
         try:
