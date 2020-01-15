@@ -24,7 +24,7 @@ SENSOR_TYPES = {
     },
     "time": {
         "first_light": ["Alot Hashachar", "mdi:weather-sunset-up"],
-        "talit": ["Talit and Tefillin", ""],
+        "talit": ["Talit and Tefillin", "mdi:calendar-clock"],
         "gra_end_shma": ['Latest time for Shma Gr"a', "mdi:calendar-clock"],
         "mga_end_shma": ['Latest time for Shma MG"A', "mdi:calendar-clock"],
         "gra_end_tfila": ['Latest time for Tefilla MG"A', "mdi:calendar-clock"],
