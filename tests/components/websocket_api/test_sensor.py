@@ -2,8 +2,9 @@
 
 from homeassistant.bootstrap import async_setup_component
 
-from tests.common import assert_setup_component
 from .test_auth import test_auth_active_with_token
+
+from tests.common import assert_setup_component
 
 
 async def test_websocket_api(

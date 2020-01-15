@@ -3,11 +3,10 @@ import json
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components import mqtt
-from homeassistant.const import CONF_PLATFORM, CONF_PAYLOAD
+from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-
 
 # mypy: allow-untyped-defs
 

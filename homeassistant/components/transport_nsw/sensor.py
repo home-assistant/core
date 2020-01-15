@@ -2,13 +2,13 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
 from TransportNSW import TransportNSW
+import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_MODE, CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_MODE, CONF_NAME, CONF_API_KEY, ATTR_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 

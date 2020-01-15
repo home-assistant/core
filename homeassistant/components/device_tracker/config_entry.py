@@ -3,12 +3,12 @@ from typing import Optional
 
 from homeassistant.components import zone
 from homeassistant.const import (
-    STATE_NOT_HOME,
-    STATE_HOME,
+    ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    ATTR_BATTERY_LEVEL,
+    STATE_HOME,
+    STATE_NOT_HOME,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent

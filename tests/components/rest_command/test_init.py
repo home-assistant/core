@@ -6,7 +6,7 @@ import aiohttp
 import homeassistant.components.rest_command as rc
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestRestCommandSetup:

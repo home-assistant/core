@@ -60,9 +60,7 @@ class TadoDeviceScanner(DeviceScanner):
         if self.home_id is None:
             self.tadoapiurl = "https://my.tado.com/api/v2/me"
         else:
-            self.tadoapiurl = (
-                "https://my.tado.com/api/v2" "/homes/{home_id}/mobileDevices"
-            )
+            self.tadoapiurl = "https://my.tado.com/api/v2/homes/{home_id}/mobileDevices"
 
         # The API URL always needs a username and password
         self.tadoapiurl += "?username={username}&password={password}"

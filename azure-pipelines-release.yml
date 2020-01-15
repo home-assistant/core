@@ -14,7 +14,7 @@ schedules:
     always: true
 variables:
   - name: versionBuilder
-    value: '6.3'
+    value: '6.9'
   - group: docker
   - group: github
   - group: twine
@@ -94,7 +94,7 @@ stages:
           buildMachine: 'raspberrypi2,raspberrypi3,raspberrypi4,odroid-xu,tinker'
         aarch64:
           buildArch: 'aarch64'
-          buildMachine: 'qemuarm-64,raspberrypi3-64,raspberrypi4-64,odroid-c2,orangepi-prime'
+          buildMachine: 'qemuarm-64,raspberrypi3-64,raspberrypi4-64,odroid-c2,odroid-n2'
     steps:
     - template: templates/azp-step-ha-version.yaml@azure
     - script: |

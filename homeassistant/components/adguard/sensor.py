@@ -178,7 +178,7 @@ class AdGuardHomeReplacedSafeSearchSensor(AdGuardHomeSensor):
         """Initialize AdGuard Home sensor."""
         super().__init__(
             adguard,
-            "Searches Safe Search Enforced",
+            "AdGuard Safe Searches Enforced",
             "mdi:shield-search",
             "enforced_safesearch",
             "requests",

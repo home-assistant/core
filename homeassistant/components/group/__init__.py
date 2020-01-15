@@ -7,34 +7,33 @@ import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    ATTR_ICON,
+    ATTR_NAME,
     CONF_ICON,
     CONF_NAME,
+    SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
+    STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
+    STATE_OK,
     STATE_ON,
     STATE_OPEN,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
-    STATE_OK,
     STATE_PROBLEM,
     STATE_UNKNOWN,
-    ATTR_ASSUMED_STATE,
-    SERVICE_RELOAD,
-    ATTR_NAME,
-    ATTR_ICON,
+    STATE_UNLOCKED,
 )
 from homeassistant.core import callback
-from homeassistant.loader import bind_hass
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.typing import HomeAssistantType
-
+from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -583,12 +582,12 @@ class Group(Entity):
         self._async_update_group_state()
 
     async def async_added_to_hass(self):
-        """Handle addition to HASS."""
+        """Handle addition to Home Assistant."""
         if self.tracking:
             self.async_start()
 
     async def async_will_remove_from_hass(self):
-        """Handle removal from HASS."""
+        """Handle removal from Home Assistant."""
         if self._async_unsub_state_changed:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None

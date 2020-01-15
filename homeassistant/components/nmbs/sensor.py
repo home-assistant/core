@@ -92,7 +92,7 @@ class NMBSLiveBoard(Entity):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
-
+        self._unique_id = f"nmbs_live_{self._station}"
         self._attrs = {}
         self._state = None
 
@@ -100,6 +100,11 @@ class NMBSLiveBoard(Entity):
     def name(self):
         """Return the sensor default name."""
         return "NMBS Live"
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def icon(self):

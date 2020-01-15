@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     vacuums = []
     for device in hass.data[ECOVACS_DEVICES]:
         vacuums.append(EcovacsVacuum(device))
-    _LOGGER.debug("Adding Ecovacs Vacuums to Hass: %s", vacuums)
+    _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     add_entities(vacuums, True)
 
 

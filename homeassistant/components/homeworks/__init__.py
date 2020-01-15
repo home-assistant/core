@@ -98,7 +98,7 @@ class HomeworksDevice:
     """Base class of a Homeworks device."""
 
     def __init__(self, controller, addr, name):
-        """Controller, address, and name of the device."""
+        """Initialize Homeworks device."""
         self._addr = addr
         self._name = name
         self._controller = controller

@@ -39,11 +39,11 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     DOMAIN,
+    SERVICE_CLEAN_ZONE,
     SERVICE_MOVE_REMOTE_CONTROL,
     SERVICE_MOVE_REMOTE_CONTROL_STEP,
     SERVICE_START_REMOTE_CONTROL,
     SERVICE_STOP_REMOTE_CONTROL,
-    SERVICE_CLEAN_ZONE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -379,7 +379,7 @@ class MiroboVacuum(StateVacuumDevice):
                 fan_speed = int(fan_speed)
             except ValueError as exc:
                 _LOGGER.error(
-                    "Fan speed step not recognized (%s). " "Valid speeds are: %s",
+                    "Fan speed step not recognized (%s). Valid speeds are: %s",
                     exc,
                     self.fan_speed_list,
                 )

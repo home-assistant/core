@@ -1,10 +1,8 @@
 {
   "domain": "directv",
-  "name": "Directv",
+  "name": "DirecTV",
   "documentation": "https://www.home-assistant.io/integrations/directv",
-  "requirements": [
-    "directpy==0.5"
-  ],
+  "requirements": ["directpy==0.5"],
   "dependencies": [],
   "codeowners": []
 }

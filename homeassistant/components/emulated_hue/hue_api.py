@@ -1,6 +1,6 @@
 """Support for a Hue API to control Home Assistant."""
-import logging
 import hashlib
+import logging
 
 from homeassistant import core
 from homeassistant.components import (
@@ -34,8 +34,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.const import KEY_REAL_IP
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
     ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
@@ -49,8 +49,8 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     HTTP_BAD_REQUEST,
-    HTTP_UNAUTHORIZED,
     HTTP_NOT_FOUND,
+    HTTP_UNAUTHORIZED,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_TURN_OFF,
@@ -89,6 +89,24 @@ HUE_API_STATE_SAT_MAX = 254
 HUE_API_STATE_CT_MIN = 153  # Color temp
 HUE_API_STATE_CT_MAX = 500
 
+HUE_API_USERNAME = "12345678901234567890"
+UNAUTHORIZED_USER = [
+    {"error": {"address": "/", "description": "unauthorized user", "type": "1"}}
+]
+
+
+class HueUnauthorizedUser(HomeAssistantView):
+    """Handle requests to find the emulated hue bridge."""
+
+    url = "/api"
+    name = "emulated_hue:api:unauthorized_user"
+    extra_urls = ["/api/"]
+    requires_auth = False
+
+    async def get(self, request):
+        """Handle a GET request."""
+        return self.json(UNAUTHORIZED_USER)
+
 
 class HueUsernameView(HomeAssistantView):
     """Handle requests to create a username for the emulated hue bridge."""
@@ -111,7 +129,7 @@ class HueUsernameView(HomeAssistantView):
         if "devicetype" not in data:
             return self.json_message("devicetype not specified", HTTP_BAD_REQUEST)
 
-        return self.json([{"success": {"username": "12345678901234567890"}}])
+        return self.json([{"success": {"username": HUE_API_USERNAME}}])
 
 
 class HueAllGroupsStateView(HomeAssistantView):
@@ -181,13 +199,37 @@ class HueAllLightsStateView(HomeAssistantView):
         if not is_local(request[KEY_REAL_IP]):
             return self.json_message("Only local IPs allowed", HTTP_UNAUTHORIZED)
 
-        hass = request.app["hass"]
-        json_response = {}
+        return self.json(create_list_of_entities(self.config, request))
 
-        for entity in hass.states.async_all():
-            if self.config.is_entity_exposed(entity):
-                number = self.config.entity_id_to_number(entity.entity_id)
-                json_response[number] = entity_to_json(self.config, entity)
+
+class HueFullStateView(HomeAssistantView):
+    """Return full state view of emulated hue."""
+
+    url = "/api/{username}"
+    name = "emulated_hue:username:state"
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def get(self, request, username):
+        """Process a request to get the list of available lights."""
+        if not is_local(request[KEY_REAL_IP]):
+            return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
+        if username != HUE_API_USERNAME:
+            return self.json(UNAUTHORIZED_USER)
+
+        json_response = {
+            "lights": create_list_of_entities(self.config, request),
+            "config": {
+                "mac": "00:00:00:00:00:00",
+                "swversion": "01003542",
+                "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
+                "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
+            },
+        }
 
         return self.json(json_response)
 
@@ -604,7 +646,7 @@ def entity_to_json(config, entity):
         and (entity_features & SUPPORT_COLOR)
         and (entity_features & SUPPORT_COLOR_TEMP)
     ):
-        # Extended Color light (ZigBee Device ID: 0x0210)
+        # Extended Color light (Zigbee Device ID: 0x0210)
         # Same as Color light, but which supports additional setting of color temperature
         retval["type"] = "Extended color light"
         retval["modelid"] = "HASS231"
@@ -622,7 +664,7 @@ def entity_to_json(config, entity):
         else:
             retval["state"][HUE_API_STATE_COLORMODE] = "ct"
     elif (entity_features & SUPPORT_BRIGHTNESS) and (entity_features & SUPPORT_COLOR):
-        # Color light (ZigBee Device ID: 0x0200)
+        # Color light (Zigbee Device ID: 0x0200)
         # Supports on/off, dimming and color control (hue/saturation, enhanced hue, color loop and XY)
         retval["type"] = "Color light"
         retval["modelid"] = "HASS213"
@@ -638,7 +680,7 @@ def entity_to_json(config, entity):
     elif (entity_features & SUPPORT_BRIGHTNESS) and (
         entity_features & SUPPORT_COLOR_TEMP
     ):
-        # Color temperature light (ZigBee Device ID: 0x0220)
+        # Color temperature light (Zigbee Device ID: 0x0220)
         # Supports groups, scenes, on/off, dimming, and setting of a color temperature
         retval["type"] = "Color temperature light"
         retval["modelid"] = "HASS312"
@@ -655,13 +697,13 @@ def entity_to_json(config, entity):
             | SUPPORT_TARGET_TEMPERATURE
         )
     ) or entity.domain == script.DOMAIN:
-        # Dimmable light (ZigBee Device ID: 0x0100)
+        # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
         retval["type"] = "Dimmable light"
         retval["modelid"] = "HASS123"
         retval["state"].update({HUE_API_STATE_BRI: state[STATE_BRIGHTNESS]})
     else:
-        # On/off light (ZigBee Device ID: 0x0000)
+        # On/off light (Zigbee Device ID: 0x0000)
         # Supports groups, scenes and on/off control
         retval["type"] = "On/off light"
         retval["modelid"] = "HASS321"
@@ -673,3 +715,16 @@ def create_hue_success_response(entity_id, attr, value):
     """Create a success response for an attribute set on a light."""
     success_key = f"/lights/{entity_id}/state/{attr}"
     return {"success": {success_key: value}}
+
+
+def create_list_of_entities(config, request):
+    """Create a list of all entites."""
+    hass = request.app["hass"]
+    json_response = {}
+
+    for entity in hass.states.async_all():
+        if config.is_entity_exposed(entity):
+            number = config.entity_id_to_number(entity.entity_id)
+            json_response[number] = entity_to_json(config, entity)
+
+    return json_response

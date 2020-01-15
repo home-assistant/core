@@ -5,11 +5,11 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanel,
     FORMAT_NUMBER,
     FORMAT_TEXT,
+    PLATFORM_SCHEMA,
+    AlarmControlPanel,
 )
-from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,

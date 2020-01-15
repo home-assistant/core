@@ -1,13 +1,13 @@
 """Integration with the Rachio Iro sprinkler system controller."""
 import asyncio
 import logging
+import secrets
 from typing import Optional
 
 from aiohttp import web
 from rachiopy import Rachio
 import voluptuous as vol
 
-from homeassistant.auth.util import generate_secret
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
 from homeassistant.helpers import config_validation as cv, discovery
@@ -115,7 +115,7 @@ def setup(hass, config) -> bool:
     # Get the URL of this server
     custom_url = config[DOMAIN].get(CONF_CUSTOM_URL)
     hass_url = hass.config.api.base_url if custom_url is None else custom_url
-    rachio.webhook_auth = generate_secret()
+    rachio.webhook_auth = secrets.token_hex()
     rachio.webhook_url = hass_url + WEBHOOK_PATH
 
     # Get the API user

@@ -1,10 +1,10 @@
 """Support for MySensors switches."""
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components import mysensors
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN as MYSENSORS_DOMAIN, SERVICE_SEND_IR_CODE
 

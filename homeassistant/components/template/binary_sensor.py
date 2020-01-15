@@ -3,28 +3,29 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
+    DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    DEVICE_CLASSES_SCHEMA,
+    BinarySensorDevice,
 )
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME,
     ATTR_ENTITY_ID,
-    CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE,
-    CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_SENSORS,
+    ATTR_FRIENDLY_NAME,
     CONF_DEVICE_CLASS,
+    CONF_ENTITY_PICTURE_TEMPLATE,
+    CONF_ICON_TEMPLATE,
+    CONF_SENSORS,
+    CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_START,
     MATCH_ALL,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_state_change, async_track_same_state
+from homeassistant.helpers.event import async_track_same_state, async_track_state_change
+
 from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
@@ -222,7 +223,7 @@ class BinarySensorTemplate(BinarySensorDevice):
             ):
                 # Common during HA startup - so just a warning
                 _LOGGER.warning(
-                    "Could not render template %s, " "the state is unknown", self._name
+                    "Could not render template %s, the state is unknown", self._name
                 )
                 return
             _LOGGER.error("Could not render template %s: %s", self._name, ex)
@@ -258,7 +259,7 @@ class BinarySensorTemplate(BinarySensorDevice):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render %s template %s," " the state is unknown.",
+                        "Could not render %s template %s, the state is unknown.",
                         friendly_property_name,
                         self._name,
                     )
