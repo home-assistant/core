@@ -355,6 +355,7 @@ class EntityPlatform:
                 capabilities=entity.capability_attributes,
                 supported_features=entity.supported_features,
                 device_class=entity.device_class,
+                unit_of_measurement=entity.unit_of_measurement,
             )
 
             entity.registry_entry = entry
