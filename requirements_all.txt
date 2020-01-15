@@ -1675,7 +1675,7 @@ pytradfri[async]==6.4.0
 pytrafikverket==0.1.5.9
 
 # homeassistant.components.ubee
-pyubee==0.7
+pyubee==0.8
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==0.0.5
