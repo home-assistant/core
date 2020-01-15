@@ -6,7 +6,6 @@ _LOGGER = logging.getLogger(__package__)
 DOMAIN = "deconz"
 
 CONF_BRIDGEID = "bridgeid"
-CONF_UUID = "uuid"
 
 DEFAULT_PORT = 80
 DEFAULT_ALLOW_CLIP_SENSOR = False
@@ -50,3 +49,5 @@ COVER_TYPES = DAMPERS + WINDOW_COVERS
 POWER_PLUGS = ["On/Off plug-in unit", "Smart plug"]
 SIRENS = ["Warning device"]
 SWITCH_TYPES = POWER_PLUGS + SIRENS
+
+CONF_GESTURE = "gesture"

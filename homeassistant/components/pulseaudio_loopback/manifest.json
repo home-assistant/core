@@ -1,6 +1,6 @@
 {
   "domain": "pulseaudio_loopback",
-  "name": "Pulseaudio loopback",
+  "name": "PulseAudio Loopback",
   "documentation": "https://www.home-assistant.io/integrations/pulseaudio_loopback",
   "requirements": [],
   "dependencies": [],

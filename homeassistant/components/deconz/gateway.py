@@ -22,7 +22,6 @@ from .const import (
     _LOGGER,
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
-    CONF_BRIDGEID,
     CONF_MASTER_GATEWAY,
     DEFAULT_ALLOW_CLIP_SENSOR,
     DEFAULT_ALLOW_DECONZ_GROUPS,
@@ -36,7 +35,7 @@ from .errors import AuthenticationRequired, CannotConnect
 @callback
 def get_gateway_from_config_entry(hass, config_entry):
     """Return gateway with a matching bridge id."""
-    return hass.data[DOMAIN][config_entry.data[CONF_BRIDGEID]]
+    return hass.data[DOMAIN][config_entry.unique_id]
 
 
 class DeconzGateway:
@@ -56,7 +55,7 @@ class DeconzGateway:
     @property
     def bridgeid(self) -> str:
         """Return the unique identifier of the gateway."""
-        return self.config_entry.data[CONF_BRIDGEID]
+        return self.config_entry.unique_id
 
     @property
     def master(self) -> bool:
@@ -92,11 +91,9 @@ class DeconzGateway:
 
     async def async_setup(self) -> bool:
         """Set up a deCONZ gateway."""
-        hass = self.hass
-
         try:
             self.api = await get_gateway(
-                hass,
+                self.hass,
                 self.config_entry.data,
                 self.async_add_device_callback,
                 self.async_connection_status_callback,
@@ -110,8 +107,8 @@ class DeconzGateway:
             return False
 
         for component in SUPPORTED_PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(
+            self.hass.async_create_task(
+                self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, component
                 )
             )

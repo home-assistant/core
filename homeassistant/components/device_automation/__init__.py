@@ -173,13 +173,13 @@ async def _async_get_device_automation_capabilities(hass, automation_type, autom
     return capabilities
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/action/list",
         vol.Required("device_id"): str,
     }
 )
+@websocket_api.async_response
 async def websocket_device_automation_list_actions(hass, connection, msg):
     """Handle request for device actions."""
     device_id = msg["device_id"]
@@ -187,13 +187,13 @@ async def websocket_device_automation_list_actions(hass, connection, msg):
     connection.send_result(msg["id"], actions)
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/condition/list",
         vol.Required("device_id"): str,
     }
 )
+@websocket_api.async_response
 async def websocket_device_automation_list_conditions(hass, connection, msg):
     """Handle request for device conditions."""
     device_id = msg["device_id"]
@@ -201,13 +201,13 @@ async def websocket_device_automation_list_conditions(hass, connection, msg):
     connection.send_result(msg["id"], conditions)
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/trigger/list",
         vol.Required("device_id"): str,
     }
 )
+@websocket_api.async_response
 async def websocket_device_automation_list_triggers(hass, connection, msg):
     """Handle request for device triggers."""
     device_id = msg["device_id"]
@@ -215,13 +215,13 @@ async def websocket_device_automation_list_triggers(hass, connection, msg):
     connection.send_result(msg["id"], triggers)
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/action/capabilities",
         vol.Required("action"): dict,
     }
 )
+@websocket_api.async_response
 async def websocket_device_automation_get_action_capabilities(hass, connection, msg):
     """Handle request for device action capabilities."""
     action = msg["action"]
@@ -231,13 +231,13 @@ async def websocket_device_automation_get_action_capabilities(hass, connection, 
     connection.send_result(msg["id"], capabilities)
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/condition/capabilities",
         vol.Required("condition"): dict,
     }
 )
+@websocket_api.async_response
 async def websocket_device_automation_get_condition_capabilities(hass, connection, msg):
     """Handle request for device condition capabilities."""
     condition = msg["condition"]
@@ -247,13 +247,13 @@ async def websocket_device_automation_get_condition_capabilities(hass, connectio
     connection.send_result(msg["id"], capabilities)
 
 
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/trigger/capabilities",
         vol.Required("trigger"): dict,
     }
 )
+@websocket_api.async_response
 async def websocket_device_automation_get_trigger_capabilities(hass, connection, msg):
     """Handle request for device trigger capabilities."""
     trigger = msg["trigger"]

@@ -7,7 +7,7 @@ from homeassistant.components import deconz
 import homeassistant.components.switch as switch
 from homeassistant.setup import async_setup_component
 
-from .test_gateway import DECONZ_WEB_REQUEST, ENTRY_CONFIG, setup_deconz_integration
+from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
 SWITCHES = {
     "1": {
@@ -54,10 +54,7 @@ async def test_platform_manually_configured(hass):
 
 async def test_no_switches(hass):
     """Test that no switch entities are created."""
-    data = deepcopy(DECONZ_WEB_REQUEST)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass)
     assert len(gateway.deconz_ids) == 0
     assert len(hass.states.async_all()) == 0
 
@@ -66,14 +63,12 @@ async def test_switches(hass):
     """Test that all supported switch entities are created."""
     data = deepcopy(DECONZ_WEB_REQUEST)
     data["lights"] = deepcopy(SWITCHES)
-    gateway = await setup_deconz_integration(
-        hass, ENTRY_CONFIG, options={}, get_state_response=data
-    )
+    gateway = await setup_deconz_integration(hass, get_state_response=data)
     assert "switch.on_off_switch" in gateway.deconz_ids
     assert "switch.smart_plug" in gateway.deconz_ids
     assert "switch.warning_device" in gateway.deconz_ids
     assert "switch.unsupported_switch" not in gateway.deconz_ids
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 4
 
     on_off_switch = hass.states.get("switch.on_off_switch")
     assert on_off_switch.state == "on"
@@ -166,4 +161,4 @@ async def test_switches(hass):
 
     await gateway.async_reset()
 
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 0

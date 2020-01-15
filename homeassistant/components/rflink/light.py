@@ -14,23 +14,19 @@ import homeassistant.helpers.config_validation as cv
 
 from . import (
     CONF_ALIASES,
-    CONF_ALIASSES,
     CONF_AUTOMATIC_ADD,
     CONF_DEVICE_DEFAULTS,
     CONF_DEVICES,
     CONF_FIRE_EVENT,
     CONF_GROUP,
     CONF_GROUP_ALIASES,
-    CONF_GROUP_ALIASSES,
     CONF_NOGROUP_ALIASES,
-    CONF_NOGROUP_ALIASSES,
     CONF_SIGNAL_REPETITIONS,
     DATA_DEVICE_REGISTER,
     DEVICE_DEFAULTS_SCHEMA,
     EVENT_KEY_COMMAND,
     EVENT_KEY_ID,
     SwitchableRflinkDevice,
-    remove_deprecated,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,14 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                     vol.Optional(CONF_FIRE_EVENT): cv.boolean,
                     vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
                     vol.Optional(CONF_GROUP, default=True): cv.boolean,
-                    # deprecated config options
-                    vol.Optional(CONF_ALIASSES): vol.All(cv.ensure_list, [cv.string]),
-                    vol.Optional(CONF_GROUP_ALIASSES): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
-                    vol.Optional(CONF_NOGROUP_ALIASSES): vol.All(
-                        cv.ensure_list, [cv.string]
-                    ),
                 }
             )
         },
@@ -131,7 +119,6 @@ def devices_from_config(domain_config):
         entity_class = entity_class_for_type(entity_type)
 
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
-        remove_deprecated(device_config)
 
         is_hybrid = entity_class is HybridRflinkLight
 

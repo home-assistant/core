@@ -240,7 +240,7 @@ def async_set_service_schema(hass, domain, service, schema):
         "fields": schema.get("fields") or {},
     }
 
-    hass.data[SERVICE_DESCRIPTION_CACHE]["{}.{}".format(domain, service)] = description
+    hass.data[SERVICE_DESCRIPTION_CACHE][f"{domain}.{service}"] = description
 
 
 @bind_hass

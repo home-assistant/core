@@ -4,6 +4,7 @@ import re
 
 from simplipy.entity import EntityTypes
 from simplipy.system import SystemStates
+from simplipy.system.v3 import VOLUME_HIGH, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_OFF
 
 from homeassistant.components.alarm_control_panel import (
     FORMAT_NUMBER,
@@ -48,6 +49,13 @@ ATTR_VOICE_PROMPT_VOLUME = "voice_prompt_volume"
 ATTR_WALL_POWER_LEVEL = "wall_power_level"
 ATTR_WIFI_STRENGTH = "wifi_strength"
 
+VOLUME_STRING_MAP = {
+    VOLUME_HIGH: "high",
+    VOLUME_LOW: "low",
+    VOLUME_MEDIUM: "medium",
+    VOLUME_OFF: "off",
+}
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a SimpliSafe alarm control panel based on existing config."""
@@ -82,9 +90,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
             self._attrs.update(
                 {
                     ATTR_ALARM_DURATION: self._system.alarm_duration,
-                    ATTR_ALARM_VOLUME: self._system.alarm_volume.name,
+                    ATTR_ALARM_VOLUME: VOLUME_STRING_MAP[self._system.alarm_volume],
                     ATTR_BATTERY_BACKUP_POWER_LEVEL: self._system.battery_backup_power_level,
-                    ATTR_CHIME_VOLUME: self._system.chime_volume.name,
+                    ATTR_CHIME_VOLUME: VOLUME_STRING_MAP[self._system.chime_volume],
                     ATTR_ENTRY_DELAY_AWAY: self._system.entry_delay_away,
                     ATTR_ENTRY_DELAY_HOME: self._system.entry_delay_home,
                     ATTR_EXIT_DELAY_AWAY: self._system.exit_delay_away,
@@ -92,7 +100,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
                     ATTR_GSM_STRENGTH: self._system.gsm_strength,
                     ATTR_LIGHT: self._system.light,
                     ATTR_RF_JAMMING: self._system.rf_jamming,
-                    ATTR_VOICE_PROMPT_VOLUME: self._system.voice_prompt_volume.name,
+                    ATTR_VOICE_PROMPT_VOLUME: VOLUME_STRING_MAP[
+                        self._system.voice_prompt_volume
+                    ],
                     ATTR_WALL_POWER_LEVEL: self._system.wall_power_level,
                     ATTR_WIFI_STRENGTH: self._system.wifi_strength,
                 }
@@ -177,11 +187,23 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
             self._state = None
 
         last_event = self._simplisafe.last_event_data[self._system.system_id]
+
+        try:
+            last_event_sensor_type = EntityTypes(last_event["sensorType"]).name
+        except ValueError:
+            _LOGGER.warning(
+                'Encountered unknown entity type: %s ("%s"). Please report it at'
+                "https://github.com/home-assistant/home-assistant/issues.",
+                last_event["sensorType"],
+                last_event["sensorName"],
+            )
+            last_event_sensor_type = None
+
         self._attrs.update(
             {
                 ATTR_LAST_EVENT_INFO: last_event["info"],
                 ATTR_LAST_EVENT_SENSOR_NAME: last_event["sensorName"],
-                ATTR_LAST_EVENT_SENSOR_TYPE: EntityTypes(last_event["sensorType"]).name,
+                ATTR_LAST_EVENT_SENSOR_TYPE: last_event_sensor_type,
                 ATTR_LAST_EVENT_TIMESTAMP: utc_from_timestamp(
                     last_event["eventTimestamp"]
                 ),

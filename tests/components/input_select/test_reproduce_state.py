@@ -68,5 +68,5 @@ async def test_reproducing_states(hass, caplog):
     )
 
     # These should fail if options weren't changed to VALID_OPTION_SET2
-    assert hass.states.get(ENTITY).attributes == {"options": VALID_OPTION_SET2}
+    assert hass.states.get(ENTITY).attributes["options"] == VALID_OPTION_SET2
     assert hass.states.get(ENTITY).state == VALID_OPTION5

@@ -182,7 +182,7 @@ def mocked_requests_get(*args, **kwargs):
                 "sqliteVersion": "3.16.2",
                 "urlBase": "",
                 "runtimeVersion": (
-                    "4.6.1 " "(Stable 4.6.1.3/abb06f1 " "Mon Oct  3 07:57:59 UTC 2016)"
+                    "4.6.1 (Stable 4.6.1.3/abb06f1 Mon Oct  3 07:57:59 UTC 2016)"
                 ),
             },
             200,

@@ -369,7 +369,7 @@ class HarmonyRemote(remote.RemoteDevice):
 
         for result in result_list:
             _LOGGER.error(
-                "Sending command %s to device %s failed with code " "%s: %s",
+                "Sending command %s to device %s failed with code %s: %s",
                 result.command.command,
                 result.command.device,
                 result.code,

@@ -148,7 +148,7 @@ class BitcoinSensor(Entity):
         elif self.type == "total_btc":
             self._state = "{0:.2f}".format(stats.total_btc * 0.00000001)
         elif self.type == "total_blocks":
-            self._state = "{0:.2f}".format(stats.total_blocks)
+            self._state = "{0:.0f}".format(stats.total_blocks)
         elif self.type == "next_retarget":
             self._state = "{0:.2f}".format(stats.next_retarget)
         elif self.type == "estimated_transaction_volume_usd":

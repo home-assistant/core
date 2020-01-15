@@ -299,7 +299,7 @@ class Script:
             _LOGGER.error("Error rendering '%s' delay template: %s", self.name, ex)
             raise _StopScript
 
-        self.last_action = action.get(CONF_ALIAS, "delay {}".format(delay))
+        self.last_action = action.get(CONF_ALIAS, f"delay {delay}")
         self._log("Executing step %s" % self.last_action)
 
         unsub = async_track_point_in_utc_time(
@@ -408,7 +408,7 @@ class Script:
 
         self.last_action = action.get(CONF_ALIAS, action[CONF_CONDITION])
         check = config(self.hass, variables)
-        self._log("Test condition {}: {}".format(self.last_action, check))
+        self._log(f"Test condition {self.last_action}: {check}")
 
         if not check:
             raise _StopScript
@@ -446,6 +446,6 @@ class Script:
     def _log(self, msg):
         """Logger helper."""
         if self.name is not None:
-            msg = "Script {}: {}".format(self.name, msg)
+            msg = f"Script {self.name}: {msg}"
 
         _LOGGER.info(msg)

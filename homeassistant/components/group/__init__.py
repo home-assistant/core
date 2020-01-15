@@ -183,6 +183,24 @@ def get_entity_ids(
     return [ent_id for ent_id in entity_ids if ent_id.startswith(domain_filter)]
 
 
+@bind_hass
+def groups_with_entity(hass: HomeAssistantType, entity_id: str) -> List[str]:
+    """Get all groups that contain this entity.
+
+    Async friendly.
+    """
+    if DOMAIN not in hass.data:
+        return []
+
+    groups = []
+
+    for group in hass.data[DOMAIN].entities:
+        if entity_id in group.tracking:
+            groups.append(group.entity_id)
+
+    return groups
+
+
 async def async_setup(hass, config):
     """Set up all groups found defined in the configuration."""
     component = hass.data.get(DOMAIN)
@@ -582,12 +600,12 @@ class Group(Entity):
         self._async_update_group_state()
 
     async def async_added_to_hass(self):
-        """Handle addition to HASS."""
+        """Handle addition to Home Assistant."""
         if self.tracking:
             self.async_start()
 
     async def async_will_remove_from_hass(self):
-        """Handle removal from HASS."""
+        """Handle removal from Home Assistant."""
         if self._async_unsub_state_changed:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None

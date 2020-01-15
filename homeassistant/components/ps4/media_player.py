@@ -376,7 +376,7 @@ class PS4Device(MediaPlayerDevice):
             self._unique_id = format_unique_id(self._creds, status["host-id"])
 
     async def async_will_remove_from_hass(self):
-        """Remove Entity from Hass."""
+        """Remove Entity from Home Assistant."""
         # Close TCP Transport.
         if self._ps4.connected:
             await self._ps4.close()

@@ -6,7 +6,6 @@ from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components import group
 from homeassistant.const import SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
@@ -21,9 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "fan"
 SCAN_INTERVAL = timedelta(seconds=30)
-
-GROUP_NAME_ALL_FANS = "all fans"
-ENTITY_ID_ALL_FANS = group.ENTITY_ID_FORMAT.format(GROUP_NAME_ALL_FANS)
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -51,16 +47,14 @@ ATTR_DIRECTION = "direction"
 
 PROP_TO_ATTR = {
     "speed": ATTR_SPEED,
-    "speed_list": ATTR_SPEED_LIST,
     "oscillating": ATTR_OSCILLATING,
     "current_direction": ATTR_DIRECTION,
 }
 
 
 @bind_hass
-def is_on(hass, entity_id: Optional[str] = None) -> bool:
+def is_on(hass, entity_id: str) -> bool:
     """Return if the fans are on based on the statemachine."""
-    entity_id = entity_id or ENTITY_ID_ALL_FANS
     state = hass.states.get(entity_id)
     return state.attributes[ATTR_SPEED] not in [SPEED_OFF, None]
 
@@ -68,7 +62,7 @@ def is_on(hass, entity_id: Optional[str] = None) -> bool:
 async def async_setup(hass, config: dict):
     """Expose fan control via statemachine and services."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_FANS
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)
@@ -79,17 +73,22 @@ async def async_setup(hass, config: dict):
     component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
     component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
     component.async_register_entity_service(
-        SERVICE_SET_SPEED, {vol.Required(ATTR_SPEED): cv.string}, "async_set_speed"
+        SERVICE_SET_SPEED,
+        {vol.Required(ATTR_SPEED): cv.string},
+        "async_set_speed",
+        [SUPPORT_SET_SPEED],
     )
     component.async_register_entity_service(
         SERVICE_OSCILLATE,
         {vol.Required(ATTR_OSCILLATING): cv.boolean},
         "async_oscillate",
+        [SUPPORT_OSCILLATE],
     )
     component.async_register_entity_service(
         SERVICE_SET_DIRECTION,
         {vol.Optional(ATTR_DIRECTION): cv.string},
         "async_set_direction",
+        [SUPPORT_DIRECTION],
     )
 
     return True
@@ -177,6 +176,11 @@ class FanEntity(ToggleEntity):
     def current_direction(self) -> Optional[str]:
         """Return the current direction of the fan."""
         return None
+
+    @property
+    def capability_attributes(self):
+        """Return capabilitiy attributes."""
+        return {ATTR_SPEED_LIST: self.speed_list}
 
     @property
     def state_attributes(self) -> dict:

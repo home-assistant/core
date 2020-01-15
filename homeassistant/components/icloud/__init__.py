@@ -46,9 +46,9 @@ from .const import (
     DEVICE_STATUS_SET,
     DOMAIN,
     ICLOUD_COMPONENTS,
+    SERVICE_UPDATE,
     STORAGE_KEY,
     STORAGE_VERSION,
-    TRACKER_UPDATE,
 )
 
 ATTRIBUTION = "Data provided by Apple iCloud"
@@ -216,7 +216,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
         if icloud_account is None:
             raise Exception(
-                "No iCloud account with username or name " + account_identifier
+                f"No iCloud account with username or name {account_identifier}"
             )
         return icloud_account
 
@@ -336,7 +336,7 @@ class IcloudAccount:
                 self._devices[device_id] = IcloudDevice(self, device, status)
                 self._devices[device_id].update(status)
 
-        dispatcher_send(self.hass, TRACKER_UPDATE)
+        dispatcher_send(self.hass, SERVICE_UPDATE)
         self._fetch_interval = self._determine_interval()
         track_point_in_utc_time(
             self.hass,
@@ -430,7 +430,7 @@ class IcloudAccount:
             if slugify(device.name.replace(" ", "", 99)) == name_slug:
                 result.append(device)
         if not result:
-            raise Exception("No device with name " + name)
+            raise Exception(f"No device with name {name}")
         return result
 
     @property

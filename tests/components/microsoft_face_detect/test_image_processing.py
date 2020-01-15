@@ -28,7 +28,7 @@ class TestMicrosoftFaceDetectSetup:
         self.hass.stop()
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
         return_value=mock_coro(),
     )
     def test_setup_platform(self, store_mock):
@@ -49,7 +49,7 @@ class TestMicrosoftFaceDetectSetup:
         assert self.hass.states.get("image_processing.microsoftface_demo_camera")
 
     @patch(
-        "homeassistant.components.microsoft_face." "MicrosoftFace.update_store",
+        "homeassistant.components.microsoft_face.MicrosoftFace.update_store",
         return_value=mock_coro(),
     )
     def test_setup_platform_name(self, store_mock):
