@@ -106,7 +106,7 @@ async def async_setup_entry(hass, config_entry):
 
     # Create the "sun.sun" entity for backwards compatibility:
     legacy_entity = LegacySunEntity(hass, sun)
-    legacy_entity.update()
+    legacy_entity.force_update_state()
 
     return True
 
@@ -288,7 +288,7 @@ class LegacySunEntity(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_DATA_UPDATE, self.update
+            self.hass, TOPIC_DATA_UPDATE, self.force_update_state
         )
 
     async def async_will_remove_fromhass(self):
@@ -297,6 +297,6 @@ class LegacySunEntity(Entity):
             self._async_unsub_dispatcher_connect()
 
     @callback
-    def update(self):
+    def force_update_state(self):
         """Update the entity."""
         self.schedule_update_ha_state(True)
