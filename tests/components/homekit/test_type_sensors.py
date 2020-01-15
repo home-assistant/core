@@ -1,4 +1,5 @@
 """Test different accessory types: Sensors."""
+from homeassistant.components.homekit import get_accessory
 from homeassistant.components.homekit.const import (
     PROP_CELSIUS,
     THRESHOLD_CO,
@@ -17,6 +18,7 @@ from homeassistant.components.homekit.type_sensors import (
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
+    EVENT_HOMEASSISTANT_START,
     STATE_HOME,
     STATE_NOT_HOME,
     STATE_OFF,
@@ -25,6 +27,8 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import CoreState
+from homeassistant.helpers import entity_registry
 
 
 async def test_temperature(hass, hk_driver):
@@ -262,3 +266,34 @@ async def test_binary_device_classes(hass, hk_driver):
         acc = BinarySensor(hass, hk_driver, "Binary Sensor", entity_id, 2, None)
         assert acc.get_service(service).display_name == service
         assert acc.char_detected.display_name == char
+
+
+async def test_sensor_restore(hass, hk_driver, events):
+    """Test setting up an entity from state in the event registry."""
+    hass.state = CoreState.not_running
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    registry.async_get_or_create(
+        "sensor",
+        "generic",
+        "1234",
+        suggested_object_id="temperature",
+        device_class="temperature",
+    )
+    registry.async_get_or_create(
+        "sensor",
+        "generic",
+        "12345",
+        suggested_object_id="humidity",
+        device_class="humidity",
+        unit_of_measurement="%",
+    )
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+
+    acc = get_accessory(hass, hk_driver, hass.states.get("sensor.temperature"), 2, {})
+    assert acc.category == 10
+
+    acc = get_accessory(hass, hk_driver, hass.states.get("sensor.humidity"), 2, {})
+    assert acc.category == 10

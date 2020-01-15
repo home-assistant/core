@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Airly-integration for disse koordinater er allerede konfigureret."
+        },
         "error": {
             "auth": "API-n\u00f8glen er ikke korrekt.",
             "name_exists": "Navnet findes allerede.",

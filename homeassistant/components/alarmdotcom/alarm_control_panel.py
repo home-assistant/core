@@ -115,7 +115,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
             await self._alarm.async_alarm_disarm()
 
     async def async_alarm_arm_home(self, code=None):
-        """Send arm hom command."""
+        """Send arm home command."""
         if self._validate_code(code):
             await self._alarm.async_alarm_arm_home()
 

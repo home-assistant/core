@@ -25,7 +25,7 @@
                 "data": {
                     "mfa_code": "SMS Code"
                 },
-                "description": "Geben Sie den an das Telefon gesendeten Code ein {Telefon_Nummer}",
+                "description": "Gib den an das Telefon gesendeten Code ein {Telefon_Nummer}",
                 "title": "2-Faktor-Authentifizierung"
             },
             "auth_user": {

@@ -85,7 +85,9 @@
             "remote_rotate_from_side_3": "\"\uba74 3\" \uc5d0\uc11c \"{subtype}\" \ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
             "remote_rotate_from_side_4": "\"\uba74 4\" \uc5d0\uc11c \"{subtype}\" \ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
             "remote_rotate_from_side_5": "\"\uba74 5\" \uc5d0\uc11c \"{subtype}\" \ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
-            "remote_rotate_from_side_6": "\"\uba74 6\" \uc5d0\uc11c \"{subtype}\" \ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c"
+            "remote_rotate_from_side_6": "\"\uba74 6\" \uc5d0\uc11c \"{subtype}\" \ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
+            "remote_turned_clockwise": "\uc2dc\uacc4 \ubc29\ud5a5\uc73c\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c",
+            "remote_turned_counter_clockwise": "\ubc18\uc2dc\uacc4 \ubc29\ud5a5\uc73c\ub85c \uae30\uae30\uac00 \ud68c\uc804\ub420 \ub54c"
         }
     },
     "options": {

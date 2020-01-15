@@ -18,6 +18,7 @@ import attr
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
+    ATTR_UNIT_OF_MEASUREMENT,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
 )
@@ -77,6 +78,7 @@ class RegistryEntry:
     capabilities: Optional[Dict[str, Any]] = attr.ib(default=None)
     supported_features: int = attr.ib(default=0)
     device_class: Optional[str] = attr.ib(default=None)
+    unit_of_measurement: Optional[str] = attr.ib(default=None)
     domain = attr.ib(type=str, init=False, repr=False)
 
     @domain.default
@@ -164,6 +166,7 @@ class EntityRegistry:
         capabilities: Optional[Dict[str, Any]] = None,
         supported_features: Optional[int] = None,
         device_class: Optional[str] = None,
+        unit_of_measurement: Optional[str] = None,
     ) -> RegistryEntry:
         """Get entity. Create if it doesn't exist."""
         config_entry_id = None
@@ -180,6 +183,7 @@ class EntityRegistry:
                 capabilities=capabilities or _UNDEF,
                 supported_features=supported_features or _UNDEF,
                 device_class=device_class or _UNDEF,
+                unit_of_measurement=unit_of_measurement or _UNDEF,
                 # When we changed our slugify algorithm, we invalidated some
                 # stored entity IDs with either a __ or ending in _.
                 # Fix introduced in 0.86 (Jan 23, 2019). Next line can be
@@ -210,6 +214,7 @@ class EntityRegistry:
             capabilities=capabilities,
             supported_features=supported_features or 0,
             device_class=device_class,
+            unit_of_measurement=unit_of_measurement,
         )
         self.entities[entity_id] = entity
         _LOGGER.info("Registered new %s.%s entity: %s", domain, platform, entity_id)
@@ -279,6 +284,7 @@ class EntityRegistry:
         capabilities=_UNDEF,
         supported_features=_UNDEF,
         device_class=_UNDEF,
+        unit_of_measurement=_UNDEF,
     ):
         """Private facing update properties method."""
         old = self.entities[entity_id]
@@ -293,6 +299,7 @@ class EntityRegistry:
             ("capabilities", capabilities),
             ("supported_features", supported_features),
             ("device_class", device_class),
+            ("unit_of_measurement", unit_of_measurement),
         ):
             if value is not _UNDEF and value != getattr(old, attr_name):
                 changes[attr_name] = value
@@ -369,6 +376,7 @@ class EntityRegistry:
                     capabilities=entity.get("capabilities") or {},
                     supported_features=entity.get("supported_features", 0),
                     device_class=entity.get("device_class"),
+                    unit_of_measurement=entity.get("unit_of_measurement"),
                 )
 
         self.entities = entities
@@ -395,6 +403,7 @@ class EntityRegistry:
                 "capabilities": entry.capabilities,
                 "supported_features": entry.supported_features,
                 "device_class": entry.device_class,
+                "unit_of_measurement": entry.unit_of_measurement,
             }
             for entry in self.entities.values()
         ]
@@ -502,14 +511,17 @@ def async_setup_entity_restore(
 
             attrs: Dict[str, Any] = {ATTR_RESTORED: True}
 
-            if entry.capabilities:
+            if entry.capabilities is not None:
                 attrs.update(entry.capabilities)
 
-            if entry.supported_features:
+            if entry.supported_features is not None:
                 attrs[ATTR_SUPPORTED_FEATURES] = entry.supported_features
 
-            if entry.device_class:
+            if entry.device_class is not None:
                 attrs[ATTR_DEVICE_CLASS] = entry.device_class
+
+            if entry.unit_of_measurement is not None:
+                attrs[ATTR_UNIT_OF_MEASUREMENT] = entry.unit_of_measurement
 
             states.async_set(entry.entity_id, STATE_UNAVAILABLE, attrs)
 

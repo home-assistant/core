@@ -83,6 +83,16 @@ class EntityPlatform:
         platform = self.platform
         hass = self.hass
 
+        if not hasattr(platform, "async_setup_platform") and not hasattr(
+            platform, "setup_platform"
+        ):
+            self.logger.error(
+                "The %s platform for the %s integration does not support platform setup. Please remove it from your config.",
+                self.platform_name,
+                self.domain,
+            )
+            return
+
         @callback
         def async_create_setup_task():
             """Get task to set up platform."""
@@ -136,7 +146,8 @@ class EntityPlatform:
         warn_task = hass.loop.call_later(
             SLOW_SETUP_WARNING,
             logger.warning,
-            "Setup of platform %s is taking over %s seconds.",
+            "Setup of %s platform %s is taking over %s seconds.",
+            self.domain,
             self.platform_name,
             SLOW_SETUP_WARNING,
         )
@@ -344,6 +355,7 @@ class EntityPlatform:
                 capabilities=entity.capability_attributes,
                 supported_features=entity.supported_features,
                 device_class=entity.device_class,
+                unit_of_measurement=entity.unit_of_measurement,
             )
 
             entity.registry_entry = entry

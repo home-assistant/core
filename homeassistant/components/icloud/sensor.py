@@ -4,12 +4,13 @@ from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME, DEVICE_CLASS_BATTERY
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import IcloudDevice
-from .const import DOMAIN
+from .const import DOMAIN, SERVICE_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ class IcloudDeviceBatterySensor(Entity):
     def __init__(self, device: IcloudDevice):
         """Initialize the battery sensor."""
         self._device = device
+        self._unsub_dispatcher = None
 
     @property
     def unique_id(self) -> str:
@@ -83,3 +85,18 @@ class IcloudDeviceBatterySensor(Entity):
             "manufacturer": "Apple",
             "model": self._device.device_model,
         }
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        self._unsub_dispatcher = async_dispatcher_connect(
+            self.hass, SERVICE_UPDATE, self.async_write_ha_state
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Clean up after entity before removal."""
+        self._unsub_dispatcher()

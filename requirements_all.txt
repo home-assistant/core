@@ -172,7 +172,7 @@ aioimaplib==0.7.15
 aiokafka==0.5.1
 
 # homeassistant.components.kef
-aiokef==0.2.2
+aiokef==0.2.5
 
 # homeassistant.components.lifx
 aiolifx==0.6.7
@@ -190,7 +190,7 @@ aionotion==1.1.0
 aiopvapi==1.6.14
 
 # homeassistant.components.webostv
-aiopylgtv==0.2.4
+aiopylgtv==0.2.6
 
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
@@ -235,7 +235,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.apprise
-apprise==0.8.2
+apprise==0.8.3
 
 # homeassistant.components.aprs
 aprslib==0.6.46
@@ -366,9 +366,6 @@ caldav==0.6.1
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.3
 
-# homeassistant.components.ciscospark
-ciscosparkapi==0.4.2
-
 # homeassistant.components.cppm_tracker
 clearpasspy==1.0.2
 
@@ -477,7 +474,7 @@ eliqonline==1.2.2
 elkm1-lib==0.7.15
 
 # homeassistant.components.emulated_roku
-emulated_roku==0.1.8
+emulated_roku==0.1.9
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -486,7 +483,7 @@ enocean==0.50
 enturclient==0.2.1
 
 # homeassistant.components.environment_canada
-env_canada==0.0.31
+env_canada==0.0.34
 
 # homeassistant.components.envirophat
 # envirophat==0.0.6
@@ -549,7 +546,7 @@ freesms==0.1.2
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
-# fritzconnection==0.8.4
+fritzconnection==1.2.0
 
 # homeassistant.components.fritzdect
 fritzhome==1.0.4
@@ -698,7 +695,7 @@ horimote==0.4.1
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.4.4
+huawei-lte-api==1.4.6
 
 # homeassistant.components.hydrawise
 hydrawiser==0.1.1
@@ -905,7 +902,7 @@ niko-home-control==0.2.1
 niluclient==0.1.2
 
 # homeassistant.components.nederlandse_spoorwegen
-nsapi==2.7.4
+nsapi==3.0.0
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
@@ -953,7 +950,7 @@ openwebifpy==3.1.1
 openwrt-luci-rpc==1.1.2
 
 # homeassistant.components.oru
-oru==0.1.9
+oru==0.1.11
 
 # homeassistant.components.orvibo
 orvibo==1.1.1
@@ -1140,7 +1137,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==3.1.0
+pyatmo==3.2.0
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1678,7 +1675,7 @@ pytradfri[async]==6.4.0
 pytrafikverket==0.1.5.9
 
 # homeassistant.components.ubee
-pyubee==0.7
+pyubee==0.8
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==0.0.5
@@ -1753,7 +1750,7 @@ rfk101py==0.0.1
 rflink==0.0.50
 
 # homeassistant.components.ring
-ring_doorbell==0.2.9
+ring_doorbell==0.6.0
 
 # homeassistant.components.fleetgo
 ritassist==0.9.2
@@ -1819,7 +1816,7 @@ shodan==1.21.2
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==5.3.6
+simplisafe-python==6.0.0
 
 # homeassistant.components.sisyphus
 sisyphus-control==2.2.1
@@ -1957,7 +1954,7 @@ temperusb==1.5.3
 # tensorflow==1.13.2
 
 # homeassistant.components.tesla
-teslajsonpy==0.2.2
+teslajsonpy==0.2.3
 
 # homeassistant.components.thermoworks_smoke
 thermoworks_smoke==0.1.8
@@ -2103,7 +2100,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.01.01
+youtube_dl==2020.01.15
 
 # homeassistant.components.zengge
 zengge==0.2
@@ -2112,7 +2109,7 @@ zengge==0.2
 zeroconf==0.24.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.30
+zha-quirks==0.0.31
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9
