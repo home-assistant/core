@@ -114,6 +114,7 @@ homeassistant/components/foursquare/* @robbiet480
 homeassistant/components/freebox/* @snoof85
 homeassistant/components/fronius/* @nielstron
 homeassistant/components/frontend/* @home-assistant/frontend
+homeassistant/components/garmin_connect/* @cyberjunky
 homeassistant/components/gearbest/* @HerrHofrat
 homeassistant/components/geniushub/* @zxdavb
 homeassistant/components/geo_rss_events/* @exxamalte
