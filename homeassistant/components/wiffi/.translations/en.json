@@ -9,9 +9,9 @@
                 "data": {
                     "port": "Server Port"
                 },
-                "title": "Setup TCP server for Wiffi devices"
+                "title": "Setup TCP server for WIFFI devices"
             }
         },
-        "title": "wiffi"
+        "title": "STALL WIFFI"
     }
 }

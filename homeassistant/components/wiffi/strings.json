@@ -1,9 +1,9 @@
 {
   "config": {
-    "title": "wiffi",
+    "title": "STALL WIFFI",
     "step": {
       "user": {
-        "title": "Setup TCP server for Wiffi devices",
+        "title": "Setup TCP server for WIFFI devices",
         "data": {
           "port": "Server Port"
         }
