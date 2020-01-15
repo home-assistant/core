@@ -93,18 +93,21 @@ _TRIGGER_SCHEMA = vol.All(
 
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
-PLATFORM_SCHEMA = vol.Schema(
-    {
-        # str on purpose
-        CONF_ID: str,
-        CONF_ALIAS: cv.string,
-        vol.Optional(CONF_DESCRIPTION): cv.string,
-        vol.Optional(CONF_INITIAL_STATE): cv.boolean,
-        vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
-        vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
-        vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
-        vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.107"),
+    vol.Schema(
+        {
+            # str on purpose
+            CONF_ID: str,
+            CONF_ALIAS: cv.string,
+            vol.Optional(CONF_DESCRIPTION): cv.string,
+            vol.Optional(CONF_INITIAL_STATE): cv.boolean,
+            vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
+            vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
+            vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
+            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
+        }
+    ),
 )
 
 TRIGGER_SERVICE_SCHEMA = make_entity_service_schema(
