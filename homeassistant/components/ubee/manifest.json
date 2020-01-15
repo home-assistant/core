@@ -3,7 +3,7 @@
   "name": "Ubee",
   "documentation": "https://www.home-assistant.io/integrations/ubee",
   "requirements": [
-    "pyubee==0.7"
+    "pyubee==0.8"
   ],
   "dependencies": [],
   "codeowners": []
