@@ -111,7 +111,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     collection.attach_entity_component_collection(component, storage_collection, Timer)
 
     await yaml_collection.async_load(
-        [{CONF_ID: id_, **cfg} for id_, cfg in config[DOMAIN].items()]
+        [{CONF_ID: id_, **cfg} for id_, cfg in config.get(DOMAIN, {}).items()]
     )
     await storage_collection.async_load()
 
@@ -138,7 +138,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         if conf is None:
             conf = {DOMAIN: {}}
         await yaml_collection.async_load(
-            [{CONF_ID: id_, **cfg} for id_, cfg in conf[DOMAIN].items()]
+            [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
         )
 
     homeassistant.helpers.service.async_register_admin_service(
