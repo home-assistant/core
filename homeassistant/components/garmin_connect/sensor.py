@@ -1,6 +1,4 @@
-"""
-Platform for Garmin Connect integration.
-"""
+"""Platform for Garmin Connect integration."""
 from datetime import date
 from datetime import timedelta
 import logging
@@ -253,6 +251,6 @@ class GarminConnectSensor(Entity):
             else:
                 self._state = data[self._type]
 
-       _LOGGER.debug(
+        _LOGGER.debug(
             "Device %s set to state %s %s", self._type, self._state, self._unit
         )
