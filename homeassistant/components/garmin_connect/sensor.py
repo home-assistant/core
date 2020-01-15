@@ -253,5 +253,6 @@ class GarminConnectSensor(Entity):
             else:
                 self._state = data[self._type]
 
-        _LOGGER.debug("Device %s set to state %s %s", self._type, self._state, self._unit)
-
+        _LOGGER.debug(
+            "Device %s set to state %s %s", self._type, self._state, self._unit
+        )
