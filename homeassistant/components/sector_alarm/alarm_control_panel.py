@@ -1,13 +1,16 @@
 """The Sector Alarm Integration."""
 import logging
 
-import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
 )
-import homeassistant.components.sector_alarm as sector_alarm
-from homeassistant.components.sector_alarm import DOMAIN as SECTOR_DOMAIN
+from homeassistant.components.sector_alarm import (
+    CONF_CODE,
+    CONF_ID,
+    DOMAIN as SECTOR_DOMAIN,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -22,13 +25,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Initialition of the platform."""
     sector_connection = hass.data.get(SECTOR_DOMAIN)
 
-    code = discovery_info[sector_alarm.CONF_CODE]
-    panel_id = discovery_info[sector_alarm.CONF_ID]
+    code = discovery_info[CONF_CODE]
+    panel_id = discovery_info[CONF_ID]
 
     async_add_entities([SectorAlarmPanel(sector_connection, panel_id, code)])
 
 
-class SectorAlarmPanel(alarm.AlarmControlPanel):
+class SectorAlarmPanel(AlarmControlPanel):
     """Get the alarm status, and arm/disarm alarm."""
 
     def __init__(self, sector_connect, alarm_id, code):

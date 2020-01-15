@@ -1,18 +1,16 @@
 """The Sector Alarm Integration."""
 import logging
 
-import sectoralarmlib.sector as sectorlib
+from sectoralarmlib.sector import SectorAlarm
 import voluptuous as vol
 
-from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_ID, CONF_NAME, CONF_PASSWORD
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = "sector_alarm"
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_ID = "alarm_id"
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -32,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Initialitation for Sector Alarm."""
     try:
-        alarm = sectorlib.SectorAlarm(
+        alarm = SectorAlarm(
             config[DOMAIN][CONF_EMAIL],
             config[DOMAIN][CONF_PASSWORD],
             config[DOMAIN][CONF_ID],
