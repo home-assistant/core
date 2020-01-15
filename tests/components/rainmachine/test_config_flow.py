@@ -9,8 +9,8 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SSL,
     CONF_SCAN_INTERVAL,
+    CONF_SSL,
 )
 
 from tests.common import MockConfigEntry, mock_coro

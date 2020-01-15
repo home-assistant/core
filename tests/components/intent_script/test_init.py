@@ -1,18 +1,15 @@
 """Test intent_script component."""
-import asyncio
-
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.helpers import intent
 
 from tests.common import async_mock_service
 
 
-@asyncio.coroutine
-def test_intent_script(hass):
+async def test_intent_script(hass):
     """Test intent scripts work."""
     calls = async_mock_service(hass, "test", "service")
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         "intent_script",
         {
@@ -32,7 +29,7 @@ def test_intent_script(hass):
         },
     )
 
-    response = yield from intent.async_handle(
+    response = await intent.async_handle(
         hass, "test", "HelloWorld", {"name": {"value": "Paulus"}}
     )
 

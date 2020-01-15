@@ -9,14 +9,14 @@ the user has submitted configuration information.
 import functools as ft
 import logging
 
-from homeassistant.core import callback as async_callback
 from homeassistant.const import (
-    EVENT_TIME_CHANGED,
-    ATTR_FRIENDLY_NAME,
     ATTR_ENTITY_PICTURE,
+    ATTR_FRIENDLY_NAME,
+    EVENT_TIME_CHANGED,
 )
-from homeassistant.loader import bind_hass
+from homeassistant.core import callback as async_callback
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)

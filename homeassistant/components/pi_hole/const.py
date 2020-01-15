@@ -4,8 +4,8 @@ from datetime import timedelta
 DOMAIN = "pi_hole"
 
 CONF_LOCATION = "location"
+CONF_SLUG = "slug"
 
-DEFAULT_HOST = "pi.hole"
 DEFAULT_LOCATION = "admin"
 DEFAULT_METHOD = "GET"
 DEFAULT_NAME = "Pi-Hole"
@@ -13,8 +13,10 @@ DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
 SERVICE_DISABLE = "disable"
-SERVICE_ENABLE = "enable"
 SERVICE_DISABLE_ATTR_DURATION = "duration"
+SERVICE_DISABLE_ATTR_NAME = "name"
+SERVICE_ENABLE = "enable"
+SERVICE_ENABLE_ATTR_NAME = SERVICE_DISABLE_ATTR_NAME
 
 ATTR_BLOCKED_DOMAINS = "domains_blocked"
 

@@ -15,9 +15,9 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_AWAY,
+    PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    PRESET_NONE,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -214,7 +214,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                     else:
                         self._target_temp = self.min_temp
                     _LOGGER.warning(
-                        "Undefined target temperature," "falling back to %s",
+                        "Undefined target temperature, falling back to %s",
                         self._target_temp,
                     )
                 else:

@@ -6,7 +6,7 @@ import requests
 from uvcclient import camera as uvc_camera, nvr
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
+from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.const import CONF_PORT, CONF_SSL
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -91,6 +91,17 @@ class UnifiVideoCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    @property
+    def supported_features(self):
+        """Return supported features."""
+        caminfo = self._nvr.get_camera(self._uuid)
+        channels = caminfo["channels"]
+        for channel in channels:
+            if channel["isRtspEnabled"]:
+                return SUPPORT_STREAM
+
+        return 0
 
     @property
     def is_recording(self):
@@ -199,3 +210,13 @@ class UnifiVideoCamera(Camera):
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
         self.set_motion_detection(False)
+
+    async def stream_source(self):
+        """Return the source of the stream."""
+        caminfo = self._nvr.get_camera(self._uuid)
+        channels = caminfo["channels"]
+        for channel in channels:
+            if channel["isRtspEnabled"]:
+                return channel["rtspUris"][0]
+
+        return None

@@ -253,7 +253,7 @@ async def test_error_fetching_new_version_invalid_response(hass, aioclient_mock)
 async def test_new_version_shows_entity_after_hour_hassio(
     hass, mock_get_uuid, mock_get_newest_version, mock_utcnow
 ):
-    """Test if binary sensor gets updated if new version is available / hass.io."""
+    """Test if binary sensor gets updated if new version is available / Hass.io."""
     mock_get_uuid.return_value = MOCK_HUUID
     mock_get_newest_version.return_value = mock_coro((NEW_VERSION, RELEASE_NOTES))
     mock_component(hass, "hassio")

@@ -1,9 +1,7 @@
 """Test for smart home alexa support."""
 import pytest
 
-from homeassistant.core import Context, callback
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.components.alexa import smart_home, messages
+from homeassistant.components.alexa import messages, smart_home
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -11,6 +9,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
+    SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
@@ -18,21 +17,23 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.core import Context, callback
 from homeassistant.helpers import entityfilter
 
-from tests.common import async_mock_service
-
 from . import (
-    get_new_request,
-    MockConfig,
     DEFAULT_CONFIG,
-    assert_request_calls_service,
-    assert_request_fails,
+    MockConfig,
     ReportedProperties,
     assert_power_controller_works,
+    assert_request_calls_service,
+    assert_request_fails,
     assert_scene_controller_works,
+    get_new_request,
     reported_properties,
 )
+
+from tests.common import async_mock_service
 
 
 @pytest.fixture
@@ -126,10 +127,12 @@ async def discovery_test(device, hass, expected_endpoints=1):
     return None
 
 
-def get_capability(capabilities, capability_name):
+def get_capability(capabilities, capability_name, instance=None):
     """Search a set of capabilities for a specific one."""
     for capability in capabilities:
-        if capability["interface"] == capability_name:
+        if instance and capability["instance"] == instance:
+            return capability
+        elif capability["interface"] == capability_name:
             return capability
 
     return None
@@ -420,9 +423,29 @@ async def test_variable_fan(hass):
     )
     assert call.data["speed"] == "medium"
 
+    call, _ = await assert_request_calls_service(
+        "Alexa.PercentageController",
+        "SetPercentage",
+        "fan#test_2",
+        "fan.set_speed",
+        hass,
+        payload={"percentage": "33"},
+    )
+    assert call.data["speed"] == "low"
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.PercentageController",
+        "SetPercentage",
+        "fan#test_2",
+        "fan.set_speed",
+        hass,
+        payload={"percentage": "100"},
+    )
+    assert call.data["speed"] == "high"
+
     await assert_percentage_changes(
         hass,
-        [("high", "-5"), ("off", "5"), ("low", "-80")],
+        [("high", "-5"), ("off", "5"), ("low", "-80"), ("medium", "-34")],
         "Alexa.PercentageController",
         "AdjustPercentage",
         "fan#test_2",
@@ -437,9 +460,29 @@ async def test_variable_fan(hass):
         "fan#test_2",
         "fan.set_speed",
         hass,
+        payload={"powerLevel": "20"},
+    )
+    assert call.data["speed"] == "low"
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.PowerLevelController",
+        "SetPowerLevel",
+        "fan#test_2",
+        "fan.set_speed",
+        hass,
         payload={"powerLevel": "50"},
     )
     assert call.data["speed"] == "medium"
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.PowerLevelController",
+        "SetPowerLevel",
+        "fan#test_2",
+        "fan.set_speed",
+        hass,
+        payload={"powerLevel": "99"},
+    )
+    assert call.data["speed"] == "high"
 
     await assert_percentage_changes(
         hass,
@@ -1333,51 +1376,106 @@ async def test_group(hass):
     )
 
 
-async def test_cover(hass):
-    """Test cover discovery."""
+async def test_cover_position_range(hass):
+    """Test cover discovery and position using rangeController."""
     device = (
-        "cover.test",
-        "off",
-        {"friendly_name": "Test cover", "supported_features": 255, "position": 30},
+        "cover.test_range",
+        "open",
+        {
+            "friendly_name": "Test cover range",
+            "device_class": "blind",
+            "supported_features": 7,
+            "position": 30,
+        },
     )
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "cover#test"
-    assert appliance["displayCategories"][0] == "OTHER"
-    assert appliance["friendlyName"] == "Test cover"
+    assert appliance["endpointId"] == "cover#test_range"
+    assert appliance["displayCategories"][0] == "INTERIOR_BLIND"
+    assert appliance["friendlyName"] == "Test cover range"
 
-    assert_endpoint_capabilities(
-        appliance,
-        "Alexa.ModeController",
-        "Alexa.PercentageController",
-        "Alexa.PowerController",
-        "Alexa.EndpointHealth",
-        "Alexa",
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.RangeController", "Alexa.EndpointHealth", "Alexa"
     )
 
-    await assert_power_controller_works(
-        "cover#test", "cover.open_cover", "cover.close_cover", hass
-    )
+    range_capability = get_capability(capabilities, "Alexa.RangeController")
+    assert range_capability is not None
+    assert range_capability["instance"] == "cover.position"
+
+    properties = range_capability["properties"]
+    assert properties["nonControllable"] is False
+    assert {"name": "rangeValue"} in properties["supported"]
+
+    capability_resources = range_capability["capabilityResources"]
+    assert capability_resources is not None
+    assert {
+        "@type": "text",
+        "value": {"text": "Position", "locale": "en-US"},
+    } in capability_resources["friendlyNames"]
+
+    assert {
+        "@type": "asset",
+        "value": {"assetId": "Alexa.Setting.Opening"},
+    } in capability_resources["friendlyNames"]
+
+    configuration = range_capability["configuration"]
+    assert configuration is not None
+    assert configuration["unitOfMeasure"] == "Alexa.Unit.Percent"
+
+    supported_range = configuration["supportedRange"]
+    assert supported_range["minimumValue"] == 0
+    assert supported_range["maximumValue"] == 100
+    assert supported_range["precision"] == 1
 
     call, _ = await assert_request_calls_service(
-        "Alexa.PercentageController",
-        "SetPercentage",
-        "cover#test",
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_range",
         "cover.set_cover_position",
         hass,
-        payload={"percentage": "50"},
+        payload={"rangeValue": "50"},
+        instance="cover.position",
     )
     assert call.data["position"] == 50
 
-    await assert_percentage_changes(
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_range",
+        "cover.close_cover",
         hass,
-        [(25, "-5"), (35, "5"), (0, "-80")],
-        "Alexa.PercentageController",
-        "AdjustPercentage",
-        "cover#test",
-        "percentageDelta",
+        payload={"rangeValue": "0"},
+        instance="cover.position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 0
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_range",
+        "cover.open_cover",
+        hass,
+        payload={"rangeValue": "100"},
+        instance="cover.position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 100
+
+    await assert_range_changes(
+        hass,
+        [(25, "-5"), (35, "5"), (0, "-99"), (100, "99")],
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        "cover#test_range",
+        False,
         "cover.set_cover_position",
         "position",
+        instance="cover.position",
     )
 
 
@@ -2292,26 +2390,25 @@ async def test_mode_unsupported_domain(hass):
     assert msg["payload"]["type"] == "INVALID_DIRECTIVE"
 
 
-async def test_cover_position(hass):
-    """Test cover position mode discovery."""
+async def test_cover_position_mode(hass):
+    """Test cover discovery and position using modeController."""
     device = (
-        "cover.test",
-        "off",
-        {"friendly_name": "Test cover", "supported_features": 255, "position": 30},
+        "cover.test_mode",
+        "open",
+        {
+            "friendly_name": "Test cover mode",
+            "device_class": "blind",
+            "supported_features": 3,
+        },
     )
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "cover#test"
-    assert appliance["displayCategories"][0] == "OTHER"
-    assert appliance["friendlyName"] == "Test cover"
+    assert appliance["endpointId"] == "cover#test_mode"
+    assert appliance["displayCategories"][0] == "INTERIOR_BLIND"
+    assert appliance["friendlyName"] == "Test cover mode"
 
     capabilities = assert_endpoint_capabilities(
-        appliance,
-        "Alexa",
-        "Alexa.ModeController",
-        "Alexa.PercentageController",
-        "Alexa.PowerController",
-        "Alexa.EndpointHealth",
+        appliance, "Alexa", "Alexa.ModeController", "Alexa.EndpointHealth"
     )
 
     mode_capability = get_capability(capabilities, "Alexa.ModeController")
@@ -2325,8 +2422,13 @@ async def test_cover_position(hass):
     capability_resources = mode_capability["capabilityResources"]
     assert capability_resources is not None
     assert {
+        "@type": "text",
+        "value": {"text": "Position", "locale": "en-US"},
+    } in capability_resources["friendlyNames"]
+
+    assert {
         "@type": "asset",
-        "value": {"assetId": "Alexa.Setting.Mode"},
+        "value": {"assetId": "Alexa.Setting.Opening"},
     } in capability_resources["friendlyNames"]
 
     configuration = mode_capability["configuration"]
@@ -2339,10 +2441,7 @@ async def test_cover_position(hass):
         "value": "position.open",
         "modeResources": {
             "friendlyNames": [
-                {"@type": "text", "value": {"text": "open", "locale": "en-US"}},
-                {"@type": "text", "value": {"text": "opened", "locale": "en-US"}},
-                {"@type": "text", "value": {"text": "raise", "locale": "en-US"}},
-                {"@type": "text", "value": {"text": "raised", "locale": "en-US"}},
+                {"@type": "asset", "value": {"assetId": "Alexa.Value.Open"}}
             ]
         },
     } in supported_modes
@@ -2350,19 +2449,24 @@ async def test_cover_position(hass):
         "value": "position.closed",
         "modeResources": {
             "friendlyNames": [
-                {"@type": "text", "value": {"text": "close", "locale": "en-US"}},
-                {"@type": "text", "value": {"text": "closed", "locale": "en-US"}},
-                {"@type": "text", "value": {"text": "shut", "locale": "en-US"}},
-                {"@type": "text", "value": {"text": "lower", "locale": "en-US"}},
-                {"@type": "text", "value": {"text": "lowered", "locale": "en-US"}},
+                {"@type": "asset", "value": {"assetId": "Alexa.Value.Close"}}
             ]
         },
     } in supported_modes
 
+    semantics = mode_capability["semantics"]
+    assert semantics is not None
+
+    action_mappings = semantics["actionMappings"]
+    assert action_mappings is not None
+
+    state_mappings = semantics["stateMappings"]
+    assert state_mappings is not None
+
     call, msg = await assert_request_calls_service(
         "Alexa.ModeController",
         "SetMode",
-        "cover#test",
+        "cover#test_mode",
         "cover.close_cover",
         hass,
         payload={"mode": "position.closed"},
@@ -2376,7 +2480,7 @@ async def test_cover_position(hass):
     call, msg = await assert_request_calls_service(
         "Alexa.ModeController",
         "SetMode",
-        "cover#test",
+        "cover#test_mode",
         "cover.open_cover",
         hass,
         payload={"mode": "position.open"},
@@ -2386,3 +2490,550 @@ async def test_cover_position(hass):
     assert properties["name"] == "mode"
     assert properties["namespace"] == "Alexa.ModeController"
     assert properties["value"] == "position.open"
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.ModeController",
+        "SetMode",
+        "cover#test_mode",
+        "cover.stop_cover",
+        hass,
+        payload={"mode": "position.custom"},
+        instance="cover.position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "mode"
+    assert properties["namespace"] == "Alexa.ModeController"
+    assert properties["value"] == "position.custom"
+
+
+async def test_image_processing(hass):
+    """Test image_processing discovery as event detection."""
+    device = (
+        "image_processing.test_face",
+        0,
+        {
+            "friendly_name": "Test face",
+            "device_class": "face",
+            "faces": [],
+            "total_faces": 0,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "image_processing#test_face"
+    assert appliance["displayCategories"][0] == "CAMERA"
+    assert appliance["friendlyName"] == "Test face"
+
+    assert_endpoint_capabilities(
+        appliance, "Alexa.EventDetectionSensor", "Alexa.EndpointHealth", "Alexa"
+    )
+
+
+async def test_motion_sensor_event_detection(hass):
+    """Test motion sensor with EventDetectionSensor discovery."""
+    device = (
+        "binary_sensor.test_motion_camera_event",
+        "off",
+        {"friendly_name": "Test motion camera event", "device_class": "motion"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "binary_sensor#test_motion_camera_event"
+    assert appliance["displayCategories"][0] == "CAMERA"
+    assert appliance["friendlyName"] == "Test motion camera event"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa",
+        "Alexa.MotionSensor",
+        "Alexa.EventDetectionSensor",
+        "Alexa.EndpointHealth",
+    )
+
+    event_detection_capability = get_capability(
+        capabilities, "Alexa.EventDetectionSensor"
+    )
+    assert event_detection_capability is not None
+    properties = event_detection_capability["properties"]
+    assert properties["proactivelyReported"] is True
+    assert not properties["retrievable"]
+    assert {"name": "humanPresenceDetectionState"} in properties["supported"]
+
+
+async def test_presence_sensor(hass):
+    """Test presence sensor."""
+    device = (
+        "binary_sensor.test_presence_sensor",
+        "off",
+        {"friendly_name": "Test presence sensor", "device_class": "presence"},
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "binary_sensor#test_presence_sensor"
+    assert appliance["displayCategories"][0] == "CAMERA"
+    assert appliance["friendlyName"] == "Test presence sensor"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa", "Alexa.EventDetectionSensor", "Alexa.EndpointHealth"
+    )
+
+    event_detection_capability = get_capability(
+        capabilities, "Alexa.EventDetectionSensor"
+    )
+    assert event_detection_capability is not None
+    properties = event_detection_capability["properties"]
+    assert properties["proactivelyReported"] is True
+    assert not properties["retrievable"]
+    assert {"name": "humanPresenceDetectionState"} in properties["supported"]
+
+
+async def test_cover_tilt_position_range(hass):
+    """Test cover discovery and tilt position using rangeController."""
+    device = (
+        "cover.test_tilt_range",
+        "open",
+        {
+            "friendly_name": "Test cover tilt range",
+            "device_class": "blind",
+            "supported_features": 240,
+            "tilt_position": 30,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "cover#test_tilt_range"
+    assert appliance["displayCategories"][0] == "INTERIOR_BLIND"
+    assert appliance["friendlyName"] == "Test cover tilt range"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.RangeController", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    range_capability = get_capability(capabilities, "Alexa.RangeController")
+    assert range_capability is not None
+    assert range_capability["instance"] == "cover.tilt_position"
+
+    semantics = range_capability["semantics"]
+    assert semantics is not None
+
+    action_mappings = semantics["actionMappings"]
+    assert action_mappings is not None
+
+    state_mappings = semantics["stateMappings"]
+    assert state_mappings is not None
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_tilt_range",
+        "cover.set_cover_tilt_position",
+        hass,
+        payload={"rangeValue": "50"},
+        instance="cover.tilt_position",
+    )
+    assert call.data["position"] == 50
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_tilt_range",
+        "cover.close_cover_tilt",
+        hass,
+        payload={"rangeValue": "0"},
+        instance="cover.tilt_position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 0
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "cover#test_tilt_range",
+        "cover.open_cover_tilt",
+        hass,
+        payload={"rangeValue": "100"},
+        instance="cover.tilt_position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 100
+
+    await assert_range_changes(
+        hass,
+        [(25, "-5"), (35, "5"), (0, "-99"), (100, "99")],
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        "cover#test_tilt_range",
+        False,
+        "cover.set_cover_tilt_position",
+        "tilt_position",
+        instance="cover.tilt_position",
+    )
+
+
+async def test_cover_semantics(hass):
+    """Test cover discovery and semantics."""
+    device = (
+        "cover.test_semantics",
+        "open",
+        {
+            "friendly_name": "Test cover semantics",
+            "device_class": "blind",
+            "supported_features": 255,
+            "position": 30,
+            "tilt_position": 30,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "cover#test_semantics"
+    assert appliance["displayCategories"][0] == "INTERIOR_BLIND"
+    assert appliance["friendlyName"] == "Test cover semantics"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.RangeController", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    for range_instance in ("cover.position", "cover.tilt_position"):
+        range_capability = get_capability(
+            capabilities, "Alexa.RangeController", range_instance
+        )
+        semantics = range_capability["semantics"]
+        assert semantics is not None
+
+        action_mappings = semantics["actionMappings"]
+        assert action_mappings is not None
+        if range_instance == "cover.position":
+            assert {
+                "@type": "ActionsToDirective",
+                "actions": ["Alexa.Actions.Lower"],
+                "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 0}},
+            } in action_mappings
+            assert {
+                "@type": "ActionsToDirective",
+                "actions": ["Alexa.Actions.Raise"],
+                "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 100}},
+            } in action_mappings
+        elif range_instance == "cover.position":
+            assert {
+                "@type": "ActionsToDirective",
+                "actions": ["Alexa.Actions.Close"],
+                "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 0}},
+            } in action_mappings
+            assert {
+                "@type": "ActionsToDirective",
+                "actions": ["Alexa.Actions.Open"],
+                "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 100}},
+            } in action_mappings
+
+        state_mappings = semantics["stateMappings"]
+        assert state_mappings is not None
+        assert {
+            "@type": "StatesToValue",
+            "states": ["Alexa.States.Closed"],
+            "value": 0,
+        } in state_mappings
+        assert {
+            "@type": "StatesToRange",
+            "states": ["Alexa.States.Open"],
+            "range": {"minimumValue": 1, "maximumValue": 100},
+        } in state_mappings
+
+
+async def test_input_number(hass):
+    """Test input_number discovery."""
+    device = (
+        "input_number.test_slider",
+        30,
+        {
+            "initial": 30,
+            "min": -20,
+            "max": 35,
+            "step": 1,
+            "mode": "slider",
+            "friendly_name": "Test Slider",
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "input_number#test_slider"
+    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["friendlyName"] == "Test Slider"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.RangeController", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    range_capability = get_capability(
+        capabilities, "Alexa.RangeController", "input_number.value"
+    )
+
+    capability_resources = range_capability["capabilityResources"]
+    assert capability_resources is not None
+    assert {
+        "@type": "text",
+        "value": {"text": "Value", "locale": "en-US"},
+    } in capability_resources["friendlyNames"]
+
+    configuration = range_capability["configuration"]
+    assert configuration is not None
+
+    supported_range = configuration["supportedRange"]
+    assert supported_range["minimumValue"] == -20
+    assert supported_range["maximumValue"] == 35
+    assert supported_range["precision"] == 1
+
+    presets = configuration["presets"]
+    assert {
+        "rangeValue": 35,
+        "presetResources": {
+            "friendlyNames": [
+                {"@type": "asset", "value": {"assetId": "Alexa.Value.Maximum"}}
+            ]
+        },
+    } in presets
+
+    assert {
+        "rangeValue": -20,
+        "presetResources": {
+            "friendlyNames": [
+                {"@type": "asset", "value": {"assetId": "Alexa.Value.Minimum"}}
+            ]
+        },
+    } in presets
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "input_number#test_slider",
+        "input_number.set_value",
+        hass,
+        payload={"rangeValue": "10"},
+        instance="input_number.value",
+    )
+    assert call.data["value"] == 10
+
+    await assert_range_changes(
+        hass,
+        [(25, "-5"), (35, "5"), (-20, "-100"), (35, "100")],
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        "input_number#test_slider",
+        False,
+        "input_number.set_value",
+        "value",
+        instance="input_number.value",
+    )
+
+
+async def test_input_number_float(hass):
+    """Test input_number discovery."""
+    device = (
+        "input_number.test_slider_float",
+        0.5,
+        {
+            "initial": 0.5,
+            "min": 0,
+            "max": 1,
+            "step": 0.01,
+            "mode": "slider",
+            "friendly_name": "Test Slider Float",
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "input_number#test_slider_float"
+    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["friendlyName"] == "Test Slider Float"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance, "Alexa.RangeController", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    range_capability = get_capability(
+        capabilities, "Alexa.RangeController", "input_number.value"
+    )
+
+    capability_resources = range_capability["capabilityResources"]
+    assert capability_resources is not None
+    assert {
+        "@type": "text",
+        "value": {"text": "Value", "locale": "en-US"},
+    } in capability_resources["friendlyNames"]
+
+    configuration = range_capability["configuration"]
+    assert configuration is not None
+
+    supported_range = configuration["supportedRange"]
+    assert supported_range["minimumValue"] == 0
+    assert supported_range["maximumValue"] == 1
+    assert supported_range["precision"] == 0.01
+
+    presets = configuration["presets"]
+    assert {
+        "rangeValue": 1,
+        "presetResources": {
+            "friendlyNames": [
+                {"@type": "asset", "value": {"assetId": "Alexa.Value.Maximum"}}
+            ]
+        },
+    } in presets
+
+    assert {
+        "rangeValue": 0,
+        "presetResources": {
+            "friendlyNames": [
+                {"@type": "asset", "value": {"assetId": "Alexa.Value.Minimum"}}
+            ]
+        },
+    } in presets
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "input_number#test_slider_float",
+        "input_number.set_value",
+        hass,
+        payload={"rangeValue": "0.333"},
+        instance="input_number.value",
+    )
+    assert call.data["value"] == 0.333
+
+    await assert_range_changes(
+        hass,
+        [(0.4, "-0.1"), (0.6, "0.1"), (0, "-100"), (1, "100"), (0.51, "0.01")],
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        "input_number#test_slider_float",
+        False,
+        "input_number.set_value",
+        "value",
+        instance="input_number.value",
+    )
+
+
+async def test_media_player_eq_modes(hass):
+    """Test media player discovery with sound mode list."""
+    device = (
+        "media_player.test",
+        "on",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "sound_mode": "tv",
+            "sound_mode_list": ["movie", "music", "night", "sport", "tv", "rocknroll"],
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "media_player#test"
+    assert appliance["friendlyName"] == "Test media player"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa",
+        "Alexa.EqualizerController",
+        "Alexa.PowerController",
+        "Alexa.EndpointHealth",
+    )
+
+    eq_capability = get_capability(capabilities, "Alexa.EqualizerController")
+    assert eq_capability is not None
+    assert "modes" in eq_capability["configurations"]
+
+    eq_modes = eq_capability["configurations"]["modes"]
+    assert {"name": "rocknroll"} not in eq_modes["supported"]
+    assert {"name": "ROCKNROLL"} not in eq_modes["supported"]
+
+    for mode in ("MOVIE", "MUSIC", "NIGHT", "SPORT", "TV"):
+        assert {"name": mode} in eq_modes["supported"]
+
+        call, _ = await assert_request_calls_service(
+            "Alexa.EqualizerController",
+            "SetMode",
+            "media_player#test",
+            "media_player.select_sound_mode",
+            hass,
+            payload={"mode": mode},
+        )
+        assert call.data["sound_mode"] == mode.lower()
+
+
+async def test_media_player_sound_mode_list_none(hass):
+    """Test EqualizerController bands directive not supported."""
+    device = (
+        "media_player.test",
+        "on",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "sound_mode": "unknown",
+            "sound_mode_list": None,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+    assert appliance["endpointId"] == "media_player#test"
+    assert appliance["friendlyName"] == "Test media player"
+
+
+async def test_media_player_eq_bands_not_supported(hass):
+    """Test EqualizerController bands directive not supported."""
+    device = (
+        "media_player.test_bands",
+        "on",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": SUPPORT_SELECT_SOUND_MODE,
+            "sound_mode": "tv",
+            "sound_mode_list": ["movie", "music", "night", "sport", "tv", "rocknroll"],
+        },
+    )
+    await discovery_test(device, hass)
+
+    context = Context()
+
+    # Test for SetBands Error
+    request = get_new_request(
+        "Alexa.EqualizerController", "SetBands", "media_player#test_bands"
+    )
+    request["directive"]["payload"] = {"bands": [{"name": "BASS", "value": -2}]}
+    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+
+    assert "event" in msg
+    msg = msg["event"]
+    assert msg["header"]["name"] == "ErrorResponse"
+    assert msg["header"]["namespace"] == "Alexa"
+    assert msg["payload"]["type"] == "INVALID_DIRECTIVE"
+
+    # Test for AdjustBands Error
+    request = get_new_request(
+        "Alexa.EqualizerController", "AdjustBands", "media_player#test_bands"
+    )
+    request["directive"]["payload"] = {
+        "bands": [{"name": "BASS", "levelDelta": 3, "levelDirection": "UP"}]
+    }
+    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+
+    assert "event" in msg
+    msg = msg["event"]
+    assert msg["header"]["name"] == "ErrorResponse"
+    assert msg["header"]["namespace"] == "Alexa"
+    assert msg["payload"]["type"] == "INVALID_DIRECTIVE"
+
+    # Test for ResetBands Error
+    request = get_new_request(
+        "Alexa.EqualizerController", "ResetBands", "media_player#test_bands"
+    )
+    request["directive"]["payload"] = {
+        "bands": [{"name": "BASS", "levelDelta": 3, "levelDirection": "UP"}]
+    }
+    msg = await smart_home.async_handle_message(hass, DEFAULT_CONFIG, request, context)
+
+    assert "event" in msg
+    msg = msg["event"]
+    assert msg["header"]["name"] == "ErrorResponse"
+    assert msg["header"]["namespace"] == "Alexa"
+    assert msg["payload"]["type"] == "INVALID_DIRECTIVE"

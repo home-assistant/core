@@ -340,7 +340,7 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def media_image_url(self):
         """Return the image url of current playing media."""
-        return "https://graph.facebook.com/v2.5/107771475912710/" "picture?type=large"
+        return "https://graph.facebook.com/v2.5/107771475912710/picture?type=large"
 
     @property
     def media_title(self):

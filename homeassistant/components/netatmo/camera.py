@@ -6,20 +6,20 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA,
-    Camera,
-    SUPPORT_STREAM,
     CAMERA_SERVICE_SCHEMA,
+    PLATFORM_SCHEMA,
+    SUPPORT_STREAM,
+    Camera,
 )
-from homeassistant.const import CONF_VERIFY_SSL, STATE_ON, STATE_OFF
+from homeassistant.const import CONF_VERIFY_SSL, STATE_OFF, STATE_ON
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
     async_dispatcher_connect,
+    async_dispatcher_send,
 )
 
-from .const import DATA_NETATMO_AUTH, DOMAIN
 from . import CameraData
+from .const import DATA_NETATMO_AUTH, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,7 +106,7 @@ class NetatmoCamera(Camera):
         self._camera_name = camera_name
         self._home = home
         if home:
-            self._name = home + " / " + camera_name
+            self._name = f"{home} / {camera_name}"
         else:
             self._name = camera_name
         self._cameratype = camera_type
@@ -383,7 +383,7 @@ class NetatmoCamera(Camera):
         """Set light mode ('auto', 'on', 'off')."""
         if self.model == "Presence":
             try:
-                config = '{"mode":"' + mode + '"}'
+                config = f'{{"mode":"{mode}"}}'
                 if self._localurl:
                     requests.get(
                         f"{self._localurl}/command/floodlight_set_config?config={config}",

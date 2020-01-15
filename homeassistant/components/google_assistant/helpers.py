@@ -8,26 +8,26 @@ from typing import List, Optional
 
 from aiohttp.web import json_response
 
-from homeassistant.core import Context, callback, HomeAssistant, State
-from homeassistant.helpers.event import async_call_later
 from homeassistant.components import webhook
-from homeassistant.helpers.storage import Store
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_SUPPORTED_FEATURES,
+    CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
     STATE_UNAVAILABLE,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_DEVICE_CLASS,
-    CLOUD_NEVER_EXPOSED_ENTITIES,
 )
+from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.storage import Store
 
 from . import trait
 from .const import (
+    CONF_ALIASES,
+    CONF_ROOM_HINT,
+    DEVICE_CLASS_TO_GOOGLE_TYPES,
     DOMAIN,
     DOMAIN_TO_GOOGLE_TYPES,
-    CONF_ALIASES,
     ERR_FUNCTION_NOT_SUPPORTED,
-    DEVICE_CLASS_TO_GOOGLE_TYPES,
-    CONF_ROOM_HINT,
     STORE_AGENT_USER_IDS,
 )
 from .error import SmartHomeError
@@ -124,6 +124,7 @@ class AbstractConfig(ABC):
     def async_enable_report_state(self):
         """Enable proactive mode."""
         # Circular dep
+        # pylint: disable=import-outside-toplevel
         from .report_state import async_enable_report_state
 
         if self._unsub_report_state is None:
@@ -218,6 +219,8 @@ class AbstractConfig(ABC):
 
     async def _handle_local_webhook(self, hass, webhook_id, request):
         """Handle an incoming local SDK message."""
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
         from . import smart_home
 
         payload = await request.json()

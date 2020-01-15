@@ -4,21 +4,21 @@ import logging
 from pynetgear import Netgear
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_PORT,
-    CONF_SSL,
     CONF_DEVICES,
     CONF_EXCLUDE,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
 )
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +116,7 @@ class NetgearDeviceScanner(DeviceScanner):
                     self.tracked_accesspoints
                     and dev.conn_ap_mac in self.tracked_accesspoints
                 ):
-                    devices.append(dev.mac + "_" + dev.conn_ap_mac)
+                    devices.append(f"{dev.mac}_{dev.conn_ap_mac}")
 
         return devices
 
@@ -144,7 +144,7 @@ class NetgearDeviceScanner(DeviceScanner):
                     ap_name = dev.name
                     break
 
-            return name + " on " + ap_name
+            return f"{name} on {ap_name}"
 
         return name
 

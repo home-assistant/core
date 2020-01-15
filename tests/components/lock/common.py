@@ -7,10 +7,10 @@ from homeassistant.components.lock import DOMAIN
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    SERVICE_OPEN,
     ENTITY_MATCH_ALL,
+    SERVICE_LOCK,
+    SERVICE_OPEN,
+    SERVICE_UNLOCK,
 )
 from homeassistant.loader import bind_hass
 

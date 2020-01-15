@@ -9,8 +9,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PASSWORD,
     CONF_NAME,
+    CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
     DEVICE_CLASS_POWER,

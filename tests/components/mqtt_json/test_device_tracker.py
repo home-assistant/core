@@ -2,18 +2,19 @@
 import json
 import logging
 import os
+
 from asynctest import patch
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.device_tracker.legacy import (
-    YAML_DEVICES,
-    ENTITY_ID_FORMAT,
     DOMAIN as DT_DOMAIN,
+    ENTITY_ID_FORMAT,
+    YAML_DEVICES,
 )
 from homeassistant.const import CONF_PLATFORM
+from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_mqtt_component, async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message, async_mock_mqtt_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +46,7 @@ async def test_ensure_device_tracker_platform_validation(hass):
         assert "qos" in config
 
     with patch(
-        "homeassistant.components.mqtt_json.device_tracker." "async_setup_scanner",
+        "homeassistant.components.mqtt_json.device_tracker.async_setup_scanner",
         autospec=True,
         side_effect=mock_setup_scanner,
     ) as mock_sp:
