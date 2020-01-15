@@ -6,10 +6,12 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
 from homeassistant.components.vizio import VIZIO_SCHEMA
 from homeassistant.components.vizio.const import (
     CONF_VOLUME_STEP,
     DEFAULT_NAME,
+    DEFAULT_TIMEOUT,
     DEFAULT_VOLUME_STEP,
     DOMAIN,
 )
@@ -18,6 +20,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
+    CONF_TIMEOUT,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -27,10 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 
 NAME = "Vizio"
 HOST = "192.168.1.1:9000"
-DEVICE_CLASS_TV = "tv"
-DEVICE_CLASS_SOUNDBAR = "soundbar"
 ACCESS_TOKEN = "deadbeef"
 VOLUME_STEP = 2
+TIMEOUT = 3
 UNIQUE_ID = "testid"
 
 MOCK_USER_VALID_TV_ENTRY = {
@@ -46,6 +48,7 @@ MOCK_IMPORT_VALID_TV_ENTRY = {
     CONF_DEVICE_CLASS: DEVICE_CLASS_TV,
     CONF_ACCESS_TOKEN: ACCESS_TOKEN,
     CONF_VOLUME_STEP: VOLUME_STEP,
+    CONF_TIMEOUT: TIMEOUT,
 }
 
 MOCK_INVALID_TV_ENTRY = {
@@ -54,10 +57,10 @@ MOCK_INVALID_TV_ENTRY = {
     CONF_DEVICE_CLASS: DEVICE_CLASS_TV,
 }
 
-MOCK_SOUNDBAR_ENTRY = {
+MOCK_SPEAKER_ENTRY = {
     CONF_NAME: NAME,
     CONF_HOST: HOST,
-    CONF_DEVICE_CLASS: DEVICE_CLASS_SOUNDBAR,
+    CONF_DEVICE_CLASS: DEVICE_CLASS_SPEAKER,
 }
 
 
@@ -100,7 +103,7 @@ async def test_user_flow_minimum_fields(hass: HomeAssistantType, vizio_connect) 
         user_input={
             CONF_NAME: NAME,
             CONF_HOST: HOST,
-            CONF_DEVICE_CLASS: DEVICE_CLASS_SOUNDBAR,
+            CONF_DEVICE_CLASS: DEVICE_CLASS_SPEAKER,
         },
     )
 
@@ -108,7 +111,7 @@ async def test_user_flow_minimum_fields(hass: HomeAssistantType, vizio_connect) 
     assert result["title"] == NAME
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SOUNDBAR
+    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SPEAKER
 
 
 async def test_user_flow_all_fields(hass: HomeAssistantType, vizio_connect) -> None:
@@ -139,17 +142,42 @@ async def test_user_flow_all_fields(hass: HomeAssistantType, vizio_connect) -> N
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
 
 
+async def test_options_flow(hass: HomeAssistantType) -> None:
+    """Test options config flow."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_SPEAKER_ENTRY)
+    entry.add_to_hass(hass)
+
+    assert not entry.options
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_VOLUME_STEP: VOLUME_STEP, CONF_TIMEOUT: TIMEOUT},
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == ""
+    assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
+    assert result["data"][CONF_TIMEOUT] == TIMEOUT
+
+
 async def test_user_host_already_configured(
     hass: HomeAssistantType, vizio_connect
 ) -> None:
     """Test host is already configured during user setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_SOUNDBAR_ENTRY,
-        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        data=MOCK_SPEAKER_ENTRY,
+        options={CONF_VOLUME_STEP: VOLUME_STEP, CONF_TIMEOUT: TIMEOUT},
     )
     entry.add_to_hass(hass)
-    fail_entry = MOCK_SOUNDBAR_ENTRY.copy()
+    fail_entry = MOCK_SPEAKER_ENTRY.copy()
     fail_entry[CONF_NAME] = "newtestname"
 
     result = await hass.config_entries.flow.async_init(
@@ -160,7 +188,7 @@ async def test_user_host_already_configured(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=fail_entry,
+        result["flow_id"], user_input=fail_entry
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -173,12 +201,12 @@ async def test_user_name_already_configured(
     """Test name is already configured during user setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_SOUNDBAR_ENTRY,
-        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        data=MOCK_SPEAKER_ENTRY,
+        options={CONF_VOLUME_STEP: VOLUME_STEP, CONF_TIMEOUT: TIMEOUT},
     )
     entry.add_to_hass(hass)
 
-    fail_entry = MOCK_SOUNDBAR_ENTRY.copy()
+    fail_entry = MOCK_SPEAKER_ENTRY.copy()
     fail_entry[CONF_HOST] = "0.0.0.0"
 
     result = await hass.config_entries.flow.async_init(
@@ -240,7 +268,7 @@ async def test_import_flow_minimum_fields(
         DOMAIN,
         context={"source": "import"},
         data=vol.Schema(VIZIO_SCHEMA)(
-            {CONF_HOST: HOST, CONF_DEVICE_CLASS: DEVICE_CLASS_SOUNDBAR}
+            {CONF_HOST: HOST, CONF_DEVICE_CLASS: DEVICE_CLASS_SPEAKER}
         ),
     )
 
@@ -248,8 +276,9 @@ async def test_import_flow_minimum_fields(
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_NAME] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SOUNDBAR
+    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SPEAKER
     assert result["data"][CONF_VOLUME_STEP] == DEFAULT_VOLUME_STEP
+    assert result["data"][CONF_TIMEOUT] == DEFAULT_TIMEOUT
 
 
 async def test_import_flow_all_fields(hass: HomeAssistantType, vizio_connect) -> None:
@@ -267,6 +296,7 @@ async def test_import_flow_all_fields(hass: HomeAssistantType, vizio_connect) ->
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
+    assert result["data"][CONF_TIMEOUT] == TIMEOUT
 
 
 async def test_import_entity_already_configured(
@@ -275,11 +305,11 @@ async def test_import_entity_already_configured(
     """Test entity is already configured during import setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SOUNDBAR_ENTRY),
-        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_ENTRY),
+        options={CONF_VOLUME_STEP: VOLUME_STEP, CONF_TIMEOUT: TIMEOUT},
     )
     entry.add_to_hass(hass)
-    fail_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SOUNDBAR_ENTRY.copy())
+    fail_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_ENTRY.copy())
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "import"}, data=fail_entry
