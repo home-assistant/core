@@ -16,11 +16,11 @@ class RingEntityMixin:
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self.ring_objects["device_data"].add_listener(self._update_callback)
+        self.ring_objects["device_data"].async_add_listener(self._update_callback)
 
     async def async_will_remove_from_hass(self):
         """Disconnect callbacks."""
-        self.ring_objects["device_data"].remove_listener(self._update_callback)
+        self.ring_objects["device_data"].async_remove_listener(self._update_callback)
 
     @callback
     def _update_callback(self):

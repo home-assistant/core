@@ -10,6 +10,7 @@ from haffmpeg.tools import IMAGE_JPEG, ImageFrame
 from homeassistant.components.camera import Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.util import dt as dt_util
 
@@ -56,7 +57,7 @@ class RingCam(RingEntityMixin, Camera):
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        await self.ring_objects["history_data"].track_device(
+        await self.ring_objects["history_data"].async_track_device(
             self._device, self._history_update_callback
         )
 
@@ -64,10 +65,11 @@ class RingCam(RingEntityMixin, Camera):
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
-        self.ring_objects["history_data"].untrack_device(
+        self.ring_objects["history_data"].async_untrack_device(
             self._device, self._history_update_callback
         )
 
+    @callback
     def _history_update_callback(self, history_data):
         """Call update method."""
         if history_data:

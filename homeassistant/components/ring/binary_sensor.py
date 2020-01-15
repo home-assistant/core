@@ -60,13 +60,15 @@ class RingBinarySensor(RingEntityMixin, BinarySensorDevice):
     async def async_added_to_hass(self):
         """Register callbacks."""
         await super().async_added_to_hass()
-        self.ring_objects["dings_data"].add_listener(self._dings_update_callback)
+        self.ring_objects["dings_data"].async_add_listener(self._dings_update_callback)
         self._dings_update_callback()
 
     async def async_will_remove_from_hass(self):
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
-        self.ring_objects["dings_data"].remove_listener(self._dings_update_callback)
+        self.ring_objects["dings_data"].async_remove_listener(
+            self._dings_update_callback
+        )
 
     @callback
     def _dings_update_callback(self):

@@ -124,7 +124,7 @@ async def async_setup_entry(hass, entry):
     if hass.services.has_service(DOMAIN, "update"):
         return True
 
-    async def refresh_all(_):
+    async def async_refresh_all(_):
         """Refresh all ring data."""
         for info in hass.data[DOMAIN].values():
             await info["device_data"].async_refresh_all()
@@ -133,7 +133,7 @@ async def async_setup_entry(hass, entry):
             await hass.async_add_executor_job(info["health_data"].refresh_all)
 
     # register service
-    hass.services.async_register(DOMAIN, "update", refresh_all)
+    hass.services.async_register(DOMAIN, "update", async_refresh_all)
 
     return True
 
@@ -183,7 +183,7 @@ class GlobalDataUpdater:
         self._unsub_interval = None
 
     @callback
-    def add_listener(self, update_callback):
+    def async_add_listener(self, update_callback):
         """Listen for data updates."""
         # This is the first listener, set up interval.
         if not self.listeners:
@@ -194,7 +194,7 @@ class GlobalDataUpdater:
         self.listeners.append(update_callback)
 
     @callback
-    def remove_listener(self, update_callback):
+    def async_remove_listener(self, update_callback):
         """Remove data update."""
         self.listeners.remove(update_callback)
 
@@ -240,7 +240,7 @@ class DeviceDataUpdater:
         self.devices = {}
         self._unsub_interval = None
 
-    async def track_device(self, device, update_callback):
+    async def async_track_device(self, device, update_callback):
         """Track a device."""
         if not self.devices:
             self._unsub_interval = async_track_time_interval(
@@ -269,7 +269,7 @@ class DeviceDataUpdater:
         update_callback(self.devices[device.device_id]["data"])
 
     @callback
-    def untrack_device(self, device, update_callback):
+    def async_untrack_device(self, device, update_callback):
         """Untrack a device."""
         self.devices[device.device_id]["update_callbacks"].remove(update_callback)
 

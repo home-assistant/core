@@ -107,7 +107,7 @@ class HealthDataRingSensor(RingSensor):
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        await self.ring_objects["health_data"].track_device(
+        await self.ring_objects["health_data"].async_track_device(
             self._device, self._health_update_callback
         )
 
@@ -115,7 +115,7 @@ class HealthDataRingSensor(RingSensor):
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
-        self.ring_objects["health_data"].untrack_device(
+        self.ring_objects["health_data"].async_untrack_device(
             self._device, self._health_update_callback
         )
 
@@ -143,7 +143,7 @@ class HistoryRingSensor(RingSensor):
         """Register callbacks."""
         await super().async_added_to_hass()
 
-        await self.ring_objects["history_data"].track_device(
+        await self.ring_objects["history_data"].async_track_device(
             self._device, self._history_update_callback
         )
 
@@ -151,7 +151,7 @@ class HistoryRingSensor(RingSensor):
         """Disconnect callbacks."""
         await super().async_will_remove_from_hass()
 
-        self.ring_objects["history_data"].untrack_device(
+        self.ring_objects["history_data"].async_untrack_device(
             self._device, self._history_update_callback
         )
 
