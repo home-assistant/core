@@ -7,6 +7,13 @@
             "default": "Vellykket autentisering for Withings og den valgte profilen."
         },
         "step": {
+            "profile": {
+                "data": {
+                    "profile": "Profil"
+                },
+                "description": "Hvilken profil valgte du p\u00e5 Withings nettsted? Det er viktig at profilene samsvarer, ellers blir data feilmerket.",
+                "title": "Brukerprofil."
+            },
             "user": {
                 "data": {
                     "profile": "Profil"

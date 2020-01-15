@@ -1,28 +1,35 @@
 """Support for HomeMatic binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.homematic import ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
-from homeassistant.const import DEVICE_CLASS_BATTERY
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_BATTERY,
+    DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_PRESENCE,
+    DEVICE_CLASS_SMOKE,
+    BinarySensorDevice,
+)
 
-from . import ATTR_DISCOVER_DEVICES, HMDevice
+from .const import ATTR_DISCOVER_DEVICES, ATTR_DISCOVERY_TYPE, DISCOVER_BATTERY
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES_CLASS = {
-    "IPShutterContact": "opening",
-    "IPShutterContactSabotage": "opening",
-    "MaxShutterContact": "opening",
-    "Motion": "motion",
-    "MotionV2": "motion",
-    "PresenceIP": "motion",
+    "IPShutterContact": DEVICE_CLASS_OPENING,
+    "IPShutterContactSabotage": DEVICE_CLASS_OPENING,
+    "MaxShutterContact": DEVICE_CLASS_OPENING,
+    "Motion": DEVICE_CLASS_MOTION,
+    "MotionV2": DEVICE_CLASS_MOTION,
+    "PresenceIP": DEVICE_CLASS_PRESENCE,
     "Remote": None,
     "RemoteMotion": None,
-    "ShutterContact": "opening",
-    "Smoke": "smoke",
-    "SmokeV2": "smoke",
+    "ShutterContact": DEVICE_CLASS_OPENING,
+    "Smoke": DEVICE_CLASS_SMOKE,
+    "SmokeV2": DEVICE_CLASS_SMOKE,
     "TiltSensor": None,
     "WeatherSensor": None,
+    "IPContact": DEVICE_CLASS_OPENING,
 }
 
 
@@ -38,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         else:
             devices.append(HMBinarySensor(conf))
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMBinarySensor(HMDevice, BinarySensorDevice):
@@ -56,8 +63,8 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
         """Return the class of this sensor from DEVICE_CLASSES."""
         # If state is MOTION (Only RemoteMotion working)
         if self._state == "MOTION":
-            return "motion"
-        return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
+            return DEVICE_CLASS_MOTION
+        return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__)
 
     def _init_data_struct(self):
         """Generate the data dictionary (self._data) from metadata."""

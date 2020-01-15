@@ -1,12 +1,13 @@
 """This component provides HA switch support for Ring Door Bell/Chimes."""
-import logging
 from datetime import timedelta
+import logging
+
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.dt as dt_util
 
-from . import DATA_RING_STICKUP_CAMS, SIGNAL_UPDATE_RING
+from . import DOMAIN, SIGNAL_UPDATE_RING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,15 +22,17 @@ SIREN_ICON = "mdi:alarm-bell"
 SKIP_UPDATES_DELAY = timedelta(seconds=5)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the switches for the Ring devices."""
-    cameras = hass.data[DATA_RING_STICKUP_CAMS]
+    ring = hass.data[DOMAIN][config_entry.entry_id]
+    devices = ring.devices()
     switches = []
-    for device in cameras:
+
+    for device in devices["stickup_cams"]:
         if device.has_capability("siren"):
             switches.append(SirenSwitch(device))
 
-    add_entities(switches, True)
+    async_add_entities(switches, True)
 
 
 class BaseRingSwitch(SwitchDevice):
@@ -40,16 +43,30 @@ class BaseRingSwitch(SwitchDevice):
         self._device = device
         self._device_type = device_type
         self._unique_id = f"{self._device.id}-{self._device_type}"
+        self._disp_disconnect = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_RING, self._update_callback)
+        self._disp_disconnect = async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_RING, self._update_callback
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks."""
+        if self._disp_disconnect:
+            self._disp_disconnect()
+            self._disp_disconnect = None
 
     @callback
     def _update_callback(self):
         """Call update method."""
-        _LOGGER.debug("Updating Ring sensor %s (callback)", self.name)
+        _LOGGER.debug("Updating Ring switch %s (callback)", self.name)
         self.async_schedule_update_ha_state(True)
+
+    @property
+    def should_poll(self):
+        """Update controlled via the hub."""
+        return False
 
     @property
     def name(self):
@@ -62,9 +79,14 @@ class BaseRingSwitch(SwitchDevice):
         return self._unique_id
 
     @property
-    def should_poll(self):
-        """Update controlled via the hub."""
-        return False
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._device.device_id)},
+            "name": self._device.name,
+            "model": self._device.model,
+            "manufacturer": "Ring",
+        }
 
 
 class SirenSwitch(BaseRingSwitch):
@@ -77,7 +99,7 @@ class SirenSwitch(BaseRingSwitch):
         self._siren_on = False
 
     def _set_switch(self, new_state):
-        """Update switch state, and causes HASS to correctly update."""
+        """Update switch state, and causes Home Assistant to correctly update."""
         self._device.siren = new_state
         self._siren_on = new_state > 0
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
@@ -101,7 +123,7 @@ class SirenSwitch(BaseRingSwitch):
         """Return the icon."""
         return SIREN_ICON
 
-    def update(self):
+    async def async_update(self):
         """Update state of the siren."""
         if self._no_updates_until > dt_util.utcnow():
             _LOGGER.debug("Skipping update...")

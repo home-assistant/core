@@ -55,7 +55,4 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload Linky sensors."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_unload(entry, "sensor")
-    )
-    return True
+    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")

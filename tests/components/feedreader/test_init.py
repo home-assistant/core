@@ -1,27 +1,27 @@
 """The tests for the feedreader component."""
-import time
 from datetime import timedelta
-
-import unittest
-from genericpath import exists
 from logging import getLogger
 from os import remove
+from os.path import exists
+import time
+import unittest
 from unittest import mock
 from unittest.mock import patch
 
 from homeassistant.components import feedreader
 from homeassistant.components.feedreader import (
+    CONF_MAX_ENTRIES,
     CONF_URLS,
+    DEFAULT_MAX_ENTRIES,
+    DEFAULT_SCAN_INTERVAL,
+    EVENT_FEEDREADER,
     FeedManager,
     StoredData,
-    EVENT_FEEDREADER,
-    DEFAULT_SCAN_INTERVAL,
-    CONF_MAX_ENTRIES,
-    DEFAULT_MAX_ENTRIES,
 )
-from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant, load_fixture
 
 _LOGGER = getLogger(__name__)
@@ -50,7 +50,7 @@ class TestFeedreaderComponent(unittest.TestCase):
     def test_setup_one_feed(self):
         """Test the general setup of this component."""
         with patch(
-            "homeassistant.components.feedreader." "track_time_interval"
+            "homeassistant.components.feedreader.track_time_interval"
         ) as track_method:
             assert setup_component(self.hass, feedreader.DOMAIN, VALID_CONFIG_1)
             track_method.assert_called_once_with(
@@ -60,7 +60,7 @@ class TestFeedreaderComponent(unittest.TestCase):
     def test_setup_scan_interval(self):
         """Test the setup of this component with scan interval."""
         with patch(
-            "homeassistant.components.feedreader." "track_time_interval"
+            "homeassistant.components.feedreader.track_time_interval"
         ) as track_method:
             assert setup_component(self.hass, feedreader.DOMAIN, VALID_CONFIG_2)
             track_method.assert_called_once_with(
@@ -88,7 +88,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         data_file = self.hass.config.path("{}.pickle".format(feedreader.DOMAIN))
         storage = StoredData(data_file)
         with patch(
-            "homeassistant.components.feedreader." "track_time_interval"
+            "homeassistant.components.feedreader.track_time_interval"
         ) as track_method:
             manager = FeedManager(
                 feed_data, DEFAULT_SCAN_INTERVAL, max_entries, self.hass, storage
@@ -131,7 +131,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         # Must patch 'get_timestamp' method because the timestamp is stored
         # with the URL which in these tests is the raw XML data.
         with patch(
-            "homeassistant.components.feedreader.StoredData." "get_timestamp",
+            "homeassistant.components.feedreader.StoredData.get_timestamp",
             return_value=time.struct_time((2018, 4, 30, 5, 10, 0, 0, 120, 0)),
         ):
             manager2, events2 = self.setup_manager(feed_data2)
@@ -139,7 +139,7 @@ class TestFeedreaderComponent(unittest.TestCase):
         # 3. Run
         feed_data3 = load_fixture("feedreader1.xml")
         with patch(
-            "homeassistant.components.feedreader.StoredData." "get_timestamp",
+            "homeassistant.components.feedreader.StoredData.get_timestamp",
             return_value=time.struct_time((2018, 4, 30, 5, 11, 0, 0, 120, 0)),
         ):
             manager3, events3 = self.setup_manager(feed_data3)
@@ -162,6 +162,12 @@ class TestFeedreaderComponent(unittest.TestCase):
         feed_data = load_fixture("feedreader3.xml")
         manager, events = self.setup_manager(feed_data)
         assert len(events) == 3
+
+    def test_feed_with_unrecognized_publication_date(self):
+        """Test simple feed with entry with unrecognized publication date."""
+        feed_data = load_fixture("feedreader4.xml")
+        manager, events = self.setup_manager(feed_data)
+        assert len(events) == 1
 
     def test_feed_invalid_data(self):
         """Test feed with invalid data."""

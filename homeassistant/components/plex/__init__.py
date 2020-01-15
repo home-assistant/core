@@ -1,9 +1,10 @@
 """Support to embed Plex."""
 import asyncio
-from datetime import timedelta
+import functools
 import logging
 
 import plexapi.exceptions
+from plexwebsocket import PlexWebsocket
 import requests.exceptions
 import voluptuous as vol
 
@@ -16,25 +17,32 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_URL,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 
 from .const import (
-    CONF_USE_EPISODE_ART,
-    CONF_SHOW_ALL_CONTROLS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
+    CONF_SHOW_ALL_CONTROLS,
+    CONF_USE_EPISODE_ART,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
     PLATFORMS,
+    PLATFORMS_COMPLETED,
     PLEX_MEDIA_PLAYER_OPTIONS,
     PLEX_SERVER_CONFIG,
-    REFRESH_LISTENERS,
+    PLEX_UPDATE_PLATFORMS_SIGNAL,
     SERVERS,
+    WEBSOCKETS,
 )
 from .server import PlexServer
 
@@ -65,20 +73,21 @@ CONFIG_SCHEMA = vol.Schema({PLEX_DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_
 _LOGGER = logging.getLogger(__package__)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Plex component."""
     hass.data.setdefault(
-        PLEX_DOMAIN, {SERVERS: {}, REFRESH_LISTENERS: {}, DISPATCHERS: {}}
+        PLEX_DOMAIN,
+        {SERVERS: {}, DISPATCHERS: {}, WEBSOCKETS: {}, PLATFORMS_COMPLETED: {}},
     )
 
     plex_config = config.get(PLEX_DOMAIN, {})
     if plex_config:
-        _setup_plex(hass, plex_config)
+        _async_setup_plex(hass, plex_config)
 
     return True
 
 
-def _setup_plex(hass, config):
+def _async_setup_plex(hass, config):
     """Pass configuration to a config flow."""
     server_config = dict(config)
     if MP_DOMAIN in server_config:
@@ -136,18 +145,46 @@ async def async_setup_entry(hass, entry):
     )
     server_id = plex_server.machine_identifier
     hass.data[PLEX_DOMAIN][SERVERS][server_id] = plex_server
-    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id] = []
-
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id] = set()
 
     entry.add_update_listener(async_options_updated)
 
-    hass.data[PLEX_DOMAIN][REFRESH_LISTENERS][server_id] = async_track_time_interval(
-        hass, lambda now: plex_server.update_platforms(), timedelta(seconds=10)
+    unsub = async_dispatcher_connect(
+        hass,
+        PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id),
+        plex_server.update_platforms,
     )
+    hass.data[PLEX_DOMAIN][DISPATCHERS].setdefault(server_id, [])
+    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+
+    def update_plex():
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+
+    session = async_get_clientsession(hass)
+    verify_ssl = server_config.get(CONF_VERIFY_SSL)
+    websocket = PlexWebsocket(
+        plex_server.plex_server, update_plex, session=session, verify_ssl=verify_ssl
+    )
+    hass.data[PLEX_DOMAIN][WEBSOCKETS][server_id] = websocket
+
+    def start_websocket_session(platform, _):
+        hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id].add(platform)
+        if hass.data[PLEX_DOMAIN][PLATFORMS_COMPLETED][server_id] == PLATFORMS:
+            hass.loop.create_task(websocket.listen())
+
+    def close_websocket_session(_):
+        websocket.close()
+
+    unsub = hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, close_websocket_session
+    )
+    hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+
+    for platform in PLATFORMS:
+        task = hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
+        task.add_done_callback(functools.partial(start_websocket_session, platform))
 
     return True
 
@@ -156,8 +193,8 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     server_id = entry.data[CONF_SERVER_IDENTIFIER]
 
-    cancel = hass.data[PLEX_DOMAIN][REFRESH_LISTENERS].pop(server_id)
-    cancel()
+    websocket = hass.data[PLEX_DOMAIN][WEBSOCKETS].pop(server_id)
+    websocket.close()
 
     dispatchers = hass.data[PLEX_DOMAIN][DISPATCHERS].pop(server_id)
     for unsub in dispatchers:

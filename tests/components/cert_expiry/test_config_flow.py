@@ -1,12 +1,14 @@
 """Tests for the Cert Expiry config flow."""
-import pytest
 import socket
+import ssl
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.cert_expiry import config_flow
-from homeassistant.components.cert_expiry.const import DEFAULT_PORT
-from homeassistant.const import CONF_PORT, CONF_NAME, CONF_HOST
+from homeassistant.components.cert_expiry.const import DEFAULT_NAME, DEFAULT_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -45,7 +47,7 @@ async def test_user(hass, test_connect):
         {CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "cert_expiry_test_1_2_3"
+    assert result["title"] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
 
@@ -57,21 +59,21 @@ async def test_import(hass, test_connect):
     # import with only host
     result = await flow.async_step_import({CONF_HOST: HOST})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "ssl_certificate_expiry"
+    assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
 
     # import with host and name
     result = await flow.async_step_import({CONF_HOST: HOST, CONF_NAME: NAME})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "cert_expiry_test_1_2_3"
+    assert result["title"] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
 
     # improt with host and port
     result = await flow.async_step_import({CONF_HOST: HOST, CONF_PORT: PORT})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "ssl_certificate_expiry"
+    assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
 
@@ -80,7 +82,7 @@ async def test_import(hass, test_connect):
         {CONF_HOST: HOST, CONF_PORT: PORT, CONF_NAME: NAME}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "cert_expiry_test_1_2_3"
+    assert result["title"] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
 
@@ -112,7 +114,7 @@ async def test_abort_if_already_setup(hass, test_connect):
         {CONF_HOST: HOST, CONF_NAME: NAME, CONF_PORT: 888}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "cert_expiry_test_1_2_3"
+    assert result["title"] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == 888
 
@@ -131,7 +133,22 @@ async def test_abort_on_socket_failed(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_HOST: "connection_timeout"}
 
-    with patch("socket.create_connection", side_effect=OSError()):
+    with patch(
+        "socket.create_connection",
+        side_effect=ssl.CertificateError(f"{HOST} doesn't match somethingelse.com"),
+    ):
         result = await flow.async_step_user({CONF_HOST: HOST})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["errors"] == {CONF_HOST: "certificate_fetch_failed"}
+        assert result["errors"] == {CONF_HOST: "wrong_host"}
+
+    with patch(
+        "socket.create_connection", side_effect=ssl.CertificateError("different error")
+    ):
+        result = await flow.async_step_user({CONF_HOST: HOST})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "certificate_error"}
+
+    with patch("socket.create_connection", side_effect=ssl.SSLError()):
+        result = await flow.async_step_user({CONF_HOST: HOST})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "certificate_error"}

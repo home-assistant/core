@@ -136,7 +136,7 @@ async def test_hmip_group_switch(hass, default_mock_hap):
     assert not ha_state.attributes.get(ATTR_GROUP_MEMBER_UNREACHABLE)
     await async_manipulate_test_data(hass, hmip_device, "unreach", True)
     ha_state = hass.states.get(entity_id)
-    assert ha_state.attributes[ATTR_GROUP_MEMBER_UNREACHABLE] is True
+    assert ha_state.attributes[ATTR_GROUP_MEMBER_UNREACHABLE]
 
 
 async def test_hmip_multi_switch(hass, default_mock_hap):

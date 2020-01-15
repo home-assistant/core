@@ -1,30 +1,13 @@
 """The tests for the logbook component."""
 # pylint: disable=protected-access,invalid-name
+from datetime import datetime, timedelta
 import logging
-from datetime import timedelta, datetime
 import unittest
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import sun
-import homeassistant.core as ha
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_SERVICE,
-    ATTR_NAME,
-    EVENT_STATE_CHANGED,
-    EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP,
-    EVENT_AUTOMATION_TRIGGERED,
-    EVENT_SCRIPT_STARTED,
-    ATTR_HIDDEN,
-    STATE_NOT_HOME,
-    STATE_ON,
-    STATE_OFF,
-)
-import homeassistant.util.dt as dt_util
-from homeassistant.components import logbook, recorder
+from homeassistant.components import logbook, recorder, sun
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
@@ -32,10 +15,25 @@ from homeassistant.components.homekit.const import (
     DOMAIN as DOMAIN_HOMEKIT,
     EVENT_HOMEKIT_CHANGED,
 )
-from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_HIDDEN,
+    ATTR_NAME,
+    ATTR_SERVICE,
+    EVENT_AUTOMATION_TRIGGERED,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_SCRIPT_STARTED,
+    EVENT_STATE_CHANGED,
+    STATE_NOT_HOME,
+    STATE_OFF,
+    STATE_ON,
+)
+import homeassistant.core as ha
+from homeassistant.setup import async_setup_component, setup_component
+import homeassistant.util.dt as dt_util
 
-from tests.common import init_recorder_component, get_test_home_assistant
-
+from tests.common import get_test_home_assistant, init_recorder_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +48,6 @@ class TestComponentLogbook(unittest.TestCase):
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)  # Force an in memory DB
         assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)
-        self.hass.start()
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -92,7 +89,7 @@ class TestComponentLogbook(unittest.TestCase):
                 dt_util.utcnow() + timedelta(hours=1),
             )
         )
-        assert len(events) == 2
+        assert len(events) == 1
 
         assert 1 == len(calls)
         last_call = calls[-1]

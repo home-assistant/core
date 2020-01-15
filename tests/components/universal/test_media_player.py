@@ -5,14 +5,14 @@ import unittest
 
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_PLAYING, STATE_PAUSED
-import homeassistant.components.switch as switch
 import homeassistant.components.input_number as input_number
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
+import homeassistant.components.switch as switch
 import homeassistant.components.universal.media_player as universal
+from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
 
-from tests.common import mock_service, get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_service
 
 
 def validate_config(config):
@@ -539,10 +539,10 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
 
-        assert "0" == ump.volume_level
+        assert 0 == ump.volume_level
 
         self.hass.states.set(self.mock_volume_id, 100)
-        assert "100" == ump.volume_level
+        assert 100 == ump.volume_level
 
     def test_is_volume_muted_children_and_attr(self):
         """Test is volume muted property w/ children and attrs."""

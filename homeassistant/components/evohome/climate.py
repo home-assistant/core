@@ -1,6 +1,6 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
 import logging
-from typing import Optional, List
+from typing import List, Optional
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -14,26 +14,26 @@ from homeassistant.components.climate.const import (
     PRESET_ECO,
     PRESET_HOME,
     PRESET_NONE,
-    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import PRECISION_TENTHS
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime
 
-from . import CONF_LOCATION_IDX, EvoDevice, EvoChild
+from . import CONF_LOCATION_IDX, EvoChild, EvoDevice
 from .const import (
     DOMAIN,
-    EVO_RESET,
     EVO_AUTO,
     EVO_AUTOECO,
     EVO_AWAY,
     EVO_CUSTOM,
     EVO_DAYOFF,
-    EVO_HEATOFF,
     EVO_FOLLOW,
-    EVO_TEMPOVER,
+    EVO_HEATOFF,
     EVO_PERMOVER,
+    EVO_RESET,
+    EVO_TEMPOVER,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,8 +81,8 @@ async def async_setup_platform(
         broker.params[CONF_LOCATION_IDX],
     )
 
-    # special case of RoundModulation/RoundWireless (is a single zone system)
-    if broker.config["zones"][0]["zoneType"] == "Thermostat":
+    # special case of RoundModulation/RoundWireless as a single zone system
+    if len(broker.tcs.zones) == 1 and list(broker.tcs.zones.keys())[0] == "Thermostat":
         zone = list(broker.tcs.zones.values())[0]
         _LOGGER.debug(
             "Found the Thermostat (%s), id=%s, name=%s",
@@ -121,9 +121,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
     async def _set_tcs_mode(self, op_mode: str) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
-        await self._call_client_api(
-            self._evo_tcs._set_status(op_mode)  # pylint: disable=protected-access
-        )
+        await self._call_client_api(self._evo_tcs.set_status(op_mode))
 
     @property
     def hvac_modes(self) -> List[str]:

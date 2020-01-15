@@ -4,7 +4,7 @@ from unittest.mock import mock_open, patch
 import pytest
 
 from homeassistant.components import camera
-from homeassistant.components.camera import STATE_STREAMING, STATE_IDLE
+from homeassistant.components.camera import STATE_IDLE, STATE_STREAMING
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 

@@ -6,7 +6,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
 
-
 VALID_CONFIG_MINIMAL = {
     "sensor": {"platform": "rmvtransport", "next_departure": [{"station": "3000010"}]}
 }

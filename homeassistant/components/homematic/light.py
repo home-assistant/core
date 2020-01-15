@@ -12,7 +12,8 @@ from homeassistant.components.light import (
     Light,
 )
 
-from . import ATTR_DISCOVER_DEVICES, HMDevice
+from .const import ATTR_DISCOVER_DEVICES
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMLight(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMLight(HMDevice, Light):
@@ -66,7 +67,7 @@ class HMLight(HMDevice, Light):
         """Return the hue and saturation color value [float, float]."""
         if not self.supported_features & SUPPORT_COLOR:
             return None
-        hue, sat = self._hmdevice.get_hs_color()
+        hue, sat = self._hmdevice.get_hs_color(self._channel)
         return hue * 360.0, sat * 100.0
 
     @property
@@ -98,6 +99,7 @@ class HMLight(HMDevice, Light):
             self._hmdevice.set_hs_color(
                 hue=kwargs[ATTR_HS_COLOR][0] / 360.0,
                 saturation=kwargs[ATTR_HS_COLOR][1] / 100.0,
+                channel=self._channel,
             )
         if ATTR_EFFECT in kwargs:
             self._hmdevice.set_effect(kwargs[ATTR_EFFECT])

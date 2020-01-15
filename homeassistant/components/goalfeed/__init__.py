@@ -1,11 +1,12 @@
 """Component for the Goalfeed service."""
 import json
 
+import pysher
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 # Version downgraded due to regression in library
 # For details: https://github.com/nlsdfnbch/Pysher/issues/38
@@ -30,8 +31,6 @@ GOALFEED_APP_ID = "bfd4ed98c1ff22c04074"
 
 def setup(hass, config):
     """Set up the Goalfeed component."""
-    import pysher
-
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)

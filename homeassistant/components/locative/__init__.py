@@ -2,21 +2,21 @@
 import logging
 from typing import Dict
 
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.const import (
-    HTTP_UNPROCESSABLE_ENTITY,
+    ATTR_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    STATE_NOT_HOME,
     CONF_WEBHOOK_ID,
-    ATTR_ID,
     HTTP_OK,
+    HTTP_UNPROCESSABLE_ENTITY,
+    STATE_NOT_HOME,
 )
 from homeassistant.helpers import config_entry_flow
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
@@ -127,8 +127,7 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
     hass.data[DOMAIN]["unsub_device_tracker"].pop(entry.entry_id)()
-    await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
-    return True
+    return await hass.config_entries.async_forward_entry_unload(entry, DEVICE_TRACKER)
 
 
 # pylint: disable=invalid-name

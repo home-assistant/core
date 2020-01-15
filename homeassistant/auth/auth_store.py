@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
-from .const import GROUP_ID_ADMIN, GROUP_ID_USER, GROUP_ID_READ_ONLY
+from .const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY, GROUP_ID_USER
 from .permissions import PermissionLookup, system_policies
 from .permissions.types import PolicyType
 

@@ -8,9 +8,9 @@ import re
 from typing import Any, Dict, Optional, Tuple
 
 import aiohttp.client_exceptions
-import voluptuous as vol
-import evohomeasync2
 import evohomeasync
+import evohomeasync2
+import voluptuous as vol
 
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -28,7 +28,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN, EVO_FOLLOW, STORAGE_VERSION, STORAGE_KEY, GWS, TCS
+from .const import DOMAIN, EVO_FOLLOW, GWS, STORAGE_KEY, STORAGE_VERSION, TCS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -237,11 +237,7 @@ class EvoBroker:
 
         loc_idx = params[CONF_LOCATION_IDX]
         self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
-        self.tcs = (
-            client.locations[loc_idx]  # pylint: disable=protected-access
-            ._gateways[0]
-            ._control_systems[0]
-        )
+        self.tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]
         self.temps = None
 
     async def save_auth_tokens(self) -> None:
@@ -460,36 +456,43 @@ class EvoChild(EvoDevice):
         day_of_week = int(day_time.strftime("%w"))  # 0 is Sunday
         time_of_day = day_time.strftime("%H:%M:%S")
 
-        # Iterate today's switchpoints until past the current time of day...
-        day = self._schedule["DailySchedules"][day_of_week]
-        sp_idx = -1  # last switchpoint of the day before
-        for i, tmp in enumerate(day["Switchpoints"]):
-            if time_of_day > tmp["TimeOfDay"]:
-                sp_idx = i  # current setpoint
-            else:
-                break
+        try:
+            # Iterate today's switchpoints until past the current time of day...
+            day = self._schedule["DailySchedules"][day_of_week]
+            sp_idx = -1  # last switchpoint of the day before
+            for i, tmp in enumerate(day["Switchpoints"]):
+                if time_of_day > tmp["TimeOfDay"]:
+                    sp_idx = i  # current setpoint
+                else:
+                    break
 
-        # Did the current SP start yesterday? Does the next start SP tomorrow?
-        this_sp_day = -1 if sp_idx == -1 else 0
-        next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
+            # Did the current SP start yesterday? Does the next start SP tomorrow?
+            this_sp_day = -1 if sp_idx == -1 else 0
+            next_sp_day = 1 if sp_idx + 1 == len(day["Switchpoints"]) else 0
 
-        for key, offset, idx in [
-            ("this", this_sp_day, sp_idx),
-            ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
-        ]:
-            sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
-            day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
-            switchpoint = day["Switchpoints"][idx]
+            for key, offset, idx in [
+                ("this", this_sp_day, sp_idx),
+                ("next", next_sp_day, (sp_idx + 1) * (1 - next_sp_day)),
+            ]:
+                sp_date = (day_time + timedelta(days=offset)).strftime("%Y-%m-%d")
+                day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
+                switchpoint = day["Switchpoints"][idx]
 
-            dt_local_aware = _local_dt_to_aware(
-                dt_util.parse_datetime(f"{sp_date}T{switchpoint['TimeOfDay']}")
+                dt_local_aware = _local_dt_to_aware(
+                    dt_util.parse_datetime(f"{sp_date}T{switchpoint['TimeOfDay']}")
+                )
+
+                self._setpoints[f"{key}_sp_from"] = dt_local_aware.isoformat()
+                try:
+                    self._setpoints[f"{key}_sp_temp"] = switchpoint["heatSetpoint"]
+                except KeyError:
+                    self._setpoints[f"{key}_sp_state"] = switchpoint["DhwState"]
+
+        except IndexError:
+            self._setpoints = {}
+            _LOGGER.warning(
+                "Failed to get setpoints - please report as an issue", exc_info=True
             )
-
-            self._setpoints[f"{key}_sp_from"] = dt_local_aware.isoformat()
-            try:
-                self._setpoints[f"{key}_sp_temp"] = switchpoint["heatSetpoint"]
-            except KeyError:
-                self._setpoints[f"{key}_sp_state"] = switchpoint["DhwState"]
 
         return self._setpoints
 

@@ -1,6 +1,7 @@
 """The snapcast component."""
 
 import asyncio
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID

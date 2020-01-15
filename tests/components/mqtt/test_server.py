@@ -19,13 +19,9 @@ class TestMQTT:
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch(
-        "homeassistant.components.mqtt.server.custom_app_context", Mock(return_value="")
-    )
+    @patch("passlib.apps.custom_app_context", Mock(return_value=""))
     @patch("tempfile.NamedTemporaryFile", Mock(return_value=MagicMock()))
-    @patch(
-        "homeassistant.components.mqtt.server.Broker", Mock(return_value=MagicMock())
-    )
+    @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock()))
     @patch("hbmqtt.broker.Broker.start", Mock(return_value=mock_coro()))
     @patch("homeassistant.components.mqtt.MQTT")
     def test_creating_config_with_pass_and_no_http_pass(self, mock_mqtt):
@@ -45,13 +41,9 @@ class TestMQTT:
         assert mock_mqtt.mock_calls[1][2]["username"] == "homeassistant"
         assert mock_mqtt.mock_calls[1][2]["password"] == password
 
-    @patch(
-        "homeassistant.components.mqtt.server.custom_app_context", Mock(return_value="")
-    )
+    @patch("passlib.apps.custom_app_context", Mock(return_value=""))
     @patch("tempfile.NamedTemporaryFile", Mock(return_value=MagicMock()))
-    @patch(
-        "homeassistant.components.mqtt.server.Broker", Mock(return_value=MagicMock())
-    )
+    @patch("hbmqtt.broker.Broker", Mock(return_value=MagicMock()))
     @patch("hbmqtt.broker.Broker.start", Mock(return_value=mock_coro()))
     @patch("homeassistant.components.mqtt.MQTT")
     def test_creating_config_with_pass_and_http_pass(self, mock_mqtt):

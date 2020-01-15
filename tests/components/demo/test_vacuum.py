@@ -2,23 +2,6 @@
 import unittest
 
 from homeassistant.components import vacuum
-from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_COMMAND,
-    ATTR_FAN_SPEED,
-    ATTR_FAN_SPEED_LIST,
-    ATTR_PARAMS,
-    ATTR_STATUS,
-    DOMAIN,
-    ENTITY_ID_ALL_VACUUMS,
-    SERVICE_SEND_COMMAND,
-    SERVICE_SET_FAN_SPEED,
-    STATE_DOCKED,
-    STATE_CLEANING,
-    STATE_PAUSED,
-    STATE_IDLE,
-    STATE_RETURNING,
-)
 from homeassistant.components.demo.vacuum import (
     DEMO_VACUUM_BASIC,
     DEMO_VACUUM_COMPLETE,
@@ -27,6 +10,22 @@ from homeassistant.components.demo.vacuum import (
     DEMO_VACUUM_NONE,
     DEMO_VACUUM_STATE,
     FAN_SPEEDS,
+)
+from homeassistant.components.vacuum import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_COMMAND,
+    ATTR_FAN_SPEED,
+    ATTR_FAN_SPEED_LIST,
+    ATTR_PARAMS,
+    ATTR_STATUS,
+    DOMAIN,
+    SERVICE_SEND_COMMAND,
+    SERVICE_SET_FAN_SPEED,
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -39,7 +38,6 @@ from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, mock_service
 from tests.components.vacuum import common
-
 
 ENTITY_VACUUM_BASIC = "{}.{}".format(DOMAIN, DEMO_VACUUM_BASIC).lower()
 ENTITY_VACUUM_COMPLETE = "{}.{}".format(DOMAIN, DEMO_VACUUM_COMPLETE).lower()
@@ -119,14 +117,6 @@ class TestVacuumDemo(unittest.TestCase):
         self.hass.states.set(ENTITY_VACUUM_BASIC, STATE_OFF)
         self.hass.block_till_done()
         assert not vacuum.is_on(self.hass, ENTITY_VACUUM_BASIC)
-
-        self.hass.states.set(ENTITY_ID_ALL_VACUUMS, STATE_ON)
-        self.hass.block_till_done()
-        assert vacuum.is_on(self.hass)
-
-        self.hass.states.set(ENTITY_ID_ALL_VACUUMS, STATE_OFF)
-        self.hass.block_till_done()
-        assert not vacuum.is_on(self.hass)
 
         common.turn_on(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()

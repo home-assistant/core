@@ -1,15 +1,15 @@
 """The tests for the Jewish calendar sensors."""
-from datetime import timedelta
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 
 import pytest
 
-import homeassistant.util.dt as dt_util
-from homeassistant.setup import async_setup_component
 from homeassistant.components import jewish_calendar
-from tests.common import async_fire_time_changed
+from homeassistant.setup import async_setup_component
+import homeassistant.util.dt as dt_util
 
-from . import alter_time, make_nyc_test_params, make_jerusalem_test_params
+from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
+
+from tests.common import async_fire_time_changed
 
 
 async def test_jewish_calendar_min_config(hass):
@@ -180,8 +180,9 @@ async def test_jewish_calendar_sensor(
     assert sensor_object.state == str(result)
 
     if sensor == "holiday":
-        assert sensor_object.attributes.get("type") == "YOM_TOV"
         assert sensor_object.attributes.get("id") == "rosh_hashana_i"
+        assert sensor_object.attributes.get("type") == "YOM_TOV"
+        assert sensor_object.attributes.get("type_id") == 1
 
 
 SHABBAT_PARAMS = [

@@ -5,18 +5,24 @@ https://home-assistant.io/components/fan.dyson/
 """
 import logging
 
+from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
+from libpurecool.dyson_pure_cool import DysonPureCool
+from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
+from libpurecool.dyson_pure_state import DysonPureCoolState
+from libpurecool.dyson_pure_state_v2 import DysonPureCoolV2State
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
     SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED,
     FanEntity,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_HIGH,
 )
 from homeassistant.const import ATTR_ENTITY_ID
+import homeassistant.helpers.config_validation as cv
+
 from . import DYSON_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,8 +94,6 @@ SET_DYSON_SPEED_SCHEMA = vol.Schema(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
-    from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
-    from libpurecool.dyson_pure_cool import DysonPureCool
 
     if discovery_info is None:
         return
@@ -151,14 +155,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         service_handle,
         schema=DYSON_SET_NIGHT_MODE_SCHEMA,
     )
-    if has_purecool_devices:
-        hass.services.register(
-            DYSON_DOMAIN,
-            SERVICE_SET_AUTO_MODE,
-            service_handle,
-            schema=SET_AUTO_MODE_SCHEMA,
-        )
 
+    hass.services.register(
+        DYSON_DOMAIN,
+        SERVICE_SET_AUTO_MODE,
+        service_handle,
+        schema=SET_AUTO_MODE_SCHEMA,
+    )
+    if has_purecool_devices:
         hass.services.register(
             DYSON_DOMAIN, SERVICE_SET_ANGLE, service_handle, schema=SET_ANGLE_SCHEMA
         )
@@ -197,7 +201,6 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def on_message(self, message):
         """Call when new messages received from the fan."""
-        from libpurecool.dyson_pure_state import DysonPureCoolState
 
         if isinstance(message, DysonPureCoolState):
             _LOGGER.debug("Message received for fan device %s: %s", self.name, message)
@@ -215,8 +218,6 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan. Never called ??."""
-        from libpurecool.const import FanSpeed, FanMode
-
         _LOGGER.debug("Set fan speed to: %s", speed)
 
         if speed == FanSpeed.FAN_SPEED_AUTO.value:
@@ -227,8 +228,6 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
-        from libpurecool.const import FanSpeed, FanMode
-
         _LOGGER.debug("Turn on fan %s with speed %s", self.name, speed)
         if speed:
             if speed == FanSpeed.FAN_SPEED_AUTO.value:
@@ -244,15 +243,11 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def turn_off(self, **kwargs) -> None:
         """Turn off the fan."""
-        from libpurecool.const import FanMode
-
         _LOGGER.debug("Turn off fan %s", self.name)
         self._device.set_configuration(fan_mode=FanMode.OFF)
 
     def oscillate(self, oscillating: bool) -> None:
         """Turn on/off oscillating."""
-        from libpurecool.const import Oscillation
-
         _LOGGER.debug("Turn oscillation %s for device %s", oscillating, self.name)
 
         if oscillating:
@@ -275,8 +270,6 @@ class DysonPureCoolLinkDevice(FanEntity):
     @property
     def speed(self) -> str:
         """Return the current speed."""
-        from libpurecool.const import FanSpeed
-
         if self._device.state:
             if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
                 return self._device.state.speed
@@ -295,8 +288,6 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def set_night_mode(self, night_mode: bool) -> None:
         """Turn fan in night mode."""
-        from libpurecool.const import NightMode
-
         _LOGGER.debug("Set %s night mode %s", self.name, night_mode)
         if night_mode:
             self._device.set_configuration(night_mode=NightMode.NIGHT_MODE_ON)
@@ -310,8 +301,6 @@ class DysonPureCoolLinkDevice(FanEntity):
 
     def set_auto_mode(self, auto_mode: bool) -> None:
         """Turn fan in auto mode."""
-        from libpurecool.const import FanMode
-
         _LOGGER.debug("Set %s auto mode %s", self.name, auto_mode)
         if auto_mode:
             self._device.set_configuration(fan_mode=FanMode.AUTO)
@@ -321,8 +310,6 @@ class DysonPureCoolLinkDevice(FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        from libpurecool.const import FanSpeed
-
         supported_speeds = [
             FanSpeed.FAN_SPEED_AUTO.value,
             int(FanSpeed.FAN_SPEED_1.value),
@@ -365,8 +352,6 @@ class DysonPureCoolDevice(FanEntity):
 
     def on_message(self, message):
         """Call when new messages received from the fan."""
-        from libpurecool.dyson_pure_state_v2 import DysonPureCoolV2State
-
         if isinstance(message, DysonPureCoolV2State):
             _LOGGER.debug("Message received for fan device %s: %s", self.name, message)
             self.schedule_update_ha_state()
@@ -392,8 +377,6 @@ class DysonPureCoolDevice(FanEntity):
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        from libpurecool.const import FanSpeed
-
         if speed == SPEED_LOW:
             self._device.set_fan_speed(FanSpeed.FAN_SPEED_4)
         elif speed == SPEED_MEDIUM:
@@ -408,8 +391,6 @@ class DysonPureCoolDevice(FanEntity):
 
     def set_dyson_speed(self, speed: str = None) -> None:
         """Set the exact speed of the purecool fan."""
-        from libpurecool.const import FanSpeed
-
         _LOGGER.debug("Set exact speed for fan %s", self.name)
 
         fan_speed = FanSpeed("{0:04d}".format(int(speed)))
@@ -487,8 +468,6 @@ class DysonPureCoolDevice(FanEntity):
     @property
     def speed(self):
         """Return the current speed."""
-        from libpurecool.const import FanSpeed
-
         speed_map = {
             FanSpeed.FAN_SPEED_1.value: SPEED_LOW,
             FanSpeed.FAN_SPEED_2.value: SPEED_LOW,
@@ -508,8 +487,6 @@ class DysonPureCoolDevice(FanEntity):
     @property
     def dyson_speed(self):
         """Return the current speed."""
-        from libpurecool.const import FanSpeed
-
         if self._device.state:
             if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
                 return self._device.state.speed
@@ -553,6 +530,8 @@ class DysonPureCoolDevice(FanEntity):
     @property
     def carbon_filter(self):
         """Return the carbon filter state."""
+        if self._device.state.carbon_filter_state == "INV":
+            return self._device.state.carbon_filter_state
         return int(self._device.state.carbon_filter_state)
 
     @property
@@ -563,8 +542,6 @@ class DysonPureCoolDevice(FanEntity):
     @property
     def dyson_speed_list(self) -> list:
         """Get the list of available dyson speeds."""
-        from libpurecool.const import FanSpeed
-
         return [
             int(FanSpeed.FAN_SPEED_1.value),
             int(FanSpeed.FAN_SPEED_2.value),

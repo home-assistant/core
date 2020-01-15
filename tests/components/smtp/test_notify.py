@@ -1,11 +1,11 @@
 """The tests for the notify smtp platform."""
+import re
 import unittest
 from unittest.mock import patch
 
 from homeassistant.components.smtp.notify import MailNotificationService
 
 from tests.common import get_test_home_assistant
-import re
 
 
 class MockSMTP(MailNotificationService):
@@ -31,7 +31,7 @@ class TestNotifySmtp(unittest.TestCase):
             "testuser",
             "testpass",
             ["recip1@example.com", "testrecip@test.com"],
-            "HomeAssistant",
+            "Home Assistant",
             0,
         )
 
@@ -49,8 +49,8 @@ class TestNotifySmtp(unittest.TestCase):
             "Content-Transfer-Encoding: 7bit\n"
             "Subject: Home Assistant\n"
             "To: recip1@example.com,testrecip@test.com\n"
-            "From: HomeAssistant <test@test.com>\n"
-            "X-Mailer: HomeAssistant\n"
+            "From: Home Assistant <test@test.com>\n"
+            "X-Mailer: Home Assistant\n"
             "Date: [^\n]+\n"
             "Message-Id: <[^@]+@[^>]+>\n"
             "\n"

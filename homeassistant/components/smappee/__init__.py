@@ -1,13 +1,16 @@
 """Support for Smappee energy monitor."""
-import logging
 from datetime import datetime, timedelta
+import logging
 import re
-import voluptuous as vol
+
 from requests.exceptions import RequestException
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_HOST
-from homeassistant.util import Throttle
-from homeassistant.helpers.discovery import load_platform
+import smappy
+import voluptuous as vol
+
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +24,7 @@ CONF_HOST_PASSWORD = "host_password"
 DOMAIN = "smappee"
 DATA_SMAPPEE = "SMAPPEE"
 
-_SENSOR_REGEX = re.compile(r"(?P<key>([A-Za-z]+))\=" + r"(?P<value>([0-9\.]+))")
+_SENSOR_REGEX = re.compile(r"(?P<key>([A-Za-z]+))\=(?P<value>([0-9\.]+))")
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -72,7 +75,6 @@ class Smappee:
         self, client_id, client_secret, username, password, host, host_password
     ):
         """Initialize the data."""
-        import smappy
 
         self._remote_active = False
         self._local_active = False

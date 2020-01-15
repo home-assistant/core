@@ -1,5 +1,5 @@
 """Constants for ebus component."""
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS, PRESSURE_BAR
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, PRESSURE_BAR, TEMP_CELSIUS
 
 DOMAIN = "ebusd"
 TIME_SECONDS = "seconds"

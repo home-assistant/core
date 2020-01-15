@@ -16,11 +16,11 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
     STATE_OPEN,
     STATE_UNAVAILABLE,
-    SERVICE_TOGGLE,
-    SERVICE_TOGGLE_COVER_TILT,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
@@ -544,6 +544,27 @@ async def test_no_command_topic(hass, mqtt_mock):
     )
 
     assert hass.states.get("cover.test").attributes["supported_features"] == 240
+
+
+async def test_no_payload_stop(hass, mqtt_mock):
+    """Test with no stop payload."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": None,
+            }
+        },
+    )
+
+    assert hass.states.get("cover.test").attributes["supported_features"] == 3
 
 
 async def test_with_command_topic_and_tilt(hass, mqtt_mock):

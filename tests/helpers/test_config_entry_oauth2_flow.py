@@ -1,15 +1,15 @@
 """Tests for the Somfy config flow."""
 import asyncio
 import logging
-from unittest.mock import patch
 import time
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow, setup, config_entries
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.common import mock_platform, MockConfigEntry
+from tests.common import MockConfigEntry, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
 CLIENT_SECRET = "5678"
@@ -120,6 +120,64 @@ async def test_abort_if_authorization_timeout(hass, flow_handler, local_impl):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "authorize_url_timeout"
+
+
+async def test_step_discovery(hass, flow_handler, local_impl):
+    """Check flow triggers from discovery."""
+    hass.config.api.base_url = "https://example.com"
+    flow_handler.async_register_implementation(hass, local_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, MockOAuth2Implementation()
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "pick_implementation"
+
+
+async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
+    """Test if aborts when discovered multiple times."""
+    hass.config.api.base_url = "https://example.com"
+    flow_handler.async_register_implementation(hass, local_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, MockOAuth2Implementation()
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_SSDP}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "pick_implementation"
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl):
+    """Test if abort discovery when entries exists."""
+    hass.config.api.base_url = "https://example.com"
+    flow_handler.async_register_implementation(hass, local_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, MockOAuth2Implementation()
+    )
+
+    entry = MockConfigEntry(domain=TEST_DOMAIN, data={},)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_SSDP}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_full_flow(
@@ -264,3 +322,45 @@ async def test_oauth_session(hass, flow_handler, local_impl, aioclient_mock):
     assert config_entry.data["token"]["expires_in"] == 100
     assert config_entry.data["token"]["random_other_data"] == "should_stay"
     assert round(config_entry.data["token"]["expires_at"] - now) == 100
+
+
+async def test_implementation_provider(hass, local_impl):
+    """Test providing an implementation provider."""
+    assert (
+        await config_entry_oauth2_flow.async_get_implementations(hass, TEST_DOMAIN)
+        == {}
+    )
+
+    mock_domain_with_impl = "some_domain"
+
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, mock_domain_with_impl, local_impl
+    )
+
+    assert await config_entry_oauth2_flow.async_get_implementations(
+        hass, mock_domain_with_impl
+    ) == {TEST_DOMAIN: local_impl}
+
+    provider_source = {}
+
+    async def async_provide_implementation(hass, domain):
+        """Mock implementation provider."""
+        return provider_source.get(domain)
+
+    config_entry_oauth2_flow.async_add_implementation_provider(
+        hass, "cloud", async_provide_implementation
+    )
+
+    assert await config_entry_oauth2_flow.async_get_implementations(
+        hass, mock_domain_with_impl
+    ) == {TEST_DOMAIN: local_impl}
+
+    provider_source[
+        mock_domain_with_impl
+    ] = config_entry_oauth2_flow.LocalOAuth2Implementation(
+        hass, "cloud", CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
+    )
+
+    assert await config_entry_oauth2_flow.async_get_implementations(
+        hass, mock_domain_with_impl
+    ) == {TEST_DOMAIN: local_impl, "cloud": provider_source[mock_domain_with_impl]}

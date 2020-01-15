@@ -9,6 +9,10 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_TYPE,
+    CONF_USERNAME,
     DEVICE_CLASS_POWER,
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
@@ -20,6 +24,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_call_later
@@ -31,33 +36,66 @@ MAX_INTERVAL = 300
 
 UNIT_OF_MEASUREMENT_HOURS = "h"
 
+INVERTER_TYPES = ["ethernet", "wifi"]
+
 SAJ_UNIT_MAPPINGS = {
-    "W": POWER_WATT,
-    "kWh": ENERGY_KILO_WATT_HOUR,
+    "": None,
     "h": UNIT_OF_MEASUREMENT_HOURS,
     "kg": MASS_KILOGRAMS,
+    "kWh": ENERGY_KILO_WATT_HOUR,
+    "W": POWER_WATT,
     "°C": TEMP_CELSIUS,
-    "": None,
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_TYPE, default=INVERTER_TYPES[0]): vol.In(INVERTER_TYPES),
+        vol.Inclusive(CONF_USERNAME, "credentials"): cv.string,
+        vol.Inclusive(CONF_PASSWORD, "credentials"): cv.string,
+    }
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up SAJ sensors."""
+    """Set up the SAJ sensors."""
 
     remove_interval_update = None
+    wifi = config[CONF_TYPE] == INVERTER_TYPES[1]
 
     # Init all sensors
-    sensor_def = pysaj.Sensors()
+    sensor_def = pysaj.Sensors(wifi)
 
     # Use all sensors by default
     hass_sensors = []
 
-    for sensor in sensor_def:
-        hass_sensors.append(SAJsensor(sensor))
+    kwargs = {}
+    if wifi:
+        kwargs["wifi"] = True
+        if config.get(CONF_USERNAME) and config.get(CONF_PASSWORD):
+            kwargs["username"] = config[CONF_USERNAME]
+            kwargs["password"] = config[CONF_PASSWORD]
 
-    saj = pysaj.SAJ(config[CONF_HOST])
+    try:
+        saj = pysaj.SAJ(config[CONF_HOST], **kwargs)
+        done = await saj.read(sensor_def)
+    except pysaj.UnauthorizedException:
+        _LOGGER.error("Username and/or password is wrong")
+        return
+    except pysaj.UnexpectedResponseException as err:
+        _LOGGER.error(
+            "Error in SAJ, please check host/ip address. Original error: %s", err
+        )
+        return
+
+    if not done:
+        raise PlatformNotReady
+
+    for sensor in sensor_def:
+        hass_sensors.append(
+            SAJsensor(saj.serialnumber, sensor, inverter_name=config.get(CONF_NAME))
+        )
 
     async_add_entities(hass_sensors)
 
@@ -131,14 +169,19 @@ def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
 class SAJsensor(Entity):
     """Representation of a SAJ sensor."""
 
-    def __init__(self, pysaj_sensor):
-        """Initialize the sensor."""
+    def __init__(self, serialnumber, pysaj_sensor, inverter_name=None):
+        """Initialize the SAJ sensor."""
         self._sensor = pysaj_sensor
+        self._inverter_name = inverter_name
+        self._serialnumber = serialnumber
         self._state = self._sensor.value
 
     @property
     def name(self):
         """Return the name of the sensor."""
+        if self._inverter_name:
+            return f"saj_{self._inverter_name}_{self._sensor.name}"
+
         return f"saj_{self._sensor.name}"
 
     @property
@@ -199,4 +242,4 @@ class SAJsensor(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return f"{self._sensor.name}"
+        return f"{self._serialnumber}_{self._sensor.name}"

@@ -1,16 +1,14 @@
-"""
-Support for Somfy Covers.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.somfy/
-"""
+"""Support for Somfy Covers."""
+from pymfy.api.devices.blind import Blind
+from pymfy.api.devices.category import Category
 
 from homeassistant.components.cover import (
-    CoverDevice,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    CoverDevice,
 )
-from homeassistant.components.somfy import DOMAIN, SomfyEntity, DEVICES, API
+
+from . import API, DEVICES, DOMAIN, SomfyEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -18,8 +16,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     def get_covers():
         """Retrieve covers."""
-        from pymfy.api.devices.category import Category
-
         categories = {
             Category.ROLLER_SHUTTER.value,
             Category.INTERIOR_BLIND.value,
@@ -37,29 +33,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_covers), True)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up platform.
-
-    Can only be called when a user accidentally mentions the platform in their
-    config. But even in that case it would have been ignored.
-    """
-    pass
-
-
 class SomfyCover(SomfyEntity, CoverDevice):
     """Representation of a Somfy cover device."""
 
     def __init__(self, device, api):
         """Initialize the Somfy device."""
-        from pymfy.api.devices.blind import Blind
-
         super().__init__(device, api)
         self.cover = Blind(self.device, self.api)
 
     async def async_update(self):
         """Update the device with the latest data."""
-        from pymfy.api.devices.blind import Blind
-
         await super().async_update()
         self.cover = Blind(self.device, self.api)
 
@@ -108,15 +91,15 @@ class SomfyCover(SomfyEntity, CoverDevice):
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        self.cover.orientation = kwargs[ATTR_TILT_POSITION]
+        self.cover.orientation = 100 - kwargs[ATTR_TILT_POSITION]
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        self.cover.orientation = 100
+        self.cover.orientation = 0
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        self.cover.orientation = 0
+        self.cover.orientation = 100
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""

@@ -2,7 +2,7 @@
     "config": {
         "error": {
             "name_exists": "Navnet findes allerede",
-            "wrong_location": "Placering kun i Sverige"
+            "wrong_location": "Lokalitet kun i Sverige"
         },
         "step": {
             "user": {
@@ -11,7 +11,7 @@
                     "longitude": "L\u00e6ngdegrad",
                     "name": "Navn"
                 },
-                "title": "Placering i Sverige"
+                "title": "Lokalitet i Sverige"
             }
         },
         "title": "Svensk vejr service (SMHI)"

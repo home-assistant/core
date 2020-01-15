@@ -1,9 +1,11 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
 import logging
 
+from afsapi import AFSAPI
+import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -64,8 +66,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Frontier Silicon platform."""
-    import requests
-
     if discovery_info is not None:
         async_add_entities(
             [AFSAPIDevice(discovery_info["ssdp_description"], DEFAULT_PASSWORD)], True
@@ -118,8 +118,6 @@ class AFSAPIDevice(MediaPlayerDevice):
         connected to the device in between the updates and invalidated the
         existing session (i.e UNDOK).
         """
-        from afsapi import AFSAPI
-
         return AFSAPI(self._device_url, self._password)
 
     @property

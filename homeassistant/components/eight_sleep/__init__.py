@@ -1,23 +1,24 @@
 """Support for Eight smart mattress covers and mattresses."""
-import logging
 from datetime import timedelta
+import logging
 
+from pyeight.eight import EightSleep
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_USERNAME,
+    ATTR_ENTITY_ID,
+    CONF_BINARY_SENSORS,
     CONF_PASSWORD,
     CONF_SENSORS,
-    CONF_BINARY_SENSORS,
-    ATTR_ENTITY_ID,
+    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
     async_dispatcher_connect,
+    async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -90,7 +91,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Eight Sleep component."""
-    from pyeight.eight import EightSleep
 
     conf = config.get(DOMAIN)
     user = conf.get(CONF_USERNAME)

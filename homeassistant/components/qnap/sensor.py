@@ -1,26 +1,27 @@
 """Support for QNAP NAS Sensors."""
-import logging
 from datetime import timedelta
+import logging
 
+from qnapstats import QNAPStats
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
+    ATTR_NAME,
     CONF_HOST,
-    CONF_USERNAME,
+    CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    ATTR_NAME,
-    CONF_VERIFY_SSL,
     CONF_TIMEOUT,
-    CONF_MONITORED_CONDITIONS,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
     TEMP_CELSIUS,
 )
-from homeassistant.util import Throttle
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,7 +171,6 @@ class QNAPStatsAPI:
 
     def __init__(self, config):
         """Initialize the API wrapper."""
-        from qnapstats import QNAPStats
 
         protocol = "https" if config.get(CONF_SSL) else "http"
         self._api = QNAPStats(
