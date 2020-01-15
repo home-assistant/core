@@ -255,6 +255,8 @@ class LegacySunEntity(Entity):
     def __init__(self, hass, sun):
         """Initialize."""
         self._async_unsub_dispatcher_connect = None
+        self._attrs = {}
+        self._state = None
         self._sun = sun
         self.hass = hass
 
@@ -266,29 +268,38 @@ class LegacySunEntity(Entity):
     @property
     def state(self):
         """Return the state of the sun."""
-        if self._sun.solar_elevation > HORIZON_ELEVATION:
-            return STATE_ABOVE_HORIZON
-        return STATE_BELOW_HORIZON
+        return self._state
 
     @property
     def state_attributes(self):
         """Return the state attributes of the sun."""
-        return {
-            STATE_ATTR_NEXT_DAWN: self._sun.next_dawn.isoformat(),
-            STATE_ATTR_NEXT_DUSK: self._sun.next_dusk.isoformat(),
-            STATE_ATTR_NEXT_MIDNIGHT: self._sun.next_midnight.isoformat(),
-            STATE_ATTR_NEXT_NOON: self._sun.next_noon.isoformat(),
-            STATE_ATTR_NEXT_RISING: self._sun.next_rising.isoformat(),
-            STATE_ATTR_NEXT_SETTING: self._sun.next_setting.isoformat(),
-            STATE_ATTR_ELEVATION: self._sun.solar_elevation,
-            STATE_ATTR_AZIMUTH: self._sun.solar_azimuth,
-            STATE_ATTR_RISING: self._sun.rising,
-        }
+        return self._attrs
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
             self.hass, TOPIC_DATA_UPDATE, self.force_update_state
+        )
+
+    async def async_update(self):
+        """Update the entity."""
+        if self._sun.solar_elevation > HORIZON_ELEVATION:
+            self._state = STATE_ABOVE_HORIZON
+        else:
+            self._state = STATE_BELOW_HORIZON
+
+        self._attrs.update(
+            {
+                STATE_ATTR_NEXT_DAWN: self._sun.next_dawn.isoformat(),
+                STATE_ATTR_NEXT_DUSK: self._sun.next_dusk.isoformat(),
+                STATE_ATTR_NEXT_MIDNIGHT: self._sun.next_midnight.isoformat(),
+                STATE_ATTR_NEXT_NOON: self._sun.next_noon.isoformat(),
+                STATE_ATTR_NEXT_RISING: self._sun.next_rising.isoformat(),
+                STATE_ATTR_NEXT_SETTING: self._sun.next_setting.isoformat(),
+                STATE_ATTR_ELEVATION: self._sun.solar_elevation,
+                STATE_ATTR_AZIMUTH: self._sun.solar_azimuth,
+                STATE_ATTR_RISING: self._sun.rising,
+            }
         )
 
     async def async_will_remove_fromhass(self):
