@@ -6,5 +6,5 @@
     "pyubee==0.8"
   ],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@mzdrale"]
 }
