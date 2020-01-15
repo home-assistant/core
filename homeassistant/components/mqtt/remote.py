@@ -94,7 +94,9 @@ class MqttRemote(
         self._unique_id = config.get(CONF_UNIQUE_ID)
 
         # Load config
-        self._setup_from_config(config)
+        self._config = config
+        self._optimistic = config[CONF_OPTIMISTIC]
+        self._commands = config.get(CONF_COMMANDS)
 
         device_config = config.get(CONF_DEVICE)
 
@@ -158,12 +160,6 @@ class MqttRemote(
                 }
             },
         )
-
-    def _setup_from_config(self, config):
-        """(Re)Setup the entity."""
-        self._config = config
-        self._optimistic = config[CONF_OPTIMISTIC]
-        self._commands = config.get(CONF_COMMANDS)
 
     async def async_will_remove_from_hass(self):
         """Unsubscribe when removed."""
