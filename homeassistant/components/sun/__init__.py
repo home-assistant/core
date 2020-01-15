@@ -106,7 +106,7 @@ async def async_setup_entry(hass, config_entry):
 
     # Create the "sun.sun" entity for backwards compatibility:
     legacy_entity = LegacySunEntity(hass, sun)
-    legacy_entity.force_update_state()
+    await legacy_entity.async_update_ha_state()
 
     return True
 
@@ -262,6 +262,13 @@ class LegacySunEntity(Entity):
         self._sun = sun
         self.hass = hass
 
+        @callback
+        def update():
+            """Update the entity."""
+            self.schedule_update_ha_state(True)
+
+        async_dispatcher_connect(self.hass, TOPIC_DATA_UPDATE, update)
+
     @property
     def name(self):
         """Return the name."""
@@ -276,12 +283,6 @@ class LegacySunEntity(Entity):
     def state_attributes(self):
         """Return the state attributes of the sun."""
         return self._attrs
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_DATA_UPDATE, self.force_update_state
-        )
 
     async def async_update(self):
         """Update the entity."""
@@ -303,13 +304,3 @@ class LegacySunEntity(Entity):
                 STATE_ATTR_RISING: self._sun.rising,
             }
         )
-
-    async def async_will_remove_from_hass(self):
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-
-    @callback
-    def force_update_state(self):
-        """Update the entity."""
-        self.schedule_update_ha_state(True)
