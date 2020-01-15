@@ -924,7 +924,7 @@ class MockEntity(entity.Entity):
 
     @property
     def unit_of_measurement(self):
-        """What units the entity state is in."""
+        """Info on the units the entity state is in."""
         return self._handle("unit_of_measurement")
 
     @property
