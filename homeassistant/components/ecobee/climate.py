@@ -669,7 +669,7 @@ class Thermostat(ClimateDevice):
     async def resume_program(self, resume_all: bool = False):
         """Resume the scheduled thermostat program."""
         _LOGGER.debug(
-            "Resuming the program on thermostat %s with resume_all %",
+            "Resuming the program on thermostat %s with resume_all %s",
             self.name,
             resume_all,
         )
