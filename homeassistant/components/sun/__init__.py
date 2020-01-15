@@ -205,10 +205,10 @@ class Sun:
         )
         self._update_sun_position(utc_point_in_time)
 
-        async_dispatcher_send(self.hass, TOPIC_DATA_UPDATE)
-
         # Set timer for the next solar event
         async_track_point_in_utc_time(self.hass, self._update_events, self._next_change)
+
+        async_dispatcher_send(self.hass, TOPIC_DATA_UPDATE)
 
         _LOGGER.debug("next time: %s", self._next_change.isoformat())
 
@@ -236,6 +236,8 @@ class Sun:
         async_track_point_in_utc_time(
             self.hass, self._update_sun_position, utc_point_in_time + delta
         )
+
+        async_dispatcher_send(self.hass, TOPIC_DATA_UPDATE)
 
     @callback
     def async_update_location(self):
