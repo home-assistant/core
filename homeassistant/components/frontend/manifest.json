@@ -9,9 +9,9 @@
     "http",
     "lovelace",
     "onboarding",
+    "search",
     "system_log",
-    "websocket_api",
-    "search"
+    "websocket_api"
   ],
   "codeowners": ["@home-assistant/frontend"],
   "quality_scale": "internal"
