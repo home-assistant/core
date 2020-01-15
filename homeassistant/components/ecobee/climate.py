@@ -617,15 +617,15 @@ class Thermostat(ClimateDevice):
         heat_temp_setpoint = (
             heat_temp
             if heat_temp is not None
-            else self._thermostat["runtime"]["desiredCool"] / 10.0
+            else self._thermostat["runtime"]["desiredHeat"] / 10.0
         )
 
         _LOGGER.debug(
             "Setting hold temperature on thermostat %s to "
             "heat_temp: %s, cool_temp: %s",
             self.name,
-            heat_temp_setpoint,
             cool_temp_setpoint,
+            heat_temp_setpoint,
         )
         await self._data.request(
             self._data.ecobee.set_hold_temp,
