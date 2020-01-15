@@ -1,24 +1,23 @@
 """Platform for Garmin Connect integration."""
-from datetime import date
-from datetime import timedelta
+from datetime import date, timedelta
 import logging
-import voluptuous as vol
 
 import garminconnect
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
     CONF_EMAIL,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PASSWORD,
-    ATTR_ATTRIBUTION,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-GARMIN_RESOURCES_LIST = {
+GARMIN_CONDITIONS_LIST = {
     "totalSteps": ["Total Steps", "steps", "mdi:walk"],
     "dailyStepGoal": ["Daily Step Goal", "steps", "mdi:walk"],
     "totalKilocalories": ["Total KiloCalories", "kcal", "mdi:food"],
@@ -126,7 +125,7 @@ GARMIN_RESOURCES_LIST = {
 
 _LOGGER = logging.getLogger(__name__)
 
-GARMIN_DEFAULT_RESOURCES = ["totalSteps"]
+GARMIN_DEFAULT_CONDITIONS = ["totalSteps"]
 ATTRIBUTION = "Data provided by garmin.com"
 DEFAULT_NAME = "Garmin"
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
@@ -137,8 +136,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_EMAIL): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(
-            CONF_MONITORED_CONDITIONS, default=GARMIN_DEFAULT_RESOURCES
-        ): vol.All(cv.ensure_list, [vol.In(GARMIN_RESOURCES_LIST)]),
+            CONF_MONITORED_CONDITIONS, default=GARMIN_DEFAULT_CONDITIONS
+        ): vol.All(cv.ensure_list, [vol.In(GARMIN_CONDITIONS_LIST)]),
     }
 )
 
@@ -161,9 +160,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     entities = []
     for resource in config[CONF_MONITORED_CONDITIONS]:
         sensor_type = resource
-        name = prefix_name + " " + GARMIN_RESOURCES_LIST[resource][0]
-        unit = GARMIN_RESOURCES_LIST[resource][1]
-        icon = GARMIN_RESOURCES_LIST[resource][2]
+        name = prefix_name + " " + GARMIN_CONDITIONS_LIST[resource][0]
+        unit = GARMIN_CONDITIONS_LIST[resource][1]
+        icon = GARMIN_CONDITIONS_LIST[resource][2]
 
         _LOGGER.debug(
             "Registered new sensor: %s, %s, %s, %s", sensor_type, name, unit, icon
@@ -243,7 +242,7 @@ class GarminConnectSensor(Entity):
         self._data.update()
         data = self._data.data
 
-        if GARMIN_RESOURCES_LIST[self._type] and self._type in data:
+        if GARMIN_CONDITIONS_LIST[self._type] and self._type in data:
             if "Duration" in self._type:
                 self._state = data[self._type] // 60
             elif "Seconds" in self._type:
