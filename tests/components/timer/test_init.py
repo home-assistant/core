@@ -534,3 +534,22 @@ async def test_ws_create(hass, hass_ws_client, storage_setup):
     assert state.state == STATUS_IDLE
     assert state.attributes[ATTR_DURATION] == str(cv.time_period(42))
     assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, timer_id) == timer_entity_id
+
+
+async def test_setup_no_config(hass, hass_admin_user):
+    """Test component setup with no config."""
+    count_start = len(hass.states.async_entity_ids())
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file", autospec=True, return_value={}
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert count_start == len(hass.states.async_entity_ids())
