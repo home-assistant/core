@@ -146,7 +146,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         data=entry.data.copy().update(options_changed),
                         options=entry.options.copy().update(options_changed),
                     )
-                    return self.async_abort(reason="updated_volume_step")
+                    return self.async_abort(reason="updated_options")
 
                 return self.async_abort(reason="already_setup")
 
