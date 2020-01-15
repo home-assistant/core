@@ -14,10 +14,10 @@ from homeassistant.helpers import device_registry
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-from .Wiffi import WiffiTcpServer
 from .binary_sensor import BoolEntity
 from .const import DOMAIN
 from .sensor import NumberEntity, StringEntity
+from .wiffi import WiffiTcpServer
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,12 +72,11 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry):
 
     try:
         await api.server.start_server()
-    except OSError as e:
-        if e.errno != errno.EADDRINUSE:
+    except OSError as exc:
+        if exc.errno != errno.EADDRINUSE:
             raise
-        else:
-            _LOGGER.error(f"port {config_entry.data[CONF_PORT]} already in use")
-            raise ConfigEntryNotReady from e
+        _LOGGER.error("port %s already in use", config_entry.data[CONF_PORT])
+        raise ConfigEntryNotReady from exc
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -149,18 +148,18 @@ class WiffiIntegrationApi:
             bool_entities = []
 
             # unique entity id
-            id = device.mac_address.replace(":", "")
+            entity_id = device.mac_address.replace(":", "")
 
             for metric in metrics:
                 entity = None
                 if metric.is_number:
-                    entity = NumberEntity(id, device_info, metric)
+                    entity = NumberEntity(entity_id, device_info, metric)
                     sensor_entities.append(entity)
                 elif metric.is_string:
-                    entity = StringEntity(id, device_info, metric)
+                    entity = StringEntity(entity_id, device_info, metric)
                     sensor_entities.append(entity)
                 elif metric.is_bool:
-                    entity = BoolEntity(id, device_info, metric)
+                    entity = BoolEntity(entity_id, device_info, metric)
                     bool_entities.append(entity)
                 else:
                     # unknown type -> ignore
@@ -179,7 +178,7 @@ class WiffiIntegrationApi:
                     await entity.update_value(metric)
                 else:
                     _LOGGER.warning(
-                        f"wiffi entity {device.mac_address}-{metric.id} not found"
+                        "wiffi entity %s-%s not found", device.mac_address, metric.id
                     )
 
     @property

@@ -73,15 +73,13 @@ def convert_value(var):
     """Convert the metric value from string into python type."""
     if var["type"] == "number":
         return float(var["value"])
-    elif var["type"] == "boolean":
-        return True if var["value"] == "true" else False
-    elif var["type"] == "string":
+    if var["type"] == "boolean":
+        return var["value"] == "true"
+    if var["type"] == "string":
         return var["value"]
-    else:
-        print(
-            "can't convert unknown type {} for var {}".format(var["type"], var["name"])
-        )
-        return None
+
+    print("can't convert unknown type {} for var {}".format(var["type"], var["name"]))
+    return None
 
 
 class WiffiDevice:
@@ -165,8 +163,8 @@ class WiffiConnection:
         systeminfo = data["Systeminfo"]
 
         metrics = []
-        for v in data["vars"]:
-            metrics.append(WiffiMetric(v))
+        for var in data["vars"]:
+            metrics.append(WiffiMetric(var))
 
         if self._server.callback is not None:
             await self._server.callback(WiffiDevice(moduletype, systeminfo), metrics)

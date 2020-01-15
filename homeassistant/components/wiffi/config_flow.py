@@ -11,8 +11,8 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PORT
 from homeassistant.core import callback
 
-from .Wiffi import WiffiTcpServer
 from .const import DEFAULT_PORT, DOMAIN
+from .wiffi import WiffiTcpServer
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -49,11 +49,10 @@ class WiffiFlowHandler(config_entries.ConfigFlow):
             return self.async_create_entry(
                 title=f"Port {user_input[CONF_PORT]}", data=user_input
             )
-        except OSError as e:
-            if e.errno == errno.EADDRINUSE:
+        except OSError as exc:
+            if exc.errno == errno.EADDRINUSE:
                 return self.async_abort(reason="addr_in_use")
-            else:
-                return self.async_abort(reason="start_server_failed")
+            return self.async_abort(reason="start_server_failed")
 
     def _show_form(self, errors=None):
         """Show the config flow form to the user."""

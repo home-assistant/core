@@ -11,15 +11,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PRESSURE_MBAR, TEMP_CELSIUS
 
-from .WiffiStrings import (
+from .const import DOMAIN
+from .entity_base import WiffiEntity
+from .wiffi_strings import (
     WIFFI_UOM_DEGREE,
     WIFFI_UOM_LUX,
     WIFFI_UOM_MILLI_BAR,
     WIFFI_UOM_PERCENT,
     WIFFI_UOM_TEMP_CELSIUS,
 )
-from .const import DOMAIN
-from .entity_base import WiffiEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,11 +123,10 @@ def determine_device_class(metric):
     """
     if metric.unit_of_measurement == WIFFI_UOM_TEMP_CELSIUS:
         return DEVICE_CLASS_TEMPERATURE
-    elif metric.unit_of_measurement == WIFFI_UOM_PERCENT:
+    if metric.unit_of_measurement == WIFFI_UOM_PERCENT:
         return DEVICE_CLASS_HUMIDITY
-    elif metric.unit_of_measurement == WIFFI_UOM_MILLI_BAR:
+    if metric.unit_of_measurement == WIFFI_UOM_MILLI_BAR:
         return DEVICE_CLASS_PRESSURE
-    elif metric.unit_of_measurement == WIFFI_UOM_LUX:
+    if metric.unit_of_measurement == WIFFI_UOM_LUX:
         return DEVICE_CLASS_ILLUMINANCE
-    else:
-        return None
+    return None
