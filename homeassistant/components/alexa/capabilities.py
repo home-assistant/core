@@ -1,7 +1,14 @@
 """Alexa capabilities."""
 import logging
 
-from homeassistant.components import cover, fan, image_processing, input_number, light
+from homeassistant.components import (
+    cover,
+    fan,
+    image_processing,
+    input_number,
+    light,
+    vacuum,
+)
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
 import homeassistant.components.climate.const as climate
 import homeassistant.components.media_player.const as media_player
@@ -1291,6 +1298,15 @@ class AlexaRangeController(AlexaCapability):
         if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
             return float(self.entity.state)
 
+        # Vacuum Fan Speed
+        if self.instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+            speed_list = self.entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
+            speed = self.entity.attributes[vacuum.ATTR_FAN_SPEED]
+            speed_index = next(
+                (i for i, v in enumerate(speed_list) if v == speed), None
+            )
+            return speed_index
+
         return None
 
     def configuration(self):
@@ -1365,6 +1381,26 @@ class AlexaRangeController(AlexaCapability):
             self._resource.add_preset(
                 value=max_value, labels=[AlexaGlobalCatalog.VALUE_MAXIMUM]
             )
+            return self._resource.serialize_capability_resources()
+
+        # Vacuum Fan Speed Resources
+        if self.instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+            speed_list = self.entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
+            max_value = len(speed_list) - 1
+            self._resource = AlexaPresetResource(
+                labels=[AlexaGlobalCatalog.SETTING_FAN_SPEED],
+                min_value=0,
+                max_value=max_value,
+                precision=1,
+            )
+            for index, speed in enumerate(speed_list):
+                labels = [speed.replace("_", " ")]
+                if index == 1:
+                    labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
+                if index == max_value:
+                    labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
+                self._resource.add_preset(value=index, labels=labels)
+
             return self._resource.serialize_capability_resources()
 
         return None

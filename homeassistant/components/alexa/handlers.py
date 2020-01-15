@@ -11,6 +11,7 @@ from homeassistant.components import (
     light,
     media_player,
     timer,
+    vacuum,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
@@ -1138,6 +1139,20 @@ async def async_api_set_range(hass, config, directive, context):
         max_value = float(entity.attributes[input_number.ATTR_MAX])
         data[input_number.ATTR_VALUE] = min(max_value, max(min_value, range_value))
 
+    # Vacuum Fan Speed
+    elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+        service = vacuum.SERVICE_SET_FAN_SPEED
+        speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
+        speed = next(
+            (v for i, v in enumerate(speed_list) if i == int(range_value)), None
+        )
+
+        if not speed:
+            msg = "Entity does not support value"
+            raise AlexaInvalidValueError(msg)
+
+        data[vacuum.ATTR_FAN_SPEED] = speed
+
     else:
         msg = "Entity does not support directive"
         raise AlexaInvalidDirectiveError(msg)
@@ -1219,6 +1234,24 @@ async def async_api_adjust_range(hass, config, directive, context):
         data[input_number.ATTR_VALUE] = response_value = min(
             max_value, max(min_value, range_delta + current)
         )
+
+    # Vacuum Fan Speed
+    elif instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+        range_delta = int(range_delta)
+        service = vacuum.SERVICE_SET_FAN_SPEED
+        speed_list = entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
+        current_speed = entity.attributes[vacuum.ATTR_FAN_SPEED]
+        current_speed_index = next(
+            (i for i, v in enumerate(speed_list) if v == current_speed), 0
+        )
+        new_speed_index = min(
+            len(speed_list) - 1, max(0, current_speed_index + range_delta)
+        )
+        speed = next(
+            (v for i, v in enumerate(speed_list) if i == new_speed_index), None
+        )
+
+        data[vacuum.ATTR_FAN_SPEED] = response_value = speed
 
     else:
         msg = "Entity does not support directive"
@@ -1412,8 +1445,18 @@ async def async_api_hold(hass, config, directive, context):
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
+    if entity.domain == timer.DOMAIN:
+        service = timer.SERVICE_PAUSE
+
+    elif entity.domain == vacuum.DOMAIN:
+        service = vacuum.SERVICE_START_PAUSE
+
+    else:
+        msg = "Entity does not support directive"
+        raise AlexaInvalidDirectiveError(msg)
+
     await hass.services.async_call(
-        entity.domain, timer.SERVICE_PAUSE, data, blocking=False, context=context
+        entity.domain, service, data, blocking=False, context=context
     )
 
     return directive.response()
@@ -1425,8 +1468,18 @@ async def async_api_resume(hass, config, directive, context):
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
 
+    if entity.domain == timer.DOMAIN:
+        service = timer.SERVICE_START
+
+    elif entity.domain == vacuum.DOMAIN:
+        service = vacuum.SERVICE_START_PAUSE
+
+    else:
+        msg = "Entity does not support directive"
+        raise AlexaInvalidDirectiveError(msg)
+
     await hass.services.async_call(
-        entity.domain, timer.SERVICE_START, data, blocking=False, context=context
+        entity.domain, service, data, blocking=False, context=context
     )
 
     return directive.response()
