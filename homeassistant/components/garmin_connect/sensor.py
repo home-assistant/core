@@ -8,10 +8,10 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_EMAIL,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PASSWORD,
+    CONF_USERNAME,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -116,7 +116,6 @@ GARMIN_CONDITIONS_LIST = {
         "%",
         "mdi:image-filter-hdr",
     ],
-    "durationInMilliseconds": ["Duration", "ms", "mdi:progress-clock"],
     "highestRespirationValue": ["Highest Respiration", "brpm", "mdi:progress-clock"],
     "lowestRespirationValue": ["Lowest Respiration", "brpm", "mdi:progress-clock"],
     "latestRespirationValue": ["Latest Respiration", "brpm", "mdi:progress-clock"],
@@ -133,7 +132,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_EMAIL): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(
             CONF_MONITORED_CONDITIONS, default=GARMIN_DEFAULT_CONDITIONS
@@ -145,12 +144,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Garmin Connect component."""
 
-    email = config.get(CONF_EMAIL)
-    password = config.get(CONF_PASSWORD)
-    prefix_name = config.get(CONF_NAME)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    prefix_name = config[CONF_NAME]
 
     try:
-        garmin_client = garminconnect.Garmin(email, password)
+        garmin_client = garminconnect.Garmin(username, password)
     except ValueError as err:
         _LOGGER.error("Error occured during Garmin Connect Client init: %s", err)
         return
@@ -160,7 +159,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     entities = []
     for resource in config[CONF_MONITORED_CONDITIONS]:
         sensor_type = resource
-        name = prefix_name + " " + GARMIN_CONDITIONS_LIST[resource][0]
+        name = f"{prefix_name} {GARMIN_CONDITIONS_LIST[resource][0]}"
         unit = GARMIN_CONDITIONS_LIST[resource][1]
         icon = GARMIN_CONDITIONS_LIST[resource][2]
 
@@ -231,7 +230,7 @@ class GarminConnectSensor(Entity):
         if self._data.data:
             attributes = {
                 "source": self._data.data["source"],
-                "last synced (GMT)": self._data.data["lastSyncTimestampGMT"],
+                "last_synced": self._data.data["lastSyncTimestampGMT"],
                 ATTR_ATTRIBUTION: ATTRIBUTION,
             }
         return attributes
