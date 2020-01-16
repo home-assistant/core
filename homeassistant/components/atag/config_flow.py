@@ -1,5 +1,6 @@
 """Config flow for the Atag component."""
 import logging
+
 from pyatag.errors import AtagException
 from pyatag.gateway import AtagDataStore
 import voluptuous as vol
@@ -10,16 +11,12 @@ from homeassistant.const import (
     CONF_EMAIL,
     CONF_HOST,
     CONF_PORT,
-    CONF_SENSORS,
     CONF_SCAN_INTERVAL,
+    CONF_SENSORS,
 )
-from homeassistant.core import callback, HomeAssistant
-from .const import (
-    DOMAIN,
-    DEFAULT_PORT,
-    DEFAULT_SENSORS,
-    DEFAULT_SCAN_INTERVAL,
-)
+from homeassistant.core import HomeAssistant, callback
+
+from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SENSORS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = {

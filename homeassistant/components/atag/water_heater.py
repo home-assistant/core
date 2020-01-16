@@ -9,7 +9,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import STATE_OFF, TEMP_CELSIUS
 
-from . import AtagEntity, DOMAIN
+from . import DOMAIN, AtagEntity
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -1,6 +1,7 @@
 """Initialization of ATAG One sensor platform."""
 from homeassistant.const import CONF_SENSORS
-from . import AtagEntity, DOMAIN
+
+from . import DOMAIN, AtagEntity
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
