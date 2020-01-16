@@ -69,7 +69,7 @@ async def async_setup(hass, config):
     bridges = conf[CONF_BRIDGES]
 
     configured_hosts = set(
-        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
     )
 
     for bridge_conf in bridges:
