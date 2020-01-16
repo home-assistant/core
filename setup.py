@@ -46,7 +46,7 @@ REQUIRES = [
     "pip>=8.0.3",
     "python-slugify==4.0.0",
     "pytz>=2019.03",
-    "pyyaml==5.2.0",
+    "pyyaml==5.2",
     "requests==2.22.0",
     "ruamel.yaml==0.15.100",
     "voluptuous==0.11.7",
