@@ -187,7 +187,9 @@ class EntityComponent:
 
         This method must be run in the event loop.
         """
-        return async_extract_entities(self.hass, self.entities, service, expand_group)
+        return await async_extract_entities(
+            self.hass, self.entities, service, expand_group
+        )
 
     @callback
     def async_register_entity_service(self, name, schema, func, required_features=None):

@@ -461,7 +461,7 @@ class EntityPlatform:
 
         This method must be run in the event loop.
         """
-        return async_extract_entities(
+        return await async_extract_entities(
             self.hass, self.entities.values(), service, expand_group
         )
 
