@@ -92,7 +92,7 @@ class TankerkoenigData:
 
     def __init__(self, hass, conf):
         """Initialize the data object."""
-        self._api_key = conf.get(CONF_API_KEY)
+        self._api_key = conf[CONF_API_KEY]
         self._entities = {}
         self._fuel_types = conf.get(CONF_FUEL_TYPES)
 
@@ -200,4 +200,4 @@ class TankerkoenigData:
                 )
                 self._entities[station_id].append(station_sensor)
             else:
-                _LOGGER.info("Station %s does not offer %s fuel", station_id, fuel)
+                _LOGGER.warning("Station %s does not offer %s fuel", station_id, fuel)
