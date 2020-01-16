@@ -58,15 +58,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "Failed to determine board type. Is this instance running on a Raspberry Pi or a similar I2C capable device?"
             )
             raise PlatformNotReady()
-        else:
-            raise error
+        raise error
     except ValueError as error:
         # this happens when the board is I2C capable, but the device is not found at the configured address
         if str(error.args[0]).startswith("No I2C device at address"):
             _LOGGER.error(error.args[0])
             raise PlatformNotReady()
-        else:
-            raise error
+        raise error
 
 
 class Bmp280Sensor(Entity):
