@@ -9,7 +9,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Setup from config entry"""
+    """Initialize sensor platform from config entry."""
     sensors = config_entry.data.get(CONF_SENSORS)
     if not sensors:
         return

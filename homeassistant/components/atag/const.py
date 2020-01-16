@@ -1,4 +1,4 @@
-"""Constants for Homeassistant"""
+"""Constants for Homeassistant."""
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE
 
 DOMAIN = "atag"

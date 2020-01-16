@@ -1,4 +1,4 @@
-"""The ATAG Integration"""
+"""The ATAG Integration."""
 from datetime import timedelta
 from pyatag import AtagDataStore, SENSOR_TYPES, AtagException
 import voluptuous as vol
@@ -16,7 +16,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
 from homeassistant.const import (
-    CONF_DEVICE,
     CONF_HOST,
     CONF_PORT,
     CONF_EMAIL,
@@ -106,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         )
 
     async def refresh(event_time):
-        """Poll Atag for latest data"""
+        """Poll Atag for latest data."""
         await atag.async_update()
         dispatcher.async_dispatcher_send(hass, SIGNAL_UPDATE_ATAG)
 
@@ -166,7 +165,7 @@ class AtagEntity(Entity):
 
     @property
     def device_info(self):
-        """Return info for device registry"""
+        """Return info for device registry."""
         device = self.atag.device
         host = self.atag.config.host
         version = self.atag.apiversion

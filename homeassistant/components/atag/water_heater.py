@@ -1,4 +1,4 @@
-"""Support for ATAG water heater."""
+"""ATAG water heater component."""
 import logging
 
 from homeassistant.components.water_heater import (
@@ -25,7 +25,7 @@ async def async_setup_platform(hass, config, async_add_devices, _discovery_info=
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Setup DHW device from config entry"""
+    """Initialize DHW device from config entry."""
     atag = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities([AtagOneWaterHeater(atag, "DHW")])
 
@@ -52,7 +52,7 @@ class AtagOneWaterHeater(
 
     @property
     def current_operation(self):
-        """Return current operation"""
+        """Return current operation."""
         if self.atag.dhw_status:
             return STATE_PERFORMANCE
         return STATE_OFF
