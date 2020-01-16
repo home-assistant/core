@@ -33,6 +33,7 @@ async def test_setup_defined_hosts_known_auth(hass):
                             hue.CONF_HOST: "0.0.0.0",
                             hue.CONF_ALLOW_HUE_GROUPS: False,
                             hue.CONF_ALLOW_UNREACHABLE: True,
+                            "filename": "bla",
                         }
                     }
                 },
@@ -49,6 +50,7 @@ async def test_setup_defined_hosts_known_auth(hass):
             hue.CONF_HOST: "0.0.0.0",
             hue.CONF_ALLOW_HUE_GROUPS: False,
             hue.CONF_ALLOW_UNREACHABLE: True,
+            "filename": "bla",
         }
     }
 
