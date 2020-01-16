@@ -185,7 +185,7 @@ class GarminConnectClient:
         """Fetch the latest data."""
         today = date.today()
         try:
-            self.data = self.client.fetch_stats(today.strftime("%Y-%m-%d"))
+            self.data = self.client.fetch_stats(today.isoformat())
         except ValueError as err:
             _LOGGER.error("Error occured while fetching Garmin Connect data: %s", err)
             return
@@ -236,19 +236,17 @@ class GarminConnectSensor(Entity):
             }
         return attributes
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update data and set sensor states."""
         self._data.update()
         data = self._data.data
 
-        if GARMIN_CONDITIONS_LIST[self._type] and self._type in data:
-            if "Duration" in self._type:
-                self._state = data[self._type] // 60
-            elif "Seconds" in self._type:
-                self._state = data[self._type] // 60
-            else:
-                self._state = data[self._type]
+        if "Duration" in self._type:
+            self._state = data[self._type] // 60
+        elif "Seconds" in self._type:
+            self._state = data[self._type] // 60
+        else:
+            self._state = data[self._type]
 
         _LOGGER.debug(
             "Device %s set to state %s %s", self._type, self._state, self._unit
