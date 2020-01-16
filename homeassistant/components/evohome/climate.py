@@ -142,19 +142,18 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
             mode = EVO_RESET
 
         allowed_system_modes = self._evo_device.allowedSystemModes
-        try:
-            attrs = [m for m in allowed_system_modes if m["systemMode"] == mode][0]
-        except IndexError:
-            raise KeyError(f"'{mode}' mode is not supported by this system")
+        attrs = [m for m in allowed_system_modes if m["systemMode"] == mode]
+        if not attrs:  # TODO: do I need this if teh service schema is set correctly?
+            raise ValueError(f"'{mode}' mode is not supported by this system")
 
         if ATTR_DURATION_DAYS in data:
-            if attrs.get("timingResolution") != "1.00:00:00":
+            if attrs[0].get("timingResolution") != "1.00:00:00":
                 raise TypeError(f"'{mode}' mode does not support days, only hours")
             until = dt.combine(dt.now().date(), dt.min.time())
             until += data[ATTR_DURATION_DAYS]
 
         elif ATTR_DURATION_HOURS in data:
-            if attrs.get("timingResolution") != "01:00:00":
+            if attrs[0].get("timingResolution") != "01:00:00":
                 raise TypeError(f"'{mode}' mode does not support hours, only days")
             until = dt.now() + data[ATTR_DURATION_HOURS]
 
@@ -165,7 +164,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
     async def _set_tcs_mode(self, mode: str, until: Optional[dt] = None) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
-        await self._evo_broker.call_client_api(self._evo_tcs.set_status(op_mode))
+        await self._evo_broker.call_client_api(self._evo_tcs.set_status(mode))
 
     @property
     def hvac_modes(self) -> List[str]:

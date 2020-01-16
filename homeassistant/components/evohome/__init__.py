@@ -27,6 +27,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
@@ -239,7 +240,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
 
     await broker.save_auth_tokens()
-    await broker.update()  # get initial state
+    await broker.async_update()  # get initial state
 
     hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
     if broker.tcs.hotwater:
@@ -248,7 +249,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         )
 
     hass.helpers.event.async_track_time_interval(
-        broker.update, config[DOMAIN][CONF_SCAN_INTERVAL]
+        broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]
     )
 
     setup_service_functions(hass, broker)
@@ -256,16 +257,23 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
+@callback
 def setup_service_functions(hass: HomeAssistantType, broker):
-    """Set up the service functions.
+    """Set up the service handlers for the system/zone operating modes.
 
-    Not all evohome-compatible systems support all system modes.
+    Not all TCC-compatible systems support all operating modes. In addition, each
+    mode will require any of four distinct service schemas. This has to be enumerated
+    before registering the approperiate handlers.
+
+    It appears that all TCC-compatible systems support the same three zones modes.
     """
 
+    @verify_domain_control
     async def force_refresh(call):
         """Obtain the latest state data via the vendor's RESTful API."""
-        await broker.update()
+        await broker.async_update()
 
+    @verify_domain_control
     async def set_system_mode(call):
         """Set the system mode."""
         payload = {
@@ -275,6 +283,7 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         }
         hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, payload)
 
+    @verify_domain_control
     async def set_zone_override(call):
         """Set the zone override (setpoint)."""
         entity_id = call.data[ATTR_ENTITY_ID]
@@ -283,10 +292,10 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         registry_entry = registry.async_get(entity_id)
 
         if registry_entry is None or registry_entry.platform != DOMAIN:
-            raise KeyError(f"'{entity_id}' is not a known evohome entity")
+            raise ValueError(f"'{entity_id}' is not a known evohome entity")
 
         if registry_entry.domain != "climate":
-            raise KeyError(f"'{entity_id}' is not an evohome zone")
+            raise ValueError(f"'{entity_id}' is not an evohome zone")
 
         payload = {
             "unique_id": registry_entry.unique_id,
@@ -296,6 +305,7 @@ def setup_service_functions(hass: HomeAssistantType, broker):
 
         hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, payload)
 
+    # The zone modes are consistent across all systems and use the same schema
     hass.services.async_register(
         DOMAIN,
         SVC_SET_ZONE_OVERRIDE,
@@ -309,8 +319,10 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         schema=RESET_ZONE_OVERRIDE_SCHEMA,
     )
 
+    # Enumerate what operating modes this system supports
     modes = broker.config["allowedSystemModes"]
 
+    # Not all systems support "AutoWithReset": register this handler only if required
     if [m["systemMode"] for m in modes if m["systemMode"] == "AutoWithReset"]:
         hass.services.async_register(
             DOMAIN, SVC_RESET_SYSTEM, set_system_mode, schema=vol.Schema({})
@@ -319,13 +331,15 @@ def setup_service_functions(hass: HomeAssistantType, broker):
     system_mode_schemas = []
     modes = [m for m in modes if m["systemMode"] != "AutoWithReset"]
 
+    # Permanent-only modes will use this schema
     perm_modes = [m["systemMode"] for m in modes if not m["canBeTemporary"]]
-    if perm_modes:  # any of: "Auto", "HeatingOff", permanent only
+    if perm_modes:  # any of: "Auto", "HeatingOff": permanent only
         schema = vol.Schema({vol.Required(ATTR_SYSTEM_MODE): vol.In(perm_modes)})
         system_mode_schemas.append(schema)
 
     modes = [m for m in modes if m["canBeTemporary"]]
 
+    # These modes are set for a number of hours (or indefinitely): use this schema
     temp_modes = [m["systemMode"] for m in modes if m["timingMode"] == "Duration"]
     if temp_modes:  # any of: "AutoWithEco", permanent or for 0-24 hours
         schema = vol.Schema(
@@ -339,6 +353,7 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         )
         system_mode_schemas.append(schema)
 
+    # These modes are set for a number of days (or indefinitely): use this schema
     temp_modes = [m["systemMode"] for m in modes if m["timingMode"] == "Period"]
     if temp_modes:  # any of: "Away", "Custom", "DayOff", permanent or for 1-99 days
         schema = vol.Schema(
@@ -406,7 +421,7 @@ class EvoBroker:
                 return
 
         if refresh:
-            self.hass.helpers.event.async_call_later(1, self.update())
+            self.hass.helpers.event.async_call_later(1, self.async_update())
 
         return result
 
@@ -468,7 +483,7 @@ class EvoBroker:
         if access_token != self.client.access_token:
             await self.save_auth_tokens()
 
-    async def update(self, *args, **kwargs) -> None:
+    async def async_update(self, *args, **kwargs) -> None:
         """Get the latest state data of an entire evohome Location.
 
         This includes state data for a Controller and all its child devices, such as the
@@ -502,18 +517,15 @@ class EvoDevice(Entity):
         self._device_state_attrs = {}
 
     @callback
-    def _refresh(self, payload=None) -> None:
+    async def _refresh(self, payload=None) -> None:
         if payload is None:
             self.async_schedule_update_ha_state(force_refresh=True)
-        elif payload["unique_id"] == self._unique_id:
+            return
+        if payload["unique_id"] == self._unique_id:
             if payload["service"] in [SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE]:
-                self.hass.async_create_task(
-                    self.async_zone_svc_request(payload["service"], payload["data"])
-                )
-            else:
-                self.hass.async_create_task(
-                    self.async_tcs_svc_request(payload["service"], payload["data"])
-                )
+                await self.async_zone_svc_request(payload["service"], payload["data"])
+                return
+            await self.async_tcs_svc_request(payload["service"], payload["data"])
 
     async def async_tcs_svc_request(self, service, data) -> None:
         """Process a service request (system mode) for a controller."""
