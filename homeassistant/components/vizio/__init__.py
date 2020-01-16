@@ -3,46 +3,27 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
+from homeassistant.components.media_player import DEVICE_CLASS_TV
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_DEVICE_CLASS,
-    CONF_HOST,
-    CONF_NAME,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DEVICE_CLASS
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import CONF_VOLUME_STEP, DEFAULT_NAME, DEFAULT_VOLUME_STEP, DOMAIN
-
-DEFAULT_DEVICE_CLASS = DEVICE_CLASS_TV
-ICON = {DEVICE_CLASS_TV: "mdi:television", DEVICE_CLASS_SPEAKER: "mdi:speaker"}
+from .const import DOMAIN, VIZIO_SCHEMA
 
 
 def validate_auth(config: ConfigType) -> ConfigType:
-    """Validate presence of CONF_ACCESS_TOKEN when CONF_DEVICE_CLASS=tv."""
+    """Validate presence of CONF_ACCESS_TOKEN when CONF_DEVICE_CLASS == DEVICE_CLASS_TV."""
     token = config.get(CONF_ACCESS_TOKEN)
     if config[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV and not token:
         raise vol.Invalid(
-            f"When '{CONF_DEVICE_CLASS}' is '{DEVICE_CLASS_TV}' then '{CONF_ACCESS_TOKEN}' is required.",
+            f"When '{CONF_DEVICE_CLASS}' is '{DEVICE_CLASS_TV}' then "
+            f"'{CONF_ACCESS_TOKEN}' is required.",
             path=[CONF_ACCESS_TOKEN],
         )
 
     return config
 
-
-VIZIO_SCHEMA = {
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS, default=DEFAULT_DEVICE_CLASS): vol.All(
-        cv.string, vol.Lower, vol.In([DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER])
-    ),
-    vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=10)
-    ),
-}
 
 CONFIG_SCHEMA = vol.Schema(
     {

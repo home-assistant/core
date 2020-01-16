@@ -1,30 +1,11 @@
 """Vizio SmartCast Device support."""
-from datetime import timedelta
 import logging
 from typing import Callable, List
 
 from pyvizio import VizioAsync
-from pyvizio.const import (
-    DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
-    DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,
-)
 
 from homeassistant import util
-from homeassistant.components.media_player import (
-    DEVICE_CLASS_SPEAKER,
-    DEVICE_CLASS_TV,
-    MediaPlayerDevice,
-)
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-)
+from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -43,38 +24,22 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import ICON
-from .const import CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP, DEVICE_ID, DOMAIN
+from .const import (
+    CONF_VOLUME_STEP,
+    DEFAULT_VOLUME_STEP,
+    DEVICE_ID,
+    DOMAIN,
+    ICON,
+    MIN_TIME_BETWEEN_FORCED_SCANS,
+    MIN_TIME_BETWEEN_SCANS,
+    SUPPORTED_COMMANDS,
+    VIZIO_DEVICE_CLASSES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 PARALLEL_UPDATES = 0
-
-COMMON_SUPPORTED_COMMANDS = (
-    SUPPORT_SELECT_SOURCE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-)
-
-SUPPORTED_COMMANDS = {
-    DEVICE_CLASS_SPEAKER: COMMON_SUPPORTED_COMMANDS,
-    DEVICE_CLASS_TV: (
-        COMMON_SUPPORTED_COMMANDS | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
-    ),
-}
-
-# Since Vizio component relies on device class, this dict will ensure that changes to
-# the values of DEVICE_CLASS_SPEAKER or DEVICE_CLASS_TV don't require changes to pyvizio.
-VIZIO_DEVICE_CLASS = {
-    DEVICE_CLASS_SPEAKER: VIZIO_DEVICE_CLASS_SPEAKER,
-    DEVICE_CLASS_TV: VIZIO_DEVICE_CLASS_TV,
-}
 
 
 async def async_setup_entry(
@@ -86,7 +51,7 @@ async def async_setup_entry(
     host = config_entry.data[CONF_HOST]
     token = config_entry.data.get(CONF_ACCESS_TOKEN)
     name = config_entry.data[CONF_NAME]
-    device_class = VIZIO_DEVICE_CLASS[config_entry.data[CONF_DEVICE_CLASS]]
+    device_class = config_entry.data[CONF_DEVICE_CLASS]
 
     # If config entry options not set up, set them up, otherwise assign values managed in options
     if not config_entry.options:
@@ -102,7 +67,7 @@ async def async_setup_entry(
         host,
         name,
         token,
-        device_class,
+        VIZIO_DEVICE_CLASSES[device_class],
         session=async_get_clientsession(hass, False),
     )
 

@@ -16,8 +16,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 
-from . import DEFAULT_DEVICE_CLASS, validate_auth
-from .const import CONF_VOLUME_STEP, DEFAULT_NAME, DEFAULT_VOLUME_STEP, DOMAIN
+from . import validate_auth
+from .const import (
+    CONF_VOLUME_STEP,
+    DEFAULT_DEVICE_CLASS,
+    DEFAULT_NAME,
+    DEFAULT_VOLUME_STEP,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

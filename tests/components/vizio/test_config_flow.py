@@ -7,12 +7,12 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
-from homeassistant.components.vizio import VIZIO_SCHEMA
 from homeassistant.components.vizio.const import (
     CONF_VOLUME_STEP,
     DEFAULT_NAME,
     DEFAULT_VOLUME_STEP,
     DOMAIN,
+    VIZIO_SCHEMA,
 )
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
