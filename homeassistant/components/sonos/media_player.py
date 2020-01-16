@@ -39,7 +39,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import ServiceCall, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.util.dt import utcnow
 
 from . import (
@@ -266,20 +266,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     hass, entities, service_call.data[ATTR_WITH_GROUP]
                 )
 
-    hass.services.async_register(
-        SONOS_DOMAIN, SERVICE_JOIN, async_service_handle, schema=SONOS_JOIN_SCHEMA
+    service.async_register_admin_service(
+        hass, SONOS_DOMAIN, SERVICE_JOIN, async_service_handle, SONOS_JOIN_SCHEMA
     )
 
-    hass.services.async_register(
-        SONOS_DOMAIN, SERVICE_UNJOIN, async_service_handle, schema=SONOS_UNJOIN_SCHEMA
+    service.async_register_admin_service(
+        hass, SONOS_DOMAIN, SERVICE_UNJOIN, async_service_handle, SONOS_UNJOIN_SCHEMA
     )
 
-    hass.services.async_register(
-        SONOS_DOMAIN, SERVICE_SNAPSHOT, async_service_handle, schema=SONOS_STATES_SCHEMA
+    service.async_register_admin_service(
+        hass, SONOS_DOMAIN, SERVICE_SNAPSHOT, async_service_handle, SONOS_STATES_SCHEMA
     )
 
-    hass.services.async_register(
-        SONOS_DOMAIN, SERVICE_RESTORE, async_service_handle, schema=SONOS_STATES_SCHEMA
+    service.async_register_admin_service(
+        hass, SONOS_DOMAIN, SERVICE_RESTORE, async_service_handle, SONOS_STATES_SCHEMA
     )
 
     platform.async_register_entity_service(
