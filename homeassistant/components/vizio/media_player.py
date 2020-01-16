@@ -74,10 +74,12 @@ async def async_setup_entry(
     if not await device.can_connect():
         fail_auth_msg = ""
         if token:
-            fail_auth_msg = ", auth token is correct"
+            fail_auth_msg = "and auth token are correct."
+        else:
+            fail_auth_msg = "is correct."
         _LOGGER.error(
             "Failed to set up Vizio platform, please check if host "
-            "is valid and available, device type is correct%s",
+            "is valid and available. Also check if device class %s",
             fail_auth_msg,
         )
         raise PlatformNotReady
