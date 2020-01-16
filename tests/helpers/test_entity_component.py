@@ -301,7 +301,7 @@ async def test_setup_entry(hass):
     assert p_hass is hass
     assert p_entry is entry
 
-    assert component.platforms[entry.entry_id].scan_interval == timedelta(seconds=5)
+    assert component._platforms[entry.entry_id].scan_interval == timedelta(seconds=5)
 
 
 async def test_setup_entry_platform_not_exist(hass):

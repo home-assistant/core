@@ -135,7 +135,7 @@ SONOS_SET_OPTION_SCHEMA = vol.Schema(
 SONOS_PLAY_QUEUE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Optional(ATTR_QUEUE_POSITION, default=0): cv.positive_int,
+        vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int,
     }
 )
 
@@ -1241,7 +1241,7 @@ class SonosEntity(MediaPlayerDevice):
             self.soco.dialog_mode = speech_enhance
 
     @soco_error()
-    def play_queue(self, queue_position):
+    def play_queue(self, queue_position=0):
         """Start playing the queue."""
         self.soco.play_from_queue(queue_position)
 
