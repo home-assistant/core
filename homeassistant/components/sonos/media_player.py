@@ -34,41 +34,19 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TIME,
-    ENTITY_MATCH_ALL,
     STATE_IDLE,
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import callback
+from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import utcnow
 
 from . import (
-    ATTR_ALARM_ID,
-    ATTR_ENABLED,
-    ATTR_INCLUDE_LINKED_ZONES,
-    ATTR_MASTER,
-    ATTR_NIGHT_SOUND,
-    ATTR_QUEUE_POSITION,
-    ATTR_SLEEP_TIME,
-    ATTR_SPEECH_ENHANCE,
-    ATTR_VOLUME,
-    ATTR_WITH_GROUP,
     CONF_ADVERTISE_ADDR,
     CONF_HOSTS,
     CONF_INTERFACE_ADDR,
-    DATA_SERVICE_EVENT,
     DOMAIN as SONOS_DOMAIN,
-    SERVICE_CLEAR_TIMER,
-    SERVICE_JOIN,
-    SERVICE_PLAY_QUEUE,
-    SERVICE_RESTORE,
-    SERVICE_SET_OPTION,
-    SERVICE_SET_TIMER,
-    SERVICE_SNAPSHOT,
-    SERVICE_UNJOIN,
-    SERVICE_UPDATE_ALARM,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,6 +77,43 @@ SOURCE_TV = "TV"
 ATTR_SONOS_GROUP = "sonos_group"
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
+
+SERVICE_JOIN = "join"
+SERVICE_UNJOIN = "unjoin"
+SERVICE_SNAPSHOT = "snapshot"
+SERVICE_RESTORE = "restore"
+SERVICE_SET_TIMER = "set_sleep_timer"
+SERVICE_CLEAR_TIMER = "clear_sleep_timer"
+SERVICE_UPDATE_ALARM = "update_alarm"
+SERVICE_SET_OPTION = "set_option"
+SERVICE_PLAY_QUEUE = "play_queue"
+
+ATTR_SLEEP_TIME = "sleep_time"
+ATTR_ALARM_ID = "alarm_id"
+ATTR_VOLUME = "volume"
+ATTR_ENABLED = "enabled"
+ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
+ATTR_MASTER = "master"
+ATTR_WITH_GROUP = "with_group"
+ATTR_NIGHT_SOUND = "night_sound"
+ATTR_SPEECH_ENHANCE = "speech_enhance"
+ATTR_QUEUE_POSITION = "queue_position"
+
+SONOS_JOIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_MASTER): cv.entity_id,
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+    }
+)
+
+SONOS_UNJOIN_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
+
+SONOS_STATES_SCHEMA = vol.Schema(
+    {
+        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean,
+    }
+)
 
 SONOS_SET_TIMER_SCHEMA = vol.Schema(
     {
@@ -218,32 +233,54 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     _LOGGER.debug("Adding discovery job")
     hass.async_add_executor_job(_discovery)
 
-    async def async_service_handle(service, data):
-        """Handle dispatched services."""
-        entity_ids = data.get("entity_id")
-        entities = hass.data[DATA_SONOS].entities
-        if entity_ids and entity_ids != ENTITY_MATCH_ALL:
-            entities = [e for e in entities if e.entity_id in entity_ids]
-
-        if service == SERVICE_JOIN:
-            master = [
-                e
-                for e in hass.data[DATA_SONOS].entities
-                if e.entity_id == data[ATTR_MASTER]
-            ]
-            if master:
-                await SonosEntity.join_multi(hass, master[0], entities)
-        elif service == SERVICE_UNJOIN:
-            await SonosEntity.unjoin_multi(hass, entities)
-        elif service == SERVICE_SNAPSHOT:
-            await SonosEntity.snapshot_multi(hass, entities, data[ATTR_WITH_GROUP])
-        elif service == SERVICE_RESTORE:
-            await SonosEntity.restore_multi(hass, entities, data[ATTR_WITH_GROUP])
-
-        # We are ready for the next service call
-        hass.data[DATA_SERVICE_EVENT].set()
-
     platform = entity_platform.current_platform.get()
+    management_lock = asyncio.Lock()
+
+    async def async_service_handle(service_call: ServiceCall):
+        """Handle dispatched services."""
+        entity_ids = await platform.async_extract_from_service(service_call)
+
+        if not entity_ids:
+            return
+
+        entities = hass.data[DATA_SONOS].entities
+
+        async with management_lock:
+            if service_call.service == SERVICE_JOIN:
+                master = platform.entities.get(service_call.data[ATTR_MASTER])
+                if master:
+                    await SonosEntity.join_multi(hass, master[0], entities)
+                else:
+                    _LOGGER.error(
+                        "Invalid master specified for join service: %s",
+                        service_call.data[ATTR_MASTER],
+                    )
+            elif service_call.service == SERVICE_UNJOIN:
+                await SonosEntity.unjoin_multi(hass, entities)
+            elif service_call.service == SERVICE_SNAPSHOT:
+                await SonosEntity.snapshot_multi(
+                    hass, entities, service_call.data[ATTR_WITH_GROUP]
+                )
+            elif service_call.service == SERVICE_RESTORE:
+                await SonosEntity.restore_multi(
+                    hass, entities, service_call.data[ATTR_WITH_GROUP]
+                )
+
+    hass.services.async_register(
+        SONOS_DOMAIN, SERVICE_JOIN, async_service_handle, schema=SONOS_JOIN_SCHEMA
+    )
+
+    hass.services.async_register(
+        SONOS_DOMAIN, SERVICE_UNJOIN, async_service_handle, schema=SONOS_UNJOIN_SCHEMA
+    )
+
+    hass.services.async_register(
+        SONOS_DOMAIN, SERVICE_SNAPSHOT, async_service_handle, schema=SONOS_STATES_SCHEMA
+    )
+
+    hass.services.async_register(
+        SONOS_DOMAIN, SERVICE_RESTORE, async_service_handle, schema=SONOS_STATES_SCHEMA
+    )
 
     platform.async_register_entity_service(
         SERVICE_SET_TIMER, SONOS_SET_TIMER_SCHEMA, "set_sleep_timer"
@@ -264,8 +301,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     platform.async_register_entity_service(
         SERVICE_PLAY_QUEUE, SONOS_PLAY_QUEUE_SCHEMA, "play_queue"
     )
-
-    async_dispatcher_connect(hass, SONOS_DOMAIN, async_service_handle)
 
 
 class _ProcessSonosEventQueue:
