@@ -35,14 +35,14 @@ VOLUME_STEP = 2
 TIMEOUT = 3
 UNIQUE_ID = "testid"
 
-MOCK_USER_VALID_TV_ENTRY = {
+MOCK_USER_VALID_TV_CONFIG = {
     CONF_NAME: NAME,
     CONF_HOST: HOST,
     CONF_DEVICE_CLASS: DEVICE_CLASS_TV,
     CONF_ACCESS_TOKEN: ACCESS_TOKEN,
 }
 
-MOCK_IMPORT_VALID_TV_ENTRY = {
+MOCK_IMPORT_VALID_TV_CONFIG = {
     CONF_NAME: NAME,
     CONF_HOST: HOST,
     CONF_DEVICE_CLASS: DEVICE_CLASS_TV,
@@ -51,13 +51,13 @@ MOCK_IMPORT_VALID_TV_ENTRY = {
     CONF_TIMEOUT: TIMEOUT,
 }
 
-MOCK_INVALID_TV_ENTRY = {
+MOCK_INVALID_TV_CONFIG = {
     CONF_NAME: NAME,
     CONF_HOST: HOST,
     CONF_DEVICE_CLASS: DEVICE_CLASS_TV,
 }
 
-MOCK_SPEAKER_ENTRY = {
+MOCK_SPEAKER_CONFIG = {
     CONF_NAME: NAME,
     CONF_HOST: HOST,
     CONF_DEVICE_CLASS: DEVICE_CLASS_SPEAKER,
@@ -144,7 +144,7 @@ async def test_user_flow_all_fields(hass: HomeAssistantType, vizio_connect) -> N
 
 async def test_options_flow(hass: HomeAssistantType) -> None:
     """Test options config flow."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_SPEAKER_ENTRY)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_SPEAKER_CONFIG)
     entry.add_to_hass(hass)
 
     assert not entry.options
@@ -173,11 +173,11 @@ async def test_user_host_already_configured(
     """Test host is already configured during user setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_SPEAKER_ENTRY,
+        data=MOCK_SPEAKER_CONFIG,
         options={CONF_VOLUME_STEP: VOLUME_STEP, CONF_TIMEOUT: TIMEOUT},
     )
     entry.add_to_hass(hass)
-    fail_entry = MOCK_SPEAKER_ENTRY.copy()
+    fail_entry = MOCK_SPEAKER_CONFIG.copy()
     fail_entry[CONF_NAME] = "newtestname"
 
     result = await hass.config_entries.flow.async_init(
@@ -201,12 +201,12 @@ async def test_user_name_already_configured(
     """Test name is already configured during user setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=MOCK_SPEAKER_ENTRY,
+        data=MOCK_SPEAKER_CONFIG,
         options={CONF_VOLUME_STEP: VOLUME_STEP, CONF_TIMEOUT: TIMEOUT},
     )
     entry.add_to_hass(hass)
 
-    fail_entry = MOCK_SPEAKER_ENTRY.copy()
+    fail_entry = MOCK_SPEAKER_CONFIG.copy()
     fail_entry[CONF_HOST] = "0.0.0.0"
 
     result = await hass.config_entries.flow.async_init(
@@ -235,7 +235,7 @@ async def test_user_error_on_could_not_connect(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], MOCK_USER_VALID_TV_ENTRY
+        result["flow_id"], MOCK_USER_VALID_TV_CONFIG
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cant_connect"}
@@ -253,7 +253,7 @@ async def test_user_error_on_tv_needs_token(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], MOCK_INVALID_TV_ENTRY
+        result["flow_id"], MOCK_INVALID_TV_CONFIG
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -286,7 +286,7 @@ async def test_import_flow_all_fields(hass: HomeAssistantType, vizio_connect) ->
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": "import"},
-        data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_ENTRY),
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -305,11 +305,11 @@ async def test_import_entity_already_configured(
     """Test entity is already configured during import setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_ENTRY),
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
         options={CONF_VOLUME_STEP: VOLUME_STEP, CONF_TIMEOUT: TIMEOUT},
     )
     entry.add_to_hass(hass)
-    fail_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_ENTRY.copy())
+    fail_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG.copy())
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "import"}, data=fail_entry
