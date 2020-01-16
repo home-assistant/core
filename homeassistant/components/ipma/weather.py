@@ -4,9 +4,7 @@ import logging
 
 import async_timeout
 from pyipma.api import IPMA_API
-from pyipma.forecast import Forecast
 from pyipma.location import Location
-from pyipma.observation import Observation
 import voluptuous as vol
 
 from homeassistant.components.weather import (
@@ -115,8 +113,8 @@ class IPMAWeather(WeatherEntity):
         self._api = api
         self._location_name = config.get(CONF_NAME, location.name)
         self._location = location
-        self._observation: Observation = None
-        self._forecast: list[Forecast] = None
+        self._observation = None
+        self._forecast = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
