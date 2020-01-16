@@ -2,9 +2,8 @@
 from typing import List, Optional
 
 from homeassistant.components.climate import ClimateDevice
-from homeassistant.components.climate.const import
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT
+    CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
