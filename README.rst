@@ -1,14 +1,9 @@
-AIS Home Assistant
+Assystent domowy
 =================================================================================
 
-home automation platform able to track and control all devices at home and offer a control by voice and automating the control.
+Open source home automation platform that puts local control and privacy first.
+We are able to track and control all devices at home and offer a control by voice and automating the control.
 
-To get started:
-
-.. code:: bash
-
-    python3 -m pip install ais-dom
-    hass --open-ui
 
 |screenshot-states|
 

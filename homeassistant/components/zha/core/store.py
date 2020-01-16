@@ -2,8 +2,7 @@
 # pylint: disable=unused-import
 from collections import OrderedDict
 import logging
-from typing import MutableMapping
-from typing import cast
+from typing import MutableMapping, cast
 
 import attr
 

@@ -6,6 +6,7 @@ https://home-assistant.io/integrations/zha/
 """
 import logging
 
+from zigpy.exceptions import DeliveryError
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.core import callback
@@ -149,7 +150,6 @@ class IASZoneChannel(ZigbeeChannel):
         if self._zha_device.manufacturer == "LUMI":
             self.debug("finished IASZoneChannel configuration")
             return
-        from zigpy.exceptions import DeliveryError
 
         self.debug("started IASZoneChannel configuration")
 

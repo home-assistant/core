@@ -3,12 +3,11 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.auth.models import RefreshToken, User
-from homeassistant.components.http.ban import process_wrong_login, process_success_login
+from homeassistant.components.http.ban import process_success_login, process_wrong_login
 from homeassistant.const import __version__
 
 from .connection import ActiveConnection
 from .error import Disconnect
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 

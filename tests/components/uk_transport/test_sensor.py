@@ -1,23 +1,24 @@
 """The tests for the uk_transport platform."""
 import re
-
-import requests_mock
 import unittest
 
+import requests_mock
+
 from homeassistant.components.uk_transport.sensor import (
-    UkTransportSensor,
     ATTR_ATCOCODE,
-    ATTR_LOCALITY,
-    ATTR_STOP_NAME,
-    ATTR_NEXT_BUSES,
-    ATTR_STATION_CODE,
     ATTR_CALLING_AT,
+    ATTR_LOCALITY,
+    ATTR_NEXT_BUSES,
     ATTR_NEXT_TRAINS,
-    CONF_API_APP_KEY,
+    ATTR_STATION_CODE,
+    ATTR_STOP_NAME,
     CONF_API_APP_ID,
+    CONF_API_APP_KEY,
+    UkTransportSensor,
 )
 from homeassistant.setup import setup_component
-from tests.common import load_fixture, get_test_home_assistant
+
+from tests.common import get_test_home_assistant, load_fixture
 
 BUS_ATCOCODE = "340000368SHE"
 BUS_DIRECTION = "Wantage"
@@ -62,7 +63,7 @@ class TestUkTransportSensor(unittest.TestCase):
         bus_state = self.hass.states.get("sensor.next_bus_to_wantage")
 
         assert type(bus_state.state) == str
-        assert bus_state.name == "Next bus to {}".format(BUS_DIRECTION)
+        assert bus_state.name == f"Next bus to {BUS_DIRECTION}"
         assert bus_state.attributes.get(ATTR_ATCOCODE) == BUS_ATCOCODE
         assert bus_state.attributes.get(ATTR_LOCALITY) == "Harwell Campus"
         assert bus_state.attributes.get(ATTR_STOP_NAME) == "Bus Station"
@@ -84,7 +85,7 @@ class TestUkTransportSensor(unittest.TestCase):
         train_state = self.hass.states.get("sensor.next_train_to_WAT")
 
         assert type(train_state.state) == str
-        assert train_state.name == "Next train to {}".format(TRAIN_DESTINATION_NAME)
+        assert train_state.name == f"Next train to {TRAIN_DESTINATION_NAME}"
         assert train_state.attributes.get(ATTR_STATION_CODE) == TRAIN_STATION_CODE
         assert train_state.attributes.get(ATTR_CALLING_AT) == TRAIN_DESTINATION_NAME
         assert len(train_state.attributes.get(ATTR_NEXT_TRAINS)) == 25

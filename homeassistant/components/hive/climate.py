@@ -1,6 +1,9 @@
 """Support for the Hive climate devices."""
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    CURRENT_HVAC_OFF,
     HVAC_MODE_AUTO,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -8,14 +11,10 @@ from homeassistant.components.climate.const import (
     PRESET_NONE,
     SUPPORT_PRESET_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    CURRENT_HVAC_HEAT,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 
-
-from . import DOMAIN, DATA_HIVE, HiveEntity, refresh_system
+from . import DATA_HIVE, DOMAIN, HiveEntity, refresh_system
 
 HIVE_TO_HASS_STATE = {
     "SCHEDULE": HVAC_MODE_AUTO,

@@ -9,7 +9,7 @@
                 "data": {
                     "code": "Kode (til Home Assistant)",
                     "password": "Adgangskode",
-                    "username": "Email adresse"
+                    "username": "Emailadresse"
                 },
                 "title": "Udfyld dine oplysninger"
             }

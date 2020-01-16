@@ -9,9 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
+    INTERNAL_DISCOVERY_RUNNING_KEY,
     KNOWN_CHROMECAST_INFO_KEY,
     SIGNAL_CAST_DISCOVERED,
-    INTERNAL_DISCOVERY_RUNNING_KEY,
     SIGNAL_CAST_REMOVED,
 )
 from .helpers import ChromecastInfo, ChromeCastZeroconf

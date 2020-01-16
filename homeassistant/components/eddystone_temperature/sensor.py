@@ -10,11 +10,7 @@ https://home-assistant.io/components/sensor.eddystone_temperature/
 import logging
 
 # pylint: disable=import-error
-from beacontools import (
-    BeaconScanner,
-    EddystoneFilter,
-    EddystoneTLMFrame,
-)
+from beacontools import BeaconScanner, EddystoneFilter, EddystoneTLMFrame
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA

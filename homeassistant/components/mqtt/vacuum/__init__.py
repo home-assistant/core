@@ -8,14 +8,15 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.vacuum import DOMAIN
 from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH
 from homeassistant.components.mqtt.discovery import (
     MQTT_DISCOVERY_NEW,
     clear_discovery_hash,
 )
+from homeassistant.components.vacuum import DOMAIN
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from .schema import CONF_SCHEMA, LEGACY, STATE, MQTT_VACUUM_SCHEMA
+
+from .schema import CONF_SCHEMA, LEGACY, MQTT_VACUUM_SCHEMA, STATE
 from .schema_legacy import PLATFORM_SCHEMA_LEGACY, async_setup_entity_legacy
 from .schema_state import PLATFORM_SCHEMA_STATE, async_setup_entity_state
 

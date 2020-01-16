@@ -1,6 +1,8 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
 import logging
 
+from pyspcwebgw.const import ZoneInput
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -60,7 +62,6 @@ class SpcBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Whether the device is switched on."""
-        from pyspcwebgw.const import ZoneInput
 
         return self._zone.input == ZoneInput.OPEN
 

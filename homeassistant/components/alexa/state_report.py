@@ -6,8 +6,8 @@ import logging
 import aiohttp
 import async_timeout
 
-import homeassistant.util.dt as dt_util
 from homeassistant.const import MATCH_ALL, STATE_ON
+import homeassistant.util.dt as dt_util
 
 from .const import API_CHANGE, Cause
 from .entities import ENTITY_ADAPTERS

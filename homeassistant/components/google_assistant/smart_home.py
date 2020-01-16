@@ -3,20 +3,19 @@ import asyncio
 from itertools import product
 import logging
 
+from homeassistant.const import ATTR_ENTITY_ID, __version__
 from homeassistant.util.decorator import Registry
 
-from homeassistant.const import ATTR_ENTITY_ID, __version__
-
 from .const import (
-    ERR_PROTOCOL_ERROR,
     ERR_DEVICE_OFFLINE,
+    ERR_PROTOCOL_ERROR,
     ERR_UNKNOWN_ERROR,
     EVENT_COMMAND_RECEIVED,
-    EVENT_SYNC_RECEIVED,
     EVENT_QUERY_RECEIVED,
+    EVENT_SYNC_RECEIVED,
 )
-from .helpers import RequestData, GoogleEntity, async_get_entities
 from .error import SmartHomeError
+from .helpers import GoogleEntity, RequestData, async_get_entities
 
 HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)

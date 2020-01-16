@@ -1,7 +1,8 @@
 """Config flow for OwnTracks."""
+import secrets
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.auth.util import generate_secret
 
 from .const import DOMAIN  # noqa pylint: disable=unused-import
 from .helper import supports_encryption
@@ -30,7 +31,7 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
         gate_id = ais_global.get_sercure_android_id_dom()
         webhook_url = webhook_url.replace("localhost:8180", gate_id + ".paczka.pro")
 
-        secret = generate_secret(16)
+        secret = secrets.token_hex(16)
 
         if supports_encryption():
             secret_desc = f"The encryption key is {secret} (on Android under preferences -> advanced)"
@@ -58,7 +59,7 @@ class OwnTracksFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="one_instance_allowed")
         webhook_id, _webhook_url, cloudhook = await self._get_webhook_id()
-        secret = generate_secret(16)
+        secret = secrets.token_hex(16)
         return self.async_create_entry(
             title="OwnTracks",
             data={

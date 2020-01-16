@@ -195,5 +195,5 @@ class DysonAirQualitySensor(DysonSensor):
     def state(self):
         """Return Air Quality value."""
         if self._device.environmental_state:
-            return self._device.environmental_state.volatil_organic_compounds
+            return int(self._device.environmental_state.volatil_organic_compounds)
         return None

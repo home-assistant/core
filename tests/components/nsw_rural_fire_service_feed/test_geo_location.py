@@ -3,22 +3,22 @@ import datetime
 from unittest.mock import ANY
 
 from aio_geojson_nsw_rfs_incidents import NswRuralFireServiceIncidentsFeed
-from asynctest.mock import patch, MagicMock, call
+from asynctest.mock import MagicMock, call, patch
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
 from homeassistant.components.nsw_rural_fire_service_feed.geo_location import (
-    ATTR_EXTERNAL_ID,
-    SCAN_INTERVAL,
     ATTR_CATEGORY,
+    ATTR_COUNCIL_AREA,
+    ATTR_EXTERNAL_ID,
     ATTR_FIRE,
     ATTR_LOCATION,
-    ATTR_COUNCIL_AREA,
+    ATTR_PUBLICATION_DATE,
+    ATTR_RESPONSIBLE_AGENCY,
+    ATTR_SIZE,
     ATTR_STATUS,
     ATTR_TYPE,
-    ATTR_SIZE,
-    ATTR_RESPONSIBLE_AGENCY,
-    ATTR_PUBLICATION_DATE,
+    SCAN_INTERVAL,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -34,8 +34,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.setup import async_setup_component
-from tests.common import assert_setup_component, async_fire_time_changed
 import homeassistant.util.dt as dt_util
+
+from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {
     geo_location.DOMAIN: [{"platform": "nsw_rural_fire_service_feed", CONF_RADIUS: 200}]

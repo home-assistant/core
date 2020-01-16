@@ -69,7 +69,7 @@ class BMWConnectedDriveSensor(Entity):
     """Representation of a BMW vehicle sensor."""
 
     def __init__(self, account, vehicle, attribute: str, attribute_info):
-        """Constructor."""
+        """Initialize BMW vehicle sensor."""
         self._vehicle = vehicle
         self._account = account
         self._attribute = attribute
