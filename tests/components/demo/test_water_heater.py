@@ -4,13 +4,12 @@ import unittest
 import pytest
 import voluptuous as vol
 
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM
-from homeassistant.setup import setup_component
 from homeassistant.components import water_heater
+from homeassistant.setup import setup_component
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from tests.common import get_test_home_assistant
 from tests.components.water_heater import common
-
 
 ENTITY_WATER_HEATER = "water_heater.demo_water_heater"
 ENTITY_WATER_HEATER_CELSIUS = "water_heater.demo_water_heater_celsius"

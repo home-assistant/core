@@ -2,13 +2,13 @@
 import unittest
 import unittest.mock as mock
 
-import requests
 from mficlient.client import FailedToLogin
+import requests
 
-from homeassistant.setup import setup_component
-import homeassistant.components.sensor as sensor
 import homeassistant.components.mfi.sensor as mfi
+import homeassistant.components.sensor as sensor
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 

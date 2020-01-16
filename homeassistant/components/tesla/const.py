@@ -9,7 +9,7 @@ TESLA_COMPONENTS = [
     "device_tracker",
     "switch",
 ]
-SENSOR_ICONS = {
+ICONS = {
     "battery sensor": "mdi:battery",
     "range sensor": "mdi:gauge",
     "mileage sensor": "mdi:counter",

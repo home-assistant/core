@@ -87,6 +87,11 @@ class PlexSensor(Entity):
         return "Watching"
 
     @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return "mdi:plex"
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {content[0]: content[1] for content in self._now_playing}

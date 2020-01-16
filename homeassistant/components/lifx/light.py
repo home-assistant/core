@@ -562,7 +562,7 @@ class LIFXLight(Light):
         """Return the name of the currently running effect."""
         effect = self.effects_conductor.effect(self.bulb)
         if effect:
-            return "lifx_effect_" + effect.name
+            return f"lifx_effect_{effect.name}"
         return None
 
     async def update_hass(self, now=None):

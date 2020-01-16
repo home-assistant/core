@@ -73,7 +73,7 @@ class TankUtilitySensor(Entity):
         self._token = token
         self._device = device
         self._state = None
-        self._name = "Tank Utility " + self.device
+        self._name = f"Tank Utility {self.device}"
         self._unit_of_measurement = SENSOR_UNIT_OF_MEASUREMENT
         self._attributes = {}
 
@@ -116,6 +116,8 @@ class TankUtilitySensor(Entity):
             if (
                 http_error.response.status_code
                 == requests.codes.unauthorized  # pylint: disable=no-member
+                or http_error.response.status_code
+                == requests.codes.bad_request  # pylint: disable=no-member
             ):
                 _LOGGER.info("Getting new token")
                 self._token = auth.get_token(self._email, self._password, force=True)

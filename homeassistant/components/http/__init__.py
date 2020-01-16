@@ -26,7 +26,6 @@ from .real_ip import setup_real_ip
 from .static import CACHE_HEADERS, CachingStaticResource
 from .view import HomeAssistantView  # noqa: F401
 
-
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 DOMAIN = "http"
@@ -54,6 +53,8 @@ DEFAULT_DEVELOPMENT = "0"
 # To be able to load custom cards.
 DEFAULT_CORS = "https://cast.home-assistant.io"
 NO_LOGIN_ATTEMPT_THRESHOLD = -1
+
+MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
 
 
 HTTP_SCHEMA = vol.Schema(
@@ -189,9 +190,9 @@ class HomeAssistantHTTP:
         ssl_profile,
     ):
         """Initialize the HTTP Home Assistant server."""
-        # 1024^2 bytes = 1 MBx5 = 5MB we need this to upload from camera, going to resize after POST
-        max_size = (1024 ** 2) * 5
-        app = self.app = web.Application(middlewares=[], client_max_size=max_size)
+        app = self.app = web.Application(
+            middlewares=[], client_max_size=MAX_CLIENT_SIZE
+        )
         app[KEY_HASS] = hass
 
         # This order matters

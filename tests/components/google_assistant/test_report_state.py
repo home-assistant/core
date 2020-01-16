@@ -1,13 +1,12 @@
 """Test Google report state."""
 from unittest.mock import patch
 
-from homeassistant.components.google_assistant import report_state, error
+from homeassistant.components.google_assistant import error, report_state
 from homeassistant.util.dt import utcnow
 
 from . import BASIC_CONFIG
 
-
-from tests.common import mock_coro, async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_coro
 
 
 async def test_report_state(hass, caplog):

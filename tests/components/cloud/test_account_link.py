@@ -6,12 +6,12 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant import data_entry_flow, config_entries
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.cloud import account_link
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
-from tests.common import mock_coro, async_fire_time_changed, mock_platform
 
+from tests.common import async_fire_time_changed, mock_coro, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
 

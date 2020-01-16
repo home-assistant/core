@@ -1,10 +1,8 @@
 {
   "domain": "ubee",
-  "name": "Ubee",
+  "name": "Ubee Router",
   "documentation": "https://www.home-assistant.io/integrations/ubee",
-  "requirements": [
-    "pyubee==0.7"
-  ],
+  "requirements": ["pyubee==0.7"],
   "dependencies": [],
   "codeowners": []
 }

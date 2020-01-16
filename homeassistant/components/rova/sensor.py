@@ -30,8 +30,8 @@ SCAN_INTERVAL = timedelta(hours=12)
 SENSOR_TYPES = {
     "bio": ["gft", "Biowaste", "mdi:recycle"],
     "paper": ["papier", "Paper", "mdi:recycle"],
-    "plastic": ["plasticplus", "PET", "mdi:recycle"],
-    "residual": ["rest", "Residual", "mdi:recycle"],
+    "plastic": ["pmd", "PET", "mdi:recycle"],
+    "residual": ["restafval", "Residual", "mdi:recycle"],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(

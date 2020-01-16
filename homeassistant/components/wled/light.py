@@ -143,8 +143,14 @@ class WLEDLight(Light, WLEDDeviceEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
+        data = {ATTR_ON: False, ATTR_SEGMENT_ID: self._segment}
+
+        if ATTR_TRANSITION in kwargs:
+            # WLED uses 100ms per unit, so 10 = 1 second.
+            data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
+
         try:
-            await self.wled.light(on=False)
+            await self.wled.light(**data)
             self._state = False
         except WLEDError:
             _LOGGER.error("An error occurred while turning off WLED light.")
@@ -168,7 +174,8 @@ class WLEDLight(Light, WLEDDeviceEntity):
             data[ATTR_COLOR_PRIMARY] = color_util.color_hsv_to_RGB(hue, sat, 100)
 
         if ATTR_TRANSITION in kwargs:
-            data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
+            # WLED uses 100ms per unit, so 10 = 1 second.
+            data[ATTR_TRANSITION] = round(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_BRIGHTNESS in kwargs:
             data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
@@ -185,6 +192,11 @@ class WLEDLight(Light, WLEDDeviceEntity):
             if not any(x in (ATTR_COLOR_TEMP, ATTR_HS_COLOR) for x in kwargs):
                 hue, sat = self._color
                 data[ATTR_COLOR_PRIMARY] = color_util.color_hsv_to_RGB(hue, sat, 100)
+
+            # On a RGBW strip, when the color is pure white, disable the RGB LEDs in
+            # WLED by setting RGB to 0,0,0
+            if data[ATTR_COLOR_PRIMARY] == (255, 255, 255):
+                data[ATTR_COLOR_PRIMARY] = (0, 0, 0)
 
             # Add requested or last known white value
             if ATTR_WHITE_VALUE in kwargs:

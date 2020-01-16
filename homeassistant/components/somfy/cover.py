@@ -1,13 +1,14 @@
 """Support for Somfy Covers."""
-from pymfy.api.devices.category import Category
 from pymfy.api.devices.blind import Blind
+from pymfy.api.devices.category import Category
 
 from homeassistant.components.cover import (
-    CoverDevice,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
+    CoverDevice,
 )
-from . import DOMAIN, SomfyEntity, DEVICES, API
+
+from . import API, DEVICES, DOMAIN, SomfyEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -90,15 +91,15 @@ class SomfyCover(SomfyEntity, CoverDevice):
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        self.cover.orientation = kwargs[ATTR_TILT_POSITION]
+        self.cover.orientation = 100 - kwargs[ATTR_TILT_POSITION]
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
-        self.cover.orientation = 100
+        self.cover.orientation = 0
 
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
-        self.cover.orientation = 0
+        self.cover.orientation = 100
 
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""

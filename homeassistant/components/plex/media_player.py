@@ -300,7 +300,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         elif self._session_type == "movie":
             self._media_content_type = MEDIA_TYPE_MOVIE
             if self.session.year is not None and self._media_title is not None:
-                self._media_title += " (" + str(self.session.year) + ")"
+                self._media_title += f" ({self.session.year!s})"
 
         elif self._session_type == "track":
             self._media_content_type = MEDIA_TYPE_MUSIC

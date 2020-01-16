@@ -1,7 +1,7 @@
 """Test STT component setup."""
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import stt
+from homeassistant.setup import async_setup_component
 
 
 async def test_setup_comp(hass):

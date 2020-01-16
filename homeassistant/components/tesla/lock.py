@@ -9,22 +9,31 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Tesla lock platform."""
-    devices = [
-        TeslaLock(device, hass.data[TESLA_DOMAIN]["controller"])
-        for device in hass.data[TESLA_DOMAIN]["devices"]["lock"]
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Tesla binary_sensors by config_entry."""
+    entities = [
+        TeslaLock(
+            device,
+            hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"],
+            config_entry,
+        )
+        for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["lock"]
     ]
-    add_entities(devices, True)
+    async_add_entities(entities, True)
 
 
 class TeslaLock(TeslaDevice, LockDevice):
     """Representation of a Tesla door lock."""
 
-    def __init__(self, tesla_device, controller):
+    def __init__(self, tesla_device, controller, config_entry):
         """Initialise of the lock."""
         self._state = None
-        super().__init__(tesla_device, controller)
+        super().__init__(tesla_device, controller, config_entry)
 
     async def async_lock(self, **kwargs):
         """Send the lock command."""

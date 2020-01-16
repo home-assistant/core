@@ -6,11 +6,11 @@ from typing import Optional
 
 import attr
 
-from homeassistant.const import CONF_URL, STATE_UNKNOWN
 from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DOMAIN as SENSOR_DOMAIN,
 )
+from homeassistant.const import CONF_URL, STATE_UNKNOWN
 
 from . import HuaweiLteBaseEntity
 from .const import (
@@ -21,7 +21,6 @@ from .const import (
     UNIT_BYTES,
     UNIT_SECONDS,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 

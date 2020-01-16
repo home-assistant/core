@@ -1,10 +1,10 @@
 """The tests for the Conversation component."""
 import pytest
 
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
-from homeassistant.setup import async_setup_component
 from homeassistant.components import conversation
+from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
 from homeassistant.helpers import intent
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_intent, async_mock_service
 

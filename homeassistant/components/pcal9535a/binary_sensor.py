@@ -1,10 +1,10 @@
 """Support for binary sensor using I2C PCAL9535A chip."""
 import logging
 
-import voluptuous as vol
 from pcal9535a import PCAL9535A
+import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDevice, PLATFORM_SCHEMA
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 

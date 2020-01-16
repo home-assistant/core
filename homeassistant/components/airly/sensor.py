@@ -2,6 +2,8 @@
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     CONF_NAME,
     DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_PRESSURE,
@@ -60,12 +62,16 @@ SENSOR_TYPES = {
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Airly sensor entities based on a config entry."""
     name = config_entry.data[CONF_NAME]
+    latitude = config_entry.data[CONF_LATITUDE]
+    longitude = config_entry.data[CONF_LONGITUDE]
 
     data = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
 
     sensors = []
     for sensor in SENSOR_TYPES:
-        sensors.append(AirlySensor(data, name, sensor))
+        unique_id = f"{latitude}-{longitude}-{sensor.lower()}"
+        sensors.append(AirlySensor(data, name, sensor, unique_id))
+
     async_add_entities(sensors, True)
 
 
@@ -84,11 +90,12 @@ def round_state(func):
 class AirlySensor(Entity):
     """Define an Airly sensor."""
 
-    def __init__(self, airly, name, kind):
+    def __init__(self, airly, name, kind, unique_id):
         """Initialize."""
         self.airly = airly
         self.data = airly.data
         self._name = name
+        self._unique_id = unique_id
         self.kind = kind
         self._device_class = None
         self._state = None
@@ -130,7 +137,7 @@ class AirlySensor(Entity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self.airly.latitude}-{self.airly.longitude}-{self.kind.lower()}"
+        return self._unique_id
 
     @property
     def unit_of_measurement(self):
@@ -140,7 +147,7 @@ class AirlySensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self.airly.data)
+        return bool(self.data)
 
     async def async_update(self):
         """Update the sensor."""

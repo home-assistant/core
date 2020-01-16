@@ -1,20 +1,22 @@
 """Provide the device automations for Vacuum."""
 from typing import Dict, List
+
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_CONDITION,
-    CONF_DOMAIN,
-    CONF_TYPE,
     CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
+    CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import condition, config_validation as cv, entity_registry
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.config_validation import DEVICE_CONDITION_BASE_SCHEMA
-from . import DOMAIN, STATE_DOCKED, STATE_CLEANING, STATE_RETURNING
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+
+from . import DOMAIN, STATE_CLEANING, STATE_DOCKED, STATE_RETURNING
 
 CONDITION_TYPES = {"is_cleaning", "is_docked"}
 

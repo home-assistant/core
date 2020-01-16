@@ -1,22 +1,23 @@
 """The test for light device automation."""
 from datetime import timedelta
-import pytest
 from unittest.mock import patch
 
-from homeassistant.components.light import DOMAIN
-from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
-from homeassistant.setup import async_setup_component
+import pytest
+
 import homeassistant.components.automation as automation
+from homeassistant.components.light import DOMAIN
+from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
+    async_get_device_automation_capabilities,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
-    async_get_device_automation_capabilities,
 )
 
 

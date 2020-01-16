@@ -24,6 +24,7 @@ CONF_DEVICE_BAUD = "baudrate"
 CONF_DEVICE_PATH = "path"
 CONF_DEVICE_PORT = "port"
 CONF_DEVICE_TYPE = "type"
+CONF_AUTO_BYPASS = "autobypass"
 CONF_PANEL_DISPLAY = "panel_display"
 CONF_ZONE_NAME = "name"
 CONF_ZONE_TYPE = "type"
@@ -39,6 +40,7 @@ DEFAULT_DEVICE_PORT = 10000
 DEFAULT_DEVICE_PATH = "/dev/ttyUSB0"
 DEFAULT_DEVICE_BAUD = 115200
 
+DEFAULT_AUTO_BYPASS = False
 DEFAULT_PANEL_DISPLAY = False
 
 DEFAULT_ZONE_TYPE = "opening"
@@ -102,6 +104,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_PANEL_DISPLAY, default=DEFAULT_PANEL_DISPLAY
                 ): cv.boolean,
+                vol.Optional(CONF_AUTO_BYPASS, default=DEFAULT_AUTO_BYPASS): cv.boolean,
                 vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
             }
         )

@@ -2,15 +2,14 @@
 import asyncio
 import logging
 import os
+from pathlib import Path
 from subprocess import PIPE, Popen
 import sys
 from typing import Optional
 from urllib.parse import urlparse
-from pathlib import Path
 
+from importlib_metadata import PackageNotFoundError, version
 import pkg_resources
-from importlib_metadata import version, PackageNotFoundError
-
 
 _LOGGER = logging.getLogger(__name__)
 

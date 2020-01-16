@@ -1,8 +1,8 @@
 """The test for the threshold sensor platform."""
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 

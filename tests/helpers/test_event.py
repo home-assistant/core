@@ -7,10 +7,10 @@ from unittest.mock import patch
 from astral import Astral
 import pytest
 
-from homeassistant.core import callback
-from homeassistant.setup import async_setup_component
-import homeassistant.core as ha
+from homeassistant.components import sun
 from homeassistant.const import MATCH_ALL
+import homeassistant.core as ha
+from homeassistant.core import callback
 from homeassistant.helpers.event import (
     async_call_later,
     async_track_point_in_time,
@@ -25,7 +25,7 @@ from homeassistant.helpers.event import (
     async_track_utc_time_change,
 )
 from homeassistant.helpers.template import Template
-from homeassistant.components import sun
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -805,7 +805,7 @@ async def test_call_later(hass):
     now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
 
     with patch(
-        "homeassistant.helpers.event" ".async_track_point_in_utc_time"
+        "homeassistant.helpers.event.async_track_point_in_utc_time"
     ) as mock, patch("homeassistant.util.dt.utcnow", return_value=now):
         async_call_later(hass, 3, action)
 
@@ -825,7 +825,7 @@ async def test_async_call_later(hass):
     now = datetime(2017, 12, 19, 15, 40, 0, tzinfo=dt_util.UTC)
 
     with patch(
-        "homeassistant.helpers.event" ".async_track_point_in_utc_time"
+        "homeassistant.helpers.event.async_track_point_in_utc_time"
     ) as mock, patch("homeassistant.util.dt.utcnow", return_value=now):
         remove = async_call_later(hass, 3, action)
 

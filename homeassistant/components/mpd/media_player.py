@@ -37,6 +37,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,6 +99,8 @@ class MpdDevice(MediaPlayerDevice):
         self._is_connected = False
         self._muted = False
         self._muted_volume = 0
+        self._media_position_updated_at = None
+        self._media_position = None
 
         # set up MPD client
         self._client = mpd.MPDClient()
@@ -129,6 +132,11 @@ class MpdDevice(MediaPlayerDevice):
         """Fetch status from MPD."""
         self._status = self._client.status()
         self._currentsong = self._client.currentsong()
+
+        position = self._status["time"]
+        if self._media_position != position:
+            self._media_position_updated_at = dt_util.utcnow()
+            self._media_position = position
 
         self._update_playlists()
 
@@ -187,6 +195,20 @@ class MpdDevice(MediaPlayerDevice):
         """Return the duration of current playing media in seconds."""
         # Time does not exist for streams
         return self._currentsong.get("time")
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds.
+
+        This is returned as part of the mpd status rather than in the details
+        of the current song.
+        """
+        return self._media_position
+
+    @property
+    def media_position_updated_at(self):
+        """Last valid time of media position."""
+        return self._media_position_updated_at
 
     @property
     def media_title(self):

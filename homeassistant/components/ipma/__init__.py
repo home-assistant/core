@@ -1,5 +1,6 @@
 """Component for the Portuguese weather service - IPMA."""
 from homeassistant.core import Config, HomeAssistant
+
 from .config_flow import IpmaFlowHandler  # noqa: F401
 from .const import DOMAIN  # noqa: F401
 
