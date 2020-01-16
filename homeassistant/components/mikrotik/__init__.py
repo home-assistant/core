@@ -167,7 +167,7 @@ class MikrotikClient:
 
     def get_hostname(self):
         """Return device host name."""
-        data = self.command(MIKROTIK_SERVICES[IDENTITY])
+        data = list(self.command(MIKROTIK_SERVICES[IDENTITY]))
         return data[0][NAME] if data else None
 
     def connected(self):
