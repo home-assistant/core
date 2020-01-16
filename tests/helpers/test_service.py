@@ -23,6 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
+    MockEntity,
     get_test_home_assistant,
     mock_coro,
     mock_device_registry,
@@ -678,3 +679,79 @@ async def test_domain_control_no_user(hass, mock_entities):
         )
 
         assert len(calls) == 1
+
+
+async def test_extract_from_service_available_device(hass):
+    """Test the extraction of entity from service and device is available."""
+    entities = [
+        MockEntity(name="test_1", entity_id="test_domain.test_1"),
+        MockEntity(name="test_2", entity_id="test_domain.test_2", available=False),
+        MockEntity(name="test_3", entity_id="test_domain.test_3"),
+        MockEntity(name="test_4", entity_id="test_domain.test_4", available=False),
+    ]
+
+    call_1 = ha.ServiceCall("test", "service", data={"entity_id": ENTITY_MATCH_ALL})
+
+    assert ["test_domain.test_1", "test_domain.test_3"] == [
+        ent.entity_id
+        for ent in (await service.async_extract_entities(hass, entities, call_1))
+    ]
+
+    call_2 = ha.ServiceCall(
+        "test",
+        "service",
+        data={"entity_id": ["test_domain.test_3", "test_domain.test_4"]},
+    )
+
+    assert ["test_domain.test_3"] == [
+        ent.entity_id
+        for ent in (await service.async_extract_entities(hass, entities, call_2))
+    ]
+
+
+async def test_extract_from_service_empty_if_no_entity_id(hass):
+    """Test the extraction from service without specifying entity."""
+    entities = [
+        MockEntity(name="test_1", entity_id="test_domain.test_1"),
+        MockEntity(name="test_2", entity_id="test_domain.test_2"),
+    ]
+    call = ha.ServiceCall("test", "service")
+
+    assert [] == [
+        ent.entity_id
+        for ent in (await service.async_extract_entities(hass, entities, call))
+    ]
+
+
+async def test_extract_from_service_filter_out_non_existing_entities(hass):
+    """Test the extraction of non existing entities from service."""
+    entities = [
+        MockEntity(name="test_1", entity_id="test_domain.test_1"),
+        MockEntity(name="test_2", entity_id="test_domain.test_2"),
+    ]
+
+    call = ha.ServiceCall(
+        "test",
+        "service",
+        {"entity_id": ["test_domain.test_2", "test_domain.non_exist"]},
+    )
+
+    assert ["test_domain.test_2"] == [
+        ent.entity_id
+        for ent in (await service.async_extract_entities(hass, entities, call))
+    ]
+
+
+async def test_extract_all_use_match_all(hass):
+    """Test extract all with None and *."""
+    entities = [
+        MockEntity(name="test_1", entity_id="test_domain.test_1"),
+        MockEntity(name="test_2", entity_id="test_domain.test_2"),
+    ]
+
+    call = ha.ServiceCall("test", "service", {"entity_id": "all"})
+
+    assert ["test_domain.test_1", "test_domain.test_2"] == [
+        ent.entity_id
+        for ent in (await service.async_extract_entities(hass, entities, call))
+    ]

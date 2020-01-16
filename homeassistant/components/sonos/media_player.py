@@ -57,15 +57,10 @@ from . import (
     CONF_INTERFACE_ADDR,
     DATA_SERVICE_EVENT,
     DOMAIN as SONOS_DOMAIN,
-    SERVICE_CLEAR_TIMER,
     SERVICE_JOIN,
-    SERVICE_PLAY_QUEUE,
     SERVICE_RESTORE,
-    SERVICE_SET_OPTION,
-    SERVICE_SET_TIMER,
     SERVICE_SNAPSHOT,
     SERVICE_UNJOIN,
-    SERVICE_UPDATE_ALARM,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -197,20 +192,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             await SonosEntity.snapshot_multi(hass, entities, data[ATTR_WITH_GROUP])
         elif service == SERVICE_RESTORE:
             await SonosEntity.restore_multi(hass, entities, data[ATTR_WITH_GROUP])
-        else:
-            for entity in entities:
-                if service == SERVICE_SET_TIMER:
-                    call = entity.set_sleep_timer
-                elif service == SERVICE_CLEAR_TIMER:
-                    call = entity.clear_sleep_timer
-                elif service == SERVICE_UPDATE_ALARM:
-                    call = entity.set_alarm
-                elif service == SERVICE_SET_OPTION:
-                    call = entity.set_option
-                elif service == SERVICE_PLAY_QUEUE:
-                    call = entity.play_queue
-
-                hass.async_add_executor_job(call, data)
 
         # We are ready for the next service call
         hass.data[DATA_SERVICE_EVENT].set()

@@ -6,7 +6,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, CONF_HOSTS
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_component
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN
@@ -148,26 +148,6 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_RESTORE, service_handle, schema=SONOS_STATES_SCHEMA
     )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_TIMER, service_handle, schema=SONOS_SET_TIMER_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_CLEAR_TIMER, service_handle, schema=SONOS_CLEAR_TIMER_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_UPDATE_ALARM, service_handle, schema=SONOS_UPDATE_ALARM_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_OPTION, service_handle, schema=SONOS_SET_OPTION_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_PLAY_QUEUE, service_handle, schema=SONOS_PLAY_QUEUE_SCHEMA
-    )
-
     return True
 
 
@@ -176,4 +156,65 @@ async def async_setup_entry(hass, entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, MP_DOMAIN)
     )
+
+    async def entity_service_handle(service):
+        """Handle an entity service."""
+        entities = await entity_component.async_get_platform(
+            hass, entry, "media_player"
+        ).async_extract_from_service(service)
+
+        if not entities:
+            return
+
+        if service == SERVICE_SET_TIMER:
+            method = "set_sleep_timer"
+        elif service == SERVICE_CLEAR_TIMER:
+            method = "clear_sleep_timer"
+        elif service == SERVICE_UPDATE_ALARM:
+            method = "set_alarm"
+        elif service == SERVICE_SET_OPTION:
+            method = "set_option"
+        elif service == SERVICE_PLAY_QUEUE:
+            method = "play_queue"
+
+        await hass.async_add_executor_job(_execute, entities, method)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_TIMER, entity_service_handle, schema=SONOS_SET_TIMER_SCHEMA
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAR_TIMER,
+        entity_service_handle,
+        schema=SONOS_CLEAR_TIMER_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UPDATE_ALARM,
+        entity_service_handle,
+        schema=SONOS_UPDATE_ALARM_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_OPTION,
+        entity_service_handle,
+        schema=SONOS_SET_OPTION_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_PLAY_QUEUE,
+        entity_service_handle,
+        schema=SONOS_PLAY_QUEUE_SCHEMA,
+    )
+
     return True
+
+
+def _execute(objects, method):
+    """Execute a method on each object in a list."""
+    for obj in objects:
+        getattr(obj, method)()

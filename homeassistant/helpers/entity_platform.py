@@ -7,6 +7,7 @@ from typing import Optional
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.helpers.service import async_extract_entities
 from homeassistant.util.async_ import run_callback_threadsafe
 
 from .entity_registry import DISABLED_INTEGRATION
@@ -194,7 +195,11 @@ class EntityPlatform:
             )
             return False
         except Exception:  # pylint: disable=broad-except
-            logger.exception("Error while setting up platform %s", self.platform_name)
+            logger.exception(
+                "Error while setting up %s platform for %s",
+                self.platform_name,
+                self.domain,
+            )
             return False
         finally:
             warn_task.cancel()
@@ -448,6 +453,17 @@ class EntityPlatform:
         ):
             self._async_unsub_polling()
             self._async_unsub_polling = None
+
+    async def async_extract_from_service(self, service, expand_group=True):
+        """Extract all known and available entities from a service call.
+
+        Will return an empty list if entities specified but unknown.
+
+        This method must be run in the event loop.
+        """
+        return async_extract_entities(
+            self.hass, self.entities.values(), service, expand_group
+        )
 
     async def _update_entity_states(self, now: datetime) -> None:
         """Update the states of all the polling entities.

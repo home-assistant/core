@@ -12,7 +12,7 @@ from homeassistant.const import ENTITY_MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import EntityComponent, async_get_platform
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -301,7 +301,7 @@ async def test_setup_entry(hass):
     assert p_hass is hass
     assert p_entry is entry
 
-    assert component._platforms[entry.entry_id].scan_interval == timedelta(seconds=5)
+    assert component.platforms[entry.entry_id].scan_interval == timedelta(seconds=5)
 
 
 async def test_setup_entry_platform_not_exist(hass):
@@ -429,3 +429,22 @@ async def test_extract_all_use_match_all(hass, caplog):
     assert (
         "Not passing an entity ID to a service to target all entities is deprecated"
     ) not in caplog.text
+
+
+async def test_platforms_for_config_entry(hass):
+    """Test returning the platforms for a config entry."""
+    entry = MockConfigEntry(domain="mod2")
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("mod2"))
+    mock_entity_platform(
+        hass,
+        "light.mod2",
+        MockPlatform(async_setup_entry=asynctest.CoroutineMock(return_value=True)),
+    )
+
+    await hass.config_entries.async_forward_entry_setup(entry, "light")
+
+    assert async_get_platform(hass, entry, "switch") is None
+    platform = async_get_platform(hass, entry, "light")
+    assert platform is not None
