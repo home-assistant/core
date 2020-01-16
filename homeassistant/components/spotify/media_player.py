@@ -229,17 +229,17 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         elif media_type == MEDIA_TYPE_PLAYLIST:
             kwargs["context_uri"] = media_id
         else:
-            _LOGGER.error("media type %s is not supported", media_type)
+            _LOGGER.error("Media type %s is not supported", media_type)
             return
         if not media_id.startswith("spotify:"):
-            _LOGGER.error("media id must be spotify uri")
+            _LOGGER.error("Media ID must be Spotify URI ('spotify:')")
             return
         self._player.start_playback(**kwargs)
 
     def play_playlist(self, media_id, random_song) -> None:
         """Play random music in a playlist."""
         if not media_id.startswith("spotify:"):
-            _LOGGER.error("media id must be spotify playlist uri")
+            _LOGGER.error("Media ID must be Spotify URI ('spotify:')")
             return
         kwargs = {"context_uri": media_id}
         if random_song:
