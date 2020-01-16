@@ -159,7 +159,6 @@ class PersonStorageCollection(collection.StorageCollection):
     ):
         """Initialize a person storage collection."""
         super().__init__(store, logger, id_manager)
-        self.async_add_listener(self._collection_changed)
         self.yaml_collection = yaml_collection
 
     async def async_load(self) -> None:
@@ -228,16 +227,6 @@ class PersonStorageCollection(collection.StorageCollection):
             if any(person for person in persons if person.get(CONF_USER_ID) == user_id):
                 raise ValueError("User already taken")
 
-    async def _collection_changed(
-        self, change_type: str, item_id: str, config: Optional[dict]
-    ) -> None:
-        """Handle a collection change."""
-        if change_type != collection.CHANGE_REMOVED:
-            return
-
-        ent_reg = await entity_registry.async_get_registry(self.hass)
-        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
-
 
 async def filter_yaml_data(hass: HomeAssistantType, persons: List[dict]) -> List[dict]:
     """Validate YAML data that we can't validate via schema."""
@@ -294,6 +283,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     collection.attach_entity_component_collection(
         entity_component, storage_collection, lambda conf: Person(conf, True)
     )
+    collection.attach_entity_registry_keeper(hass, DOMAIN, DOMAIN, yaml_collection)
+    collection.attach_entity_registry_keeper(hass, DOMAIN, DOMAIN, storage_collection)
 
     await yaml_collection.async_load(
         await filter_yaml_data(hass, config.get(DOMAIN, []))
