@@ -2,10 +2,9 @@
 from typing import List, Optional
 
 from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate.const import
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,  # SUPPORT_PRESET_MODE,,,
-)
-from homeassistant.components.climate.const import (
+    CURRENT_HVAC_HEAT
     CURRENT_HVAC_IDLE,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
@@ -19,8 +18,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN, AtagEntity
 
-# TODO add presets: # [PRESET_AWAY, PRESET_COMFORT, PRESET_HOME, PRESET_SLEEP]
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE  # | SUPPORT_PRESET_MODE
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 SUPPORT_PRESET = []
 
 
