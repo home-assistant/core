@@ -97,7 +97,7 @@ async def async_setup_entry(
         session,
         entry.data[CONF_ID],
         entry.data[CONF_NAME],
-        hass.data[DOMAIN][CONF_ALIASES],
+        hass.data[DOMAIN].get(CONF_ALIASES, {}),
     )
 
     async_add_entities([player], True)

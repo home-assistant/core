@@ -18,7 +18,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Inclusive(CONF_CLIENT_ID, ATTR_CREDENTIALS): cv.string,
                 vol.Inclusive(CONF_CLIENT_SECRET, ATTR_CREDENTIALS): cv.string,
-                vol.Optional(CONF_ALIASES, default={}): {cv.string: cv.string},
+                vol.Optional(CONF_ALIASES): {cv.string: cv.string},
             }
         )
     },
@@ -32,7 +32,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][CONF_ALIASES] = config[DOMAIN].get(CONF_ALIASES)
+
+    if CONF_ALIASES in config[DOMAIN]:
+        hass.data[DOMAIN][CONF_ALIASES] = config[DOMAIN][CONF_ALIASES]
 
     if CONF_CLIENT_ID in config[DOMAIN]:
         config_flow.SpotifyFlowHandler.async_register_implementation(
