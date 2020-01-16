@@ -116,8 +116,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    collection.attach_entity_registry_keeper(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_keeper(hass, DOMAIN, DOMAIN, storage_collection)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml entities."""

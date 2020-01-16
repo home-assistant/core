@@ -283,8 +283,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     collection.attach_entity_component_collection(
         entity_component, storage_collection, lambda conf: Person(conf, True)
     )
-    collection.attach_entity_registry_keeper(hass, DOMAIN, DOMAIN, yaml_collection)
-    collection.attach_entity_registry_keeper(hass, DOMAIN, DOMAIN, storage_collection)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     await yaml_collection.async_load(
         await filter_yaml_data(hass, config.get(DOMAIN, []))

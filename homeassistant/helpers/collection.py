@@ -262,7 +262,7 @@ def attach_entity_component_collection(
 
 
 @callback
-def attach_entity_registry_keeper(
+def attach_entity_registry_cleaner(
     hass: HomeAssistantType,
     domain: str,
     platform: str,
