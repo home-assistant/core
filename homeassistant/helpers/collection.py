@@ -278,7 +278,9 @@ def attach_entity_registry_keeper(
             return
 
         ent_reg = await entity_registry.async_get_registry(hass)
-        ent_reg.async_remove(ent_reg.async_get_entity_id(domain, platform, item_id))
+        ent_to_remove = ent_reg.async_get_entity_id(domain, platform, item_id)
+        if ent_to_remove is not None:
+            ent_reg.async_remove(ent_to_remove)
 
     collection.async_add_listener(_collection_changed)
 
