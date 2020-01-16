@@ -5,8 +5,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TIME, CONF_HOSTS
-from homeassistant.helpers import config_validation as cv, entity_component
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOSTS
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN
@@ -70,44 +70,6 @@ SONOS_STATES_SCHEMA = vol.Schema(
     }
 )
 
-SONOS_SET_TIMER_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Required(ATTR_SLEEP_TIME): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=86399)
-        ),
-    }
-)
-
-SONOS_CLEAR_TIMER_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids}
-)
-
-SONOS_UPDATE_ALARM_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Required(ATTR_ALARM_ID): cv.positive_int,
-        vol.Optional(ATTR_TIME): cv.time,
-        vol.Optional(ATTR_VOLUME): cv.small_float,
-        vol.Optional(ATTR_ENABLED): cv.boolean,
-        vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
-    }
-)
-
-SONOS_SET_OPTION_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
-        vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
-    }
-)
-
-SONOS_PLAY_QUEUE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Optional(ATTR_QUEUE_POSITION, default=0): cv.positive_int,
-    }
-)
 
 DATA_SERVICE_EVENT = "sonos_service_idle"
 
@@ -157,64 +119,4 @@ async def async_setup_entry(hass, entry):
         hass.config_entries.async_forward_entry_setup(entry, MP_DOMAIN)
     )
 
-    async def entity_service_handle(service):
-        """Handle an entity service."""
-        entities = await entity_component.async_get_platform(
-            hass, entry, "media_player"
-        ).async_extract_from_service(service)
-
-        if not entities:
-            return
-
-        if service == SERVICE_SET_TIMER:
-            method = "set_sleep_timer"
-        elif service == SERVICE_CLEAR_TIMER:
-            method = "clear_sleep_timer"
-        elif service == SERVICE_UPDATE_ALARM:
-            method = "set_alarm"
-        elif service == SERVICE_SET_OPTION:
-            method = "set_option"
-        elif service == SERVICE_PLAY_QUEUE:
-            method = "play_queue"
-
-        await hass.async_add_executor_job(_execute, entities, method)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SET_TIMER, entity_service_handle, schema=SONOS_SET_TIMER_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CLEAR_TIMER,
-        entity_service_handle,
-        schema=SONOS_CLEAR_TIMER_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_UPDATE_ALARM,
-        entity_service_handle,
-        schema=SONOS_UPDATE_ALARM_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_SET_OPTION,
-        entity_service_handle,
-        schema=SONOS_SET_OPTION_SCHEMA,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_PLAY_QUEUE,
-        entity_service_handle,
-        schema=SONOS_PLAY_QUEUE_SCHEMA,
-    )
-
     return True
-
-
-def _execute(objects, method):
-    """Execute a method on each object in a list."""
-    for obj in objects:
-        getattr(obj, method)()

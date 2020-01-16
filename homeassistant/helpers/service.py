@@ -264,9 +264,7 @@ def async_set_service_schema(hass, domain, service, schema):
 
 
 @bind_hass
-async def entity_service_call(
-    hass, platforms, func, call, service_name="", required_features=None
-):
+async def entity_service_call(hass, platforms, func, call, required_features=None):
     """Handle an entity service call.
 
     Calls all platforms simultaneously.

@@ -11,6 +11,7 @@ import pysonos
 from pysonos import alarms
 from pysonos.exceptions import SoCoException, SoCoUPnPException
 import pysonos.snapshot
+import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -31,12 +32,15 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TIME,
     ENTITY_MATCH_ALL,
     STATE_IDLE,
     STATE_PAUSED,
     STATE_PLAYING,
 )
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import utcnow
 
@@ -49,7 +53,6 @@ from . import (
     ATTR_QUEUE_POSITION,
     ATTR_SLEEP_TIME,
     ATTR_SPEECH_ENHANCE,
-    ATTR_TIME,
     ATTR_VOLUME,
     ATTR_WITH_GROUP,
     CONF_ADVERTISE_ADDR,
@@ -57,10 +60,15 @@ from . import (
     CONF_INTERFACE_ADDR,
     DATA_SERVICE_EVENT,
     DOMAIN as SONOS_DOMAIN,
+    SERVICE_CLEAR_TIMER,
     SERVICE_JOIN,
+    SERVICE_PLAY_QUEUE,
     SERVICE_RESTORE,
+    SERVICE_SET_OPTION,
+    SERVICE_SET_TIMER,
     SERVICE_SNAPSHOT,
     SERVICE_UNJOIN,
+    SERVICE_UPDATE_ALARM,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,6 +99,45 @@ SOURCE_TV = "TV"
 ATTR_SONOS_GROUP = "sonos_group"
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
+
+SONOS_SET_TIMER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(ATTR_SLEEP_TIME): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=86399)
+        ),
+    }
+)
+
+SONOS_CLEAR_TIMER_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids}
+)
+
+SONOS_UPDATE_ALARM_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Required(ATTR_ALARM_ID): cv.positive_int,
+        vol.Optional(ATTR_TIME): cv.time,
+        vol.Optional(ATTR_VOLUME): cv.small_float,
+        vol.Optional(ATTR_ENABLED): cv.boolean,
+        vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
+    }
+)
+
+SONOS_SET_OPTION_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
+        vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
+    }
+)
+
+SONOS_PLAY_QUEUE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
+        vol.Optional(ATTR_QUEUE_POSITION, default=0): cv.positive_int,
+    }
+)
 
 
 class SonosData:
@@ -195,6 +242,28 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         # We are ready for the next service call
         hass.data[DATA_SERVICE_EVENT].set()
+
+    platform = entity_platform.current_platform.get()
+
+    platform.async_register_entity_service(
+        SERVICE_SET_TIMER, SONOS_SET_TIMER_SCHEMA, "set_sleep_timer"
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_CLEAR_TIMER, SONOS_CLEAR_TIMER_SCHEMA, "clear_sleep_timer"
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_ALARM, SONOS_UPDATE_ALARM_SCHEMA, "set_alarm"
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_SET_OPTION, SONOS_SET_OPTION_SCHEMA, "set_option"
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_PLAY_QUEUE, SONOS_PLAY_QUEUE_SCHEMA, "play_queue"
+    )
 
     async_dispatcher_connect(hass, SONOS_DOMAIN, async_service_handle)
 
@@ -1128,52 +1197,53 @@ class SonosEntity(MediaPlayerDevice):
 
     @soco_error()
     @soco_coordinator
-    def set_sleep_timer(self, data):
+    def set_sleep_timer(self, sleep_time):
         """Set the timer on the player."""
-        self.soco.set_sleep_timer(data[ATTR_SLEEP_TIME])
+        self.soco.set_sleep_timer(sleep_time)
 
     @soco_error()
     @soco_coordinator
-    def clear_sleep_timer(self, data):
+    def clear_sleep_timer(self):
         """Clear the timer on the player."""
         self.soco.set_sleep_timer(None)
 
     @soco_error()
     @soco_coordinator
-    def set_alarm(self, data):
+    def set_alarm(
+        self, alarm_id, time=None, volume=None, enabled=None, include_linked_zones=None
+    ):
         """Set the alarm clock on the player."""
-
         alarm = None
         for one_alarm in alarms.get_alarms(self.soco):
             # pylint: disable=protected-access
-            if one_alarm._alarm_id == str(data[ATTR_ALARM_ID]):
+            if one_alarm._alarm_id == str(alarm_id):
                 alarm = one_alarm
         if alarm is None:
-            _LOGGER.warning("did not find alarm with id %s", data[ATTR_ALARM_ID])
+            _LOGGER.warning("did not find alarm with id %s", alarm_id)
             return
-        if ATTR_TIME in data:
-            alarm.start_time = data[ATTR_TIME]
-        if ATTR_VOLUME in data:
-            alarm.volume = int(data[ATTR_VOLUME] * 100)
-        if ATTR_ENABLED in data:
-            alarm.enabled = data[ATTR_ENABLED]
-        if ATTR_INCLUDE_LINKED_ZONES in data:
-            alarm.include_linked_zones = data[ATTR_INCLUDE_LINKED_ZONES]
+        if time is not None:
+            alarm.start_time = time
+        if volume is not None:
+            alarm.volume = int(volume * 100)
+        if enabled is not None:
+            alarm.enabled = enabled
+        if include_linked_zones is not None:
+            alarm.include_linked_zones = include_linked_zones
         alarm.save()
 
     @soco_error()
-    def set_option(self, data):
+    def set_option(self, night_sound=None, speech_enhance=None):
         """Modify playback options."""
-        if ATTR_NIGHT_SOUND in data and self._night_sound is not None:
-            self.soco.night_mode = data[ATTR_NIGHT_SOUND]
+        if night_sound is not None and self._night_sound is not None:
+            self.soco.night_mode = night_sound
 
-        if ATTR_SPEECH_ENHANCE in data and self._speech_enhance is not None:
-            self.soco.dialog_mode = data[ATTR_SPEECH_ENHANCE]
+        if speech_enhance is not None and self._speech_enhance is not None:
+            self.soco.dialog_mode = speech_enhance
 
     @soco_error()
-    def play_queue(self, data):
+    def play_queue(self, queue_position):
         """Start playing the queue."""
-        self.soco.play_from_queue(data[ATTR_QUEUE_POSITION])
+        self.soco.play_from_queue(queue_position)
 
     @property
     def device_state_attributes(self):

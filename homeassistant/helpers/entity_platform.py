@@ -7,7 +7,7 @@ from typing import Optional
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
-from homeassistant.helpers.service import async_extract_entities
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.util.async_ import run_callback_threadsafe
 
 from .entity_registry import DISABLED_INTEGRATION
@@ -454,15 +454,31 @@ class EntityPlatform:
             self._async_unsub_polling()
             self._async_unsub_polling = None
 
-    async def async_extract_from_service(self, service, expand_group=True):
+    async def async_extract_from_service(self, service_call, expand_group=True):
         """Extract all known and available entities from a service call.
 
         Will return an empty list if entities specified but unknown.
 
         This method must be run in the event loop.
         """
-        return await async_extract_entities(
-            self.hass, self.entities.values(), service, expand_group
+        return await service.async_extract_entities(
+            self.hass, self.entities.values(), service_call, expand_group
+        )
+
+    @callback
+    def async_register_entity_service(self, name, schema, func, required_features=None):
+        """Register an entity service."""
+        if isinstance(schema, dict):
+            schema = cv.make_entity_service_schema(schema)
+
+        async def handle_service(call):
+            """Handle the service."""
+            await service.entity_service_call(
+                self.hass, [self], func, call, required_features
+            )
+
+        self.hass.services.async_register(
+            self.platform_name, name, handle_service, schema
         )
 
     async def _update_entity_states(self, now: datetime) -> None:

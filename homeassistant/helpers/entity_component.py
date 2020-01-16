@@ -183,9 +183,8 @@ class EntityComponent:
 
         async def handle_service(call):
             """Handle the service."""
-            service_name = f"{self.domain}.{name}"
             await self.hass.helpers.service.entity_service_call(
-                self._platforms.values(), func, call, service_name, required_features
+                self._platforms.values(), func, call, required_features
             )
 
         self.hass.services.async_register(self.domain, name, handle_service, schema)
