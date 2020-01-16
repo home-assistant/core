@@ -10,18 +10,11 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
-    CONF_TIMEOUT,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .const import (
-    CONF_VOLUME_STEP,
-    DEFAULT_NAME,
-    DEFAULT_TIMEOUT,
-    DEFAULT_VOLUME_STEP,
-    DOMAIN,
-)
+from .const import CONF_VOLUME_STEP, DEFAULT_NAME, DEFAULT_VOLUME_STEP, DOMAIN
 
 DEFAULT_DEVICE_CLASS = DEVICE_CLASS_TV
 ICON = {DEVICE_CLASS_TV: "mdi:television", DEVICE_CLASS_SPEAKER: "mdi:speaker"}
@@ -47,9 +40,6 @@ VIZIO_SCHEMA = {
         cv.string, vol.Lower, vol.In([DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER])
     ),
     vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=10)
-    ),
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
         vol.Coerce(int), vol.Range(min=1, max=10)
     ),
 }

@@ -13,18 +13,11 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
-    CONF_TIMEOUT,
 )
 from homeassistant.core import callback
 
 from . import DEFAULT_DEVICE_CLASS, validate_auth
-from .const import (
-    CONF_VOLUME_STEP,
-    DEFAULT_NAME,
-    DEFAULT_TIMEOUT,
-    DEFAULT_VOLUME_STEP,
-    DOMAIN,
-)
+from .const import CONF_VOLUME_STEP, DEFAULT_NAME, DEFAULT_VOLUME_STEP, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -134,9 +127,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if entry.data[CONF_VOLUME_STEP] != import_config[CONF_VOLUME_STEP]:
                     new_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
 
-                if entry.data[CONF_TIMEOUT] != import_config[CONF_TIMEOUT]:
-                    new_options[CONF_TIMEOUT] = import_config[CONF_TIMEOUT]
-
                 if new_options:
                     self.hass.config_entries.async_update_entry(
                         entry=entry,
@@ -173,11 +163,7 @@ class VizioOptionsConfigFlow(config_entries.OptionsFlow):
                 default=self.config_entry.options.get(
                     CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
                 ),
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
-            vol.Optional(
-                CONF_TIMEOUT,
-                default=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10)),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10))
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

@@ -11,7 +11,6 @@ from homeassistant.components.vizio import VIZIO_SCHEMA
 from homeassistant.components.vizio.const import (
     CONF_VOLUME_STEP,
     DEFAULT_NAME,
-    DEFAULT_TIMEOUT,
     DEFAULT_VOLUME_STEP,
     DOMAIN,
 )
@@ -20,7 +19,6 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
-    CONF_TIMEOUT,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -32,7 +30,6 @@ NAME = "Vizio"
 HOST = "192.168.1.1:9000"
 ACCESS_TOKEN = "deadbeef"
 VOLUME_STEP = 2
-TIMEOUT = 3
 UNIQUE_ID = "testid"
 
 MOCK_USER_VALID_TV_CONFIG = {
@@ -48,7 +45,6 @@ MOCK_IMPORT_VALID_TV_CONFIG = {
     CONF_DEVICE_CLASS: DEVICE_CLASS_TV,
     CONF_ACCESS_TOKEN: ACCESS_TOKEN,
     CONF_VOLUME_STEP: VOLUME_STEP,
-    CONF_TIMEOUT: TIMEOUT,
 }
 
 MOCK_INVALID_TV_CONFIG = {
@@ -157,14 +153,12 @@ async def test_options_flow(hass: HomeAssistantType) -> None:
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_VOLUME_STEP: VOLUME_STEP, CONF_TIMEOUT: TIMEOUT},
+        result["flow_id"], user_input={CONF_VOLUME_STEP: VOLUME_STEP},
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == ""
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
-    assert result["data"][CONF_TIMEOUT] == TIMEOUT
 
 
 async def test_user_host_already_configured(
@@ -174,7 +168,7 @@ async def test_user_host_already_configured(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_SPEAKER_CONFIG,
-        options={CONF_VOLUME_STEP: VOLUME_STEP, CONF_TIMEOUT: TIMEOUT},
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
     )
     entry.add_to_hass(hass)
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
@@ -202,7 +196,7 @@ async def test_user_name_already_configured(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_SPEAKER_CONFIG,
-        options={CONF_VOLUME_STEP: VOLUME_STEP, CONF_TIMEOUT: TIMEOUT},
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
     )
     entry.add_to_hass(hass)
 
@@ -278,7 +272,6 @@ async def test_import_flow_minimum_fields(
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SPEAKER
     assert result["data"][CONF_VOLUME_STEP] == DEFAULT_VOLUME_STEP
-    assert result["data"][CONF_TIMEOUT] == DEFAULT_TIMEOUT
 
 
 async def test_import_flow_all_fields(hass: HomeAssistantType, vizio_connect) -> None:
@@ -296,7 +289,6 @@ async def test_import_flow_all_fields(hass: HomeAssistantType, vizio_connect) ->
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
     assert result["data"][CONF_ACCESS_TOKEN] == ACCESS_TOKEN
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
-    assert result["data"][CONF_TIMEOUT] == TIMEOUT
 
 
 async def test_import_entity_already_configured(
@@ -306,7 +298,7 @@ async def test_import_entity_already_configured(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
-        options={CONF_VOLUME_STEP: VOLUME_STEP, CONF_TIMEOUT: TIMEOUT},
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
     )
     entry.add_to_hass(hass)
     fail_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG.copy())
