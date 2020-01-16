@@ -289,7 +289,7 @@ class InputDatetime(RestoreEntity):
 
         if self.has_date and self.has_time:
             return self._current_datetime
-        elif self.has_date:
+        if self.has_date:
             return self._current_datetime.date()
         return self._current_datetime.time()
 
