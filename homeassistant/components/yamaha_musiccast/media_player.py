@@ -18,6 +18,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    SUPPORT_SELECT_SOUND_MODE,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -44,6 +45,7 @@ SUPPORTED_FEATURES = (
     | SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_MUTE
     | SUPPORT_SELECT_SOURCE
+    | SUPPORT_SELECT_SOUND_MODE
 )
 
 KNOWN_HOSTS_KEY = "data_yamaha_musiccast"
@@ -124,6 +126,8 @@ class YamahaDevice(MediaPlayerDevice):
         self.volume_max = 0
         self._recv.set_yamaha_device(self)
         self._zone.set_yamaha_device(self)
+        self._sound_mode = None
+        self._sound_mode_list = []
 
     @property
     def name(self):
@@ -294,3 +298,24 @@ class YamahaDevice(MediaPlayerDevice):
         _LOGGER.debug("new media_status arrived")
         self.media_status = status
         self.media_status_received = dt_util.utcnow()
+
+    @property
+    def sound_mode(self):
+        """Name of the current sound mode."""
+        return self._sound_mode
+
+    @property
+    def sound_mode_list(self):
+        """List of available sound modes."""
+        return self._sound_mode_list
+
+    @sound_mode_list.setter
+    def sound_mode_list(self, value):
+        """Set sound_mode_list attribute."""
+        self._sound_mode_list = value
+
+    def select_sound_mode(self, sound_mode):
+        """Send the media player the command to select sound program."""
+        _LOGGER.debug("select_sound_mode: %s", sound_mode)
+        self.status = STATE_UNKNOWN
+        self._zone.set_sound_program(sound_mode)
