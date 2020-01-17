@@ -149,7 +149,7 @@ def _handle_exception(err) -> bool:
         return False
 
     except aiohttp.ClientConnectionError:
-        # this appears to be common with Honeywell's servers
+        # this appears to be a common occurance with the vendor's servers
         _LOGGER.warning(
             "Unable to connect with the vendor's server. "
             "Check your network and the vendor's service status page. "
