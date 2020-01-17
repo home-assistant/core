@@ -11,7 +11,6 @@ from homeassistant.components.icloud.config_flow import (
     CONF_VERIFICATION_CODE,
 )
 from homeassistant.components.icloud.const import (
-    CONF_ACCOUNT_NAME,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
@@ -25,8 +24,6 @@ from tests.common import MockConfigEntry
 
 USERNAME = "username@me.com"
 PASSWORD = "password"
-ACCOUNT_NAME = "Account name 1 2 3"
-ACCOUNT_NAME_FROM_USERNAME = None
 MAX_INTERVAL = 15
 GPS_ACCURACY_THRESHOLD = 250
 
@@ -120,7 +117,6 @@ async def test_user_with_cookie(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNT_NAME_FROM_USERNAME
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
@@ -141,7 +137,6 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
         {
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
-            CONF_ACCOUNT_NAME: ACCOUNT_NAME,
             CONF_MAX_INTERVAL: MAX_INTERVAL,
             CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
         }
@@ -164,7 +159,6 @@ async def test_import_with_cookie(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNT_NAME_FROM_USERNAME
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
@@ -173,7 +167,6 @@ async def test_import_with_cookie(
         {
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
-            CONF_ACCOUNT_NAME: ACCOUNT_NAME,
             CONF_MAX_INTERVAL: MAX_INTERVAL,
             CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
         }
@@ -182,9 +175,29 @@ async def test_import_with_cookie(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_ACCOUNT_NAME] == ACCOUNT_NAME
     assert result["data"][CONF_MAX_INTERVAL] == MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == GPS_ACCURACY_THRESHOLD
+
+
+async def test_two_accounts_setup(
+    hass: HomeAssistantType, service_with_cookie: MagicMock
+):
+    """Test to setup two accounts."""
+    flow = init_config_flow(hass)
+    MockConfigEntry(
+        domain=DOMAIN, data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    ).add_to_hass(hass)
+
+    # import with username and password
+    result = await flow.async_step_import(
+        {CONF_USERNAME: "second_username@icloud.com", CONF_PASSWORD: PASSWORD}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "second_username@icloud.com"
+    assert result["data"][CONF_USERNAME] == "second_username@icloud.com"
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+    assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
+    assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
 async def test_abort_if_already_setup(hass: HomeAssistantType):
@@ -197,17 +210,6 @@ async def test_abort_if_already_setup(hass: HomeAssistantType):
     # Should fail, same USERNAME (import)
     result = await flow.async_step_import(
         {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "username_exists"
-
-    # Should fail, same ACCOUNT_NAME (import)
-    result = await flow.async_step_import(
-        {
-            CONF_USERNAME: "other_username@icloud.com",
-            CONF_PASSWORD: PASSWORD,
-            CONF_ACCOUNT_NAME: ACCOUNT_NAME_FROM_USERNAME,
-        }
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "username_exists"
@@ -290,7 +292,6 @@ async def test_verification_code_success(
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_ACCOUNT_NAME] is None
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
