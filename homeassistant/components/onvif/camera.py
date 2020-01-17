@@ -82,7 +82,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_EXTRA_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
         vol.Optional(CONF_PROFILE, default=DEFAULT_PROFILE): vol.All(
             vol.Coerce(int), vol.Range(min=0)
-        ),
+        )
     }
 )
 
@@ -97,7 +97,7 @@ SERVICE_PTZ_SCHEMA = vol.Schema(
         ),
         vol.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
         vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
-        vol.Optional(ATTR_SPEED, default=0.5): cv.small_float,
+        vol.Optional(ATTR_SPEED, default=0.5): cv.small_float
     }
 )
 
