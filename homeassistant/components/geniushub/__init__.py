@@ -31,8 +31,6 @@ from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
-ATTR_DURATION = "duration"
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "geniushub"
@@ -71,13 +69,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 ATTR_ZONE_MODE = "mode"
-
-ATTR_UNTIL_MINUTES = "duration"
-ATTR_UNTIL_TIME = "until"
+ATTR_DURATION = "duration"
 
 SVC_SET_ZONE_MODE = "set_zone_mode"
-
-HH_MM_REGEXP = r"^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"  # 24h format, with leading 0
 
 SET_ZONE_MODE_SIMPLE = vol.Schema(
     {
@@ -92,8 +86,8 @@ SET_ZONE_MODE_OVERRIDE = vol.Schema(
         vol.Required(ATTR_TEMPERATURE): vol.All(
             vol.Coerce(float), vol.Range(min=4, max=28)
         ),
-        vol.Optional(ATTR_UNTIL_MINUTES): vol.All(
-            cv.positive_int, vol.Range(min=1, max=24 * 60)
+        vol.Optional(ATTR_DURATION): vol.All(
+            cv.time_period, vol.Range(min=timedelta(minutes=1), max=timedelta(days=1)),
         ),
     }
 )
@@ -149,25 +143,6 @@ def setup_service_functions(hass: HomeAssistantType, broker):
 
         if registry_entry.domain != "climate":
             raise ValueError(f"'{entity_id}' is not an {DOMAIN} zone")
-
-        # if not isinstance(zone_entity, GeniusZone):  # TODO: remove
-        #     raise TypeError(f"'{entity_id}' is not a zone")
-
-        # zone_device = zone_entity._zone  # pylint: disable=protected-access
-
-        # if (  # pylint: disable=protected-access
-        #     zone_mode == "footprint" and not zone_device._has_pir
-        # ):
-        #     raise TypeError(f"'{entity_id}' does not support footprint mode (no PIR)")
-
-        # if zone_mode in ["off", "timer", "footprint"]:
-        #     await zone_device.set_mode(zone_mode)
-        #     return
-
-        # temperature = round(call.data[ATTR_TEMPERATURE] * 2) / 2
-        # duration = call.data.get(ATTR_UNTIL_MINUTES, 60) * 60
-
-        # await zone_device.set_override(temperature, duration)
 
         payload = {
             "unique_id": registry_entry.unique_id,
@@ -231,9 +206,10 @@ class GeniusEntity(Entity):
         """Set up a listener when this entity is added to HA."""
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
-    @callback
-    def _refresh(self) -> None:
-        self.async_schedule_update_ha_state(force_refresh=True)
+    async def _refresh(self, payload: Optional[dict] = None) -> None:
+        """Process any signals."""
+        if payload is None:
+            self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -302,6 +278,32 @@ class GeniusZone(GeniusEntity):
         self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
 
         broker.entity_by_uid[self._unique_id] = self
+
+    async def _refresh(self, payload: Optional[dict] = None) -> None:
+        """Process any signals."""
+        if payload is None:
+            self.async_schedule_update_ha_state(force_refresh=True)
+            return
+
+        if payload["unique_id"] != self._unique_id:
+            return
+
+        mode = payload["data"][ATTR_ZONE_MODE]
+
+        if mode == "override":
+            temperature = round(payload["data"][ATTR_TEMPERATURE] * 2) / 2
+            duration = payload["data"].get(ATTR_DURATION, timedelta(hours=1))
+
+            await self._zone.set_override(temperature, int(duration.totalseconds()))
+
+        # pylint: disable=protected-access
+        if mode == "footprint" and not self._zone._has_pir:
+            raise TypeError(
+                f"'{self.entity_id}' can not support footprint mode (it has no PIR)"
+            )
+
+        await self._zone.set_mode(mode)
+        return
 
     @property
     def name(self) -> str:
