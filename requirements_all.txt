@@ -1159,6 +1159,9 @@ py-schluter==0.1.7
 # homeassistant.components.synology
 py-synology==0.2.0
 
+# homeassistant.components.synology_surveillance_control
+py-synology==0.3.0
+
 # homeassistant.components.seventeentrack
 py17track==2.2.2
 
