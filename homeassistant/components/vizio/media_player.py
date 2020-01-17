@@ -74,12 +74,12 @@ async def async_setup_entry(
     if not await device.can_connect():
         fail_auth_msg = ""
         if token:
-            fail_auth_msg = "and auth token are correct."
+            fail_auth_msg = "and auth token '{token}' are correct."
         else:
             fail_auth_msg = "is correct."
         _LOGGER.error(
-            "Failed to connect to Vizio component, please check if host "
-            "is valid and available. Also check if device class %s",
+            "Failed to connect to Vizio device, please check if host '{host}'"
+            "is valid and available. Also check if device class '{device_class}' %s",
             fail_auth_msg,
         )
         raise ConfigEntryNotReady
