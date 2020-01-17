@@ -8,7 +8,7 @@ set_zone_mode:
       description: The zone's entity_id.
       example: climate.kitchen
     mode:
-      description: 'The mode: off, timer or footprint.'
+      description: 'One of: off, timer or footprint.'
       example: timer
 
 set_zone_override:
