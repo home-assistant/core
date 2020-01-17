@@ -190,7 +190,7 @@ aionotion==1.1.0
 aiopvapi==1.6.14
 
 # homeassistant.components.webostv
-aiopylgtv==0.2.6
+aiopylgtv==0.2.7
 
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
@@ -477,7 +477,7 @@ eliqonline==1.2.2
 elkm1-lib==0.7.15
 
 # homeassistant.components.emulated_roku
-emulated_roku==0.1.8
+emulated_roku==0.1.9
 
 # homeassistant.components.enocean
 enocean==0.50
