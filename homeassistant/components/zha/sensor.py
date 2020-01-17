@@ -26,6 +26,7 @@ from .core.const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
+    CHANNEL_MULTISTATE_INPUT,
     CHANNEL_POWER_CONFIGURATION,
     CHANNEL_PRESSURE,
     CHANNEL_SMARTENERGY_METERING,
@@ -225,6 +226,18 @@ class ElectricalMeasurement(Sensor):
     def formatter(self, value) -> int:
         """Return 'normalized' value."""
         return round(value * self._channel.multiplier / self._channel.divisor)
+
+
+@STRICT_MATCH(channel_names=CHANNEL_MULTISTATE_INPUT)
+class Text(Sensor):
+    """Sensor that displays string values."""
+
+    _device_class = None
+    _unit = None
+
+    def formatter(self, value) -> str:
+        """Return string value."""
+        return value
 
 
 @STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
