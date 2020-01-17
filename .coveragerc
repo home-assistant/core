@@ -628,6 +628,7 @@ omit =
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/simplisafe/alarm_control_panel.py
+    homeassistant/components/simplisafe/binary_sensor.py
     homeassistant/components/simplisafe/lock.py
     homeassistant/components/simulated/sensor.py
     homeassistant/components/sisyphus/*
