@@ -1,6 +1,5 @@
 """Support for SimpliSafe alarm systems."""
 import asyncio
-from datetime import timedelta
 import logging
 
 from simplipy import API
@@ -9,13 +8,7 @@ from simplipy.system.v3 import VOLUME_HIGH, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_OF
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_TOKEN,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -100,7 +93,6 @@ ACCOUNT_CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CODE): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
     }
 )
 
@@ -160,7 +152,6 @@ async def async_setup(hass, config):
                     CONF_USERNAME: account[CONF_USERNAME],
                     CONF_PASSWORD: account[CONF_PASSWORD],
                     CONF_CODE: account.get(CONF_CODE),
-                    CONF_SCAN_INTERVAL: account[CONF_SCAN_INTERVAL],
                 },
             )
         )
@@ -202,7 +193,7 @@ async def async_setup_entry(hass, config_entry):
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
     hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = async_track_time_interval(
-        hass, refresh, timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
+        hass, refresh, DEFAULT_SCAN_INTERVAL
     )
 
     # Register the base station for each system:
