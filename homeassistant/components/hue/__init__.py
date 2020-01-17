@@ -26,17 +26,20 @@ PHUE_CONFIG_FILE = "phue.conf"
 CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
 DEFAULT_ALLOW_HUE_GROUPS = True
 
-BRIDGE_CONFIG_SCHEMA = vol.Schema(
-    {
-        # Validate as IP address and then convert back to a string.
-        vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
-        vol.Optional(
-            CONF_ALLOW_UNREACHABLE, default=DEFAULT_ALLOW_UNREACHABLE
-        ): cv.boolean,
-        vol.Optional(
-            CONF_ALLOW_HUE_GROUPS, default=DEFAULT_ALLOW_HUE_GROUPS
-        ): cv.boolean,
-    }
+BRIDGE_CONFIG_SCHEMA = vol.All(
+    cv.deprecated("filename", invalidation_version="0.106.0"),
+    vol.Schema(
+        {
+            # Validate as IP address and then convert back to a string.
+            vol.Required(CONF_HOST): vol.All(ipaddress.ip_address, cv.string),
+            vol.Optional(
+                CONF_ALLOW_UNREACHABLE, default=DEFAULT_ALLOW_UNREACHABLE
+            ): cv.boolean,
+            vol.Optional(
+                CONF_ALLOW_HUE_GROUPS, default=DEFAULT_ALLOW_HUE_GROUPS
+            ): cv.boolean,
+        }
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -44,11 +47,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_BRIDGES): vol.All(
-                    cv.ensure_list,
-                    [
-                        cv.deprecated("filename", invalidation_version="0.106.0"),
-                        vol.All(BRIDGE_CONFIG_SCHEMA),
-                    ],
+                    cv.ensure_list, [BRIDGE_CONFIG_SCHEMA]
                 )
             }
         )
