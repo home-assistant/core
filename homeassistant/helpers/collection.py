@@ -10,9 +10,11 @@ from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
 
 STORAGE_VERSION = 1
@@ -255,6 +257,30 @@ def attach_entity_component_collection(
 
         # CHANGE_UPDATED
         await entities[item_id].async_update_config(config)  # type: ignore
+
+    collection.async_add_listener(_collection_changed)
+
+
+@callback
+def attach_entity_registry_cleaner(
+    hass: HomeAssistantType,
+    domain: str,
+    platform: str,
+    collection: ObservableCollection,
+) -> None:
+    """Attach a listener to clean up entity registry on collection changes."""
+
+    async def _collection_changed(
+        change_type: str, item_id: str, config: Optional[Dict]
+    ) -> None:
+        """Handle a collection change: clean up entity registry on removals."""
+        if change_type != CHANGE_REMOVED:
+            return
+
+        ent_reg = await entity_registry.async_get_registry(hass)
+        ent_to_remove = ent_reg.async_get_entity_id(domain, platform, item_id)
+        if ent_to_remove is not None:
+            ent_reg.async_remove(ent_to_remove)
 
     collection.async_add_listener(_collection_changed)
 
