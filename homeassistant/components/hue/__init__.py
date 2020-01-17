@@ -36,6 +36,7 @@ BRIDGE_CONFIG_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_ALLOW_HUE_GROUPS, default=DEFAULT_ALLOW_HUE_GROUPS
         ): cv.boolean,
+        vol.Optional("filename"): str,
     }
 )
 
@@ -46,8 +47,10 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_BRIDGES): vol.All(
                     cv.ensure_list,
                     [
-                        cv.deprecated("filename", invalidation_version="0.106.0"),
-                        vol.All(BRIDGE_CONFIG_SCHEMA),
+                        vol.All(
+                            cv.deprecated("filename", invalidation_version="0.106.0"),
+                            BRIDGE_CONFIG_SCHEMA,
+                        ),
                     ],
                 )
             }
