@@ -360,22 +360,33 @@ async def test_input_datetime_context(hass, hass_admin_user):
 async def test_reload(hass, hass_admin_user, hass_read_only_user):
     """Test reload service."""
     count_start = len(hass.states.async_entity_ids())
+    ent_reg = await entity_registry.async_get_registry(hass)
 
     assert await async_setup_component(
         hass,
         DOMAIN,
-        {DOMAIN: {"dt1": {"has_time": False, "has_date": True, "initial": "2019-1-1"}}},
+        {
+            DOMAIN: {
+                "dt1": {"has_time": False, "has_date": True, "initial": "2019-1-1"},
+                "dt3": {CONF_HAS_TIME: True, CONF_HAS_DATE: True},
+            }
+        },
     )
 
-    assert count_start + 1 == len(hass.states.async_entity_ids())
+    assert count_start + 2 == len(hass.states.async_entity_ids())
 
     state_1 = hass.states.get("input_datetime.dt1")
     state_2 = hass.states.get("input_datetime.dt2")
+    state_3 = hass.states.get("input_datetime.dt3")
 
     dt_obj = datetime.datetime(2019, 1, 1, 0, 0)
     assert state_1 is not None
     assert state_2 is None
+    assert state_3 is not None
     assert str(dt_obj.date()) == state_1.state
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt1") == f"{DOMAIN}.dt1"
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt2") is None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt3") == f"{DOMAIN}.dt3"
 
     with patch(
         "homeassistant.config.load_yaml_config_file",
@@ -406,11 +417,17 @@ async def test_reload(hass, hass_admin_user, hass_read_only_user):
 
     state_1 = hass.states.get("input_datetime.dt1")
     state_2 = hass.states.get("input_datetime.dt2")
+    state_3 = hass.states.get("input_datetime.dt3")
 
     assert state_1 is not None
     assert state_2 is not None
+    assert state_3 is None
     assert str(DEFAULT_TIME) == state_1.state
     assert str(datetime.datetime(1970, 1, 1, 0, 0)) == state_2.state
+
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt1") == f"{DOMAIN}.dt1"
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt2") == f"{DOMAIN}.dt2"
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "dt3") is None
 
 
 async def test_load_from_storage(hass, storage_setup):
