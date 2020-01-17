@@ -25,6 +25,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.service import verify_domain_control
@@ -79,7 +83,7 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_ZONE_TEMP): vol.All(
-            vol.Coerce(float), vol.Range(min=4.0, max=35.0),
+            vol.Coerce(float), vol.Range(min=4.0, max=35.0)
         ),
         vol.Optional(ATTR_DURATION_UNTIL): vol.All(
             cv.time_period,
@@ -268,12 +272,12 @@ def setup_service_functions(hass: HomeAssistantType, broker):
     It appears that all TCC-compatible systems support the same three zones modes.
     """
 
-    @verify_domain_control
+    @verify_domain_control(hass, DOMAIN)
     async def force_refresh(call):
         """Obtain the latest state data via the vendor's RESTful API."""
         await broker.async_update()
 
-    @verify_domain_control
+    @verify_domain_control(hass, DOMAIN)
     async def set_system_mode(call):
         """Set the system mode."""
         payload = {
@@ -281,9 +285,9 @@ def setup_service_functions(hass: HomeAssistantType, broker):
             "service": call.service,
             "data": call.data,
         }
-        hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, payload)
+        async_dispatcher_send(hass, DOMAIN, payload)
 
-    @verify_domain_control
+    @verify_domain_control(hass, DOMAIN)
     async def set_zone_override(call):
         """Set the zone override (setpoint)."""
         entity_id = call.data[ATTR_ENTITY_ID]
@@ -303,30 +307,16 @@ def setup_service_functions(hass: HomeAssistantType, broker):
             "data": call.data,
         }
 
-        hass.helpers.dispatcher.async_dispatcher_send(DOMAIN, payload)
+        async_dispatcher_send(hass, DOMAIN, payload)
 
-    # The zone modes are consistent across all systems and use the same schema
-    hass.services.async_register(
-        DOMAIN,
-        SVC_SET_ZONE_OVERRIDE,
-        set_zone_override,
-        schema=SET_ZONE_OVERRIDE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        SVC_RESET_ZONE_OVERRIDE,
-        set_zone_override,
-        schema=RESET_ZONE_OVERRIDE_SCHEMA,
-    )
+    hass.services.async_register(DOMAIN, SVC_REFRESH_SYSTEM, force_refresh)
 
-    # Enumerate what operating modes this system supports
+    # Enumerate which operating modes are supported by this system
     modes = broker.config["allowedSystemModes"]
 
     # Not all systems support "AutoWithReset": register this handler only if required
     if [m["systemMode"] for m in modes if m["systemMode"] == "AutoWithReset"]:
-        hass.services.async_register(
-            DOMAIN, SVC_RESET_SYSTEM, set_system_mode, schema=vol.Schema({})
-        )
+        hass.services.async_register(DOMAIN, SVC_RESET_SYSTEM, set_system_mode)
 
     system_mode_schemas = []
     modes = [m for m in modes if m["systemMode"] != "AutoWithReset"]
@@ -374,6 +364,20 @@ def setup_service_functions(hass: HomeAssistantType, broker):
             set_system_mode,
             schema=vol.Any(*system_mode_schemas),
         )
+
+    # The zone modes are consistent across all systems and use the same schema
+    hass.services.async_register(
+        DOMAIN,
+        SVC_SET_ZONE_OVERRIDE,
+        set_zone_override,
+        schema=SET_ZONE_OVERRIDE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SVC_RESET_ZONE_OVERRIDE,
+        set_zone_override,
+        schema=RESET_ZONE_OVERRIDE_SCHEMA,
+    )
 
 
 class EvoBroker:
@@ -476,7 +480,7 @@ class EvoBroker:
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
             _handle_exception(err)
         else:
-            self.hass.helpers.dispatcher.async_dispatcher_send(DOMAIN)
+            async_dispatcher_send(self.hass, DOMAIN)
 
             _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
 
@@ -496,7 +500,7 @@ class EvoBroker:
             await self._update_v1()
 
         # inform the evohome devices that state data has been updated
-        self.hass.helpers.dispatcher.async_dispatcher_send(DOMAIN)
+        async_dispatcher_send(self.hass, DOMAIN)
 
 
 class EvoDevice(Entity):
@@ -516,16 +520,17 @@ class EvoDevice(Entity):
         self._supported_features = None
         self._device_state_attrs = {}
 
-    @callback
-    async def _refresh(self, payload=None) -> None:
+    async def async_refresh(self, payload=None) -> None:
+        """Process any signals."""
         if payload is None:
             self.async_schedule_update_ha_state(force_refresh=True)
             return
-        if payload["unique_id"] == self._unique_id:
-            if payload["service"] in [SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE]:
-                await self.async_zone_svc_request(payload["service"], payload["data"])
-                return
-            await self.async_tcs_svc_request(payload["service"], payload["data"])
+        if payload["unique_id"] != self._unique_id:
+            return
+        if payload["service"] in [SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE]:
+            await self.async_zone_svc_request(payload["service"], payload["data"])
+            return
+        await self.async_tcs_svc_request(payload["service"], payload["data"])
 
     async def async_tcs_svc_request(self, service, data) -> None:
         """Process a service request (system mode) for a controller."""
@@ -575,7 +580,7 @@ class EvoDevice(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(DOMAIN, self._refresh)
+        async_dispatcher_connect(self.hass, DOMAIN, self.async_refresh)
 
     @property
     def precision(self) -> float:
@@ -665,7 +670,7 @@ class EvoChild(EvoDevice):
         return self._setpoints
 
     async def _update_schedule(self) -> None:
-        """Get the latest schedule."""
+        """Get the latest schedule, if any."""
         if "DailySchedules" in self._schedule and not self._schedule["DailySchedules"]:
             if not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
                 return  # avoid unnecessary I/O - there's nothing to update

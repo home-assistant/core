@@ -143,7 +143,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
         allowed_system_modes = self._evo_device.allowedSystemModes
         attrs = [m for m in allowed_system_modes if m["systemMode"] == mode]
-        if not attrs:  # TODO: do I need this if teh service schema is set correctly?
+        if not attrs:  # TODO: do I need this if the service schema is set correctly?
             raise ValueError(f"'{mode}' mode is not supported by this system")
 
         if ATTR_DURATION_DAYS in data:

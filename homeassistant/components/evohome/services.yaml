@@ -10,8 +10,8 @@ set_system_mode:
       example: Away
     period:
       description: >-
-          A period of time in days; used with Away, DayOff, or Custom. The system will
-          revert to Auto at midnight (up to 99 days, today is day 1).
+          A period of time in days; used only with Away, DayOff, or Custom. The system
+          will revert to Auto at midnight (up to 99 days, today is day 1).
       example: '{"days": 28}'
     duration:
       description: The duration in hours; used only with AutoWithEco (up to 24 hours).
