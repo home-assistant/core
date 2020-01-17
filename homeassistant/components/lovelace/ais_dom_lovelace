@@ -5,25 +5,6 @@
             "title": "Asystent domowy",
             "views": [
                 {
-                    "badges": [
-                        "sensor.time",
-                        "sensor.daytodisplay",
-                        "sensor.dark_sky_hourly_summary",
-                        "sensor.dark_sky_daily_summary",
-                        "sun.sun"
-                    ],
-                    "cards": [
-                        {
-                            "content": "**Witaj [[ {user} ]]**. Mi\u0142o nam Ci\u0119 poinformowa\u0107, \u017ce mo\u017cesz dostosowa\u0107 wygl\u0105d aplikacji. \n\nMy obecnie dostarczamy i aktualizujemy przyk\u0142adowy widok <ha-icon icon=\"mdi:google-circles-extended\"></ha-icon> **Jednostki**\n\nW instrukcji wyja\u015bniamy [jak w\u0142\u0105czy\u0107 tryb konfiguracji](https://sviete.github.io/AIS-docs/docs/en/ais_app_ui_config.html).\n\nW widoku **Jednostki** automatycznie wype\u0142niamy karty pozycjami spe\u0142niaj\u0105cymi okre\u015blone kryteria, w ten spos\u00f3b podpowiadamy jak mo\u017cesz tworzy\u0107 w\u0142asne karty <ha-icon icon=\"mdi:cat\"></ha-icon> <ha-icon icon=\"mdi:auto-fix\"></ha-icon>. Sprawdz konfiguracj\u0119 kart na tym widoku i j\u0105 kopiuj do w\u0142asnych widok\u00f3w <ha-icon icon=\"mdi:certificate\"></ha-icon>  \n\nReszta nale\u017cy do Ciebie- nadszed\u0142 czas, \u017ceby\u015b przej\u0105\u0142/przej\u0119\u0142a kontrol\u0119 nad konfiguracj\u0105 interfejsu!\n\n\n<p>\nPozdrawiamy, zesp\u00f3\u0142 AI-Speaker\n<img src=\"/static/icons/favicon-50x50.png\">\n</p>\n\n\n",
-                            "title": "Dostosuj sw\u00f3j interfejs!",
-                            "type": "markdown"
-                        }
-                    ],
-                    "icon": "mdi:home-outline",
-                    "path": "default_view",
-                    "title": "Dom"
-                },
-                {
                     "badges": [],
                     "cards": [
                         {
