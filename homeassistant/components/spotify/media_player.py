@@ -313,7 +313,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             self._me = self._spotify.me()
 
         current = self._spotify.current_playback()
-        self._currently_playing = current if current is not None else {}
+        self._currently_playing = current or {}
 
         self._playlist = None
         if current.get("context", {}).get("type") == MEDIA_TYPE_PLAYLIST:
