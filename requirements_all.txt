@@ -760,7 +760,7 @@ keyrings.alt==3.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.konnected
-konnected==0.1.5
+konnected==1.1.0
 
 # homeassistant.components.eufy
 lakeside==0.12

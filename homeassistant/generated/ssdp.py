@@ -32,6 +32,11 @@ SSDP = {
             "modelName": "Philips hue bridge 2015"
         }
     ],
+    "konnected": [
+        {
+            "manufacturer": "konnected.io"
+        }
+    ],
     "samsungtv": [
         {
             "deviceType": "urn:samsung.com:device:RemoteControlReceiver:1"
