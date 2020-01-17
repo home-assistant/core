@@ -28,7 +28,7 @@ from homeassistant.helpers.service import (
 )
 
 from .config_flow import configured_instances
-from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
+from .const import ATTR_SERIAL, DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -181,7 +181,7 @@ async def async_setup_entry(hass, config_entry):
     await simplisafe.async_update()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
-    for component in ("alarm_control_panel", "lock"):
+    for component in ("alarm_control_panel", "binary_sensor", "lock"):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
@@ -288,7 +288,7 @@ async def async_unload_entry(hass, entry):
     """Unload a SimpliSafe config entry."""
     tasks = [
         hass.config_entries.async_forward_entry_unload(entry, component)
-        for component in ("alarm_control_panel", "lock")
+        for component in ("alarm_control_panel", "binary_sensor", "lock")
     ]
 
     await asyncio.gather(*tasks)
@@ -345,7 +345,6 @@ class SimpliSafeEntity(Entity):
     def __init__(self, system, name, *, serial=None):
         """Initialize."""
         self._async_unsub_dispatcher_connect = None
-        self._attrs = {ATTR_SYSTEM_ID: system.system_id}
         self._name = name
         self._online = True
         self._system = system
@@ -354,6 +353,8 @@ class SimpliSafeEntity(Entity):
             self._serial = serial
         else:
             self._serial = system.serial
+
+        self._attrs = {ATTR_SERIAL: self._serial, ATTR_SYSTEM_ID: system.system_id}
 
     @property
     def available(self):
