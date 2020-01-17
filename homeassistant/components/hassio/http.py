@@ -31,7 +31,7 @@ NO_TIMEOUT = re.compile(
     r")$"
 )
 
-NO_AUTH = re.compile(r"^(?:" r"|app/.*" r"|addons/[^/]+/logo" r")$")
+NO_AUTH = re.compile(r"^(?:" r"|app/.*" r"|addons/[^/]+/logo" r"|addons/[^/]+/icon" r")$")
 
 
 class HassIOView(HomeAssistantView):
