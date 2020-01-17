@@ -78,7 +78,7 @@ async def async_setup_entry(
         else:
             fail_auth_msg = "is correct."
         _LOGGER.error(
-            "Failed to connect to Vizio platform, please check if host "
+            "Failed to connect to Vizio component, please check if host "
             "is valid and available. Also check if device class %s",
             fail_auth_msg,
         )
