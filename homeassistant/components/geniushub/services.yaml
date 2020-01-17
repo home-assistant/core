@@ -6,15 +6,23 @@ set_zone_mode:
   fields:
     entity_id:
       description: The zone's entity_id.
-      example: climate.bathroom
+      example: climate.kitchen
     mode:
-      description: 'The mode, one of: off, override, timer or footprint.'
-      example: override
+      description: 'The mode: off, timer or footprint.'
+      example: timer
+
+set_zone_override:
+  description: >-
+      Override the zone's setpoint for a given duration.
+  fields:
+    entity_id:
+      description: The zone's entity_id.
+      example: climate.bathroom
     temperature:
-      description: The target temperature. Used only by override mode.
-      example: 18.5
+      description: The target temperature, to 0.1 C.
+      example: 19.2
     duration:
       description: >-
-          The duration of the override. Used only by override mode.  Optional, default 1
-          hour, maximum 24 hours.
+          The duration of the override. Optional, default 1 hour, maximum 24 hours.
       example: '{"minutes": 135}'
+

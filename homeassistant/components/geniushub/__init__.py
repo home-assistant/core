@@ -72,26 +72,25 @@ ATTR_ZONE_MODE = "mode"
 ATTR_DURATION = "duration"
 
 SVC_SET_ZONE_MODE = "set_zone_mode"
+SVC_SET_ZONE_OVERRIDE = "set_zone_override"
 
-SET_ZONE_MODE_SIMPLE = vol.Schema(
+SET_ZONE_MODE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
         vol.Required(ATTR_ZONE_MODE): vol.In(["off", "timer", "footprint"]),
     }
 )
-SET_ZONE_MODE_OVERRIDE = vol.Schema(
+SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_ZONE_MODE): vol.In(["override"]),
         vol.Required(ATTR_TEMPERATURE): vol.All(
             vol.Coerce(float), vol.Range(min=4, max=28)
         ),
         vol.Optional(ATTR_DURATION): vol.All(
-            cv.time_period, vol.Range(min=timedelta(minutes=1), max=timedelta(days=1)),
+            cv.time_period, vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
         ),
     }
 )
-SET_ZONE_MODE_SCHEMA = vol.Any(SET_ZONE_MODE_SIMPLE, SET_ZONE_MODE_OVERRIDE)
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
@@ -154,6 +153,9 @@ def setup_service_functions(hass: HomeAssistantType, broker):
 
     hass.services.async_register(
         DOMAIN, SVC_SET_ZONE_MODE, set_zone_mode, schema=SET_ZONE_MODE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SVC_SET_ZONE_OVERRIDE, set_zone_mode, schema=SET_ZONE_OVERRIDE_SCHEMA
     )
 
 
@@ -287,14 +289,14 @@ class GeniusZone(GeniusEntity):
         if payload["unique_id"] != self._unique_id:
             return
 
-        mode = payload["data"][ATTR_ZONE_MODE]
-
-        if mode == "override":
-            temperature = round(payload["data"][ATTR_TEMPERATURE] * 2) / 2
+        if payload["service"] == SVC_SET_ZONE_OVERRIDE:
+            temperature = round(payload["data"][ATTR_TEMPERATURE] * 10) / 10
             duration = payload["data"].get(ATTR_DURATION, timedelta(hours=1))
 
-            await self._zone.set_override(temperature, int(duration.totalseconds()))
+            await self._zone.set_override(temperature, int(duration.total_seconds()))
             return
+
+        mode = payload["data"][ATTR_ZONE_MODE]
 
         # pylint: disable=protected-access
         if mode == "footprint" and not self._zone._has_pir:
