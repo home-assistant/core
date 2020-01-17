@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
@@ -131,38 +132,50 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
+@callback
 def setup_service_functions(hass: HomeAssistantType, broker):
     """Set up the service functions."""
 
-    async def set_zone_mode(call):
+    @verify_domain_control(hass, DOMAIN)
+    async def set_zone_mode(call) -> None:
         """Set the system mode."""
         entity_id = call.data[ATTR_ENTITY_ID]
-        zone_mode = call.data[ATTR_ZONE_MODE]
 
-        try:
-            unique_id = hass.data["entity_registry"].entities[entity_id].unique_id
-            zone_entity = broker.entity_by_uid[unique_id]
-        except KeyError:
-            raise KeyError(f"'{entity_id}' is not a known {DOMAIN} entity")
+        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry_entry = registry.async_get(entity_id)
 
-        if not isinstance(zone_entity, GeniusZone):
-            raise TypeError(f"'{entity_id}' is not a zone")
+        if registry_entry is None or registry_entry.platform != DOMAIN:
+            raise ValueError(f"'{entity_id}' is not a known {DOMAIN} entity")
 
-        zone_device = zone_entity._zone  # pylint: disable=protected-access
+        if registry_entry.domain != "climate":
+            raise ValueError(f"'{entity_id}' is not an {DOMAIN} zone")
 
-        if (  # pylint: disable=protected-access
-            zone_mode == "footprint" and not zone_device._has_pir
-        ):
-            raise TypeError(f"'{entity_id}' does not support footprint mode (no PIR)")
+        # if not isinstance(zone_entity, GeniusZone):  # TODO: remove
+        #     raise TypeError(f"'{entity_id}' is not a zone")
 
-        if zone_mode in ["off", "timer", "footprint"]:
-            await zone_device.set_mode(zone_mode)
-            return
+        # zone_device = zone_entity._zone  # pylint: disable=protected-access
 
-        temperature = round(call.data[ATTR_TEMPERATURE] * 2) / 2
-        duration = call.data.get(ATTR_UNTIL_MINUTES, 60) * 60
+        # if (  # pylint: disable=protected-access
+        #     zone_mode == "footprint" and not zone_device._has_pir
+        # ):
+        #     raise TypeError(f"'{entity_id}' does not support footprint mode (no PIR)")
 
-        await zone_device.set_override(temperature, duration)
+        # if zone_mode in ["off", "timer", "footprint"]:
+        #     await zone_device.set_mode(zone_mode)
+        #     return
+
+        # temperature = round(call.data[ATTR_TEMPERATURE] * 2) / 2
+        # duration = call.data.get(ATTR_UNTIL_MINUTES, 60) * 60
+
+        # await zone_device.set_override(temperature, duration)
+
+        payload = {
+            "unique_id": registry_entry.unique_id,
+            "service": call.service,
+            "data": call.data,
+        }
+
+        async_dispatcher_send(hass, DOMAIN, payload)
 
     hass.services.async_register(
         DOMAIN, SVC_SET_ZONE_MODE, set_zone_mode, schema=SET_ZONE_MODE_SCHEMA
