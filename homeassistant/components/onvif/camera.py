@@ -71,6 +71,7 @@ DOMAIN = "onvif"
 ONVIF_DATA = "onvif"
 ENTITIES = "entities"
 
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -88,9 +89,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SERVICE_PTZ_SCHEMA = vol.Schema(
     {
         ATTR_ENTITY_ID: cv.entity_ids,
-        ATTR_PAN: vol.In([DIR_LEFT, DIR_RIGHT, PTZ_NONE]),
-        ATTR_TILT: vol.In([DIR_UP, DIR_DOWN, PTZ_NONE]),
-        ATTR_ZOOM: vol.In([ZOOM_OUT, ZOOM_IN, PTZ_NONE]),
+        vol.Optional(ATTR_PAN, default=PTZ_NONE): vol.In([DIR_LEFT, DIR_RIGHT, PTZ_NONE]),
+        vol.Optional(ATTR_TILT, default=PTZ_NONE): vol.In([DIR_UP, DIR_DOWN, PTZ_NONE]),
+        vol.Optional(ATTR_ZOOM, default=PTZ_NONE): vol.In([ZOOM_OUT, ZOOM_IN, PTZ_NONE]),
         ATTR_MOVE_MODE: vol.In(
             [CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE, PTZ_NONE]
         ),
@@ -107,13 +108,13 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_handle_ptz(service):
         """Handle PTZ service call."""
-        pan = service.data.get(ATTR_PAN, None)
-        tilt = service.data.get(ATTR_TILT, None)
-        zoom = service.data.get(ATTR_ZOOM, None)
-        distance = service.data.get(ATTR_DISTANCE, None)
-        speed = service.data.get(ATTR_SPEED, None)
-        move_mode = service.data.get(ATTR_MOVE_MODE, "ContinuousMove")
-        continuous_duration = service.data.get(ATTR_CONTINUOUS_DURATION, None)
+        pan = service.data[ATTR_PAN]
+        tilt = service.data[ATTR_TILT]
+        zoom = service.data[ATTR_ZOOM]
+        distance = service.data[ATTR_DISTANCE]
+        speed = service.data[ATTR_SPEED]
+        move_mode = service.data[ATTR_MOVE_MODE]
+        continuous_timeout = service.data[ATTR_CONTINUOUS_DURATION]
         all_cameras = hass.data[ONVIF_DATA][ENTITIES]
         entity_ids = await async_extract_entity_ids(hass, service)
         target_cameras = []
