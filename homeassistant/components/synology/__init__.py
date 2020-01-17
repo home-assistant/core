@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    CONF_WHITELIST,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -30,6 +31,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_WHITELIST_SCHEMA = vol.Schema(
+    {CONF_WHITELIST: vol.Schema({vol.Optional("camera", default=[]): cv.ensure_list})}
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -40,6 +45,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_URL): cv.string,
                 vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
                 vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+                vol.Optional(CONF_WHITELIST, default={}): CONFIG_WHITELIST_SCHEMA,
             }
         )
     },

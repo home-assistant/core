@@ -7,7 +7,7 @@ from synology.surveillance_station import SurveillanceStation
 
 from homeassistant.components.switch import SwitchDevice
 
-from .const import DATA_NAME, DATA_SYNOLOGY_CLIENT, DOMAIN_DATA
+from .const import DATA_NAME, DATA_SURVEILLANCE_CLIENT, DOMAIN_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -15,11 +15,11 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a Synology Switches."""
     if hass.data[DOMAIN_DATA]:
-        synology_client = hass.data[DOMAIN_DATA][DATA_SYNOLOGY_CLIENT]
-        if synology_client:
+        surveillance_client = hass.data[DOMAIN_DATA][DATA_SURVEILLANCE_CLIENT]
+        if surveillance_client:
             switches = [
                 SurveillanceHomeModeSwitch(
-                    synology_client, hass.data[DOMAIN_DATA][DATA_NAME]
+                    surveillance_client, hass.data[DOMAIN_DATA][DATA_NAME]
                 )
             ]
             async_add_entities(switches)
@@ -28,10 +28,10 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class SurveillanceHomeModeSwitch(SwitchDevice):
     """Synology Surveillance Station Home Mode toggle."""
 
-    def __init__(self, synology_client: SurveillanceStation, name):
+    def __init__(self, surveillance_client: SurveillanceStation, name):
         """Initialize a Home Mode toggle."""
         super().__init__()
-        self._synology_client = synology_client
+        self._surveillance_client = surveillance_client
         self._name = f"{name} Surveillance HomeMode Switch"
 
     @property
@@ -43,7 +43,7 @@ class SurveillanceHomeModeSwitch(SwitchDevice):
     def is_on(self) -> bool:
         """Return True if Home Mode is enabled."""
         try:
-            return self._synology_client.get_home_mode_status()
+            return self._surveillance_client.get_home_mode_status()
         except (requests.exceptions.RequestException):
             _LOGGER.exception("Error when trying to get the status", exc_info=True)
             return False
@@ -51,13 +51,13 @@ class SurveillanceHomeModeSwitch(SwitchDevice):
     def turn_on(self, **kwargs: Any) -> None:
         """Enable Home Mode."""
         try:
-            self._synology_client.set_home_mode(True)
+            self._surveillance_client.set_home_mode(True)
         except (requests.exceptions.RequestException):
             _LOGGER.exception("Error when trying to enable home mode", exc_info=True)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Disable Home Mode."""
         try:
-            self._synology_client.set_home_mode(False)
+            self._surveillance_client.set_home_mode(False)
         except (requests.exceptions.RequestException):
             _LOGGER.exception("Error when trying to disable home mode", exc_info=True)
