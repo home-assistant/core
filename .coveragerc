@@ -177,7 +177,6 @@ omit =
     homeassistant/components/ecoal_boiler/*
     homeassistant/components/ecobee/__init__.py
     homeassistant/components/ecobee/binary_sensor.py
-    homeassistant/components/ecobee/climate.py
     homeassistant/components/ecobee/notify.py
     homeassistant/components/ecobee/sensor.py
     homeassistant/components/ecobee/weather.py
