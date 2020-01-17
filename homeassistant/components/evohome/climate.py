@@ -126,7 +126,7 @@ async def async_setup_platform(
 
 
 class EvoClimateDevice(EvoDevice, ClimateDevice):
-    """Base for a Honeywell evohome Climate device."""
+    """Base for an evohome Climate device."""
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Climate device."""
@@ -134,7 +134,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
         self._preset_modes = None
 
-    async def async_tcs_svc_request(self, service: str, data) -> None:
+    async def async_tcs_svc_request(self, service: dict, data: dict) -> None:
         """Process a service request (system mode) for a controller."""
         if service == SVC_SET_SYSTEM_MODE:
             mode = data[ATTR_SYSTEM_MODE]
@@ -178,7 +178,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
 
 class EvoZone(EvoChild, EvoClimateDevice):
-    """Base for a Honeywell evohome Zone."""
+    """Base for a Honeywell TCC Zone."""
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Zone."""
@@ -195,7 +195,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
         else:
             self._precision = self._evo_device.setpointCapabilities["valueResolution"]
 
-    async def async_zone_svc_request(self, service, data) -> None:
+    async def async_zone_svc_request(self, service: dict, data: dict) -> None:
         """Process a service request (setpoint override) for a zone."""
         if service == SVC_RESET_ZONE_OVERRIDE:
             await self._evo_broker.call_client_api(
@@ -345,14 +345,14 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
 
 class EvoController(EvoClimateDevice):
-    """Base for a Honeywell evohome Controller (hub).
+    """Base for a Honeywell TCC Controller (hub).
 
     The Controller (aka TCS, temperature control system) is the parent of all
     the child (CH/DHW) devices.  It is also a Climate device.
     """
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize a evohome Controller (hub)."""
+        """Initialize an evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
 
         self._unique_id = evo_device.systemId
@@ -422,7 +422,7 @@ class EvoController(EvoClimateDevice):
 
 
 class EvoThermostat(EvoZone):
-    """Base for a Honeywell Round Thermostat.
+    """Base for a Honeywell TCC Round Thermostat.
 
     These are implemented as a combined Controller/Zone.
     """

@@ -178,7 +178,7 @@ def _handle_exception(err) -> bool:
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Create a (EMEA/EU-based) Honeywell evohome system."""
+    """Create a (EMEA/EU-based) Honeywell TCC system."""
 
     async def load_auth_tokens(store) -> Tuple[Dict, Optional[Dict]]:
         app_storage = await store.async_load()
@@ -265,9 +265,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 def setup_service_functions(hass: HomeAssistantType, broker):
     """Set up the service handlers for the system/zone operating modes.
 
-    Not all TCC-compatible systems support all operating modes. In addition, each
-    mode will require any of four distinct service schemas. This has to be enumerated
-    before registering the approperiate handlers.
+    Not all Honeywell TCC-compatible systems support all operating modes. In addition,
+    each mode will require any of four distinct service schemas. This has to be
+    enumerated before registering the approperiate handlers.
 
     It appears that all TCC-compatible systems support the same three zones modes.
     """
@@ -488,7 +488,7 @@ class EvoBroker:
             await self.save_auth_tokens()
 
     async def async_update(self, *args, **kwargs) -> None:
-        """Get the latest state data of an entire evohome Location.
+        """Get the latest state data of an entire Honeywell TCC Location.
 
         This includes state data for a Controller and all its child devices, such as the
         operating mode of the Controller and the current temp of its children (e.g.
@@ -520,7 +520,7 @@ class EvoDevice(Entity):
         self._supported_features = None
         self._device_state_attrs = {}
 
-    async def async_refresh(self, payload=None) -> None:
+    async def async_refresh(self, payload: Optional[dict] = None) -> None:
         """Process any signals."""
         if payload is None:
             self.async_schedule_update_ha_state(force_refresh=True)
@@ -532,11 +532,11 @@ class EvoDevice(Entity):
             return
         await self.async_tcs_svc_request(payload["service"], payload["data"])
 
-    async def async_tcs_svc_request(self, service, data) -> None:
+    async def async_tcs_svc_request(self, service: dict, data: dict) -> None:
         """Process a service request (system mode) for a controller."""
         raise NotImplementedError
 
-    async def async_zone_svc_request(self, service, data) -> None:
+    async def async_zone_svc_request(self, service: dict, data: dict) -> None:
         """Process a service request (setpoint override) for a zone."""
         raise NotImplementedError
 
@@ -552,12 +552,12 @@ class EvoDevice(Entity):
 
     @property
     def name(self) -> str:
-        """Return the name of the Evohome entity."""
+        """Return the name of the evohome entity."""
         return self._name
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the Evohome-specific state attributes."""
+        """Return the evohome-specific state attributes."""
         status = self._device_state_attrs
         if "systemModeStatus" in status:
             convert_until(status["systemModeStatus"], "timeUntil")

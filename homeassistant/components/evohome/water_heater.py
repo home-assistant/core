@@ -44,10 +44,10 @@ async def async_setup_platform(
 
 
 class EvoDHW(EvoChild, WaterHeaterDevice):
-    """Base for a Honeywell evohome DHW controller (aka boiler)."""
+    """Base for a Honeywell TCC DHW controller (aka boiler)."""
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize a evohome DHW controller."""
+        """Initialize an evohome DHW controller."""
         super().__init__(evo_broker, evo_device)
 
         self._unique_id = evo_device.dhwId
