@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ALIASES, CONF_CLIENT_ID, CONF_CLIENT_SECRET, DOMAIN
+from .const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -18,7 +18,6 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Inclusive(CONF_CLIENT_ID, ATTR_CREDENTIALS): cv.string,
                 vol.Inclusive(CONF_CLIENT_SECRET, ATTR_CREDENTIALS): cv.string,
-                vol.Optional(CONF_ALIASES): {cv.string: cv.string},
             }
         )
     },
@@ -30,11 +29,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Spotify integration."""
     if DOMAIN not in config:
         return True
-
-    hass.data[DOMAIN] = {}
-
-    if CONF_ALIASES in config[DOMAIN]:
-        hass.data[DOMAIN][CONF_ALIASES] = config[DOMAIN][CONF_ALIASES]
 
     if CONF_CLIENT_ID in config[DOMAIN]:
         config_flow.SpotifyFlowHandler.async_register_implementation(
