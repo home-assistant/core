@@ -318,7 +318,7 @@ class AlexaSemantics:
     Semantics is supported for the following interfaces only: ModeController, RangeController, and ToggleController.
 
     Semantics stateMappings are only supported for one interface of the same type on the same device. If a device has
-    multiple RangeControllers only one interface may use semantics otherwise discovery will fail.
+    multiple RangeControllers only one interface may use stateMappings otherwise discovery will fail.
 
     You can support semantics actionMappings on different controllers for the same device, however each controller must
     support different phrases. For example, you can support "raise" on a RangeController, and "open" on a ModeController,
