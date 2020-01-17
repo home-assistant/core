@@ -189,7 +189,7 @@ class ONVIFHassCamera(Camera):
 
             await self.async_check_date_and_time()
             await self.async_obtain_input_uri()
-            await self.setup_ptz()
+            self.setup_ptz()
         except ClientConnectionError as err:
             _LOGGER.warning(
                 "Couldn't connect to camera '%s', but will retry later. Error: %s",
@@ -355,7 +355,7 @@ class ONVIFHassCamera(Camera):
         except exceptions.ONVIFError as err:
             _LOGGER.error("Couldn't setup camera '%s'. Error: %s", self._name, err)
 
-    async def setup_ptz(self):
+    def setup_ptz(self):
         """Set up PTZ if available."""
         _LOGGER.debug("Setting up the ONVIF PTZ service")
         if self._camera.get_service("ptz") is None:
