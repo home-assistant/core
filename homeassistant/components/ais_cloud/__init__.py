@@ -1,14 +1,20 @@
 """Component to manage the AIS Cloud."""
 import asyncio
-import logging
-import requests
 import json
+import logging
 import os
 
+import requests
+
 from homeassistant.components.ais_dom import ais_global
-from homeassistant.const import EVENT_PLATFORM_DISCOVERED, EVENT_STATE_CHANGED
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+    CONF_NAME,
+    EVENT_PLATFORM_DISCOVERED,
+    EVENT_STATE_CHANGED,
+)
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.const import CONF_NAME, CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.util import slugify
 
 DOMAIN = "ais_cloud"
@@ -220,8 +226,11 @@ def async_setup(hass, config):
             else:
                 _old = state_event.data["old_state"].attributes
             # check if name was changed
-            if _new["friendly_name"] != _old["friendly_name"]:
-                hass.async_add_job(hass.services.async_call("ais_cloud", "get_players"))
+            if "friendly_name" in _new and "friendly_name" in _old:
+                if _new["friendly_name"] != _old["friendly_name"]:
+                    hass.async_add_job(
+                        hass.services.async_call("ais_cloud", "get_players")
+                    )
         elif entity_id == "input_select.assistant_voice":
             # old_voice = state_event.data["old_state"].state
             new_voice = state_event.data["new_state"].state
