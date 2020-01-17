@@ -1,3 +1,4 @@
+# Support for (EMEA/EU-based) Honeywell TCC climate systems.
 # Describes the format for available services
 
 set_system_mode:
