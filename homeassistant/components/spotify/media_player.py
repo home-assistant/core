@@ -148,6 +148,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def media_content_type(self) -> Optional[str]:
         """Return the media type."""
+        if self._playlist is not None:
+            return MEDIA_TYPE_PLAYLIST
         return MEDIA_TYPE_MUSIC
 
     @property
