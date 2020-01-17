@@ -427,6 +427,11 @@ class NetatmoPublicSensor(Entity):
         """Return the unit of measurement of this entity."""
         return self._unit_of_measurement
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(self._state)
+
     def update(self):
         """Get the latest data from Netatmo API and updates the states."""
         self.netatmo_data.update()
