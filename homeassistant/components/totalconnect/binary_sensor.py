@@ -90,7 +90,7 @@ class TotalConnectBinarySensor(BinarySensorDevice):
                 self._zone.zone_type_id,
                 self._zone_id,
             )
-        return None
+            return None
 
     @property
     def device_state_attributes(self):
