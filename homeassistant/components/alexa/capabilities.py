@@ -1091,7 +1091,7 @@ class AlexaModeController(AlexaCapability):
     The instance property must not contain words from other instance property strings within the same device.
     e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
 
-    An instance property string value may reused for different devices.
+    An instance property string value may be reused for different devices.
 
     https://developer.amazon.com/docs/device-apis/alexa-modecontroller.html
     """
@@ -1250,7 +1250,7 @@ class AlexaRangeController(AlexaCapability):
     The instance property must not contain words from other instance property strings within the same device.
     e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
 
-    An instance property string value may reused for different devices.
+    An instance property string value may be reused for different devices.
 
     https://developer.amazon.com/docs/device-apis/alexa-rangecontroller.html
     """
@@ -1454,7 +1454,7 @@ class AlexaToggleController(AlexaCapability):
     The instance property must not contain words from other instance property strings within the same device.
     e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
 
-    An instance property string value may reused for different devices.
+    An instance property string value may be reused for different devices.
 
     https://developer.amazon.com/docs/device-apis/alexa-togglecontroller.html
     """
