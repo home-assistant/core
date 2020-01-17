@@ -84,8 +84,6 @@ PyViCare==0.1.7
 PyXiaomiGateway==0.12.4
 
 # homeassistant.components.bmp280
-RPI.GPIO==0.7.0
-
 # homeassistant.components.mcp23017
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.7.0

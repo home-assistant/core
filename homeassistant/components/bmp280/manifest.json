@@ -4,6 +4,6 @@
   "documentation": "https://www.home-assistant.io/components/bmp280",
   "dependencies": [],
   "codeowners": ["@belidzs"],
-  "requirements": ["adafruit-circuitpython-bmp280==3.1.1", "RPI.GPIO==0.7.0"],
+  "requirements": ["adafruit-circuitpython-bmp280==3.1.1", "RPi.GPIO==0.7.0"],
   "quality_scale": "silver"
 }
