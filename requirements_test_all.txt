@@ -399,7 +399,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==3.2.0
+pyatmo==3.2.2
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
