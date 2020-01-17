@@ -60,10 +60,25 @@ async def test_forward_request_no_auth_for_panel(
 
 
 async def test_forward_request_no_auth_for_logo(hassio_client, aioclient_mock):
-    """Test no auth needed for ."""
+    """Test no auth needed for logo."""
     aioclient_mock.get("http://127.0.0.1/addons/bl_b392/logo", text="response")
 
     resp = await hassio_client.get("/api/hassio/addons/bl_b392/logo")
+
+    # Check we got right response
+    assert resp.status == 200
+    body = await resp.text()
+    assert body == "response"
+
+    # Check we forwarded command
+    assert len(aioclient_mock.mock_calls) == 1
+
+
+async def test_forward_request_no_auth_for_icon(hassio_client, aioclient_mock):
+    """Test no auth needed for icon."""
+    aioclient_mock.get("http://127.0.0.1/addons/bl_b392/icon", text="response")
+
+    resp = await hassio_client.get("/api/hassio/addons/bl_b392/icon")
 
     # Check we got right response
     assert resp.status == 200
