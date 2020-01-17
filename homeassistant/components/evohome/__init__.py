@@ -1,6 +1,6 @@
 """Support for (EMEA/EU-based) Honeywell TCC climate systems.
 
-Such systems include evohome (multi-zone), and Round Thermostat (single zone).
+Such systems include evohome, Round Thermostat, and others.
 """
 from datetime import datetime as dt, timedelta
 import logging
@@ -30,7 +30,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
@@ -274,12 +273,12 @@ def setup_service_functions(hass: HomeAssistantType, broker):
     """
 
     @verify_domain_control(hass, DOMAIN)
-    async def force_refresh(call):
+    async def force_refresh(call) -> None:
         """Obtain the latest state data via the vendor's RESTful API."""
         await broker.async_update()
 
     @verify_domain_control(hass, DOMAIN)
-    async def set_system_mode(call):
+    async def set_system_mode(call) -> None:
         """Set the system mode."""
         payload = {
             "unique_id": broker.tcs.systemId,
@@ -289,18 +288,18 @@ def setup_service_functions(hass: HomeAssistantType, broker):
         async_dispatcher_send(hass, DOMAIN, payload)
 
     @verify_domain_control(hass, DOMAIN)
-    async def set_zone_override(call):
+    async def set_zone_override(call) -> None:
         """Set the zone override (setpoint)."""
         entity_id = call.data[ATTR_ENTITY_ID]
 
-        registry = await async_get_registry(hass)
+        registry = await hass.helpers.entity_registry.async_get_registry()
         registry_entry = registry.async_get(entity_id)
 
         if registry_entry is None or registry_entry.platform != DOMAIN:
-            raise ValueError(f"'{entity_id}' is not a known evohome entity")
+            raise ValueError(f"'{entity_id}' is not a known {DOMAIN} entity")
 
         if registry_entry.domain != "climate":
-            raise ValueError(f"'{entity_id}' is not an evohome controller/zone")
+            raise ValueError(f"'{entity_id}' is not an {DOMAIN} controller/zone")
 
         payload = {
             "unique_id": registry_entry.unique_id,
