@@ -4,8 +4,10 @@
             "user": {
                 "data": {
                     "name": "Sensor Naam"
-                }
+                },
+                "title": "Lokaal IP-adres"
             }
-        }
+        },
+        "title": "Lokaal IP-adres"
     }
 }

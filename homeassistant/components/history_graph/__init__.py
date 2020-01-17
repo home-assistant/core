@@ -35,6 +35,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Load graph configurations."""
+    _LOGGER.warning(
+        "The history_graph integration has been deprecated and is pending for removal "
+        "in Home Assistant 0.107.0."
+    )
+
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     graphs = []
 

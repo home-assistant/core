@@ -20,6 +20,7 @@ from homeassistant.components import (
     sensor,
     switch,
     timer,
+    vacuum,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
@@ -724,3 +725,34 @@ class TimerCapabilities(AlexaEntity):
         """Yield the supported interfaces."""
         yield AlexaTimeHoldController(self.entity, allow_remote_resume=True)
         yield Alexa(self.entity)
+
+
+@ENTITY_ADAPTERS.register(vacuum.DOMAIN)
+class VacuumCapabilities(AlexaEntity):
+    """Class to represent vacuum capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if (supported & vacuum.SUPPORT_TURN_ON) and (
+            supported & vacuum.SUPPORT_TURN_OFF
+        ):
+            yield AlexaPowerController(self.entity)
+
+        if supported & vacuum.SUPPORT_FAN_SPEED:
+            yield AlexaRangeController(
+                self.entity, instance=f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}"
+            )
+
+        if supported & vacuum.SUPPORT_PAUSE:
+            support_resume = bool(supported & vacuum.SUPPORT_START)
+            yield AlexaTimeHoldController(
+                self.entity, allow_remote_resume=support_resume
+            )
+
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)

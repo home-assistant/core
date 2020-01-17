@@ -12,7 +12,7 @@ cryptography==2.8
 pip>=8.0.3
 python-slugify==4.0.0
 pytz>=2019.03
-pyyaml==5.2.0
+pyyaml==5.2
 requests==2.22.0
 ruamel.yaml==0.15.100
 voluptuous==0.11.7
@@ -190,7 +190,7 @@ aionotion==1.1.0
 aiopvapi==1.6.14
 
 # homeassistant.components.webostv
-aiopylgtv==0.2.6
+aiopylgtv==0.2.7
 
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
@@ -474,7 +474,7 @@ eliqonline==1.2.2
 elkm1-lib==0.7.15
 
 # homeassistant.components.emulated_roku
-emulated_roku==0.1.8
+emulated_roku==0.1.9
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -676,7 +676,7 @@ hole==0.5.0
 holidays==0.9.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200108.0
+home-assistant-frontend==20200108.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.7
@@ -775,7 +775,7 @@ libpyfoscam==1.0
 libpyvivotek==0.4.0
 
 # homeassistant.components.mikrotik
-librouteros==2.3.0
+librouteros==3.0.0
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.7.2
@@ -1021,9 +1021,6 @@ pmsensor==0.4
 # homeassistant.components.pocketcasts
 pocketcasts==0.1
 
-# homeassistant.components.postnl
-postnl_api==1.2.2
-
 # homeassistant.components.reddit
 praw==6.5.0
 
@@ -1137,7 +1134,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==3.2.0
+pyatmo==3.2.2
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1399,7 +1396,7 @@ pynuki==1.3.3
 pynut2==2.1.2
 
 # homeassistant.components.nws
-pynws==0.8.1
+pynws==0.10.1
 
 # homeassistant.components.nx584
 pynx584==0.4
@@ -1675,7 +1672,7 @@ pytradfri[async]==6.4.0
 pytrafikverket==0.1.5.9
 
 # homeassistant.components.ubee
-pyubee==0.7
+pyubee==0.8
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==0.0.5
@@ -1693,7 +1690,7 @@ pyversasense==0.0.6
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.0.15
+pyvizio==0.1.1
 
 # homeassistant.components.velux
 pyvlx==0.2.12
@@ -2100,7 +2097,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.01.01
+youtube_dl==2020.01.15
 
 # homeassistant.components.zengge
 zengge==0.2

@@ -297,10 +297,11 @@ class IcloudAccount:
         self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
 
         self._family_members_fullname = {}
-        for prs_id, member in user_info["membersInfo"].items():
-            self._family_members_fullname[
-                prs_id
-            ] = f"{member['firstName']} {member['lastName']}"
+        if user_info.get("membersInfo") is not None:
+            for prs_id, member in user_info["membersInfo"].items():
+                self._family_members_fullname[
+                    prs_id
+                ] = f"{member['firstName']} {member['lastName']}"
 
         self._devices = {}
         self.update_devices()

@@ -44,7 +44,11 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_BRIDGES): vol.All(
-                    cv.ensure_list, [BRIDGE_CONFIG_SCHEMA]
+                    cv.ensure_list,
+                    [
+                        cv.deprecated("filename", invalidation_version="0.106.0"),
+                        vol.All(BRIDGE_CONFIG_SCHEMA),
+                    ],
                 )
             }
         )
@@ -69,7 +73,7 @@ async def async_setup(hass, config):
     bridges = conf[CONF_BRIDGES]
 
     configured_hosts = set(
-        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
     )
 
     for bridge_conf in bridges:

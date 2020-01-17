@@ -1,15 +1,26 @@
 """Support for Timers."""
 from datetime import timedelta
 import logging
+import typing
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ICON, CONF_NAME, SERVICE_RELOAD
+from homeassistant.const import (
+    ATTR_EDITABLE,
+    CONF_ICON,
+    CONF_ID,
+    CONF_NAME,
+    SERVICE_RELOAD,
+)
+from homeassistant.core import callback
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
+from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceCallType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "timer"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
-DEFAULT_DURATION = timedelta(0)
+DEFAULT_DURATION = 0
 ATTR_DURATION = "duration"
 ATTR_REMAINING = "remaining"
 CONF_DURATION = "duration"
@@ -36,6 +47,21 @@ SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_CANCEL = "cancel"
 SERVICE_FINISH = "finish"
+
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
+
+CREATE_FIELDS = {
+    vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
+}
+UPDATE_FIELDS = {
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_ICON): cv.icon,
+    vol.Optional(CONF_DURATION): cv.time_period,
+}
 
 
 def _none_to_empty_dict(value):
@@ -65,20 +91,45 @@ CONFIG_SCHEMA = vol.Schema(
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
-async def async_setup(hass, config):
-    """Set up a timer."""
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+    """Set up an input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    id_manager = collection.IDManager()
 
-    entities = await _async_process_config(hass, config)
+    yaml_collection = collection.YamlCollection(
+        logging.getLogger(f"{__name__}.yaml_collection"), id_manager
+    )
+    collection.attach_entity_component_collection(
+        component, yaml_collection, Timer.from_yaml
+    )
 
-    async def reload_service_handler(service_call):
-        """Remove all input booleans and load new ones from config."""
-        conf = await component.async_prepare_reload()
+    storage_collection = TimerStorageCollection(
+        Store(hass, STORAGE_VERSION, STORAGE_KEY),
+        logging.getLogger(f"{__name__}.storage_collection"),
+        id_manager,
+    )
+    collection.attach_entity_component_collection(component, storage_collection, Timer)
+
+    await yaml_collection.async_load(
+        [{CONF_ID: id_, **cfg} for id_, cfg in config.get(DOMAIN, {}).items()]
+    )
+    await storage_collection.async_load()
+
+    collection.StorageCollectionWebsocket(
+        storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
+    ).async_setup(hass)
+
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
+
+    async def reload_service_handler(service_call: ServiceCallType) -> None:
+        """Reload yaml entities."""
+        conf = await component.async_prepare_reload(skip_reset=True)
         if conf is None:
-            return
-        new_entities = await _async_process_config(hass, conf)
-        if new_entities:
-            await component.async_add_entities(new_entities)
+            conf = {DOMAIN: {}}
+        await yaml_collection.async_load(
+            [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
+        )
 
     homeassistant.helpers.service.async_register_admin_service(
         hass,
@@ -96,42 +147,54 @@ async def async_setup(hass, config):
     component.async_register_entity_service(SERVICE_CANCEL, {}, "async_cancel")
     component.async_register_entity_service(SERVICE_FINISH, {}, "async_finish")
 
-    if entities:
-        await component.async_add_entities(entities)
     return True
 
 
-async def _async_process_config(hass, config):
-    """Process config and create list of entities."""
-    entities = []
+class TimerStorageCollection(collection.StorageCollection):
+    """Timer storage based collection."""
 
-    for object_id, cfg in config[DOMAIN].items():
-        if not cfg:
-            cfg = {}
+    CREATE_SCHEMA = vol.Schema(CREATE_FIELDS)
+    UPDATE_SCHEMA = vol.Schema(UPDATE_FIELDS)
 
-        name = cfg.get(CONF_NAME)
-        icon = cfg.get(CONF_ICON)
-        duration = cfg[CONF_DURATION]
+    async def _process_create_data(self, data: typing.Dict) -> typing.Dict:
+        """Validate the config is valid."""
+        data = self.CREATE_SCHEMA(data)
+        # make duration JSON serializeable
+        data[CONF_DURATION] = str(data[CONF_DURATION])
+        return data
 
-        entities.append(Timer(hass, object_id, name, icon, duration))
+    @callback
+    def _get_suggested_id(self, info: typing.Dict) -> str:
+        """Suggest an ID based on the config."""
+        return info[CONF_NAME]
 
-    return entities
+    async def _update_data(self, data: dict, update_data: typing.Dict) -> typing.Dict:
+        """Return a new updated data object."""
+        data = {**data, **self.UPDATE_SCHEMA(update_data)}
+        # make duration JSON serializeable
+        data[CONF_DURATION] = str(data[CONF_DURATION])
+        return data
 
 
 class Timer(RestoreEntity):
     """Representation of a timer."""
 
-    def __init__(self, hass, object_id, name, icon, duration):
+    def __init__(self, config: typing.Dict):
         """Initialize a timer."""
-        self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self._name = name
+        self._config = config
+        self.editable = True
         self._state = STATUS_IDLE
-        self._duration = duration
-        self._remaining = self._duration
-        self._icon = icon
-        self._hass = hass
+        self._remaining = config[CONF_DURATION]
         self._end = None
         self._listener = None
+
+    @classmethod
+    def from_yaml(cls, config: typing.Dict) -> "Timer":
+        """Return entity instance initialized from yaml storage."""
+        timer = cls(config)
+        timer.entity_id = ENTITY_ID_FORMAT.format(config[CONF_ID])
+        timer.editable = False
+        return timer
 
     @property
     def should_poll(self):
@@ -141,12 +204,12 @@ class Timer(RestoreEntity):
     @property
     def name(self):
         """Return name of the timer."""
-        return self._name
+        return self._config.get(CONF_NAME)
 
     @property
     def icon(self):
         """Return the icon to be used for this entity."""
-        return self._icon
+        return self._config.get(CONF_ICON)
 
     @property
     def state(self):
@@ -157,9 +220,15 @@ class Timer(RestoreEntity):
     def state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_DURATION: str(self._duration),
+            ATTR_DURATION: str(self._config[CONF_DURATION]),
+            ATTR_EDITABLE: self.editable,
             ATTR_REMAINING: str(self._remaining),
         }
+
+    @property
+    def unique_id(self) -> typing.Optional[str]:
+        """Return unique id for the entity."""
+        return self._config[CONF_ID]
 
     async def async_added_to_hass(self):
         """Call when entity is about to be added to Home Assistant."""
@@ -189,18 +258,18 @@ class Timer(RestoreEntity):
             self._end = start + self._remaining
         else:
             if newduration:
-                self._duration = newduration
+                self._config[CONF_DURATION] = newduration
                 self._remaining = newduration
             else:
-                self._remaining = self._duration
-            self._end = start + self._duration
+                self._remaining = self._config[CONF_DURATION]
+            self._end = start + self._config[CONF_DURATION]
 
-        self._hass.bus.async_fire(event, {"entity_id": self.entity_id})
+        self.hass.bus.async_fire(event, {"entity_id": self.entity_id})
 
         self._listener = async_track_point_in_utc_time(
-            self._hass, self.async_finished, self._end
+            self.hass, self.async_finished, self._end
         )
-        await self.async_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_pause(self):
         """Pause a timer."""
@@ -212,8 +281,8 @@ class Timer(RestoreEntity):
         self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
         self._state = STATUS_PAUSED
         self._end = None
-        self._hass.bus.async_fire(EVENT_TIMER_PAUSED, {"entity_id": self.entity_id})
-        await self.async_update_ha_state()
+        self.hass.bus.async_fire(EVENT_TIMER_PAUSED, {"entity_id": self.entity_id})
+        self.async_write_ha_state()
 
     async def async_cancel(self):
         """Cancel a timer."""
@@ -223,8 +292,8 @@ class Timer(RestoreEntity):
         self._state = STATUS_IDLE
         self._end = None
         self._remaining = timedelta()
-        self._hass.bus.async_fire(EVENT_TIMER_CANCELLED, {"entity_id": self.entity_id})
-        await self.async_update_ha_state()
+        self.hass.bus.async_fire(EVENT_TIMER_CANCELLED, {"entity_id": self.entity_id})
+        self.async_write_ha_state()
 
     async def async_finish(self):
         """Reset and updates the states, fire finished event."""
@@ -234,8 +303,8 @@ class Timer(RestoreEntity):
         self._listener = None
         self._state = STATUS_IDLE
         self._remaining = timedelta()
-        self._hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
-        await self.async_update_ha_state()
+        self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
+        self.async_write_ha_state()
 
     async def async_finished(self, time):
         """Reset and updates the states, fire finished event."""
@@ -245,5 +314,10 @@ class Timer(RestoreEntity):
         self._listener = None
         self._state = STATUS_IDLE
         self._remaining = timedelta()
-        self._hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
-        await self.async_update_ha_state()
+        self.hass.bus.async_fire(EVENT_TIMER_FINISHED, {"entity_id": self.entity_id})
+        self.async_write_ha_state()
+
+    async def async_update_config(self, config: typing.Dict) -> None:
+        """Handle when the config is updated."""
+        self._config = config
+        self.async_write_ha_state()

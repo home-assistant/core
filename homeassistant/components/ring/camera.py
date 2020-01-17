@@ -6,16 +6,17 @@ import logging
 
 from haffmpeg.camera import CameraMjpeg
 from haffmpeg.tools import IMAGE_JPEG, ImageFrame
+import requests
 
 from homeassistant.components.camera import Camera
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 
-from . import ATTRIBUTION, DATA_HISTORY, DOMAIN, SIGNAL_UPDATE_RING
+from . import ATTRIBUTION, DOMAIN
+from .entity import RingEntityMixin
 
 FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
 
@@ -24,8 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Ring Door Bell and StickUp Camera."""
-    ring = hass.data[DOMAIN][config_entry.entry_id]
-    devices = ring.devices()
+    devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
 
     cams = []
     for camera in chain(
@@ -36,42 +36,52 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         cams.append(RingCam(config_entry.entry_id, hass.data[DATA_FFMPEG], camera))
 
-    async_add_entities(cams, True)
+    async_add_entities(cams)
 
 
-class RingCam(Camera):
+class RingCam(RingEntityMixin, Camera):
     """An implementation of a Ring Door Bell camera."""
 
     def __init__(self, config_entry_id, ffmpeg, device):
         """Initialize a Ring Door Bell camera."""
-        super().__init__()
-        self._config_entry_id = config_entry_id
-        self._device = device
+        super().__init__(config_entry_id, device)
+
         self._name = self._device.name
         self._ffmpeg = ffmpeg
+        self._last_event = None
         self._last_video_id = None
         self._video_url = None
         self._utcnow = dt_util.utcnow()
         self._expires_at = self._utcnow - FORCE_REFRESH_INTERVAL
-        self._disp_disconnect = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        self._disp_disconnect = async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_RING, self._update_callback
+        await super().async_added_to_hass()
+
+        await self.ring_objects["history_data"].async_track_device(
+            self._device, self._history_update_callback
         )
 
     async def async_will_remove_from_hass(self):
         """Disconnect callbacks."""
-        if self._disp_disconnect:
-            self._disp_disconnect()
-            self._disp_disconnect = None
+        await super().async_will_remove_from_hass()
+
+        self.ring_objects["history_data"].async_untrack_device(
+            self._device, self._history_update_callback
+        )
 
     @callback
-    def _update_callback(self):
+    def _history_update_callback(self, history_data):
         """Call update method."""
-        self.async_schedule_update_ha_state(True)
-        _LOGGER.debug("Updating Ring camera %s (callback)", self.name)
+        if history_data:
+            self._last_event = history_data[0]
+            self.async_schedule_update_ha_state(True)
+        else:
+            self._last_event = None
+            self._last_video_id = None
+            self._video_url = None
+            self._expires_at = self._utcnow
+            self.async_write_ha_state()
 
     @property
     def name(self):
@@ -84,16 +94,6 @@ class RingCam(Camera):
         return self._device.id
 
     @property
-    def device_info(self):
-        """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "name": self._device.name,
-            "model": self._device.model,
-            "manufacturer": "Ring",
-        }
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
@@ -104,7 +104,6 @@ class RingCam(Camera):
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
-
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
 
         if self._video_url is None:
@@ -136,33 +135,29 @@ class RingCam(Camera):
 
     async def async_update(self):
         """Update camera entity and refresh attributes."""
-        _LOGGER.debug("Checking if Ring DoorBell needs to refresh video_url")
-
-        self._utcnow = dt_util.utcnow()
-
-        data = await self.hass.data[DATA_HISTORY].async_get_history(
-            self._config_entry_id, self._device
-        )
-
-        if not data:
+        if self._last_event is None:
             return
 
-        last_event = data[0]
-        last_recording_id = last_event["id"]
-        video_status = last_event["recording"]["status"]
+        if self._last_event["recording"]["status"] != "ready":
+            return
 
-        if video_status == "ready" and (
-            self._last_video_id != last_recording_id or self._utcnow >= self._expires_at
+        if (
+            self._last_video_id == self._last_event["id"]
+            and self._utcnow <= self._expires_at
         ):
+            return
 
+        try:
             video_url = await self.hass.async_add_executor_job(
-                self._device.recording_url, last_recording_id
+                self._device.recording_url, self._last_event["id"]
             )
+        except requests.Timeout:
+            _LOGGER.warning(
+                "Time out fetching recording url for camera %s", self.entity_id
+            )
+            video_url = None
 
-            if video_url:
-                _LOGGER.debug("Ring DoorBell properties refreshed")
-
-                # update attributes if new video or if URL has expired
-                self._last_video_id = last_recording_id
-                self._video_url = video_url
-                self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow
+        if video_url:
+            self._last_video_id = self._last_event["id"]
+            self._video_url = video_url
+            self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow

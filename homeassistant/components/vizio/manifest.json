@@ -2,7 +2,8 @@
   "domain": "vizio",
   "name": "Vizio SmartCast TV",
   "documentation": "https://www.home-assistant.io/integrations/vizio",
-  "requirements": ["pyvizio==0.0.15"],
+  "requirements": ["pyvizio==0.1.1"],
   "dependencies": [],
-  "codeowners": ["@raman325"]
+  "codeowners": ["@raman325"],
+  "config_flow": true
 }
