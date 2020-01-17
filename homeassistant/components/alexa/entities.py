@@ -410,9 +410,7 @@ class CoverCapabilities(AlexaEntity):
                 self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_POSITION}"
             )
         if supported & cover.SUPPORT_SET_TILT_POSITION:
-            yield AlexaRangeController(
-                self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}"
-            )
+            yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
 
