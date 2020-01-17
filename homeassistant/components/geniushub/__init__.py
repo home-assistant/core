@@ -208,8 +208,7 @@ class GeniusEntity(Entity):
 
     async def _refresh(self, payload: Optional[dict] = None) -> None:
         """Process any signals."""
-        if payload is None:
-            self.async_schedule_update_ha_state(force_refresh=True)
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def unique_id(self) -> Optional[str]:
@@ -295,6 +294,7 @@ class GeniusZone(GeniusEntity):
             duration = payload["data"].get(ATTR_DURATION, timedelta(hours=1))
 
             await self._zone.set_override(temperature, int(duration.totalseconds()))
+            return
 
         # pylint: disable=protected-access
         if mode == "footprint" and not self._zone._has_pir:

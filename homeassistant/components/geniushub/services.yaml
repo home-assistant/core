@@ -15,5 +15,6 @@ set_zone_mode:
       example: 18.5
     duration:
       description: >-
-          The duration in minutes. Optional, defaults to 60. Used only by override mode.
-      example: 120
+          The duration of the override. Used only by override mode.  Optional, default 1
+          hour, maximum 24 hours.
+      example: '{"minutes": 135}'
