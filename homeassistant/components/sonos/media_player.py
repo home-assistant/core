@@ -565,10 +565,10 @@ class SonosEntity(MediaPlayerDevice):
 
             player = self.soco
 
-            def subscribe(service, action):
+            def subscribe(sonos_service, action):
                 """Add a subscription to a pysonos service."""
                 queue = _ProcessSonosEventQueue(action)
-                sub = service.subscribe(auto_renew=True, event_queue=queue)
+                sub = sonos_service.subscribe(auto_renew=True, event_queue=queue)
                 self._subscriptions.append(sub)
 
             subscribe(player.avTransport, self.update_media)
