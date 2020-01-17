@@ -72,13 +72,15 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow):
         except SimplipyError:
             return await self._show_form({"base": "invalid_credentials"})
 
-        scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        scan_interval = user_input.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.seconds
+        )
 
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],
             data={
                 CONF_USERNAME: username,
                 CONF_TOKEN: simplisafe.refresh_token,
-                CONF_SCAN_INTERVAL: scan_interval.seconds,
+                CONF_SCAN_INTERVAL: scan_interval,
             },
         )

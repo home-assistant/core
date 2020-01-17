@@ -100,7 +100,13 @@ ACCOUNT_CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CODE): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
+            cv.time_period,
+            lambda value: value.seconds,
+            # For a reverse-engineered polling-based API, don't scan any faster than the
+            # default:
+            vol.Range(min=DEFAULT_SCAN_INTERVAL.seconds),
+        ),
     }
 )
 
