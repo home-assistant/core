@@ -208,9 +208,9 @@ class Battery(Sensor):
             state_attrs["battery_quantity"] = battery_quantity
         return state_attrs
 
-    def async_update_state_attribute(self, attr_name, value):
+    def async_update_state_attribute(self, key, value):
         """Update a single device state attribute."""
-        if attr_name == "battery_voltage":
+        if key == "battery_voltage":
             self._device_state_attributes["voltage"] = f"{round(value/10, 1)}V"
             self.async_schedule_update_ha_state()
 
