@@ -80,9 +80,9 @@ class TotalConnectBinarySensor(BinarySensorDevice):
         """Return the class of this device, from component DEVICE_CLASSES."""
         if self._zone.is_type_security():
             return DEVICE_CLASS_DOOR
-        elif self._zone.is_type_fire():
+        if self._zone.is_type_fire():
             return DEVICE_CLASS_SMOKE
-        elif self._zone.is_type_carbon_monoxide():
+        if self._zone.is_type_carbon_monoxide():
             return DEVICE_CLASS_GAS
         _LOGGER.info(
             "Unknown Total Connect zone type %s returned by zone %s.",
