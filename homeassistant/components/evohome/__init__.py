@@ -337,7 +337,7 @@ def setup_service_functions(hass: HomeAssistantType, broker):
             {
                 vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
                 vol.Optional(ATTR_DURATION_HOURS): vol.All(
-                    cv.time_period,  # lambda td: (td.total_seconds() // 3600)
+                    cv.time_period,
                     vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
                 ),
             }
