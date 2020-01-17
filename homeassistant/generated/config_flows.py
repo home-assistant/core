@@ -56,6 +56,7 @@ FLOWS = [
     "met",
     "meteo_france",
     "mikrotik",
+    "minecraft_server",
     "mobile_app",
     "mqtt",
     "neato",
