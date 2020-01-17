@@ -86,8 +86,7 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
             vol.Coerce(float), vol.Range(min=4.0, max=35.0)
         ),
         vol.Optional(ATTR_DURATION_UNTIL): vol.All(
-            cv.time_period,
-            vol.Range(min=timedelta(minutes=0), max=timedelta(minutes=24 * 60)),
+            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
         ),
     }
 )
