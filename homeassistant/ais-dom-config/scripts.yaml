@@ -1,5 +1,5 @@
 ais_update_system:
-  alias: 'Sprawdz/Zainstaluj aktualizację'
+  alias: 'Sprawdź/Zainstaluj aktualizację'
   sequence:
     - service: ais_updater.check_version
       data:
