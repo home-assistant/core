@@ -98,7 +98,7 @@ async def async_setup_entry(hass, entry):
             hass, entry.entry_id, ring, "update_devices", timedelta(minutes=1)
         ),
         "dings_data": GlobalDataUpdater(
-            hass, entry.entry_id, ring, "update_dings", timedelta(seconds=10)
+            hass, entry.entry_id, ring, "update_dings", timedelta(seconds=5)
         ),
         "history_data": DeviceDataUpdater(
             hass,
