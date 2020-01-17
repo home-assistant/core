@@ -72,11 +72,12 @@ ATTR_DURATION_HOURS = "duration"
 ATTR_ZONE_TEMP = "setpoint"
 ATTR_DURATION_UNTIL = "duration"
 
-SVC_REFRESH_SYSTEM = "force_refresh"
+SVC_REFRESH_SYSTEM = "refresh_system"
 SVC_SET_SYSTEM_MODE = "set_system_mode"
 SVC_RESET_SYSTEM = "reset_system"
 SVC_SET_ZONE_OVERRIDE = "set_zone_override"
 SVC_RESET_ZONE_OVERRIDE = "clear_zone_override"
+
 
 RESET_ZONE_OVERRIDE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
 SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
@@ -299,7 +300,7 @@ def setup_service_functions(hass: HomeAssistantType, broker):
             raise ValueError(f"'{entity_id}' is not a known evohome entity")
 
         if registry_entry.domain != "climate":
-            raise ValueError(f"'{entity_id}' is not an evohome zone")
+            raise ValueError(f"'{entity_id}' is not an evohome controller/zone")
 
         payload = {
             "unique_id": registry_entry.unique_id,
@@ -368,15 +369,15 @@ def setup_service_functions(hass: HomeAssistantType, broker):
     # The zone modes are consistent across all systems and use the same schema
     hass.services.async_register(
         DOMAIN,
-        SVC_SET_ZONE_OVERRIDE,
-        set_zone_override,
-        schema=SET_ZONE_OVERRIDE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
         SVC_RESET_ZONE_OVERRIDE,
         set_zone_override,
         schema=RESET_ZONE_OVERRIDE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SVC_SET_ZONE_OVERRIDE,
+        set_zone_override,
+        schema=SET_ZONE_OVERRIDE_SCHEMA,
     )
 
 

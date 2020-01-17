@@ -3,7 +3,7 @@
 set_system_mode:
   description: >-
       Set the system mode, either indefinitely, or for a specified period of time, after
-      which it will revert to Auto.
+      which it will revert to Auto. Not all systems support all modes.
   fields:
     mode:
       description: 'One of: Auto, AutoWithEco, Away, DayOff, HeatingOff, or Custom.'
@@ -22,7 +22,7 @@ reset_system:
       Set the system to Auto mode and reset all the zones to follow their schedules.
       Not all Evohome systems support this feature (i.e. AutoWithReset mode).
 
-force_refresh:
+refresh_system:
   description: >-
       Pull the latest data from the vendor's servers now, rather than waiting for the
       next scheduled update.

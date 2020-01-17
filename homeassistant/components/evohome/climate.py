@@ -135,26 +135,20 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
         self._preset_modes = None
 
     async def async_tcs_svc_request(self, service: dict, data: dict) -> None:
-        """Process a service request (system mode) for a controller."""
+        """Process a service request (system mode) for a controller.
+
+        Data validation is not required, it will have been done upstream.
+        """
         if service == SVC_SET_SYSTEM_MODE:
             mode = data[ATTR_SYSTEM_MODE]
         else:  # otherwise it is SVC_RESET_SYSTEM
             mode = EVO_RESET
 
-        allowed_system_modes = self._evo_device.allowedSystemModes
-        attrs = [m for m in allowed_system_modes if m["systemMode"] == mode]
-        if not attrs:  # TODO: do I need this if the service schema is set correctly?
-            raise ValueError(f"'{mode}' mode is not supported by this system")
-
         if ATTR_DURATION_DAYS in data:
-            if attrs[0].get("timingResolution") != "1.00:00:00":
-                raise TypeError(f"'{mode}' mode does not support days, only hours")
             until = dt.combine(dt.now().date(), dt.min.time())
             until += data[ATTR_DURATION_DAYS]
 
         elif ATTR_DURATION_HOURS in data:
-            if attrs[0].get("timingResolution") != "01:00:00":
-                raise TypeError(f"'{mode}' mode does not support hours, only days")
             until = dt.now() + data[ATTR_DURATION_HOURS]
 
         else:
