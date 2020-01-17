@@ -539,7 +539,6 @@ omit =
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
     homeassistant/components/point/*
-    homeassistant/components/postnl/sensor.py
     homeassistant/components/prezzibenzina/sensor.py
     homeassistant/components/proliphix/climate.py
     homeassistant/components/prometheus/*
