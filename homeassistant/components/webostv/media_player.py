@@ -118,6 +118,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         self._customize = customize
         self._on_script = on_script
 
+        # Assume that the TV is not paused
+        self._paused = False
+
         # Assume that the TV is not muted
         self._muted = False
         self._volume = 0
@@ -326,8 +329,11 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
 
     @cmd
     async def async_media_play_pause(self):
-        """Client pause command acts as a play-pause toggle."""
-        await self._client.pause()
+        """Simulate play pause media player."""
+        if self._paused:
+            await self.async_media_play()
+        else:
+            await self.async_media_pause()
 
     @cmd
     async def async_select_source(self, source):
@@ -379,11 +385,13 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     @cmd
     async def async_media_play(self):
         """Send play command."""
+        self._paused = False
         await self._client.play()
 
     @cmd
     async def async_media_pause(self):
         """Send media pause command to media player."""
+        self._paused = True
         await self._client.pause()
 
     @cmd
