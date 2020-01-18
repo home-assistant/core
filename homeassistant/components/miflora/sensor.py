@@ -2,7 +2,6 @@
 from datetime import timedelta
 import logging
 
-
 import btlewrap
 from btlewrap import BluetoothBackendException
 from miflora import miflora_poller
@@ -149,7 +148,6 @@ class MiFloraSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        #return self._available
         return True if self.last_successful_update > dt_util.utcnow() - self.go_unavailable_timeout else False
 
     @property
@@ -186,12 +184,10 @@ class MiFloraSensor(Entity):
             data = self.poller.parameter_value(self.parameter)
         except (OSError, BluetoothBackendException) as err:
             _LOGGER.info("Polling error %s: %s", type(err).__name__, err)
-            #self._available = False
             return
 
         if data is not None:
             _LOGGER.debug("%s = %s", self.name, data)
-            #self._available = True
             self.data.append(data)
             self.last_successful_update = dt_util.utcnow()
         else:
