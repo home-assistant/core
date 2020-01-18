@@ -237,17 +237,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def async_service_handle(service_call: ServiceCall):
         """Handle dispatched services."""
-        entity_ids = await platform.async_extract_from_service(service_call)
+        entities = await platform.async_extract_from_service(service_call)
 
-        if not entity_ids:
+        if not entities:
             return
-
-        entities = hass.data[DATA_SONOS].entities
 
         if service_call.service == SERVICE_JOIN:
             master = platform.entities.get(service_call.data[ATTR_MASTER])
             if master:
-                await SonosEntity.join_multi(hass, master[0], entities)
+                await SonosEntity.join_multi(hass, master, entities)
             else:
                 _LOGGER.error(
                     "Invalid master specified for join service: %s",
