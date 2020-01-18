@@ -141,7 +141,7 @@ aioasuswrt==1.1.22
 aioautomatic==0.6.5
 
 # homeassistant.components.aws
-aiobotocore==0.10.4
+aiobotocore==0.11.1
 
 # homeassistant.components.dnsip
 aiodns==2.0.0
