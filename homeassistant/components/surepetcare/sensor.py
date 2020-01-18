@@ -1,5 +1,6 @@
 """Support for Sure PetCare Flaps/Pets sensors."""
 import logging
+from typing import Any, Dict, Optional
 
 from surepy import SureThingID
 
@@ -14,6 +15,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
+from . import SurePetcareAPI
 from .const import (
     DATA_SURE_PETCARE,
     SPC,
@@ -44,7 +46,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class FlapBattery(Entity):
     """Sure Petcare Flap."""
 
-    def __init__(self, _id: int, name: str, spc):
+    def __init__(self, _id: int, name: str, spc: SurePetcareAPI):
         """Initialize a Sure Petcare Flap battery sensor."""
         self._id = _id
         self._name = f"Flap {name.capitalize()} Battery Level"
@@ -54,18 +56,19 @@ class FlapBattery(Entity):
         self._async_unsub_dispatcher_connect = None
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Return true."""
         return False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device if any."""
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> Optional[int]:
         """Return battery level in percent."""
+        battery_percent: Optional[int]
         try:
             per_battery_voltage = self._state["battery"] / 4
             voltage_diff = per_battery_voltage - SURE_BATT_VOLTAGE_LOW
@@ -76,17 +79,17 @@ class FlapBattery(Entity):
         return battery_percent
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return an unique ID."""
         return f"{self._spc.household_id}-{self._id}"
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the device class."""
         return DEVICE_CLASS_BATTERY
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return state attributes."""
         attributes = None
         if self._state:
@@ -108,19 +111,19 @@ class FlapBattery(Entity):
         return attributes
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return "%"
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and update the state."""
         self._state = self._spc.states[SureThingID.FLAP.name][self._id].get("data")
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
         @callback
-        def update():
+        def update() -> None:
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
@@ -128,7 +131,7 @@ class FlapBattery(Entity):
             self.hass, TOPIC_UPDATE, update
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()

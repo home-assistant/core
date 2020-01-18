@@ -1,5 +1,6 @@
 """Support for Sure Petcare cat/pet flaps."""
 import logging
+from typing import Any, Dict, List
 
 from surepy import (
     SurePetcare,
@@ -63,7 +64,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass, config) -> bool:
     """Initialize the Sure Petcare component."""
     conf = config[DOMAIN]
 
@@ -135,15 +136,17 @@ async def async_setup(hass, config):
 class SurePetcareAPI:
     """Define a generic Sure Petcare object."""
 
-    def __init__(self, hass, surepy, ids, household_id):
+    def __init__(
+        self, hass, surepy: SurePetcare, ids: List[Dict[str, Any]], household_id: int,
+    ) -> None:
         """Initialize the Sure Petcare object."""
         self.hass = hass
         self.surepy = surepy
         self.household_id = household_id
         self.ids = ids
-        self.states = {}
+        self.states: Dict[str, Any] = {}
 
-    async def async_update(self, args=None):
+    async def async_update(self, arg: Any = None) -> None:
         """Refresh Sure Petcare data."""
         for thing in self.ids:
             sure_id = thing[CONF_ID]

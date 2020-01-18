@@ -1,5 +1,6 @@
 """Support for Sure PetCare Flaps/Pets binary sensors."""
 import logging
+from typing import Any, Dict, Optional
 
 from surepy import SureLocationID, SureLockStateID, SureThingID
 
@@ -12,12 +13,15 @@ from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from . import SurePetcareAPI
 from .const import DATA_SURE_PETCARE, DEFAULT_DEVICE_CLASS, SPC, TOPIC_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, async_add_entities, discovery_info=None
+) -> None:
     """Set up Sure PetCare Flaps sensors based on a config entry."""
     if discovery_info is None:
         return
@@ -44,7 +48,12 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Sure Petcare Entities."""
 
     def __init__(
-        self, _id: int, name: str, spc, device_class: str, sure_type: SureThingID
+        self: BinarySensorDevice,
+        _id: int,
+        name: str,
+        spc: SurePetcareAPI,
+        device_class: str,
+        sure_type: SureThingID,
     ):
         """Initialize a Sure Petcare binary sensor."""
         self._id = _id
@@ -52,49 +61,49 @@ class SurePetcareBinarySensor(BinarySensorDevice):
         self._spc = spc
         self._device_class = device_class
         self._sure_type = sure_type
-        self._state = {}
+        self._state: Dict[str, Any] = {}
 
         self._async_unsub_dispatcher_connect = None
 
     @property
-    def is_on(self):
+    def is_on(self) -> Optional[bool]:
         """Return true if entity is on/unlocked."""
         return bool(self._state)
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Return true."""
         return False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device if any."""
         return self._name
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the device."""
         return self._state
 
     @property
-    def device_class(self):
+    def device_class(self) -> str:
         """Return the device class."""
         return DEFAULT_DEVICE_CLASS if not self._device_class else self._device_class
 
     @property
-    def unique_id(self):
+    def unique_id(self: BinarySensorDevice) -> str:
         """Return an unique ID."""
         return f"{self._spc.household_id}-{self._id}"
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest data and update the state."""
         self._state = self._spc.states[self._sure_type][self._id].get("data")
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
         @callback
-        def update():
+        def update() -> None:
             """Update the state."""
             self.async_schedule_update_ha_state(True)
 
@@ -102,7 +111,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
             self.hass, TOPIC_UPDATE, update
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
@@ -111,7 +120,9 @@ class SurePetcareBinarySensor(BinarySensorDevice):
 class Flap(SurePetcareBinarySensor):
     """Sure Petcare Flap."""
 
-    def __init__(self, _id: int, name: str, spc):
+    def __init__(
+        self: BinarySensorDevice, _id: int, name: str, spc: SurePetcareAPI
+    ) -> None:
         """Initialize a Sure Petcare Flap."""
         super().__init__(
             _id,
@@ -122,7 +133,7 @@ class Flap(SurePetcareBinarySensor):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> Optional[bool]:
         """Return true if entity is on/unlocked."""
         try:
             return bool(self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
@@ -130,7 +141,7 @@ class Flap(SurePetcareBinarySensor):
             return None
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
@@ -157,7 +168,9 @@ class Flap(SurePetcareBinarySensor):
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
-    def __init__(self, _id: int, name: str, spc):
+    def __init__(
+        self: BinarySensorDevice, _id: int, name: str, spc: SurePetcareAPI
+    ) -> None:
         """Initialize a Sure Petcare Pet."""
         super().__init__(
             _id,
@@ -168,7 +181,7 @@ class Pet(SurePetcareBinarySensor):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if entity is at home."""
         try:
             return bool(self._state["where"] == SureLocationID.INSIDE)
