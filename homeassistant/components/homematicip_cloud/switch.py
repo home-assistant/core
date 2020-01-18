@@ -13,7 +13,7 @@ from homematicip.aio.device import (
     AsyncPrintedCircuitBoardSwitch2,
     AsyncPrintedCircuitBoardSwitchBattery,
 )
-from homematicip.aio.group import AsyncSwitchingGroup
+from homematicip.aio.group import AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
@@ -67,7 +67,7 @@ async def async_setup_entry(
                 entities.append(HomematicipMultiSwitch(hap, device, channel))
 
     for group in hap.home.groups:
-        if isinstance(group, AsyncSwitchingGroup):
+        if isinstance(group, (AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup)):
             entities.append(HomematicipGroupSwitch(hap, group))
 
     if entities:
