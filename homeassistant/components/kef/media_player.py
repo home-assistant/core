@@ -214,10 +214,10 @@ class KefMediaPlayer(MediaPlayerDevice):
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_SELECT_SOURCE
         )
-        if not self._supports_on_off:
-            return support_kef
-        else:
-            return support_kef | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+        if self._supports_on_off:
+            support_kef |= SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+
+        return support_kef
 
     @property
     def source(self):
