@@ -88,6 +88,10 @@ class SurePetcareBinarySensor(BinarySensorDevice):
             self._state["since"] = str(
                 datetime.fromisoformat(self._state["since"]).replace(tzinfo=None)
             )
+        if "where" in self._state:
+            self._state["where"] = SureLocationID(
+                self._state["where"]
+            ).name.capitalize()
         _LOGGER.debug(f"device_state_attributes(): {self._state = }")
         return self._state
 
@@ -103,7 +107,8 @@ class SurePetcareBinarySensor(BinarySensorDevice):
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
-        self._state = self._spc.states[self._sure_type][self._id].get("data")
+        self._state = self._spc.states[self._sure_type.name][self._id].get("data")
+        _LOGGER.debug(f"async_update(): {self._state = }")
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -131,11 +136,7 @@ class Flap(SurePetcareBinarySensor):
     ) -> None:
         """Initialize a Sure Petcare Flap."""
         super().__init__(
-            _id,
-            f"Flap {name.capitalize()}",
-            spc,
-            DEVICE_CLASS_LOCK,
-            SureThingID.FLAP.name,
+            _id, f"Flap {name.capitalize()}", spc, DEVICE_CLASS_LOCK, SureThingID.FLAP,
         )
 
     @property
@@ -154,7 +155,9 @@ class Flap(SurePetcareBinarySensor):
             try:
                 attributes = {
                     "battery_voltage": self._state["battery"] / 4,
-                    "locking_mode": self._state["locking"]["mode"],
+                    "locking_mode": SureLockStateID(
+                        self._state["locking"]["mode"],
+                    ).name.capitalize(),
                     "device_rssi": self._state["signal"]["device_rssi"],
                     "hub_rssi": self._state["signal"]["hub_rssi"],
                 }
@@ -183,13 +186,13 @@ class Pet(SurePetcareBinarySensor):
             f"Pet {name.capitalize()}",
             spc,
             DEVICE_CLASS_PRESENCE,
-            SureThingID.PET.name,
+            SureThingID.PET,
         )
 
     @property
     def is_on(self) -> bool:
         """Return true if entity is at home."""
         try:
-            return bool(self._state["where"] == SureLocationID.INSIDE)
+            return bool(SureLocationID(self._state["where"]) == SureLocationID.INSIDE)
         except (KeyError, TypeError):
             return False
