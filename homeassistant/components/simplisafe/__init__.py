@@ -311,10 +311,10 @@ class SimpliSafe:
         self.last_event_data = {}
         self.systems = systems
 
-    async def _update_system(self, system):
+    async def _update_system(self, system, *, cached=False):
         """Update a system."""
         try:
-            await system.update()
+            await system.update(cached=cached)
             latest_event = await system.get_latest_event()
         except SimplipyError as err:
             _LOGGER.error(
@@ -334,7 +334,17 @@ class SimpliSafe:
 
     async def async_update(self):
         """Get updated data from SimpliSafe."""
-        tasks = [self._update_system(system) for system in self.systems.values()]
+        tasks = []
+        for system in self.systems.values():
+            if system.version == 2:
+                # Because we do not support sensor data for v2 systems (see
+                # https://github.com/home-assistant/home-assistant/pull/30926),
+                # we instruct them to use SimpliSafe's cloud cache. Note that this does
+                # not apply to system state, which will always be pulled fresh no matter
+                # whether v2 or v3:
+                tasks.append(self._update_system(system, cached=True))
+            else:
+                tasks.append(self._update_system(system))
 
         await asyncio.gather(*tasks)
 

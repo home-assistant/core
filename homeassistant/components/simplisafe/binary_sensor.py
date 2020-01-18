@@ -31,15 +31,22 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up SimpliSafe locks based on a config entry."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
 
-    async_add_entities(
-        [
-            SimpliSafeBinarySensor(system, sensor, BINARY_SENSOR_TYPES[sensor.type])
-            for system in simplisafe.systems.values()
-            for sensor in system.sensors.values()
-            if sensor.type in BINARY_SENSOR_TYPES
-        ],
-        True,
-    )
+    binary_sensors = []
+    for system in simplisafe.systems.values():
+        if system.version == 2:
+            # We don't currently (or plan to) support retrieving sensors from v2
+            # systems:
+            continue
+
+        for sensor in system.sensors.values():
+            if sensor.type in BINARY_SENSOR_TYPES:
+                binary_sensors.append(
+                    SimpliSafeBinarySensor(
+                        system, sensor, BINARY_SENSOR_TYPES[sensor.type]
+                    )
+                )
+
+    async_add_entities(binary_sensors, True)
 
 
 class SimpliSafeBinarySensor(SimpliSafeEntity, BinarySensorDevice):
