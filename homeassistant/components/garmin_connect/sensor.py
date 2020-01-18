@@ -1,7 +1,7 @@
 """Platform for Garmin Connect integration."""
 import logging
 from typing import Any, Dict
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_ID, CONF_NAME
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_ID
 from homeassistant.helpers.entity import Entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
@@ -16,7 +16,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up Garmin Connect sensor based on a config entry."""
     garmin_data = hass.data[DOMAIN][entry.entry_id]
-    prefix_name = entry.data[CONF_NAME]
     unique_id = entry.data[CONF_ID]
     # try:
     #     await twentemilieu.update()
@@ -26,7 +25,7 @@ async def async_setup_entry(
     entities = []
     for resource in GARMIN_ENTITY_LIST:
         sensor_type = resource
-        name = f"{prefix_name} {GARMIN_ENTITY_LIST[resource][0]}"
+        name = GARMIN_ENTITY_LIST[resource][0]
         unit = GARMIN_ENTITY_LIST[resource][1]
         icon = GARMIN_ENTITY_LIST[resource][2]
 
@@ -116,11 +115,15 @@ class GarminConnectSensor(Entity):
         """Return True if entity is available."""
         return self._available
 
-    def update(self):
-        """Update data and set sensor states."""
-        self._data.update()
-        data = self._data.data
+    async def async_update(self):
+        """Get the latest data and use it to update our sensor state."""
 
+        await self._data.async_update()
+        if not self._data.data:
+            _LOGGER.error("Didn't receive data from TOON")
+            return
+
+        data = self._data.data
         if "Duration" in self._type:
             self._state = data[self._type] // 60
         elif "Seconds" in self._type:

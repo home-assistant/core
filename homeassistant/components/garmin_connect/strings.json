@@ -13,10 +13,9 @@
       "user": {
         "data": {
           "password": "Password",
-          "username": "Username",
-          "name": "Name Prefix (optional)"
+          "username": "Username"
         },
-        "description": "Set up Garmin Connect providing activity statistics.",
+        "description": "Please enter your credentials.",
         "title": "Garmin Connect"
       }
     },

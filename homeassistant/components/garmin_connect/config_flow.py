@@ -6,7 +6,6 @@ from homeassistant.const import (
     CONF_ID,
     CONF_PASSWORD,
     CONF_USERNAME,
-    CONF_NAME,
 )
 from .const import DOMAIN
 from garminconnect import (
@@ -31,11 +30,7 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): str,
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Optional(CONF_NAME): str,
-                }
+                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str,}
             ),
             errors=errors or {},
         )
@@ -89,6 +84,5 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_ID: unique_id,
                 CONF_USERNAME: user_input[CONF_USERNAME],
                 CONF_PASSWORD: user_input[CONF_PASSWORD],
-                CONF_NAME: user_input[CONF_NAME],
             },
         )

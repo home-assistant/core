@@ -1,0 +1,24 @@
+{
+  "config": {
+    "abort": {
+      "already_setup": "Dit account is al geconfigureerd."
+    },
+    "error": {
+      "cannot_connect": "Kan niet verbinden, probeer later nog eens.",
+      "invalid_auth": "Verkeerde login gegevens.",
+      "too_many_requests": "Te vaak geconnect, probeer later.",
+      "unknown": "Onbekende fout."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Wachtwoord",
+          "username": "Gebruikersnaam"
+        },
+        "description": "Vul je gegevens in.",
+        "title": "Garmin Connect"
+      }
+    },
+    "title": "Garmin Connect"
+  }
+}
