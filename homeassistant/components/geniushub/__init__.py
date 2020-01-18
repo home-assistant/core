@@ -8,6 +8,7 @@ from geniushubclient import GeniusHub
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_MAC,
@@ -26,10 +27,9 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
-
-ATTR_DURATION = "duration"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +68,30 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Any(V3_API_SCHEMA, V1_API_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
 
+ATTR_ZONE_MODE = "mode"
+ATTR_DURATION = "duration"
+
+SVC_SET_ZONE_MODE = "set_zone_mode"
+SVC_SET_ZONE_OVERRIDE = "set_zone_override"
+
+SET_ZONE_MODE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_ZONE_MODE): vol.In(["off", "timer", "footprint"]),
+    }
+)
+SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_TEMPERATURE): vol.All(
+            vol.Coerce(float), vol.Range(min=4, max=28)
+        ),
+        vol.Optional(ATTR_DURATION): vol.All(
+            cv.time_period, vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
+        ),
+    }
+)
+
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Create a Genius Hub system."""
@@ -96,7 +120,43 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     for platform in ["climate", "water_heater", "sensor", "binary_sensor", "switch"]:
         hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
+    setup_service_functions(hass, broker)
+
     return True
+
+
+@callback
+def setup_service_functions(hass: HomeAssistantType, broker):
+    """Set up the service functions."""
+
+    @verify_domain_control(hass, DOMAIN)
+    async def set_zone_mode(call) -> None:
+        """Set the system mode."""
+        entity_id = call.data[ATTR_ENTITY_ID]
+
+        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry_entry = registry.async_get(entity_id)
+
+        if registry_entry is None or registry_entry.platform != DOMAIN:
+            raise ValueError(f"'{entity_id}' is not a known {DOMAIN} entity")
+
+        if registry_entry.domain != "climate":
+            raise ValueError(f"'{entity_id}' is not an {DOMAIN} zone")
+
+        payload = {
+            "unique_id": registry_entry.unique_id,
+            "service": call.service,
+            "data": call.data,
+        }
+
+        async_dispatcher_send(hass, DOMAIN, payload)
+
+    hass.services.async_register(
+        DOMAIN, SVC_SET_ZONE_MODE, set_zone_mode, schema=SET_ZONE_MODE_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SVC_SET_ZONE_OVERRIDE, set_zone_mode, schema=SET_ZONE_OVERRIDE_SCHEMA
+    )
 
 
 class GeniusBroker:
@@ -146,8 +206,8 @@ class GeniusEntity(Entity):
         """Set up a listener when this entity is added to HA."""
         async_dispatcher_connect(self.hass, DOMAIN, self._refresh)
 
-    @callback
-    def _refresh(self) -> None:
+    async def _refresh(self, payload: Optional[dict] = None) -> None:
+        """Process any signals."""
         self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
@@ -175,7 +235,6 @@ class GeniusDevice(GeniusEntity):
 
         self._device = device
         self._unique_id = f"{broker.hub_uid}_device_{device.id}"
-
         self._last_comms = self._state_attr = None
 
     @property
@@ -188,7 +247,7 @@ class GeniusDevice(GeniusEntity):
             attrs["last_comms"] = self._last_comms.isoformat()
 
         state = dict(self._device.data["state"])
-        if "_state" in self._device.data:  # only for v3 API
+        if "_state" in self._device.data:  # only via v3 API
             state.update(self._device.data["_state"])
 
         attrs["state"] = {
@@ -199,7 +258,7 @@ class GeniusDevice(GeniusEntity):
 
     async def async_update(self) -> None:
         """Update an entity's state data."""
-        if "_state" in self._device.data:  # only for v3 API
+        if "_state" in self._device.data:  # only via v3 API
             self._last_comms = dt_util.utc_from_timestamp(
                 self._device.data["_state"]["lastComms"]
             )
@@ -214,6 +273,32 @@ class GeniusZone(GeniusEntity):
 
         self._zone = zone
         self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
+
+    async def _refresh(self, payload: Optional[dict] = None) -> None:
+        """Process any signals."""
+        if payload is None:
+            self.async_schedule_update_ha_state(force_refresh=True)
+            return
+
+        if payload["unique_id"] != self._unique_id:
+            return
+
+        if payload["service"] == SVC_SET_ZONE_OVERRIDE:
+            temperature = round(payload["data"][ATTR_TEMPERATURE] * 10) / 10
+            duration = payload["data"].get(ATTR_DURATION, timedelta(hours=1))
+
+            await self._zone.set_override(temperature, int(duration.total_seconds()))
+            return
+
+        mode = payload["data"][ATTR_ZONE_MODE]
+
+        # pylint: disable=protected-access
+        if mode == "footprint" and not self._zone._has_pir:
+            raise TypeError(
+                f"'{self.entity_id}' can not support footprint mode (it has no PIR)"
+            )
+
+        await self._zone.set_mode(mode)
 
     @property
     def name(self) -> str:
