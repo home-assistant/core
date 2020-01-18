@@ -5,6 +5,11 @@
             "cannot_connect": "Kan geen verbinding maken met de Almond-server.",
             "missing_configuration": "Raadpleeg de documentatie over het instellen van Almond."
         },
+        "step": {
+            "pick_implementation": {
+                "title": "Kies de authenticatie methode"
+            }
+        },
         "title": "Almond"
     }
 }

@@ -1,10 +1,10 @@
 """Provide functionality to stream video source."""
 import logging
+import secrets
 import threading
 
 import voluptuous as vol
 
-from homeassistant.auth.util import generate_secret
 from homeassistant.const import CONF_FILENAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -23,12 +23,6 @@ from .const import (
 from .core import PROVIDERS
 from .hls import async_setup_hls
 
-try:
-    import uvloop
-except ImportError:
-    uvloop = None
-
-
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
@@ -42,7 +36,6 @@ SERVICE_RECORD_SCHEMA = STREAM_SERVICE_SCHEMA.extend(
         vol.Optional(CONF_LOOKBACK, default=0): int,
     }
 )
-DATA_UVLOOP_WARN = "stream_uvloop_warn"
 # Set log level to error for libav
 logging.getLogger("libav").setLevel(logging.ERROR)
 
@@ -52,21 +45,6 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
     """Set up stream with token."""
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
-
-    if DATA_UVLOOP_WARN not in hass.data:
-        hass.data[DATA_UVLOOP_WARN] = True
-        # Warn about https://github.com/home-assistant/home-assistant/issues/22999
-        if (
-            uvloop is not None
-            and isinstance(hass.loop, uvloop.Loop)
-            and (
-                "shell_command" in hass.config.components
-                or "ffmpeg" in hass.config.components
-            )
-        ):
-            _LOGGER.warning(
-                "You are using UVLoop with stream and shell_command. This is known to cause issues. Please uninstall uvloop."
-            )
 
     if options is None:
         options = {}
@@ -94,7 +72,7 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
         stream.add_provider(fmt)
 
         if not stream.access_token:
-            stream.access_token = generate_secret()
+            stream.access_token = secrets.token_hex()
             stream.start()
         return hass.data[DOMAIN][ATTR_ENDPOINTS][fmt].format(stream.access_token)
     except Exception:
@@ -104,6 +82,7 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
 async def async_setup(hass, config):
     """Set up stream."""
     # Keep import here so that we can import stream integration without installing reqs
+    # pylint: disable=import-outside-toplevel
     from .recorder import async_setup_recorder
 
     hass.data[DOMAIN] = {}
@@ -184,6 +163,7 @@ class Stream:
     def start(self):
         """Start a stream."""
         # Keep import here so that we can import stream integration without installing reqs
+        # pylint: disable=import-outside-toplevel
         from .worker import stream_worker
 
         if self._thread is None or not self._thread.isAlive():

@@ -1,4 +1,5 @@
 """Support for Ambient Weather Station Service."""
+import asyncio
 import logging
 
 from aioambient import Client
@@ -7,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
-    ATTR_NAME,
     ATTR_LOCATION,
+    ATTR_NAME,
     CONF_API_KEY,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -25,6 +26,7 @@ from homeassistant.helpers.event import async_call_later
 from .config_flow import configured_instances
 from .const import (
     ATTR_LAST_DATA,
+    ATTR_MONITORED_CONDITIONS,
     CONF_APP_KEY,
     DATA_CLIENT,
     DOMAIN,
@@ -297,8 +299,12 @@ async def async_unload_entry(hass, config_entry):
     ambient = hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
     hass.async_create_task(ambient.ws_disconnect())
 
-    for component in ("binary_sensor", "sensor"):
-        await hass.config_entries.async_forward_entry_unload(config_entry, component)
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(config_entry, component)
+        for component in ("binary_sensor", "sensor")
+    ]
+
+    await asyncio.gather(*tasks)
 
     return True
 
@@ -336,7 +342,6 @@ class AmbientStation:
         self._watchdog_listener = None
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
-        self.monitored_conditions = []
         self.stations = {}
 
     async def _attempt_connect(self):
@@ -393,19 +398,19 @@ class AmbientStation:
 
                 _LOGGER.debug("New station subscription: %s", data)
 
-                self.monitored_conditions = [
+                # Only create entities based on the data coming through the socket.
+                # If the user is monitoring brightness (in W/m^2), make sure we also
+                # add a calculated sensor for the same data measured in lx:
+                monitored_conditions = [
                     k for k in station["lastData"] if k in SENSOR_TYPES
                 ]
-
-                # If the user is monitoring brightness (in W/m^2),
-                # make sure we also add a calculated sensor for the
-                # same data measured in lx:
-                if TYPE_SOLARRADIATION in self.monitored_conditions:
-                    self.monitored_conditions.append(TYPE_SOLARRADIATION_LX)
+                if TYPE_SOLARRADIATION in monitored_conditions:
+                    monitored_conditions.append(TYPE_SOLARRADIATION_LX)
 
                 self.stations[station["macAddress"]] = {
                     ATTR_LAST_DATA: station["lastData"],
                     ATTR_LOCATION: station.get("info", {}).get("location"),
+                    ATTR_MONITORED_CONDITIONS: monitored_conditions,
                     ATTR_NAME: station.get("info", {}).get(
                         "name", station["macAddress"]
                     ),

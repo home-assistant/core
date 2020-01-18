@@ -20,7 +20,6 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..api import async_get_device_info
 from .const import (
     ATTR_IEEE,
     ATTR_MANUFACTURER,
@@ -65,6 +64,7 @@ from .const import (
 )
 from .device import DeviceStatus, ZHADevice
 from .discovery import async_dispatch_discovery_info, async_process_endpoint
+from .helpers import async_get_device_info
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
 from .store import async_get_registry
@@ -221,6 +221,10 @@ class ZHAGateway:
     def get_device(self, ieee):
         """Return ZHADevice for given ieee."""
         return self._devices.get(ieee)
+
+    def get_group(self, group_id):
+        """Return Group for given group id."""
+        return self.application_controller.groups[group_id]
 
     def get_entity_reference(self, entity_id):
         """Return entity reference for given entity_id if found."""

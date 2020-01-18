@@ -1,20 +1,16 @@
 """Config flow to configure the SimpliSafe component."""
 from collections import OrderedDict
 
+from simplipy import API
+from simplipy.errors import SimplipyError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_TOKEN,
-    CONF_USERNAME,
-)
 from homeassistant.helpers import aiohttp_client
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 
 @callback
@@ -53,8 +49,6 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        from simplipy import API
-        from simplipy.errors import SimplipyError
 
         if not user_input:
             return await self._show_form()
@@ -72,13 +66,7 @@ class SimpliSafeFlowHandler(config_entries.ConfigFlow):
         except SimplipyError:
             return await self._show_form({"base": "invalid_credentials"})
 
-        scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-
         return self.async_create_entry(
             title=user_input[CONF_USERNAME],
-            data={
-                CONF_USERNAME: username,
-                CONF_TOKEN: simplisafe.refresh_token,
-                CONF_SCAN_INTERVAL: scan_interval.seconds,
-            },
+            data={CONF_USERNAME: username, CONF_TOKEN: simplisafe.refresh_token},
         )

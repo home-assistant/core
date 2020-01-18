@@ -12,6 +12,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([DemoCamera("Demo camera")])
 
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
+
+
 class DemoCamera(Camera):
     """The representation of a Demo camera."""
 

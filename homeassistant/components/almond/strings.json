@@ -1,5 +1,10 @@
 {
   "config": {
+    "step": {
+      "pick_implementation": {
+        "title": "Pick Authentication Method"
+      }
+    },
     "abort": {
       "already_setup": "You can only configure one Almond account.",
       "cannot_connect": "Unable to connect to the Almond server.",

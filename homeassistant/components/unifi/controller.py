@@ -1,16 +1,14 @@
 """UniFi Controller abstraction."""
-from datetime import timedelta
-
 import asyncio
+from datetime import timedelta
 import ssl
-import async_timeout
 
 from aiohttp import CookieJar
-
 import aiounifi
+import async_timeout
 
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.const import CONF_HOST
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -22,19 +20,19 @@ from .const import (
     CONF_DONT_TRACK_CLIENTS,
     CONF_DONT_TRACK_DEVICES,
     CONF_DONT_TRACK_WIRED_CLIENTS,
+    CONF_SITE_ID,
+    CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
-    CONF_SITE_ID,
-    CONF_SSID_FILTER,
     CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_BLOCK_CLIENTS,
+    DEFAULT_DETECTION_TIME,
+    DEFAULT_SSID_FILTER,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
-    DEFAULT_DETECTION_TIME,
-    DEFAULT_SSID_FILTER,
     DOMAIN,
     LOGGER,
     UNIFI_CONFIG,

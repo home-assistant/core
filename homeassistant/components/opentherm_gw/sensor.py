@@ -7,8 +7,8 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
+from . import DOMAIN
 from .const import DATA_GATEWAYS, DATA_OPENTHERM_GW, SENSOR_INFO
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,13 +47,24 @@ class OpenThermSensor(Entity):
         self._device_class = device_class
         self._unit = unit
         self._friendly_name = friendly_name_format.format(gw_dev.name)
+        self._unsub_updates = None
 
     async def async_added_to_hass(self):
         """Subscribe to updates from the component."""
         _LOGGER.debug("Added OpenTherm Gateway sensor %s", self._friendly_name)
-        async_dispatcher_connect(
+        self._unsub_updates = async_dispatcher_connect(
             self.hass, self._gateway.update_signal, self.receive_report
         )
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe from updates from the component."""
+        _LOGGER.debug("Removing OpenTherm Gateway sensor %s", self._friendly_name)
+        self._unsub_updates()
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Disable sensors by default."""
+        return False
 
     @callback
     def receive_report(self, status):
@@ -68,6 +79,22 @@ class OpenThermSensor(Entity):
     def name(self):
         """Return the friendly name of the sensor."""
         return self._friendly_name
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._gateway.gw_id)},
+            "name": self._gateway.name,
+            "manufacturer": "Schelte Bron",
+            "model": "OpenTherm Gateway",
+            "sw_version": self._gateway.gw_version,
+        }
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return f"{self._gateway.gw_id}-{self._var}"
 
     @property
     def device_class(self):

@@ -1,6 +1,5 @@
 """The tests for the hddtemp platform."""
 import socket
-
 import unittest
 from unittest.mock import patch
 
@@ -156,7 +155,7 @@ class TestHDDTempSensor(unittest.TestCase):
 
         assert len(self.hass.states.all()) == 1
         state = self.hass.states.get("sensor.hd_temperature_dev_sdx1")
-        assert state.attributes.get("friendly_name") == "HD Temperature " + "/dev/sdx1"
+        assert state.attributes.get("friendly_name") == "HD Temperature /dev/sdx1"
 
     @patch("telnetlib.Telnet", new=TelnetMock)
     def test_hddtemp_multiple_disks(self):

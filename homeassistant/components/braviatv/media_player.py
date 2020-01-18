@@ -2,10 +2,11 @@
 import ipaddress
 import logging
 
+from braviarc.braviarc import BraviaRC
 from getmac import get_mac_address
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
@@ -128,12 +129,11 @@ def request_configuration(config, hass, add_entities):
 
     def bravia_configuration_callback(data):
         """Handle the entry of user PIN."""
-        from braviarc import braviarc
 
         pin = data.get("pin")
-        braviarc = braviarc.BraviaRC(host)
-        braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
-        if braviarc.is_connected():
+        _braviarc = BraviaRC(host)
+        _braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
+        if _braviarc.is_connected():
             setup_bravia(config, pin, hass, add_entities)
         else:
             request_configuration(config, hass, add_entities)
@@ -154,10 +154,9 @@ class BraviaTVDevice(MediaPlayerDevice):
 
     def __init__(self, host, mac, name, pin):
         """Initialize the Sony Bravia device."""
-        from braviarc import braviarc
 
         self._pin = pin
-        self._braviarc = braviarc.BraviaRC(host, mac)
+        self._braviarc = BraviaRC(host, mac)
         self._name = name
         self._state = STATE_OFF
         self._muted = False
@@ -292,7 +291,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         if self._channel_name is not None:
             return_value = self._channel_name
             if self._program_name is not None:
-                return_value = return_value + ": " + self._program_name
+                return_value = f"{return_value}: {self._program_name}"
         return return_value
 
     @property

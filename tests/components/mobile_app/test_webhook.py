@@ -1,6 +1,7 @@
 """Webhook tests for mobile_app."""
-# pylint: disable=redefined-outer-name,unused-import
+
 import logging
+
 import pytest
 
 from homeassistant.components.mobile_app.const import CONF_SECRET
@@ -9,9 +10,9 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
-
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
+
+from tests.common import async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,9 +30,7 @@ async def test_webhook_handle_render_template(create_registrations, webhook_clie
     assert json == {"one": "Hello world"}
 
 
-async def test_webhook_handle_call_services(
-    hass, create_registrations, webhook_client
-):  # noqa: E501 F811
+async def test_webhook_handle_call_services(hass, create_registrations, webhook_client):
     """Test that we call services properly."""
     calls = async_mock_service(hass, "test", "mobile_app")
 
@@ -68,9 +67,7 @@ async def test_webhook_handle_fire_event(hass, create_registrations, webhook_cli
     assert events[0].data["hello"] == "yo world"
 
 
-async def test_webhook_update_registration(
-    webhook_client, hass_client
-):  # noqa: E501 F811
+async def test_webhook_update_registration(webhook_client, hass_client):
     """Test that a we can update an existing registration via webhook."""
     authed_api_client = await hass_client()
     register_resp = await authed_api_client.post(
@@ -156,7 +153,7 @@ async def test_webhook_handle_get_config(hass, create_registrations, webhook_cli
 
 async def test_webhook_returns_error_incorrect_json(
     webhook_client, create_registrations, caplog
-):  # noqa: E501 F811
+):
     """Test that an error is returned when JSON is invalid."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]), data="not json"
@@ -171,9 +168,8 @@ async def test_webhook_returns_error_incorrect_json(
 async def test_webhook_handle_decryption(webhook_client, create_registrations):
     """Test that we can encrypt/decrypt properly."""
     try:
-        # pylint: disable=unused-import
-        from nacl.secret import SecretBox  # noqa: F401
-        from nacl.encoding import Base64Encoder  # noqa: F401
+        from nacl.secret import SecretBox
+        from nacl.encoding import Base64Encoder
     except (ImportError, OSError):
         pytest.skip("libnacl/libsodium is not installed")
         return
@@ -221,3 +217,23 @@ async def test_webhook_requires_encryption(webhook_client, create_registrations)
     assert "error" in webhook_json
     assert webhook_json["success"] is False
     assert webhook_json["error"]["code"] == "encryption_required"
+
+
+async def test_webhook_update_location(hass, webhook_client, create_registrations):
+    """Test that encrypted registrations only accept encrypted data."""
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={
+            "type": "update_location",
+            "data": {"gps": [1, 2], "gps_accuracy": 10, "altitude": -10},
+        },
+    )
+
+    assert resp.status == 200
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.attributes["latitude"] == 1.0
+    assert state.attributes["longitude"] == 2.0
+    assert state.attributes["gps_accuracy"] == 10
+    assert state.attributes["altitude"] == -10

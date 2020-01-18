@@ -68,6 +68,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+    _LOGGER.debug("New entity listener created")
 
 
 @callback
@@ -75,6 +76,7 @@ def _async_add_entities(
     hass, registry, config_entry, async_add_entities, server_id, new_entities
 ):
     """Set up Plex media_player entities."""
+    _LOGGER.debug("New entities: %s", new_entities)
     entities = []
     plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
     for entity_params in new_entities:
@@ -142,6 +144,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         """Run when about to be added to hass."""
         server_id = self.plex_server.machine_identifier
 
+        _LOGGER.debug("Added %s [%s]", self.entity_id, self.unique_id)
         unsub = async_dispatcher_connect(
             self.hass,
             PLEX_UPDATE_MEDIA_PLAYER_SIGNAL.format(self.unique_id),
@@ -152,6 +155,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
     @callback
     def async_refresh_media_player(self, device, session):
         """Set instance objects and trigger an entity state update."""
+        _LOGGER.debug("Refreshing %s [%s / %s]", self.entity_id, device, session)
         self.device = device
         self.session = session
         self.async_schedule_update_ha_state(True)
@@ -286,12 +290,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_content_type = MEDIA_TYPE_TVSHOW
 
             # season number (00)
-            if callable(self.session.season):
-                self._media_season = str((self.session.season()).index).zfill(2)
-            elif self.session.parentIndex is not None:
-                self._media_season = self.session.parentIndex.zfill(2)
-            else:
-                self._media_season = None
+            self._media_season = self.session.seasonNumber
             # show name
             self._media_series_title = self.session.grandparentTitle
             # episode number (00)
@@ -301,7 +300,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         elif self._session_type == "movie":
             self._media_content_type = MEDIA_TYPE_MOVIE
             if self.session.year is not None and self._media_title is not None:
-                self._media_title += " (" + str(self.session.year) + ")"
+                self._media_title += f" ({self.session.year!s})"
 
         elif self._session_type == "track":
             self._media_content_type = MEDIA_TYPE_MUSIC

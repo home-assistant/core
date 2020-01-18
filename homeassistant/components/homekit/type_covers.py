@@ -17,7 +17,9 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
     STATE_CLOSED,
+    STATE_CLOSING,
     STATE_OPEN,
+    STATE_OPENING,
 )
 
 from . import TYPES
@@ -101,6 +103,9 @@ class WindowCovering(HomeAccessory):
         self.char_target_position = serv_cover.configure_char(
             CHAR_TARGET_POSITION, value=0, setter_callback=self.move_cover
         )
+        self.char_position_state = serv_cover.configure_char(
+            CHAR_POSITION_STATE, value=2
+        )
 
     @debounce
     def move_cover(self, value):
@@ -122,6 +127,12 @@ class WindowCovering(HomeAccessory):
             ):
                 self.char_target_position.set_value(current_position)
                 self._homekit_target = None
+        if new_state.state == STATE_OPENING:
+            self.char_position_state.set_value(1)
+        elif new_state.state == STATE_CLOSING:
+            self.char_position_state.set_value(0)
+        else:
+            self.char_position_state.set_value(2)
 
 
 @TYPES.register("WindowCoveringBasic")
@@ -175,7 +186,6 @@ class WindowCoveringBasic(HomeAccessory):
         # Snap the current/target position to the expected final position.
         self.char_current_position.set_value(position)
         self.char_target_position.set_value(position)
-        self.char_position_state.set_value(2)
 
     def update_state(self, new_state):
         """Update cover position after state changed."""
@@ -184,4 +194,9 @@ class WindowCoveringBasic(HomeAccessory):
         if hk_position is not None:
             self.char_current_position.set_value(hk_position)
             self.char_target_position.set_value(hk_position)
+        if new_state.state == STATE_OPENING:
+            self.char_position_state.set_value(1)
+        elif new_state.state == STATE_CLOSING:
+            self.char_position_state.set_value(0)
+        else:
             self.char_position_state.set_value(2)

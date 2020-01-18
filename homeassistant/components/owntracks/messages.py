@@ -2,15 +2,18 @@
 import json
 import logging
 
+from nacl.encoding import Base64Encoder
+from nacl.secret import SecretBox
+
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import (
-    SOURCE_TYPE_GPS,
     SOURCE_TYPE_BLUETOOTH_LE,
+    SOURCE_TYPE_GPS,
 )
-
 from homeassistant.const import STATE_HOME
 from homeassistant.util import decorator, slugify
 
+from .helper import supports_encryption
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,8 +25,6 @@ def get_cipher():
 
     Async friendly.
     """
-    from nacl.secret import SecretBox
-    from nacl.encoding import Base64Encoder
 
     def decrypt(ciphertext, key):
         """Decrypt ciphertext using key."""
@@ -105,9 +106,13 @@ def _set_gps_from_zone(kwargs, location, zone):
 def _decrypt_payload(secret, topic, ciphertext):
     """Decrypt encrypted payload."""
     try:
-        keylen, decrypt = get_cipher()
+        if supports_encryption():
+            keylen, decrypt = get_cipher()
+        else:
+            _LOGGER.warning("Ignoring encrypted payload because nacl not installed")
+            return None
     except OSError:
-        _LOGGER.warning("Ignoring encrypted payload because libsodium not installed")
+        _LOGGER.warning("Ignoring encrypted payload because nacl not installed")
         return None
 
     if isinstance(secret, dict):
@@ -117,8 +122,7 @@ def _decrypt_payload(secret, topic, ciphertext):
 
     if key is None:
         _LOGGER.warning(
-            "Ignoring encrypted payload because no decryption key known "
-            "for topic %s",
+            "Ignoring encrypted payload because no decryption key known for topic %s",
             topic,
         )
         return None
@@ -134,8 +138,7 @@ def _decrypt_payload(secret, topic, ciphertext):
         return message
     except ValueError:
         _LOGGER.warning(
-            "Ignoring encrypted payload because unable to decrypt using "
-            "key for topic %s",
+            "Ignoring encrypted payload because unable to decrypt using key for topic %s",
             topic,
         )
         return None

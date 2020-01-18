@@ -1,32 +1,32 @@
 """Test the helper method for writing tests."""
 import asyncio
 import collections
-import functools as ft
-import json
-import logging
-import os
-import uuid
-import sys
-import threading
-
 from collections import OrderedDict
 from contextlib import contextmanager
 from datetime import timedelta
+import functools as ft
 from io import StringIO
+import json
+import logging
+import os
+import sys
+import threading
 from unittest.mock import MagicMock, Mock, patch
-
-import homeassistant.util.dt as date_util
-import homeassistant.util.yaml.loader as yaml_loader
+import uuid
 
 from homeassistant import auth, config_entries, core as ha, loader
 from homeassistant.auth import (
-    models as auth_models,
     auth_store,
-    providers as auth_providers,
+    models as auth_models,
     permissions as auth_permissions,
+    providers as auth_providers,
 )
 from homeassistant.auth.permissions import system_policies
 from homeassistant.components import mqtt, recorder
+from homeassistant.components.device_automation import (  # noqa: F401
+    _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
+    _async_get_device_automations as async_get_device_automations,
+)
 from homeassistant.components.mqtt.models import Message
 from homeassistant.config import async_process_component_config
 from homeassistant.const import (
@@ -38,8 +38,8 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     SERVER_PORT,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import State
 from homeassistant.helpers import (
@@ -54,12 +54,10 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component, setup_component
-from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import run_callback_threadsafe
-from homeassistant.components.device_automation import (  # noqa
-    _async_get_device_automations as async_get_device_automations,
-    _async_get_device_automation_capabilities as async_get_device_automation_capabilities,
-)
+import homeassistant.util.dt as date_util
+from homeassistant.util.unit_system import METRIC_SYSTEM
+import homeassistant.util.yaml.loader as yaml_loader
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -349,7 +347,7 @@ mock_mqtt_component = threadsafe_coroutine_factory(async_mock_mqtt_component)
 def mock_component(hass, component):
     """Mock a component is setup."""
     if component in hass.config.components:
-        AssertionError("Integration {} is already setup".format(component))
+        AssertionError(f"Integration {component} is already setup")
 
     hass.config.components.add(component)
 
@@ -488,8 +486,8 @@ class MockModule:
         partial_manifest=None,
     ):
         """Initialize the mock module."""
-        self.__name__ = "homeassistant.components.{}".format(domain)
-        self.__file__ = "homeassistant/components/{}".format(domain)
+        self.__name__ = f"homeassistant.components.{domain}"
+        self.__file__ = f"homeassistant/components/{domain}"
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
         self.REQUIREMENTS = requirements or []
@@ -586,7 +584,6 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         platform=None,
         scan_interval=timedelta(seconds=15),
         entity_namespace=None,
-        async_entities_added_callback=lambda: None,
     ):
         """Initialize a mock entity platform."""
         if logger is None:
@@ -604,7 +601,6 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
             platform=platform,
             scan_interval=scan_interval,
             entity_namespace=entity_namespace,
-            async_entities_added_callback=async_entities_added_callback,
         )
 
 
@@ -673,6 +669,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         options={},
         system_options={},
         connection_class=config_entries.CONN_CLASS_UNKNOWN,
+        unique_id=None,
     ):
         """Initialize a mock config entry."""
         kwargs = {
@@ -684,6 +681,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "version": version,
             "title": title,
             "connection_class": connection_class,
+            "unique_id": unique_id,
         }
         if source is not None:
             kwargs["source"] = source
@@ -728,7 +726,7 @@ def patch_yaml_files(files_dict, endswith=True):
             return open(fname, encoding="utf-8")
 
         # Not found
-        raise FileNotFoundError("File not found: {}".format(fname))
+        raise FileNotFoundError(f"File not found: {fname}")
 
     return patch.object(yaml_loader, "open", mock_open_f, create=True)
 
@@ -791,9 +789,9 @@ def assert_setup_component(count, domain=None):
 
     res = config.get(domain)
     res_len = 0 if res is None else len(res)
-    assert res_len == count, "setup_component failed, expected {} got {}: {}".format(
-        count, res_len, res
-    )
+    assert (
+        res_len == count
+    ), f"setup_component failed, expected {count} got {res_len}: {res}"
 
 
 def init_recorder_component(hass, add_config=None):
@@ -824,9 +822,7 @@ def mock_restore_cache(hass, states):
         )
     data.last_states = last_states
     _LOGGER.debug("Restore cache: %s", data.last_states)
-    assert len(data.last_states) == len(states), "Duplicate entity_id? {}".format(
-        states
-    )
+    assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
 
     async def get_restore_state_data() -> restore_state.RestoreStateData:
         return data
@@ -855,7 +851,7 @@ class MockDependency:
 
         base = MagicMock()
         to_mock = {
-            "{}.{}".format(self.root, tom): resolve(base, tom.split("."))
+            f"{self.root}.{tom}": resolve(base, tom.split("."))
             for tom in self.submodules
         }
         to_mock[self.root] = base
@@ -907,6 +903,11 @@ class MockEntity(entity.Entity):
         return self._handle("unique_id")
 
     @property
+    def state(self):
+        """Return the state of the entity."""
+        return self._handle("state")
+
+    @property
     def available(self):
         """Return True if entity is available."""
         return self._handle("available")
@@ -915,6 +916,26 @@ class MockEntity(entity.Entity):
     def device_info(self):
         """Info how it links to a device."""
         return self._handle("device_info")
+
+    @property
+    def device_class(self):
+        """Info how device should be classified."""
+        return self._handle("device_class")
+
+    @property
+    def unit_of_measurement(self):
+        """Info on the units the entity state is in."""
+        return self._handle("unit_of_measurement")
+
+    @property
+    def capability_attributes(self):
+        """Info about capabilities."""
+        return self._handle("capability_attributes")
+
+    @property
+    def supported_features(self):
+        """Info about supported features."""
+        return self._handle("supported_features")
 
     @property
     def entity_registry_enabled_default(self):
@@ -997,10 +1018,7 @@ async def get_system_health_info(hass, domain):
 def mock_integration(hass, module):
     """Mock an integration."""
     integration = loader.Integration(
-        hass,
-        "homeassistant.components.{}".format(module.DOMAIN),
-        None,
-        module.mock_manifest(),
+        hass, f"homeassistant.components.{module.DOMAIN}", None, module.mock_manifest(),
     )
 
     _LOGGER.info("Adding mock integration: %s", module.DOMAIN)
@@ -1084,49 +1102,35 @@ class hashdict(dict):
 
     """
 
-    def __key(self):  # noqa: D105 no docstring
+    def __key(self):
         return tuple(sorted(self.items()))
 
     def __repr__(self):  # noqa: D105 no docstring
-        return ", ".join("{0}={1}".format(str(i[0]), repr(i[1])) for i in self.__key())
+        return ", ".join(f"{i[0]!s}={i[1]!r}" for i in self.__key())
 
     def __hash__(self):  # noqa: D105 no docstring
         return hash(self.__key())
 
     def __setitem__(self, key, value):  # noqa: D105 no docstring
-        raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def __delitem__(self, key):  # noqa: D105 no docstring
-        raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def clear(self):  # noqa: D102 no docstring
-        raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def pop(self, *args, **kwargs):  # noqa: D102 no docstring
-        raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def popitem(self, *args, **kwargs):  # noqa: D102 no docstring
-        raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def setdefault(self, *args, **kwargs):  # noqa: D102 no docstring
-        raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     def update(self, *args, **kwargs):  # noqa: D102 no docstring
-        raise TypeError(
-            "{0} does not support item assignment".format(self.__class__.__name__)
-        )
+        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
 
     # update is not ok because it mutates the object
     # __add__ is ok because it creates a new object

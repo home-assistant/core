@@ -3,6 +3,7 @@ import enum
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
@@ -24,6 +25,7 @@ ATTR_LEVEL = "level"
 ATTR_LQI = "lqi"
 ATTR_MANUFACTURER = "manufacturer"
 ATTR_MANUFACTURER_CODE = "manufacturer_code"
+ATTR_MEMBERS = "members"
 ATTR_MODEL = "model"
 ATTR_NAME = "name"
 ATTR_NWK = "nwk"
@@ -41,18 +43,28 @@ ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE = "duty_cycle"
 ATTR_WARNING_DEVICE_STROBE_INTENSITY = "intensity"
 
 BAUD_RATES = [2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 256000]
+BINDINGS = "bindings"
 
+CHANNEL_ACCELEROMETER = "accelerometer"
 CHANNEL_ATTRIBUTE = "attribute"
 CHANNEL_BASIC = "basic"
 CHANNEL_COLOR = "light_color"
+CHANNEL_COVER = "window_covering"
 CHANNEL_DOORLOCK = "door_lock"
 CHANNEL_ELECTRICAL_MEASUREMENT = "electrical_measurement"
 CHANNEL_EVENT_RELAY = "event_relay"
 CHANNEL_FAN = "fan"
+CHANNEL_HUMIDITY = "humidity"
 CHANNEL_IAS_WD = "ias_wd"
+CHANNEL_ILLUMINANCE = "illuminance"
 CHANNEL_LEVEL = ATTR_LEVEL
+CHANNEL_MULTISTATE_INPUT = "multistate_input"
+CHANNEL_OCCUPANCY = "occupancy"
 CHANNEL_ON_OFF = "on_off"
 CHANNEL_POWER_CONFIGURATION = "power"
+CHANNEL_PRESSURE = "pressure"
+CHANNEL_SMARTENERGY_METERING = "smartenergy_metering"
+CHANNEL_TEMPERATURE = "temperature"
 CHANNEL_ZDO = "zdo"
 CHANNEL_ZONE = ZONE = "ias_zone"
 
@@ -62,7 +74,7 @@ CLUSTER_COMMANDS_SERVER = "server_commands"
 CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
-COMPONENTS = (BINARY_SENSOR, DEVICE_TRACKER, FAN, LIGHT, LOCK, SENSOR, SWITCH)
+COMPONENTS = (BINARY_SENSOR, COVER, DEVICE_TRACKER, FAN, LIGHT, LOCK, SENSOR, SWITCH)
 
 CONF_BAUDRATE = "baudrate"
 CONF_DATABASE = "database_path"
@@ -104,6 +116,10 @@ DEFAULT_DATABASE_NAME = "zigbee.db"
 DISCOVERY_KEY = "zha_discovery_info"
 
 DOMAIN = "zha"
+
+GROUP_ID = "group_id"
+GROUP_IDS = "group_ids"
+GROUP_NAME = "group_name"
 
 MFG_CLUSTER_ID_START = 0xFC00
 
@@ -161,15 +177,15 @@ REPORT_CONFIG_OP = (
 
 SENSOR_ACCELERATION = "acceleration"
 SENSOR_BATTERY = "battery"
-SENSOR_ELECTRICAL_MEASUREMENT = "electrical_measurement"
+SENSOR_ELECTRICAL_MEASUREMENT = CHANNEL_ELECTRICAL_MEASUREMENT
 SENSOR_GENERIC = "generic"
-SENSOR_HUMIDITY = "humidity"
-SENSOR_ILLUMINANCE = "illuminance"
+SENSOR_HUMIDITY = CHANNEL_HUMIDITY
+SENSOR_ILLUMINANCE = CHANNEL_ILLUMINANCE
 SENSOR_METERING = "metering"
-SENSOR_OCCUPANCY = "occupancy"
+SENSOR_OCCUPANCY = CHANNEL_OCCUPANCY
 SENSOR_OPENING = "opening"
-SENSOR_PRESSURE = "pressure"
-SENSOR_TEMPERATURE = "temperature"
+SENSOR_PRESSURE = CHANNEL_PRESSURE
+SENSOR_TEMPERATURE = CHANNEL_TEMPERATURE
 SENSOR_TYPE = "sensor_type"
 
 SIGNAL_ATTR_UPDATED = "attribute_updated"

@@ -1,14 +1,16 @@
 """Define tests for the OpenUV config flow."""
 from unittest.mock import patch
 
+from regenmaschine.errors import RainMachineError
+
 from homeassistant import data_entry_flow
 from homeassistant.components.rainmachine import DOMAIN, config_flow
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SSL,
     CONF_SCAN_INTERVAL,
+    CONF_SSL,
 )
 
 from tests.common import MockConfigEntry, mock_coro
@@ -33,8 +35,6 @@ async def test_duplicate_error(hass):
 
 async def test_invalid_password(hass):
     """Test that an invalid password throws an error."""
-    from regenmaschine.errors import RainMachineError
-
     conf = {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "bad_password",
@@ -46,7 +46,8 @@ async def test_invalid_password(hass):
     flow.hass = hass
 
     with patch(
-        "regenmaschine.login", return_value=mock_coro(exception=RainMachineError)
+        "homeassistant.components.rainmachine.config_flow.login",
+        return_value=mock_coro(exception=RainMachineError),
     ):
         result = await flow.async_step_user(user_input=conf)
         assert result["errors"] == {CONF_PASSWORD: "invalid_credentials"}
@@ -75,7 +76,10 @@ async def test_step_import(hass):
     flow = config_flow.RainMachineFlowHandler()
     flow.hass = hass
 
-    with patch("regenmaschine.login", return_value=mock_coro(True)):
+    with patch(
+        "homeassistant.components.rainmachine.config_flow.login",
+        return_value=mock_coro(True),
+    ):
         result = await flow.async_step_import(import_config=conf)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -101,7 +105,10 @@ async def test_step_user(hass):
     flow = config_flow.RainMachineFlowHandler()
     flow.hass = hass
 
-    with patch("regenmaschine.login", return_value=mock_coro(True)):
+    with patch(
+        "homeassistant.components.rainmachine.config_flow.login",
+        return_value=mock_coro(True),
+    ):
         result = await flow.async_step_user(user_input=conf)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY

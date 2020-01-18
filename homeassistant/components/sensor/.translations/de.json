@@ -3,24 +3,24 @@
         "condition_type": {
             "is_battery_level": "{entity_name} Batteriestand",
             "is_humidity": "{entity_name} Feuchtigkeit",
-            "is_illuminance": "{entity_name} Beleuchtungsst\u00e4rke",
-            "is_power": "{entity_name} Leistung",
+            "is_illuminance": "Aktuelle {entity_name} Helligkeit",
+            "is_power": "Aktuelle {entity_name} Leistung",
             "is_pressure": "{entity_name} Druck",
-            "is_signal_strength": "{entity_name} Signalst\u00e4rke",
-            "is_temperature": "{entity_name} Temperatur",
+            "is_signal_strength": "Aktuelle {entity_name} Signalst\u00e4rke",
+            "is_temperature": "Aktuelle {entity_name} Temperatur",
             "is_timestamp": "Aktueller Zeitstempel von {entity_name}",
-            "is_value": "{entity_name} Wert"
+            "is_value": "Aktueller {entity_name} Wert"
         },
         "trigger_type": {
-            "battery_level": "{entity_name} Batteriestatus",
-            "humidity": "{entity_name} Feuchtigkeit",
-            "illuminance": "{entity_name} Beleuchtungsst\u00e4rke",
-            "power": "{entity_name} Leistung",
-            "pressure": "{entity_name} Druck",
-            "signal_strength": "{entity_name} Signalst\u00e4rke",
-            "temperature": "{entity_name} Temperatur",
-            "timestamp": "{entity_name} Zeitstempel",
-            "value": "{entity_name} Wert"
+            "battery_level": "{entity_name} Batteriestatus\u00e4nderungen",
+            "humidity": "{entity_name} Feuchtigkeits\u00e4nderungen",
+            "illuminance": "{entity_name} Helligkeits\u00e4nderungen",
+            "power": "{entity_name} Leistungs\u00e4nderungen",
+            "pressure": "{entity_name} Druck\u00e4nderungen",
+            "signal_strength": "{entity_name} Signalst\u00e4rke\u00e4nderungen",
+            "temperature": "{entity_name} Temperatur\u00e4nderungen",
+            "timestamp": "{entity_name} Zeitstempel\u00e4nderungen",
+            "value": "{entity_name} Wert\u00e4nderungen"
         }
     }
 }

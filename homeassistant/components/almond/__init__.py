@@ -5,24 +5,26 @@ import logging
 import time
 from typing import Optional
 
+from aiohttp import ClientError, ClientSession
 import async_timeout
-from aiohttp import ClientSession, ClientError
-from pyalmond import AlmondLocalAuth, AbstractAlmondWebAuth, WebAlmondAPI
+from pyalmond import AbstractAlmondWebAuth, AlmondLocalAuth, WebAlmondAPI
 import voluptuous as vol
 
-from homeassistant import core
-from homeassistant.const import CONF_TYPE, CONF_HOST
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant import config_entries
 from homeassistant.auth.const import GROUP_ID_ADMIN
+from homeassistant.components import conversation
+from homeassistant.const import CONF_HOST, CONF_TYPE, EVENT_HOMEASSISTANT_START
+from homeassistant.core import Context, CoreState, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
-    config_validation as cv,
-    config_entry_oauth2_flow,
-    intent,
     aiohttp_client,
+    config_entry_oauth2_flow,
+    config_validation as cv,
+    event,
+    intent,
+    network,
     storage,
 )
-from homeassistant import config_entries
-from homeassistant.components import conversation
 
 from . import config_flow
 from .const import DOMAIN, TYPE_LOCAL, TYPE_OAUTH2
@@ -32,6 +34,8 @@ CONF_CLIENT_SECRET = "client_secret"
 
 STORAGE_VERSION = 1
 STORAGE_KEY = DOMAIN
+
+ALMOND_SETUP_DELAY = 30
 
 DEFAULT_OAUTH2_HOST = "https://almond.stanford.edu"
 DEFAULT_LOCAL_HOST = "http://localhost:3000"
@@ -93,7 +97,7 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: config_entries.ConfigEntry):
     """Set up Almond config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
 
@@ -112,12 +116,50 @@ async def async_setup_entry(hass, entry):
     api = WebAlmondAPI(auth)
     agent = AlmondAgent(hass, api, entry)
 
-    # Hass.io does its own configuration of Almond.
-    if entry.data.get("is_hassio") or entry.data["type"] != TYPE_LOCAL:
-        conversation.async_set_agent(hass, agent)
-        return True
+    # Hass.io does its own configuration.
+    if not entry.data.get("is_hassio"):
+        # If we're not starting or local, set up Almond right away
+        if hass.state != CoreState.not_running or entry.data["type"] == TYPE_LOCAL:
+            await _configure_almond_for_ha(hass, entry, api)
 
-    # Configure Almond to connect to Home Assistant
+        else:
+            # OAuth2 implementations can potentially rely on the HA Cloud url.
+            # This url is not be available until 30 seconds after boot.
+
+            async def configure_almond(_now):
+                try:
+                    await _configure_almond_for_ha(hass, entry, api)
+                except ConfigEntryNotReady:
+                    _LOGGER.warning(
+                        "Unable to configure Almond to connect to Home Assistant"
+                    )
+
+            async def almond_hass_start(_event):
+                event.async_call_later(hass, ALMOND_SETUP_DELAY, configure_almond)
+
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, almond_hass_start)
+
+    conversation.async_set_agent(hass, agent)
+    return True
+
+
+async def _configure_almond_for_ha(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry, api: WebAlmondAPI
+):
+    """Configure Almond to connect to HA."""
+
+    if entry.data["type"] == TYPE_OAUTH2:
+        # If we're connecting over OAuth2, we will only set up connection
+        # with Home Assistant if we're remotely accessible.
+        hass_url = network.async_get_external_url(hass)
+    else:
+        hass_url = hass.config.api.base_url
+
+    # If hass_url is None, we're not going to configure Almond to connect to HA.
+    if hass_url is None:
+        return
+
+    _LOGGER.debug("Configuring Almond to connect to Home Assistant at %s", hass_url)
     store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
     data = await store.async_load()
 
@@ -144,11 +186,11 @@ async def async_setup_entry(hass, entry):
 
     # Store token in Almond
     try:
-        with async_timeout.timeout(10):
+        with async_timeout.timeout(30):
             await api.async_create_device(
                 {
                     "kind": "io.home-assistant",
-                    "hassUrl": hass.config.api.base_url,
+                    "hassUrl": hass_url,
                     "accessToken": access_token,
                     "refreshToken": "",
                     # 5 years from now in ms.
@@ -168,9 +210,6 @@ async def async_setup_entry(hass, entry):
     for token in list(user.refresh_tokens.values()):
         if token.id != refresh_token.id:
             await hass.auth.async_remove_refresh_token(token)
-
-    conversation.async_set_agent(hass, agent)
-    return True
 
 
 async def async_unload_entry(hass, entry):
@@ -203,7 +242,9 @@ class AlmondOAuth(AbstractAlmondWebAuth):
 class AlmondAgent(conversation.AbstractConversationAgent):
     """Almond conversation agent."""
 
-    def __init__(self, hass: core.HomeAssistant, api: WebAlmondAPI, entry):
+    def __init__(
+        self, hass: HomeAssistant, api: WebAlmondAPI, entry: config_entries.ConfigEntry
+    ):
         """Initialize the agent."""
         self.hass = hass
         self.api = api
@@ -222,8 +263,6 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         host = self.entry.data["host"]
         if self.entry.data.get("is_hassio"):
             host = "/core_almond"
-        elif self.entry.data["type"] != TYPE_LOCAL:
-            host = f"{host}/me"
         return {
             "text": "Would you like to opt-in to share your anonymized commands with Stanford to improve Almond's responses?",
             "url": f"{host}/conversation",
@@ -238,11 +277,12 @@ class AlmondAgent(conversation.AbstractConversationAgent):
         return True
 
     async def async_process(
-        self, text: str, conversation_id: Optional[str] = None
+        self, text: str, context: Context, conversation_id: Optional[str] = None
     ) -> intent.IntentResponse:
         """Process a sentence."""
         response = await self.api.async_converse_text(text, conversation_id)
 
+        first_choice = True
         buffer = ""
         for message in response["messages"]:
             if message["type"] == "text":
@@ -257,7 +297,11 @@ class AlmondAgent(conversation.AbstractConversationAgent):
                     + message["rdl"]["webCallback"]
                 )
             elif message["type"] == "choice":
-                buffer += "\n Choice: " + message["title"]
+                if first_choice:
+                    first_choice = False
+                else:
+                    buffer += ","
+                buffer += f" {message['title']}"
 
         intent_result = intent.IntentResponse()
         intent_result.async_set_speech(buffer.strip())
