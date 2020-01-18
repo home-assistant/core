@@ -88,6 +88,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(brother.serial.lower())
         self._abort_if_unique_id_configured()
 
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
                 CONF_HOST: host,
@@ -111,6 +112,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Handle a flow initiated by zeroconf."""
         try:
+            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             brother = Brother(self.context.get(CONF_HOST))
             await brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel):
@@ -122,6 +124,7 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             title = f"{brother.model} {brother.serial}"
+            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             return self.async_create_entry(
                 title=title,
                 data={
