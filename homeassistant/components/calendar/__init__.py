@@ -86,15 +86,19 @@ def calculate_offset(event, offset):
     summary = event.get("summary", "")
     # check if we have an offset tag in the message
     # time is HH:MM or MM
-    reg = "{}([+-]?[0-9]{{0,2}}(:[0-9]{{0,2}})?)".format(offset)
+    reg = "{}(([+-]?[0-9]{{0,2}}:[0-9]{{0,2}})|([+-]?[0-9]{{1,3}}))".format(offset)
     search = re.search(reg, summary)
     if search and search.group(1):
         time = search.group(1)
         if ":" not in time:
             if time[0] == "+" or time[0] == "-":
-                time = "{}0:{}".format(time[0], time[1:])
+                sign = time[0]
+                time = time[1:]
             else:
-                time = "0:{}".format(time)
+                sign = "+"
+            hours = (int)(int(time) / 60)
+            minutes = int(time) % 60
+            time = "{}{}:{}".format(sign, hours, minutes)
 
         offset_time = time_period_str(time)
         summary = (summary[: search.start()] + summary[search.end() :]).strip()
