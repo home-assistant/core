@@ -17,12 +17,14 @@ from homeassistant.components.icloud.const import (
     DEFAULT_MAX_INTERVAL,
     DOMAIN,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
 
 USERNAME = "username@me.com"
+USERNAME_2 = "second_username@icloud.com"
 PASSWORD = "password"
 MAX_INTERVAL = 15
 GPS_ACCURACY_THRESHOLD = 250
@@ -89,15 +91,17 @@ def init_config_flow(hass: HomeAssistantType):
 
 async def test_user(hass: HomeAssistantType, service: MagicMock):
     """Test user config."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=None
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
     # test with all provided
-    result = await flow.async_step_user(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
@@ -107,11 +111,11 @@ async def test_user_with_cookie(
     hass: HomeAssistantType, service_with_cookie: MagicMock
 ):
     """Test user config with presence of a cookie."""
-    flow = init_config_flow(hass)
-
     # test with all provided
-    result = await flow.async_step_user(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == USERNAME
@@ -123,23 +127,25 @@ async def test_user_with_cookie(
 
 async def test_import(hass: HomeAssistantType, service: MagicMock):
     """Test import step."""
-    flow = init_config_flow(hass)
-
     # import with username and password
-    result = await flow.async_step_import(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "trusted_device"
 
     # import with all
-    result = await flow.async_step_import(
-        {
-            CONF_USERNAME: USERNAME,
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_USERNAME: USERNAME_2,
             CONF_PASSWORD: PASSWORD,
             CONF_MAX_INTERVAL: MAX_INTERVAL,
             CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
-        }
+        },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "trusted_device"
@@ -149,11 +155,11 @@ async def test_import_with_cookie(
     hass: HomeAssistantType, service_with_cookie: MagicMock
 ):
     """Test import step with presence of a cookie."""
-    flow = init_config_flow(hass)
-
     # import with username and password
-    result = await flow.async_step_import(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == USERNAME
@@ -163,17 +169,19 @@ async def test_import_with_cookie(
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
     # import with all
-    result = await flow.async_step_import(
-        {
-            CONF_USERNAME: USERNAME,
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_USERNAME: USERNAME_2,
             CONF_PASSWORD: PASSWORD,
             CONF_MAX_INTERVAL: MAX_INTERVAL,
             CONF_GPS_ACCURACY_THRESHOLD: GPS_ACCURACY_THRESHOLD,
-        }
+        },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == USERNAME
-    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["title"] == USERNAME_2
+    assert result["data"][CONF_USERNAME] == USERNAME_2
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_MAX_INTERVAL] == MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == GPS_ACCURACY_THRESHOLD
@@ -183,18 +191,19 @@ async def test_two_accounts_setup(
     hass: HomeAssistantType, service_with_cookie: MagicMock
 ):
     """Test to setup two accounts."""
-    flow = init_config_flow(hass)
     MockConfigEntry(
         domain=DOMAIN, data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
     ).add_to_hass(hass)
 
     # import with username and password
-    result = await flow.async_step_import(
-        {CONF_USERNAME: "second_username@icloud.com", CONF_PASSWORD: PASSWORD}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_USERNAME: USERNAME_2, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "second_username@icloud.com"
-    assert result["data"][CONF_USERNAME] == "second_username@icloud.com"
+    assert result["title"] == USERNAME_2
+    assert result["data"][CONF_USERNAME] == USERNAME_2
     assert result["data"][CONF_PASSWORD] == PASSWORD
     assert result["data"][CONF_MAX_INTERVAL] == DEFAULT_MAX_INTERVAL
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
@@ -202,21 +211,24 @@ async def test_two_accounts_setup(
 
 async def test_abort_if_already_setup(hass: HomeAssistantType):
     """Test we abort if the account is already setup."""
-    flow = init_config_flow(hass)
     MockConfigEntry(
         domain=DOMAIN, data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
     ).add_to_hass(hass)
 
     # Should fail, same USERNAME (import)
-    result = await flow.async_step_import(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "username_exists"
 
     # Should fail, same USERNAME (flow)
-    result = await flow.async_step_user(
-        {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {CONF_USERNAME: "username_exists"}
@@ -224,14 +236,14 @@ async def test_abort_if_already_setup(hass: HomeAssistantType):
 
 async def test_login_failed(hass: HomeAssistantType):
     """Test when we have errors during login."""
-    flow = init_config_flow(hass)
-
     with patch(
         "pyicloud.base.PyiCloudService.authenticate",
         side_effect=PyiCloudFailedLoginException(),
     ):
-        result = await flow.async_step_user(
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_USERNAME: "login"}
