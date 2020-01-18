@@ -1,4 +1,4 @@
-"""Provide functionality to TTS."""
+"""Provide functionality for TTS."""
 import asyncio
 import ctypes
 import functools as ft
@@ -353,7 +353,7 @@ class SpeechManager:
             raise HomeAssistantError(f"No TTS from {engine} for '{message}'")
 
         # Create file infos
-        filename = (f"{key}.{extension}").lower()
+        filename = f"{key}.{extension}".lower()
 
         data = self.write_tags(filename, data, provider, message, language, options)
 
@@ -438,7 +438,7 @@ class SpeechManager:
             await self.async_file_to_mem(key)
 
         content, _ = mimetypes.guess_type(filename)
-        return (content, self.mem_cache[key][MEM_CACHE_VOICE])
+        return content, self.mem_cache[key][MEM_CACHE_VOICE]
 
     @staticmethod
     def write_tags(filename, data, provider, message, language, options):

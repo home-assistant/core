@@ -1,39 +1,39 @@
 """Test config utils."""
 # pylint: disable=protected-access
 import asyncio
+from collections import OrderedDict
 import copy
 import os
 import unittest.mock as mock
-from collections import OrderedDict
 
 import asynctest
 import pytest
-from voluptuous import MultipleInvalid, Invalid
+from voluptuous import Invalid, MultipleInvalid
 import yaml
 
-from homeassistant.core import SOURCE_STORAGE, HomeAssistantError
 import homeassistant.config as config_util
-from homeassistant.loader import async_get_integration
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_FRIENDLY_NAME,
     ATTR_HIDDEN,
-    ATTR_ASSUMED_STATE,
+    CONF_AUTH_MFA_MODULES,
+    CONF_AUTH_PROVIDERS,
+    CONF_CUSTOMIZE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_UNIT_SYSTEM,
     CONF_NAME,
-    CONF_CUSTOMIZE,
-    __version__,
-    CONF_UNIT_SYSTEM_METRIC,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_TEMPERATURE_UNIT,
-    CONF_AUTH_PROVIDERS,
-    CONF_AUTH_MFA_MODULES,
+    CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
+    CONF_UNIT_SYSTEM_METRIC,
+    __version__,
 )
+from homeassistant.core import SOURCE_STORAGE, HomeAssistantError
+import homeassistant.helpers.check_config as check_config
+from homeassistant.helpers.entity import Entity
+from homeassistant.loader import async_get_integration
 from homeassistant.util import dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
-from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.check_config as check_config
 
 from tests.common import get_test_config_dir, patch_yaml_files
 
@@ -82,7 +82,7 @@ def teardown():
 
 async def test_create_default_config(hass):
     """Test creation of default config."""
-    await config_util.async_create_default_config(hass, CONFIG_DIR)
+    await config_util.async_create_default_config(hass)
 
     assert os.path.isfile(YAML_PATH)
     assert os.path.isfile(SECRET_PATH)
@@ -91,20 +91,13 @@ async def test_create_default_config(hass):
     assert os.path.isfile(AUTOMATIONS_PATH)
 
 
-def test_find_config_file_yaml():
-    """Test if it finds a YAML config file."""
-    create_file(YAML_PATH)
-
-    assert YAML_PATH == config_util.find_config_file(CONFIG_DIR)
-
-
 async def test_ensure_config_exists_creates_config(hass):
     """Test that calling ensure_config_exists.
 
     If not creates a new config file.
     """
     with mock.patch("builtins.print") as mock_print:
-        await config_util.async_ensure_config_exists(hass, CONFIG_DIR)
+        await config_util.async_ensure_config_exists(hass)
 
     assert os.path.isfile(YAML_PATH)
     assert mock_print.called
@@ -113,7 +106,7 @@ async def test_ensure_config_exists_creates_config(hass):
 async def test_ensure_config_exists_uses_existing_config(hass):
     """Test that calling ensure_config_exists uses existing config."""
     create_file(YAML_PATH)
-    await config_util.async_ensure_config_exists(hass, CONFIG_DIR)
+    await config_util.async_ensure_config_exists(hass)
 
     with open(YAML_PATH) as f:
         content = f.read()
@@ -172,13 +165,9 @@ async def test_create_default_config_returns_none_if_write_error(hass):
 
     Non existing folder returns None.
     """
+    hass.config.config_dir = os.path.join(CONFIG_DIR, "non_existing_dir/")
     with mock.patch("builtins.print") as mock_print:
-        assert (
-            await config_util.async_create_default_config(
-                hass, os.path.join(CONFIG_DIR, "non_existing_dir/")
-            )
-            is None
-        )
+        assert await config_util.async_create_default_config(hass) is False
     assert mock_print.called
 
 
@@ -331,7 +320,6 @@ def test_config_upgrade_same_version(hass):
         assert opened_file.write.call_count == 0
 
 
-@mock.patch("homeassistant.config.find_config_file", mock.Mock())
 def test_config_upgrade_no_file(hass):
     """Test update of version on upgrade, with no version file."""
     mock_open = mock.mock_open()
@@ -732,9 +720,7 @@ async def test_merge_id_schema(hass):
         integration = await async_get_integration(hass, domain)
         module = integration.get_component()
         typ, _ = config_util._identify_config_schema(module)
-        assert typ == expected_type, "{} expected {}, got {}".format(
-            domain, expected_type, typ
-        )
+        assert typ == expected_type, f"{domain} expected {expected_type}, got {typ}"
 
 
 async def test_merge_duplicate_keys(merge_log_err, hass):

@@ -2,23 +2,23 @@
 import logging
 import time
 
+from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
-from aiohttp.hdrs import CONTENT_TYPE
 
 from homeassistant.components.discovery import SERVICE_OCTOPRINT
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_BINARY_SENSORS,
     CONF_HOST,
-    CONTENT_TYPE_JSON,
+    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PATH,
     CONF_PORT,
-    CONF_SSL,
-    TEMP_CELSIUS,
-    CONF_MONITORED_CONDITIONS,
     CONF_SENSORS,
-    CONF_BINARY_SENSORS,
+    CONF_SSL,
+    CONTENT_TYPE_JSON,
+    TEMP_CELSIUS,
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
@@ -45,7 +45,7 @@ def ensure_valid_path(value):
     """Validate the path, ensuring it starts and ends with a /."""
     vol.Schema(cv.string)(value)
     if value[0] != "/":
-        value = "/" + value
+        value = f"/{value}"
     if value[-1] != "/":
         value += "/"
     return value
@@ -189,7 +189,7 @@ class OctoPrintAPI:
         tools = []
         if self.number_of_tools > 0:
             for tool_number in range(0, self.number_of_tools):
-                tools.append("tool" + str(tool_number))
+                tools.append(f"tool{tool_number!s}")
         if self.bed:
             tools.append("bed")
         if not self.bed and self.number_of_tools == 0:
@@ -231,18 +231,16 @@ class OctoPrintAPI:
                 self.printer_error_logged = False
             return response.json()
         except Exception as conn_exc:  # pylint: disable=broad-except
-            log_string = "Failed to update OctoPrint status. " + "  Error: %s" % (
-                conn_exc
-            )
+            log_string = "Failed to update OctoPrint status. Error: %s" % conn_exc
             # Only log the first failure
             if endpoint == "job":
-                log_string = "Endpoint: job " + log_string
+                log_string = f"Endpoint: job {log_string}"
                 if not self.job_error_logged:
                     _LOGGER.error(log_string)
                     self.job_error_logged = True
                     self.job_available = False
             elif endpoint == "printer":
-                log_string = "Endpoint: printer " + log_string
+                log_string = f"Endpoint: printer {log_string}"
                 if not self.printer_error_logged:
                     _LOGGER.error(log_string)
                     self.printer_error_logged = True

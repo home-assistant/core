@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import json
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -12,7 +12,6 @@ from homeassistant.util import dt
 
 from tests.common import async_fire_time_changed, mock_coro
 
-
 MOCK_VERSION = 1
 MOCK_KEY = "storage-test"
 MOCK_DATA = {"hello": "world"}
@@ -21,7 +20,7 @@ MOCK_DATA2 = {"goodbye": "cruel world"}
 
 @pytest.fixture
 def store(hass):
-    """Fixture of a store that prevents writing on HASS stop."""
+    """Fixture of a store that prevents writing on Home Assistant stop."""
     yield storage.Store(hass, MOCK_VERSION, MOCK_KEY)
 
 
@@ -63,7 +62,7 @@ async def test_loading_parallel(hass, store, hass_storage, caplog):
 
     assert results[0] is MOCK_DATA
     assert results[1] is MOCK_DATA
-    assert caplog.text.count("Loading data for {}".format(store.key))
+    assert caplog.text.count(f"Loading data for {store.key}")
 
 
 async def test_saving_with_delay(hass, store, hass_storage):

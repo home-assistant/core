@@ -1,18 +1,18 @@
 """Support for an exposed aREST RESTful API of a device."""
-import logging
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
-    PLATFORM_SCHEMA,
     DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    BinarySensorDevice,
 )
-from homeassistant.const import CONF_RESOURCE, CONF_PIN, CONF_NAME, CONF_DEVICE_CLASS
-from homeassistant.util import Throttle
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_PIN, CONF_RESOURCE
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         response = requests.get(resource, timeout=10).json()
     except requests.exceptions.MissingSchema:
         _LOGGER.error(
-            "Missing resource or schema in configuration. " "Add http:// to your URL"
+            "Missing resource or schema in configuration. Add http:// to your URL"
         )
         return False
     except requests.exceptions.ConnectionError:

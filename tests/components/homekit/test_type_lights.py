@@ -11,16 +11,19 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     DOMAIN,
     SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    STATE_ON,
+    EVENT_HOMEASSISTANT_START,
     STATE_OFF,
+    STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.core import CoreState
+from homeassistant.helpers import entity_registry
 
 from tests.common import async_mock_service
 from tests.components.homekit.common import patch_debounce
@@ -101,7 +104,9 @@ async def test_light_brightness(hass, hk_driver, cls, events):
     await hass.async_block_till_done()
     acc = cls.light(hass, hk_driver, "Light", entity_id, 2, None)
 
-    assert acc.char_brightness.value == 0
+    # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
+    # brightness to 100 when turning on a light on a freshly booted up server.
+    assert acc.char_brightness.value != 0
 
     await hass.async_add_job(acc.run)
     await hass.async_block_till_done()
@@ -172,6 +177,25 @@ async def test_light_color_temperature(hass, hk_driver, cls, events):
     assert events[-1].data[ATTR_VALUE] == "color temperature at 250"
 
 
+async def test_light_color_temperature_and_rgb_color(hass, hk_driver, cls, events):
+    """Test light with color temperature and rgb color not exposing temperature."""
+    entity_id = "light.demo"
+
+    hass.states.async_set(
+        entity_id,
+        STATE_ON,
+        {
+            ATTR_SUPPORTED_FEATURES: SUPPORT_COLOR_TEMP | SUPPORT_COLOR,
+            ATTR_COLOR_TEMP: 190,
+            ATTR_HS_COLOR: (260, 90),
+        },
+    )
+    await hass.async_block_till_done()
+    acc = cls.light(hass, hk_driver, "Light", entity_id, 2, None)
+
+    assert not hasattr(acc, "char_color_temperature")
+
+
 async def test_light_rgb_color(hass, hk_driver, cls, events):
     """Test light with rgb_color."""
     entity_id = "light.demo"
@@ -203,3 +227,36 @@ async def test_light_rgb_color(hass, hk_driver, cls, events):
     assert call_turn_on[0].data[ATTR_HS_COLOR] == (145, 75)
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "set color at (145, 75)"
+
+
+async def test_light_restore(hass, hk_driver, cls, events):
+    """Test setting up an entity from state in the event registry."""
+    hass.state = CoreState.not_running
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    registry.async_get_or_create(
+        "light", "hue", "1234", suggested_object_id="simple",
+    )
+    registry.async_get_or_create(
+        "light",
+        "hue",
+        "9012",
+        suggested_object_id="all_info_set",
+        capabilities={"max": 100},
+        supported_features=5,
+        device_class="mock-device-class",
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+
+    acc = cls.light(hass, hk_driver, "Light", "light.simple", 2, None)
+    assert acc.category == 5  # Lightbulb
+    assert acc.chars == []
+    assert acc.char_on.value == 0
+
+    acc = cls.light(hass, hk_driver, "Light", "light.all_info_set", 2, None)
+    assert acc.category == 5  # Lightbulb
+    assert acc.chars == ["Brightness"]
+    assert acc.char_on.value == 0

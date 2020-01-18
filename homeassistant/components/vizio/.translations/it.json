@@ -1,0 +1,8 @@
+{
+    "config": {
+        "error": {
+            "host_exists": "Host gi\u00e0 configurato.",
+            "name_exists": "Nome gi\u00e0 configurato."
+        }
+    }
+}

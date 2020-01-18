@@ -7,11 +7,10 @@ import psutil
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_RESOURCES, STATE_OFF, STATE_ON, CONF_TYPE
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import CONF_RESOURCES, CONF_TYPE, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

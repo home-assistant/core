@@ -1,7 +1,7 @@
 """Constants for the Solar-Log integration."""
 from datetime import timedelta
 
-from homeassistant.const import POWER_WATT, ENERGY_KILO_WATT_HOUR
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 
 DOMAIN = "solarlog"
 

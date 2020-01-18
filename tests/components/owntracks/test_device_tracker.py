@@ -1300,7 +1300,7 @@ async def test_single_waypoint_import(hass, context):
 async def test_not_implemented_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch(
-        "homeassistant.components.owntracks." "messages.async_handle_not_impl_msg",
+        "homeassistant.components.owntracks.messages.async_handle_not_impl_msg",
         return_value=mock_coro(False),
     )
     patch_handler.start()
@@ -1311,7 +1311,7 @@ async def test_not_implemented_message(hass, context):
 async def test_unsupported_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch(
-        "homeassistant.components.owntracks." "messages.async_handle_unsupported_msg",
+        "homeassistant.components.owntracks.messages.async_handle_unsupported_msg",
         return_value=mock_coro(False),
     )
     patch_handler.start()
@@ -1396,7 +1396,7 @@ def config_context(hass, setup_comp):
     patch_load.start()
 
     patch_save = patch(
-        "homeassistant.components.device_tracker." "DeviceTracker.async_update_config"
+        "homeassistant.components.device_tracker.DeviceTracker.async_update_config"
     )
     patch_save.start()
 
@@ -1404,6 +1404,25 @@ def config_context(hass, setup_comp):
 
     patch_load.stop()
     patch_save.stop()
+
+
+@pytest.fixture(name="not_supports_encryption")
+def mock_not_supports_encryption():
+    """Mock non successful nacl import."""
+    with patch(
+        "homeassistant.components.owntracks.messages.supports_encryption",
+        return_value=False,
+    ):
+        yield
+
+
+@pytest.fixture(name="get_cipher_error")
+def mock_get_cipher_error():
+    """Mock non successful cipher."""
+    with patch(
+        "homeassistant.components.owntracks.messages.get_cipher", side_effect=OSError()
+    ):
+        yield
 
 
 @patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
@@ -1420,6 +1439,22 @@ async def test_encrypted_payload_topic_key(hass, setup_comp):
     await setup_owntracks(hass, {CONF_SECRET: {LOCATION_TOPIC: TEST_SECRET_KEY}})
     await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
+
+
+async def test_encrypted_payload_not_supports_encryption(
+    hass, setup_comp, not_supports_encryption
+):
+    """Test encrypted payload with no supported encryption."""
+    await setup_owntracks(hass, {CONF_SECRET: TEST_SECRET_KEY})
+    await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
+    assert hass.states.get(DEVICE_TRACKER_STATE) is None
+
+
+async def test_encrypted_payload_get_cipher_error(hass, setup_comp, get_cipher_error):
+    """Test encrypted payload with no supported encryption."""
+    await setup_owntracks(hass, {CONF_SECRET: TEST_SECRET_KEY})
+    await send_message(hass, LOCATION_TOPIC, MOCK_ENCRYPTED_LOCATION_MESSAGE)
+    assert hass.states.get(DEVICE_TRACKER_STATE) is None
 
 
 @patch("homeassistant.components.owntracks.messages.get_cipher", mock_cipher)
@@ -1460,8 +1495,7 @@ async def test_encrypted_payload_no_topic_key(hass, setup_comp):
 async def test_encrypted_payload_libsodium(hass, setup_comp):
     """Test sending encrypted message payload."""
     try:
-        # pylint: disable=unused-import
-        import nacl  # noqa: F401
+        import nacl  # noqa: F401 pylint: disable=unused-import
     except (ImportError, OSError):
         pytest.skip("PyNaCl/libsodium is not installed")
         return

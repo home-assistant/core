@@ -1,16 +1,17 @@
 """Test util methods."""
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant.components.recorder import util
 from homeassistant.components.recorder.const import DATA_INSTANCE
+
 from tests.common import get_test_home_assistant, init_recorder_component
 
 
 @pytest.fixture
 def hass_recorder():
-    """HASS fixture with in-memory recorder."""
+    """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
 
     def setup_recorder(config=None):

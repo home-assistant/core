@@ -5,15 +5,15 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/somfy/
 """
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
 from requests import HTTPError
+import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv, config_entry_oauth2_flow
 from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
@@ -26,7 +26,7 @@ DEVICES = "devices"
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 DOMAIN = "somfy"
 
@@ -48,7 +48,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMFY_COMPONENTS = ["cover"]
+SOMFY_COMPONENTS = ["cover", "switch"]
 
 
 async def async_setup(hass, config):

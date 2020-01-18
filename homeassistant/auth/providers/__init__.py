@@ -8,8 +8,8 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant import data_entry_flow, requirements
-from homeassistant.core import callback, HomeAssistant
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
@@ -48,7 +48,7 @@ class AuthProvider:
         self.config = config
 
     @property
-    def id(self) -> Optional[str]:  # pylint: disable=invalid-name
+    def id(self) -> Optional[str]:
         """Return id of the auth provider.
 
         Optional, can be None.

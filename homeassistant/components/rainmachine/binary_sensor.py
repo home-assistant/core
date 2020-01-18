@@ -76,7 +76,7 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return "{0}_{1}".format(
             self.rainmachine.device_mac.replace(":", ""), self._sensor_type
         )
@@ -96,7 +96,9 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
     async def async_update(self):
         """Update the state."""
         if self._sensor_type == TYPE_FLOW_SENSOR:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS].get("useFlowSensor")
+            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
+                "useFlowSensor"
+            )
         elif self._sensor_type == TYPE_FREEZE:
             self._state = self.rainmachine.data[RESTRICTIONS_CURRENT]["freeze"]
         elif self._sensor_type == TYPE_FREEZE_PROTECTION:

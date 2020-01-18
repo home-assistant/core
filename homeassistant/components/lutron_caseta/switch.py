@@ -27,18 +27,18 @@ class LutronCasetaLight(LutronCasetaDevice, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._smartbridge.turn_on(self._device_id)
+        self._smartbridge.turn_on(self.device_id)
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._smartbridge.turn_off(self._device_id)
+        self._smartbridge.turn_off(self.device_id)
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state["current_state"] > 0
+        return self._device["current_state"] > 0
 
     async def async_update(self):
         """Update when forcing a refresh of the device."""
-        self._state = self._smartbridge.get_device_by_id(self._device_id)
-        _LOGGER.debug(self._state)
+        self._device = self._smartbridge.get_device_by_id(self.device_id)
+        _LOGGER.debug(self._device)

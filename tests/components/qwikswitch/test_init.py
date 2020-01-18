@@ -1,14 +1,14 @@
 """Test qwikswitch sensors."""
 import logging
 
+from aiohttp.client_exceptions import ClientError
 import pytest
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
 from homeassistant.bootstrap import async_setup_component
-from tests.test_util.aiohttp import mock_aiohttp_client
-from aiohttp.client_exceptions import ClientError
+from homeassistant.components.qwikswitch import DOMAIN as QWIKSWITCH
+from homeassistant.const import EVENT_HOMEASSISTANT_START
 
+from tests.test_util.aiohttp import mock_aiohttp_client
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ def aioclient_mock():
         yield mock_session
 
 
-async def test_binary_sensor_device(hass, aioclient_mock):  # noqa
+async def test_binary_sensor_device(hass, aioclient_mock):  # noqa: F811
     """Test a binary sensor device."""
     config = {
         "qwikswitch": {
@@ -86,7 +86,7 @@ async def test_binary_sensor_device(hass, aioclient_mock):  # noqa
     assert state_obj.state == "off"
 
 
-async def test_sensor_device(hass, aioclient_mock):  # noqa
+async def test_sensor_device(hass, aioclient_mock):  # noqa: F811
     """Test a sensor device."""
     config = {
         "qwikswitch": {

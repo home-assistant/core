@@ -1,29 +1,32 @@
 """The tests for Monoprice Media player platform."""
+from collections import defaultdict
 import unittest
 from unittest import mock
+
+import pytest
 import voluptuous as vol
 
-from collections import defaultdict
 from homeassistant.components.media_player.const import (
-    DOMAIN,
-    SUPPORT_TURN_ON,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE,
 )
-from homeassistant.const import STATE_ON, STATE_OFF
-
-import tests.common
+from homeassistant.components.monoprice.const import (
+    DOMAIN,
+    SERVICE_RESTORE,
+    SERVICE_SNAPSHOT,
+)
 from homeassistant.components.monoprice.media_player import (
     DATA_MONOPRICE,
     PLATFORM_SCHEMA,
-    SERVICE_SNAPSHOT,
-    SERVICE_RESTORE,
     setup_platform,
 )
-import pytest
+from homeassistant.const import STATE_OFF, STATE_ON
+
+import tests.common
 
 
 class AttrDict(dict):
@@ -172,7 +175,10 @@ class TestMonopriceMediaPlayer(unittest.TestCase):
         self.hass = tests.common.get_test_home_assistant()
         self.hass.start()
         # Note, source dictionary is unsorted!
-        with mock.patch("pymonoprice.get_monoprice", new=lambda *a: self.monoprice):
+        with mock.patch(
+            "homeassistant.components.monoprice.media_player.get_monoprice",
+            new=lambda *a: self.monoprice,
+        ):
             setup_platform(
                 self.hass,
                 {

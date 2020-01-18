@@ -1,8 +1,8 @@
 """Test Smart Home HTTP endpoints."""
 import json
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components.alexa import DOMAIN, smart_home_http
+from homeassistant.setup import async_setup_component
 
 from . import get_new_request
 

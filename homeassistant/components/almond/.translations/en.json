@@ -5,6 +5,11 @@
             "cannot_connect": "Unable to connect to the Almond server.",
             "missing_configuration": "Please check the documentation on how to set up Almond."
         },
+        "step": {
+            "pick_implementation": {
+                "title": "Pick Authentication Method"
+            }
+        },
         "title": "Almond"
     }
 }

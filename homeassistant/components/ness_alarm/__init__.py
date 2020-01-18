@@ -1,17 +1,18 @@
 """Support for Ness D8X/D16X devices."""
+from collections import namedtuple
 import datetime
 import logging
-from collections import namedtuple
 
+from nessclient import ArmingState, Client
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_STATE,
-    EVENT_HOMEASSISTANT_STOP,
-    CONF_SCAN_INTERVAL,
     CONF_HOST,
+    CONF_SCAN_INTERVAL,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -82,7 +83,6 @@ SERVICE_SCHEMA_AUX = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the Ness Alarm platform."""
-    from nessclient import Client, ArmingState
 
     conf = config[DOMAIN]
 

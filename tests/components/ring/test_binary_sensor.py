@@ -1,83 +1,31 @@
 """The tests for the Ring binary sensor platform."""
-import os
-import unittest
-import requests_mock
+from time import time
+from unittest.mock import patch
 
-from homeassistant.components.ring import binary_sensor as ring
-from homeassistant.components import ring as base_ring
-
-from tests.components.ring.test_init import ATTRIBUTION, VALID_CONFIG
-from tests.common import get_test_config_dir, get_test_home_assistant, load_fixture
+from .common import setup_platform
 
 
-class TestRingBinarySensorSetup(unittest.TestCase):
-    """Test the Ring Binary Sensor platform."""
+async def test_binary_sensor(hass, requests_mock):
+    """Test the Ring binary sensors."""
+    with patch(
+        "ring_doorbell.Ring.active_alerts",
+        return_value=[
+            {
+                "kind": "motion",
+                "doorbot_id": 987654,
+                "state": "ringing",
+                "now": time(),
+                "expires_in": 180,
+            }
+        ],
+    ):
+        await setup_platform(hass, "binary_sensor")
 
-    DEVICES = []
+    motion_state = hass.states.get("binary_sensor.front_door_motion")
+    assert motion_state is not None
+    assert motion_state.state == "on"
+    assert motion_state.attributes["device_class"] == "motion"
 
-    def add_entities(self, devices, action):
-        """Mock add devices."""
-        for device in devices:
-            self.DEVICES.append(device)
-
-    def cleanup(self):
-        """Cleanup any data created from the tests."""
-        if os.path.isfile(self.cache):
-            os.remove(self.cache)
-
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
-        self.cache = get_test_config_dir(base_ring.DEFAULT_CACHEDB)
-        self.config = {
-            "username": "foo",
-            "password": "bar",
-            "monitored_conditions": ["ding", "motion"],
-        }
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
-        self.cleanup()
-
-    @requests_mock.Mocker()
-    def test_binary_sensor(self, mock):
-        """Test the Ring sensor class and methods."""
-        mock.post(
-            "https://oauth.ring.com/oauth/token", text=load_fixture("ring_oauth.json")
-        )
-        mock.post(
-            "https://api.ring.com/clients_api/session",
-            text=load_fixture("ring_session.json"),
-        )
-        mock.get(
-            "https://api.ring.com/clients_api/ring_devices",
-            text=load_fixture("ring_devices.json"),
-        )
-        mock.get(
-            "https://api.ring.com/clients_api/dings/active",
-            text=load_fixture("ring_ding_active.json"),
-        )
-        mock.get(
-            "https://api.ring.com/clients_api/doorbots/987652/health",
-            text=load_fixture("ring_doorboot_health_attrs.json"),
-        )
-        mock.get(
-            "https://api.ring.com/clients_api/chimes/999999/health",
-            text=load_fixture("ring_chime_health_attrs.json"),
-        )
-
-        base_ring.setup(self.hass, VALID_CONFIG)
-        ring.setup_platform(self.hass, self.config, self.add_entities, None)
-
-        for device in self.DEVICES:
-            device.update()
-            if device.name == "Front Door Ding":
-                assert "on" == device.state
-                assert "America/New_York" == device.device_state_attributes["timezone"]
-            elif device.name == "Front Door Motion":
-                assert "off" == device.state
-                assert "motion" == device.device_class
-
-            assert device.entity_picture is None
-            assert ATTRIBUTION == device.device_state_attributes["attribution"]
+    ding_state = hass.states.get("binary_sensor.front_door_ding")
+    assert ding_state is not None
+    assert ding_state.state == "off"

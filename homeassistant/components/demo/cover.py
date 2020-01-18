@@ -1,6 +1,4 @@
 """Demo platform for the cover component."""
-from homeassistant.helpers.event import track_utc_time_change
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -8,17 +6,21 @@ from homeassistant.components.cover import (
     SUPPORT_OPEN,
     CoverDevice,
 )
+from homeassistant.helpers.event import track_utc_time_change
+
+from . import DOMAIN
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Demo covers."""
-    add_entities(
+    async_add_entities(
         [
-            DemoCover(hass, "Kitchen Window"),
-            DemoCover(hass, "Hall Window", 10),
-            DemoCover(hass, "Living Room Window", 70, 50),
+            DemoCover(hass, "cover_1", "Kitchen Window"),
+            DemoCover(hass, "cover_2", "Hall Window", 10),
+            DemoCover(hass, "cover_3", "Living Room Window", 70, 50),
             DemoCover(
                 hass,
+                "cover_4",
                 "Garage Door",
                 device_class="garage",
                 supported_features=(SUPPORT_OPEN | SUPPORT_CLOSE),
@@ -27,12 +29,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
 
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Demo config entry."""
+    await async_setup_platform(hass, {}, async_add_entities)
+
+
 class DemoCover(CoverDevice):
     """Representation of a demo cover."""
 
     def __init__(
         self,
         hass,
+        unique_id,
         name,
         position=None,
         tilt_position=None,
@@ -41,6 +49,7 @@ class DemoCover(CoverDevice):
     ):
         """Initialize the cover."""
         self.hass = hass
+        self._unique_id = unique_id
         self._name = name
         self._position = position
         self._device_class = device_class
@@ -58,6 +67,22 @@ class DemoCover(CoverDevice):
             self._closed = True
         else:
             self._closed = self.current_cover_position <= 0
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.unique_id)
+            },
+            "name": self.name,
+        }
+
+    @property
+    def unique_id(self):
+        """Return unique ID for cover."""
+        return self._unique_id
 
     @property
     def name(self):

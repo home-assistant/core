@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "auth_missing": "Home Assistant is niet geverifieerd om verbinding te maken met deze Samsung TV.",
+            "not_found": "Geen ondersteunde Samsung TV-apparaten gevonden op het netwerk.",
+            "not_supported": "Deze Samsung TV-apparaten wordt momenteel niet ondersteund."
+        },
+        "step": {
+            "confirm": {
+                "title": "Samsung TV"
+            },
+            "user": {
+                "data": {
+                    "host": "Hostnaam of IP-adres",
+                    "name": "Naam"
+                },
+                "title": "Samsung TV"
+            }
+        },
+        "title": "Samsung TV"
+    }
+}
