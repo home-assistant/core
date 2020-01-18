@@ -206,8 +206,6 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         self._transition = transition
         self.unsub_tracker = None
         self._attributes = {}
-        self._attributes['Brightness'] = ''
-        self._attributes['Colour Temperature'] = ''
 
     @property
     def name(self):
@@ -223,7 +221,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
     def device_state_attributes(self):
         """Return the attributes of the switch."""
         return self._attributes
-    
+
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
         last_state = await self.async_get_last_state()
@@ -328,6 +326,13 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
                 time_state,
                 now,
             )
+            self._attributes = {}
+            self._attributes["Colour Temperature (K)"] = int(temp)
+            self._attributes["Brightness (%)"] = round(brightness / 255 * 100, 1)
+            self._attributes["x, y"] = (
+                str(round(x_val, 4)) + ", " + str(round(y_val, 4))
+            )
+
         elif self._mode == MODE_RGB:
             await async_set_lights_rgb(self.hass, self._lights, rgb, self._transition)
             _LOGGER.debug(
@@ -337,6 +342,14 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
                 time_state,
                 now,
             )
+            r_val, g_val, b_val = rgb
+            self._attributes = {}
+            self._attributes["Colour Temperature (K)"] = int(temp)
+            self._attributes["Brightness (%)"] = round(brightness / 255 * 100, 1)
+            self._attributes["rgb"] = (
+                str(int(r_val)) + ", " + str(int(g_val)) + ", " + str(int(b_val))
+            )
+
         else:
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
@@ -352,9 +365,10 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
                 time_state,
                 now,
             )
-        self._attributes = {}
-        self._attributes['Brightness'] = str(round(brightness/255*100,1)) + "%"
-        self._attributes['Colour Temperature'] = str(int(temp)) + "K"
+            self._attributes = {}
+            self._attributes["Colour Temperature (K)"] = int(temp)
+            self._attributes["Brightness (%)"] = round(brightness / 255 * 100, 1)
+            self._attributes["mireds"] = int(mired)
 
     def find_start_time(self, now):
         """Return sunrise or start_time if given."""
