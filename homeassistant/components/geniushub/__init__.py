@@ -168,8 +168,6 @@ class GeniusBroker:
         self.client = client
         self._hub_uid = hub_uid
 
-        self.entity_by_uid = {}
-
     @property
     def hub_uid(self) -> int:
         """Return the Hub UID (MAC address)."""
@@ -237,8 +235,6 @@ class GeniusDevice(GeniusEntity):
 
         self._device = device
         self._unique_id = f"{broker.hub_uid}_device_{device.id}"
-
-        broker.entity_by_uid[self._unique_id] = self
         self._last_comms = self._state_attr = None
 
     @property
@@ -278,8 +274,6 @@ class GeniusZone(GeniusEntity):
         self._zone = zone
         self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
 
-        broker.entity_by_uid[self._unique_id] = self
-
     async def _refresh(self, payload: Optional[dict] = None) -> None:
         """Process any signals."""
         if payload is None:
@@ -305,7 +299,6 @@ class GeniusZone(GeniusEntity):
             )
 
         await self._zone.set_mode(mode)
-        return
 
     @property
     def name(self) -> str:
