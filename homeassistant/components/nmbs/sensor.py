@@ -130,7 +130,7 @@ class NMBSLiveBoard(Entity):
 
         attrs = {
             "departure": f"In {departure} minutes",
-            "departure_min": departure,
+            "departure_minutes": departure,
             "extra_train": int(self._attrs["isExtra"]) > 0,
             "vehicle_id": self._attrs["vehicle"],
             "monitored_station": self._station,
