@@ -102,11 +102,11 @@ class AmcrestBinarySensor(BinarySensorDevice):
 
             elif self._sensor_type == BINARY_SENSOR_ONLINE:
                 self._state = self._api.available
-                
+
             elif self._sensor_type == BINARY_SENSOR_ALARM_TRIGGERED:
                 event = self._api.event_channels_happened("AlarmLocal")
                 self._state = bool("channels" in event)
-                
+
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
 
