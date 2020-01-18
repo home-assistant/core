@@ -1,4 +1,5 @@
 """Support for Climate devices of (EMEA/EU-based) Honeywell TCC systems."""
+from datetime import datetime as dt
 import logging
 from typing import List, Optional
 
@@ -21,7 +22,18 @@ from homeassistant.const import PRECISION_TENTHS
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import parse_datetime
 
-from . import CONF_LOCATION_IDX, EvoChild, EvoDevice
+from . import (
+    ATTR_DURATION_DAYS,
+    ATTR_DURATION_HOURS,
+    ATTR_DURATION_UNTIL,
+    ATTR_SYSTEM_MODE,
+    ATTR_ZONE_TEMP,
+    CONF_LOCATION_IDX,
+    SVC_RESET_ZONE_OVERRIDE,
+    SVC_SET_SYSTEM_MODE,
+    EvoChild,
+    EvoDevice,
+)
 from .const import (
     DOMAIN,
     EVO_AUTO,
@@ -90,8 +102,9 @@ async def async_setup_platform(
             zone.zoneId,
             zone.name,
         )
+        new_entity = EvoThermostat(broker, zone)
 
-        async_add_entities([EvoThermostat(broker, zone)], update_before_add=True)
+        async_add_entities([new_entity], update_before_add=True)
         return
 
     controller = EvoController(broker, broker.tcs)
@@ -105,13 +118,15 @@ async def async_setup_platform(
             zone.zoneId,
             zone.name,
         )
-        zones.append(EvoZone(broker, zone))
+        new_entity = EvoZone(broker, zone)
+
+        zones.append(new_entity)
 
     async_add_entities([controller] + zones, update_before_add=True)
 
 
 class EvoClimateDevice(EvoDevice, ClimateDevice):
-    """Base for a Honeywell evohome Climate device."""
+    """Base for an evohome Climate device."""
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Climate device."""
@@ -119,9 +134,31 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
         self._preset_modes = None
 
-    async def _set_tcs_mode(self, op_mode: str) -> None:
+    async def async_tcs_svc_request(self, service: dict, data: dict) -> None:
+        """Process a service request (system mode) for a controller.
+
+        Data validation is not required, it will have been done upstream.
+        """
+        if service == SVC_SET_SYSTEM_MODE:
+            mode = data[ATTR_SYSTEM_MODE]
+        else:  # otherwise it is SVC_RESET_SYSTEM
+            mode = EVO_RESET
+
+        if ATTR_DURATION_DAYS in data:
+            until = dt.combine(dt.now().date(), dt.min.time())
+            until += data[ATTR_DURATION_DAYS]
+
+        elif ATTR_DURATION_HOURS in data:
+            until = dt.now() + data[ATTR_DURATION_HOURS]
+
+        else:
+            until = None
+
+        await self._set_tcs_mode(mode, until=until)
+
+    async def _set_tcs_mode(self, mode: str, until: Optional[dt] = None) -> None:
         """Set a Controller to any of its native EVO_* operating modes."""
-        await self._call_client_api(self._evo_tcs.set_status(op_mode))
+        await self._evo_broker.call_client_api(self._evo_tcs.set_status(mode))
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -135,7 +172,7 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
 
 
 class EvoZone(EvoChild, EvoClimateDevice):
-    """Base for a Honeywell evohome Zone."""
+    """Base for a Honeywell TCC Zone."""
 
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Zone."""
@@ -151,6 +188,32 @@ class EvoZone(EvoChild, EvoClimateDevice):
             self._precision = PRECISION_TENTHS
         else:
             self._precision = self._evo_device.setpointCapabilities["valueResolution"]
+
+    async def async_zone_svc_request(self, service: dict, data: dict) -> None:
+        """Process a service request (setpoint override) for a zone."""
+        if service == SVC_RESET_ZONE_OVERRIDE:
+            await self._evo_broker.call_client_api(
+                self._evo_device.cancel_temp_override()
+            )
+            return
+
+        # otherwise it is SVC_SET_ZONE_OVERRIDE
+        temp = round(data[ATTR_ZONE_TEMP] * self.precision) / self.precision
+        temp = max(min(temp, self.max_temp), self.min_temp)
+
+        if ATTR_DURATION_UNTIL in data:
+            duration = data[ATTR_DURATION_UNTIL]
+            if duration == 0:
+                await self._update_schedule()
+                until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+            else:
+                until = dt.now() + data[ATTR_DURATION_UNTIL]
+        else:
+            until = None  # indefinitely
+
+        await self._evo_broker.call_client_api(
+            self._evo_device.set_temperature(temperature=temp, until=until)
+        )
 
     @property
     def hvac_mode(self) -> str:
@@ -206,16 +269,16 @@ class EvoZone(EvoChild, EvoClimateDevice):
     async def async_set_temperature(self, **kwargs) -> None:
         """Set a new target temperature."""
         temperature = kwargs["temperature"]
+        until = kwargs.get("until")
 
-        if self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
-            await self._update_schedule()
-            until = parse_datetime(str(self.setpoints.get("next_sp_from")))
-        elif self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
-            until = parse_datetime(self._evo_device.setpointStatus["until"])
-        else:  # EVO_PERMOVER
-            until = None
+        if until is None:
+            if self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
+                await self._update_schedule()
+                until = parse_datetime(str(self.setpoints.get("next_sp_from")))
+            elif self._evo_device.setpointStatus["setpointMode"] == EVO_TEMPOVER:
+                until = parse_datetime(self._evo_device.setpointStatus["until"])
 
-        await self._call_client_api(
+        await self._evo_broker.call_client_api(
             self._evo_device.set_temperature(temperature, until)
         )
 
@@ -237,18 +300,22 @@ class EvoZone(EvoChild, EvoClimateDevice):
         and 'Away', Zones to (by default) 12C.
         """
         if hvac_mode == HVAC_MODE_OFF:
-            await self._call_client_api(
+            await self._evo_broker.call_client_api(
                 self._evo_device.set_temperature(self.min_temp, until=None)
             )
         else:  # HVAC_MODE_HEAT
-            await self._call_client_api(self._evo_device.cancel_temp_override())
+            await self._evo_broker.call_client_api(
+                self._evo_device.cancel_temp_override()
+            )
 
     async def async_set_preset_mode(self, preset_mode: Optional[str]) -> None:
         """Set the preset mode; if None, then revert to following the schedule."""
         evo_preset_mode = HA_PRESET_TO_EVO.get(preset_mode, EVO_FOLLOW)
 
         if evo_preset_mode == EVO_FOLLOW:
-            await self._call_client_api(self._evo_device.cancel_temp_override())
+            await self._evo_broker.call_client_api(
+                self._evo_device.cancel_temp_override()
+            )
             return
 
         temperature = self._evo_device.setpointStatus["targetHeatTemperature"]
@@ -259,7 +326,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
         else:  # EVO_PERMOVER
             until = None
 
-        await self._call_client_api(
+        await self._evo_broker.call_client_api(
             self._evo_device.set_temperature(temperature, until)
         )
 
@@ -272,14 +339,14 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
 
 class EvoController(EvoClimateDevice):
-    """Base for a Honeywell evohome Controller (hub).
+    """Base for a Honeywell TCC Controller (hub).
 
     The Controller (aka TCS, temperature control system) is the parent of all
     the child (CH/DHW) devices.  It is also a Climate device.
     """
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize a evohome Controller (hub)."""
+        """Initialize an evohome Controller (hub)."""
         super().__init__(evo_broker, evo_device)
 
         self._unique_id = evo_device.systemId
@@ -349,7 +416,7 @@ class EvoController(EvoClimateDevice):
 
 
 class EvoThermostat(EvoZone):
-    """Base for a Honeywell Round Thermostat.
+    """Base for a Honeywell TCC Round Thermostat.
 
     These are implemented as a combined Controller/Zone.
     """
