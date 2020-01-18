@@ -1,23 +1,11 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
 import logging
 
-from miio import (
-    AirQualityMonitor,
-    DeviceException,
-    Device,
-)  # pylint: disable=import-error
+from miio import AirQualityMonitor, DeviceException  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_TOKEN,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
-    TEMP_CELSIUS,
-    ATTR_BATTERY_LEVEL,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -44,53 +32,8 @@ ATTR_NIGHT_TIME_BEGIN = "night_time_begin"
 ATTR_NIGHT_TIME_END = "night_time_end"
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_MODEL = "model"
-ATTR_TEMPERATURE = "temperature"
-ATTR_HUMIDITY = "humidity"
-ATTR_CO2 = "co2"
-ATTR_PM2_5 = "pm25"
-ATTR_TVOC = "tvoc"
-
-DEVICE_CLASS_CO2 = "co2"
-DEVICE_CLASS_PM2_5 = "pm25"
-DEVICE_CLASS_TVOC = "tvoc"
-
-MODEL_XIAOMI_AIRQUALITYMONITOR_S1 = "cgllc.airmonitor.s1"
-MODEL_XIAOMI_AIRQUALITYMONITOR_B1 = "cgllc.airmonitor.b1"
 
 SUCCESS = ["ok"]
-
-SENSOR_TYPES = {
-    "TEMPERATURE": {
-        "device_class": DEVICE_CLASS_TEMPERATURE,
-        "unit_of_measurement": TEMP_CELSIUS,
-        "icon": "mdi:thermometer",
-        "state_attr": ATTR_TEMPERATURE,
-    },
-    "HUMIDITY": {
-        "device_class": DEVICE_CLASS_HUMIDITY,
-        "unit_of_measurement": "%",
-        "icon": "mdi:water-percent",
-        "state_attr": ATTR_HUMIDITY,
-    },
-    "CO2": {
-        "device_class": DEVICE_CLASS_CO2,
-        "unit_of_measurement": "ppm",
-        "icon": "mdi:periodic-table-co2",
-        "state_attr": ATTR_CO2,
-    },
-    "TVOC": {
-        "device_class": DEVICE_CLASS_TVOC,
-        "unit_of_measurement": "ppb",
-        "icon": "mdi:cloud",
-        "state_attr": ATTR_TVOC,
-    },
-    "PM25": {
-        "device_class": DEVICE_CLASS_PM2_5,
-        "unit_of_measurement": "µg/m3",
-        "icon": "mdi:cloud",
-        "state_attr": ATTR_PM2_5,
-    },
-}
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -98,7 +41,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
-    all_devices = []
     host = config[CONF_HOST]
     token = config[CONF_TOKEN]
     name = config[CONF_NAME]
@@ -106,8 +48,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
     try:
-        miio_device = Device(host, token)
-        device_info = await hass.async_add_executor_job(miio_device.info)
+        air_quality_monitor = AirQualityMonitor(host, token)
+        device_info = await hass.async_add_executor_job(air_quality_monitor.info)
         model = device_info.model
         unique_id = f"{model}-{device_info.mac_address}"
         _LOGGER.info(
@@ -116,70 +58,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             device_info.firmware_version,
             device_info.hardware_version,
         )
-        device = XiaomiAirQualityMonitor(
-            name, AirQualityMonitor(host, token, model=model), model, unique_id
-        )
-        if (
-            model == MODEL_XIAOMI_AIRQUALITYMONITOR_S1
-            or model == MODEL_XIAOMI_AIRQUALITYMONITOR_B1
-        ):
-            for sensor in SENSOR_TYPES:
-                cgllc_sensor = XiaomiCgllcSensor(
-                    device, SENSOR_TYPES[sensor], unique_id
-                )
-                all_devices.append(cgllc_sensor)
-        all_devices.append(device)
+        device = XiaomiAirQualityMonitor(name, air_quality_monitor, model, unique_id)
     except DeviceException:
         raise PlatformNotReady
 
     hass.data[DATA_KEY][host] = device
-    async_add_entities(all_devices, update_before_add=True)
-
-
-class XiaomiCgllcSensor(Entity):
-    """Implementation of an XiaomiCgllcSensor device."""
-
-    def __init__(self, device, sensor_type, unique_id):
-        """Initialize the sensor."""
-        self._device = device
-        self._type = sensor_type
-        self._name = device.name + " " + sensor_type["device_class"]
-        self._unique_id = unique_id + "_" + sensor_type["device_class"]
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return self._type["device_class"]
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return self._type["icon"]
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._device.device_state_attributes[self._type["state_attr"]]
-
-    @property
-    def available(self):
-        """Return available of this entity."""
-        return self._device.available
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this entity."""
-        return self._unique_id
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity."""
-        return self._type["unit_of_measurement"]
+    async_add_entities([device], update_before_add=True)
 
 
 class XiaomiAirQualityMonitor(Entity):
@@ -196,7 +80,17 @@ class XiaomiAirQualityMonitor(Entity):
         self._unit_of_measurement = "AQI"
         self._available = None
         self._state = None
-        self._state_attrs = {ATTR_MODEL: self._model}
+        self._state_attrs = {
+            ATTR_POWER: None,
+            ATTR_BATTERY_LEVEL: None,
+            ATTR_CHARGING: None,
+            ATTR_DISPLAY_CLOCK: None,
+            ATTR_NIGHT_MODE: None,
+            ATTR_NIGHT_TIME_BEGIN: None,
+            ATTR_NIGHT_TIME_END: None,
+            ATTR_SENSOR_STATE: None,
+            ATTR_MODEL: self._model,
+        }
 
     @property
     def should_poll(self):
@@ -245,44 +139,19 @@ class XiaomiAirQualityMonitor(Entity):
             _LOGGER.debug("Got new state: %s", state)
 
             self._available = True
-
-            if self._model == MODEL_XIAOMI_AIRQUALITYMONITOR_S1:
-                self._state = state.pm25
-                self._state_attrs.update(
-                    {
-                        ATTR_BATTERY_LEVEL: state.battery,
-                        ATTR_CO2: state.co2,
-                        ATTR_HUMIDITY: state.humidity,
-                        ATTR_PM2_5: state.pm25,
-                        ATTR_TEMPERATURE: state.temperature,
-                        ATTR_TVOC: state.tvoc,
-                    }
-                )
-            elif self._model == MODEL_XIAOMI_AIRQUALITYMONITOR_B1:
-                self._state = state.pm25
-                self._state_attrs.update(
-                    {
-                        ATTR_CO2: state.co2e,
-                        ATTR_HUMIDITY: state.humidity,
-                        ATTR_PM2_5: state.pm25,
-                        ATTR_TEMPERATURE: state.temperature,
-                        ATTR_TVOC: state.tvoc,
-                    }
-                )
-            else:
-                self._state = state.aqi
-                self._state_attrs.update(
-                    {
-                        ATTR_POWER: state.power,
-                        ATTR_CHARGING: state.usb_power,
-                        ATTR_BATTERY_LEVEL: state.battery,
-                        ATTR_DISPLAY_CLOCK: state.display_clock,
-                        ATTR_NIGHT_MODE: state.night_mode,
-                        ATTR_NIGHT_TIME_BEGIN: state.night_time_begin,
-                        ATTR_NIGHT_TIME_END: state.night_time_end,
-                        ATTR_SENSOR_STATE: state.sensor_state,
-                    }
-                )
+            self._state = state.aqi
+            self._state_attrs.update(
+                {
+                    ATTR_POWER: state.power,
+                    ATTR_CHARGING: state.usb_power,
+                    ATTR_BATTERY_LEVEL: state.battery,
+                    ATTR_DISPLAY_CLOCK: state.display_clock,
+                    ATTR_NIGHT_MODE: state.night_mode,
+                    ATTR_NIGHT_TIME_BEGIN: state.night_time_begin,
+                    ATTR_NIGHT_TIME_END: state.night_time_end,
+                    ATTR_SENSOR_STATE: state.sensor_state,
+                }
+            )
 
         except DeviceException as ex:
             self._available = False
