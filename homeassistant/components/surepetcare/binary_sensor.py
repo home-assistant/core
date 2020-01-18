@@ -1,4 +1,5 @@
 """Support for Sure PetCare Flaps/Pets binary sensors."""
+from datetime import datetime
 import logging
 from typing import Any, Dict, Optional
 
@@ -83,6 +84,11 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
         """Return the state attributes of the device."""
+        if "since" in self._state:
+            self._state["since"] = str(
+                datetime.fromisoformat(self._state["since"]).replace(tzinfo=None)
+            )
+        _LOGGER.debug(f"device_state_attributes(): {self._state = }")
         return self._state
 
     @property
