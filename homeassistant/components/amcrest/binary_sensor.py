@@ -7,6 +7,7 @@ from amcrest import AmcrestError
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOTION,
+    DEVICE_CLASS_PROBLEM,
     BinarySensorDevice,
 )
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME
@@ -24,10 +25,12 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=BINARY_SENSOR_SCAN_INTERVAL_SECS)
 
+BINARY_SENSOR_ALARM_TRIGGERED = "alarm_triggered"
 BINARY_SENSOR_MOTION_DETECTED = "motion_detected"
 BINARY_SENSOR_ONLINE = "online"
 # Binary sensor types are defined like: Name, device class
 BINARY_SENSORS = {
+    BINARY_SENSOR_ALARM_TRIGGERED: ("Alarm Triggered", DEVICE_CLASS_PROBLEM),
     BINARY_SENSOR_MOTION_DETECTED: ("Motion Detected", DEVICE_CLASS_MOTION),
     BINARY_SENSOR_ONLINE: ("Online", DEVICE_CLASS_CONNECTIVITY),
 }
@@ -99,6 +102,11 @@ class AmcrestBinarySensor(BinarySensorDevice):
 
             elif self._sensor_type == BINARY_SENSOR_ONLINE:
                 self._state = self._api.available
+                
+            elif self._sensor_type == BINARY_SENSOR_ALARM_TRIGGERED:
+                event = self._api.event_channels_happened("AlarmLocal")
+                self._state = bool("channels" in event)
+                
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "binary sensor", error)
 
