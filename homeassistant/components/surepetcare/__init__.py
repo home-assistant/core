@@ -96,7 +96,7 @@ async def async_setup(hass, config) -> bool:
         {
             CONF_NAME: flap[CONF_NAME],
             CONF_ID: flap[CONF_ID],
-            CONF_TYPE: SureThingID.FLAP.name,
+            CONF_TYPE: SureThingID.FLAP,
         }
         for flap in conf[CONF_FLAPS]
     ]
@@ -107,7 +107,7 @@ async def async_setup(hass, config) -> bool:
             {
                 CONF_NAME: pet[CONF_NAME],
                 CONF_ID: pet[CONF_ID],
-                CONF_TYPE: SureThingID.PET.name,
+                CONF_TYPE: SureThingID.PET,
             }
             for pet in conf[CONF_PETS]
         ]
@@ -155,9 +155,9 @@ class SurePetcareAPI:
             try:
                 type_state = self.states.setdefault(sure_type, {})
 
-                if sure_type == SureThingID.FLAP.name:
+                if sure_type == SureThingID.FLAP:
                     type_state[sure_id] = await self.surepy.get_flap_data(sure_id)
-                elif sure_type == SureThingID.PET.name:
+                elif sure_type == SureThingID.PET:
                     type_state[sure_id] = await self.surepy.get_pet_data(sure_id)
 
             except SurePetcareError as error:
