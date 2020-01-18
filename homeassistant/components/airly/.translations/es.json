@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "La integraci\u00f3n a\u00e9rea para estas coordenadas ya est\u00e1 configurada."
+        },
         "error": {
             "auth": "La clave de la API no es correcta.",
             "name_exists": "El nombre ya existe.",
