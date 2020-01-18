@@ -18,12 +18,20 @@
                 "data": {
                     "access_token": "Jeton d'acc\u00e8s",
                     "device_class": "Type d'appareil",
+                    "host": "<H\u00f4te/IP>:<Port>",
                     "name": "Nom"
-                }
+                },
+                "title": "Configurer le client Vizio SmartCast"
             }
-        }
+        },
+        "title": "Vizio SmartCast"
     },
     "options": {
+        "step": {
+            "init": {
+                "title": "Mettre \u00e0 jour les options de Vizo SmartCast"
+            }
+        },
         "title": "Mettre \u00e0 jour les options de Vizo SmartCast"
     }
 }
