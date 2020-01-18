@@ -152,8 +152,6 @@ class Sensor(ZhaEntity):
         """Return the state of the entity."""
         if self._state is None:
             return None
-        if isinstance(self._state, float):
-            return str(round(self._state, 2))
         return self._state
 
     def async_set_state(self, state):
@@ -231,7 +229,10 @@ class ElectricalMeasurement(Sensor):
 
     def formatter(self, value) -> int:
         """Return 'normalized' value."""
-        return round(value * self._channel.multiplier / self._channel.divisor)
+        value = value * self._channel.multiplier / self._channel.divisor
+        if value < 100 and self._channel.divisor > 1:
+            return round(value, self._decimals)
+        return round(value)
 
 
 @STRICT_MATCH(channel_names=CHANNEL_MULTISTATE_INPUT)
