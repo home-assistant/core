@@ -1073,6 +1073,15 @@ class AlexaSecurityPanelController(AlexaCapability):
 class AlexaModeController(AlexaCapability):
     """Implements Alexa.ModeController.
 
+    The instance property must be unique across ModeController, RangeController, ToggleController within the same device.
+    The instance property should be a concatenated string of device domain period and single word.
+    e.g. fan.speed & fan.direction.
+
+    The instance property must not contain words from other instance property strings within the same device.
+    e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
+
+    An instance property string value may be reused for different devices.
+
     https://developer.amazon.com/docs/device-apis/alexa-modecontroller.html
     """
 
@@ -1183,28 +1192,38 @@ class AlexaModeController(AlexaCapability):
 
     def semantics(self):
         """Build and return semantics object."""
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+            lower_labels = [AlexaSemantics.ACTION_LOWER]
+            raise_labels = [AlexaSemantics.ACTION_RAISE]
             self._semantics = AlexaSemantics()
+
+            # Add open/close semantics if tilt is not supported.
+            if not supported & cover.SUPPORT_SET_TILT_POSITION:
+                lower_labels.append(AlexaSemantics.ACTION_CLOSE)
+                raise_labels.append(AlexaSemantics.ACTION_OPEN)
+                self._semantics.add_states_to_value(
+                    [AlexaSemantics.STATES_CLOSED],
+                    f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}",
+                )
+                self._semantics.add_states_to_value(
+                    [AlexaSemantics.STATES_OPEN],
+                    f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}",
+                )
+
             self._semantics.add_action_to_directive(
-                [AlexaSemantics.ACTION_CLOSE, AlexaSemantics.ACTION_LOWER],
+                lower_labels,
                 "SetMode",
                 {"mode": f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}"},
             )
             self._semantics.add_action_to_directive(
-                [AlexaSemantics.ACTION_OPEN, AlexaSemantics.ACTION_RAISE],
+                raise_labels,
                 "SetMode",
                 {"mode": f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}"},
             )
-            self._semantics.add_states_to_value(
-                [AlexaSemantics.STATES_CLOSED],
-                f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}",
-            )
-            self._semantics.add_states_to_value(
-                [AlexaSemantics.STATES_OPEN],
-                f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}",
-            )
+
             return self._semantics.serialize_semantics()
 
         return None
@@ -1212,6 +1231,15 @@ class AlexaModeController(AlexaCapability):
 
 class AlexaRangeController(AlexaCapability):
     """Implements Alexa.RangeController.
+
+    The instance property must be unique across ModeController, RangeController, ToggleController within the same device.
+    The instance property should be a concatenated string of device domain period and single word.
+    e.g. fan.speed & fan.direction.
+
+    The instance property must not contain words from other instance property strings within the same device.
+    e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
+
+    An instance property string value may be reused for different devices.
 
     https://developer.amazon.com/docs/device-apis/alexa-rangecontroller.html
     """
@@ -1268,8 +1296,8 @@ class AlexaRangeController(AlexaCapability):
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
             return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION)
 
-        # Cover Tilt Position
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
+        # Cover Tilt
+        if self.instance == f"{cover.DOMAIN}.tilt":
             return self.entity.attributes.get(cover.ATTR_CURRENT_TILT_POSITION)
 
         # Input Number Value
@@ -1321,10 +1349,10 @@ class AlexaRangeController(AlexaCapability):
             )
             return self._resource.serialize_capability_resources()
 
-        # Cover Tilt Position Resources
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
+        # Cover Tilt Resources
+        if self.instance == f"{cover.DOMAIN}.tilt":
             self._resource = AlexaPresetResource(
-                ["Tilt Position", AlexaGlobalCatalog.SETTING_OPENING],
+                ["Tilt", "Angle", AlexaGlobalCatalog.SETTING_DIRECTION],
                 min_value=0,
                 max_value=100,
                 precision=1,
@@ -1358,24 +1386,35 @@ class AlexaRangeController(AlexaCapability):
 
     def semantics(self):
         """Build and return semantics object."""
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+            lower_labels = [AlexaSemantics.ACTION_LOWER]
+            raise_labels = [AlexaSemantics.ACTION_RAISE]
             self._semantics = AlexaSemantics()
+
+            # Add open/close semantics if tilt is not supported.
+            if not supported & cover.SUPPORT_SET_TILT_POSITION:
+                lower_labels.append(AlexaSemantics.ACTION_CLOSE)
+                raise_labels.append(AlexaSemantics.ACTION_OPEN)
+                self._semantics.add_states_to_value(
+                    [AlexaSemantics.STATES_CLOSED], value=0
+                )
+                self._semantics.add_states_to_range(
+                    [AlexaSemantics.STATES_OPEN], min_value=1, max_value=100
+                )
+
             self._semantics.add_action_to_directive(
-                [AlexaSemantics.ACTION_LOWER], "SetRangeValue", {"rangeValue": 0}
+                lower_labels, "SetRangeValue", {"rangeValue": 0}
             )
             self._semantics.add_action_to_directive(
-                [AlexaSemantics.ACTION_RAISE], "SetRangeValue", {"rangeValue": 100}
-            )
-            self._semantics.add_states_to_value([AlexaSemantics.STATES_CLOSED], value=0)
-            self._semantics.add_states_to_range(
-                [AlexaSemantics.STATES_OPEN], min_value=1, max_value=100
+                raise_labels, "SetRangeValue", {"rangeValue": 100}
             )
             return self._semantics.serialize_semantics()
 
-        # Cover Tilt Position
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
+        # Cover Tilt
+        if self.instance == f"{cover.DOMAIN}.tilt":
             self._semantics = AlexaSemantics()
             self._semantics.add_action_to_directive(
                 [AlexaSemantics.ACTION_CLOSE], "SetRangeValue", {"rangeValue": 0}
@@ -1394,6 +1433,15 @@ class AlexaRangeController(AlexaCapability):
 
 class AlexaToggleController(AlexaCapability):
     """Implements Alexa.ToggleController.
+
+    The instance property must be unique across ModeController, RangeController, ToggleController within the same device.
+    The instance property should be a concatenated string of device domain period and single word.
+    e.g. fan.speed & fan.direction.
+
+    The instance property must not contain words from other instance property strings within the same device.
+    e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
+
+    An instance property string value may be reused for different devices.
 
     https://developer.amazon.com/docs/device-apis/alexa-togglecontroller.html
     """
