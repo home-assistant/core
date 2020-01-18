@@ -72,5 +72,7 @@ VIZIO_SCHEMA = {
     ),
 }
 
+VIZIO_ZEROCONF_SERVICE_TYPE = "_viziocast._tcp.local."
+
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)

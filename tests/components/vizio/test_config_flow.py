@@ -13,13 +13,16 @@ from homeassistant.components.vizio.const import (
     DEFAULT_VOLUME_STEP,
     DOMAIN,
     VIZIO_SCHEMA,
+    VIZIO_ZEROCONF_SERVICE_TYPE,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
+    CONF_PORT,
+    CONF_TYPE,
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -60,6 +63,18 @@ MOCK_SPEAKER_CONFIG = {
     CONF_NAME: NAME,
     CONF_HOST: HOST,
     CONF_DEVICE_CLASS: DEVICE_CLASS_SPEAKER,
+}
+
+ZEROCONF_NAME = f"{NAME}.{VIZIO_ZEROCONF_SERVICE_TYPE}"
+ZEROCONF_HOST = HOST.split(":")[0]
+ZEROCONF_PORT = HOST.split(":")[1]
+
+MOCK_ZEROCONF_ENTRY = {
+    CONF_TYPE: VIZIO_ZEROCONF_SERVICE_TYPE,
+    CONF_NAME: ZEROCONF_NAME,
+    CONF_HOST: ZEROCONF_HOST,
+    CONF_PORT: ZEROCONF_PORT,
+    "properties": {"name": "SB4031-D5"},
 }
 
 
@@ -175,7 +190,7 @@ async def test_options_flow(hass: HomeAssistantType) -> None:
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_VOLUME_STEP: VOLUME_STEP},
+        result["flow_id"], user_input={CONF_VOLUME_STEP: VOLUME_STEP}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -188,9 +203,7 @@ async def test_user_host_already_configured(
 ) -> None:
     """Test host is already configured during user setup."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_SPEAKER_CONFIG,
-        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, options={CONF_VOLUME_STEP: VOLUME_STEP}
     )
     entry.add_to_hass(hass)
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
@@ -216,9 +229,7 @@ async def test_user_name_already_configured(
 ) -> None:
     """Test name is already configured during user setup."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=MOCK_SPEAKER_CONFIG,
-        options={CONF_VOLUME_STEP: VOLUME_STEP},
+        domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, options={CONF_VOLUME_STEP: VOLUME_STEP}
     )
     entry.add_to_hass(hass)
 
@@ -385,3 +396,30 @@ async def test_import_flow_update_options(
         hass.config_entries.async_get_entry(entry_id).options[CONF_VOLUME_STEP]
         == VOLUME_STEP + 1
     )
+
+
+async def test_zeroconf_flow(hass: HomeAssistantType, vizio_connect) -> None:
+    """Test zeroconf config flow."""
+    with patch("pyvizio.vizio.VizioAsync.can_connect", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_ENTRY
+        )
+
+    # Form should always show even if all required properties are discovered
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    # Apply discovery updates to entry to mimick when user hits submit without changing
+    # defaults which were set from discovery parameters
+    user_input = result["data_schema"](MOCK_ZEROCONF_ENTRY)
+
+    with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=user_input
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_NAME] == NAME
+    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SPEAKER
