@@ -32,6 +32,7 @@ from .const import (
     ATTR_CLUSTER_ID,
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
+    ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_IEEE,
     ATTR_LAST_SEEN,
@@ -54,9 +55,13 @@ from .const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    DEVICE_TYPE_COORDINATOR,
+    DEVICE_TYPE_END_DEVICE,
+    DEVICE_TYPE_ROUTER,
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
+    UNKNOWN,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
 )
@@ -159,6 +164,19 @@ class ZHADevice(LogMixin):
     def is_mains_powered(self):
         """Return true if device is mains powered."""
         return self._zigpy_device.node_desc.is_mains_powered
+
+    @property
+    def device_type(self):
+        """Return the logical device type for the device."""
+        return (
+            DEVICE_TYPE_COORDINATOR
+            if self.is_coordinator
+            else DEVICE_TYPE_ROUTER
+            if self.is_router
+            else DEVICE_TYPE_END_DEVICE
+            if self.is_end_device
+            else UNKNOWN
+        )
 
     @property
     def power_source(self):
@@ -281,6 +299,7 @@ class ZHADevice(LogMixin):
             ATTR_RSSI: self.rssi,
             ATTR_LAST_SEEN: update_time,
             ATTR_AVAILABLE: self.available,
+            ATTR_DEVICE_TYPE: self.device_type,
         }
 
     def add_cluster_channel(self, cluster_channel):

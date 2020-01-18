@@ -18,6 +18,7 @@ ATTR_CLUSTER_ID = "cluster_id"
 ATTR_CLUSTER_TYPE = "cluster_type"
 ATTR_COMMAND = "command"
 ATTR_COMMAND_TYPE = "command_type"
+ATTR_DEVICE_TYPE = "device_type"
 ATTR_ENDPOINT_ID = "endpoint_id"
 ATTR_IEEE = "ieee"
 ATTR_LAST_SEEN = "last_seen"
@@ -113,6 +114,11 @@ DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY]
 DEFAULT_RADIO_TYPE = "ezsp"
 DEFAULT_BAUDRATE = 57600
 DEFAULT_DATABASE_NAME = "zigbee.db"
+
+DEVICE_TYPE_COORDINATOR = "coordinator"
+DEVICE_TYPE_END_DEVICE = "end device"
+DEVICE_TYPE_ROUTER = "router"
+
 DISCOVERY_KEY = "zha_discovery_info"
 
 DOMAIN = "zha"
