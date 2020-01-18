@@ -24,7 +24,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for location_id in client_locations:
         for zone in client_locations[location_id].zones:
-            sensors.append(TotalConnectBinarySensor(zone, location_id, client_locations))
+            sensors.append(
+                TotalConnectBinarySensor(zone, location_id, client_locations)
+            )
     add_entities(sensors)
 
 
@@ -35,13 +37,9 @@ class TotalConnectBinarySensor(BinarySensorDevice):
         """Initialize the TotalConnect status."""
         self._zone_id = zone_id
         self._location_id = location_id
-        self._name = "TC {} zone {}".format(
-            locations[location_id].location_name, zone_id
-        )
-        self._unique_id = "TC {} zone {}".format(
-            locations[location_id].location_name, zone_id
-        )
         self._zone = locations[location_id].zones[zone_id]
+        self._name = self._zone.description
+        self._unique_id = "TC Location {} zone {}".format(location_id, zone_id)
         self.update()
 
     @property
@@ -96,9 +94,8 @@ class TotalConnectBinarySensor(BinarySensorDevice):
         """Return the state attributes."""
         attributes = {
             "zone_id": self._zone_id,
-            "zone_description": self._name,
             "location_id": self._location_id,
             "low_battery": self._is_low_battery,
-            "tampered": self._is_tampered
+            "tampered": self._is_tampered,
         }
         return attributes
