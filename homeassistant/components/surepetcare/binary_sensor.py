@@ -37,9 +37,9 @@ async def async_setup_platform(
         sure_id = thing[CONF_ID]
         sure_type = thing[CONF_TYPE]
 
-        if sure_type == SureThingID.FLAP.name:
+        if sure_type == SureThingID.FLAP:
             entity = Flap(sure_id, thing[CONF_NAME], spc)
-        elif sure_type == SureThingID.PET.name:
+        elif sure_type == SureThingID.PET:
             entity = Pet(sure_id, thing[CONF_NAME], spc)
 
         entities.append(entity)
@@ -109,7 +109,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
-        self._state = self._spc.states[self._sure_type.name][self._id].get("data")
+        self._state = self._spc.states[self._sure_type][self._id].get("data")
         _LOGGER.debug("async_update(): - self._state: %s", self._state)
 
     async def async_added_to_hass(self) -> None:
