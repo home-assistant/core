@@ -234,7 +234,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hass.async_add_executor_job(_discovery)
 
     platform = entity_platform.current_platform.get()
-    management_lock = asyncio.Lock()
 
     async def async_service_handle(service_call: ServiceCall):
         """Handle dispatched services."""
@@ -245,26 +244,25 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         entities = hass.data[DATA_SONOS].entities
 
-        async with management_lock:
-            if service_call.service == SERVICE_JOIN:
-                master = platform.entities.get(service_call.data[ATTR_MASTER])
-                if master:
-                    await SonosEntity.join_multi(hass, master[0], entities)
-                else:
-                    _LOGGER.error(
-                        "Invalid master specified for join service: %s",
-                        service_call.data[ATTR_MASTER],
-                    )
-            elif service_call.service == SERVICE_UNJOIN:
-                await SonosEntity.unjoin_multi(hass, entities)
-            elif service_call.service == SERVICE_SNAPSHOT:
-                await SonosEntity.snapshot_multi(
-                    hass, entities, service_call.data[ATTR_WITH_GROUP]
+        if service_call.service == SERVICE_JOIN:
+            master = platform.entities.get(service_call.data[ATTR_MASTER])
+            if master:
+                await SonosEntity.join_multi(hass, master[0], entities)
+            else:
+                _LOGGER.error(
+                    "Invalid master specified for join service: %s",
+                    service_call.data[ATTR_MASTER],
                 )
-            elif service_call.service == SERVICE_RESTORE:
-                await SonosEntity.restore_multi(
-                    hass, entities, service_call.data[ATTR_WITH_GROUP]
-                )
+        elif service_call.service == SERVICE_UNJOIN:
+            await SonosEntity.unjoin_multi(hass, entities)
+        elif service_call.service == SERVICE_SNAPSHOT:
+            await SonosEntity.snapshot_multi(
+                hass, entities, service_call.data[ATTR_WITH_GROUP]
+            )
+        elif service_call.service == SERVICE_RESTORE:
+            await SonosEntity.restore_multi(
+                hass, entities, service_call.data[ATTR_WITH_GROUP]
+            )
 
     service.async_register_admin_service(
         hass, SONOS_DOMAIN, SERVICE_JOIN, async_service_handle, SONOS_JOIN_SCHEMA
