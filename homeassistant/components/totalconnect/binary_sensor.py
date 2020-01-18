@@ -94,10 +94,11 @@ class TotalConnectBinarySensor(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attributes = {}
-        attributes["zone_id"] = self._zone_id
-        attributes["zone_description"] = self._name
-        attributes["location_id"] = self._location_id
-        attributes["low_battery"] = self._is_low_battery
-        attributes["tampered"] = self._is_tampered
+        attributes = {
+            "zone_id": self._zone_id,
+            "zone_description": self._name,
+            "location_id": self._location_id,
+            "low_battery": self._is_low_battery,
+            "tampered": self._is_tampered
+        }
         return attributes
