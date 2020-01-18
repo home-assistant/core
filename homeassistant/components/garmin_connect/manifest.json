@@ -3,6 +3,7 @@
   "name": "Garmin Connect",
   "documentation": "https://www.home-assistant.io/integrations/garmin_connect",
   "dependencies": [],
-  "requirements": ["garminconnect==0.1.4"],
-  "codeowners": ["@cyberjunky"]
+  "requirements": ["garminconnect==0.1.5"],
+  "codeowners": ["@cyberjunky"],
+  "config_flow": true
 }
