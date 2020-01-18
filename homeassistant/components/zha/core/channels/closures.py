@@ -11,9 +11,9 @@ import zigpy.zcl.clusters.closures as closures
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ZigbeeChannel
 from .. import registries
 from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
+from .base import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 

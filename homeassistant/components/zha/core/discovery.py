@@ -14,7 +14,7 @@ from homeassistant import const as ha_const
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .channels import AttributeListeningChannel, EventRelayChannel, ZDOChannel
+from .channels.base import AttributeListeningChannel, EventRelayChannel, ZDOChannel
 from .const import COMPONENTS, CONF_DEVICE_CONFIG, DATA_ZHA, ZHA_DISCOVERY_NEW
 from .registries import (
     CHANNEL_ONLY_CLUSTERS,

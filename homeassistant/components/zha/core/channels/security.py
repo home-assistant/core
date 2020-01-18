@@ -12,7 +12,6 @@ import zigpy.zcl.clusters.security as security
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ZigbeeChannel
 from .. import registries
 from ..const import (
     CLUSTER_COMMAND_SERVER,
@@ -23,6 +22,7 @@ from ..const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
+from .base import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -18,16 +18,16 @@ ZigpyDeviceType = zigpy.device.Device
 ZigpyEndpointType = zigpy.endpoint.Endpoint
 
 if TYPE_CHECKING:
-    import homeassistant.components.zha.core.channels
+    import homeassistant.components.zha.core.channels.base as base_channels
     import homeassistant.components.zha.core.device
     import homeassistant.components.zha.core.gateway
     import homeassistant.components.zha.entity
     import homeassistant.components.zha.core.channels
 
     # pylint: disable=invalid-name
-    ChannelType = homeassistant.components.zha.core.channels.ZigbeeChannel
-    EventRelayChannelType = homeassistant.components.zha.core.channels.EventRelayChannel
-    ZDOChannelType = homeassistant.components.zha.core.channels.ZDOChannel
+    ChannelType = base_channels.ZigbeeChannel
+    EventRelayChannelType = base_channels.EventRelayChannel
+    ZDOChannelType = base_channels.ZDOChannel
     ZhaDeviceType = homeassistant.components.zha.core.device.ZHADevice
     ZhaEntityType = homeassistant.components.zha.entity.ZhaEntity
     ZhaGatewayType = homeassistant.components.zha.core.gateway.ZHAGateway

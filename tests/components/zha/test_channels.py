@@ -2,7 +2,7 @@
 import pytest
 import zigpy.types as t
 
-import homeassistant.components.zha.core.channels as channels
+import homeassistant.components.zha.core.channels.base as base_channels
 import homeassistant.components.zha.core.device as zha_device
 import homeassistant.components.zha.core.registries as registries
 
@@ -85,7 +85,7 @@ async def test_in_channel_config(
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
     channel_class = registries.ZIGBEE_CHANNEL_REGISTRY.get(
-        cluster_id, channels.AttributeListeningChannel
+        cluster_id, base_channels.AttributeListeningChannel
     )
     channel = channel_class(cluster, zha_dev)
 
@@ -144,7 +144,7 @@ async def test_out_channel_config(
     cluster = zigpy_dev.endpoints[1].out_clusters[cluster_id]
     cluster.bind_only = True
     channel_class = registries.ZIGBEE_CHANNEL_REGISTRY.get(
-        cluster_id, channels.AttributeListeningChannel
+        cluster_id, base_channels.AttributeListeningChannel
     )
     channel = channel_class(cluster, zha_dev)
 
@@ -159,4 +159,4 @@ def test_channel_registry():
     for (cluster_id, channel) in registries.ZIGBEE_CHANNEL_REGISTRY.items():
         assert isinstance(cluster_id, int)
         assert 0 <= cluster_id <= 0xFFFF
-        assert issubclass(channel, channels.ZigbeeChannel)
+        assert issubclass(channel, base_channels.ZigbeeChannel)

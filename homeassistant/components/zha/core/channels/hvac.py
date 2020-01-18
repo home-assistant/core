@@ -12,9 +12,9 @@ import zigpy.zcl.clusters.hvac as hvac
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ZigbeeChannel
 from .. import registries
 from ..const import REPORT_CONFIG_OP, SIGNAL_ATTR_UPDATED
+from .base import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 

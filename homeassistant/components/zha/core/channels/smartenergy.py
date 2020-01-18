@@ -11,8 +11,8 @@ import zigpy.zcl.clusters.smartenergy as smartenergy
 from homeassistant.core import callback
 
 from .. import registries
-from ..channels import AttributeListeningChannel, ZigbeeChannel
 from ..const import REPORT_CONFIG_DEFAULT
+from .base import AttributeListeningChannel, ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 

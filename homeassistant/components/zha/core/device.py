@@ -25,7 +25,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import typing as zha_typing
-from .channels import EventRelayChannel
+from .channels import base
 from .const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
@@ -324,7 +324,7 @@ class ZHADevice(LogMixin):
         ):
             return
 
-        if isinstance(cluster_channel, EventRelayChannel):
+        if isinstance(cluster_channel, base.EventRelayChannel):
             self._relay_channels[cluster_channel.unique_id] = cluster_channel
             self._all_channels.append(cluster_channel)
         else:

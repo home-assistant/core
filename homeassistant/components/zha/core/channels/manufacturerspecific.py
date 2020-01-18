@@ -9,7 +9,6 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import AttributeListeningChannel, ZigbeeChannel
 from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
@@ -17,6 +16,7 @@ from ..const import (
     REPORT_CONFIG_MIN_INT,
     SIGNAL_ATTR_UPDATED,
 )
+from .base import AttributeListeningChannel, ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 

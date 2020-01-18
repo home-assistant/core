@@ -8,9 +8,9 @@ import logging
 
 import zigpy.zcl.clusters.lighting as lighting
 
-from . import ZigbeeChannel
 from .. import registries
 from ..const import REPORT_CONFIG_DEFAULT
+from .base import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 

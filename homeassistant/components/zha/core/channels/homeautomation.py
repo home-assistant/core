@@ -11,13 +11,13 @@ import zigpy.zcl.clusters.homeautomation as homeautomation
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import AttributeListeningChannel, ZigbeeChannel
 from .. import registries
 from ..const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     REPORT_CONFIG_DEFAULT,
     SIGNAL_ATTR_UPDATED,
 )
+from .base import AttributeListeningChannel, ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 
