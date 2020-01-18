@@ -22,9 +22,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     client_locations = hass.data[TOTALCONNECT_DOMAIN].client.locations
 
-    for k in client_locations:
-        for zone in client_locations[k].zones:
-            sensors.append(TotalConnectBinarySensor(zone, k, client_locations))
+    for location_id in client_locations:
+        for zone in client_locations[location_id].zones:
+            sensors.append(TotalConnectBinarySensor(zone, location_id, client_locations))
     add_entities(sensors)
 
 
