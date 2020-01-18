@@ -9,7 +9,6 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_SOURCE,
-    CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -27,6 +26,7 @@ ATTR_SOURCE_ID = "source"
 CONF_ROUND_DIGITS = "round"
 CONF_UNIT_PREFIX = "unit_prefix"
 CONF_UNIT_TIME = "unit_time"
+CONF_UNIT = "unit"
 
 # SI Metric prefixes
 UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "G": 10 ** 6, "T": 10 ** 9}
@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ROUND_DIGITS, default=DEFAULT_ROUND): vol.Coerce(int),
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
         vol.Optional(CONF_UNIT_TIME, default="h"): vol.In(UNIT_TIME),
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_UNIT): cv.string,
     }
 )
 
@@ -58,7 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         config[CONF_ROUND_DIGITS],
         config[CONF_UNIT_PREFIX],
         config[CONF_UNIT_TIME],
-        config.get(CONF_UNIT_OF_MEASUREMENT),
+        config.get(CONF_UNIT),
     )
 
     async_add_entities([derivative])
