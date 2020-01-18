@@ -72,7 +72,7 @@ class FlapBattery(Entity):
         try:
             per_battery_voltage = self._state["battery"] / 4
             voltage_diff = per_battery_voltage - SURE_BATT_VOLTAGE_LOW
-            battery_percent = int(voltage_diff / SURE_BATT_VOLTAGE_DIFF * 100)
+            battery_percent = min(int(voltage_diff / SURE_BATT_VOLTAGE_DIFF * 100), 100)
         except (KeyError, TypeError):
             battery_percent = None
 
