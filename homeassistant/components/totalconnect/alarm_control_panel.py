@@ -32,8 +32,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     client = hass.data[TOTALCONNECT_DOMAIN].client
 
-    for k in client.locations:
-        alarms.append(TotalConnectAlarm(client.locations[k].location_name, k, client))
+    for location_id in client.locations:
+        alarms.append(
+            TotalConnectAlarm(
+                client.locations[location_id].location_name, location_id, client
+            )
+        )
     add_entities(alarms)
 
 
