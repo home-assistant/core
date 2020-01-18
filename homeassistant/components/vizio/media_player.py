@@ -248,34 +248,34 @@ class VizioDevice(MediaPlayerDevice):
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""
-        await self._device.pow_on(log_api_exception=False)
+        await self._device.pow_on()
 
     async def async_turn_off(self) -> None:
         """Turn the device off."""
-        await self._device.pow_off(log_api_exception=False)
+        await self._device.pow_off()
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
-            await self._device.mute_on(log_api_exception=False)
+            await self._device.mute_on()
         else:
-            await self._device.mute_off(log_api_exception=False)
+            await self._device.mute_off()
 
     async def async_media_previous_track(self) -> None:
         """Send previous channel command."""
-        await self._device.ch_down(log_api_exception=False)
+        await self._device.ch_down()
 
     async def async_media_next_track(self) -> None:
         """Send next channel command."""
-        await self._device.ch_up(log_api_exception=False)
+        await self._device.ch_up()
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self._device.input_switch(name=source, log_api_exception=False)
+        await self._device.input_switch(name=source)
 
     async def async_volume_up(self) -> None:
         """Increasing volume of the device."""
-        await self._device.vol_up(num=self._volume_step, log_api_exception=False)
+        await self._device.vol_up(num=self._volume_step)
 
         if self._volume_level is not None:
             self._volume_level = min(
@@ -284,7 +284,7 @@ class VizioDevice(MediaPlayerDevice):
 
     async def async_volume_down(self) -> None:
         """Decreasing volume of the device."""
-        await self._device.vol_down(num=self._volume_step, log_api_exception=False)
+        await self._device.vol_down(num=self._volume_step)
 
         if self._volume_level is not None:
             self._volume_level = max(
@@ -296,9 +296,9 @@ class VizioDevice(MediaPlayerDevice):
         if self._volume_level is not None:
             if volume > self._volume_level:
                 num = int(self._max_volume * (volume - self._volume_level))
-                await self._device.vol_up(num=num, log_api_exception=False)
+                await self._device.vol_up(num=num)
                 self._volume_level = volume
             elif volume < self._volume_level:
                 num = int(self._max_volume * (self._volume_level - volume))
-                await self._device.vol_down(num=num, log_api_exception=False)
+                await self._device.vol_down(num=num)
                 self._volume_level = volume
