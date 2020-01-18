@@ -154,6 +154,8 @@ class Flap(SurePetcareBinarySensor):
         if self._state:
             try:
                 attributes = {
+                    "online": bool(self._state["online"]),
+                    "learn_mode": bool(self._state["learn_mode"]),
                     "battery_voltage": self._state["battery"] / 4,
                     "locking_mode": SureLockStateID(
                         self._state["locking"]["mode"],
