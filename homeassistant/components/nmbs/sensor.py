@@ -130,6 +130,7 @@ class NMBSLiveBoard(Entity):
 
         attrs = {
             "departure": f"In {departure} minutes",
+            "departure_min": departure,
             "extra_train": int(self._attrs["isExtra"]) > 0,
             "vehicle_id": self._attrs["vehicle"],
             "monitored_station": self._station,
@@ -138,6 +139,7 @@ class NMBSLiveBoard(Entity):
 
         if delay > 0:
             attrs["delay"] = f"{delay} minutes"
+            attrs["delay_min"] = delay
 
         return attrs
 
@@ -200,6 +202,7 @@ class NMBSSensor(Entity):
 
         attrs = {
             "departure": f"In {departure} minutes",
+            "departure_min": departure,
             "destination": self._station_to,
             "direction": self._attrs["departure"]["direction"]["name"],
             "platform_arriving": self._attrs["arrival"]["platform"],
@@ -224,6 +227,7 @@ class NMBSSensor(Entity):
 
         if delay > 0:
             attrs["delay"] = f"{delay} minutes"
+            attrs["delay_min"] = delay
 
         return attrs
 
