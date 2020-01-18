@@ -1,0 +1,12 @@
+{
+  "domain": "arris_tg2492lg",
+  "name": "Arris TG2492LG",
+  "documentation": "https://www.home-assistant.io/integrations/arris_tg2492lg",
+  "requirements": [
+    "arris-tg2492lg==0.1.0"
+  ],
+  "dependencies": [],
+  "codeowners": [
+    "@vanbalken"
+  ]
+}
