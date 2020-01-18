@@ -55,9 +55,6 @@ from .const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
-    DEVICE_TYPE_COORDINATOR,
-    DEVICE_TYPE_END_DEVICE,
-    DEVICE_TYPE_ROUTER,
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
@@ -168,15 +165,8 @@ class ZHADevice(LogMixin):
     @property
     def device_type(self):
         """Return the logical device type for the device."""
-        return (
-            DEVICE_TYPE_COORDINATOR
-            if self.is_coordinator
-            else DEVICE_TYPE_ROUTER
-            if self.is_router
-            else DEVICE_TYPE_END_DEVICE
-            if self.is_end_device
-            else UNKNOWN
-        )
+        device_type = self._zigpy_device.node_desc.logical_type
+        return device_type.name if device_type else UNKNOWN
 
     @property
     def power_source(self):
