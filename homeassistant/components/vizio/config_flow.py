@@ -6,6 +6,7 @@ from pyvizio import VizioAsync
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -27,8 +28,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def update_schema_defaults(input_dict: Dict[str, Any]) -> vol.Schema:
-    """Update schema defaults based on user input/config dict. Retains info already provided for future form views."""
+def _config_flow_schema(input_dict: Dict[str, Any]) -> vol.Schema:
+    """Return schema defaults based on user input/config dict. Retain info already provided for future form views by setting them as defaults in schema."""
     return vol.Schema(
         {
             vol.Required(
@@ -38,7 +39,7 @@ def update_schema_defaults(input_dict: Dict[str, Any]) -> vol.Schema:
             vol.Optional(
                 CONF_DEVICE_CLASS,
                 default=input_dict.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
-            ): vol.All(str, vol.Lower, vol.In(["tv", "soundbar"])),
+            ): vol.All(str, vol.Lower, vol.In([DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER])),
             vol.Optional(
                 CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
             ): str,
@@ -72,7 +73,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
-            self.user_schema = update_schema_defaults(user_input)
+            self.user_schema = _config_flow_schema(user_input)
 
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -116,7 +117,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=user_input
                 )
 
-        schema = self.user_schema or self.import_schema or update_schema_defaults({})
+        schema = self.user_schema or self.import_schema or _config_flow_schema({})
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
@@ -127,20 +128,23 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_HOST] == import_config[CONF_HOST] and entry.data[
                 CONF_NAME
             ] == import_config.get(CONF_NAME):
+                new_options = {}
+
                 if entry.data[CONF_VOLUME_STEP] != import_config[CONF_VOLUME_STEP]:
-                    new_volume_step = {
-                        CONF_VOLUME_STEP: import_config[CONF_VOLUME_STEP]
-                    }
+                    new_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
+
+                if new_options:
                     self.hass.config_entries.async_update_entry(
                         entry=entry,
-                        data=entry.data.copy().update(new_volume_step),
-                        options=entry.options.copy().update(new_volume_step),
+                        data=entry.data.copy().update(new_options),
+                        options=entry.options.copy().update(new_options),
                     )
-                    return self.async_abort(reason="updated_volume_step")
+                    return self.async_abort(reason="updated_options")
+
                 return self.async_abort(reason="already_setup")
 
         # Store import values in case setup fails so user can see error
-        self.import_schema = update_schema_defaults(import_config)
+        self.import_schema = _config_flow_schema(import_config)
 
         return await self.async_step_user(user_input=import_config)
 
