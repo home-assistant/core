@@ -69,7 +69,10 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_abort(reason="connection_error")
 
-        if "Brother" not in user_input["name"]:
+        try:
+            if "Brother" not in user_input["name"]:
+                raise ValueError
+        except (KeyError, ValueError):
             return self.async_abort(reason="not_brother_printer")
 
         # Hostname is format: brother.local.
