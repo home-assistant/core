@@ -1,7 +1,8 @@
 """Support for Arris TG2492LG router."""
 import logging
+from typing import List
 
-from arris_tg2492lg import ConnectBox
+from arris_tg2492lg import ConnectBox, Device
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -32,31 +33,42 @@ def get_scanner(hass, config):
 
 
 class ArrisDeviceScanner(DeviceScanner):
-    """This class queries a Arrus TG2492LG router for connected devices."""
+    """This class queries a Arris TG2492LG router for connected devices."""
 
     def __init__(self, connect_box):
         """Initialize the scanner."""
         self.connect_box: ConnectBox = connect_box
+        self.last_results: List[Device] = []
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
-        devices = self.connect_box.get_connected_devices()
+        self._update_info()
 
-        def filter_online(device):
-            return device.online is True
-
-        def map_mac_address(device):
-            return device.mac
-
-        # filter online devices
-        online_devices = list(filter(filter_online, devices))
-
-        # show only mac address
-        mac_addresses = list(map(map_mac_address, online_devices))
-
-        # remove duplicates as some devices are returned with ipv4 and ipv6
-        return list(set(mac_addresses))
+        return [device.mac for device in self.last_results]
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
+        filter_named = [
+            result.hostname for result in self.last_results if result.mac == device
+        ]
+
+        if filter_named:
+            return filter_named[0]
         return None
+
+    def _update_info(self):
+        """Ensure the information from the Arris TG2492LG router is up to date.
+
+        Return boolean if scanning successful.
+        """
+        result = self.connect_box.get_connected_devices()
+
+        last_results = []
+        mac_addresses = set()
+
+        for device in result:
+            if device.online and device.mac not in mac_addresses:
+                last_results.append(device)
+                mac_addresses.add(device.mac)
+
+        self.last_results = last_results
