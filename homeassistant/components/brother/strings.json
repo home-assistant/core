@@ -13,7 +13,10 @@
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the Brother Printer {model} with serial number `{serial_number}` to Home Assistant?",
-        "title": "Discovered Brother Printer"
+        "title": "Discovered Brother Printer",
+        "data": {
+          "type": "Type of the printer"
+        }
       }
     },
     "error": {
