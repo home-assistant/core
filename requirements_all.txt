@@ -679,7 +679,7 @@ hole==0.5.0
 holidays==0.9.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200108.0
+home-assistant-frontend==20200108.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.7
@@ -1194,7 +1194,7 @@ pydaikin==1.6.1
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==67
+pydeconz==68
 
 # homeassistant.components.delijn
 pydelijn==0.5.1

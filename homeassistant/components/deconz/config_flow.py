@@ -21,7 +21,7 @@ from homeassistant.helpers import aiohttp_client
 from .const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
-    CONF_BRIDGEID,
+    CONF_BRIDGE_ID,
     DEFAULT_ALLOW_CLIP_SENSOR,
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_PORT,
@@ -74,7 +74,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             for bridge in self.bridges:
                 if bridge[CONF_HOST] == user_input[CONF_HOST]:
-                    self.bridge_id = bridge[CONF_BRIDGEID]
+                    self.bridge_id = bridge[CONF_BRIDGE_ID]
                     self.deconz_config = {
                         CONF_HOST: bridge[CONF_HOST],
                         CONF_PORT: bridge[CONF_PORT],

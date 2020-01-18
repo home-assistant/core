@@ -5,7 +5,8 @@ _LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "deconz"
 
-CONF_BRIDGEID = "bridgeid"
+CONF_BRIDGE_ID = "bridgeid"
+CONF_GROUP_ID_BASE = "group_id_base"
 
 DEFAULT_PORT = 80
 DEFAULT_ALLOW_CLIP_SENSOR = False
