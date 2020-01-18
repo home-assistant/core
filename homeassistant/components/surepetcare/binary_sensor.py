@@ -156,12 +156,12 @@ class Flap(SurePetcareBinarySensor):
                 attributes = {
                     "online": bool(self._state["online"]),
                     "learn_mode": bool(self._state["learn_mode"]),
-                    "battery_voltage": self._state["battery"] / 4,
+                    "battery_voltage": f'{self._state["battery"] / 4:.2f}',
                     "locking_mode": SureLockStateID(
-                        self._state["locking"]["mode"],
+                        self._state["locking"]["mode"]
                     ).name.capitalize(),
-                    "device_rssi": self._state["signal"]["device_rssi"],
-                    "hub_rssi": self._state["signal"]["hub_rssi"],
+                    "device_rssi": f'{self._state["signal"]["device_rssi"]:.2f}',
+                    "hub_rssi": f'{self._state["signal"]["hub_rssi"]:.2f}',
                 }
 
             except (KeyError, TypeError) as error:
