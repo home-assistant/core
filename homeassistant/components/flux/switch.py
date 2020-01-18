@@ -354,7 +354,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
             )
         self._attributes = {}
         self._attributes['Brightness'] = str(round(brightness/255*100,1)) + "%"
-        self._attributes['Colour Temperature'] = str(int(1000000 / mired)) + "K"
+        self._attributes['Colour Temperature'] = str(int(temp)) + "K"
 
     def find_start_time(self, now):
         """Return sunrise or start_time if given."""
