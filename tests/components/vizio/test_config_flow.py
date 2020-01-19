@@ -257,13 +257,7 @@ async def test_user_esn_already_exists(
     fail_entry[CONF_NAME] = NAME2
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], fail_entry
+        DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
