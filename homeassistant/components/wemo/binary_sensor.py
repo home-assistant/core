@@ -8,16 +8,18 @@ import requests
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import SUBSCRIPTION_REGISTRY
+from .const import DOMAIN as WEMO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Register discovered WeMo binary sensors."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up WeMo binary sensors."""
 
-    if discovery_info is not None:
+    async def _discovered_wemo(discovery_info):
+        """Handle a discovered Wemo device."""
         location = discovery_info["ssdp_description"]
         mac = discovery_info["mac_address"]
 
@@ -31,7 +33,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             raise PlatformNotReady
 
         if device:
-            add_entities([WemoBinarySensor(hass, device)])
+            async_add_entities([WemoBinarySensor(hass, device)])
+
+    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.binary_sensor", _discovered_wemo)
 
 
 class WemoBinarySensor(BinarySensorDevice):
@@ -67,7 +71,7 @@ class WemoBinarySensor(BinarySensorDevice):
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = SUBSCRIPTION_REGISTRY
+        registry = self.hass.data[WEMO_DOMAIN]
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 
@@ -126,3 +130,13 @@ class WemoBinarySensor(BinarySensorDevice):
     def available(self):
         """Return true if sensor is available."""
         return self._available
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "name": self.wemo.name,
+            "identifiers": {(WEMO_DOMAIN, self.wemo.serialnumber)},
+            "model": self.wemo.model_name,
+            "manufacturer": "Belkin",
+        }

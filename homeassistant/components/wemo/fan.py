@@ -20,8 +20,11 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-from . import SUBSCRIPTION_REGISTRY
-from .const import DOMAIN, SERVICE_RESET_FILTER_LIFE, SERVICE_SET_HUMIDITY
+from .const import (
+    DOMAIN as WEMO_DOMAIN,
+    SERVICE_RESET_FILTER_LIFE,
+    SERVICE_SET_HUMIDITY,
+)
 
 SCAN_INTERVAL = timedelta(seconds=10)
 DATA_KEY = "fan.wemo"
@@ -91,26 +94,26 @@ SET_HUMIDITY_SCHEMA = vol.Schema(
 RESET_FILTER_LIFE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up discovered WeMo humidifiers."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up WeMo binary sensors."""
+    hass.data[DATA_KEY] = {}
 
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
+    async def _discovered_wemo(discovery_info):
+        """Handle a discovered Wemo device."""
+        location = discovery_info["ssdp_description"]
+        mac = discovery_info["mac_address"]
 
-    if discovery_info is None:
-        return
+        try:
+            device = WemoHumidifier(discovery.device_from_description(location, mac))
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+        ) as err:
+            _LOGGER.error("Unable to access %s (%s)", location, err)
+            raise PlatformNotReady
 
-    location = discovery_info["ssdp_description"]
-    mac = discovery_info["mac_address"]
-
-    try:
-        device = WemoHumidifier(discovery.device_from_description(location, mac))
-    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as err:
-        _LOGGER.error("Unable to access %s (%s)", location, err)
-        raise PlatformNotReady
-
-    hass.data[DATA_KEY][device.entity_id] = device
-    add_entities([device])
+        hass.data[DATA_KEY][device.entity_id] = device
+        async_add_entities([device])
 
     def service_handle(service):
         """Handle the WeMo humidifier services."""
@@ -132,12 +135,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 humidifier.reset_filter_life()
 
     # Register service(s)
-    hass.services.register(
-        DOMAIN, SERVICE_SET_HUMIDITY, service_handle, schema=SET_HUMIDITY_SCHEMA
+    hass.services.async_register(
+        WEMO_DOMAIN, SERVICE_SET_HUMIDITY, service_handle, schema=SET_HUMIDITY_SCHEMA
     )
 
-    hass.services.register(
-        DOMAIN,
+    hass.services.async_register(
+        WEMO_DOMAIN,
         SERVICE_RESET_FILTER_LIFE,
         service_handle,
         schema=RESET_FILTER_LIFE_SCHEMA,
@@ -200,6 +203,16 @@ class WemoHumidifier(FanEntity):
         return self._available
 
     @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "name": self.wemo.name,
+            "identifiers": {(WEMO_DOMAIN, self.wemo.serialnumber)},
+            "model": self.wemo.model_name,
+            "manufacturer": "Belkin",
+        }
+
+    @property
     def icon(self):
         """Return the icon of device based on its type."""
         return "mdi:water-percent"
@@ -236,7 +249,7 @@ class WemoHumidifier(FanEntity):
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = SUBSCRIPTION_REGISTRY
+        registry = self.hass.data[WEMO_DOMAIN]
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 

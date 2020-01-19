@@ -1,4 +1,5 @@
 """Support for WeMo device discovery."""
+import asyncio
 import logging
 
 import pywemo
@@ -6,9 +7,9 @@ import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.discovery import SERVICE_WEMO
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import DOMAIN
 
@@ -25,9 +26,6 @@ WEMO_MODEL_DISPATCH = {
     "Sensor": "binary_sensor",
     "Socket": "switch",
 }
-
-SUBSCRIPTION_REGISTRY = None
-KNOWN_DEVICES = []
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +68,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up for WeMo devices."""
     hass.data[DOMAIN] = config
 
@@ -86,6 +84,8 @@ def setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up a wemo config entry."""
+    known_devices = set()
+    loaded_components = set()
 
     config = hass.data[DOMAIN]
 
@@ -93,20 +93,15 @@ async def async_setup_entry(hass, entry):
     devices = []
 
     # Keep track of WeMo device subscriptions for push updates
-    global SUBSCRIPTION_REGISTRY
-    SUBSCRIPTION_REGISTRY = pywemo.SubscriptionRegistry()
-    await hass.async_add_executor_job(SUBSCRIPTION_REGISTRY.start)
+    hass.data[DOMAIN] = pywemo.SubscriptionRegistry()
+    await hass.async_add_executor_job(hass.data[DOMAIN].start)
 
     def stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions")
-        SUBSCRIPTION_REGISTRY.stop()
+        hass.data[DOMAIN].stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
-
-    def setup_url_for_device(device):
-        """Determine setup.xml url for given device."""
-        return f"http://{device.host}:{device.port}/setup.xml"
 
     def setup_url_for_address(host, port):
         """Determine setup.xml url for given host and port pair."""
@@ -117,26 +112,6 @@ async def async_setup_entry(hass, entry):
             return None
 
         return f"http://{host}:{port}/setup.xml"
-
-    def discovery_dispatch(service, discovery_info):
-        """Dispatcher for incoming WeMo discovery events."""
-        # name, model, location, mac
-        model_name = discovery_info.get("model_name")
-        serial = discovery_info.get("serial")
-
-        # Only register a device once
-        if serial in KNOWN_DEVICES:
-            _LOGGER.debug("Ignoring known device %s %s", service, discovery_info)
-            return
-
-        _LOGGER.debug("Discovered unique WeMo device: %s", serial)
-        KNOWN_DEVICES.append(serial)
-
-        component = WEMO_MODEL_DISPATCH.get(model_name, "switch")
-
-        discovery.load_platform(hass, component, DOMAIN, discovery_info, config)
-
-    discovery.async_listen(hass, SERVICE_WEMO, discovery_dispatch)
 
     def discover_wemo_devices(now):
         """Run discovery for WeMo devices."""
@@ -175,17 +150,41 @@ async def async_setup_entry(hass, entry):
         for url, device in devices:
             _LOGGER.debug("Adding WeMo device at %s:%i", device.host, device.port)
 
-            discovery_info = {
-                "model_name": device.model_name,
-                "serial": device.serialnumber,
-                "mac_address": device.mac,
-                "ssdp_description": url,
-            }
+            # Only register a device once
+            if device.serialnumber in known_devices:
+                _LOGGER.debug("Ignoring known device %s", device.serialnumber)
+                return
 
-            discovery_dispatch(SERVICE_WEMO, discovery_info)
+            _LOGGER.debug("Discovered unique WeMo device: %s", device.serialnumber)
+            known_devices.add(device.serialnumber)
+
+            component = WEMO_MODEL_DISPATCH.get(device.model_name, "switch")
+
+            if component not in loaded_components:
+                loaded_components.add(component)
+                asyncio.run_coroutine_threadsafe(
+                    hass.config_entries.async_forward_entry_setup(entry, component),
+                    hass.loop,
+                ).result()
+
+            dispatcher_send(
+                hass,
+                f"{DOMAIN}.{component}",
+                {
+                    "model_name": device.model_name,
+                    "serial": device.serialnumber,
+                    "mac_address": device.mac,
+                    "ssdp_description": url,
+                },
+            )
 
         _LOGGER.debug("WeMo device discovery has finished")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, discover_wemo_devices)
 
     return True
+
+
+def setup_url_for_device(device):
+    """Determine setup.xml url for given device."""
+    return f"http://{device.host}:{device.port}/setup.xml"

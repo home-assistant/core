@@ -20,9 +20,10 @@ from homeassistant.components.light import (
     Light,
 )
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.color as color_util
 
-from . import SUBSCRIPTION_REGISTRY
+from .const import DOMAIN as WEMO_DOMAIN
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -34,10 +35,11 @@ SUPPORT_WEMO = (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up discovered WeMo switches."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up WeMo lights."""
 
-    if discovery_info is not None:
+    async def _discovered_wemo(discovery_info):
+        """Handle a discovered Wemo device."""
         location = discovery_info["ssdp_description"]
         mac = discovery_info["mac_address"]
 
@@ -51,12 +53,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             raise PlatformNotReady
 
         if device.model_name == "Dimmer":
-            add_entities([WemoDimmer(device)])
+            async_add_entities([WemoDimmer(device)])
         else:
-            setup_bridge(device, add_entities)
+            setup_bridge(hass, device, async_add_entities)
 
 
-def setup_bridge(bridge, add_entities):
+def setup_bridge(hass, bridge, async_add_entities):
     """Set up a WeMo link."""
     lights = {}
 
@@ -73,7 +75,7 @@ def setup_bridge(bridge, add_entities):
                 new_lights.append(lights[light_id])
 
         if new_lights:
-            add_entities(new_lights)
+            run_callback_threadsafe(hass.loop, async_add_entities, new_lights).result()
 
     update_lights()
 
@@ -109,6 +111,16 @@ class WemoLight(Light):
     def name(self):
         """Return the name of the light."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "name": self.wemo.name,
+            "identifiers": {(WEMO_DOMAIN, self.wemo.serialnumber)},
+            "model": self.wemo.model_name,
+            "manufacturer": "Belkin",
+        }
 
     @property
     def brightness(self):
@@ -235,7 +247,7 @@ class WemoDimmer(Light):
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = SUBSCRIPTION_REGISTRY
+        registry = self.hass.data[WEMO_DOMAIN]
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 
