@@ -47,7 +47,7 @@ async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
     async_add_entities: Callable[[List[Entity], bool], None],
-) -> bool:
+) -> None:
     """Set up a Vizio media player entry."""
     host = config_entry.data[CONF_HOST]
     token = config_entry.data.get(CONF_ACCESS_TOKEN)
