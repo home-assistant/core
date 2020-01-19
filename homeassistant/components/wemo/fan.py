@@ -19,6 +19,7 @@ from homeassistant.components.fan import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     DOMAIN as WEMO_DOMAIN,
@@ -114,6 +115,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         hass.data[DATA_KEY][device.entity_id] = device
         async_add_entities([device])
+
+    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
 
     def service_handle(service):
         """Handle the WeMo humidifier services."""

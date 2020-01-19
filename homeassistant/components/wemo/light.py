@@ -20,6 +20,7 @@ from homeassistant.components.light import (
     Light,
 )
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.color as color_util
 
@@ -56,6 +57,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             async_add_entities([WemoDimmer(device)])
         else:
             setup_bridge(hass, device, async_add_entities)
+
+    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
 
 
 def setup_bridge(hass, bridge, async_add_entities):
