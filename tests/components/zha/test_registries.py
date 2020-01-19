@@ -125,10 +125,9 @@ def channels(channel):
         ),
     ],
 )
-def test_registry_matching(rule, matched, zha_device, channels):
+def test_registry_matching(rule, matched, channels):
     """Test strict rule matching."""
-    reg = registries.ZHAEntityRegistry()
-    assert reg._strict_matched(zha_device, channels, rule) is matched
+    assert rule.strict_matched(MANUFACTURER, MODEL, channels) is matched
 
 
 @pytest.mark.parametrize(
@@ -209,10 +208,9 @@ def test_registry_matching(rule, matched, zha_device, channels):
         ),
     ],
 )
-def test_registry_loose_matching(rule, matched, zha_device, channels):
+def test_registry_loose_matching(rule, matched, channels):
     """Test loose rule matching."""
-    reg = registries.ZHAEntityRegistry()
-    assert reg._loose_matched(zha_device, channels, rule) is matched
+    assert rule.loose_matched(MANUFACTURER, MODEL, channels) is matched
 
 
 def test_match_rule_claim_channels_color(channel):
