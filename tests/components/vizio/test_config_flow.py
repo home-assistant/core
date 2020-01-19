@@ -340,6 +340,26 @@ async def test_import_flow_all_fields(
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
 
 
+async def test_import_entity_already_configured(
+    hass: HomeAssistantType, vizio_connect, vizio_bypass_setup
+) -> None:
+    """Test entity is already configured during import setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
+    )
+    entry.add_to_hass(hass)
+    fail_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG.copy())
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "import"}, data=fail_entry
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_setup"
+
+
 async def test_import_flow_update_options(
     hass: HomeAssistantType, vizio_connect, vizio_bypass_update
 ) -> None:
