@@ -133,7 +133,7 @@ def get_capability(capabilities, capability_name, instance=None):
     for capability in capabilities:
         if instance and capability["instance"] == instance:
             return capability
-        if capability["interface"] == capability_name:
+        if not instance and capability["interface"] == capability_name:
             return capability
 
     return None
@@ -1484,6 +1484,36 @@ async def test_cover_position_range(hass):
     assert supported_range["maximumValue"] == 100
     assert supported_range["precision"] == 1
 
+    # Assert for Position Semantics
+    position_semantics = range_capability["semantics"]
+    assert position_semantics is not None
+
+    position_action_mappings = position_semantics["actionMappings"]
+    assert position_action_mappings is not None
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Lower", "Alexa.Actions.Close"],
+        "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 0}},
+    } in position_action_mappings
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Raise", "Alexa.Actions.Open"],
+        "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 100}},
+    } in position_action_mappings
+
+    position_state_mappings = position_semantics["stateMappings"]
+    assert position_state_mappings is not None
+    assert {
+        "@type": "StatesToValue",
+        "states": ["Alexa.States.Closed"],
+        "value": 0,
+    } in position_state_mappings
+    assert {
+        "@type": "StatesToRange",
+        "states": ["Alexa.States.Open"],
+        "range": {"minimumValue": 1, "maximumValue": 100},
+    } in position_state_mappings
+
     call, _ = await assert_request_calls_service(
         "Alexa.RangeController",
         "SetRangeValue",
@@ -2511,16 +2541,37 @@ async def test_cover_position_mode(hass):
         },
     } in supported_modes
 
-    semantics = mode_capability["semantics"]
-    assert semantics is not None
+    # Assert for Position Semantics
+    position_semantics = mode_capability["semantics"]
+    assert position_semantics is not None
 
-    action_mappings = semantics["actionMappings"]
-    assert action_mappings is not None
+    position_action_mappings = position_semantics["actionMappings"]
+    assert position_action_mappings is not None
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Lower", "Alexa.Actions.Close"],
+        "directive": {"name": "SetMode", "payload": {"mode": "position.closed"}},
+    } in position_action_mappings
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Raise", "Alexa.Actions.Open"],
+        "directive": {"name": "SetMode", "payload": {"mode": "position.open"}},
+    } in position_action_mappings
 
-    state_mappings = semantics["stateMappings"]
-    assert state_mappings is not None
+    position_state_mappings = position_semantics["stateMappings"]
+    assert position_state_mappings is not None
+    assert {
+        "@type": "StatesToValue",
+        "states": ["Alexa.States.Closed"],
+        "value": "position.closed",
+    } in position_state_mappings
+    assert {
+        "@type": "StatesToValue",
+        "states": ["Alexa.States.Open"],
+        "value": "position.open",
+    } in position_state_mappings
 
-    call, msg = await assert_request_calls_service(
+    _, msg = await assert_request_calls_service(
         "Alexa.ModeController",
         "SetMode",
         "cover#test_mode",
@@ -2534,7 +2585,7 @@ async def test_cover_position_mode(hass):
     assert properties["namespace"] == "Alexa.ModeController"
     assert properties["value"] == "position.closed"
 
-    call, msg = await assert_request_calls_service(
+    _, msg = await assert_request_calls_service(
         "Alexa.ModeController",
         "SetMode",
         "cover#test_mode",
@@ -2548,7 +2599,7 @@ async def test_cover_position_mode(hass):
     assert properties["namespace"] == "Alexa.ModeController"
     assert properties["value"] == "position.open"
 
-    call, msg = await assert_request_calls_service(
+    _, msg = await assert_request_calls_service(
         "Alexa.ModeController",
         "SetMode",
         "cover#test_mode",
@@ -2668,7 +2719,7 @@ async def test_cover_tilt_position_range(hass):
 
     range_capability = get_capability(capabilities, "Alexa.RangeController")
     assert range_capability is not None
-    assert range_capability["instance"] == "cover.tilt_position"
+    assert range_capability["instance"] == "cover.tilt"
 
     semantics = range_capability["semantics"]
     assert semantics is not None
@@ -2686,7 +2737,7 @@ async def test_cover_tilt_position_range(hass):
         "cover.set_cover_tilt_position",
         hass,
         payload={"rangeValue": "50"},
-        instance="cover.tilt_position",
+        instance="cover.tilt",
     )
     assert call.data["position"] == 50
 
@@ -2697,7 +2748,7 @@ async def test_cover_tilt_position_range(hass):
         "cover.close_cover_tilt",
         hass,
         payload={"rangeValue": "0"},
-        instance="cover.tilt_position",
+        instance="cover.tilt",
     )
     properties = msg["context"]["properties"][0]
     assert properties["name"] == "rangeValue"
@@ -2711,7 +2762,7 @@ async def test_cover_tilt_position_range(hass):
         "cover.open_cover_tilt",
         hass,
         payload={"rangeValue": "100"},
-        instance="cover.tilt_position",
+        instance="cover.tilt",
     )
     properties = msg["context"]["properties"][0]
     assert properties["name"] == "rangeValue"
@@ -2727,12 +2778,12 @@ async def test_cover_tilt_position_range(hass):
         False,
         "cover.set_cover_tilt_position",
         "tilt_position",
-        instance="cover.tilt_position",
+        instance="cover.tilt",
     )
 
 
-async def test_cover_semantics(hass):
-    """Test cover discovery and semantics."""
+async def test_cover_semantics_position_and_tilt(hass):
+    """Test cover discovery and semantics with position and tilt support."""
     device = (
         "cover.test_semantics",
         "open",
@@ -2754,50 +2805,57 @@ async def test_cover_semantics(hass):
         appliance, "Alexa.RangeController", "Alexa.EndpointHealth", "Alexa"
     )
 
-    for range_instance in ("cover.position", "cover.tilt_position"):
-        range_capability = get_capability(
-            capabilities, "Alexa.RangeController", range_instance
-        )
-        semantics = range_capability["semantics"]
-        assert semantics is not None
+    # Assert for Position Semantics
+    position_capability = get_capability(
+        capabilities, "Alexa.RangeController", "cover.position"
+    )
+    position_semantics = position_capability["semantics"]
+    assert position_semantics is not None
 
-        action_mappings = semantics["actionMappings"]
-        assert action_mappings is not None
-        if range_instance == "cover.position":
-            assert {
-                "@type": "ActionsToDirective",
-                "actions": ["Alexa.Actions.Lower"],
-                "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 0}},
-            } in action_mappings
-            assert {
-                "@type": "ActionsToDirective",
-                "actions": ["Alexa.Actions.Raise"],
-                "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 100}},
-            } in action_mappings
-        elif range_instance == "cover.position":
-            assert {
-                "@type": "ActionsToDirective",
-                "actions": ["Alexa.Actions.Close"],
-                "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 0}},
-            } in action_mappings
-            assert {
-                "@type": "ActionsToDirective",
-                "actions": ["Alexa.Actions.Open"],
-                "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 100}},
-            } in action_mappings
+    position_action_mappings = position_semantics["actionMappings"]
+    assert position_action_mappings is not None
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Lower"],
+        "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 0}},
+    } in position_action_mappings
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Raise"],
+        "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 100}},
+    } in position_action_mappings
 
-        state_mappings = semantics["stateMappings"]
-        assert state_mappings is not None
-        assert {
-            "@type": "StatesToValue",
-            "states": ["Alexa.States.Closed"],
-            "value": 0,
-        } in state_mappings
-        assert {
-            "@type": "StatesToRange",
-            "states": ["Alexa.States.Open"],
-            "range": {"minimumValue": 1, "maximumValue": 100},
-        } in state_mappings
+    # Assert for Tilt Semantics
+    tilt_capability = get_capability(
+        capabilities, "Alexa.RangeController", "cover.tilt"
+    )
+    tilt_semantics = tilt_capability["semantics"]
+    assert tilt_semantics is not None
+    tilt_action_mappings = tilt_semantics["actionMappings"]
+    assert tilt_action_mappings is not None
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Close"],
+        "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 0}},
+    } in tilt_action_mappings
+    assert {
+        "@type": "ActionsToDirective",
+        "actions": ["Alexa.Actions.Open"],
+        "directive": {"name": "SetRangeValue", "payload": {"rangeValue": 100}},
+    } in tilt_action_mappings
+
+    tilt_state_mappings = tilt_semantics["stateMappings"]
+    assert tilt_state_mappings is not None
+    assert {
+        "@type": "StatesToValue",
+        "states": ["Alexa.States.Closed"],
+        "value": 0,
+    } in tilt_state_mappings
+    assert {
+        "@type": "StatesToRange",
+        "states": ["Alexa.States.Open"],
+        "range": {"minimumValue": 1, "maximumValue": 100},
+    } in tilt_state_mappings
 
 
 async def test_input_number(hass):
