@@ -8,7 +8,10 @@ from random import uniform
 
 import zigpy.exceptions
 
-from homeassistant.components.zha.core.const import (
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from ..const import (
     CHANNEL_EVENT_RELAY,
     CHANNEL_ZDO,
     REPORT_CONFIG_DEFAULT,
@@ -17,14 +20,7 @@ from homeassistant.components.zha.core.const import (
     REPORT_CONFIG_RPT_CHANGE,
     SIGNAL_ATTR_UPDATED,
 )
-from homeassistant.components.zha.core.helpers import (
-    LogMixin,
-    get_attr_id_by_name,
-    safe_read,
-)
-from homeassistant.components.zha.core.registries import CLUSTER_REPORT_CONFIGS
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from ..helpers import LogMixin, get_attr_id_by_name, safe_read
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,9 +85,7 @@ class ZigbeeChannel(LogMixin):
         self._zha_device = device
         self._id = f"{cluster.endpoint.endpoint_id}:0x{cluster.cluster_id:04x}"
         self._unique_id = f"{str(device.ieee)}:{self._id}"
-        self._report_config = CLUSTER_REPORT_CONFIGS.get(
-            self._cluster.cluster_id, self.REPORT_CONFIG
-        )
+        self._report_config = self.REPORT_CONFIG
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
 
