@@ -13,6 +13,7 @@ from homeassistant.util import convert
 from .const import DOMAIN as WEMO_DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=10)
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 

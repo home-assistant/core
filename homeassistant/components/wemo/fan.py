@@ -25,6 +25,7 @@ from .const import (
 )
 
 SCAN_INTERVAL = timedelta(seconds=10)
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
