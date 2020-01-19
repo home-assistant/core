@@ -3,7 +3,7 @@ from datetime import datetime
 import logging
 from typing import Any, Dict, Optional
 
-from surepy import SureLocationID, SureLockStateID, SureThingID
+from surepy import SureLocationID, SureLockStateID, SureProductID
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_LOCK,
@@ -37,9 +37,9 @@ async def async_setup_platform(
         sure_id = thing[CONF_ID]
         sure_type = thing[CONF_TYPE]
 
-        if sure_type == SureThingID.FLAP:
+        if sure_type in [SureProductID.CAT_FLAP, SureProductID.PET_FLAP]:
             entity = Flap(sure_id, thing[CONF_NAME], spc)
-        elif sure_type == SureThingID.PET:
+        elif sure_type == SureProductID.PET:
             entity = Pet(sure_id, thing[CONF_NAME], spc)
 
         entities.append(entity)
@@ -56,7 +56,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
         name: str,
         spc: SurePetcareAPI,
         device_class: str,
-        sure_type: SureThingID,
+        sure_type: SureProductID,
     ):
         """Initialize a Sure Petcare binary sensor."""
         self._id = _id
@@ -138,7 +138,11 @@ class Flap(SurePetcareBinarySensor):
     ) -> None:
         """Initialize a Sure Petcare Flap."""
         super().__init__(
-            _id, f"Flap {name.capitalize()}", spc, DEVICE_CLASS_LOCK, SureThingID.FLAP,
+            _id,
+            f"Flap {name.capitalize()}",
+            spc,
+            DEVICE_CLASS_LOCK,
+            SureProductID.PET_FLAP,
         )
 
     @property
@@ -190,7 +194,7 @@ class Pet(SurePetcareBinarySensor):
             f"Pet {name.capitalize()}",
             spc,
             DEVICE_CLASS_PRESENCE,
-            SureThingID.PET,
+            SureProductID.PET,
         )
 
     @property

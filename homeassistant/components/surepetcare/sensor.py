@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Dict, Optional
 
-from surepy import SureThingID
+from surepy import SureProductID
 
 from homeassistant.const import (
     ATTR_VOLTAGE,
@@ -37,7 +37,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         [
             FlapBattery(entity[CONF_ID], entity[CONF_NAME], spc)
             for entity in spc.ids
-            if entity[CONF_TYPE] == SureThingID.FLAP
+            if entity[CONF_TYPE] == SureProductID.PET_FLAP
         ],
         True,
     )
@@ -51,7 +51,7 @@ class FlapBattery(Entity):
         self._id = _id
         self._name = f"Flap {name.capitalize()} Battery Level"
         self._spc = spc
-        self._state = self._spc.states[SureThingID.FLAP][self._id].get("data")
+        self._state = self._spc.states[SureProductID.PET_FLAP][self._id].get("data")
 
         self._async_unsub_dispatcher_connect = None
 
@@ -117,7 +117,7 @@ class FlapBattery(Entity):
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
-        self._state = self._spc.states[SureThingID.FLAP][self._id].get("data")
+        self._state = self._spc.states[SureProductID.PET_FLAP][self._id].get("data")
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
