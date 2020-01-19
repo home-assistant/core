@@ -89,10 +89,7 @@ def vizio_bypass_update_fixture():
     with patch(
         "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
         return_value=True,
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioDevice.async_update",
-        return_value=None,
-    ):
+    ), patch("homeassistant.components.vizio.media_player.VizioDevice.async_update"):
         yield
 
 
@@ -369,6 +366,8 @@ async def test_import_flow_update_options(
         context={"source": SOURCE_IMPORT},
         data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
     )
+    await hass.async_block_till_done()
+    assert result["result"].options == {CONF_VOLUME_STEP: VOLUME_STEP}
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     entry_id = result["result"].entry_id
 
