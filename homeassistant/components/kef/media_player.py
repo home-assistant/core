@@ -36,7 +36,7 @@ DEFAULT_PORT = 50001
 DEFAULT_MAX_VOLUME = 0.5
 DEFAULT_VOLUME_STEP = 0.05
 DEFAULT_INVERSE_SPEAKER_MODE = False
-DEFAULT_SUPPORTS_ON_OFF = True
+DEFAULT_SUPPORTS_ON = True
 
 DOMAIN = "kef"
 
@@ -48,7 +48,7 @@ SOURCES["LS50"] = SOURCES["LSX"] + ["Usb"]
 CONF_MAX_VOLUME = "maximum_volume"
 CONF_VOLUME_STEP = "volume_step"
 CONF_INVERSE_SPEAKER_MODE = "inverse_speaker_mode"
-CONF_SUPPORTS_ON_OFF = "supports_on_off"
+CONF_SUPPORTS_ON = "supports_on"
 CONF_STANDBY_TIME = "standby_time"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_INVERSE_SPEAKER_MODE, default=DEFAULT_INVERSE_SPEAKER_MODE
         ): cv.boolean,
-        vol.Optional(CONF_SUPPORTS_ON_OFF, default=DEFAULT_SUPPORTS_ON_OFF): cv.boolean,
+        vol.Optional(CONF_SUPPORTS_ON, default=DEFAULT_SUPPORTS_ON): cv.boolean,
         vol.Optional(CONF_STANDBY_TIME): vol.In([20, 60]),
     }
 )
@@ -80,7 +80,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     maximum_volume = config[CONF_MAX_VOLUME]
     volume_step = config[CONF_VOLUME_STEP]
     inverse_speaker_mode = config[CONF_INVERSE_SPEAKER_MODE]
-    supports_on_off = config[CONF_SUPPORTS_ON_OFF]
+    supports_on = config[CONF_SUPPORTS_ON]
     standby_time = config.get(CONF_STANDBY_TIME)
 
     sources = SOURCES[speaker_type]
@@ -112,7 +112,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         volume_step,
         standby_time,
         inverse_speaker_mode,
-        supports_on_off,
+        supports_on,
         sources,
         ioloop=hass.loop,
         unique_id=unique_id,
@@ -137,7 +137,7 @@ class KefMediaPlayer(MediaPlayerDevice):
         volume_step,
         standby_time,
         inverse_speaker_mode,
-        supports_on_off,
+        supports_on,
         sources,
         ioloop,
         unique_id,
@@ -155,7 +155,7 @@ class KefMediaPlayer(MediaPlayerDevice):
             ioloop=ioloop,
         )
         self._unique_id = unique_id
-        self._supports_on_off = supports_on_off
+        self._supports_on = supports_on
 
         self._state = None
         self._muted = None
@@ -213,9 +213,10 @@ class KefMediaPlayer(MediaPlayerDevice):
             | SUPPORT_VOLUME_STEP
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_SELECT_SOURCE
+            | SUPPORT_TURN_OFF
         )
-        if self._supports_on_off:
-            support_kef |= SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+        if self._supports_on:
+            support_kef |= SUPPORT_TURN_ON
 
         return support_kef
 
@@ -246,13 +247,11 @@ class KefMediaPlayer(MediaPlayerDevice):
 
     async def async_turn_off(self):
         """Turn the media player off."""
-        if not self._supports_on_off:
-            raise NotImplementedError()
         await self._speaker.turn_off()
 
     async def async_turn_on(self):
         """Turn the media player on."""
-        if not self._supports_on_off:
+        if not self._supports_on:
             raise NotImplementedError()
         await self._speaker.turn_on()
 
