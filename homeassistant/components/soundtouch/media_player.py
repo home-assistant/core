@@ -12,6 +12,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
@@ -22,6 +23,8 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    CONF_RESOURCES,
+    CONF_SOURCE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
@@ -30,11 +33,13 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    BLUETOOTH_SOURCE,
     DOMAIN,
     SERVICE_ADD_ZONE_SLAVE,
     SERVICE_CREATE_ZONE,
     SERVICE_PLAY_EVERYWHERE,
     SERVICE_REMOVE_ZONE_SLAVE,
+    Source,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,11 +83,16 @@ SUPPORT_SOUNDTOUCH = (
     | SUPPORT_PLAY_MEDIA
 )
 
+SOURCE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_SOURCE): cv.string, vol.Required(CONF_NAME): cv.string}
+)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_RESOURCES): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
     }
 )
 
@@ -110,6 +120,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "id": "ha.component.soundtouch",
             "port": config.get(CONF_PORT),
             "host": config.get(CONF_HOST),
+            "resources": config.get(CONF_RESOURCES),
         }
         bose_soundtouch_entity = SoundTouchDevice(name, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
@@ -194,6 +205,22 @@ class SoundTouchDevice(MediaPlayerDevice):
         self._status = self._device.status()
         self._volume = self._device.volume()
         self._config = config
+        self._resources = config.get("resources")
+        self._sources = []
+        self._sourcename = {}
+        self._namesource = {}
+        _LOGGER.debug(f"CONF_RESOURCES: {self._resources}")
+        if self._resources:
+            for pair in self._resources:
+                source = pair["source"].upper()
+                name = pair["name"]
+                self._sources.append(name)
+                self._sourcename[source] = name
+                self._namesource[name] = source
+                self._namesource[source] = source
+        _LOGGER.debug(
+            f"_sources= {self._sources}, _sourcename={self._sourcename}, _namesource={self._namesource}"
+        )
 
     @property
     def config(self):
@@ -236,7 +263,11 @@ class SoundTouchDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_SOUNDTOUCH
+        return (
+            (SUPPORT_SOUNDTOUCH | SUPPORT_SELECT_SOURCE)
+            if len(self._sources) > 0
+            else SUPPORT_SOUNDTOUCH
+        )
 
     def turn_off(self):
         """Turn off media player."""
@@ -398,3 +429,22 @@ class SoundTouchDevice(MediaPlayerDevice):
                 "Adding slaves to zone with master %s", self._device.config.name
             )
             self._device.add_zone_slave([slave.device for slave in slaves])
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return self._sources
+
+    @property
+    def source(self):
+        """Return the current input source."""
+        return self._sourcename.get(self._status.source)
+
+    def select_source(self, source):
+        """Set the input source."""
+        source_account = self._namesource.get(source)
+        if source_account == BLUETOOTH_SOURCE:
+            self._device.select_source_bluetooth()
+        elif source_account:
+            self._device.select_content_item(Source.PRODUCT_SOURCE, source_account)
+        self._status = self._device.status()
