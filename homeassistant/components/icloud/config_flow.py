@@ -8,10 +8,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.util import slugify
 
 from .const import (
-    CONF_ACCOUNT_NAME,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
@@ -45,14 +43,10 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._trusted_device = None
         self._verification_code = None
 
-    def _configuration_exists(self, username: str, account_name: str) -> bool:
-        """Return True if username or account_name exists in configuration."""
+    def _configuration_exists(self, username: str) -> bool:
+        """Return True if username exists in configuration."""
         for entry in self._async_current_entries():
-            if (
-                entry.data[CONF_USERNAME] == username
-                or entry.data.get(CONF_ACCOUNT_NAME) == account_name
-                or slugify(entry.data[CONF_USERNAME].partition("@")[0]) == account_name
-            ):
+            if entry.data[CONF_USERNAME] == username:
                 return True
         return False
 
@@ -91,13 +85,12 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._username = user_input[CONF_USERNAME]
         self._password = user_input[CONF_PASSWORD]
-        self._account_name = user_input.get(CONF_ACCOUNT_NAME)
         self._max_interval = user_input.get(CONF_MAX_INTERVAL, DEFAULT_MAX_INTERVAL)
         self._gps_accuracy_threshold = user_input.get(
             CONF_GPS_ACCURACY_THRESHOLD, DEFAULT_GPS_ACCURACY_THRESHOLD
         )
 
-        if self._configuration_exists(self._username, self._account_name):
+        if self._configuration_exists(self._username):
             errors[CONF_USERNAME] = "username_exists"
             return await self._show_setup_form(user_input, errors)
 
@@ -119,7 +112,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={
                 CONF_USERNAME: self._username,
                 CONF_PASSWORD: self._password,
-                CONF_ACCOUNT_NAME: self._account_name,
                 CONF_MAX_INTERVAL: self._max_interval,
                 CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
             },
@@ -127,9 +119,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
-        if self._configuration_exists(
-            user_input[CONF_USERNAME], user_input.get(CONF_ACCOUNT_NAME)
-        ):
+        if self._configuration_exists(user_input[CONF_USERNAME]):
             return self.async_abort(reason="username_exists")
 
         return await self.async_step_user(user_input)
@@ -214,7 +204,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 CONF_USERNAME: self._username,
                 CONF_PASSWORD: self._password,
-                CONF_ACCOUNT_NAME: self._account_name,
                 CONF_MAX_INTERVAL: self._max_interval,
                 CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
             }
