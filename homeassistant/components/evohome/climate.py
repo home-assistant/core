@@ -96,7 +96,7 @@ async def async_setup_platform(
     controller = EvoController(broker, broker.tcs)
 
     zones = []
-    for zone in broker.tcs.zones.values():
+    for zone in [z for z in broker.tcs.zones.values() if z.name]:
         _LOGGER.debug(
             "Found a %s (%s), id=%s, name=%s",
             zone.zoneType,
@@ -104,9 +104,9 @@ async def async_setup_platform(
             zone.zoneId,
             zone.name,
         )
-        new_entity = EvoZone(broker, zone)
-
-        zones.append(new_entity)
+        if zone.zoneType != "Unknown":  # in ["RadiatorZone", "Thermostat"]:
+            new_entity = EvoZone(broker, zone)
+            zones.append(new_entity)
 
     async_add_entities([controller] + zones, update_before_add=True)
 
