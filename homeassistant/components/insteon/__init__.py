@@ -30,6 +30,7 @@ from .const import (
     DOMAIN,
     INSTEON_ENTITIES,
 )
+from .schemas import CONFIG_SCHEMA  # noqa F440
 from .utils import register_services
 
 _LOGGER = logging.getLogger(__name__)
