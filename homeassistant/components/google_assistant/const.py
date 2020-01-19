@@ -16,6 +16,7 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
+    webostv,
 )
 
 DOMAIN = "google_assistant"
@@ -54,6 +55,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "binary_sensor",
     "sensor",
     "alarm_control_panel",
+    "webostv",
 ]
 
 PREFIX_TYPES = "action.devices.types."
@@ -115,6 +117,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     light.DOMAIN: TYPE_LIGHT,
     lock.DOMAIN: TYPE_LOCK,
     media_player.DOMAIN: TYPE_SWITCH,
+    webostv.DOMAIN: TYPE_SWITCH,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
     switch.DOMAIN: TYPE_SWITCH,
@@ -136,6 +139,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE): TYPE_SENSOR,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY): TYPE_SENSOR,
+    (webostv.DOMAIN, webostv.DEVICE_CLASS_TV): TYPE_TV,
 }
 
 CHALLENGE_ACK_NEEDED = "ackNeeded"
