@@ -136,7 +136,7 @@ class EndpointChannels:
         self._channels = channels
         self._claimed_channels = {}
         self._id = ep_id
-        self._unique_id = f"{channels.unique_id}:{ep_id}"
+        self._unique_id = f"{channels.unique_id}-{ep_id}"
         self._relay_channels = {}
 
     @property

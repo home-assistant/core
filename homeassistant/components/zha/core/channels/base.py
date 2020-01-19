@@ -96,7 +96,8 @@ class ZigbeeChannel(LogMixin):
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
         self._cluster = cluster
         self._id = f"{ep_channels.id}:0x{cluster.cluster_id:04x}"
-        self._unique_id = f"{ep_channels.unique_id}:0x{cluster.cluster_id:04x}"
+        unique_id = ep_channels.unique_id.replace("-", ":")
+        self._unique_id = f"{unique_id}:0x{cluster.cluster_id:04x}"
         self._report_config = self.REPORT_CONFIG
         self._status = ChannelStatus.CREATED
         self._cluster.add_listener(self)
@@ -232,7 +233,7 @@ class ZigbeeChannel(LogMixin):
         """Relay events to hass."""
         self._ep_channels.zha_send_event(
             {
-                ATTR_UNIQUE_ID: self._unique_id,
+                ATTR_UNIQUE_ID: self.unique_id,
                 ATTR_CLUSTER_ID: self.cluster.cluster_id,
                 ATTR_COMMAND: command,
                 ATTR_ARGS: args,
