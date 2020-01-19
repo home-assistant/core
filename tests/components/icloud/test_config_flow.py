@@ -8,7 +8,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components.icloud.config_flow import (
     CONF_TRUSTED_DEVICE,
     CONF_VERIFICATION_CODE,
-    IcloudFlowHandler,
 )
 from homeassistant.components.icloud.const import (
     CONF_GPS_ACCURACY_THRESHOLD,
@@ -41,6 +40,9 @@ def mock_controller_service():
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
         service_mock.return_value.requires_2fa = True
+        service_mock.return_value.trusted_devices = TRUSTED_DEVICES
+        service_mock.return_value.send_verification_code = Mock(return_value=True)
+        service_mock.return_value.validate_verification_code = Mock(return_value=True)
         yield service_mock
 
 
@@ -63,7 +65,7 @@ def mock_controller_service_send_verification_code_failed():
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
-        service_mock.return_value.requires_2fa = False
+        service_mock.return_value.requires_2fa = True
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
         service_mock.return_value.send_verification_code = Mock(return_value=False)
         yield service_mock
@@ -75,18 +77,11 @@ def mock_controller_service_validate_verification_code_failed():
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
-        service_mock.return_value.requires_2fa = False
+        service_mock.return_value.requires_2fa = True
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
         service_mock.return_value.send_verification_code = Mock(return_value=True)
         service_mock.return_value.validate_verification_code = Mock(return_value=False)
         yield service_mock
-
-
-def init_config_flow(hass: HomeAssistantType):
-    """Init a configuration flow."""
-    flow = IcloudFlowHandler()
-    flow.hass = hass
-    return flow
 
 
 async def test_user(hass: HomeAssistantType, service: MagicMock):
@@ -259,20 +254,28 @@ async def test_login_failed(hass: HomeAssistantType):
 
 async def test_trusted_device(hass: HomeAssistantType, service: MagicMock):
     """Test trusted_device step."""
-    flow = init_config_flow(hass)
-    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
 
-    result = await flow.async_step_trusted_device()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
 
 
 async def test_trusted_device_success(hass: HomeAssistantType, service: MagicMock):
     """Test trusted_device step success."""
-    flow = init_config_flow(hass)
-    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
 
-    result = await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
 
@@ -281,10 +284,15 @@ async def test_send_verification_code_failed(
     hass: HomeAssistantType, service_send_verification_code_failed: MagicMock
 ):
     """Test when we have errors during send_verification_code."""
-    flow = init_config_flow(hass)
-    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
 
-    result = await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
     assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
@@ -292,24 +300,34 @@ async def test_send_verification_code_failed(
 
 async def test_verification_code(hass: HomeAssistantType, service: MagicMock):
     """Test verification_code step."""
-    flow = init_config_flow(hass)
-    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
-    await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
+    )
 
-    result = await flow.async_step_verification_code()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == CONF_VERIFICATION_CODE
 
 
-async def test_verification_code_success(
-    hass: HomeAssistantType, service_with_cookie: MagicMock
-):
+async def test_verification_code_success(hass: HomeAssistantType, service: MagicMock):
     """Test verification_code step success."""
-    flow = init_config_flow(hass)
-    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
-    await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
+    )
 
-    result = await flow.async_step_verification_code({CONF_VERIFICATION_CODE: 0})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_VERIFICATION_CODE: 0}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
@@ -322,11 +340,18 @@ async def test_validate_verification_code_failed(
     hass: HomeAssistantType, service_validate_verification_code_failed: MagicMock
 ):
     """Test when we have errors during validate_verification_code."""
-    flow = init_config_flow(hass)
-    await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
-    await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
+    )
 
-    result = await flow.async_step_verification_code({CONF_VERIFICATION_CODE: 0})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_VERIFICATION_CODE: 0}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
     assert result["errors"] == {"base": "validate_verification_code"}

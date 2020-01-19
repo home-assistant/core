@@ -43,8 +43,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._trusted_device = None
         self._verification_code = None
 
-        self.context = {}
-
     async def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
