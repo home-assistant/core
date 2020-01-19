@@ -159,7 +159,6 @@ class NSDepartureSensor(Entity):
             attributes["departure_time_actual"] = self._trips[
                 0
             ].departure_time_actual.strftime("%H:%M")
-            # attributes["departure_delay"] = True
             attributes["departure_platform_actual"] = self._trips[
                 0
             ].departure_platform_actual
@@ -187,7 +186,6 @@ class NSDepartureSensor(Entity):
             attributes["arrival_time_actual"] = self._trips[
                 0
             ].arrival_time_actual.strftime("%H:%M")
-            # attributes["arrival_delay"] = True
             attributes["arrival_platform_actual"] = self._trips[
                 0
             ].arrival_platform_actual
