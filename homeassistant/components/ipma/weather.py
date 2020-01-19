@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_LATITUDE): cv.latitude,
         vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_MODE, default="hourly"): vol.In(FORECAST_MODE),
+        vol.Optional(CONF_MODE, default="daily"): vol.In(FORECAST_MODE),
     }
 )
 
@@ -235,7 +235,38 @@ class IPMAWeather(WeatherEntity):
         if not self._forecast:
             return []
 
-        if self._mode == "daily":
+        if self._mode == "hourly":
+            forecast_filtered = [
+                x
+                for x in self._forecast
+                if x.forecasted_hours == 1
+                and parse_datetime(x.forecast_date)
+                > (now().utcnow() - timedelta(hours=1))
+            ]
+
+            fcdata_out = [
+                {
+                    ATTR_FORECAST_TIME: data_in.forecast_date,
+                    ATTR_FORECAST_CONDITION: next(
+                        (
+                            k
+                            for k, v in CONDITION_CLASSES.items()
+                            if int(data_in.weather_type) in v
+                        ),
+                        None,
+                    ),
+                    ATTR_FORECAST_TEMP: float(data_in.feels_like_temperature),
+                    ATTR_FORECAST_PRECIPITATION: (
+                        data_in.precipitation_probability
+                        if float(data_in.precipitation_probability) >= 0
+                        else None
+                    ),
+                    ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
+                    ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
+                }
+                for data_in in forecast_filtered
+            ]
+        else:
             forecast_filtered = list(
                 filter(lambda x: x.forecasted_hours == 24, self._forecast)
             )
@@ -258,35 +289,5 @@ class IPMAWeather(WeatherEntity):
                 }
                 for data_in in forecast_filtered
             ]
-        else:
-            forecast_filtered = list(
-                filter(
-                    lambda x: x.forecasted_hours == 1
-                    and parse_datetime(x.forecast_date)
-                    > (now().utcnow() - timedelta(hours=1)),
-                    self._forecast,
-                )
-            )
-            fcdata_out = [
-                {
-                    ATTR_FORECAST_TIME: data_in.forecast_date,
-                    ATTR_FORECAST_CONDITION: next(
-                        (
-                            k
-                            for k, v in CONDITION_CLASSES.items()
-                            if int(data_in.weather_type) in v
-                        ),
-                        None,
-                    ),
-                    ATTR_FORECAST_TEMP: data_in.temperature,
-                    ATTR_FORECAST_PRECIPITATION: (
-                        data_in.precipitation_probability
-                        if float(data_in.precipitation_probability) >= 0
-                        else None
-                    ),
-                    ATTR_FORECAST_WIND_SPEED: data_in.wind_strength,
-                    ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
-                }
-                for data_in in forecast_filtered
-            ]
+
         return fcdata_out
