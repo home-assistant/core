@@ -45,13 +45,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self.context = {}
 
-    def _configuration_exists(self, username: str) -> bool:
-        """Return True if username exists in configuration."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_USERNAME] == username:
-                return True
-        return False
-
     async def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
@@ -121,9 +114,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
-        if self._configuration_exists(user_input[CONF_USERNAME]):
-            return self.async_abort(reason="already_configured")
-
         return await self.async_step_user(user_input)
 
     async def async_step_trusted_device(self, user_input=None, errors=None):
