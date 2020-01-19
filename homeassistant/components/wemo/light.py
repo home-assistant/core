@@ -18,7 +18,6 @@ from homeassistant.components.light import (
     Light,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN as WEMO_DOMAIN
@@ -72,7 +71,7 @@ def setup_bridge(hass, bridge, async_add_entities):
                 new_lights.append(lights[light_id])
 
         if new_lights:
-            run_callback_threadsafe(hass.loop, async_add_entities, new_lights).result()
+            hass.add_job(async_add_entities, new_lights)
 
     update_lights()
 

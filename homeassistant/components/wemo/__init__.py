@@ -109,7 +109,7 @@ async def async_setup_entry(hass, entry):
         for device in await asyncio.gather(
             *[
                 hass.async_add_executor_job(validate_static_config, host, port)
-                for host, port in config.get(CONF_STATIC, [])
+                for host, port in static_conf
             ]
         ):
             if device is None:
