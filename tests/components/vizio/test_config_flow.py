@@ -325,7 +325,7 @@ async def test_import_flow_minimum_fields(
     """Test import config flow with minimum fields."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "import"},
+        context={"source": SOURCE_IMPORT},
         data=vol.Schema(VIZIO_SCHEMA)(
             {CONF_HOST: HOST, CONF_DEVICE_CLASS: DEVICE_CLASS_SPEAKER}
         ),
@@ -345,7 +345,7 @@ async def test_import_flow_all_fields(
     """Test import config flow with all fields."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": "import"},
+        context={"source": SOURCE_IMPORT},
         data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
     )
 
