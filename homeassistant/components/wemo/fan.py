@@ -120,6 +120,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
 
+    await asyncio.gather(
+        *[
+            _discovered_wemo(device_info)
+            for device_info in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
+        ]
+    )
+
     def service_handle(service):
         """Handle the WeMo humidifier services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
@@ -250,7 +257,7 @@ class WemoHumidifier(FanEntity):
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = self.hass.data[WEMO_DOMAIN]
+        registry = self.hass.data[WEMO_DOMAIN]["registry"]
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 

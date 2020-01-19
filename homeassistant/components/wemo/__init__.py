@@ -6,7 +6,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -69,7 +69,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up for WeMo devices."""
-    hass.data[DOMAIN] = config
+    hass.data[DOMAIN] = {
+        "config": config.get(DOMAIN, {}),
+        "registry": None,
+        "pending": {},
+    }
 
     if DOMAIN in config:
         hass.async_create_task(
@@ -86,77 +90,92 @@ async def async_setup_entry(hass, entry):
     known_devices = set()
     loaded_components = set()
 
-    config = hass.data[DOMAIN]
-
-    # Keep track of WeMo devices
-    devices = []
+    config = hass.data[DOMAIN].pop("config")
 
     # Keep track of WeMo device subscriptions for push updates
-    hass.data[DOMAIN] = pywemo.SubscriptionRegistry()
-    await hass.async_add_executor_job(hass.data[DOMAIN].start)
+    registry = hass.data[DOMAIN]["registry"] = pywemo.SubscriptionRegistry()
+    await hass.async_add_executor_job(registry.start)
 
     def stop_wemo(event):
         """Shutdown Wemo subscriptions and subscription thread on exit."""
         _LOGGER.debug("Shutting down WeMo event subscriptions")
-        hass.data[DOMAIN].stop()
+        registry.stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_wemo)
 
-    async def async_discover_wemo_devices(now):
-        """Run discovery for WeMo devices."""
-        _LOGGER.debug("Beginning WeMo device discovery...")
-        _LOGGER.debug("Adding statically configured WeMo devices...")
-        for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
-            url = await hass.async_add_executor_job(setup_url_for_address, host, port)
+    devices = []
 
-            if not url:
-                _LOGGER.error(
-                    "Unable to get description url for WeMo at: %s",
-                    f"{host}:{port}" if port else host,
-                )
-                continue
+    _LOGGER.debug("Beginning WeMo device discovery...")
+    _LOGGER.debug("Adding statically configured WeMo devices...")
 
-            try:
-                device = await hass.async_add_executor_job(
-                    pywemo.discovery.device_from_description, url, None
-                )
-            except (
-                requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout,
-            ) as err:
-                _LOGGER.error("Unable to access WeMo at %s (%s)", url, err)
-                continue
+    for host, port in config.get(CONF_STATIC, []):
+        url = await hass.async_add_executor_job(setup_url_for_address, host, port)
 
+        if not url:
+            _LOGGER.error(
+                "Unable to get description url for WeMo at: %s",
+                f"{host}:{port}" if port else host,
+            )
+            continue
+
+        try:
+            device = await hass.async_add_executor_job(
+                pywemo.discovery.device_from_description, url, None
+            )
+        except (
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+        ) as err:
+            _LOGGER.error("Unable to access WeMo at %s (%s)", url, err)
+            continue
+
+        if not [d[1] for d in devices if d[1].serialnumber == device.serialnumber]:
+            devices.append((url, device))
+
+    if config.get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
+        _LOGGER.debug("Scanning network for WeMo devices...")
+        for device in await hass.async_add_executor_job(pywemo.discover_devices):
             if not [d[1] for d in devices if d[1].serialnumber == device.serialnumber]:
-                devices.append((url, device))
+                devices.append(
+                    (f"http://{device.host}:{device.port}/setup.xml", device)
+                )
 
-        if config.get(DOMAIN, {}).get(CONF_DISCOVERY, DEFAULT_DISCOVERY):
-            _LOGGER.debug("Scanning network for WeMo devices...")
-            for device in await hass.async_add_executor_job(pywemo.discover_devices):
-                if not [
-                    d[1] for d in devices if d[1].serialnumber == device.serialnumber
-                ]:
-                    devices.append(
-                        (f"http://{device.host}:{device.port}/setup.xml", device)
-                    )
+    for url, device in devices:
+        _LOGGER.debug("Adding WeMo device at %s:%i", device.host, device.port)
 
-        for url, device in devices:
-            _LOGGER.debug("Adding WeMo device at %s:%i", device.host, device.port)
+        # Only register a device once
+        if device.serialnumber in known_devices:
+            _LOGGER.debug("Ignoring known device %s", device.serialnumber)
+            return
 
-            # Only register a device once
-            if device.serialnumber in known_devices:
-                _LOGGER.debug("Ignoring known device %s", device.serialnumber)
-                return
+        _LOGGER.debug("Discovered unique WeMo device: %s", device.serialnumber)
+        known_devices.add(device.serialnumber)
 
-            _LOGGER.debug("Discovered unique WeMo device: %s", device.serialnumber)
-            known_devices.add(device.serialnumber)
+        device_info = {
+            "model_name": device.model_name,
+            "serial": device.serialnumber,
+            "mac_address": device.mac,
+            "ssdp_description": url,
+        }
 
-            component = WEMO_MODEL_DISPATCH.get(device.model_name, "switch")
+        component = WEMO_MODEL_DISPATCH.get(device.model_name, "switch")
 
-            if component not in loaded_components:
-                loaded_components.add(component)
-                await hass.config_entries.async_forward_entry_setup(entry, component)
+        # Three cases:
+        # - First time we see component, we need to load it and initialize the backlog
+        # - Component is being loaded, add to backlog
+        # - Component is loaded, backlog is gone, dispatch discovery
 
+        if component not in loaded_components:
+            hass.data[DOMAIN]["pending"][component] = [device_info]
+            loaded_components.add(component)
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(entry, component)
+            )
+
+        elif component in hass.data[DOMAIN]["pending"]:
+            hass.data[DOMAIN]["pending"].append(device_info)
+
+        else:
             async_dispatcher_send(
                 hass,
                 f"{DOMAIN}.{component}",
@@ -168,9 +187,7 @@ async def async_setup_entry(hass, entry):
                 },
             )
 
-        _LOGGER.debug("WeMo device discovery has finished")
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_discover_wemo_devices)
+    _LOGGER.debug("WeMo device discovery has finished")
 
     return True
 
