@@ -1,0 +1,1 @@
+"""Example Load Platform integration."""

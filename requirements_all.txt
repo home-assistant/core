@@ -310,6 +310,9 @@ bimmer_connected==0.6.2
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
+# homeassistant.components.bkk
+bkkfutar==0.2
+
 # homeassistant.components.blink
 blinkpy==0.14.2
 

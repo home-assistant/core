@@ -1,0 +1,11 @@
+{
+  "domain": "bkk",
+  "name": "Budapest public transport",
+  "documentation": "https://www.home-assistant.io/integrations/budapest_public_transport",
+  "requirements": ["bkkfutar==0.2"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": ["group"],
+  "codeowners":[]
+}
