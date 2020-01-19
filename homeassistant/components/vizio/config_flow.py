@@ -128,16 +128,19 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if entry.data[CONF_HOST] == import_config[CONF_HOST] and entry.data[
                 CONF_NAME
             ] == import_config.get(CONF_NAME):
-                new_options = {}
+                updated_options = {}
 
                 if entry.data[CONF_VOLUME_STEP] != import_config[CONF_VOLUME_STEP]:
-                    new_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
+                    updated_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
 
-                if new_options:
+                if updated_options:
+                    new_data = entry.data.copy()
+                    new_data.update(updated_options)
+                    new_options = entry.options.copy()
+                    new_options.update(updated_options)
+
                     self.hass.config_entries.async_update_entry(
-                        entry=entry,
-                        data=entry.data.copy().update(new_options),
-                        options=entry.options.copy().update(new_options),
+                        entry=entry, data=new_data, options=new_options,
                     )
                     return self.async_abort(reason="updated_options")
 
