@@ -329,6 +329,7 @@ async def test_verification_code_success(hass: HomeAssistantType, service: Magic
         result["flow_id"], {CONF_VERIFICATION_CODE: 0}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
