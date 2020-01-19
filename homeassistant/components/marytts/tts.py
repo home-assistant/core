@@ -73,7 +73,7 @@ class MaryTTSProvider(Provider):
     @property
     def default_options(self):
         """Return dict include default options."""
-        return {CONF_EFFECT: DEFAULT_EFFECTS}
+        return {CONF_EFFECT: self._effects}
 
     @property
     def supported_options(self):
@@ -82,10 +82,7 @@ class MaryTTSProvider(Provider):
 
     async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from MaryTTS."""
-        effects = self._effects
-
-        if options is not None and CONF_EFFECT in options:
-            effects.update(options[CONF_EFFECT])
+        effects = options[CONF_EFFECT]
 
         data = self._mary.speak(message, effects)
 
