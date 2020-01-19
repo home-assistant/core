@@ -4,8 +4,6 @@ from datetime import datetime, timedelta
 import logging
 
 import async_timeout
-from pywemo import discovery
-import requests
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
@@ -34,31 +32,16 @@ WEMO_STANDBY = 8
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo switches."""
 
-    async def _discovered_wemo(discovery_info):
+    async def _discovered_wemo(device):
         """Handle a discovered Wemo device."""
-        location = discovery_info["ssdp_description"]
-        mac = discovery_info["mac_address"]
-
-        try:
-            device = await hass.async_add_executor_job(
-                discovery.device_from_description, location, mac
-            )
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout,
-        ) as err:
-            _LOGGER.error("Unable to access %s (%s)", location, err)
-            return
-
-        if device:
-            async_add_entities([WemoSwitch(device)])
+        async_add_entities([WemoSwitch(device)])
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.switch", _discovered_wemo)
 
     await asyncio.gather(
         *[
-            _discovered_wemo(device_info)
-            for device_info in hass.data[WEMO_DOMAIN]["pending"].pop("switch")
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("switch")
         ]
     )
 

@@ -4,8 +4,6 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from pywemo import discovery
-import requests
 
 from homeassistant import util
 from homeassistant.components.light import (
@@ -38,33 +36,21 @@ SUPPORT_WEMO = (
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo lights."""
 
-    async def _discovered_wemo(discovery_info):
+    async def _discovered_wemo(device):
         """Handle a discovered Wemo device."""
-        location = discovery_info["ssdp_description"]
-        mac = discovery_info["mac_address"]
-
-        try:
-            device = await hass.async_add_executor_job(
-                discovery.device_from_description, location, mac
-            )
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout,
-        ) as err:
-            _LOGGER.error("Unable to access %s (%s)", location, err)
-            return
-
         if device.model_name == "Dimmer":
             async_add_entities([WemoDimmer(device)])
         else:
-            setup_bridge(hass, device, async_add_entities)
+            await hass.async_add_executor_job(
+                setup_bridge, hass, device, async_add_entities
+            )
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
 
     await asyncio.gather(
         *[
-            _discovered_wemo(device_info)
-            for device_info in hass.data[WEMO_DOMAIN]["pending"].pop("light")
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("light")
         ]
     )
 
