@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.common import MockConfigEntry, mock_coro_func
+from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
