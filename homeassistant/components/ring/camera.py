@@ -18,7 +18,7 @@ from homeassistant.util import dt as dt_util
 from . import ATTRIBUTION, DOMAIN
 from .entity import RingEntityMixin
 
-FORCE_REFRESH_INTERVAL = timedelta(minutes=2)
+FORCE_REFRESH_INTERVAL = timedelta(minutes=45)
 
 _LOGGER = logging.getLogger(__name__)
 
