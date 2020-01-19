@@ -1,0 +1,11 @@
+{
+  "domain": "salt",
+  "name": "Salt Fiber Box",
+  "documentation": "https://www.home-assistant.io/integrations/salt",
+  "requirements": ["saltbox==0.1.2"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@bjornorri"]
+}
