@@ -81,7 +81,8 @@ class NumberEntity(WiffiEntity):
             metric.unit_of_measurement
         )
         self._value = metric.value
-        self.async_schedule_update_ha_state()
+        if self.enabled:
+            self.async_schedule_update_ha_state()
 
 
 class StringEntity(WiffiEntity):
@@ -105,7 +106,8 @@ class StringEntity(WiffiEntity):
         """
         self.reset_expiration_date()
         self._value = metric.value
-        self.async_schedule_update_ha_state()
+        if self.enabled:
+            self.async_schedule_update_ha_state()
 
 
 def convert_unit_of_measurement(oum):

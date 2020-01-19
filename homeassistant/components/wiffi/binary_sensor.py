@@ -50,4 +50,5 @@ class BoolEntity(WiffiEntity):
         """
         self.reset_expiration_date()
         self._value = metric.value
-        self.async_schedule_update_ha_state()
+        if self.enabled:
+            self.async_schedule_update_ha_state()
