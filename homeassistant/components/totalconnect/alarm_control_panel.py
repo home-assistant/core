@@ -76,7 +76,6 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
         """Return the state of the device."""
         status = self._client.get_armed_status(self._location_id)
         attr = {
-            "location_name": self._client.locations[self._location_id].location_name,
             "location_id": self._location_id,
             "ac_loss": self._client.locations[self._location_id].ac_loss,
             "low_battery": self._client.locations[self._location_id].low_battery,
