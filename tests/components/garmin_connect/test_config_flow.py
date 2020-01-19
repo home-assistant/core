@@ -2,7 +2,10 @@
 from asynctest import patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.garmin_connect.config_flow import CannotConnect, InvalidAuth
+from homeassistant.components.garmin_connect.config_flow import (
+    CannotConnect,
+    InvalidAuth,
+)
 from homeassistant.components.garmin_connect.const import DOMAIN
 
 

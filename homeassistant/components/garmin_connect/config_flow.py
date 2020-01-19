@@ -1,15 +1,18 @@
 """Config flow for Garmin Connect integration."""
 import logging
-import voluptuous as vol
-from homeassistant import config_entries
-from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
-from .const import DOMAIN
+
 from garminconnect import (
     Garmin,
+    GarminConnectAuthenticationError,
     GarminConnectConnectionError,
     GarminConnectTooManyRequestsError,
-    GarminConnectAuthenticationError,
 )
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
