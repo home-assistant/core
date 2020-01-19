@@ -340,21 +340,17 @@ async def test_import_flow_all_fields(
 async def test_import_entity_already_configured(
     hass: HomeAssistantType, vizio_connect, vizio_bypass_setup
 ) -> None:
-    """Test import config flow with updated options."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
+    """Test entity is already configured during import setup."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
+        options={CONF_VOLUME_STEP: VOLUME_STEP},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    entry = result["result"]
+    entry.add_to_hass(hass)
+    fail_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG.copy())
 
-    updated_config = MOCK_IMPORT_VALID_TV_CONFIG.copy()
-    updated_config[CONF_VOLUME_STEP] = VOLUME_STEP + 1
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=vol.Schema(VIZIO_SCHEMA)(updated_config),
+        DOMAIN, context={"source": "import"}, data=fail_entry
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
