@@ -127,19 +127,15 @@ class NSDepartureSensor(Entity):
         # Static attributes
         attributes = {
             "going": self._trips[0].going,
-            "departure_time_planned": self._trips[0].departure_time_planned.strftime(
-                "%H:%M"
-            ),
+            "departure_time_planned": None,
             "departure_time_actual": None,
             "departure_delay": False,
-            "departure_platform_planned": self._trips[0].departure_platform_planned,
+            "departure_platform_planned": None,
             "departure_platform_actual": None,
-            "arrival_time_planned": self._trips[0].arrival_time_planned.strftime(
-                "%H:%M"
-            ),
+            "arrival_time_planned": None,
             "arrival_time_actual": None,
             "arrival_delay": False,
-            "arrival_platform_platform": self._trips[0].arrival_platform_planned,
+            "arrival_platform_planned": None,
             "arrival_platform_actual": None,
             "next": None,
             "status": self._trips[0].status.lower(),
@@ -149,25 +145,60 @@ class NSDepartureSensor(Entity):
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
-        # Departure attributes
+        # Planned departure attributes
+        if self._trips[0].departure_time_planned is not None:
+            attributes["departure_time_planned"] = self._trips[
+                0
+            ].departure_time_planned.strftime("%H:%M")
+            attributes["departure_platform_planned"] = self._trips[
+                0
+            ].departure_platform_planned
+
+        # Actual departure attributes
         if self._trips[0].departure_time_actual is not None:
             attributes["departure_time_actual"] = self._trips[
                 0
             ].departure_time_actual.strftime("%H:%M")
-            attributes["departure_delay"] = True
+            # attributes["departure_delay"] = True
             attributes["departure_platform_actual"] = self._trips[
                 0
             ].departure_platform_actual
 
-        # Arrival attributes
+        # Delay departure attributes
+        if (
+            attributes["departure_time_planned"]
+            and attributes["departure_time_actual"]
+            and attributes["departure_time_planned"]
+            != attributes["departure_time_actual"]
+        ):
+            attributes["departure_delay"] = True
+
+        # Planned arrival attributes
+        if self._trips[0].arrival_time_planned is not None:
+            attributes["arrival_time_planned"] = self._trips[
+                0
+            ].arrival_time_planned.strftime("%H:%M")
+            attributes["arrival_platform_planned"] = self._trips[
+                0
+            ].arrival_platform_planned
+
+        # Actual arrival attributes
         if self._trips[0].arrival_time_actual is not None:
             attributes["arrival_time_actual"] = self._trips[
                 0
             ].arrival_time_actual.strftime("%H:%M")
-            attributes["arrival_delay"] = True
+            # attributes["arrival_delay"] = True
             attributes["arrival_platform_actual"] = self._trips[
                 0
             ].arrival_platform_actual
+
+        # Delay arrival attributes
+        if (
+            attributes["arrival_time_planned"]
+            and attributes["arrival_time_actual"]
+            and attributes["arrival_time_planned"] != attributes["arrival_time_actual"]
+        ):
+            attributes["arrival_delay"] = True
 
         # Next attributes
         if self._trips[1].departure_time_actual is not None:
