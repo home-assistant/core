@@ -1,5 +1,7 @@
 """Schemas used by insteon component."""
 
+from typing import Dict
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -39,7 +41,22 @@ from .const import (
     SRV_LOAD_DB_RELOAD,
     SRV_RESPONDER,
 )
-from .utils import set_default_port
+
+
+def set_default_port(schema: Dict) -> Dict:
+    """Set the default port based on the Hub version."""
+    # If the ip_port is found do nothing
+    # If it is not found the set the default
+    ip_port = schema.get(CONF_IP_PORT)
+    if not ip_port:
+        hub_version = schema.get(CONF_HUB_VERSION)
+        # Found hub_version but not ip_port
+        if hub_version == 1:
+            schema[CONF_IP_PORT] = 9761
+        else:
+            schema[CONF_IP_PORT] = 25105
+    return schema
+
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM),

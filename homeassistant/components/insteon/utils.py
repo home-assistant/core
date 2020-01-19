@@ -1,7 +1,6 @@
 """Utilities used by insteon component."""
 
 import logging
-from typing import Dict
 
 from insteonplm.devices import ALDBStatus
 
@@ -12,8 +11,6 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
     BUTTON_PRESSED_STATE_NAME,
-    CONF_HUB_VERSION,
-    CONF_IP_PORT,
     DOMAIN,
     EVENT_BUTTON_OFF,
     EVENT_BUTTON_ON,
@@ -48,21 +45,6 @@ from .schemas import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def set_default_port(schema: Dict) -> Dict:
-    """Set the default port based on the Hub version."""
-    # If the ip_port is found do nothing
-    # If it is not found the set the default
-    ip_port = schema.get(CONF_IP_PORT)
-    if not ip_port:
-        hub_version = schema.get(CONF_HUB_VERSION)
-        # Found hub_version but not ip_port
-        if hub_version == 1:
-            schema[CONF_IP_PORT] = 9761
-        else:
-            schema[CONF_IP_PORT] = 25105
-    return schema
 
 
 def register_services(hass, config, insteon_modem):
