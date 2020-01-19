@@ -88,8 +88,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up a wemo config entry."""
-    loaded_components = set()
-
     config = hass.data[DOMAIN].pop("config")
 
     # Keep track of WeMo device subscriptions for push updates
@@ -105,11 +103,9 @@ async def async_setup_entry(hass, entry):
 
     devices = {}
 
-    _LOGGER.debug("Beginning WeMo device discovery...")
-    _LOGGER.debug("Adding statically configured WeMo devices...")
-
     static_conf = config.get(CONF_STATIC, [])
     if static_conf:
+        _LOGGER.debug("Adding statically configured WeMo devices...")
         for device in await asyncio.gather(
             *[
                 hass.async_add_executor_job(validate_static_config, host, port)
@@ -127,6 +123,8 @@ async def async_setup_entry(hass, entry):
             devices.setdefault(
                 device.serialnumber, device,
             )
+
+    loaded_components = set()
 
     for device in devices.values():
         _LOGGER.debug(
@@ -157,8 +155,6 @@ async def async_setup_entry(hass, entry):
             async_dispatcher_send(
                 hass, f"{DOMAIN}.{component}", device,
             )
-
-    _LOGGER.debug("WeMo device discovery has finished")
 
     return True
 
