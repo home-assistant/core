@@ -18,6 +18,37 @@ class TestBayesianBinarySensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
+    def test_load_values_on_setup(self):
+        """Test that sensor initializes with observations of relevant entities."""
+
+        config = {
+            "binary_sensor": {
+                "name": "Test_Binary",
+                "platform": "bayesian",
+                "observations": [
+                    {
+                        "platform": "state",
+                        "entity_id": "sensor.test_monitored",
+                        "to_state": "off",
+                        "prob_given_true": 0.8,
+                        "prob_given_false": 0.4,
+                    }
+                ],
+                "prior": 0.2,
+                "probability_threshold": 0.32,
+            }
+        }
+
+        self.hass.states.set("sensor.test_monitored", "off")
+        self.hass.block_till_done()
+
+        assert setup_component(self.hass, "binary_sensor", config)
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert [{"prob_true": 0.8, "prob_false": 0.4}] == state.attributes.get(
+            "observations"
+        )
+
     def test_sensor_numeric_state(self):
         """Test sensor on numeric state platform observations."""
         config = {

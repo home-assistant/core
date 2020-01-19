@@ -138,21 +138,7 @@ class BayesianBinarySensor(BinarySensorDevice):
                     list(obs.get(CONF_VALUE_TEMPLATE).extract_entities())
                 )
 
-        to_observe = set()
-        for obs in self._observations:
-            if "entity_id" in obs:
-                to_observe.update(set([obs.get("entity_id")]))
-            if "value_template" in obs:
-                to_observe.update(set(obs.get(CONF_VALUE_TEMPLATE).extract_entities()))
-        self.entity_obs = {key: [] for key in to_observe}
-
-        for ind, obs in enumerate(self._observations):
-            obs["id"] = ind
-            if "entity_id" in obs:
-                self.entity_obs[obs["entity_id"]].append(obs)
-            if "value_template" in obs:
-                for ent in obs.get(CONF_VALUE_TEMPLATE).extract_entities():
-                    self.entity_obs[ent].append(obs)
+        self.observations_by_entity = self._build_observations_by_entity()
 
         self.watchers = {
             "numeric_state": self._process_numeric_state,
@@ -164,28 +150,69 @@ class BayesianBinarySensor(BinarySensorDevice):
         """Call when entity about to be added."""
 
         @callback
-        def async_threshold_sensor_state_listener(entity, old_state, new_state):
+        def async_threshold_sensor_state_listener(entity, _old_state, new_state):
             """Handle sensor state changes."""
             if new_state.state == STATE_UNKNOWN:
                 return
 
-            entity_obs_list = self.entity_obs[entity]
-
-            for entity_obs in entity_obs_list:
-                platform = entity_obs["platform"]
-
-                self.watchers[platform](entity_obs)
-
-            prior = self.prior
-            for obs in self.current_obs.values():
-                prior = update_probability(prior, obs["prob_true"], obs["prob_false"])
-            self.probability = prior
+            self._handle_entity_observation(entity)
 
             self.hass.async_add_job(self.async_update_ha_state, True)
 
+        self._initialize_current_observations()
         async_track_state_change(
-            self.hass, self.entity_obs, async_threshold_sensor_state_listener
+            self.hass,
+            self.observations_by_entity,
+            async_threshold_sensor_state_listener,
         )
+
+    def _initialize_current_observations(self):
+        for entity in self.observations_by_entity.keys():
+            self._handle_entity_observation(entity)
+
+    def _handle_entity_observation(self, entity):
+        entity_obs_list = self.observations_by_entity[entity]
+
+        for entity_obs in entity_obs_list:
+            platform = entity_obs["platform"]
+
+            self.watchers[platform](entity_obs)
+
+        prior = self.prior
+        for obs in self.current_obs.values():
+            prior = update_probability(prior, obs["prob_true"], obs["prob_false"])
+        self.probability = prior
+
+    def _build_observations_by_entity(self):
+        """
+        Build and return data structure of the form below.
+
+        {
+            "sensor.sensor1": [{"id": 0, ...}, {"id": 1, ...}],
+            "sensor.sensor2": [{"id": 2, ...}],
+            ...
+        }
+
+        Each "observation" must be recognized uniquely, and it should be possible
+        for all relevant observations to be looked up via their `entity_id`.
+        """
+        to_observe = set()
+        for obs in self._observations:
+            if "entity_id" in obs:
+                to_observe.update(set([obs.get("entity_id")]))
+            if "value_template" in obs:
+                to_observe.update(set(obs.get(CONF_VALUE_TEMPLATE).extract_entities()))
+        observations_by_entity = {key: [] for key in to_observe}
+
+        for ind, obs in enumerate(self._observations):
+            obs["id"] = ind
+            if "entity_id" in obs:
+                observations_by_entity[obs["entity_id"]].append(obs)
+            if "value_template" in obs:
+                for ent in obs.get(CONF_VALUE_TEMPLATE).extract_entities():
+                    observations_by_entity[ent].append(obs)
+
+        return observations_by_entity
 
     def _update_current_obs(self, entity_observation, should_trigger):
         """Update current observation."""
