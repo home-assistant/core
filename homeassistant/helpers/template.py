@@ -815,6 +815,14 @@ def strptime(string, fmt):
         return string
 
 
+def strtoint(value):
+    """Try to convert string to long integer."""
+    try:
+        return int(value, base=16)
+    except (ValueError):
+        return None
+
+
 def fail_when_undefined(value):
     """Filter to force a failure when the value is undefined."""
     if isinstance(value, jinja2.Undefined):
@@ -871,6 +879,21 @@ def bitwise_and(first_value, second_value):
 def bitwise_or(first_value, second_value):
     """Perform a bitwise or operation."""
     return first_value | second_value
+
+
+def bitwise_xor(first_value, second_value):
+    """Perform a bitwise XOR operation."""
+    return first_value ^ second_value
+
+
+def bitwise_left(first_value, second_value):
+    """Perform a bitwise left shift operation."""
+    return first_value << second_value
+
+
+def bitwise_right(first_value, second_value):
+    """Perform a bitwise right shift operation."""
+    return first_value >> second_value
 
 
 def base64_encode(value):
@@ -949,6 +972,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["regex_findall_index"] = regex_findall_index
         self.filters["bitwise_and"] = bitwise_and
         self.filters["bitwise_or"] = bitwise_or
+        self.filters["bitwise_xor"] = bitwise_xor
+        self.filters["bitwise_left"] = bitwise_left
+        self.filters["bitwise_right"] = bitwise_right
         self.filters["ord"] = ord
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
@@ -968,6 +994,8 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["relative_time"] = dt_util.get_age
         self.globals["strptime"] = strptime
+        self.globals["strtoint"] = strtoint
+        self.globals["hex"] = hex
         if hass is None:
             return
 

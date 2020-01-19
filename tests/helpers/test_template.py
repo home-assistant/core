@@ -1011,6 +1011,97 @@ def test_bitwise_or(hass):
     assert tpl.async_render() == str(8 | 2)
 
 
+def test_bitwise_xor(hass):
+    """Test bitwise_xor method."""
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_xor(8) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == str(8 ^ 8)
+    tpl = template.Template(
+        """
+{{ 10 | bitwise_xor(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == str(10 ^ 2)
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_xor(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == str(8 ^ 2)
+
+
+def test_bitwise_left(hass):
+    """Test bitwise_left method."""
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_left(8) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == str(8 << 8)
+    tpl = template.Template(
+        """
+{{ 10 | bitwise_left(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == str(10 << 2)
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_left(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == str(8 << 2)
+
+
+def test_bitwise_right(hass):
+    """Test bitwise_right method."""
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_right(8) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == str(8 >> 8)
+    tpl = template.Template(
+        """
+{{ 10 | bitwise_right(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == str(10 >> 2)
+    tpl = template.Template(
+        """
+{{ 8 | bitwise_right(2) }}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == str(8 >> 2)
+
+
+def test_hex(hass):
+    """Test the hex filter."""
+    assert template.Template("{{ hex(4) }}", hass).async_render() == "0x4"
+    assert template.Template("{{ hex(15) }}", hass).async_render() == "0xf"
+    assert template.Template("{{ hex(241) }}", hass).async_render() == "0xf1"
+    assert template.Template("{{ hex(2564) }}", hass).async_render() == "0xa04"
+
+
+def test_strtoint(hass):
+    """Test the strtoint filter."""
+    assert template.Template('{{ strtoint("4") }}', hass).async_render() == "4"
+    assert template.Template('{{ strtoint("0x01") }}', hass).async_render() == "1"
+    assert template.Template('{{ strtoint("0xF1") }}', hass).async_render() == "241"
+    assert template.Template('{{ strtoint("0xF") }}', hass).async_render() == "15"
+
+
 def test_distance_function_with_1_state(hass):
     """Test distance function with 1 state."""
     _set_up_units(hass)
