@@ -29,16 +29,14 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "Garmin Connect"
     assert result2["data"] == {
-        "host": "1.1.1.1",
         "username": "test-username",
         "password": "test-password",
     }
@@ -60,7 +58,6 @@ async def test_form_invalid_auth(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
@@ -83,7 +80,6 @@ async def test_form_cannot_connect(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
                 "username": "test-username",
                 "password": "test-password",
             },
