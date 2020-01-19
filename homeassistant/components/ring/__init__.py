@@ -96,27 +96,27 @@ async def async_setup_entry(hass, entry):
         "api": ring,
         "devices": ring.devices(),
         "device_data": GlobalDataUpdater(
-            "device", hass, entry.entry_id, ring, "update_devices", timedelta(minutes=1)
+            hass, "device", entry.entry_id, ring, "update_devices", timedelta(minutes=1)
         ),
         "dings_data": GlobalDataUpdater(
-            "active dings",
             hass,
+            "active dings",
             entry.entry_id,
             ring,
             "update_dings",
             timedelta(seconds=5),
         ),
         "history_data": DeviceDataUpdater(
-            "history",
             hass,
+            "history",
             entry.entry_id,
             ring,
             lambda device: device.history(limit=10),
             timedelta(minutes=1),
         ),
         "health_data": DeviceDataUpdater(
-            "health",
             hass,
+            "health",
             entry.entry_id,
             ring,
             lambda device: device.update_health_data(),
@@ -175,16 +175,16 @@ class GlobalDataUpdater:
 
     def __init__(
         self,
-        data_type: str,
         hass: HomeAssistant,
+        data_type: str,
         config_entry_id: str,
         ring: Ring,
         update_method: str,
         update_interval: timedelta,
     ):
         """Initialize global data updater."""
-        self.data_type = data_type
         self.hass = hass
+        self.data_type = data_type
         self.config_entry_id = config_entry_id
         self.ring = ring
         self.update_method = update_method
@@ -240,8 +240,8 @@ class DeviceDataUpdater:
 
     def __init__(
         self,
-        data_type: str,
         hass: HomeAssistant,
+        data_type: str,
         config_entry_id: str,
         ring: Ring,
         update_method: str,
