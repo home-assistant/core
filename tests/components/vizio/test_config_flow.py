@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.common import MockConfigEntry, mock_coro_func
+from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ def vizio_bypass_update_fixture():
         return_value=True,
     ), patch(
         "homeassistant.components.vizio.media_player.VizioDevice.async_update",
-        return_value=mock_coro_func(return_value=None),
+        return_value=None,
     ):
         yield
 
