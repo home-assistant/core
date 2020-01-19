@@ -18,7 +18,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_load_values_on_setup(self):
+    def test_load_values_when_added_to_hass(self):
         """Test that sensor initializes with observations of relevant entities."""
 
         config = {
@@ -45,9 +45,8 @@ class TestBayesianBinarySensor(unittest.TestCase):
         assert setup_component(self.hass, "binary_sensor", config)
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert [{"prob_true": 0.8, "prob_false": 0.4}] == state.attributes.get(
-            "observations"
-        )
+        assert state.attributes.get("observations")[0]["prob_given_true"] == 0.8
+        assert state.attributes.get("observations")[0]["prob_given_false"] == 0.4
 
     def test_sensor_numeric_state(self):
         """Test sensor on numeric state platform observations."""
@@ -83,7 +82,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
 
-        assert [] == state.attributes.get("observations")
+        assert [None, None] == state.attributes.get("observations")
         assert 0.2 == state.attributes.get("probability")
 
         assert state.state == "off"
@@ -97,10 +96,9 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert [
-            {"prob_false": 0.4, "prob_true": 0.6},
-            {"prob_false": 0.1, "prob_true": 0.9},
-        ] == state.attributes.get("observations")
+        assert state.attributes.get("observations")[0]["prob_given_true"] == 0.6
+        assert state.attributes.get("observations")[1]["prob_given_true"] == 0.9
+        assert state.attributes.get("observations")[1]["prob_given_false"] == 0.1
         assert round(abs(0.77 - state.attributes.get("probability")), 7) == 0
 
         assert state.state == "on"
@@ -149,7 +147,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
 
-        assert [] == state.attributes.get("observations")
+        assert [None] == state.attributes.get("observations")
         assert 0.2 == state.attributes.get("probability")
 
         assert state.state == "off"
@@ -162,9 +160,8 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert [{"prob_true": 0.8, "prob_false": 0.4}] == state.attributes.get(
-            "observations"
-        )
+        assert state.attributes.get("observations")[0]["prob_given_true"] == 0.8
+        assert state.attributes.get("observations")[0]["prob_given_false"] == 0.4
         assert round(abs(0.33 - state.attributes.get("probability")), 7) == 0
 
         assert state.state == "on"
@@ -241,7 +238,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
 
-        assert [] == state.attributes.get("observations")
+        assert [None, None] == state.attributes.get("observations")
         assert 0.2 == state.attributes.get("probability")
 
         assert state.state == "off"
@@ -254,9 +251,9 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert [{"prob_true": 0.8, "prob_false": 0.4}] == state.attributes.get(
-            "observations"
-        )
+
+        assert state.attributes.get("observations")[0]["prob_given_true"] == 0.8
+        assert state.attributes.get("observations")[0]["prob_given_false"] == 0.4
         assert round(abs(0.33 - state.attributes.get("probability")), 7) == 0
 
         assert state.state == "on"
@@ -273,20 +270,20 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
     def test_probability_updates(self):
         """Test probability update function."""
-        prob_true = [0.3, 0.6, 0.8]
-        prob_false = [0.7, 0.4, 0.2]
+        prob_given_true = [0.3, 0.6, 0.8]
+        prob_given_false = [0.7, 0.4, 0.2]
         prior = 0.5
 
-        for pt, pf in zip(prob_true, prob_false):
+        for pt, pf in zip(prob_given_true, prob_given_false):
             prior = bayesian.update_probability(prior, pt, pf)
 
         assert round(abs(0.720000 - prior), 7) == 0
 
-        prob_true = [0.8, 0.3, 0.9]
-        prob_false = [0.6, 0.4, 0.2]
+        prob_given_true = [0.8, 0.3, 0.9]
+        prob_given_false = [0.6, 0.4, 0.2]
         prior = 0.7
 
-        for pt, pf in zip(prob_true, prob_false):
+        for pt, pf in zip(prob_given_true, prob_given_false):
             prior = bayesian.update_probability(prior, pt, pf)
 
         assert round(abs(0.9130434782608695 - prior), 7) == 0
