@@ -9,8 +9,6 @@ from typing import Optional
 
 import zigpy.zcl.clusters.homeautomation as homeautomation
 
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-
 from .. import registries
 from ..const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
@@ -78,9 +76,7 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
 
         # This is a polling channel. Don't allow cache.
         result = await self.get_attribute_value("active_power", from_cache=False)
-        async_dispatcher_send(
-            self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result
-        )
+        self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result)
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""

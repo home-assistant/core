@@ -9,7 +9,6 @@ import logging
 import zigpy.zcl.clusters.closures as closures
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .. import registries
 from ..const import REPORT_CONFIG_IMMEDIATE, SIGNAL_ATTR_UPDATED
@@ -29,9 +28,7 @@ class DoorLockChannel(ZigbeeChannel):
         """Retrieve latest state."""
         result = await self.get_attribute_value("lock_state", from_cache=True)
 
-        async_dispatcher_send(
-            self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result
-        )
+        self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result)
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -41,9 +38,7 @@ class DoorLockChannel(ZigbeeChannel):
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
         if attrid == self._value_attribute:
-            async_dispatcher_send(
-                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
-            )
+            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
@@ -74,9 +69,7 @@ class WindowCovering(ZigbeeChannel):
         )
         self.debug("read current position: %s", result)
 
-        async_dispatcher_send(
-            self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result
-        )
+        self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", result)
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -86,9 +79,7 @@ class WindowCovering(ZigbeeChannel):
             "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
         )
         if attrid == self._value_attribute:
-            async_dispatcher_send(
-                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
-            )
+            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""

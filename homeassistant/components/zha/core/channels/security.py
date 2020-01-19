@@ -10,7 +10,6 @@ from zigpy.exceptions import DeliveryError
 import zigpy.zcl.clusters.security as security
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .. import registries
 from ..const import (
@@ -135,9 +134,7 @@ class IASZoneChannel(ZigbeeChannel):
         """Handle commands received to this cluster."""
         if command_id == 0:
             state = args[0] & 3
-            async_dispatcher_send(
-                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", state
-            )
+            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", state)
             self.debug("Updated alarm state: %s", state)
         elif command_id == 1:
             self.debug("Enroll requested")
@@ -178,9 +175,7 @@ class IASZoneChannel(ZigbeeChannel):
         """Handle attribute updates on this cluster."""
         if attrid == 2:
             value = value & 3
-            async_dispatcher_send(
-                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
-            )
+            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""

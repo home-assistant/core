@@ -5,9 +5,10 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
 import logging
-from typing import Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from . import (  # noqa: F401 # pylint: disable=unused-import
     base,
@@ -109,9 +110,21 @@ class Channels:
         pass
 
     @callback
+    def async_send_signal(self, signal: str, *args: Any) -> None:
+        """Send a signal through hass dispatcher."""
+        async_dispatcher_send(self.zha_device.hass, signal, *args)
+
+    @callback
     def zha_send_event(self, event_data: Dict[str, Union[str, int]]) -> None:
         """Relay events to hass."""
-        pass
+        self.zha_device.hass.bus.async_fire(
+            "zha_event",
+            {
+                const.ATTR_DEVICE_IEEE: str(self.zha_device.ieee),
+                const.ATTR_UNIQUE_ID: self.unique_id,
+                **event_data,
+            },
+        )
 
 
 class EndpointChannels:
@@ -145,6 +158,26 @@ class EndpointChannels:
     def id(self) -> int:
         """Return endpoint id."""
         return self._id
+
+    @property
+    def nwk(self) -> int:
+        """Device NWK for logging."""
+        return self._channels.zha_device.nwk
+
+    @property
+    def manufacturer(self) -> Optional[str]:
+        """Return device manufacturer."""
+        return self._channels.zha_device.manufacturer
+
+    @property
+    def manufacturer_code(self) -> Optional[int]:
+        """Return device manufacturer."""
+        return self._channels.zha_device.manufacturer_code
+
+    @property
+    def model(self) -> Optional[str]:
+        """Return device model."""
+        return self._channels.zha_device.model
 
     @property
     def relay_channels(self) -> Dict[str, zha_typing.EventRelayChannelType]:

@@ -9,7 +9,6 @@ import logging
 import zigpy.zcl.clusters.general as general
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .. import registries
@@ -198,9 +197,7 @@ class LevelControlChannel(ZigbeeChannel):
 
     def dispatch_level_change(self, command, level):
         """Dispatch level change."""
-        async_dispatcher_send(
-            self._zha_device.hass, f"{self.unique_id}_{command}", level
-        )
+        self.async_send_signal(f"{self.unique_id}_{command}", level)
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
@@ -284,9 +281,7 @@ class OnOffChannel(ZigbeeChannel):
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
         if attrid == self.ON_OFF:
-            async_dispatcher_send(
-                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
-            )
+            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
             self._state = bool(value)
 
     async def async_initialize(self, from_cache):
@@ -353,16 +348,11 @@ class PowerConfigurationChannel(ZigbeeChannel):
         else:
             attr_id = attr
         if attrid == attr_id:
-            async_dispatcher_send(
-                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
-            )
+            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
             return
         attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
-        async_dispatcher_send(
-            self._zha_device.hass,
-            f"{self.unique_id}_{SIGNAL_STATE_ATTR}",
-            attr_name,
-            value,
+        self.async_send_signal(
+            f"{self.unique_id}_{SIGNAL_STATE_ATTR}", attr_name, value
         )
 
     async def async_initialize(self, from_cache):
