@@ -1,202 +1,75 @@
 """Platform for Garmin Connect integration."""
-from datetime import date, timedelta
 import logging
+from typing import Any, Dict
 
-import garminconnect
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
+from garminconnect import (
+    GarminConnectAuthenticationError,
+    GarminConnectConnectionError,
+    GarminConnectTooManyRequestsError,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
-GARMIN_CONDITIONS_LIST = {
-    "totalSteps": ["Total Steps", "steps", "mdi:walk"],
-    "dailyStepGoal": ["Daily Step Goal", "steps", "mdi:walk"],
-    "totalKilocalories": ["Total KiloCalories", "kcal", "mdi:food"],
-    "activeKilocalories": ["Active KiloCalories", "kcal", "mdi:food"],
-    "bmrKilocalories": ["BMR KiloCalories", "kcal", "mdi:food"],
-    "consumedKilocalories": ["Consumed KiloCalories", "kcal", "mdi:food"],
-    "burnedKilocalories": ["Burned KiloCalories", "kcal", "mdi:food"],
-    "remainingKilocalories": ["Remaining KiloCalories", "kcal", "mdi:food"],
-    "netRemainingKilocalories": ["Net Remaining KiloCalories", "kcal", "mdi:food"],
-    "netCalorieGoal": ["Net Calorie Goal", "cal", "mdi:food"],
-    "totalDistanceMeters": ["Total Distance Mtr", "mtr", "mdi:walk"],
-    "wellnessStartTimeLocal": ["Wellness Start Time", "", "mdi:clock"],
-    "wellnessEndTimeLocal": ["Wellness End Time", "", "mdi:clock"],
-    "wellnessDescription": ["Wellness Description", "", "mdi:clock"],
-    "wellnessDistanceMeters": ["Wellness Distance Mtr", "mtr", "mdi:walk"],
-    "wellnessActiveKilocalories": ["Wellness Active KiloCalories", "kcal", "mdi:food"],
-    "wellnessKilocalories": ["Wellness KiloCalories", "kcal", "mdi:food"],
-    "highlyActiveSeconds": ["Highly Active Time", "minutes", "mdi:fire"],
-    "activeSeconds": ["Active Time", "minutes", "mdi:fire"],
-    "sedentarySeconds": ["Sedentary Time", "minutes", "mdi:seat"],
-    "sleepingSeconds": ["Sleeping Time", "minutes", "mdi:sleep"],
-    "measurableAwakeDuration": ["Awake Duration", "minutes", "mdi:sleep"],
-    "measurableAsleepDuration": ["Sleep Duration", "minutes", "mdi:sleep"],
-    "floorsAscendedInMeters": ["Floors Ascended Mtr", "mtr", "mdi:stairs"],
-    "floorsDescendedInMeters": ["Floors Descended Mtr", "mtr", "mdi:stairs"],
-    "floorsAscended": ["Floors Ascended", "floors", "mdi:stairs"],
-    "floorsDescended": ["Floors Descended", "floors", "mdi:stairs"],
-    "userFloorsAscendedGoal": ["Floors Ascended Goal", "", "mdi:stairs"],
-    "minHeartRate": ["Min Heart Rate", "bpm", "mdi:heart-pulse"],
-    "maxHeartRate": ["Max Heart Rate", "bpm", "mdi:heart-pulse"],
-    "restingHeartRate": ["Resting Heart Rate", "bpm", "mdi:heart-pulse"],
-    "minAvgHeartRate": ["Min Avg Heart Rate", "bpm", "mdi:heart-pulse"],
-    "maxAvgHeartRate": ["Max Avg Heart Rate", "bpm", "mdi:heart-pulse"],
-    "abnormalHeartRateAlertsCount": ["Abnormal HR Counts", "", "mdi:heart-pulse"],
-    "lastSevenDaysAvgRestingHeartRate": [
-        "Last 7 Days Avg Heart Rate",
-        "bpm",
-        "mdi:heart-pulse",
-    ],
-    "averageStressLevel": ["Avg Stress Level", "", "mdi:flash-alert"],
-    "maxStressLevel": ["Max Stress Level", "", "mdi:flash-alert"],
-    "stressQualifier": ["Stress Qualifier", "", "mdi:flash-alert"],
-    "stressDuration": ["Stress Duration", "minutes", "mdi:flash-alert"],
-    "restStressDuration": ["Rest Stress Duration", "minutes", "mdi:flash-alert"],
-    "activityStressDuration": [
-        "Activity Stress Duration",
-        "minutes",
-        "mdi:flash-alert",
-    ],
-    "uncategorizedStressDuration": [
-        "Uncat. Stress Duration",
-        "minutes",
-        "mdi:flash-alert",
-    ],
-    "totalStressDuration": ["Total Stress Duration", "minutes", "mdi:flash-alert"],
-    "lowStressDuration": ["Low Stress Duration", "minutes", "mdi:flash-alert"],
-    "mediumStressDuration": ["Medium Stress Duration", "minutes", "mdi:flash-alert"],
-    "highStressDuration": ["High Stress Duration", "minutes", "mdi:flash-alert"],
-    "stressPercentage": ["Stress Percentage", "%", "mdi:flash-alert"],
-    "restStressPercentage": ["Rest Stress Percentage", "%", "mdi:flash-alert"],
-    "activityStressPercentage": ["Activity Stress Percentage", "%", "mdi:flash-alert"],
-    "uncategorizedStressPercentage": [
-        "Uncat. Stress Percentage",
-        "%",
-        "mdi:flash-alert",
-    ],
-    "lowStressPercentage": ["Low Stress Percentage", "%", "mdi:flash-alert"],
-    "mediumStressPercentage": ["Medium Stress Percentage", "%", "mdi:flash-alert"],
-    "highStressPercentage": ["High Stress Percentage", "%", "mdi:flash-alert"],
-    "moderateIntensityMinutes": ["Moderate Intensity", "minutes", "mdi:flash-alert"],
-    "vigorousIntensityMinutes": ["Vigorous Intensity", "minutes", "mdi:run-fast"],
-    "intensityMinutesGoal": ["Intensity Goal", "minutes", "mdi:run-fast"],
-    "bodyBatteryChargedValue": [
-        "Body Battery Charged",
-        "%",
-        "mdi:battery-charging-100",
-    ],
-    "bodyBatteryDrainedValue": [
-        "Body Battery Drained",
-        "%",
-        "mdi:battery-alert-variant-outline",
-    ],
-    "bodyBatteryHighestValue": ["Body Battery Highest", "%", "mdi:battery-heart"],
-    "bodyBatteryLowestValue": ["Body Battery Lowest", "%", "mdi:battery-heart-outline"],
-    "bodyBatteryMostRecentValue": [
-        "Body Battery Most Recent",
-        "%",
-        "mdi:battery-positive",
-    ],
-    "averageSpo2": ["Average SPO2", "%", "mdi:diabetes"],
-    "lowestSpo2": ["Lowest SPO2", "%", "mdi:diabetes"],
-    "latestSpo2": ["Latest SPO2", "%", "mdi:diabetes"],
-    "latestSpo2ReadingTimeLocal": ["Latest SPO2 Time", "", "mdi:diabetes"],
-    "averageMonitoringEnvironmentAltitude": [
-        "Average Altitude",
-        "%",
-        "mdi:image-filter-hdr",
-    ],
-    "highestRespirationValue": ["Highest Respiration", "brpm", "mdi:progress-clock"],
-    "lowestRespirationValue": ["Lowest Respiration", "brpm", "mdi:progress-clock"],
-    "latestRespirationValue": ["Latest Respiration", "brpm", "mdi:progress-clock"],
-    "latestRespirationTimeGMT": ["Latest Respiration Update", "", "mdi:progress-clock"],
-}
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_ID
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import ATTRIBUTION, DOMAIN, GARMIN_ENTITY_LIST
 
 _LOGGER = logging.getLogger(__name__)
 
-GARMIN_DEFAULT_CONDITIONS = ["totalSteps"]
-ATTRIBUTION = "Data provided by garmin.com"
-DEFAULT_NAME = "Garmin"
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(
-            CONF_MONITORED_CONDITIONS, default=GARMIN_DEFAULT_CONDITIONS
-        ): vol.All(cv.ensure_list, [vol.In(GARMIN_CONDITIONS_LIST)]),
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Garmin Connect component."""
-
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    prefix_name = config[CONF_NAME]
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Set up Garmin Connect sensor based on a config entry."""
+    garmin_data = hass.data[DOMAIN][entry.entry_id]
+    unique_id = entry.data[CONF_ID]
 
     try:
-        garmin_client = garminconnect.Garmin(username, password)
-    except ValueError as err:
-        _LOGGER.error("Error occured during Garmin Connect Client init: %s", err)
-        return
-
-    garmin_data = GarminConnectClient(garmin_client)
+        await garmin_data.async_update()
+    except (
+        GarminConnectConnectionError,
+        GarminConnectAuthenticationError,
+        GarminConnectTooManyRequestsError,
+    ) as err:
+        _LOGGER.error("Error occured during Garmin Connect Client update: %s", err)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.error("Unknown error occured during Garmin Connect Client update.")
 
     entities = []
-    for resource in config[CONF_MONITORED_CONDITIONS]:
+    for resource in GARMIN_ENTITY_LIST:
         sensor_type = resource
-        name = f"{prefix_name} {GARMIN_CONDITIONS_LIST[resource][0]}"
-        unit = GARMIN_CONDITIONS_LIST[resource][1]
-        icon = GARMIN_CONDITIONS_LIST[resource][2]
+        name = GARMIN_ENTITY_LIST[resource][0]
+        unit = GARMIN_ENTITY_LIST[resource][1]
+        icon = GARMIN_ENTITY_LIST[resource][2]
+        device_class = GARMIN_ENTITY_LIST[resource][3]
 
         _LOGGER.debug(
-            "Registered new sensor: %s, %s, %s, %s", sensor_type, name, unit, icon
+            "Registering entity: %s, %s, %s, %s, %s",
+            sensor_type,
+            name,
+            unit,
+            icon,
+            device_class,
         )
-        entities.append(GarminConnectSensor(garmin_data, sensor_type, name, unit, icon))
+        entities.append(
+            GarminConnectSensor(
+                garmin_data, unique_id, sensor_type, name, unit, icon, device_class
+            )
+        )
 
-    add_entities(entities, True)
-
-
-class GarminConnectClient:
-    """Set up the Garmin Connect client."""
-
-    def __init__(self, client):
-        """Initialize the client."""
-        self.client = client
-        self.data = None
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Fetch the latest data."""
-        today = date.today()
-        try:
-            self.data = self.client.fetch_stats(today.isoformat())
-        except ValueError as err:
-            _LOGGER.error("Error occured while fetching Garmin Connect data: %s", err)
-            return
+    async_add_entities(entities, True)
 
 
 class GarminConnectSensor(Entity):
     """Representation of a Garmin Connect Sensor."""
 
-    def __init__(self, data, sensor_type, name, unit, icon):
-        """Initialize the sensor."""
+    def __init__(self, data, unique_id, sensor_type, name, unit, icon, device_class):
+        """Initialize."""
         self._data = data
+        self._unique_id = unique_id
         self._type = sensor_type
+        self._device_class = device_class
         self._name = name
         self._icon = icon
         self._unit = unit
@@ -218,6 +91,11 @@ class GarminConnectSensor(Entity):
         return self._state
 
     @property
+    def unique_id(self) -> str:
+        """Return the unique ID for this sensor."""
+        return f"{DOMAIN}_{self._unique_id}_{self._type}"
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return self._unit
@@ -225,7 +103,6 @@ class GarminConnectSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return attributes for sensor."""
-
         attributes = {}
         if self._data.data:
             attributes = {
@@ -235,11 +112,37 @@ class GarminConnectSensor(Entity):
             }
         return attributes
 
-    def update(self):
-        """Update data and set sensor states."""
-        self._data.update()
-        data = self._data.data
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        """Return device information."""
+        return {
+            "identifiers": {(DOMAIN, self._unique_id)},
+            "name": "Garmin Connect",
+            "manufacturer": "Garmin Connect",
+            "model": "Activity Tracker",
+        }
 
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        pass
+
+    async def async_will_remove_from_hass(self):
+        """Prepare for unload."""
+        pass
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self._device_class
+
+    async def async_update(self):
+        """Update the data from Garmin Connect."""
+        await self._data.async_update()
+        if not self._data.data:
+            _LOGGER.error("Didn't receive data from Garmin Connect")
+            return
+
+        data = self._data.data
         if "Duration" in self._type:
             self._state = data[self._type] // 60
         elif "Seconds" in self._type:
@@ -248,5 +151,5 @@ class GarminConnectSensor(Entity):
             self._state = data[self._type]
 
         _LOGGER.debug(
-            "Device %s set to state %s %s", self._type, self._state, self._unit
+            "Entity %s set to state %s %s", self._type, self._state, self._unit
         )
