@@ -23,27 +23,29 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     client_locations = hass.data[TOTALCONNECT_DOMAIN].client.locations
 
     for location_id in client_locations:
-        for zone in client_locations[location_id].zones:
-            sensors.append(
-                TotalConnectBinarySensor(zone, location_id, client_locations)
-            )
+        for zone_id in client_locations[location_id].zones:
+            zone = client_locations[location_id].zones[zone_id]
+            sensors.append(TotalConnectBinarySensor(zone_id, location_id, zone))
     add_entities(sensors)
 
 
 class TotalConnectBinarySensor(BinarySensorDevice):
     """Represent an TotalConnect zone."""
 
-    def __init__(self, zone_id, location_id, locations):
+    def __init__(self, zone_id, location_id, zone):
         """Initialize the TotalConnect status."""
         self._zone_id = zone_id
         self._location_id = location_id
-        self._zone = locations[location_id].zones[zone_id]
+        self._zone = zone
         self._name = self._zone.description
         self._unique_id = "TC Location {} zone {}".format(location_id, zone_id)
+        self._is_on = None
+        self._is_tampered = None
+        self._is_low_battery = None
         self.update()
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self):
         """Return the unique id."""
         return self._unique_id
 
