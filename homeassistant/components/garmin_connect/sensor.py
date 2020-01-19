@@ -1,18 +1,19 @@
 """Platform for Garmin Connect integration."""
 import logging
 from typing import Any, Dict
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_ID
-from homeassistant.helpers.entity import Entity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
 
 from garminconnect import (
+    GarminConnectAuthenticationError,
     GarminConnectConnectionError,
     GarminConnectTooManyRequestsError,
-    GarminConnectAuthenticationError,
 )
 
-from .const import DOMAIN, GARMIN_ENTITY_LIST, ATTRIBUTION
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_ID
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import ATTRIBUTION, DOMAIN, GARMIN_ENTITY_LIST
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +103,6 @@ class GarminConnectSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return attributes for sensor."""
-
         attributes = {}
         if self._data.data:
             attributes = {
@@ -137,7 +137,6 @@ class GarminConnectSensor(Entity):
 
     async def async_update(self):
         """Update the data from Garmin Connect."""
-
         await self._data.async_update()
         if not self._data.data:
             _LOGGER.error("Didn't receive data from Garmin Connect")

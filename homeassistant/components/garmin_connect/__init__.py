@@ -1,22 +1,22 @@
 """The Garmin Connect integration."""
 import asyncio
-import logging
 from datetime import date, timedelta
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.util import Throttle
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-
-from .const import DOMAIN
+import logging
 
 from garminconnect import (
     Garmin,
+    GarminConnectAuthenticationError,
     GarminConnectConnectionError,
     GarminConnectTooManyRequestsError,
-    GarminConnectAuthenticationError,
 )
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.util import Throttle
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
