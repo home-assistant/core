@@ -1,8 +1,12 @@
 """Test ZHA Core channels."""
+from unittest import mock
+
 import pytest
 import zigpy.types as t
 
+import homeassistant.components.zha.core.channels as channels
 import homeassistant.components.zha.core.channels.base as base_channels
+import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.device as zha_device
 import homeassistant.components.zha.core.registries as registries
 
@@ -160,3 +164,71 @@ def test_channel_registry():
         assert isinstance(cluster_id, int)
         assert 0 <= cluster_id <= 0xFFFF
         assert issubclass(channel, base_channels.ZigbeeChannel)
+
+
+def test_epch_unclaimed_channels(channel):
+    """Test unclaimed channels."""
+
+    ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
+    ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
+    ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
+
+    ep_channels = channels.EndpointChannels(
+        mock.MagicMock(spec_set=channels.Channels), mock.sentinel.ep
+    )
+    all_channels = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
+    with mock.patch.dict(ep_channels.all_channels, all_channels, clear=True):
+        available = ep_channels.unclaimed_channels()
+        assert ch_1 in available
+        assert ch_2 in available
+        assert ch_3 in available
+
+        ep_channels.claimed_channels[ch_2.id] = ch_2
+        available = ep_channels.unclaimed_channels()
+        assert ch_1 in available
+        assert ch_2 not in available
+        assert ch_3 in available
+
+        ep_channels.claimed_channels[ch_1.id] = ch_1
+        available = ep_channels.unclaimed_channels()
+        assert ch_1 not in available
+        assert ch_2 not in available
+        assert ch_3 in available
+
+        ep_channels.claimed_channels[ch_3.id] = ch_3
+        available = ep_channels.unclaimed_channels()
+        assert ch_1 not in available
+        assert ch_2 not in available
+        assert ch_3 not in available
+
+
+def test_epch_claim_channels(channel):
+    """Test channel claiming."""
+
+    ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
+    ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
+    ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
+
+    ep_channels = channels.EndpointChannels(
+        mock.MagicMock(spec_set=channels.Channels), mock.sentinel.ep
+    )
+    all_channels = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
+    with mock.patch.dict(ep_channels.all_channels, all_channels, clear=True):
+        assert ch_1.id not in ep_channels.claimed_channels
+        assert ch_2.id not in ep_channels.claimed_channels
+        assert ch_3.id not in ep_channels.claimed_channels
+
+        ep_channels.claim_channels([ch_2])
+        assert ch_1.id not in ep_channels.claimed_channels
+        assert ch_2.id in ep_channels.claimed_channels
+        assert ep_channels.claimed_channels[ch_2.id] is ch_2
+        assert ch_3.id not in ep_channels.claimed_channels
+
+        ep_channels.claim_channels([ch_3, ch_1])
+        assert ch_1.id in ep_channels.claimed_channels
+        assert ep_channels.claimed_channels[ch_1.id] is ch_1
+        assert ch_2.id in ep_channels.claimed_channels
+        assert ep_channels.claimed_channels[ch_2.id] is ch_2
+        assert ch_3.id in ep_channels.claimed_channels
+        assert ep_channels.claimed_channels[ch_3.id] is ch_3
+        assert "1:0x0300" in ep_channels.claimed_channels

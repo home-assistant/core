@@ -192,7 +192,7 @@ class ZigbeeChannel(LogMixin):
 
     async def async_configure(self):
         """Set cluster binding and attribute reporting."""
-        if not self._zha_device.skip_configuration:
+        if not self._ch_pool.skip_configuration:
             await self.bind()
             if self.cluster.is_server:
                 for report_config in self._report_config:

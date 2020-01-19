@@ -146,7 +146,8 @@ class IASZoneChannel(ZigbeeChannel):
 
     async def async_configure(self):
         """Configure IAS device."""
-        if self._zha_device.skip_configuration:
+        await self.get_attribute_value("zone_type", from_cache=False)
+        if self._ch_pool.skip_configuration:
             self.debug("skipping IASZoneChannel configuration")
             return
 
@@ -171,8 +172,6 @@ class IASZoneChannel(ZigbeeChannel):
                 str(ex),
             )
         self.debug("finished IASZoneChannel configuration")
-
-        await self.get_attribute_value("zone_type", from_cache=False)
 
     @callback
     def attribute_updated(self, attrid, value):
