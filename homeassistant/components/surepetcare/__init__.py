@@ -6,7 +6,7 @@ from surepy import (
     SurePetcare,
     SurePetcareAuthenticationError,
     SurePetcareError,
-    SureThingID,
+    SureProductID,
 )
 import voluptuous as vol
 
@@ -24,6 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    CONF_FEEDERS,
     CONF_FLAPS,
     CONF_HOUSEHOLD_ID,
     CONF_PETS,
@@ -36,6 +37,10 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
+FEEDER_SCHEMA = vol.Schema(
+    {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string}
+)
 
 FLAP_SCHEMA = vol.Schema(
     {vol.Required(CONF_ID): cv.positive_int, vol.Required(CONF_NAME): cv.string}
@@ -52,6 +57,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Required(CONF_HOUSEHOLD_ID): cv.positive_int,
+                vol.Required(CONF_FEEDERS): vol.All(cv.ensure_list, [FEEDER_SCHEMA]),
                 vol.Required(CONF_FLAPS): vol.All(cv.ensure_list, [FLAP_SCHEMA]),
                 vol.Required(CONF_PETS): vol.All(cv.ensure_list, [PET_SCHEMA]),
                 vol.Optional(
@@ -79,11 +85,10 @@ async def async_setup(hass, config) -> bool:
         surepy = SurePetcare(
             conf[CONF_USERNAME],
             conf[CONF_PASSWORD],
-            conf[CONF_HOUSEHOLD_ID],
             hass.loop,
             async_get_clientsession(hass),
         )
-        await surepy.refresh_token()
+        await surepy.get_data()
     except SurePetcareAuthenticationError:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong credentials!")
         return False
@@ -91,12 +96,12 @@ async def async_setup(hass, config) -> bool:
         _LOGGER.error("Unable to connect to surepetcare.io: Wrong %s!", error)
         return False
 
-    # add flaps
+    # add flaps (dont differentiate between CAT and PET for now)
     things = [
         {
             CONF_NAME: flap[CONF_NAME],
             CONF_ID: flap[CONF_ID],
-            CONF_TYPE: SureThingID.FLAP,
+            CONF_TYPE: SureProductID.PET_FLAP,
         }
         for flap in conf[CONF_FLAPS]
     ]
@@ -107,7 +112,7 @@ async def async_setup(hass, config) -> bool:
             {
                 CONF_NAME: pet[CONF_NAME],
                 CONF_ID: pet[CONF_ID],
-                CONF_TYPE: SureThingID.PET,
+                CONF_TYPE: SureProductID.PET,
             }
             for pet in conf[CONF_PETS]
         ]
@@ -155,10 +160,12 @@ class SurePetcareAPI:
             try:
                 type_state = self.states.setdefault(sure_type, {})
 
-                if sure_type == SureThingID.FLAP:
-                    type_state[sure_id] = await self.surepy.get_flap_data(sure_id)
-                elif sure_type == SureThingID.PET:
-                    type_state[sure_id] = await self.surepy.get_pet_data(sure_id)
+                if sure_type in [SureProductID.CAT_FLAP, SureProductID.PET_FLAP]:
+                    type_state[sure_id] = await self.surepy.flap(sure_id)
+                if sure_type == SureProductID.FEEDER:
+                    type_state[sure_id] = await self.surepy.feeder(sure_id)
+                elif sure_type == SureProductID.PET:
+                    type_state[sure_id] = await self.surepy.pet(sure_id)
 
             except SurePetcareError as error:
                 _LOGGER.error("Unable to retrieve data from surepetcare.io: %s", error)
