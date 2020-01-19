@@ -105,12 +105,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "tv_needs_token"
 
             if not errors:
-                unique_id = await VizioAsync.get_unique_id(
-                    user_input[CONF_HOST],
-                    user_input.get(CONF_ACCESS_TOKEN),
-                    user_input[CONF_DEVICE_CLASS],
-                )
-
                 # If config flow is initiated by zeroconf discovery, always require user to go through form to finish setup
                 # pylint: disable=no-member # Needed because of https://github.com/PyCQA/pylint/issues/3167
                 if (
@@ -123,6 +117,12 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     # Abort flow if existing entry with same unique ID matches new config entry.
                     # Since name and host check have already passed, if an entry already exists,
                     # It is likely a reconfigured device.
+                    unique_id = await VizioAsync.get_unique_id(
+                        user_input[CONF_HOST],
+                        user_input.get(CONF_ACCESS_TOKEN),
+                        user_input[CONF_DEVICE_CLASS],
+                    )
+
                     if await self.async_set_unique_id(
                         unique_id=unique_id, raise_on_progress=True
                     ):
