@@ -178,9 +178,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
 
-        discovery_info[CONF_HOST] = (
-            str(discovery_info[CONF_HOST]) + ":" + str(discovery_info[CONF_PORT])
-        )
+        discovery_info[
+            CONF_HOST
+        ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
 
         # Check if new config entry matches any existing config entries and abort if so
         for entry in self.hass.config_entries.async_entries(DOMAIN):
