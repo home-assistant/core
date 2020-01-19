@@ -28,7 +28,6 @@ from .const import (
 )
 
 SCAN_INTERVAL = timedelta(seconds=10)
-DATA_KEY = "fan.wemo"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,7 +96,7 @@ RESET_FILTER_LIFE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_i
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up WeMo binary sensors."""
-    hass.data[DATA_KEY] = {}
+    entities = []
 
     async def _discovered_wemo(discovery_info):
         """Handle a discovered Wemo device."""
@@ -105,7 +104,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         mac = discovery_info["mac_address"]
 
         try:
-            device = WemoHumidifier(discovery.device_from_description(location, mac))
+            entity = WemoHumidifier(
+                await hass.async_add_executor_job(
+                    discovery.device_from_description, location, mac
+                )
+            )
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.Timeout,
@@ -113,8 +116,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             _LOGGER.error("Unable to access %s (%s)", location, err)
             raise PlatformNotReady
 
-        hass.data[DATA_KEY][device.entity_id] = device
-        async_add_entities([device])
+        entities.append(entity)
+        async_add_entities([entity])
 
     async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
 
@@ -122,11 +125,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Handle the WeMo humidifier services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
-        humidifiers = [
-            device
-            for device in hass.data[DATA_KEY].values()
-            if device.entity_id in entity_ids
-        ]
+        humidifiers = [entity for entity in entities if entity.entity_id in entity_ids]
 
         if service.service == SERVICE_SET_HUMIDITY:
             target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)

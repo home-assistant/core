@@ -45,7 +45,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         mac = discovery_info["mac_address"]
 
         try:
-            device = discovery.device_from_description(location, mac)
+            device = await hass.async_add_executor_job(
+                discovery.device_from_description, location, mac
+            )
         except (
             requests.exceptions.ConnectionError,
             requests.exceptions.Timeout,
