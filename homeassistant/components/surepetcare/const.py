@@ -11,6 +11,7 @@ SPC = "spc"
 SUREPY = "surepy"
 
 CONF_HOUSEHOLD_ID = "household_id"
+CONF_FEEDERS = "feeders"
 CONF_FLAPS = "flaps"
 CONF_PETS = "pets"
 CONF_DATA = "data"
