@@ -7,7 +7,6 @@ from pywemo import discovery
 import requests
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN as WEMO_DOMAIN
@@ -32,7 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             requests.exceptions.Timeout,
         ) as err:
             _LOGGER.error("Unable to access %s (%s)", location, err)
-            raise PlatformNotReady
+            return
 
         if device:
             async_add_entities([WemoBinarySensor(hass, device)])

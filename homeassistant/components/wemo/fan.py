@@ -17,7 +17,6 @@ from homeassistant.components.fan import (
     FanEntity,
 )
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -114,7 +113,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             requests.exceptions.Timeout,
         ) as err:
             _LOGGER.error("Unable to access %s (%s)", location, err)
-            raise PlatformNotReady
+            return
 
         entities.append(entity)
         async_add_entities([entity])

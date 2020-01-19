@@ -9,7 +9,6 @@ import requests
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import convert
 
@@ -49,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             requests.exceptions.Timeout,
         ) as err:
             _LOGGER.error("Unable to access %s (%s)", location, err)
-            raise PlatformNotReady
+            return
 
         if device:
             async_add_entities([WemoSwitch(device)])

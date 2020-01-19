@@ -19,7 +19,6 @@ from homeassistant.components.light import (
     SUPPORT_TRANSITION,
     Light,
 )
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.color as color_util
@@ -53,7 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             requests.exceptions.Timeout,
         ) as err:
             _LOGGER.error("Unable to access %s (%s)", location, err)
-            raise PlatformNotReady
+            return
 
         if device.model_name == "Dimmer":
             async_add_entities([WemoDimmer(device)])
