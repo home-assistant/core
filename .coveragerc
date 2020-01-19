@@ -45,6 +45,7 @@ omit =
     homeassistant/components/arest/sensor.py
     homeassistant/components/arest/switch.py
     homeassistant/components/arlo/*
+    homeassistant/components/arris_tg2492lg/*
     homeassistant/components/aruba/device_tracker.py
     homeassistant/components/arwn/sensor.py
     homeassistant/components/asterisk_cdr/mailbox.py
