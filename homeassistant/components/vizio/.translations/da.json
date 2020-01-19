@@ -5,6 +5,7 @@
             "already_setup": "Denne post er allerede blevet konfigureret.",
             "host_exists": "Vizio-komponent med v\u00e6rt er allerede konfigureret.",
             "name_exists": "Vizio-komponent med navn er allerede konfigureret.",
+            "updated_options": "Denne post er allerede konfigureret, men indstillingerne, der er defineret i konfigurationen, stemmer ikke overens med de tidligere importerede indstillingsv\u00e6rdier, s\u00e5 konfigurationsposten er blevet opdateret i overensstemmelse hermed.",
             "updated_volume_step": "Denne post er allerede konfigureret, men lydstyrketrinst\u00f8rrelsen i konfigurationen stemmer ikke overens med konfigurationsposten, s\u00e5 konfigurationsposten er blevet opdateret i overensstemmelse hermed."
         },
         "error": {
@@ -30,6 +31,7 @@
         "step": {
             "init": {
                 "data": {
+                    "timeout": "Timeout for API-anmodning (sekunder)",
                     "volume_step": "Lydstyrkestrinst\u00f8rrelse"
                 },
                 "title": "Opdater Vizo SmartCast-indstillinger"
