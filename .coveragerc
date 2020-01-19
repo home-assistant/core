@@ -256,7 +256,7 @@ omit =
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
     homeassistant/components/garmin_connect/__init__.py
-    homeassistant/components/garmin_connect/consts.py
+    homeassistant/components/garmin_connect/const.py
     homeassistant/components/garmin_connect/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
