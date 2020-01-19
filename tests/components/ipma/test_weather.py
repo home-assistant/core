@@ -13,7 +13,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 TEST_CONFIG = {"name": "HomeTown", "latitude": "40.00", "longitude": "-8.00"}
 
@@ -119,7 +119,7 @@ async def test_setup_configuration(hass):
     """Test for successfully setting up the IPMA platform."""
     with patch(
         "homeassistant.components.ipma.weather.async_get_location",
-        return_value=MockLocation(),
+        return_value=mock_coro(MockLocation()),
     ):
         assert await async_setup_component(
             hass, weather.DOMAIN, {"weather": {"name": "HomeTown", "platform": "ipma"}}
@@ -142,7 +142,7 @@ async def test_setup_config_flow(hass):
     """Test for successfully setting up the IPMA platform."""
     with patch(
         "homeassistant.components.ipma.weather.async_get_location",
-        return_value=MockLocation(),
+        return_value=mock_coro(MockLocation()),
     ):
         entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
         await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)
