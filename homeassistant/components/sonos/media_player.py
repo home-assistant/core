@@ -31,13 +31,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TIME,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import ATTR_TIME, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.util.dt import utcnow
@@ -98,61 +92,6 @@ ATTR_WITH_GROUP = "with_group"
 ATTR_NIGHT_SOUND = "night_sound"
 ATTR_SPEECH_ENHANCE = "speech_enhance"
 ATTR_QUEUE_POSITION = "queue_position"
-
-SONOS_JOIN_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_MASTER): cv.entity_id,
-        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-    }
-)
-
-SONOS_UNJOIN_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids})
-
-SONOS_STATES_SCHEMA = vol.Schema(
-    {
-        vol.Optional(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean,
-    }
-)
-
-SONOS_SET_TIMER_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Required(ATTR_SLEEP_TIME): vol.All(
-            vol.Coerce(int), vol.Range(min=0, max=86399)
-        ),
-    }
-)
-
-SONOS_CLEAR_TIMER_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids}
-)
-
-SONOS_UPDATE_ALARM_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Required(ATTR_ALARM_ID): cv.positive_int,
-        vol.Optional(ATTR_TIME): cv.time,
-        vol.Optional(ATTR_VOLUME): cv.small_float,
-        vol.Optional(ATTR_ENABLED): cv.boolean,
-        vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
-    }
-)
-
-SONOS_SET_OPTION_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
-        vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
-    }
-)
-
-SONOS_PLAY_QUEUE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.comp_entity_ids,
-        vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int,
-    }
-)
 
 
 class SonosData:
@@ -263,39 +202,70 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             )
 
     service.async_register_admin_service(
-        hass, SONOS_DOMAIN, SERVICE_JOIN, async_service_handle, SONOS_JOIN_SCHEMA
+        hass,
+        SONOS_DOMAIN,
+        SERVICE_JOIN,
+        async_service_handle,
+        cv.make_entity_service_schema({vol.Required(ATTR_MASTER): cv.entity_id}),
     )
 
     service.async_register_admin_service(
-        hass, SONOS_DOMAIN, SERVICE_UNJOIN, async_service_handle, SONOS_UNJOIN_SCHEMA
+        hass,
+        SONOS_DOMAIN,
+        SERVICE_UNJOIN,
+        async_service_handle,
+        cv.make_entity_service_schema({}),
+    )
+
+    join_unjoin_schema = cv.make_entity_service_schema(
+        {vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean}
     )
 
     service.async_register_admin_service(
-        hass, SONOS_DOMAIN, SERVICE_SNAPSHOT, async_service_handle, SONOS_STATES_SCHEMA
+        hass, SONOS_DOMAIN, SERVICE_SNAPSHOT, async_service_handle, join_unjoin_schema
     )
 
     service.async_register_admin_service(
-        hass, SONOS_DOMAIN, SERVICE_RESTORE, async_service_handle, SONOS_STATES_SCHEMA
+        hass, SONOS_DOMAIN, SERVICE_RESTORE, async_service_handle, join_unjoin_schema
     )
 
     platform.async_register_entity_service(
-        SERVICE_SET_TIMER, SONOS_SET_TIMER_SCHEMA, "set_sleep_timer"
+        SERVICE_SET_TIMER,
+        {
+            vol.Required(ATTR_SLEEP_TIME): vol.All(
+                vol.Coerce(int), vol.Range(min=0, max=86399)
+            )
+        },
+        "set_sleep_timer",
+    )
+
+    platform.async_register_entity_service(SERVICE_CLEAR_TIMER, {}, "clear_sleep_timer")
+
+    platform.async_register_entity_service(
+        SERVICE_UPDATE_ALARM,
+        {
+            vol.Required(ATTR_ALARM_ID): cv.positive_int,
+            vol.Optional(ATTR_TIME): cv.time,
+            vol.Optional(ATTR_VOLUME): cv.small_float,
+            vol.Optional(ATTR_ENABLED): cv.boolean,
+            vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
+        },
+        "set_alarm",
     )
 
     platform.async_register_entity_service(
-        SERVICE_CLEAR_TIMER, SONOS_CLEAR_TIMER_SCHEMA, "clear_sleep_timer"
+        SERVICE_SET_OPTION,
+        {
+            vol.Optional(ATTR_NIGHT_SOUND): cv.boolean,
+            vol.Optional(ATTR_SPEECH_ENHANCE): cv.boolean,
+        },
+        "set_option",
     )
 
     platform.async_register_entity_service(
-        SERVICE_UPDATE_ALARM, SONOS_UPDATE_ALARM_SCHEMA, "set_alarm"
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_SET_OPTION, SONOS_SET_OPTION_SCHEMA, "set_option"
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_PLAY_QUEUE, SONOS_PLAY_QUEUE_SCHEMA, "play_queue"
+        SERVICE_PLAY_QUEUE,
+        {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
+        "play_queue",
     )
 
 
