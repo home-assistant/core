@@ -111,7 +111,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if await self.async_set_unique_id(
                     unique_id=unique_id, raise_on_progress=True
                 ):
-                    return self.async_abort(reason="already_setup")
+                    return self.async_abort(
+                        reason="already_setup_with_diff_host_and_name"
+                    )
 
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=user_input

@@ -28,7 +28,9 @@ from tests.common import MockConfigEntry, mock_coro_func
 _LOGGER = logging.getLogger(__name__)
 
 NAME = "Vizio"
+NAME2 = "Vizio2"
 HOST = "192.168.1.1:9000"
+HOST2 = "192.168.1.2:9000"
 ACCESS_TOKEN = "deadbeef"
 VOLUME_STEP = 2
 UNIQUE_ID = "testid"
@@ -240,6 +242,34 @@ async def test_user_name_already_configured(
     assert result["errors"] == {CONF_NAME: "name_exists"}
 
 
+async def test_user_esn_already_exists(
+    hass: HomeAssistantType, vizio_connect, vizio_bypass_setup
+) -> None:
+    """Test ESN is already configured with different host and name during user setup."""
+    # Set up new entry
+    MockConfigEntry(
+        domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
+    ).add_to_hass(hass)
+
+    # Set up new entry with same unique_id but different host and name
+    fail_entry = MOCK_SPEAKER_CONFIG.copy()
+    fail_entry[CONF_HOST] = HOST2
+    fail_entry[CONF_NAME] = NAME2
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], fail_entry
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_setup_with_diff_host_and_name"
+
+
 async def test_user_error_on_could_not_connect(
     hass: HomeAssistantType, vizio_cant_connect
 ) -> None:
@@ -326,7 +356,7 @@ async def test_import_flow_update_options(
         data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    entry = result["result"]
+    entry_id = result["result"].entry_id
 
     updated_config = MOCK_IMPORT_VALID_TV_CONFIG.copy()
     updated_config[CONF_VOLUME_STEP] = VOLUME_STEP + 1
@@ -338,4 +368,7 @@ async def test_import_flow_update_options(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "updated_options"
-    assert entry.options[CONF_VOLUME_STEP] == VOLUME_STEP + 1
+    assert (
+        hass.config_entries.async_get_entry(entry_id).options[CONF_VOLUME_STEP]
+        == VOLUME_STEP + 1
+    )
