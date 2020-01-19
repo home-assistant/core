@@ -120,7 +120,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 ):
                     self.show_form_for_zeroconf = False
                 else:
-                    # Abort flow if existing component with same unique ID matches new config entry
+                    # Abort flow if existing entry with same unique ID matches new config entry.
+                    # Since name and host check have already passed, if an entry already exists,
+                    # It is likely a reconfigured device.
                     if await self.async_set_unique_id(
                         unique_id=unique_id, raise_on_progress=True
                     ):

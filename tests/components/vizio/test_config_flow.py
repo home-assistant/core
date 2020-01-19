@@ -108,6 +108,16 @@ def vizio_bypass_update_fixture():
         yield
 
 
+@pytest.fixture(name="vizio_guess_device_type")
+def vizio_guess_device_type_fixture():
+    """Mock vizio async_guess_device_type function."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.async_guess_device_type",
+        return_value="speaker",
+    ):
+        yield
+
+
 @pytest.fixture(name="vizio_cant_connect")
 def vizio_cant_connect_fixture():
     """Mock vizio device cant connect."""
@@ -207,7 +217,7 @@ async def test_user_host_already_configured(
     )
     entry.add_to_hass(hass)
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
-    fail_entry[CONF_NAME] = "newtestname"
+    fail_entry[CONF_NAME] = NAME2
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -234,7 +244,7 @@ async def test_user_name_already_configured(
     entry.add_to_hass(hass)
 
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
-    fail_entry[CONF_HOST] = "0.0.0.0"
+    fail_entry[CONF_HOST] = HOST2
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -398,12 +408,14 @@ async def test_import_flow_update_options(
     )
 
 
-async def test_zeroconf_flow(hass: HomeAssistantType, vizio_connect) -> None:
+async def test_zeroconf_flow(
+    hass: HomeAssistantType, vizio_connect, vizio_guess_device_type
+) -> None:
     """Test zeroconf config flow."""
-    with patch("pyvizio.vizio.VizioAsync.can_connect", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_ENTRY
-        )
+    discovery_info = MOCK_ZEROCONF_ENTRY.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
 
     # Form should always show even if all required properties are discovered
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -411,15 +423,52 @@ async def test_zeroconf_flow(hass: HomeAssistantType, vizio_connect) -> None:
 
     # Apply discovery updates to entry to mimick when user hits submit without changing
     # defaults which were set from discovery parameters
-    user_input = result["data_schema"](MOCK_ZEROCONF_ENTRY)
+    user_input = result["data_schema"](discovery_info)
 
-    with patch("pyvizio.VizioAsync.validate_ha_config", return_value=True):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=user_input
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SPEAKER
+
+
+async def test_zeroconf_flow_already_configured(
+    hass: HomeAssistantType, vizio_connect, vizio_guess_device_type
+) -> None:
+    """Test entity is already configured during zeroconf setup."""
+    discovery_info = MOCK_ZEROCONF_ENTRY.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    # Form should always show even if all required properties are discovered
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "user"
+
+    # Apply discovery updates to entry to mimick when user hits submit without changing
+    # defaults which were set from discovery parameters
+    user_input = result["data_schema"](discovery_info)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == NAME
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_NAME] == NAME
+    assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SPEAKER
+
+    # Try rediscovering same device
+    discovery_info = MOCK_ZEROCONF_ENTRY.copy()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+    )
+
+    # Flow should abort because device is already setup
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_setup"
