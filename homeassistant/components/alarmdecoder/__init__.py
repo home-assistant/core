@@ -121,6 +121,7 @@ def setup(hass, config):
     device = conf.get(CONF_DEVICE)
     display = conf.get(CONF_PANEL_DISPLAY)
     zones = conf.get(CONF_ZONES)
+    auto_bypass = conf.get(CONF_AUTO_BYPASS)
 
     device_type = device.get(CONF_DEVICE_TYPE)
     host = DEFAULT_DEVICE_HOST
@@ -204,7 +205,9 @@ def setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
 
-    load_platform(hass, "alarm_control_panel", DOMAIN, conf, config)
+    load_platform(
+        hass, "alarm_control_panel", DOMAIN, {CONF_AUTO_BYPASS: auto_bypass}, config
+    )
 
     if zones:
         load_platform(hass, "binary_sensor", DOMAIN, {CONF_ZONES: zones}, config)
