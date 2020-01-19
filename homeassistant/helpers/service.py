@@ -116,13 +116,11 @@ async def async_extract_entities(hass, entities, service_call, expand_group=True
     """
     data_ent_id = service_call.data.get(ATTR_ENTITY_ID)
 
-    if data_ent_id is None:
-        return []
-
     if data_ent_id == ENTITY_MATCH_ALL:
         return [entity for entity in entities if entity.available]
 
     entity_ids = await async_extract_entity_ids(hass, service_call, expand_group)
+
     return [
         entity
         for entity in entities

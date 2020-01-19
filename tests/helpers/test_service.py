@@ -65,6 +65,54 @@ def mock_entities():
     return entities
 
 
+@pytest.fixture
+def area_mock(hass):
+    """Mock including area info."""
+    hass.states.async_set("light.Bowl", STATE_ON)
+    hass.states.async_set("light.Ceiling", STATE_OFF)
+    hass.states.async_set("light.Kitchen", STATE_OFF)
+
+    device_in_area = dev_reg.DeviceEntry(area_id="test-area")
+    device_no_area = dev_reg.DeviceEntry()
+    device_diff_area = dev_reg.DeviceEntry(area_id="diff-area")
+
+    mock_device_registry(
+        hass,
+        {
+            device_in_area.id: device_in_area,
+            device_no_area.id: device_no_area,
+            device_diff_area.id: device_diff_area,
+        },
+    )
+
+    entity_in_area = ent_reg.RegistryEntry(
+        entity_id="light.in_area",
+        unique_id="in-area-id",
+        platform="test",
+        device_id=device_in_area.id,
+    )
+    entity_no_area = ent_reg.RegistryEntry(
+        entity_id="light.no_area",
+        unique_id="no-area-id",
+        platform="test",
+        device_id=device_no_area.id,
+    )
+    entity_diff_area = ent_reg.RegistryEntry(
+        entity_id="light.diff_area",
+        unique_id="diff-area-id",
+        platform="test",
+        device_id=device_diff_area.id,
+    )
+    mock_registry(
+        hass,
+        {
+            entity_in_area.entity_id: entity_in_area,
+            entity_no_area.entity_id: entity_no_area,
+            entity_diff_area.entity_id: entity_diff_area,
+        },
+    )
+
+
 class TestServiceHelpers(unittest.TestCase):
     """Test the Home Assistant service helpers."""
 
@@ -205,52 +253,8 @@ async def test_extract_entity_ids(hass):
     )
 
 
-async def test_extract_entity_ids_from_area(hass):
+async def test_extract_entity_ids_from_area(hass, area_mock):
     """Test extract_entity_ids method with areas."""
-    hass.states.async_set("light.Bowl", STATE_ON)
-    hass.states.async_set("light.Ceiling", STATE_OFF)
-    hass.states.async_set("light.Kitchen", STATE_OFF)
-
-    device_in_area = dev_reg.DeviceEntry(area_id="test-area")
-    device_no_area = dev_reg.DeviceEntry()
-    device_diff_area = dev_reg.DeviceEntry(area_id="diff-area")
-
-    mock_device_registry(
-        hass,
-        {
-            device_in_area.id: device_in_area,
-            device_no_area.id: device_no_area,
-            device_diff_area.id: device_diff_area,
-        },
-    )
-
-    entity_in_area = ent_reg.RegistryEntry(
-        entity_id="light.in_area",
-        unique_id="in-area-id",
-        platform="test",
-        device_id=device_in_area.id,
-    )
-    entity_no_area = ent_reg.RegistryEntry(
-        entity_id="light.no_area",
-        unique_id="no-area-id",
-        platform="test",
-        device_id=device_no_area.id,
-    )
-    entity_diff_area = ent_reg.RegistryEntry(
-        entity_id="light.diff_area",
-        unique_id="diff-area-id",
-        platform="test",
-        device_id=device_diff_area.id,
-    )
-    mock_registry(
-        hass,
-        {
-            entity_in_area.entity_id: entity_in_area,
-            entity_no_area.entity_id: entity_no_area,
-            entity_diff_area.entity_id: entity_diff_area,
-        },
-    )
-
     call = ha.ServiceCall("light", "turn_on", {"area_id": "test-area"})
 
     assert {"light.in_area"} == await service.async_extract_entity_ids(hass, call)
@@ -739,4 +743,26 @@ async def test_extract_from_service_filter_out_non_existing_entities(hass):
     assert ["test_domain.test_2"] == [
         ent.entity_id
         for ent in (await service.async_extract_entities(hass, entities, call))
+    ]
+
+
+async def test_extract_from_service_area_id(hass, area_mock):
+    """Test the extraction using area ID as reference."""
+    entities = [
+        MockEntity(name="in_area", entity_id="light.in_area"),
+        MockEntity(name="no_area", entity_id="light.no_area"),
+        MockEntity(name="diff_area", entity_id="light.diff_area"),
+    ]
+
+    call = ha.ServiceCall("light", "turn_on", {"area_id": "test-area"})
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 1
+    assert extracted[0].entity_id == "light.in_area"
+
+    call = ha.ServiceCall("light", "turn_on", {"area_id": ["test-area", "diff-area"]})
+    extracted = await service.async_extract_entities(hass, entities, call)
+    assert len(extracted) == 2
+    assert sorted(ent.entity_id for ent in extracted) == [
+        "light.diff_area",
+        "light.in_area",
     ]
