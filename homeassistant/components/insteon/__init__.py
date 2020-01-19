@@ -119,6 +119,6 @@ async def async_setup(hass, config):
         if device and hasattr(device.states[0x01], "steps"):
             device.states[0x01].steps = steps
 
-    hass.async_add_job(register_services)
+    hass.async_add_job(register_services, hass, config, insteon_modem)
 
     return True
