@@ -22,13 +22,6 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize Meteo-France config flow."""
 
-    def _configuration_exists(self, city_name: str) -> bool:
-        """Return True if city_name exists in configuration."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_CITY] == city_name:
-                return True
-        return False
-
     async def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
@@ -54,9 +47,10 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         monitored_conditions = user_input.get(
             CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES)
         )
-        if self._configuration_exists(city):
-            errors[CONF_CITY] = "city_exists"
-            return await self._show_setup_form(user_input, errors)
+
+        # Check if already configured
+        await self.async_set_unique_id(city)
+        self._abort_if_unique_id_configured()
 
         try:
             await self.hass.async_add_executor_job(meteofranceClient, city)
@@ -74,7 +68,4 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
-        if self._configuration_exists(user_input[CONF_CITY]):
-            return self.async_abort(reason="city_exists")
-
         return await self.async_step_user(user_input)
