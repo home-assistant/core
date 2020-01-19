@@ -14,6 +14,7 @@ from homeassistant.components.vizio.const import (
     DOMAIN,
     VIZIO_SCHEMA,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -22,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro_func
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,8 +70,26 @@ def vizio_connect_fixture():
     ), patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.get_unique_id",
         return_value=UNIQUE_ID,
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_bypass_setup")
+def vizio_bypass_setup_fixture():
+    """Mock component setup."""
+    with patch("homeassistant.components.vizio.async_setup_entry", return_value=True):
+        yield
+
+
+@pytest.fixture(name="vizio_bypass_update")
+def vizio_bypass_update_fixture():
+    """Mock component update."""
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
+        return_value=True,
     ), patch(
-        "homeassistant.components.vizio.async_setup_entry", return_value=True
+        "homeassistant.components.vizio.media_player.VizioDevice.async_update",
+        return_value=mock_coro_func(return_value=None),
     ):
         yield
 
@@ -85,11 +104,13 @@ def vizio_cant_connect_fixture():
         yield
 
 
-async def test_user_flow_minimum_fields(hass: HomeAssistantType, vizio_connect) -> None:
+async def test_user_flow_minimum_fields(
+    hass: HomeAssistantType, vizio_connect, vizio_bypass_setup
+) -> None:
     """Test user config flow with minimum fields."""
     # test form shows
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -110,11 +131,13 @@ async def test_user_flow_minimum_fields(hass: HomeAssistantType, vizio_connect) 
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_SPEAKER
 
 
-async def test_user_flow_all_fields(hass: HomeAssistantType, vizio_connect) -> None:
+async def test_user_flow_all_fields(
+    hass: HomeAssistantType, vizio_connect, vizio_bypass_setup
+) -> None:
     """Test user config flow with all fields."""
     # test form shows
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -162,7 +185,7 @@ async def test_options_flow(hass: HomeAssistantType) -> None:
 
 
 async def test_user_host_already_configured(
-    hass: HomeAssistantType, vizio_connect
+    hass: HomeAssistantType, vizio_connect, vizio_bypass_setup
 ) -> None:
     """Test host is already configured during user setup."""
     entry = MockConfigEntry(
@@ -175,7 +198,7 @@ async def test_user_host_already_configured(
     fail_entry[CONF_NAME] = "newtestname"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -190,7 +213,7 @@ async def test_user_host_already_configured(
 
 
 async def test_user_name_already_configured(
-    hass: HomeAssistantType, vizio_connect
+    hass: HomeAssistantType, vizio_connect, vizio_bypass_setup
 ) -> None:
     """Test name is already configured during user setup."""
     entry = MockConfigEntry(
@@ -204,7 +227,7 @@ async def test_user_name_already_configured(
     fail_entry[CONF_HOST] = "0.0.0.0"
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -222,7 +245,7 @@ async def test_user_error_on_could_not_connect(
 ) -> None:
     """Test with could_not_connect during user_setup."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -236,11 +259,11 @@ async def test_user_error_on_could_not_connect(
 
 
 async def test_user_error_on_tv_needs_token(
-    hass: HomeAssistantType, vizio_connect
+    hass: HomeAssistantType, vizio_connect, vizio_bypass_setup
 ) -> None:
     """Test when config fails custom validation for non null access token when device_class = tv during user setup."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -255,7 +278,7 @@ async def test_user_error_on_tv_needs_token(
 
 
 async def test_import_flow_minimum_fields(
-    hass: HomeAssistantType, vizio_connect
+    hass: HomeAssistantType, vizio_connect, vizio_bypass_setup
 ) -> None:
     """Test import config flow with minimum fields."""
     result = await hass.config_entries.flow.async_init(
@@ -274,7 +297,9 @@ async def test_import_flow_minimum_fields(
     assert result["data"][CONF_VOLUME_STEP] == DEFAULT_VOLUME_STEP
 
 
-async def test_import_flow_all_fields(hass: HomeAssistantType, vizio_connect) -> None:
+async def test_import_flow_all_fields(
+    hass: HomeAssistantType, vizio_connect, vizio_bypass_setup
+) -> None:
     """Test import config flow with all fields."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -291,21 +316,26 @@ async def test_import_flow_all_fields(hass: HomeAssistantType, vizio_connect) ->
     assert result["data"][CONF_VOLUME_STEP] == VOLUME_STEP
 
 
-async def test_import_entity_already_configured(
-    hass: HomeAssistantType, vizio_connect
+async def test_import_flow_update_options(
+    hass: HomeAssistantType, vizio_connect, vizio_bypass_update
 ) -> None:
-    """Test entity is already configured during import setup."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
-        options={CONF_VOLUME_STEP: VOLUME_STEP},
-    )
-    entry.add_to_hass(hass)
-    fail_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG.copy())
-
+    """Test import config flow with updated options."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "import"}, data=fail_entry
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    entry = result["result"]
+
+    updated_config = MOCK_IMPORT_VALID_TV_CONFIG.copy()
+    updated_config[CONF_VOLUME_STEP] = VOLUME_STEP + 1
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=vol.Schema(VIZIO_SCHEMA)(updated_config),
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "updated_options"
+    assert entry.options[CONF_VOLUME_STEP] == VOLUME_STEP + 1
