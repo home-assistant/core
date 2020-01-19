@@ -6,7 +6,13 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import ATTRIBUTION, DOMAIN, GARMIN_ENTITY_LIST
+from garminconnect import (
+    GarminConnectConnectionError,
+    GarminConnectTooManyRequestsError,
+    GarminConnectAuthenticationError,
+)
+
+from .const import DOMAIN, GARMIN_ENTITY_LIST, ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,10 +23,17 @@ async def async_setup_entry(
     """Set up Garmin Connect sensor based on a config entry."""
     garmin_data = hass.data[DOMAIN][entry.entry_id]
     unique_id = entry.data[CONF_ID]
-    # try:
-    #     await twentemilieu.update()
-    # except TwenteMilieuConnectionError as exception:
-    #     raise PlatformNotReady from exception
+
+    try:
+        await garmin_data.async_update()
+    except (
+        GarminConnectConnectionError,
+        GarminConnectAuthenticationError,
+        GarminConnectTooManyRequestsError,
+    ) as err:
+        _LOGGER.error("Error occured during Garmin Connect Client update: %s", err)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.error("Unknown error occured during Garmin Connect Client update.")
 
     entities = []
     for resource in GARMIN_ENTITY_LIST:
@@ -28,12 +41,20 @@ async def async_setup_entry(
         name = GARMIN_ENTITY_LIST[resource][0]
         unit = GARMIN_ENTITY_LIST[resource][1]
         icon = GARMIN_ENTITY_LIST[resource][2]
+        device_class = GARMIN_ENTITY_LIST[resource][3]
 
         _LOGGER.debug(
-            "Registered new sensor: %s, %s, %s, %s", sensor_type, name, unit, icon
+            "Registering entity: %s, %s, %s, %s, %s",
+            sensor_type,
+            name,
+            unit,
+            icon,
+            device_class,
         )
         entities.append(
-            GarminConnectSensor(garmin_data, unique_id, sensor_type, name, unit, icon)
+            GarminConnectSensor(
+                garmin_data, unique_id, sensor_type, name, unit, icon, device_class
+            )
         )
 
     async_add_entities(entities, True)
@@ -42,16 +63,15 @@ async def async_setup_entry(
 class GarminConnectSensor(Entity):
     """Representation of a Garmin Connect Sensor."""
 
-    def __init__(self, data, unique_id, sensor_type, name, unit, icon):
-        """Initialize the sensor."""
+    def __init__(self, data, unique_id, sensor_type, name, unit, icon, device_class):
+        """Initialize."""
         self._data = data
         self._unique_id = unique_id
-        self._available = True
         self._type = sensor_type
+        self._device_class = device_class
         self._name = name
         self._icon = icon
         self._unit = unit
-        self._unsub_dispatcher = None
         self._state = None
 
     @property
@@ -94,12 +114,12 @@ class GarminConnectSensor(Entity):
 
     @property
     def device_info(self) -> Dict[str, Any]:
-        """Return device information about Twente Milieu."""
+        """Return device information."""
         return {
             "identifiers": {(DOMAIN, self._unique_id)},
             "name": "Garmin Connect",
             "manufacturer": "Garmin Connect",
-            "model": "Fitness Tracker",
+            "model": "Activity Tracker",
         }
 
     async def async_added_to_hass(self):
@@ -111,16 +131,16 @@ class GarminConnectSensor(Entity):
         pass
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return self._device_class
 
     async def async_update(self):
-        """Get the latest data and use it to update our sensor state."""
+        """Update the data from Garmin Connect."""
 
         await self._data.async_update()
         if not self._data.data:
-            _LOGGER.error("Didn't receive data from TOON")
+            _LOGGER.error("Didn't receive data from Garmin Connect")
             return
 
         data = self._data.data
@@ -132,5 +152,5 @@ class GarminConnectSensor(Entity):
             self._state = data[self._type]
 
         _LOGGER.debug(
-            "Device %s set to state %s %s", self._type, self._state, self._unit
+            "Entity %s set to state %s %s", self._type, self._state, self._unit
         )

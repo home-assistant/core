@@ -2,11 +2,7 @@
 import logging
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_ID,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 from .const import DOMAIN
 from garminconnect import (
     Garmin,
@@ -30,7 +26,7 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str,}
+                {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
             ),
             errors=errors or {},
         )
@@ -58,16 +54,7 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_setup_form(errors)
 
         try:
-            unique_id = garmin.unique_id()
-        except GarminConnectConnectionError:
-            errors["base"] = "cannot_connect"
-            return await self._show_setup_form(errors)
-        except GarminConnectAuthenticationError:
-            errors["base"] = "invalid_auth"
-            return await self._show_setup_form(errors)
-        except GarminConnectTooManyRequestsError:
-            errors["base"] = "too_many_requests"
-            return await self._show_setup_form(errors)
+            unique_id = garmin.get_full_name()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
