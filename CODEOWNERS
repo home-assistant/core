@@ -280,6 +280,7 @@ homeassistant/components/rmvtransport/* @cgtobi
 homeassistant/components/roomba/* @pschmitt
 homeassistant/components/safe_mode/* @home-assistant/core
 homeassistant/components/saj/* @fredericvl
+homeassistant/components/salt/* @bjornorri
 homeassistant/components/samsungtv/* @escoand
 homeassistant/components/scene/* @home-assistant/core
 homeassistant/components/scrape/* @fabaff
