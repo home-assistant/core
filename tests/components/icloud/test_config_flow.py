@@ -5,10 +5,10 @@ from pyicloud.exceptions import PyiCloudFailedLoginException
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.icloud import config_flow
 from homeassistant.components.icloud.config_flow import (
     CONF_TRUSTED_DEVICE,
     CONF_VERIFICATION_CODE,
+    IcloudFlowHandler,
 )
 from homeassistant.components.icloud.const import (
     CONF_GPS_ACCURACY_THRESHOLD,
@@ -84,7 +84,7 @@ def mock_controller_service_validate_verification_code_failed():
 
 def init_config_flow(hass: HomeAssistantType):
     """Init a configuration flow."""
-    flow = config_flow.IcloudFlowHandler()
+    flow = IcloudFlowHandler()
     flow.hass = hass
     return flow
 
@@ -118,6 +118,7 @@ async def test_user_with_cookie(
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
@@ -162,6 +163,7 @@ async def test_import_with_cookie(
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME
     assert result["title"] == USERNAME
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
@@ -180,6 +182,7 @@ async def test_import_with_cookie(
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME_2
     assert result["title"] == USERNAME_2
     assert result["data"][CONF_USERNAME] == USERNAME_2
     assert result["data"][CONF_PASSWORD] == PASSWORD
@@ -192,7 +195,9 @@ async def test_two_accounts_setup(
 ):
     """Test to setup two accounts."""
     MockConfigEntry(
-        domain=DOMAIN, data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        domain=DOMAIN,
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        unique_id=USERNAME,
     ).add_to_hass(hass)
 
     # import with username and password
@@ -202,6 +207,7 @@ async def test_two_accounts_setup(
         data={CONF_USERNAME: USERNAME_2, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == USERNAME_2
     assert result["title"] == USERNAME_2
     assert result["data"][CONF_USERNAME] == USERNAME_2
     assert result["data"][CONF_PASSWORD] == PASSWORD
@@ -212,7 +218,9 @@ async def test_two_accounts_setup(
 async def test_abort_if_already_setup(hass: HomeAssistantType):
     """Test we abort if the account is already setup."""
     MockConfigEntry(
-        domain=DOMAIN, data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+        domain=DOMAIN,
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        unique_id=USERNAME,
     ).add_to_hass(hass)
 
     # Should fail, same USERNAME (import)
@@ -222,7 +230,7 @@ async def test_abort_if_already_setup(hass: HomeAssistantType):
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "username_exists"
+    assert result["reason"] == "already_configured"
 
     # Should fail, same USERNAME (flow)
     result = await hass.config_entries.flow.async_init(
@@ -230,8 +238,8 @@ async def test_abort_if_already_setup(hass: HomeAssistantType):
         context={"source": SOURCE_USER},
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {CONF_USERNAME: "username_exists"}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_login_failed(hass: HomeAssistantType):
@@ -282,10 +290,11 @@ async def test_send_verification_code_failed(
     assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
 
 
-async def test_verification_code(hass: HomeAssistantType):
+async def test_verification_code(hass: HomeAssistantType, service: MagicMock):
     """Test verification_code step."""
     flow = init_config_flow(hass)
     await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
+    await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
 
     result = await flow.async_step_verification_code()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -298,6 +307,7 @@ async def test_verification_code_success(
     """Test verification_code step success."""
     flow = init_config_flow(hass)
     await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
+    await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
 
     result = await flow.async_step_verification_code({CONF_VERIFICATION_CODE: 0})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -314,6 +324,7 @@ async def test_validate_verification_code_failed(
     """Test when we have errors during validate_verification_code."""
     flow = init_config_flow(hass)
     await flow.async_step_user({CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD})
+    await flow.async_step_trusted_device({CONF_TRUSTED_DEVICE: 0})
 
     result = await flow.async_step_verification_code({CONF_VERIFICATION_CODE: 0})
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
