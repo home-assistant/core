@@ -300,14 +300,15 @@ class EvoZone(EvoChild, EvoClimateDevice):
 class EvoController(EvoClimateDevice):
     """Base for a Honeywell TCC Controller/Location.
 
-    The Controller (aka TCS, temperature control system) is the parent of all
-    the child (CH/DHW) devices. It is also a Climate device.
+    The Controller (aka TCS, temperature control system) is the parent of all the child
+    (CH/DHW) devices. It is implemented as a Climate entity to expose the controller's
+    operating modes to HA.
 
     It is assumed there is only one TCS per location, and they are thus synonymous.
     """
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize a Honeywell TCC Location (hub)."""
+        """Initialize a Honeywell TCC Controller/Location."""
         super().__init__(evo_broker, evo_device)
 
         self._unique_id = evo_device.systemId
