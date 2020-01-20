@@ -27,12 +27,12 @@ ATTR_ALERT_LEVEL = "alert_level"
 ATTR_COUNTRY = "country"
 ATTR_DESCRIPTION = "description"
 ATTR_DURATION_IN_WEEK = "duration_in_week"
+ATTR_EVENT_TYPE = "event_type"
 ATTR_EXTERNAL_ID = "external_id"
 ATTR_FROM_DATE = "from_date"
 ATTR_POPULATION = "population"
 ATTR_SEVERITY = "severity"
 ATTR_TO_DATE = "to_date"
-ATTR_VERSION = "version"
 ATTR_VULNERABILITY = "vulnerability"
 
 ICONS = {
@@ -84,6 +84,7 @@ class GdacsEvent(GeolocationEvent):
         self._country = None
         self._description = None
         self._duration_in_week = None
+        self._event_type_short = None
         self._event_type = None
         self._from_date = None
         self._to_date = None
@@ -136,7 +137,7 @@ class GdacsEvent(GeolocationEvent):
 
     def _update_from_feed(self, feed_entry):
         """Update the internal state from the provided feed entry."""
-        self._title = f"{feed_entry.event_type_long}: {feed_entry.event_name}"
+        self._title = f"{feed_entry.event_type}: {feed_entry.event_name}"
         # Convert distance if not metric system.
         if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
             self._distance = IMPERIAL_SYSTEM.length(
@@ -151,6 +152,7 @@ class GdacsEvent(GeolocationEvent):
         self._country = feed_entry.country
         self._description = feed_entry.title
         self._duration_in_week = feed_entry.duration_in_week
+        self._event_type_short = feed_entry.event_type_short
         self._event_type = feed_entry.event_type
         self._from_date = feed_entry.from_date
         self._to_date = feed_entry.to_date
@@ -162,8 +164,8 @@ class GdacsEvent(GeolocationEvent):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        if self._event_type:
-            return ICONS[self._event_type]
+        if self._event_type_short and self._event_type_short in ICONS:
+            return ICONS[self._event_type_short]
         return DEFAULT_ICON
 
     @property
@@ -206,6 +208,7 @@ class GdacsEvent(GeolocationEvent):
             (ATTR_EXTERNAL_ID, self._external_id),
             (ATTR_DESCRIPTION, self._description),
             (ATTR_ATTRIBUTION, self._attribution),
+            (ATTR_EVENT_TYPE, self._event_type),
             (ATTR_ALERT_LEVEL, self._alert_level),
             (ATTR_COUNTRY, self._country),
             (ATTR_DURATION_IN_WEEK, self._duration_in_week),
