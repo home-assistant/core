@@ -201,4 +201,4 @@ class AirMonitorV1(AirMonitorB1):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "AQI"
+        return None
