@@ -100,7 +100,10 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
         data = self.openuv.data[DATA_PROTECTION_WINDOW]
 
         if not data:
+            self._available = False
             return
+
+        self._available = True
 
         for key in ("from_time", "to_time", "from_uv", "to_uv"):
             if not data.get(key):
