@@ -95,7 +95,7 @@ class MockLocation:
         return "HomeTown"
 
     @property
-    def latitude(self):
+    def station_latitude(self):
         """Mock latitude."""
         return 0
 
@@ -110,7 +110,7 @@ class MockLocation:
         return 1200545
 
     @property
-    def longitude(self):
+    def station_longitude(self):
         """Mock longitude."""
         return 0
 
