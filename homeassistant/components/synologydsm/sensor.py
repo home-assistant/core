@@ -1,11 +1,11 @@
 """Support for Synology NAS Sensors."""
 from datetime import timedelta
 import logging
+from typing import Dict
 
 from SynologyDSM import SynologyDSM
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_VERSION,
@@ -17,210 +17,180 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_START,
     TEMP_CELSIUS,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import HomeAssistantType
+
+from .const import (
+    CONF_VOLUMES,
+    MEMORY_SENSORS_KEYS,
+    NETWORK_SENSORS_KEYS,
+    SERVICE_UPDATE,
+    STORAGE_DSK_MON_COND,
+    STORAGE_VOL_MON_COND,
+    TEMP_SENSORS_KEYS,
+    UTILISATION_MON_COND,
+    DEFAULT_DSM_VERSION,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Data provided by Synology"
 
-CONF_VOLUMES = "volumes"
-DEFAULT_NAME = "Synology DSM"
-DEFAULT_PORT = 5001
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
-
-_UTILISATION_MON_COND = {
-    "cpu_other_load": ["CPU Load (Other)", "%", "mdi:chip"],
-    "cpu_user_load": ["CPU Load (User)", "%", "mdi:chip"],
-    "cpu_system_load": ["CPU Load (System)", "%", "mdi:chip"],
-    "cpu_total_load": ["CPU Load (Total)", "%", "mdi:chip"],
-    "cpu_1min_load": ["CPU Load (1 min)", "%", "mdi:chip"],
-    "cpu_5min_load": ["CPU Load (5 min)", "%", "mdi:chip"],
-    "cpu_15min_load": ["CPU Load (15 min)", "%", "mdi:chip"],
-    "memory_real_usage": ["Memory Usage (Real)", "%", "mdi:memory"],
-    "memory_size": ["Memory Size", "Mb", "mdi:memory"],
-    "memory_cached": ["Memory Cached", "Mb", "mdi:memory"],
-    "memory_available_swap": ["Memory Available (Swap)", "Mb", "mdi:memory"],
-    "memory_available_real": ["Memory Available (Real)", "Mb", "mdi:memory"],
-    "memory_total_swap": ["Memory Total (Swap)", "Mb", "mdi:memory"],
-    "memory_total_real": ["Memory Total (Real)", "Mb", "mdi:memory"],
-    "network_up": ["Network Up", "Kbps", "mdi:upload"],
-    "network_down": ["Network Down", "Kbps", "mdi:download"],
-}
-_STORAGE_VOL_MON_COND = {
-    "volume_status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
-    "volume_device_type": ["Type", None, "mdi:harddisk"],
-    "volume_size_total": ["Total Size", None, "mdi:chart-pie"],
-    "volume_size_used": ["Used Space", None, "mdi:chart-pie"],
-    "volume_percentage_used": ["Volume Used", "%", "mdi:chart-pie"],
-    "volume_disk_temp_avg": ["Average Disk Temp", None, "mdi:thermometer"],
-    "volume_disk_temp_max": ["Maximum Disk Temp", None, "mdi:thermometer"],
-}
-_STORAGE_DSK_MON_COND = {
-    "disk_name": ["Name", None, "mdi:harddisk"],
-    "disk_device": ["Device", None, "mdi:dots-horizontal"],
-    "disk_smart_status": ["Status (Smart)", None, "mdi:checkbox-marked-circle-outline"],
-    "disk_status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
-    "disk_exceed_bad_sector_thr": ["Exceeded Max Bad Sectors", None, "mdi:test-tube"],
-    "disk_below_remain_life_thr": ["Below Min Remaining Life", None, "mdi:test-tube"],
-    "disk_temp": ["Temperature", None, "mdi:thermometer"],
-}
-
-_MONITORED_CONDITIONS = (
-    list(_UTILISATION_MON_COND.keys())
-    + list(_STORAGE_VOL_MON_COND.keys())
-    + list(_STORAGE_DSK_MON_COND.keys())
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=True): cv.boolean,
-        vol.Optional(CONF_API_VERSION): cv.positive_int,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(
-            cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]
-        ),
-        vol.Optional(CONF_DISKS): cv.ensure_list,
-        vol.Optional(CONF_VOLUMES): cv.ensure_list,
-    }
-)
+SCAN_INTERVAL = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the Synology NAS Sensor."""
+    name = entry.data[CONF_NAME]
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
+    unit = hass.config.units.temperature_unit
+    use_ssl = entry.data[CONF_SSL]
+    api_version = entry.data.get(CONF_API_VERSION, DEFAULT_DSM_VERSION)
+    monitored_conditions = entry.data[CONF_MONITORED_CONDITIONS]
 
-    def run_setup(event):
-        """Wait until Home Assistant is fully initialized before creating.
+    api = SynoApi(hass, host, port, username, password, unit, use_ssl, api_version)
 
-        Delay the setup until Home Assistant is fully initialized.
-        This allows any entities to be created already
-        """
-        name = config.get(CONF_NAME)
-        host = config.get(CONF_HOST)
-        port = config.get(CONF_PORT)
-        username = config.get(CONF_USERNAME)
-        password = config.get(CONF_PASSWORD)
-        use_ssl = config.get(CONF_SSL)
-        unit = hass.config.units.temperature_unit
-        monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
-        api_version = config.get(CONF_API_VERSION)
+    await hass.async_add_executor_job(api.update)
 
-        api = SynoApi(host, port, username, password, unit, use_ssl, api_version)
+    sensors = [
+        SynoNasUtilSensor(api, name, sensor_type, UTILISATION_MON_COND[sensor_type])
+        for sensor_type in monitored_conditions
+        if sensor_type in UTILISATION_MON_COND
+    ]
 
-        sensors = [
-            SynoNasUtilSensor(api, name, variable, _UTILISATION_MON_COND[variable])
-            for variable in monitored_conditions
-            if variable in _UTILISATION_MON_COND
-        ]
+    # Handle all volumes
+    if api.storage.volumes is not None:
+        for volume in entry.data.get(CONF_VOLUMES, api.storage.volumes):
+            sensors += [
+                SynoNasStorageSensor(
+                    api, name, sensor_type, STORAGE_VOL_MON_COND[sensor_type], volume
+                )
+                for sensor_type in monitored_conditions
+                if sensor_type in STORAGE_VOL_MON_COND
+            ]
 
-        # Handle all volumes
-        if api.storage.volumes is not None:
-            for volume in config.get(CONF_VOLUMES, api.storage.volumes):
-                sensors += [
-                    SynoNasStorageSensor(
-                        api, name, variable, _STORAGE_VOL_MON_COND[variable], volume
-                    )
-                    for variable in monitored_conditions
-                    if variable in _STORAGE_VOL_MON_COND
-                ]
+    # Handle all disks
+    if api.storage.disks is not None:
+        for disk in entry.data.get(CONF_DISKS, api.storage.disks):
+            sensors += [
+                SynoNasStorageSensor(
+                    api, name, sensor_type, STORAGE_DSK_MON_COND[sensor_type], disk
+                )
+                for sensor_type in monitored_conditions
+                if sensor_type in STORAGE_DSK_MON_COND
+            ]
 
-        # Handle all disks
-        if api.storage.disks is not None:
-            for disk in config.get(CONF_DISKS, api.storage.disks):
-                sensors += [
-                    SynoNasStorageSensor(
-                        api, name, variable, _STORAGE_DSK_MON_COND[variable], disk
-                    )
-                    for variable in monitored_conditions
-                    if variable in _STORAGE_DSK_MON_COND
-                ]
+    async_track_time_interval(hass, api.update, SCAN_INTERVAL)
 
-        add_entities(sensors, True)
-
-    # Wait until start event is sent to load this component.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
+    async_add_entities(sensors, True)
 
 
 class SynoApi:
     """Class to interface with Synology DSM API."""
 
-    def __init__(self, host, port, username, password, temp_unit, use_ssl, api_version):
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        host: str,
+        port: int,
+        username: str,
+        password: str,
+        temp_unit: str,
+        use_ssl: bool,
+        api_version: int
+    ):
         """Initialize the API wrapper class."""
-
+        self._hass = hass
         self.temp_unit = temp_unit
 
-        try:
-            self._api = SynologyDSM(
-                host,
-                port,
-                username,
-                password,
-                use_https=use_ssl,
-                debugmode=False,
-                dsm_version=api_version,
-            )
-        except:  # noqa: E722 pylint: disable=bare-except
-            _LOGGER.error("Error setting up Synology DSM")
+        self._api = SynologyDSM(host, port, username, password, use_ssl, dsm_version=api_version)
 
-        # Will be updated when update() gets called.
+        _LOGGER.error("SynoApi_utilisation")
         self.utilisation = self._api.utilisation
+        _LOGGER.error("SynoApi_storage")
         self.storage = self._api.storage
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update function for updating api information."""
+    def update(self, now=None):
+        """Update function for updating API information."""
+        _LOGGER.error("SynoApi_UPDATE")
         self._api.update()
+        dispatcher_send(self._hass, SERVICE_UPDATE)
 
 
 class SynoNasSensor(Entity):
     """Representation of a Synology NAS Sensor."""
 
-    def __init__(self, api, name, variable, variable_info, monitor_device=None):
+    def __init__(
+        self,
+        api: SynoApi,
+        name: str,
+        sensor_type: str,
+        sensor_info: Dict[str, str],
+        monitored_device: str = None,
+    ):
         """Initialize the sensor."""
-        self.var_id = variable
-        self.var_name = "{} {}".format(name, variable_info[0])
-        self.var_units = variable_info[1]
-        self.var_icon = variable_info[2]
-        self.monitor_device = monitor_device
+        self.sensor_type = sensor_type
+        self._name = f"{name} {sensor_info[0]}"
+        self._unit = sensor_info[1]
+        self._icon = sensor_info[2]
+        self.monitored_device = monitored_device
         self._api = api
 
+        if self.monitored_device is not None:
+            self._name = f"{self._name} ({self.monitored_device})"
+
+        self._unsub_dispatcher = None
+
     @property
-    def name(self):
-        """Return the name of the sensor, if any."""
-        if self.monitor_device is not None:
-            return f"{self.var_name} ({self.monitor_device})"
-        return self.var_name
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._name
+
+    @property
+    def name(self) -> str:
+        """Return the name."""
+        return self._name
 
     @property
     def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self.var_icon
+        """Return the icon."""
+        return self._icon
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        if self.var_id in ["volume_disk_temp_avg", "volume_disk_temp_max", "disk_temp"]:
+        if self.sensor_type in TEMP_SENSORS_KEYS:
             return self._api.temp_unit
-        return self.var_units
-
-    def update(self):
-        """Get the latest data for the states."""
-        if self._api is not None:
-            self._api.update()
+        return self._unit
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
+    async def async_added_to_hass(self):
+        """Register state update callback."""
+        self._unsub_dispatcher = async_dispatcher_connect(
+            self.hass, SERVICE_UPDATE, self.async_write_ha_state
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Clean up after entity before removal."""
+        self._unsub_dispatcher()
 
 
 class SynoNasUtilSensor(SynoNasSensor):
@@ -228,42 +198,37 @@ class SynoNasUtilSensor(SynoNasSensor):
 
     @property
     def state(self):
-        """Return the state of the sensor."""
-        network_sensors = ["network_up", "network_down"]
-        memory_sensors = [
-            "memory_size",
-            "memory_cached",
-            "memory_available_swap",
-            "memory_available_real",
-            "memory_total_swap",
-            "memory_total_real",
-        ]
-
-        if self.var_id in network_sensors or self.var_id in memory_sensors:
-            attr = getattr(self._api.utilisation, self.var_id)(False)
+        """Return the state."""
+        _LOGGER.error(self.name)
+        if (
+            self.sensor_type in NETWORK_SENSORS_KEYS
+            or self.sensor_type in MEMORY_SENSORS_KEYS
+        ):
+            attr = getattr(self._api.utilisation, self.sensor_type)(False)
 
             if attr is None:
                 return None
 
-            if self.var_id in network_sensors:
+            if self.sensor_type in NETWORK_SENSORS_KEYS:
                 return round(attr / 1024.0, 1)
-            if self.var_id in memory_sensors:
+            if self.sensor_type in MEMORY_SENSORS_KEYS:
                 return round(attr / 1024.0 / 1024.0, 1)
         else:
-            return getattr(self._api.utilisation, self.var_id)
+            return getattr(self._api.utilisation, self.sensor_type)
 
 
 class SynoNasStorageSensor(SynoNasSensor):
-    """Representation a Synology Utilisation Sensor."""
+    """Representation a Synology Storage Sensor."""
 
     @property
     def state(self):
-        """Return the state of the sensor."""
-        temp_sensors = ["volume_disk_temp_avg", "volume_disk_temp_max", "disk_temp"]
-
-        if self.monitor_device is not None:
-            if self.var_id in temp_sensors:
-                attr = getattr(self._api.storage, self.var_id)(self.monitor_device)
+        """Return the state."""
+        _LOGGER.error(self.name)
+        if self.monitored_device is not None:
+            if self.sensor_type in TEMP_SENSORS_KEYS:
+                attr = getattr(self._api.storage, self.sensor_type)(
+                    self.monitored_device
+                )
 
                 if attr is None:
                     return None
@@ -273,4 +238,5 @@ class SynoNasStorageSensor(SynoNasSensor):
 
                 return round(attr * 1.8 + 32.0, 1)
 
-            return getattr(self._api.storage, self.var_id)(self.monitor_device)
+            return getattr(self._api.storage, self.sensor_type)(self.monitored_device)
+        return None

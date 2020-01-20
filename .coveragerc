@@ -684,6 +684,7 @@ omit =
     homeassistant/components/synology/camera.py
     homeassistant/components/synology_chat/notify.py
     homeassistant/components/synology_srm/device_tracker.py
+    homeassistant/components/synologydsm/__init__.py
     homeassistant/components/synologydsm/sensor.py
     homeassistant/components/syslog/notify.py
     homeassistant/components/systemmonitor/sensor.py

@@ -545,6 +545,9 @@ python-miio==0.4.8
 # homeassistant.components.nest
 python-nest==4.1.0
 
+# homeassistant.components.synologydsm
+python-synology==0.4.0
+
 # homeassistant.components.velbus
 python-velbus==2.0.36
 
