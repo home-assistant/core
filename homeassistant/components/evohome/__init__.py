@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
+    HTTP_BAD_REQUEST,
     HTTP_SERVICE_UNAVAILABLE,
     HTTP_TOO_MANY_REQUESTS,
     TEMP_CELSIUS,
@@ -674,9 +675,23 @@ class EvoChild(EvoDevice):
             if not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
                 return  # avoid unnecessary I/O - there's nothing to update
 
-        self._schedule = await self._evo_broker.call_client_api(
-            self._evo_device.schedule(), refresh=False
-        )
+        try:
+            self._schedule = await self._evo_broker.call_client_api(
+                self._evo_device.schedule(), refresh=False
+            )
+
+        except aiohttp.ClientResponseError as err:
+            if err.status == HTTP_BAD_REQUEST:
+                _LOGGER.warning(
+                    "Failed to get schedule for zone %s (%s): is it a Ghost zone? "
+                    "Check its configuration (restart HA after any fix).",
+                    self._unique_id,
+                    self._name,
+                )
+                # from now on, stop trying to get schedule for this zone
+                self._schedule = {"DailySchedules": []}
+
+            raise  # we don't expect/handle any other Exceptions
 
         _LOGGER.debug("Schedule['%s'] = %s", self.name, self._schedule)
 
