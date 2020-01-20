@@ -199,11 +199,6 @@ class AirMonitorV1(AirMonitorB1):
             _LOGGER.error("Got exception while fetching the state: %s", ex)
 
     @property
-    def state(self):
-        """Return the current state."""
-        return self._air_quality_index
-
-    @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         return "AQI"
