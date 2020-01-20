@@ -134,8 +134,8 @@ async def _async_setup_component(
     # So we do it before validating config to catch these errors.
     try:
         component = integration.get_component()
-    except ImportError:
-        log_error("Unable to import component", integration.documentation)
+    except ImportError as err:
+        log_error(f"Unable to import component: {err}", integration.documentation)
         return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Setup failed for %s: unknown error", domain)
