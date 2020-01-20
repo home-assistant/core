@@ -41,7 +41,7 @@ ICONS = {
     "FL": "mdi:home-flood",
     "TC": "mdi:weather-hurricane",
     "TS": "mdi:waves",
-    "VO": "mdi:mountain",
+    "VO": "mdi:image-filter-hdr",
 }
 
 SOURCE = "gdacs"
