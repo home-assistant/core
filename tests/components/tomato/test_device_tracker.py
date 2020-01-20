@@ -137,7 +137,7 @@ def test_config_verify_ssl_but_no_ssl_enabled(hass, mock_session_send):
                 CONF_HOST: "tomato-router",
                 CONF_PORT: 1234,
                 CONF_SSL: False,
-                CONF_VERIFY_SSL: "/tmp/tomato.crt",
+                CONF_VERIFY_SSL: "/test/tomato.crt",
                 CONF_USERNAME: "foo",
                 CONF_PASSWORD: "password",
                 tomato.CONF_HTTP_ID: "1234567890",
@@ -171,7 +171,7 @@ def test_config_valid_verify_ssl_path(hass, mock_session_send):
                 CONF_HOST: "tomato-router",
                 CONF_PORT: 1234,
                 CONF_SSL: True,
-                CONF_VERIFY_SSL: "/tmp/tomato.crt",
+                CONF_VERIFY_SSL: "/test/tomato.crt",
                 CONF_USERNAME: "bar",
                 CONF_PASSWORD: "foo",
                 tomato.CONF_HTTP_ID: "0987654321",
@@ -189,7 +189,7 @@ def test_config_valid_verify_ssl_path(hass, mock_session_send):
     assert "exec=devlist" in result.req.body
     assert mock_session_send.call_count == 1
     assert mock_session_send.mock_calls[0] == mock.call(
-        result.req, timeout=3, verify="/tmp/tomato.crt"
+        result.req, timeout=3, verify="/test/tomato.crt"
     )
 
 

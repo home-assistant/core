@@ -93,34 +93,29 @@ async def async_setup_platform(
         broker.params[CONF_LOCATION_IDX],
     )
 
-    # special case of RoundModulation/RoundWireless as a single zone system
-    if len(broker.tcs.zones) == 1 and list(broker.tcs.zones.keys())[0] == "Thermostat":
-        zone = list(broker.tcs.zones.values())[0]
-        _LOGGER.debug(
-            "Found the Thermostat (%s), id=%s, name=%s",
-            zone.modelType,
-            zone.zoneId,
-            zone.name,
-        )
-        new_entity = EvoThermostat(broker, zone)
-
-        async_add_entities([new_entity], update_before_add=True)
-        return
-
     controller = EvoController(broker, broker.tcs)
 
     zones = []
     for zone in broker.tcs.zones.values():
-        _LOGGER.debug(
-            "Found a %s (%s), id=%s, name=%s",
-            zone.zoneType,
-            zone.modelType,
-            zone.zoneId,
-            zone.name,
-        )
-        new_entity = EvoZone(broker, zone)
+        if zone.zoneType == "Unknown":
+            _LOGGER.warning(
+                "Ignoring: %s (%s), id=%s, name=%s: invalid zone type",
+                zone.zoneType,
+                zone.modelType,
+                zone.zoneId,
+                zone.name,
+            )
+        else:
+            _LOGGER.debug(
+                "Adding: %s (%s), id=%s, name=%s",
+                zone.zoneType,
+                zone.modelType,
+                zone.zoneId,
+                zone.name,
+            )
 
-        zones.append(new_entity)
+            new_entity = EvoZone(broker, zone)
+            zones.append(new_entity)
 
     async_add_entities([controller] + zones, update_before_add=True)
 
@@ -133,32 +128,6 @@ class EvoClimateDevice(EvoDevice, ClimateDevice):
         super().__init__(evo_broker, evo_device)
 
         self._preset_modes = None
-
-    async def async_tcs_svc_request(self, service: dict, data: dict) -> None:
-        """Process a service request (system mode) for a controller.
-
-        Data validation is not required, it will have been done upstream.
-        """
-        if service == SVC_SET_SYSTEM_MODE:
-            mode = data[ATTR_SYSTEM_MODE]
-        else:  # otherwise it is SVC_RESET_SYSTEM
-            mode = EVO_RESET
-
-        if ATTR_DURATION_DAYS in data:
-            until = dt.combine(dt.now().date(), dt.min.time())
-            until += data[ATTR_DURATION_DAYS]
-
-        elif ATTR_DURATION_HOURS in data:
-            until = dt.now() + data[ATTR_DURATION_HOURS]
-
-        else:
-            until = None
-
-        await self._set_tcs_mode(mode, until=until)
-
-    async def _set_tcs_mode(self, mode: str, until: Optional[dt] = None) -> None:
-        """Set a Controller to any of its native EVO_* operating modes."""
-        await self._evo_broker.call_client_api(self._evo_tcs.set_status(mode))
 
     @property
     def hvac_modes(self) -> List[str]:
@@ -175,19 +144,20 @@ class EvoZone(EvoChild, EvoClimateDevice):
     """Base for a Honeywell TCC Zone."""
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize a Zone."""
+        """Initialize a Honeywell TCC Zone."""
         super().__init__(evo_broker, evo_device)
 
         self._unique_id = evo_device.zoneId
         self._name = evo_device.name
         self._icon = "mdi:radiator"
 
-        self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
-        self._preset_modes = list(HA_PRESET_TO_EVO)
         if evo_broker.client_v1:
             self._precision = PRECISION_TENTHS
         else:
             self._precision = self._evo_device.setpointCapabilities["valueResolution"]
+
+        self._preset_modes = list(HA_PRESET_TO_EVO)
+        self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
 
     async def async_zone_svc_request(self, service: dict, data: dict) -> None:
         """Process a service request (setpoint override) for a zone."""
@@ -246,9 +216,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
         """Return the current preset mode, e.g., home, away, temp."""
         if self._evo_tcs.systemModeStatus["mode"] in [EVO_AWAY, EVO_HEATOFF]:
             return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus["mode"])
-        return EVO_PRESET_TO_HA.get(
-            self._evo_device.setpointStatus["setpointMode"], "follow"
-        )
+        return EVO_PRESET_TO_HA.get(self._evo_device.setpointStatus["setpointMode"])
 
     @property
     def min_temp(self) -> float:
@@ -339,14 +307,17 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
 
 class EvoController(EvoClimateDevice):
-    """Base for a Honeywell TCC Controller (hub).
+    """Base for a Honeywell TCC Controller/Location.
 
-    The Controller (aka TCS, temperature control system) is the parent of all
-    the child (CH/DHW) devices.  It is also a Climate device.
+    The Controller (aka TCS, temperature control system) is the parent of all the child
+    (CH/DHW) devices. It is implemented as a Climate entity to expose the controller's
+    operating modes to HA.
+
+    It is assumed there is only one TCS per location, and they are thus synonymous.
     """
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize an evohome Controller (hub)."""
+        """Initialize a Honeywell TCC Controller/Location."""
         super().__init__(evo_broker, evo_device)
 
         self._unique_id = evo_device.systemId
@@ -354,8 +325,38 @@ class EvoController(EvoClimateDevice):
         self._icon = "mdi:thermostat"
 
         self._precision = PRECISION_TENTHS
-        self._supported_features = SUPPORT_PRESET_MODE
-        self._preset_modes = list(HA_PRESET_TO_TCS)
+
+        modes = [m["systemMode"] for m in evo_broker.config["allowedSystemModes"]]
+        self._preset_modes = [
+            TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
+        ]
+        self._supported_features = SUPPORT_PRESET_MODE if self._preset_modes else 0
+
+    async def async_tcs_svc_request(self, service: dict, data: dict) -> None:
+        """Process a service request (system mode) for a controller.
+
+        Data validation is not required, it will have been done upstream.
+        """
+        if service == SVC_SET_SYSTEM_MODE:
+            mode = data[ATTR_SYSTEM_MODE]
+        else:  # otherwise it is SVC_RESET_SYSTEM
+            mode = EVO_RESET
+
+        if ATTR_DURATION_DAYS in data:
+            until = dt.combine(dt.now().date(), dt.min.time())
+            until += data[ATTR_DURATION_DAYS]
+
+        elif ATTR_DURATION_HOURS in data:
+            until = dt.now() + data[ATTR_DURATION_HOURS]
+
+        else:
+            until = None
+
+        await self._set_tcs_mode(mode, until=until)
+
+    async def _set_tcs_mode(self, mode: str, until: Optional[dt] = None) -> None:
+        """Set a Controller to any of its native EVO_* operating modes."""
+        await self._evo_broker.call_client_api(self._evo_tcs.set_status(mode))
 
     @property
     def hvac_mode(self) -> str:
@@ -410,61 +411,6 @@ class EvoController(EvoClimateDevice):
         attrs = self._device_state_attrs
         for attr in STATE_ATTRS_TCS:
             if attr == "activeFaults":
-                attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
-            else:
-                attrs[attr] = getattr(self._evo_tcs, attr)
-
-
-class EvoThermostat(EvoZone):
-    """Base for a Honeywell TCC Round Thermostat.
-
-    These are implemented as a combined Controller/Zone.
-    """
-
-    def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize the Thermostat."""
-        super().__init__(evo_broker, evo_device)
-
-        self._name = evo_broker.tcs.location.name
-        self._preset_modes = [PRESET_AWAY, PRESET_ECO]
-
-    @property
-    def hvac_mode(self) -> str:
-        """Return the current operating mode."""
-        if self._evo_tcs.systemModeStatus["mode"] == EVO_HEATOFF:
-            return HVAC_MODE_OFF
-
-        return super().hvac_mode
-
-    @property
-    def preset_mode(self) -> Optional[str]:
-        """Return the current preset mode, e.g., home, away, temp."""
-        if (
-            self._evo_tcs.systemModeStatus["mode"] == EVO_AUTOECO
-            and self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW
-        ):
-            return PRESET_ECO
-
-        return super().preset_mode
-
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
-        """Set an operating mode."""
-        await self._set_tcs_mode(HA_HVAC_TO_TCS.get(hvac_mode))
-
-    async def async_set_preset_mode(self, preset_mode: Optional[str]) -> None:
-        """Set the preset mode; if None, then revert to following the schedule."""
-        if preset_mode in list(HA_PRESET_TO_TCS):
-            await self._set_tcs_mode(HA_PRESET_TO_TCS.get(preset_mode))
-        else:
-            await super().async_set_hvac_mode(preset_mode)
-
-    async def async_update(self) -> None:
-        """Get the latest state data for the Thermostat."""
-        await super().async_update()
-
-        attrs = self._device_state_attrs
-        for attr in STATE_ATTRS_TCS:
-            if attr == "activeFaults":  # self._evo_device also has "activeFaults"
                 attrs["activeSystemFaults"] = getattr(self._evo_tcs, attr)
             else:
                 attrs[attr] = getattr(self._evo_tcs, attr)

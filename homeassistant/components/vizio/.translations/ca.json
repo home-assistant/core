@@ -16,5 +16,14 @@
             }
         },
         "title": "Vizio SmartCast"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "volume_step": "Mida del pas de volum"
+                }
+            }
+        }
     }
 }

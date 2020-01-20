@@ -124,7 +124,14 @@ class OpenUvSensor(OpenUvEntity):
 
     async def async_update(self):
         """Update the state."""
-        data = self.openuv.data[DATA_UV]["result"]
+        data = self.openuv.data[DATA_UV].get("result")
+
+        if not data:
+            self._available = False
+            return
+
+        self._available = True
+
         if self._sensor_type == TYPE_CURRENT_OZONE_LEVEL:
             self._state = data["ozone"]
         elif self._sensor_type == TYPE_CURRENT_UV_INDEX:

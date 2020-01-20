@@ -172,7 +172,7 @@ aioimaplib==0.7.15
 aiokafka==0.5.1
 
 # homeassistant.components.kef
-aiokef==0.2.5
+aiokef==0.2.6
 
 # homeassistant.components.lifx
 aiolifx==0.6.7
@@ -474,7 +474,7 @@ eliqonline==1.2.2
 elkm1-lib==0.7.15
 
 # homeassistant.components.emulated_roku
-emulated_roku==0.1.9
+emulated_roku==0.2.0
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -2124,7 +2124,7 @@ zigpy-homeassistant==0.12.0
 zigpy-xbee-homeassistant==0.8.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.5.0
+zigpy-zigate==0.5.1
 
 # homeassistant.components.zoneminder
 zm-py==0.4.0
