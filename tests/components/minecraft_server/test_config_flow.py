@@ -115,7 +115,7 @@ async def test_update_interval_too_large(hass):
 
 
 async def test_port_too_small(hass):
-    """Test error in case of a too small update interval."""
+    """Test error in case of a too small port."""
     flow = config_flow.MinecraftServerConfigFlow()
     flow.hass = hass
     result = await flow.async_step_user(user_input=USER_INPUT_PORT_SMALL)
@@ -125,7 +125,7 @@ async def test_port_too_small(hass):
 
 
 async def test_port_too_large(hass):
-    """Test error in case of a too large update interval."""
+    """Test error in case of a too large port."""
     flow = config_flow.MinecraftServerConfigFlow()
     flow.hass = hass
     result = await flow.async_step_user(user_input=USER_INPUT_PORT_LARGE)
