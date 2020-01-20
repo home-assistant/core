@@ -34,7 +34,7 @@ async def async_setup_platform(
     broker = hass.data[DOMAIN]["broker"]
 
     _LOGGER.debug(
-        "Found the DHW Controller (%s), id: %s",
+        "Adding: DhwController (%s), id=%s",
         broker.tcs.hotwater.zone_type,
         broker.tcs.hotwater.zoneId,
     )
