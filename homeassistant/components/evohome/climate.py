@@ -99,7 +99,7 @@ async def async_setup_platform(
     for zone in broker.tcs.zones.values():
         if zone.zoneType == "Unknown":
             _LOGGER.warning(
-                "Ignoring: %s (%s), id=%s, name=%s (invalid zone type)",
+                "Ignoring: %s (%s), id=%s, name=%s: invalid zone type",
                 zone.zoneType,
                 zone.modelType,
                 zone.zoneId,
