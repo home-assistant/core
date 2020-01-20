@@ -84,8 +84,9 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # Check if already configured
-        await self.async_set_unique_id(self._username)
-        self._abort_if_unique_id_configured()
+        if self.unique_id is None:
+            await self.async_set_unique_id(self._username)
+            self._abort_if_unique_id_configured()
 
         try:
             self.api = await self.hass.async_add_executor_job(

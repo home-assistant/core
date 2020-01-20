@@ -324,9 +324,10 @@ async def test_verification_code_success(hass: HomeAssistantType, service: Magic
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
     )
+    service.return_value.requires_2fa = False
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_VERIFICATION_CODE: 0}
+        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == USERNAME
@@ -351,7 +352,7 @@ async def test_validate_verification_code_failed(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_VERIFICATION_CODE: 0}
+        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == CONF_TRUSTED_DEVICE
