@@ -623,7 +623,9 @@ class EvoChild(EvoDevice):
         Only Zones & DHW controllers (but not the TCS) can have schedules.
         """
         if not self._schedule["DailySchedules"]:
-            return {}  # no schedule {'DailySchedules': []}, so no scheduled setpoints
+            # {'DailySchedules': []}, no scheduled setpoints
+            # {'DailySchedules': False}, unable to retreive setpoints
+            return {}
 
         day_time = dt_util.now()
         day_of_week = int(day_time.strftime("%w"))  # 0 is Sunday
@@ -671,9 +673,12 @@ class EvoChild(EvoDevice):
 
     async def _update_schedule(self) -> None:
         """Get the latest schedule, if any."""
-        if "DailySchedules" in self._schedule and not self._schedule["DailySchedules"]:
-            if not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
-                return  # avoid unnecessary I/O - there's nothing to update
+        if "DailySchedules" in self._schedule:
+            # can we avoid unnecessary I/O?
+            if self._schedule["DailySchedules"] is False:
+                return  # no valid schedule
+            if self._evo_device.setpointStatus["setpointMode"] != EVO_FOLLOW:
+                return  # there's no need to update
 
         try:
             self._schedule = await self._evo_broker.call_client_api(
@@ -683,13 +688,13 @@ class EvoChild(EvoDevice):
         except aiohttp.ClientResponseError as err:
             if err.status == HTTP_BAD_REQUEST:
                 _LOGGER.warning(
-                    "Failed to get schedule for zone %s (%s): is it a Ghost zone? "
-                    "Check its configuration (restart HA after any fix).",
+                    "Error when requesting schedule data for zone %s (%s). "
+                    "Is it a'ghost' zone? Check its configuration and restart HA.",
                     self._unique_id,
                     self._name,
                 )
                 # from now on, stop trying to get schedule for this zone
-                self._schedule = {"DailySchedules": []}
+                self._schedule = {"DailySchedules": False}
 
             raise  # we don't expect/handle any other Exceptions
 
@@ -699,6 +704,7 @@ class EvoChild(EvoDevice):
         """Get the latest state data."""
         next_sp_from = self._setpoints.get("next_sp_from", "2000-01-01T00:00:00+00:00")
         if dt_util.now() >= dt_util.parse_datetime(next_sp_from):
-            await self._update_schedule()  # no schedule, or it's out-of-date
+            # no schedule, or it's out-of-date
+            await self._update_schedule()
 
         self._device_state_attrs = {"setpoints": self.setpoints}
