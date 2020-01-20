@@ -1211,18 +1211,26 @@ async def async_api_adjust_range(hass, config, directive, context):
         range_delta = int(range_delta)
         service = SERVICE_SET_COVER_POSITION
         current = entity.attributes.get(cover.ATTR_POSITION)
-        data[cover.ATTR_POSITION] = response_value = min(
-            100, max(0, range_delta + current)
-        )
+        position = response_value = min(100, max(0, range_delta + current))
+        if position == 100:
+            service = cover.SERVICE_OPEN_COVER
+        elif position == 0:
+            service = cover.SERVICE_CLOSE_COVER
+        else:
+            data[cover.ATTR_POSITION] = position
 
     # Cover Tilt
     elif instance == f"{cover.DOMAIN}.tilt":
         range_delta = int(range_delta)
         service = SERVICE_SET_COVER_TILT_POSITION
         current = entity.attributes.get(cover.ATTR_TILT_POSITION)
-        data[cover.ATTR_TILT_POSITION] = response_value = min(
-            100, max(0, range_delta + current)
-        )
+        tilt_position = response_value = min(100, max(0, range_delta + current))
+        if tilt_position == 100:
+            service = cover.SERVICE_OPEN_COVER_TILT
+        elif tilt_position == 0:
+            service = cover.SERVICE_CLOSE_COVER_TILT
+        else:
+            data[cover.ATTR_TILT_POSITION] = tilt_position
 
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
