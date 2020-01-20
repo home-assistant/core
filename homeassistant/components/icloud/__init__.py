@@ -141,6 +141,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     max_interval = entry.data[CONF_MAX_INTERVAL]
     gps_accuracy_threshold = entry.data[CONF_GPS_ACCURACY_THRESHOLD]
 
+    # For backwards compat
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=username)
+
     icloud_dir = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     account = IcloudAccount(
