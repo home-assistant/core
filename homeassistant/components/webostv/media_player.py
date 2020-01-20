@@ -293,7 +293,10 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     @cmd
     async def async_turn_off(self):
         """Turn off media player."""
-        await self._client.power_off()
+
+        # in some situations power_off may cause the TV to switch back on
+        if self._state != STATE_OFF:
+            await self._client.power_off()
 
     async def async_turn_on(self):
         """Turn on the media player."""
