@@ -5,6 +5,7 @@
             "already_setup": "Esta entrada ya ha sido configurada.",
             "host_exists": "Host ya configurado del componente de Vizio",
             "name_exists": "Nombre ya configurado del componente de Vizio",
+            "updated_options": "Esta entrada ya ha sido configurada pero las opciones definidas en la configuraci\u00f3n no coinciden con los valores de las opciones importadas previamente, por lo que la entrada de la configuraci\u00f3n ha sido actualizada en consecuencia.",
             "updated_volume_step": "Esta entrada ya ha sido configurada pero el tama\u00f1o del paso de volumen en la configuraci\u00f3n no coincide con la entrada de la configuraci\u00f3n, por lo que la entrada de la configuraci\u00f3n ha sido actualizada en consecuencia."
         },
         "error": {
@@ -30,6 +31,7 @@
         "step": {
             "init": {
                 "data": {
+                    "timeout": "Tiempo de espera de solicitud de API (segundos)",
                     "volume_step": "Tama\u00f1o del paso de volumen"
                 },
                 "title": "Actualizar las opciones de SmartCast de Vizo"
