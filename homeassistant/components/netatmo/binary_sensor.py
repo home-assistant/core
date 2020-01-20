@@ -76,11 +76,6 @@ async def async_setup_entry(hass, entry, async_add_entities):
     async_add_entities(await hass.async_add_executor_job(get_entities), True)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the access to Netatmo binary sensor."""
-    pass
-
-
 class NetatmoBinarySensor(BinarySensorDevice):
     """Represent a single binary sensor in a Netatmo Camera device."""
 
