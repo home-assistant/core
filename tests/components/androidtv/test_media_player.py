@@ -299,7 +299,7 @@ async def test_setup_with_adbkey(hass):
 async def _test_sources(hass, config0):
     """Test that sources (i.e., apps) are handled correctly for Android TV and Fire TV devices."""
     config = config0.copy()
-    config[DOMAIN][CONF_APPS] = {"com.app.test1": "TEST 1"}
+    config[DOMAIN][CONF_APPS] = {"com.app.test1": "TEST 1", "com.app.test3": ""}
     patch_key, entity_id = _setup(config)
 
     with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
@@ -315,14 +315,16 @@ async def _test_sources(hass, config0):
         patch_update = patchers.patch_androidtv_update(
             "playing",
             "com.app.test1",
-            ["com.app.test1", "com.app.test2"],
+            ["com.app.test1", "com.app.test2", "com.app.test3"],
             "hdmi",
             False,
             1,
         )
     else:
         patch_update = patchers.patch_firetv_update(
-            "playing", "com.app.test1", ["com.app.test1", "com.app.test2"]
+            "playing",
+            "com.app.test1",
+            ["com.app.test1", "com.app.test2", "com.app.test3"],
         )
 
     with patch_update:
@@ -331,20 +333,22 @@ async def _test_sources(hass, config0):
         assert state is not None
         assert state.state == STATE_PLAYING
         assert state.attributes["source"] == "TEST 1"
-        assert state.attributes["source_list"] == ["TEST 1", "com.app.test2"]
+        assert sorted(state.attributes["source_list"]) == ["TEST 1", "com.app.test2"]
 
     if config[DOMAIN].get(CONF_DEVICE_CLASS) != "firetv":
         patch_update = patchers.patch_androidtv_update(
             "playing",
             "com.app.test2",
-            ["com.app.test2", "com.app.test1"],
+            ["com.app.test2", "com.app.test1", "com.app.test3"],
             "hdmi",
             True,
             0,
         )
     else:
         patch_update = patchers.patch_firetv_update(
-            "playing", "com.app.test2", ["com.app.test2", "com.app.test1"]
+            "playing",
+            "com.app.test2",
+            ["com.app.test2", "com.app.test1", "com.app.test3"],
         )
 
     with patch_update:
@@ -353,7 +357,7 @@ async def _test_sources(hass, config0):
         assert state is not None
         assert state.state == STATE_PLAYING
         assert state.attributes["source"] == "com.app.test2"
-        assert state.attributes["source_list"] == ["com.app.test2", "TEST 1"]
+        assert sorted(state.attributes["source_list"]) == ["TEST 1", "com.app.test2"]
 
     return True
 
