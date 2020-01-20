@@ -82,9 +82,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if item_conf:
         for item in item_conf:
             name = item.get(CONF_NAME)
-            id = item.get(CONF_ID)
-            _LOGGER.debug("Creating Zabbix Item %s for ID %s", name, id)
-            sensors.append(ZabbixItemSensor(zapi, id, name))
+            itemid = item.get(CONF_ID)
+            _LOGGER.debug("Creating Zabbix Item %s for ID %s", name, itemid)
+            sensors.append(ZabbixItemSensor(zapi, itemid, name))
 
     # Single sensor that provides the total count of triggers.
     _LOGGER.debug("Creating Zabbix Sensor")
@@ -184,14 +184,14 @@ class ZabbixMultipleHostTriggerCountSensor(ZabbixTriggerCountSensor):
 class ZabbixItemSensor(Entity):
     """Get the latest value for a single item."""
 
-    def __init__(self, zApi, id, name=None):
+    def __init__(self, zApi, itemid, name=None):
         """Initialize Zabbix sensor."""
-        self._id = id
+        self._id = itemid
         self._name = name
         self._zapi = zApi
         self._state = None
         self._unit = None
-        self._attributes = {CONF_ID: id}
+        self._attributes = {CONF_ID: itemid}
 
         item_data = self._zapi.item.get(
             itemids=self._id, output=["name", "units", "lastvalue"]
