@@ -43,6 +43,20 @@ USER_INPUT_INTERVAL_LARGE = {
     CONF_UPDATE_INTERVAL: 86401,
 }
 
+USER_INPUT_PORT_SMALL = {
+    CONF_NAME: DEFAULT_NAME,
+    CONF_HOST: "1.1.1.1",
+    CONF_PORT: 1023,
+    CONF_UPDATE_INTERVAL: DEFAULT_UPDATE_INTERVAL_SECONDS,
+}
+
+USER_INPUT_PORT_LARGE = {
+    CONF_NAME: DEFAULT_NAME,
+    CONF_HOST: "1.1.1.1",
+    CONF_PORT: 65536,
+    CONF_UPDATE_INTERVAL: DEFAULT_UPDATE_INTERVAL_SECONDS,
+}
+
 
 async def test_show_config_form(hass):
     """Test if initial configuration form is shown."""
@@ -98,6 +112,26 @@ async def test_update_interval_too_large(hass):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "invalid_update_interval"}
+
+
+async def test_port_too_small(hass):
+    """Test error in case of a too small update interval."""
+    flow = config_flow.MinecraftServerConfigFlow()
+    flow.hass = hass
+    result = await flow.async_step_user(user_input=USER_INPUT_PORT_SMALL)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "invalid_port"}
+
+
+async def test_port_too_large(hass):
+    """Test error in case of a too large update interval."""
+    flow = config_flow.MinecraftServerConfigFlow()
+    flow.hass = hass
+    result = await flow.async_step_user(user_input=USER_INPUT_PORT_LARGE)
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "invalid_port"}
 
 
 async def test_connection_failed(hass):

@@ -3,14 +3,7 @@
   "name": "Minecraft Server",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/minecraft_server",
-  "requirements": [
-    "mcstatus==2.3.0"
-  ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
+  "requirements": ["mcstatus==2.3.0"],
   "dependencies": [],
-  "codeowners": [
-    "@elmurato"
-  ]
+  "codeowners": ["@elmurato"]
 }

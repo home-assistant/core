@@ -47,7 +47,7 @@ async def async_setup_entry(hass, config_entry):
     _LOGGER.debug("Setting up component...")
 
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+        hass.data.setdefault(DOMAIN, {})
 
     # Create and store server instance.
     server = MinecraftServer(
