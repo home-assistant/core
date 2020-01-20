@@ -55,7 +55,7 @@ def mock_image():
         yield image
 
 
-async def test_setup_platform(hass):
+async def test_setup_platform(hass, mock_detections):
     """Set up platform with one entity."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)

@@ -1,5 +1,4 @@
 """Person detection using Sighthound cloud service."""
-from datetime import timedelta
 import logging
 
 import simplehound.core as hound
@@ -18,15 +17,13 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_PERSON_DETECTED = "image_processing.person_detected"
+EVENT_PERSON_DETECTED = "sighthound.person_detected"
 
 ATTR_BOUNDING_BOX = "bounding_box"
 ATTR_PEOPLE = "people"
 CONF_ACCOUNT_TYPE = "account_type"
 DEV = "dev"
 PROD = "prod"
-
-SCAN_INTERVAL = timedelta(days=365)  # NEVER SCAN.
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -36,34 +33,39 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform."""
+    # Validate credentials by processing image.
+    api_key = config[CONF_API_KEY]
+    account_type = config[CONF_ACCOUNT_TYPE]
+    api = hound.cloud(api_key, account_type)
+    try:
+        api.detect(b"Test")
+    except hound.SimplehoundException as exc:
+        _LOGGER.error("Sighthound error %s setup aborted", exc)
+        return
 
     entities = []
     for camera in config[CONF_SOURCE]:
         sighthound = SighthoundEntity(
-            config.get(CONF_API_KEY),
-            config.get(CONF_ACCOUNT_TYPE),
-            camera.get(CONF_ENTITY_ID),
-            camera.get(CONF_NAME),
+            api, camera[CONF_ENTITY_ID], camera.get(CONF_NAME)
         )
         entities.append(sighthound)
-    add_devices(entities)
+    add_entities(entities)
 
 
 class SighthoundEntity(ImageProcessingEntity):
     """Create a sighthound entity."""
 
-    def __init__(self, api_key, account_type, camera_entity, name):
+    def __init__(self, api, camera_entity, name):
         """Init."""
-        super().__init__()
-        self._api = hound.cloud(api_key, account_type)
+        self._api = api
         self._camera = camera_entity
         if name:
             self._name = name
         else:
-            self._camera_name = split_entity_id(camera_entity)[1]
-            self._name = f"sighthound_{self._camera_name}"
+            camera_name = split_entity_id(camera_entity)[1]
+            self._name = f"sighthound_{camera_name}"
         self._state = None
         self._image_width = None
         self._image_height = None
@@ -101,6 +103,11 @@ class SighthoundEntity(ImageProcessingEntity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def should_poll(self):
+        """Return the polling state."""
+        return False
 
     @property
     def state(self):
