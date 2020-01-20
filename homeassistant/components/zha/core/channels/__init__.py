@@ -110,6 +110,19 @@ class Channels:
         pass
 
     @callback
+    def async_new_entity(
+        self,
+        enqueue_signal: str,
+        entity: zha_typing.CALLABLE_T,
+        unique_id: str,
+        channels: List[zha_typing.ChannelType],
+    ):
+        """Signal new entity addition."""
+        self.async_send_signal(
+            enqueue_signal, entity, (unique_id, self.zha_device, channels)
+        )
+
+    @callback
     def async_send_signal(self, signal: str, *args: Any) -> None:
         """Send a signal through hass dispatcher."""
         async_dispatcher_send(self.zha_device.hass, signal, *args)
@@ -150,7 +163,7 @@ class EndpointChannels:
         return self._claimed_channels
 
     @property
-    def _endpoint(self) -> zha_typing.ZigpyEndpointType:
+    def endpoint(self) -> zha_typing.ZigpyEndpointType:
         """Return endpoint of zigpy device."""
         return self._channels.zha_device.device.endpoints[self.id]
 
@@ -203,14 +216,9 @@ class EndpointChannels:
         return ep_chnls
 
     @callback
-    def async_send_signal(self, signal: str, *args: Any) -> None:
-        """Send a signal through hass dispatcher."""
-        self._channels.async_send_signal(signal, *args)
-
-    @callback
     def add_all_channels(self) -> None:
         """Create and add channels for all input clusters."""
-        for cluster_id, cluster in self._endpoint.in_clusters.items():
+        for cluster_id, cluster in self.endpoint.in_clusters.items():
             channel_class = zha_regs.ZIGBEE_CHANNEL_REGISTRY.get(
                 cluster_id, base.AttributeListeningChannel
             )
@@ -224,8 +232,13 @@ class EndpointChannels:
             # end of ugly hack
             ch = channel_class(cluster, self)
             if ch.name == const.CHANNEL_POWER_CONFIGURATION:
+                if (
+                    self._channels.power_configuration_ch
+                    or self._channels.zha_device.is_mains_powered
+                ):
+                    # on power configuration channel per device
+                    continue
                 self._channels.power_configuration_ch = ch
-                return
 
             self.all_channels[ch.id] = ch
 
@@ -233,10 +246,27 @@ class EndpointChannels:
     def add_relay_channels(self) -> None:
         """Create relay channels for all output clusters if in the registry."""
         for cluster_id in zha_regs.EVENT_RELAY_CLUSTERS:
-            cluster = self._endpoint.out_clusters.get(cluster_id)
+            cluster = self.endpoint.out_clusters.get(cluster_id)
             if cluster is not None:
-                ch = base.EventRelayChannel(cluster, self._channels)
+                ch = base.EventRelayChannel(cluster, self)
                 self.relay_channels[ch.id] = ch
+
+    @callback
+    def async_new_entity(
+        self,
+        component: str,
+        entity: zha_typing.CALLABLE_T,
+        unique_id: str,
+        channels: List[zha_typing.ChannelType],
+    ):
+        """Signal new entity addition."""
+        enqueue_signal = f"{const.SIGNAL_ENQUEUE_ENTITY}_{component}"
+        self._channels.async_new_entity(enqueue_signal, entity, unique_id, channels)
+
+    @callback
+    def async_send_signal(self, signal: str, *args: Any) -> None:
+        """Send a signal through hass dispatcher."""
+        self._channels.async_send_signal(signal, *args)
 
     @callback
     def claim_channels(self, channels: List[zha_typing.ChannelType]) -> None:

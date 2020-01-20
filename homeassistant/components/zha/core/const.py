@@ -198,6 +198,7 @@ SENSOR_TYPE = "sensor_type"
 
 SIGNAL_ATTR_UPDATED = "attribute_updated"
 SIGNAL_AVAILABLE = "available"
+SIGNAL_ENQUEUE_ENTITY = "enqueue_entity"
 SIGNAL_MOVE_LEVEL = "move_level"
 SIGNAL_REMOVE = "remove"
 SIGNAL_SET_LEVEL = "set_level"

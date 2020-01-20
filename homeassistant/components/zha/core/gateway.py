@@ -23,6 +23,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
 
+from . import discovery
 from .const import (
     ATTR_IEEE,
     ATTR_MANUFACTURER,
@@ -72,7 +73,6 @@ from .const import (
     ZHA_GW_RADIO_DESCRIPTION,
 )
 from .device import DeviceStatus, ZHADevice
-from .discovery import async_dispatch_discovery_info, async_process_endpoint
 from .group import ZHAGroup
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
@@ -112,6 +112,8 @@ class ZHAGateway:
 
     async def async_initialize(self):
         """Initialize controller and connect radio."""
+        discovery.probe.initialize(self._hass)
+
         self.zha_storage = await async_get_registry(self._hass)
         self.ha_device_registry = await get_dev_reg(self._hass)
         self.ha_entity_registry = await get_ent_reg(self._hass)

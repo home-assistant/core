@@ -4,10 +4,9 @@ from unittest import mock
 import pytest
 import zigpy.types as t
 
-import homeassistant.components.zha.core.channels as channels
+import homeassistant.components.zha.core.channels as zha_channels
 import homeassistant.components.zha.core.channels.base as base_channels
 import homeassistant.components.zha.core.const as zha_const
-import homeassistant.components.zha.core.device as zha_device
 import homeassistant.components.zha.core.registries as registries
 
 from .common import get_zha_gateway
@@ -30,6 +29,14 @@ async def zha_gateway(hass, setup_zha):
     """Return ZhaGateway fixture."""
     await setup_zha()
     return get_zha_gateway(hass)
+
+
+@pytest.fixture
+def ep_channels():
+    """EndpointChannels fixture."""
+    ep_ch_mock = mock.MagicMock(spec_set=zha_channels.EndpointChannels)
+    ep_ch_mock.id = 1
+    return ep_ch_mock
 
 
 @pytest.mark.parametrize(
@@ -76,7 +83,7 @@ async def zha_gateway(hass, setup_zha):
     ],
 )
 async def test_in_channel_config(
-    cluster_id, bind_count, attrs, hass, zigpy_device_mock, zha_gateway
+    cluster_id, bind_count, attrs, hass, ep_channels, zigpy_device_mock, zha_gateway
 ):
     """Test ZHA core channel configuration for input clusters."""
     zigpy_dev = zigpy_device_mock(
@@ -85,13 +92,12 @@ async def test_in_channel_config(
         "test manufacturer",
         "test model",
     )
-    zha_dev = zha_device.ZHADevice(hass, zigpy_dev, zha_gateway)
 
     cluster = zigpy_dev.endpoints[1].in_clusters[cluster_id]
     channel_class = registries.ZIGBEE_CHANNEL_REGISTRY.get(
         cluster_id, base_channels.AttributeListeningChannel
     )
-    channel = channel_class(cluster, zha_dev)
+    channel = channel_class(cluster, ep_channels)
 
     await channel.async_configure()
 
@@ -134,7 +140,7 @@ async def test_in_channel_config(
     ],
 )
 async def test_out_channel_config(
-    cluster_id, bind_count, zha_gateway, hass, zigpy_device_mock
+    cluster_id, bind_count, zha_gateway, hass, ep_channels, zigpy_device_mock
 ):
     """Test ZHA core channel configuration for output clusters."""
     zigpy_dev = zigpy_device_mock(
@@ -143,14 +149,13 @@ async def test_out_channel_config(
         "test manufacturer",
         "test model",
     )
-    zha_dev = zha_device.ZHADevice(hass, zigpy_dev, zha_gateway)
 
     cluster = zigpy_dev.endpoints[1].out_clusters[cluster_id]
     cluster.bind_only = True
     channel_class = registries.ZIGBEE_CHANNEL_REGISTRY.get(
         cluster_id, base_channels.AttributeListeningChannel
     )
-    channel = channel_class(cluster, zha_dev)
+    channel = channel_class(cluster, ep_channels)
 
     await channel.async_configure()
 
@@ -173,8 +178,8 @@ def test_epch_unclaimed_channels(channel):
     ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
     ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
 
-    ep_channels = channels.EndpointChannels(
-        mock.MagicMock(spec_set=channels.Channels), mock.sentinel.ep
+    ep_channels = zha_channels.EndpointChannels(
+        mock.MagicMock(spec_set=zha_channels.Channels), mock.sentinel.ep
     )
     all_channels = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     with mock.patch.dict(ep_channels.all_channels, all_channels, clear=True):
@@ -209,8 +214,8 @@ def test_epch_claim_channels(channel):
     ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
     ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
 
-    ep_channels = channels.EndpointChannels(
-        mock.MagicMock(spec_set=channels.Channels), mock.sentinel.ep
+    ep_channels = zha_channels.EndpointChannels(
+        mock.MagicMock(spec_set=zha_channels.Channels), mock.sentinel.ep
     )
     all_channels = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     with mock.patch.dict(ep_channels.all_channels, all_channels, clear=True):
@@ -232,3 +237,97 @@ def test_epch_claim_channels(channel):
         assert ch_3.id in ep_channels.claimed_channels
         assert ep_channels.claimed_channels[ch_3.id] is ch_3
         assert "1:0x0300" in ep_channels.claimed_channels
+
+
+@mock.patch(
+    "homeassistant.components.zha.core.channels.EndpointChannels.add_relay_channels"
+)
+def test_ep_channels_all_channels(m1, zha_device_mock):
+    """Test EndpointChannels adding all channels."""
+    zha_device = zha_device_mock(
+        {
+            1: {"in_clusters": [0, 1, 6, 8], "out_clusters": [], "device_type": 0x0000},
+            2: {
+                "in_clusters": [0, 1, 6, 8, 768],
+                "out_clusters": [],
+                "device_type": 0x0000,
+            },
+        }
+    )
+    channels = zha_channels.Channels(zha_device)
+
+    ep_channels = zha_channels.EndpointChannels.new(channels, 1)
+    assert "1:0x0000" in ep_channels.all_channels
+    assert "1:0x0001" in ep_channels.all_channels
+    assert "1:0x0006" in ep_channels.all_channels
+    assert "1:0x0008" in ep_channels.all_channels
+    assert "1:0x0300" not in ep_channels.all_channels
+    assert "2:0x0000" not in ep_channels.all_channels
+    assert "2:0x0001" not in ep_channels.all_channels
+    assert "2:0x0006" not in ep_channels.all_channels
+    assert "2:0x0008" not in ep_channels.all_channels
+    assert "2:0x0300" not in ep_channels.all_channels
+
+    channels = zha_channels.Channels(zha_device)
+    ep_channels = zha_channels.EndpointChannels.new(channels, 2)
+    assert "1:0x0000" not in ep_channels.all_channels
+    assert "1:0x0001" not in ep_channels.all_channels
+    assert "1:0x0006" not in ep_channels.all_channels
+    assert "1:0x0008" not in ep_channels.all_channels
+    assert "1:0x0300" not in ep_channels.all_channels
+    assert "2:0x0000" in ep_channels.all_channels
+    assert "2:0x0001" in ep_channels.all_channels
+    assert "2:0x0006" in ep_channels.all_channels
+    assert "2:0x0008" in ep_channels.all_channels
+    assert "2:0x0300" in ep_channels.all_channels
+
+
+@mock.patch(
+    "homeassistant.components.zha.core.channels.EndpointChannels.add_relay_channels"
+)
+def test_channel_power_config(m1, zha_device_mock):
+    """Test that channels only get a single power channel."""
+    in_clusters = [0, 1, 6, 8]
+    zha_device = zha_device_mock(
+        {
+            1: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0x0000},
+            2: {
+                "in_clusters": [*in_clusters, 768],
+                "out_clusters": [],
+                "device_type": 0x0000,
+            },
+        }
+    )
+    channels = zha_channels.Channels.new(zha_device)
+    assert "1:0x0000" in channels.endpoints[1].all_channels
+    assert "1:0x0001" in channels.endpoints[1].all_channels
+    assert "1:0x0006" in channels.endpoints[1].all_channels
+    assert "1:0x0008" in channels.endpoints[1].all_channels
+    assert "1:0x0300" not in channels.endpoints[1].all_channels
+    assert "2:0x0000" in channels.endpoints[2].all_channels
+    assert "2:0x0001" not in channels.endpoints[2].all_channels
+    assert "2:0x0006" in channels.endpoints[2].all_channels
+    assert "2:0x0008" in channels.endpoints[2].all_channels
+    assert "2:0x0300" in channels.endpoints[2].all_channels
+
+    zha_device = zha_device_mock(
+        {
+            1: {"in_clusters": [], "out_clusters": [], "device_type": 0x0000},
+            2: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0x0000},
+        }
+    )
+    channels = zha_channels.Channels.new(zha_device)
+    assert "1:0x0001" not in channels.endpoints[1].all_channels
+    assert "2:0x0001" in channels.endpoints[2].all_channels
+
+    zha_device = zha_device(
+        {2: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0x0000},}
+    )
+    channels = zha_channels.Channels.new(zha_device)
+    assert "2:1" in channels.endpoints[2].all_channels
+
+    zha_device = zha_device_mock(
+        {2: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0x0000}}
+    )
+    channels = zha_channels.Channels.new(zha_device)
+    assert "2:0x0001" in channels.endpoints[2].all_channels
