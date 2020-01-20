@@ -13,6 +13,7 @@ from homeassistant import data_entry_flow
 from homeassistant.components.freebox.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry
 
@@ -44,7 +45,7 @@ def mock_controller_connect():
         yield service_mock
 
 
-async def test_user(hass, connect):
+async def test_user(hass: HomeAssistantType, connect: MagicMock):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=None,
@@ -53,7 +54,6 @@ async def test_user(hass, connect):
     assert result["step_id"] == "user"
 
     # test with all provided
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -63,7 +63,7 @@ async def test_user(hass, connect):
     assert result["step_id"] == "link"
 
 
-async def test_import(hass, connect):
+async def test_import(hass: HomeAssistantType, connect: MagicMock):
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -74,7 +74,7 @@ async def test_import(hass, connect):
     assert result["step_id"] == "link"
 
 
-async def test_link(hass, connect):
+async def test_link(hass: HomeAssistantType, connect: MagicMock):
     """Test linking."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -90,7 +90,7 @@ async def test_link(hass, connect):
     assert result["data"][CONF_PORT] == PORT
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistantType):
     """Test we abort if component is already setup."""
     MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: HOST, CONF_PORT: PORT}, unique_id=HOST
@@ -115,7 +115,7 @@ async def test_abort_if_already_setup(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_abort_on_link_failed(hass):
+async def test_abort_on_link_failed(hass: HomeAssistantType):
     """Test when we have errors during linking the router."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
