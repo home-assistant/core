@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components import zabbix
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ID, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -13,6 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _CONF_TRIGGERS = "triggers"
 _CONF_HOSTIDS = "hostids"
+_CONF_ITEMS = "items"
 _CONF_INDIVIDUAL = "individual"
 
 _ZABBIX_ID_LIST_SCHEMA = vol.Schema([int])
@@ -23,11 +24,17 @@ _ZABBIX_TRIGGER_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME): cv.string,
     }
 )
+_ZABBIX_ITEM_SCHEMA = vol.Schema(
+    [{vol.Optional(CONF_NAME): cv.string, vol.Required(CONF_ID): cv.string}]
+)
 
 # SCAN_INTERVAL = 30
 #
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(_CONF_TRIGGERS): vol.Any(_ZABBIX_TRIGGER_SCHEMA, None)}
+    {
+        vol.Optional(_CONF_TRIGGERS): vol.Any(_ZABBIX_TRIGGER_SCHEMA, None),
+        vol.Optional(_CONF_ITEMS): vol.Any(_ZABBIX_ITEM_SCHEMA, None),
+    }
 )
 
 
@@ -43,6 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
 
     trigger_conf = config.get(_CONF_TRIGGERS)
+    item_conf = config.get(_CONF_ITEMS)
     # The following code seems overly complex. Need to think about this...
     if trigger_conf:
         hostids = trigger_conf.get(_CONF_HOSTIDS)
@@ -70,11 +78,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 _LOGGER.debug("Creating Zabbix Sensor group: %s", str(hostids))
                 sensor = ZabbixMultipleHostTriggerCountSensor(zapi, hostids, name)
             sensors.append(sensor)
-    else:
-        # Single sensor that provides the total count of triggers.
-        _LOGGER.debug("Creating Zabbix Sensor")
-        sensor = ZabbixTriggerCountSensor(zapi)
-        sensors.append(sensor)
+
+    if item_conf:
+        for item in item_conf:
+            name = item.get(CONF_NAME)
+            id = item.get(CONF_ID)
+            _LOGGER.debug("Creating Zabbix Item %s for ID %s", name, id)
+            sensors.append(ZabbixItemSensor(zapi, id, name))
+
+    # Single sensor that provides the total count of triggers.
+    _LOGGER.debug("Creating Zabbix Sensor")
+    sensors.append(ZabbixTriggerCountSensor(zapi))
 
     add_entities(sensors)
 
@@ -165,3 +179,53 @@ class ZabbixMultipleHostTriggerCountSensor(ZabbixTriggerCountSensor):
             monitored=1,
             filter={"value": 1},
         )
+
+
+class ZabbixItemSensor(Entity):
+    """Get the latest value for a single item."""
+
+    def __init__(self, zApi, id, name=None):
+        """Initialize Zabbix sensor."""
+        self._id = id
+        self._name = name
+        self._zapi = zApi
+        self._state = None
+        self._unit = None
+        self._attributes = {CONF_ID: id}
+
+        item_data = self._zapi.item.get(
+            itemids=self._id, output=["name", "units", "lastvalue"]
+        )[0]
+
+        if self._name is None:
+            self._name = item_data["name"]
+        self._unit = item_data["units"]
+        self._state = item_data["lastvalue"]
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the units of measurement."""
+        return self._unit
+
+    def _call_zabbix_api(self):
+        return self._zapi.item.get(itemids=self._id, output=["lastvalue"])[0]
+
+    def update(self):
+        """Update the sensor."""
+        _LOGGER.debug("Updating ZabbixItemSensor: %s", str(self._name))
+        self._state = self._call_zabbix_api()["lastvalue"]
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the device."""
+        return self._attributes
