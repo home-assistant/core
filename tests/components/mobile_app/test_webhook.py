@@ -67,9 +67,8 @@ async def test_webhook_handle_fire_event(hass, create_registrations, webhook_cli
     assert events[0].data["hello"] == "yo world"
 
 
-async def test_webhook_update_registration(webhook_client, hass_client):
+async def test_webhook_update_registration(webhook_client, authed_api_client):
     """Test that a we can update an existing registration via webhook."""
-    authed_api_client = await hass_client()
     register_resp = await authed_api_client.post(
         "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
     )
