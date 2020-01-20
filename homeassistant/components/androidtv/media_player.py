@@ -132,7 +132,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ADB_SERVER_IP): cv.string,
         vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
         vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
-        vol.Optional(CONF_APPS, default=dict()): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_APPS, default=dict()): vol.Schema(
+            {cv.string: vol.Any(cv.string, None)}
+        ),
         vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
         vol.Optional(CONF_TURN_OFF_COMMAND): cv.string,
         vol.Optional(CONF_STATE_DETECTION_RULES, default={}): vol.Schema(
