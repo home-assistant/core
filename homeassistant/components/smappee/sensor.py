@@ -97,19 +97,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         )
 
     if smappee.is_local_active:
-        for location_id in smappee.locations.keys():
+        if smappee.is_remote_active:
+            location_keys = smappee.locations.keys()
+        else:
+            location_keys = [None]
+        for location_id in location_keys:
             for sensor in SENSOR_TYPES:
                 if "local" in SENSOR_TYPES[sensor]:
-                    if smappee.is_remote_active:
-                        dev.append(
-                            SmappeeSensor(
-                                smappee, location_id, sensor, SENSOR_TYPES[sensor]
-                            )
+                    dev.append(
+                        SmappeeSensor(
+                            smappee, location_id, sensor, SENSOR_TYPES[sensor]
                         )
-                    else:
-                        dev.append(
-                            SmappeeSensor(smappee, None, sensor, SENSOR_TYPES[sensor])
-                        )
+                    )
 
     add_entities(dev, True)
 

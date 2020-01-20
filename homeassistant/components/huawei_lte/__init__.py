@@ -28,6 +28,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_RECIPIENT,
     CONF_URL,
@@ -51,9 +52,11 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    ADMIN_SERVICES,
     ALL_KEYS,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
+    DEFAULT_NOTIFY_SERVICE_NAME,
     DOMAIN,
     KEY_DEVICE_BASIC_INFORMATION,
     KEY_DEVICE_INFORMATION,
@@ -64,6 +67,8 @@ from .const import (
     KEY_WLAN_HOST_LIST,
     SERVICE_CLEAR_TRAFFIC_STATISTICS,
     SERVICE_REBOOT,
+    SERVICE_RESUME_INTEGRATION,
+    SERVICE_SUSPEND_INTEGRATION,
     UPDATE_OPTIONS_SIGNAL,
     UPDATE_SIGNAL,
 )
@@ -82,9 +87,10 @@ NOTIFY_SCHEMA = vol.Any(
     None,
     vol.Schema(
         {
+            vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_RECIPIENT): vol.Any(
                 None, vol.All(cv.ensure_list, [cv.string])
-            )
+            ),
         }
     ),
 )
@@ -134,6 +140,7 @@ class Router:
     )
     unload_handlers: List[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
     client: Client
+    suspended = attr.ib(init=False, default=False)
 
     def __attrs_post_init__(self):
         """Set up internal state on init."""
@@ -188,6 +195,10 @@ class Router:
     def update(self) -> None:
         """Update router data."""
 
+        if self.suspended:
+            _LOGGER.debug("Integration suspended, not updating data")
+            return
+
         self._get_data(KEY_DEVICE_INFORMATION, self.client.device.information)
         if self.data.get(KEY_DEVICE_INFORMATION):
             # Full information includes everything in basic
@@ -207,15 +218,8 @@ class Router:
 
         self.signal_update()
 
-    def cleanup(self, *_) -> None:
-        """Clean up resources."""
-
-        self.subscriptions.clear()
-
-        for handler in self.unload_handlers:
-            handler()
-        self.unload_handlers.clear()
-
+    def logout(self) -> None:
+        """Log out router session."""
         if not isinstance(self.connection, AuthorizedConnection):
             return
         try:
@@ -226,6 +230,17 @@ class Router:
             _LOGGER.debug("Logout not supported when not logged in", exc_info=True)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.warning("Logout error", exc_info=True)
+
+    def cleanup(self, *_) -> None:
+        """Clean up resources."""
+
+        self.subscriptions.clear()
+
+        for handler in self.unload_handlers:
+            handler()
+        self.unload_handlers.clear()
+
+        self.logout()
 
 
 @attr.s
@@ -262,6 +277,13 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         ):
             new_options[f"{CONF_RECIPIENT}_from_yaml"] = yaml_recipient
             new_options[CONF_RECIPIENT] = yaml_recipient
+        yaml_notify_name = yaml_config.get(NOTIFY_DOMAIN, {}).get(CONF_NAME)
+        if (
+            yaml_notify_name is not None
+            and yaml_notify_name != config_entry.options.get(f"{CONF_NAME}_from_yaml")
+        ):
+            new_options[f"{CONF_NAME}_from_yaml"] = yaml_notify_name
+            new_options[CONF_NAME] = yaml_notify_name
         # Update entry if overrides were found
         if new_data or new_options:
             hass.config_entries.async_update_entry(
@@ -353,7 +375,11 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
         hass,
         NOTIFY_DOMAIN,
         DOMAIN,
-        {CONF_URL: url, CONF_RECIPIENT: config_entry.options.get(CONF_RECIPIENT)},
+        {
+            CONF_URL: url,
+            CONF_NAME: config_entry.options.get(CONF_NAME, DEFAULT_NOTIFY_SERVICE_NAME),
+            CONF_RECIPIENT: config_entry.options.get(CONF_RECIPIENT),
+        },
         hass.data[DOMAIN].hass_config,
     )
 
@@ -413,6 +439,9 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
         routers = hass.data[DOMAIN].routers
         if url:
             router = routers.get(url)
+        elif not routers:
+            _LOGGER.error("%s: no routers configured", service.service)
+            return
         elif len(routers) == 1:
             router = next(iter(routers.values()))
         else:
@@ -427,15 +456,29 @@ async def async_setup(hass: HomeAssistantType, config) -> bool:
             return
 
         if service.service == SERVICE_CLEAR_TRAFFIC_STATISTICS:
+            if router.suspended:
+                _LOGGER.debug("%s: ignored, integration suspended", service.service)
+                return
             result = router.client.monitoring.set_clear_traffic()
             _LOGGER.debug("%s: %s", service.service, result)
         elif service.service == SERVICE_REBOOT:
+            if router.suspended:
+                _LOGGER.debug("%s: ignored, integration suspended", service.service)
+                return
             result = router.client.device.reboot()
             _LOGGER.debug("%s: %s", service.service, result)
+        elif service.service == SERVICE_RESUME_INTEGRATION:
+            # Login will be handled automatically on demand
+            router.suspended = False
+            _LOGGER.debug("%s: %s", service.service, "done")
+        elif service.service == SERVICE_SUSPEND_INTEGRATION:
+            router.logout()
+            router.suspended = True
+            _LOGGER.debug("%s: %s", service.service, "done")
         else:
             _LOGGER.error("%s: unsupported service", service.service)
 
-    for service in (SERVICE_CLEAR_TRAFFIC_STATISTICS, SERVICE_REBOOT):
+    for service in ADMIN_SERVICES:
         hass.helpers.service.async_register_admin_service(
             DOMAIN, service, service_handler, schema=SERVICE_SCHEMA,
         )

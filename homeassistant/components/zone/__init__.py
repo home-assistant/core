@@ -96,7 +96,7 @@ def async_active_zone(hass, latitude, longitude, radius=0):
 
 
 async def async_setup(hass, config):
-    """Set up configured zones as well as home assistant zone if necessary."""
+    """Set up configured zones as well as Home Assistant zone if necessary."""
     hass.data[DOMAIN] = {}
     entities: Set[str] = set()
     zone_entries = configured_zones(hass)

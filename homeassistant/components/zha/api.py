@@ -1,7 +1,9 @@
 """Web socket API for Zigbee Home Automation devices."""
 
 import asyncio
+import collections
 import logging
+from typing import Any
 
 import voluptuous as vol
 from zigpy.types.named import EUI64
@@ -31,6 +33,7 @@ from .core.const import (
     ATTR_WARNING_DEVICE_STROBE,
     ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE,
     ATTR_WARNING_DEVICE_STROBE_INTENSITY,
+    BINDINGS,
     CHANNEL_IAS_WD,
     CLUSTER_COMMAND_SERVER,
     CLUSTER_COMMANDS_CLIENT,
@@ -162,6 +165,8 @@ SERVICE_SCHEMAS = {
         }
     ),
 }
+
+ClusterBinding = collections.namedtuple("ClusterBinding", "id endpoint_id type name")
 
 
 @websocket_api.require_admin
@@ -449,7 +454,11 @@ async def remove_group(group, zha_gateway):
                         group.group_id
                     )
                 )
-        await asyncio.gather(*tasks)
+        if tasks:
+            await asyncio.gather(*tasks)
+        else:
+            # we have members but none are tracked by ZHA for whatever reason
+            zha_gateway.application_controller.groups.pop(group.group_id)
     else:
         zha_gateway.application_controller.groups.pop(group.group_id)
 
@@ -770,6 +779,64 @@ async def websocket_unbind_devices(hass, connection, msg):
     )
 
 
+def is_cluster_binding(value: Any) -> ClusterBinding:
+    """Validate and transform a cluster binding."""
+    if not isinstance(value, collections.Mapping):
+        raise vol.Invalid("Not a cluster binding")
+    try:
+        cluster_binding = ClusterBinding(
+            name=value["name"],
+            type=value["type"],
+            id=value["id"],
+            endpoint_id=value["endpoint_id"],
+        )
+    except KeyError:
+        raise vol.Invalid("Not a cluster binding")
+
+    return cluster_binding
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/groups/bind",
+        vol.Required(ATTR_SOURCE_IEEE): EUI64.convert,
+        vol.Required(GROUP_ID): cv.positive_int,
+        vol.Required(BINDINGS): vol.All(cv.ensure_list, [is_cluster_binding]),
+    }
+)
+async def websocket_bind_group(hass, connection, msg):
+    """Directly bind a device to a group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    source_ieee = msg[ATTR_SOURCE_IEEE]
+    group_id = msg[GROUP_ID]
+    bindings = msg[BINDINGS]
+    source_device = zha_gateway.get_device(source_ieee)
+
+    await source_device.async_bind_to_group(group_id, bindings)
+
+
+@websocket_api.require_admin
+@websocket_api.async_response
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zha/groups/unbind",
+        vol.Required(ATTR_SOURCE_IEEE): EUI64.convert,
+        vol.Required(GROUP_ID): cv.positive_int,
+        vol.Required(BINDINGS): vol.All(cv.ensure_list, [is_cluster_binding]),
+    }
+)
+async def websocket_unbind_group(hass, connection, msg):
+    """Unbind a device from a group."""
+    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    source_ieee = msg[ATTR_SOURCE_IEEE]
+    group_id = msg[GROUP_ID]
+    bindings = msg[BINDINGS]
+    source_device = zha_gateway.get_device(source_ieee)
+    await source_device.async_unbind_from_group(group_id, bindings)
+
+
 async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operation):
     """Create or remove a direct zigbee binding between 2 devices."""
 
@@ -793,7 +860,7 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
             operation.name,
             target_ieee,
         )
-        zdo.debug("processing " + op_msg, *op_params)
+        zdo.debug(f"processing {op_msg}", *op_params)
 
         bind_tasks.append(
             (
@@ -1078,6 +1145,8 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_remove_groups)
     websocket_api.async_register_command(hass, websocket_add_group_members)
     websocket_api.async_register_command(hass, websocket_remove_group_members)
+    websocket_api.async_register_command(hass, websocket_bind_group)
+    websocket_api.async_register_command(hass, websocket_unbind_group)
     websocket_api.async_register_command(hass, websocket_reconfigure_node)
     websocket_api.async_register_command(hass, websocket_device_clusters)
     websocket_api.async_register_command(hass, websocket_device_cluster_attributes)

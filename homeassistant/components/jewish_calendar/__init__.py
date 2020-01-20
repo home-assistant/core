@@ -24,9 +24,15 @@ SENSOR_TYPES = {
     },
     "time": {
         "first_light": ["Alot Hashachar", "mdi:weather-sunset-up"],
-        "gra_end_shma": ['Latest time for Shm"a GR"A', "mdi:calendar-clock"],
-        "mga_end_shma": ['Latest time for Shm"a MG"A', "mdi:calendar-clock"],
+        "talit": ["Talit and Tefillin", "mdi:calendar-clock"],
+        "gra_end_shma": ['Latest time for Shma Gr"a', "mdi:calendar-clock"],
+        "mga_end_shma": ['Latest time for Shma MG"A', "mdi:calendar-clock"],
+        "gra_end_tfila": ['Latest time for Tefilla MG"A', "mdi:calendar-clock"],
+        "mga_end_tfila": ['Latest time for Tefilla Gr"a', "mdi:calendar-clock"],
+        "big_mincha": ["Mincha Gedola", "mdi:calendar-clock"],
+        "small_mincha": ["Mincha Ketana", "mdi:calendar-clock"],
         "plag_mincha": ["Plag Hamincha", "mdi:weather-sunset-down"],
+        "sunset": ["Shkia", "mdi:weather-sunset"],
         "first_stars": ["T'set Hakochavim", "mdi:weather-night"],
         "upcoming_shabbat_candle_lighting": [
             "Upcoming Shabbat Candle Lighting",

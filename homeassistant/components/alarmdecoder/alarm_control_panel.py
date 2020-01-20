@@ -35,7 +35,7 @@ ALARM_KEYPRESS_SCHEMA = vol.Schema({vol.Required(ATTR_KEYPRESS): cv.string})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up for AlarmDecoder alarm panels."""
-    device = AlarmDecoderAlarmPanel()
+    device = AlarmDecoderAlarmPanel(discovery_info["autobypass"])
     add_entities([device])
 
     def alarm_toggle_chime_handler(service):
@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AlarmDecoderAlarmPanel(AlarmControlPanel):
     """Representation of an AlarmDecoder-based alarm panel."""
 
-    def __init__(self):
+    def __init__(self, auto_bypass):
         """Initialize the alarm panel."""
         self._display = ""
         self._name = "Alarm Panel"
@@ -80,6 +80,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
         self._programming_mode = None
         self._ready = None
         self._zone_bypassed = None
+        self._auto_bypass = auto_bypass
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -158,11 +159,15 @@ class AlarmDecoderAlarmPanel(AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         if code:
+            if self._auto_bypass:
+                self.hass.data[DATA_AD].send(f"{code!s}6#")
             self.hass.data[DATA_AD].send(f"{code!s}2")
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         if code:
+            if self._auto_bypass:
+                self.hass.data[DATA_AD].send(f"{code!s}6#")
             self.hass.data[DATA_AD].send(f"{code!s}3")
 
     def alarm_arm_night(self, code=None):

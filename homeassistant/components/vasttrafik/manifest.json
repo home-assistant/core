@@ -1,10 +1,8 @@
 {
   "domain": "vasttrafik",
-  "name": "Vasttrafik",
+  "name": "Västtrafik",
   "documentation": "https://www.home-assistant.io/integrations/vasttrafik",
-  "requirements": [
-    "vtjp==0.1.14"
-  ],
+  "requirements": ["vtjp==0.1.14"],
   "dependencies": [],
   "codeowners": []
 }

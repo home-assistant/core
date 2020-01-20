@@ -1,5 +1,4 @@
 """Support for exposing Home Assistant via Zeroconf."""
-
 import ipaddress
 import logging
 import socket
@@ -15,6 +14,7 @@ from zeroconf import (
 
 from homeassistant import util
 from homeassistant.const import (
+    ATTR_NAME,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     __version__,
@@ -29,7 +29,6 @@ ATTR_HOST = "host"
 ATTR_PORT = "port"
 ATTR_HOSTNAME = "hostname"
 ATTR_TYPE = "type"
-ATTR_NAME = "name"
 ATTR_PROPERTIES = "properties"
 
 ZEROCONF_TYPE = "_home-assistant._tcp.local."

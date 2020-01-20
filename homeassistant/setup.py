@@ -55,7 +55,7 @@ async def _async_process_dependencies(
     """Ensure all dependencies are set up."""
     blacklisted = [dep for dep in dependencies if dep in loader.DEPENDENCY_BLACKLIST]
 
-    if blacklisted and name != "default_config":
+    if blacklisted and name not in ("default_config", "safe_mode"):
         _LOGGER.error(
             "Unable to set up dependencies of %s: "
             "found blacklisted dependencies: %s",
@@ -75,7 +75,7 @@ async def _async_process_dependencies(
 
     if failed:
         _LOGGER.error(
-            "Unable to set up dependencies of %s. " "Setup failed for dependencies: %s",
+            "Unable to set up dependencies of %s. Setup failed for dependencies: %s",
             name,
             ", ".join(failed),
         )
@@ -108,14 +108,14 @@ async def _async_setup_component(
         await loader.async_component_dependencies(hass, domain)
     except loader.IntegrationNotFound as err:
         _LOGGER.error(
-            "Not setting up %s because we are unable to resolve " "(sub)dependency %s",
+            "Not setting up %s because we are unable to resolve (sub)dependency %s",
             domain,
             err.domain,
         )
         return False
     except loader.CircularDependency as err:
         _LOGGER.error(
-            "Not setting up %s because it contains a circular dependency: " "%s -> %s",
+            "Not setting up %s because it contains a circular dependency: %s -> %s",
             domain,
             err.from_domain,
             err.to_domain,
@@ -134,8 +134,8 @@ async def _async_setup_component(
     # So we do it before validating config to catch these errors.
     try:
         component = integration.get_component()
-    except ImportError:
-        log_error("Unable to import component", integration.documentation)
+    except ImportError as err:
+        log_error(f"Unable to import component: {err}", integration.documentation)
         return False
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Setup failed for %s: unknown error", domain)
@@ -191,8 +191,8 @@ async def _async_setup_component(
         return False
     if result is not True:
         log_error(
-            "Integration {!r} did not return boolean if setup was "
-            "successful. Disabling component.".format(domain)
+            f"Integration {domain!r} did not return boolean if setup was "
+            "successful. Disabling component."
         )
         return False
 

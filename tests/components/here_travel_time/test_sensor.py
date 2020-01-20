@@ -387,7 +387,7 @@ async def test_public_transport(hass, requests_mock_credentials_check):
     assert sensor.attributes.get(ATTR_DURATION) == 89.16666666666667
     assert sensor.attributes.get(ATTR_DISTANCE) == 22.325
     assert sensor.attributes.get(ATTR_ROUTE) == (
-        "332 - Palmer/Schiller; 332 - Cargo Rd./Delta Cargo; " "332 - Palmer/Schiller"
+        "332 - Palmer/Schiller; 332 - Cargo Rd./Delta Cargo; 332 - Palmer/Schiller"
     )
     assert sensor.attributes.get(CONF_UNIT_SYSTEM) == "metric"
     assert sensor.attributes.get(ATTR_DURATION_IN_TRAFFIC) == 89.16666666666667

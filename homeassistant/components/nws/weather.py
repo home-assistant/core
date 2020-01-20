@@ -177,7 +177,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     websession = async_get_clientsession(hass)
     # ID request as being from HA, pynws prepends the api_key in addition
     api_key_ha = f"{api_key} homeassistant"
-    nws = SimpleNWS(latitude, longitude, api_key_ha, mode, websession)
+    nws = SimpleNWS(latitude, longitude, api_key_ha, websession)
 
     _LOGGER.debug("Setting up station: %s", station)
     try:
@@ -226,15 +226,24 @@ class NWSWeather(WeatherEntity):
             )
         else:
             self.observation = self.nws.observation
+        _LOGGER.debug("Observation: %s", self.observation)
         _LOGGER.debug("Updating forecast")
         try:
-            await self.nws.update_forecast()
+            if self.mode == "daynight":
+                await self.nws.update_forecast()
+            else:
+                await self.nws.update_forecast_hourly()
         except ERRORS as status:
             _LOGGER.error(
                 "Error updating forecast from station %s: %s", self.nws.station, status
             )
             return
-        self._forecast = self.nws.forecast
+        if self.mode == "daynight":
+            self._forecast = self.nws.forecast
+        else:
+            self._forecast = self.nws.forecast_hourly
+        _LOGGER.debug("Forecast: %s", self._forecast)
+        _LOGGER.debug("Finished updating")
 
     @property
     def attribution(self):

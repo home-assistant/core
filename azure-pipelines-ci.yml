@@ -54,7 +54,7 @@ stages:
       displayName: 'Run bandit'
     - script: |
         . venv/bin/activate
-        pre-commit run isort --all-files
+        pre-commit run isort --all-files --show-diff-on-failure
       displayName: 'Run isort'
     - script: |
         . venv/bin/activate
@@ -97,7 +97,7 @@ stages:
           pre-commit install-hooks --config .pre-commit-config-all.yaml
     - script: |
         . venv/bin/activate
-        pre-commit run black --all-files
+        pre-commit run black --all-files --show-diff-on-failure
       displayName: 'Check Black formatting'
 
 - stage: 'Tests'
