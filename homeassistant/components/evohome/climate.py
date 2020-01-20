@@ -135,19 +135,20 @@ class EvoZone(EvoChild, EvoClimateDevice):
     """Base for a Honeywell TCC Zone."""
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize a Zone."""
+        """Initialize a Honeywell TCC Zone."""
         super().__init__(evo_broker, evo_device)
 
         self._unique_id = evo_device.zoneId
         self._name = evo_device.name
         self._icon = "mdi:radiator"
 
-        self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
-        self._preset_modes = list(HA_PRESET_TO_EVO)
         if evo_broker.client_v1:
             self._precision = PRECISION_TENTHS
         else:
             self._precision = self._evo_device.setpointCapabilities["valueResolution"]
+
+        self._preset_modes = list(HA_PRESET_TO_EVO)
+        self._supported_features = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
 
     async def async_zone_svc_request(self, service: dict, data: dict) -> None:
         """Process a service request (setpoint override) for a zone."""
@@ -206,9 +207,7 @@ class EvoZone(EvoChild, EvoClimateDevice):
         """Return the current preset mode, e.g., home, away, temp."""
         if self._evo_tcs.systemModeStatus["mode"] in [EVO_AWAY, EVO_HEATOFF]:
             return TCS_PRESET_TO_HA.get(self._evo_tcs.systemModeStatus["mode"])
-        return EVO_PRESET_TO_HA.get(
-            self._evo_device.setpointStatus["setpointMode"], "follow"
-        )
+        return EVO_PRESET_TO_HA.get(self._evo_device.setpointStatus["setpointMode"])
 
     @property
     def min_temp(self) -> float:
@@ -299,14 +298,17 @@ class EvoZone(EvoChild, EvoClimateDevice):
 
 
 class EvoController(EvoClimateDevice):
-    """Base for a Honeywell TCC Controller (hub).
+    """Base for a Honeywell TCC Controller/Location.
 
-    The Controller (aka TCS, temperature control system) is the parent of all
-    the child (CH/DHW) devices.  It is also a Climate device.
+    The Controller (aka TCS, temperature control system) is the parent of all the child
+    (CH/DHW) devices. It is implemented as a Climate entity to expose the controller's
+    operating modes to HA.
+
+    It is assumed there is only one TCS per location, and they are thus synonymous.
     """
 
     def __init__(self, evo_broker, evo_device) -> None:
-        """Initialize an evohome Controller (hub)."""
+        """Initialize a Honeywell TCC Controller/Location."""
         super().__init__(evo_broker, evo_device)
 
         self._unique_id = evo_device.systemId
@@ -314,7 +316,6 @@ class EvoController(EvoClimateDevice):
         self._icon = "mdi:thermostat"
 
         self._precision = PRECISION_TENTHS
-        self._supported_features = SUPPORT_PRESET_MODE
 
         modes = [m["systemMode"] for m in evo_broker.config["allowedSystemModes"]]
         self._preset_modes = [
