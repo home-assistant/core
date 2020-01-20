@@ -217,7 +217,7 @@ async def test_user_host_already_configured(
     )
     entry.add_to_hass(hass)
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
-    fail_entry[CONF_NAME] = NAME2
+    fail_entry[CONF_NAME] = "newtestname"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -244,7 +244,7 @@ async def test_user_name_already_configured(
     entry.add_to_hass(hass)
 
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
-    fail_entry[CONF_HOST] = HOST2
+    fail_entry[CONF_HOST] = "0.0.0.0"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -325,7 +325,7 @@ async def test_import_flow_minimum_fields(
     """Test import config flow with minimum fields."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_IMPORT},
+        context={"source": "import"},
         data=vol.Schema(VIZIO_SCHEMA)(
             {CONF_HOST: HOST, CONF_DEVICE_CLASS: DEVICE_CLASS_SPEAKER}
         ),
@@ -345,7 +345,7 @@ async def test_import_flow_all_fields(
     """Test import config flow with all fields."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": SOURCE_IMPORT},
+        context={"source": "import"},
         data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
     )
 
