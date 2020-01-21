@@ -74,7 +74,10 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_abort(reason="connection_error")
 
-        if not user_input.get("name").startswith("Brother"):
+        try:
+            if not user_input.get("name").startswith("Brother"):
+                return self.async_abort(reason="not_brother_printer")
+        except AttributeError:
             return self.async_abort(reason="not_brother_printer")
 
         # Hostname is format: brother.local.
