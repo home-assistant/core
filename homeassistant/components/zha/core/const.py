@@ -96,6 +96,7 @@ DATA_ZHA_BRIDGE_ID = "zha_bridge_id"
 DATA_ZHA_CORE_EVENTS = "zha_core_events"
 DATA_ZHA_DISPATCHERS = "zha_dispatchers"
 DATA_ZHA_GATEWAY = "zha_gateway"
+DATA_ZHA_PLATFORM_LOADED = "platform_loaded"
 
 DEBUG_COMP_BELLOWS = "bellows"
 DEBUG_COMP_ZHA = "homeassistant.components.zha"
@@ -196,6 +197,7 @@ SENSOR_PRESSURE = CHANNEL_PRESSURE
 SENSOR_TEMPERATURE = CHANNEL_TEMPERATURE
 SENSOR_TYPE = "sensor_type"
 
+SIGNAL_ADD_ENTITIES = "zha_add_new_entities"
 SIGNAL_ATTR_UPDATED = "attribute_updated"
 SIGNAL_AVAILABLE = "available"
 SIGNAL_ENQUEUE_ENTITY = "enqueue_entity"

@@ -1,6 +1,7 @@
 """Fans on Zigbee Home Automation networks."""
 import functools
 import logging
+from typing import List, Tuple
 
 from homeassistant.components.fan import (
     DOMAIN,
@@ -14,12 +15,14 @@ from homeassistant.components.fan import (
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .core import typing as zha_typing
 from .core.const import (
     CHANNEL_FAN,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    ZHA_DISCOVERY_NEW,
+    SIGNAL_ENQUEUE_ENTITY,
 )
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
@@ -53,39 +56,25 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation fan from config entry."""
 
-    async def async_discover(discovery_info):
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, [discovery_info]
-        )
+    async def async_discover():
+        """Add enqueued entities."""
+        entities = [ent(*args) for ent, args in hass.data[DATA_ZHA][DOMAIN]]
+        if entities:
+            async_add_entities(entities, update_before_add=True)
+        hass.data[DATA_ZHA][DOMAIN].clear()
 
+    def async_enqueue_entity(
+        entity: zha_typing.CALLABLE_T, args: Tuple[str, zha_typing.ZhaDeviceType, List]
+    ):
+        """Stash entity for later addition."""
+        hass.data[DATA_ZHA][DOMAIN].append((entity, args))
+
+    unsub = async_dispatcher_connect(hass, SIGNAL_ADD_ENTITIES, async_discover)
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover
+        hass, f"{SIGNAL_ENQUEUE_ENTITY}_{DOMAIN}", async_enqueue_entity
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
-
-    fans = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
-    if fans is not None:
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, fans.values()
-        )
-        del hass.data[DATA_ZHA][DOMAIN]
-
-
-async def _async_setup_entities(
-    hass, config_entry, async_add_entities, discovery_infos
-):
-    """Set up the ZHA fans."""
-    entities = []
-    for discovery_info in discovery_infos:
-        zha_dev = discovery_info["zha_device"]
-        channels = discovery_info["channels"]
-
-        entity = ZHA_ENTITIES.get_entity(DOMAIN, zha_dev, channels, ZhaFan)
-        if entity:
-            entities.append(entity(**discovery_info))
-
-    if entities:
-        async_add_entities(entities, update_before_add=True)
 
 
 @STRICT_MATCH(channel_names=CHANNEL_FAN)

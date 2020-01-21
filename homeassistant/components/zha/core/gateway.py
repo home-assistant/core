@@ -31,6 +31,7 @@ from .const import (
     ATTR_NWK,
     ATTR_SIGNATURE,
     ATTR_TYPE,
+    COMPONENTS,
     CONF_BAUDRATE,
     CONF_DATABASE,
     CONF_RADIO_TYPE,
@@ -39,6 +40,7 @@ from .const import (
     DATA_ZHA,
     DATA_ZHA_BRIDGE_ID,
     DATA_ZHA_GATEWAY,
+    DATA_ZHA_PLATFORM_LOADED,
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
@@ -141,19 +143,11 @@ class ZHAGateway:
             self.application_controller.ieee
         )
 
-        init_tasks = []
-        semaphore = asyncio.Semaphore(2)
-
-        async def init_with_semaphore(coro, semaphore):
-            """Don't flood the zigbee network during initialization."""
-            async with semaphore:
-                await coro
-
-        for device in self.application_controller.devices.values():
-            init_tasks.append(
-                init_with_semaphore(self.async_device_restored(device), semaphore)
-            )
-        await asyncio.gather(*init_tasks)
+    async def async_load_devices(self) -> None:
+        """Restore ZHA devices from zigpy application state."""
+        data = self._hass.data[DATA_ZHA]
+        platforms = [data[DATA_ZHA_PLATFORM_LOADED][comp].wait() for comp in COMPONENTS]
+        await asyncio.gather(*platforms)
 
         self._initialize_groups()
 
@@ -450,42 +444,42 @@ class ZHAGateway:
         )
 
     async def _async_device_joined(self, device, zha_device):
-        discovery_infos = []
-        for endpoint_id, endpoint in device.endpoints.items():
-            async_process_endpoint(
-                self._hass,
-                self._config,
-                endpoint_id,
-                endpoint,
-                discovery_infos,
-                device,
-                zha_device,
-                True,
-            )
+        # discovery_infos = []
+        # for endpoint_id, endpoint in device.endpoints.items():
+        # async_process_endpoint(
+        #    self._hass,
+        #    self._config,
+        #    endpoint_id,
+        #    endpoint,
+        #    discovery_infos,
+        #    device,
+        #    zha_device,
+        #    True,
+        # )
 
         await zha_device.async_configure()
         # will cause async_init to fire so don't explicitly call it
         zha_device.update_available(True)
 
-        for discovery_info in discovery_infos:
-            async_dispatch_discovery_info(self._hass, True, discovery_info)
+        # for discovery_info in discovery_infos:
+        #    async_dispatch_discovery_info(self._hass, True, discovery_info)
 
     # only public for testing
     async def async_device_restored(self, device):
         """Add an existing device to the ZHA zigbee network when ZHA first starts."""
         zha_device = self._async_get_or_create_device(device)
-        discovery_infos = []
-        for endpoint_id, endpoint in device.endpoints.items():
-            async_process_endpoint(
-                self._hass,
-                self._config,
-                endpoint_id,
-                endpoint,
-                discovery_infos,
-                device,
-                zha_device,
-                False,
-            )
+        # discovery_infos = []
+        # for endpoint_id, endpoint in device.endpoints.items():
+        # async_process_endpoint(
+        #     self._hass,
+        #     self._config,
+        #     endpoint_id,
+        #     endpoint,
+        #     discovery_infos,
+        #     device,
+        #     zha_device,
+        #     False,
+        # )
 
         if zha_device.is_mains_powered:
             # the device isn't a battery powered device so we should be able
@@ -500,8 +494,8 @@ class ZHAGateway:
         else:
             await zha_device.async_initialize(from_cache=True)
 
-        for discovery_info in discovery_infos:
-            async_dispatch_discovery_info(self._hass, False, discovery_info)
+        # for discovery_info in discovery_infos:
+        #    async_dispatch_discovery_info(self._hass, False, discovery_info)
 
     async def _async_device_rejoined(self, zha_device):
         _LOGGER.debug(

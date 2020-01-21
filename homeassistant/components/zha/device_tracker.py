@@ -2,18 +2,21 @@
 import functools
 import logging
 import time
+from typing import List, Tuple
 
 from homeassistant.components.device_tracker import DOMAIN, SOURCE_TYPE_ROUTER
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .core import typing as zha_typing
 from .core.const import (
     CHANNEL_POWER_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    ZHA_DISCOVERY_NEW,
+    SIGNAL_ENQUEUE_ENTITY,
 )
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
@@ -26,50 +29,34 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation device tracker from config entry."""
 
-    async def async_discover(discovery_info):
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, [discovery_info]
-        )
+    async def async_discover():
+        """Add enqueued entities."""
+        entities = [ent(*args) for ent, args in hass.data[DATA_ZHA][DOMAIN]]
+        if entities:
+            async_add_entities(entities, update_before_add=True)
+        hass.data[DATA_ZHA][DOMAIN].clear()
 
+    def async_enqueue_entity(
+        entity: zha_typing.CALLABLE_T, args: Tuple[str, zha_typing.ZhaDeviceType, List]
+    ):
+        """Stash entity for later addition."""
+        hass.data[DATA_ZHA][DOMAIN].append((entity, args))
+
+    unsub = async_dispatcher_connect(hass, SIGNAL_ADD_ENTITIES, async_discover)
+    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover
+        hass, f"{SIGNAL_ENQUEUE_ENTITY}_{DOMAIN}", async_enqueue_entity
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
-
-    device_trackers = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
-    if device_trackers is not None:
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, device_trackers.values()
-        )
-        del hass.data[DATA_ZHA][DOMAIN]
-
-
-async def _async_setup_entities(
-    hass, config_entry, async_add_entities, discovery_infos
-):
-    """Set up the ZHA device trackers."""
-    entities = []
-    for discovery_info in discovery_infos:
-        zha_dev = discovery_info["zha_device"]
-        channels = discovery_info["channels"]
-
-        entity = ZHA_ENTITIES.get_entity(
-            DOMAIN, zha_dev, channels, ZHADeviceScannerEntity
-        )
-        if entity:
-            entities.append(entity(**discovery_info))
-
-    if entities:
-        async_add_entities(entities, update_before_add=True)
 
 
 @STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
 class ZHADeviceScannerEntity(ScannerEntity, ZhaEntity):
     """Represent a tracked device."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA device tracker."""
-        super().__init__(**kwargs)
+        super().__init__(unique_id, zha_device, channels, **kwargs)
         self._battery_channel = self.cluster_channels.get(CHANNEL_POWER_CONFIGURATION)
         self._connected = False
         self._keepalive_interval = 60
