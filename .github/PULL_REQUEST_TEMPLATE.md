@@ -74,7 +74,7 @@
 
 If user exposed functionality or configuration variables are added/changed:
 
-- [ ] Documentation added/updated in [home-assistant.io][docs-repository]
+- [ ] Documentation added/updated for [www.home-assistant.io][docs-repository]
 
 If the code communicates with devices, web services, or third-party tools:
 
