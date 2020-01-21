@@ -25,11 +25,7 @@ SIGNAL_UPDATE_ENTITY = "magichome_update"
 SERVICE_FORCE_UPDATE = "force_update"
 SERVICE_PULL_DEVICES = "pull_devices"
 
-MAGICHOME_TYPE_TO_HA = {
-    "light": "light",
-    "scene": "scene",
-    "switch": "switch",
-}
+MAGICHOME_TYPE_TO_HA = ["light", "scene", "switch"]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -67,13 +63,15 @@ def setup(hass, config):
                 dev_type in MAGICHOME_TYPE_TO_HA
                 and device.object_id() not in hass.data[DOMAIN]["entities"]
             ):
-                ha_type = MAGICHOME_TYPE_TO_HA[dev_type]
-                if ha_type not in device_type_list:
-                    device_type_list[ha_type] = []
-                device_type_list[ha_type].append(device.object_id())
+                # ha_type = MAGICHOME_TYPE_TO_HA[dev_type]
+                if dev_type not in device_type_list:
+                    device_type_list[dev_type] = []
+                device_type_list[dev_type].append(device.object_id())
                 hass.data[DOMAIN]["entities"][device.object_id()] = None
-        for ha_type, dev_ids in device_type_list.items():
-            discovery.load_platform(hass, ha_type, DOMAIN, {"dev_ids": dev_ids}, config)
+        for dev_type, dev_ids in device_type_list.items():
+            discovery.load_platform(
+                hass, dev_type, DOMAIN, {"dev_ids": dev_ids}, config
+            )
 
     device_list = magichome.get_all_devices()
     load_devices(device_list)
