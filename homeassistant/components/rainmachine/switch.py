@@ -95,11 +95,6 @@ VEGETATION_MAP = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up RainMachine switches sensor based on the old way."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine switches based on a config entry."""
     rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]

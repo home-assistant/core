@@ -50,11 +50,6 @@ TREND_INCREASING = "Increasing"
 TREND_SUBSIDING = "Subsiding"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up IQVIA sensors based on the old way."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up IQVIA sensors based on a config entry."""
     iqvia = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
