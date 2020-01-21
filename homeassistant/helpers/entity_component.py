@@ -6,17 +6,15 @@ import logging
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_ENTITY_NAMESPACE,
-    CONF_SCAN_INTERVAL,
-    ENTITY_MATCH_ALL,
-)
+from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
-from homeassistant.helpers.config_validation import make_entity_service_schema
-from homeassistant.helpers.service import async_extract_entity_ids
+from homeassistant.helpers import (
+    config_per_platform,
+    config_validation as cv,
+    discovery,
+    service,
+)
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 
@@ -166,39 +164,27 @@ class EntityComponent:
         await platform.async_reset()
         return True
 
-    async def async_extract_from_service(self, service, expand_group=True):
+    async def async_extract_from_service(self, service_call, expand_group=True):
         """Extract all known and available entities from a service call.
 
         Will return an empty list if entities specified but unknown.
 
         This method must be run in the event loop.
         """
-        data_ent_id = service.data.get(ATTR_ENTITY_ID)
-
-        if data_ent_id is None:
-            return []
-
-        if data_ent_id == ENTITY_MATCH_ALL:
-            return [entity for entity in self.entities if entity.available]
-
-        entity_ids = await async_extract_entity_ids(self.hass, service, expand_group)
-        return [
-            entity
-            for entity in self.entities
-            if entity.available and entity.entity_id in entity_ids
-        ]
+        return await service.async_extract_entities(
+            self.hass, self.entities, service_call, expand_group
+        )
 
     @callback
     def async_register_entity_service(self, name, schema, func, required_features=None):
         """Register an entity service."""
         if isinstance(schema, dict):
-            schema = make_entity_service_schema(schema)
+            schema = cv.make_entity_service_schema(schema)
 
         async def handle_service(call):
             """Handle the service."""
-            service_name = f"{self.domain}.{name}"
             await self.hass.helpers.service.entity_service_call(
-                self._platforms.values(), func, call, service_name, required_features
+                self._platforms.values(), func, call, required_features
             )
 
         self.hass.services.async_register(self.domain, name, handle_service, schema)

@@ -23,7 +23,6 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.location import distance
 
 from .const import (
-    CONF_ACCOUNT_NAME,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
@@ -100,7 +99,6 @@ ACCOUNT_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_ACCOUNT_NAME): cv.string,
         vol.Optional(CONF_MAX_INTERVAL, default=DEFAULT_MAX_INTERVAL): cv.positive_int,
         vol.Optional(
             CONF_GPS_ACCURACY_THRESHOLD, default=DEFAULT_GPS_ACCURACY_THRESHOLD
@@ -140,20 +138,17 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    account_name = entry.data.get(CONF_ACCOUNT_NAME)
     max_interval = entry.data[CONF_MAX_INTERVAL]
     gps_accuracy_threshold = entry.data[CONF_GPS_ACCURACY_THRESHOLD]
+
+    # For backwards compat
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=username)
 
     icloud_dir = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     account = IcloudAccount(
-        hass,
-        username,
-        password,
-        icloud_dir,
-        account_name,
-        max_interval,
-        gps_accuracy_threshold,
+        hass, username, password, icloud_dir, max_interval, gps_accuracy_threshold,
     )
     await hass.async_add_executor_job(account.setup)
     hass.data[DOMAIN][username] = account
@@ -254,7 +249,6 @@ class IcloudAccount:
         username: str,
         password: str,
         icloud_dir: Store,
-        account_name: str,
         max_interval: int,
         gps_accuracy_threshold: int,
     ):
@@ -262,7 +256,6 @@ class IcloudAccount:
         self.hass = hass
         self._username = username
         self._password = password
-        self._name = account_name or slugify(username.partition("@")[0])
         self._fetch_interval = max_interval
         self._max_interval = max_interval
         self._gps_accuracy_threshold = gps_accuracy_threshold
@@ -435,11 +428,6 @@ class IcloudAccount:
         return result
 
     @property
-    def name(self) -> str:
-        """Return the account name."""
-        return self._name
-
-    @property
     def username(self) -> str:
         """Return the account username."""
         return self._username
@@ -471,7 +459,6 @@ class IcloudDevice:
     def __init__(self, account: IcloudAccount, device: AppleDevice, status):
         """Initialize the iCloud device."""
         self._account = account
-        account_name = account.name
 
         self._device = device
         self._status = status
@@ -494,7 +481,6 @@ class IcloudDevice:
 
         self._attrs = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            CONF_ACCOUNT_NAME: account_name,
             ATTR_ACCOUNT_FETCH_INTERVAL: self._account.fetch_interval,
             ATTR_DEVICE_NAME: self._device_model,
             ATTR_DEVICE_STATUS: None,

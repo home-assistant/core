@@ -9,6 +9,7 @@
         },
         "step": {
             "user": {
+                "description": "Entrez votre DSN Sentry",
                 "title": "Sentry"
             }
         },

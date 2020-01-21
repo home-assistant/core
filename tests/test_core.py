@@ -881,17 +881,17 @@ class TestConfig(unittest.TestCase):
 
     def test_path_with_file(self):
         """Test get_config_path method."""
-        self.config.config_dir = "/tmp/ha-config"
-        assert "/tmp/ha-config/test.conf" == self.config.path("test.conf")
+        self.config.config_dir = "/test/ha-config"
+        assert "/test/ha-config/test.conf" == self.config.path("test.conf")
 
     def test_path_with_dir_and_file(self):
         """Test get_config_path method."""
-        self.config.config_dir = "/tmp/ha-config"
-        assert "/tmp/ha-config/dir/test.conf" == self.config.path("dir", "test.conf")
+        self.config.config_dir = "/test/ha-config"
+        assert "/test/ha-config/dir/test.conf" == self.config.path("dir", "test.conf")
 
     def test_as_dict(self):
         """Test as dict."""
-        self.config.config_dir = "/tmp/ha-config"
+        self.config.config_dir = "/test/ha-config"
         expected = {
             "latitude": 0,
             "longitude": 0,
@@ -900,7 +900,7 @@ class TestConfig(unittest.TestCase):
             "location_name": "Home",
             "time_zone": "UTC",
             "components": set(),
-            "config_dir": "/tmp/ha-config",
+            "config_dir": "/test/ha-config",
             "whitelist_external_dirs": set(),
             "version": __version__,
             "config_source": "default",

@@ -15,17 +15,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a sensor for a Ring device."""
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
 
-    # Makes a ton of requests. We will make this a config entry option in the future
-    wifi_enabled = False
-
     sensors = []
 
     for device_type in ("chimes", "doorbots", "authorized_doorbots", "stickup_cams"):
         for sensor_type in SENSOR_TYPES:
             if device_type not in SENSOR_TYPES[sensor_type][1]:
-                continue
-
-            if not wifi_enabled and sensor_type.startswith("wifi_"):
                 continue
 
             for device in devices[device_type]:
@@ -123,6 +117,12 @@ class HealthDataRingSensor(RingSensor):
     def _health_update_callback(self, _health_data):
         """Call update method."""
         self.async_write_ha_state()
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        # These sensors are data hungry and not useful. Disable by default.
+        return False
 
     @property
     def state(self):

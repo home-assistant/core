@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Account already configured"
+            "already_configured": "Account already configured"
         },
         "error": {
             "login": "Login error: please check your email & password",
