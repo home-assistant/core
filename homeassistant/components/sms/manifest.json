@@ -1,0 +1,8 @@
+{
+  "domain": "sms",
+  "name": "SMS",
+  "documentation": "https://github.com/ocalvo/ha-sms/blob/master/README.md",
+  "requirements": ["python-gammu==2.12"],
+  "dependencies": [],
+  "codeowners": ["@ocalvo"]
+}
