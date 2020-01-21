@@ -159,7 +159,10 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         self._source_list = {}
         conf_sources = self._customize[CONF_SOURCES]
 
+        found_live_tv = False
         for app in self._client.apps.values():
+            if app["id"] == LIVE_TV_APP_ID:
+                found_live_tv = True
             if app["id"] == self._client.current_appId:
                 self._current_source = app["title"]
                 self._source_list[app["title"]] = app
@@ -172,6 +175,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
                 self._source_list[app["title"]] = app
 
         for source in self._client.inputs.values():
+            if source["appId"] == LIVE_TV_APP_ID:
+                found_live_tv = True
             if source["appId"] == self._client.current_appId:
                 self._current_source = source["label"]
                 self._source_list[source["label"]] = source
@@ -181,6 +186,20 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
                 or any(source["label"].find(word) != -1 for word in conf_sources)
             ):
                 self._source_list[source["label"]] = source
+
+        # special handling of live tv since this might not appear in the app or input lists in some cases
+        if not found_live_tv:
+            app = {"id": LIVE_TV_APP_ID, "title": "Live TV"}
+            if LIVE_TV_APP_ID == self._client.current_appId:
+                self._current_source = app["title"]
+                self._source_list["Live TV"] = app
+            elif (
+                not conf_sources
+                or app["id"] in conf_sources
+                or any(word in app["title"] for word in conf_sources)
+                or any(word in app["id"] for word in conf_sources)
+            ):
+                self._source_list["Live TV"] = app
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self):
