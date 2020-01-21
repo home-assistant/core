@@ -350,7 +350,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
             partial_match_channel_id = None
             perfect_match_channel_id = None
 
-            for channel in await self._client.get_channels():
+            for channel in self._client.channels:
                 if media_id == channel["channelNumber"]:
                     perfect_match_channel_id = channel["channelId"]
                     continue
