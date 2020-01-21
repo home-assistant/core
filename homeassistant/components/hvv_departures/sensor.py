@@ -2,6 +2,8 @@
 from datetime import datetime, timedelta
 import logging
 
+from pygti.gti import GTI
+
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -29,16 +31,17 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
     data = HVVDepartureData(hass, config_entry)
 
-    async_add_devices([HVVDepartureSensor(hass, config_entry.data, data)], True)
+    async_add_devices([HVVDepartureSensor(hass, config_entry, data)], True)
 
 
 class HVVDepartureSensor(Entity):
     """HVVDepartureSensor class."""
 
-    def __init__(self, hass, config, data):
+    def __init__(self, hass, entry, data):
         """Initialize."""
         self.hass = hass
-        self.config = config
+        self.entry = entry
+        self.config = self.entry.data
         self.station_name = self.config["station"]["name"]
         self.data = data
         self.attr = {}
@@ -88,14 +91,19 @@ class HVVDepartureSensor(Entity):
         station_id = self.config["station"]["id"]
         station_type = self.config["station"]["type"]
 
-        return f"{DOMAIN}-{station_id}-{station_type}"
+        return f"{DOMAIN}-{self.entry.entry_id}-{station_id}-{station_type}"
 
     @property
     def device_info(self):
         """Return the device info for this sensor."""
         return {
             "identifiers": {
-                (DOMAIN, self.config["station"]["id"], self.config["station"]["type"])
+                (
+                    DOMAIN,
+                    self.entry.entry_id,
+                    self.config["station"]["id"],
+                    self.config["station"]["type"],
+                )
             },
             "name": self.config["station"]["name"],
             "manufacturer": "HVV",
@@ -136,6 +144,9 @@ class HVVDepartureData:
         self.entry = entry
         self.config = self.entry.data
         self.last_update = None
+        self.gti = GTI(
+            self.config["username"], self.config["password"], self.config["host"]
+        )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -152,9 +163,7 @@ class HVVDepartureData:
                 "filter": self.config["filter"],
             }
 
-            self.data = self.hass.data[DOMAIN][self.entry.entry_id].departureList(
-                payload
-            )
+            self.data = self.gti.departureList(payload)
 
             self.last_update = datetime.today().strftime("%Y-%m-%d %H:%M")
         except Exception as error:

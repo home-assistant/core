@@ -2,6 +2,8 @@
 from datetime import datetime, timedelta
 import logging
 
+from pygti.gti import GTI
+
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorDevice,
@@ -39,7 +41,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
                     devices.append(
                         HVVElevatorBinarySensor(
                             hass,
-                            config_entry.data,
+                            config_entry,
                             data,
                             elevator.get("lines", []),
                             elevator["label"],
@@ -53,10 +55,11 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 class HVVElevatorBinarySensor(BinarySensorDevice):
     """HVV elevator binary sensor class."""
 
-    def __init__(self, hass, config, data, lines, label, description):
+    def __init__(self, hass, entry, data, lines, label, description):
         """Inizialize."""
         self.hass = hass
-        self.config = config
+        self.entry = entry
+        self.config = entry.data
         self.data = data
         self.lines = lines
         self.label = label
@@ -92,14 +95,21 @@ class HVVElevatorBinarySensor(BinarySensorDevice):
 
         lines = "-".join(self.lines)
 
-        return f"{self.label}-{self.station_name}-{lines}"
+        return (
+            f"{DOMAIN}-{self.entry.entry_id}-{self.label}-{self.station_name}-{lines}"
+        )
 
     @property
     def device_info(self):
         """Return the device info for this sensor."""
         return {
             "identifiers": {
-                (DOMAIN, self.config["station"]["id"], self.config["station"]["type"])
+                (
+                    DOMAIN,
+                    self.entry.entry_id,
+                    self.config["station"]["id"],
+                    self.config["station"]["type"],
+                )
             },
             "name": self.config["station"]["name"],
             "manufacturer": "HVV",
@@ -141,15 +151,17 @@ class HVVElevatorData:
         self.config = self.entry.data
         self.last_update = None
         self.data = {}
+        self.gti = GTI(
+            self.config["username"], self.config["password"], self.config["host"]
+        )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update hvv station data."""
 
         try:
-            self.data = self.hass.data[DOMAIN][self.entry.entry_id].stationInformation(
-                {"station": self.config["station"]}
-            )
+
+            self.data = self.gti.stationInformation({"station": self.config["station"]})
             self.last_update = datetime.today().strftime("%Y-%m-%d %H:%M")
         except Exception as error:
             _LOGGER.error("Error occurred while fetching data: %r", error)

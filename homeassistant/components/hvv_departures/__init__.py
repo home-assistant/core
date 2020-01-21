@@ -1,7 +1,6 @@
 """The HVV integration."""
 import asyncio
 
-from pygti.gti import GTI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -22,11 +21,6 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up HVV from a config entry."""
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][entry.entry_id] = GTI(
-        entry.data["username"], entry.data["password"], entry.data["host"]
-    )
-
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
@@ -45,7 +39,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok

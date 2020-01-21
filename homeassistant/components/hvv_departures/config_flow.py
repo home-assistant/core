@@ -43,10 +43,7 @@ class GTIHub:
         """Test if we can authenticate with the host."""
 
         return_code = self.gti.init().get("returnCode")
-        if return_code == "OK":
-            return
-
-        raise InvalidAuth
+        return return_code == "OK"
 
 
 async def validate_input(hass: core.HomeAssistant, hub: GTIHub):
@@ -76,7 +73,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     user_input["host"], user_input["username"], user_input["password"]
                 )
 
-                await validate_input(self.hass, self.hub)
+                if not await self.hub.authenticate():
+                    raise InvalidAuth
 
                 self.data = user_input
 
