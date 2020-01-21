@@ -63,11 +63,6 @@ async def setup_platform(hass, config_entry, config):
     await hass.async_block_till_done()
 
 
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await media_player.async_setup_platform(None, None, None)
-
-
 async def test_state_attributes(hass, config_entry, config, controller):
     """Tests the state attributes."""
     await setup_platform(hass, config_entry, config)

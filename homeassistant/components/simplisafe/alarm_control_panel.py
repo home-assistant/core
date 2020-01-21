@@ -57,11 +57,6 @@ VOLUME_STRING_MAP = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up a SimpliSafe alarm control panel based on existing config."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a SimpliSafe alarm control panel based on a config entry."""
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
