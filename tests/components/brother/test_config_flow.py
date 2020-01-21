@@ -221,7 +221,6 @@ async def test_zeroconf_confirm_create_entry(hass):
         flow = config_flow.BrotherConfigFlow()
         flow.hass = hass
         flow.context = {"source": SOURCE_ZEROCONF}
-        flow.host = "example.local"
 
         result = await flow.async_step_zeroconf(
             {"hostname": "example.local.", "name": "Brother Printer"}
