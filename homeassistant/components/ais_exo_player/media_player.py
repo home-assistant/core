@@ -3,39 +3,39 @@ Support to interact with a ExoPlayer on Android via HTTO and MQTT.
 
 """
 import asyncio
-import logging
 import json
-import homeassistant.util.dt as dt_util
+import logging
+from typing import Optional
+
 import homeassistant.components.ais_dom.ais_global as ais_global
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
     SUPPORT_PLAY,
     SUPPORT_PLAY_MEDIA,
-    MediaPlayerDevice,
+    SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SEEK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_SELECT_SOURCE,
     SUPPORT_SELECT_SOUND_MODE,
+    SUPPORT_SELECT_SOURCE,
+    SUPPORT_SHUFFLE_SET,
+    SUPPORT_STOP,
+    MediaPlayerDevice,
 )
 from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
-from typing import Optional
 from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+    CONF_NAME,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
-    CONF_NAME,
-    CONF_IP_ADDRESS,
-    CONF_MAC,
 )
-
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,6 +56,8 @@ SUPPORT_EXO = (
 )
 
 DEFAULT_NAME = "AIS Dom Odtwarzacz"
+ATTR_AIS_GROUP = "ais_exo_player_group"
+ATTR_MASTER = "master"
 
 
 @asyncio.coroutine
@@ -68,12 +70,60 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     else:
         name = config.get(CONF_NAME)
         _ip = config.get(CONF_IP_ADDRESS)
-        # TODO get local mac address
-        _mac = "1111111111111111111"
+        if _ip == "localhost":
+            _mac = "1111111111111111111"
+        else:
+            _mac = config.get(CONF_IP_ADDRESS).replace(".", "")
 
     device = ExoPlayerDevice(_ip, _mac, name)
     _LOGGER.info("device: " + str(device))
     async_add_devices([device], True)
+
+    def _update_state():
+        # to keep groups in sync with player
+        state = hass.states.get("media_player.wbudowany_glosnik").state
+        attributes = hass.states.get("media_player.wbudowany_glosnik").attributes
+        new_attr = {}
+        list_idx = -1
+        for itm in attributes:
+            list_idx = list_idx + 1
+            new_attr[list_idx] = attributes[itm]
+        new_attr["ais_exo_player_group"] = ais_global.G_SPEAKERS_GROUP_LIST
+        hass.states.async_set("media_player.wbudowany_glosnik", state, new_attr)
+
+    # register services
+    @asyncio.coroutine
+    def join(service):
+        def j(entity_id):
+            if entity_id not in ais_global.G_SPEAKERS_GROUP_LIST:
+                ais_global.G_SPEAKERS_GROUP_LIST.append(entity_id)
+
+        player = service.data["entity_id"]
+        if type(player) is str:
+            j(player)
+        if type(player) is list:
+            for e in player:
+                j(e)
+        _update_state()
+
+    @asyncio.coroutine
+    def unjoin(service):
+        player = None
+        if "entity_id" in service.data:
+            if type(service.data["entity_id"]) is str:
+                player = service.data["entity_id"]
+            if type(service.data["entity_id"]) is list:
+                player = None
+
+        if player is None:
+            ais_global.G_SPEAKERS_GROUP_LIST = ["media_player.wbudowany_glosnik"]
+        else:
+            if player in ais_global.G_SPEAKERS_GROUP_LIST:
+                ais_global.G_SPEAKERS_GROUP_LIST.remove(player)
+        _update_state()
+
+    hass.services.async_register("ais_exo_player", "join", join)
+    hass.services.async_register("ais_exo_player", "unjoin", unjoin)
 
 
 class ExoPlayerDevice(MediaPlayerDevice):
@@ -136,13 +186,17 @@ class ExoPlayerDevice(MediaPlayerDevice):
         self._shuffle = False
         self._assistant_audio = False
 
+        if device_ip == "localhost":
+            self._is_master = True
+        else:
+            self._is_master = False
+
     @asyncio.coroutine
     def async_added_to_hass(self):
         pass
 
     def _fetch_status(self):
         """Fetch status from ExoPlayer."""
-        _LOGGER.debug("_fetch_status")
         # INFO - we are not fetching the status from player
         # exp player and spotify is pushing the status to asystent domowy
 
@@ -327,11 +381,6 @@ class ExoPlayerDevice(MediaPlayerDevice):
         return SUPPORT_EXO
 
     @property
-    def device_ip(self):
-        """The device IP Address"""
-        return self._device_ip
-
-    @property
     def media_content_id(self):
         """The media content id"""
         return self._media_content_id
@@ -354,6 +403,15 @@ class ExoPlayerDevice(MediaPlayerDevice):
         """Return the specific state attributes of the player."""
         attr = {"device_ip": self._device_ip}
         # attr['device_mac'] = self._device_mac
+        """List members in group."""
+        attr[ATTR_AIS_GROUP] = ais_global.G_SPEAKERS_GROUP_LIST
+
+        if self._device_ip == "localhost":
+            attr["friendly_name"] = "Podłączony głośnik"
+        else:
+            attr["friendly_name"] = self._name
+        attr[ATTR_MASTER] = self._is_master
+
         return attr
 
     @property
@@ -518,7 +576,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
                     {"key": "setAudioInfo", "val": j_media_info, "ip": self._device_ip},
                 )
             except Exception as e:
-                _LOGGER.info("problem to publish setAudioInfo: " + str(e))
+                _LOGGER.debug("problem to publish setAudioInfo: " + str(e))
 
             # go to media player context on localhost
             if self._device_ip == "localhost":

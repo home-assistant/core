@@ -216,15 +216,15 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the discovery component.
         """
         self.bridge_id = normalize_bridge_id(user_input[CONF_SERIAL])
-        gateway = self.hass.data.get(DOMAIN, {}).get(self.bridge_id)
 
-        if gateway:
-            return self._update_entry(
-                gateway.config_entry,
-                user_input[CONF_HOST],
-                user_input[CONF_PORT],
-                user_input[CONF_API_KEY],
-            )
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if self.bridge_id == entry.unique_id:
+                return self._update_entry(
+                    entry,
+                    user_input[CONF_HOST],
+                    user_input[CONF_PORT],
+                    user_input[CONF_API_KEY],
+                )
 
         await self.async_set_unique_id(self.bridge_id)
         self._hassio_discovery = user_input
