@@ -31,9 +31,9 @@ DO NOT DELETE ANY TEXT from this template! Otherwise, your issue may be closed w
 
 ## Problem-relevant `configuration.yaml`
 <!--
-    An example configuration that caused the problem for you. Fill this out even
-    if it seems unimportant to you. Please be sure to remove personal information
-    like password other credentials.
+  An example configuration that caused the problem for you. Fill this out even
+  if it seems unimportant to you. Please be sure to remove personal information
+  like passwords, private URLs and other credentials.
 -->
 
 ```yaml
