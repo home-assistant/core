@@ -345,10 +345,6 @@ class ZDOChannel(LogMixin):
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
-        entry = self._zha_device.gateway.zha_storage.async_get_or_create(
-            self._zha_device
-        )
-        self.debug("entry loaded from storage: %s", entry)
         self._status = ChannelStatus.INITIALIZED
 
     async def async_configure(self):
