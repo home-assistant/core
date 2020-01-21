@@ -1,7 +1,7 @@
 {
   "domain": "sms",
   "name": "SMS",
-  "documentation": "https://github.com/ocalvo/ha-sms/blob/master/README.md",
+  "documentation": "https://www.home-assistant.io/integrations/sms",
   "requirements": ["python-gammu==2.12"],
   "dependencies": [],
   "codeowners": ["@ocalvo"]
