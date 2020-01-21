@@ -64,8 +64,8 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self.user_schema = None
         self.import_schema = None
+        self.user_schema = None
         self._must_show_form = None
 
     async def async_step_user(
