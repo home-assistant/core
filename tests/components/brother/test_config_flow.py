@@ -129,13 +129,14 @@ async def test_show_zeroconf_form(hass):
         flow.hass = hass
         flow.context = {"source": SOURCE_ZEROCONF}
 
-        result = await flow.async_step_zeroconf(
-            {"hostname": "example.local.", "name": "Brother Printer"}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={"hostname": "example.local.", "name": "Brother Printer"},
         )
 
-        assert flow.context["title_placeholders"]["model"] == "HL-L2340DW"
-        assert flow.context["title_placeholders"]["serial_number"] == "0123456789"
-        assert flow.context[CONF_HOST] == "example.local"
+        assert result["description_placeholders"]["model"] == "HL-L2340DW"
+        assert result["description_placeholders"]["serial_number"] == "0123456789"
         assert result["step_id"] == "zeroconf_confirm"
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
@@ -146,7 +147,9 @@ async def test_zeroconf_no_data(hass):
     flow.hass = hass
     flow.context = {"source": SOURCE_ZEROCONF}
 
-    result = await flow.async_step_zeroconf()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_ZEROCONF}
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "connection_error"
@@ -162,8 +165,10 @@ async def test_zeroconf_not_brother_printer_error(hass):
         flow.hass = hass
         flow.context = {"source": SOURCE_ZEROCONF}
 
-        result = await flow.async_step_zeroconf(
-            {"hostname": "example.local.", "name": "Another Printer"}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={"hostname": "example.local.", "name": "Another Printer"},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -177,8 +182,10 @@ async def test_zeroconf_snmp_error(hass):
         flow.hass = hass
         flow.context = {"source": SOURCE_ZEROCONF}
 
-        result = await flow.async_step_zeroconf(
-            {"hostname": "example.local.", "name": "Brother Printer"}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={"hostname": "example.local.", "name": "Brother Printer"},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -205,24 +212,6 @@ async def test_zeroconf_device_exists_abort(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_show_zeroconf_confirm_form(hass):
-    """Test that the zeroconf confirmation form is served."""
-    with patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("brother_printer_data.json")),
-    ):
-        flow = config_flow.BrotherConfigFlow()
-        flow.hass = hass
-        flow.context = {"source": SOURCE_ZEROCONF}
-
-        result = await flow.async_step_zeroconf_confirm()
-
-        assert result["description_placeholders"]["model"] == "HL-L2340DW"
-        assert result["description_placeholders"]["serial_number"] == "0123456789"
-        assert result["step_id"] == "zeroconf_confirm"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-
 async def test_zeroconf_confirm_create_entry(hass):
     """Test zeroconf confirmation and create config entry."""
     with patch(
@@ -231,7 +220,17 @@ async def test_zeroconf_confirm_create_entry(hass):
     ):
         flow = config_flow.BrotherConfigFlow()
         flow.hass = hass
-        flow.context = {"source": SOURCE_ZEROCONF, CONF_HOST: "example.local"}
+        flow.context = {"source": SOURCE_ZEROCONF}
+        flow.host = "example.local"
+
+        result = await flow.async_step_zeroconf(
+            {"hostname": "example.local.", "name": "Brother Printer"}
+        )
+
+        assert flow.context["title_placeholders"]["model"] == "HL-L2340DW"
+        assert flow.context["title_placeholders"]["serial_number"] == "0123456789"
+        assert result["step_id"] == "zeroconf_confirm"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
         result = await flow.async_step_zeroconf_confirm(user_input={CONF_TYPE: "laser"})
 
@@ -239,18 +238,3 @@ async def test_zeroconf_confirm_create_entry(hass):
         assert result["title"] == "HL-L2340DW 0123456789"
         assert result["data"][CONF_HOST] == "example.local"
         assert result["data"][CONF_TYPE] == "laser"
-
-
-async def test_zeroconf_confirm_snmp_error(hass):
-    """Test we abort zeroconf flow on SNMP error."""
-    with patch("brother.Brother._get_data", side_effect=SnmpError("error")):
-        flow = config_flow.BrotherConfigFlow()
-        flow.hass = hass
-        flow.context = {"source": SOURCE_ZEROCONF}
-
-        result = await flow.async_step_zeroconf_confirm(
-            {"hostname": "example.local.", "name": "Brother Printer"}
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-        assert result["reason"] == "connection_error"
