@@ -44,28 +44,23 @@ class AsyncMediaPlayer(mp.MediaPlayerDevice):
             | mp.const.SUPPORT_TURN_ON
         )
 
-    @asyncio.coroutine
-    def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._volume = volume
 
-    @asyncio.coroutine
-    def async_media_play(self):
+    async def async_media_play(self):
         """Send play command."""
         self._state = STATE_PLAYING
 
-    @asyncio.coroutine
-    def async_media_pause(self):
+    async def async_media_pause(self):
         """Send pause command."""
         self._state = STATE_PAUSED
 
-    @asyncio.coroutine
-    def async_turn_on(self):
+    async def async_turn_on(self):
         """Turn the media player on."""
         self._state = STATE_ON
 
-    @asyncio.coroutine
-    def async_turn_off(self):
+    async def async_turn_off(self):
         """Turn the media player off."""
         self._state = STATE_OFF
 
@@ -129,21 +124,19 @@ class SyncMediaPlayer(mp.MediaPlayerDevice):
         else:
             self._state = STATE_OFF
 
-    @asyncio.coroutine
-    def async_media_play_pause(self):
+    async def async_media_play_pause(self):
         """Create a coroutine to wrap the future returned by ABC.
 
         This allows the run_coroutine_threadsafe helper to be used.
         """
-        yield from super().async_media_play_pause()
+        await super().async_media_play_pause()
 
-    @asyncio.coroutine
-    def async_toggle(self):
+    async def async_toggle(self):
         """Create a coroutine to wrap the future returned by ABC.
 
         This allows the run_coroutine_threadsafe helper to be used.
         """
-        yield from super().async_toggle()
+        await super().async_toggle()
 
 
 class TestAsyncMediaPlayer(unittest.TestCase):

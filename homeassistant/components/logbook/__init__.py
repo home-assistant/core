@@ -195,7 +195,7 @@ def humanify(hass, events):
 
     Will try to group events if possible:
     - if 2+ sensor updates in GROUP_BY_MINUTES, show last
-    - if home assistant stop and start happen in same minute call it restarted
+    - if Home Assistant stop and start happen in same minute call it restarted
     """
     domain_prefixes = tuple(f"{dom}." for dom in CONTINUOUS_DOMAINS)
 

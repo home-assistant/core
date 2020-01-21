@@ -5,6 +5,7 @@ from typing import Any, Dict
 from homematicip.aio.device import (
     AsyncBrandSwitchMeasuring,
     AsyncFullFlushSwitchMeasuring,
+    AsyncHeatingSwitch2,
     AsyncMultiIOBox,
     AsyncOpenCollector8Module,
     AsyncPlugableSwitch,
@@ -12,7 +13,7 @@ from homematicip.aio.device import (
     AsyncPrintedCircuitBoardSwitch2,
     AsyncPrintedCircuitBoardSwitchBattery,
 )
-from homematicip.aio.group import AsyncSwitchingGroup
+from homematicip.aio.group import AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
@@ -55,6 +56,9 @@ async def async_setup_entry(
         elif isinstance(device, AsyncOpenCollector8Module):
             for channel in range(1, 9):
                 entities.append(HomematicipMultiSwitch(hap, device, channel))
+        elif isinstance(device, AsyncHeatingSwitch2):
+            for channel in range(1, 3):
+                entities.append(HomematicipMultiSwitch(hap, device, channel))
         elif isinstance(device, AsyncMultiIOBox):
             for channel in range(1, 3):
                 entities.append(HomematicipMultiSwitch(hap, device, channel))
@@ -63,7 +67,7 @@ async def async_setup_entry(
                 entities.append(HomematicipMultiSwitch(hap, device, channel))
 
     for group in hap.home.groups:
-        if isinstance(group, AsyncSwitchingGroup):
+        if isinstance(group, (AsyncExtendedLinkedSwitchingGroup, AsyncSwitchingGroup)):
             entities.append(HomematicipGroupSwitch(hap, group))
 
     if entities:

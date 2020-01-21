@@ -1,8 +1,10 @@
 """Support for tracking for iCloud devices."""
 import logging
+from typing import Dict
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
@@ -13,7 +15,7 @@ from .const import (
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
     DOMAIN,
-    TRACKER_UPDATE,
+    SERVICE_UPDATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,13 +28,15 @@ async def async_setup_scanner(
     pass
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+):
     """Configure a dispatcher connection based on a config entry."""
     username = entry.data[CONF_USERNAME]
 
     for device in hass.data[DOMAIN][username].devices.values():
         if device.location is None:
-            _LOGGER.debug("No position found for device %s", device.name)
+            _LOGGER.debug("No position found for %s", device.name)
             continue
 
         _LOGGER.debug("Adding device_tracker for %s", device.name)
@@ -49,12 +53,12 @@ class IcloudTrackerEntity(TrackerEntity):
         self._unsub_dispatcher = None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return a unique ID."""
-        return f"{self._device.unique_id}_tracker"
+        return self._device.unique_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._device.name
 
@@ -74,44 +78,44 @@ class IcloudTrackerEntity(TrackerEntity):
         return self._device.location[DEVICE_LOCATION_LONGITUDE]
 
     @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def battery_level(self):
+    def battery_level(self) -> int:
         """Return the battery level of the device."""
         return self._device.battery_level
 
     @property
-    def source_type(self):
+    def source_type(self) -> str:
         """Return the source type, eg gps or router, of the device."""
         return SOURCE_TYPE_GPS
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon."""
         return icon_for_icloud_device(self._device)
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, any]:
         """Return the device state attributes."""
         return self._device.state_attributes
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, any]:
         """Return the device information."""
         return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
+            "identifiers": {(DOMAIN, self._device.unique_id)},
+            "name": self._device.name,
             "manufacturer": "Apple",
             "model": self._device.device_model,
         }
 
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed."""
+        return False
+
     async def async_added_to_hass(self):
         """Register state update callback."""
         self._unsub_dispatcher = async_dispatcher_connect(
-            self.hass, TRACKER_UPDATE, self.async_write_ha_state
+            self.hass, SERVICE_UPDATE, self.async_write_ha_state
         )
 
     async def async_will_remove_from_hass(self):

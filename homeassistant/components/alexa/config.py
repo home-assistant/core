@@ -1,10 +1,12 @@
 """Config helpers for Alexa."""
+from abc import ABC, abstractmethod
+
 from homeassistant.core import callback
 
 from .state_report import async_enable_proactive_mode
 
 
-class AbstractConfig:
+class AbstractConfig(ABC):
     """Hold the configuration for Alexa."""
 
     _unsub_proactive_report = None
@@ -27,6 +29,11 @@ class AbstractConfig:
     def endpoint(self):
         """Endpoint for report state."""
         return None
+
+    @property
+    @abstractmethod
+    def locale(self):
+        """Return config locale."""
 
     @property
     def entity_config(self):

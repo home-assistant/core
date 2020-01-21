@@ -24,10 +24,13 @@ from homeassistant.components.homekit.util import HomeKitSpeedMapping
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.core import CoreState
+from homeassistant.helpers import entity_registry
 
 from tests.common import async_mock_service
 from tests.components.homekit.common import patch_debounce
@@ -197,7 +200,10 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     )
     await hass.async_block_till_done()
     acc = cls.fan(hass, hk_driver, "Fan", entity_id, 2, None)
-    assert acc.char_speed.value == 0
+
+    # Initial value can be anything but 0. If it is 0, it might cause HomeKit to set the
+    # speed to 100 when turning on a fan on a freshly booted up server.
+    assert acc.char_speed.value != 0
 
     await hass.async_add_job(acc.run)
     assert (
@@ -223,3 +229,40 @@ async def test_fan_speed(hass, hk_driver, cls, events):
     assert call_set_speed[0].data[ATTR_SPEED] == "ludicrous"
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "ludicrous"
+
+
+async def test_fan_restore(hass, hk_driver, cls, events):
+    """Test setting up an entity from state in the event registry."""
+    hass.state = CoreState.not_running
+
+    registry = await entity_registry.async_get_registry(hass)
+
+    registry.async_get_or_create(
+        "fan", "generic", "1234", suggested_object_id="simple",
+    )
+    registry.async_get_or_create(
+        "fan",
+        "generic",
+        "9012",
+        suggested_object_id="all_info_set",
+        capabilities={"speed_list": ["off", "low", "medium", "high"]},
+        supported_features=SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION,
+        device_class="mock-device-class",
+    )
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
+    await hass.async_block_till_done()
+
+    acc = cls.fan(hass, hk_driver, "Fan", "fan.simple", 2, None)
+    assert acc.category == 3
+    assert acc.char_active is not None
+    assert acc.char_direction is None
+    assert acc.char_speed is None
+    assert acc.char_swing is None
+
+    acc = cls.fan(hass, hk_driver, "Fan", "fan.all_info_set", 2, None)
+    assert acc.category == 3
+    assert acc.char_active is not None
+    assert acc.char_direction is not None
+    assert acc.char_speed is not None
+    assert acc.char_swing is not None

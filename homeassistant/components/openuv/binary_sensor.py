@@ -75,7 +75,7 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return f"{self._latitude}_{self._longitude}_{self._sensor_type}"
 
     async def async_added_to_hass(self):
@@ -100,7 +100,10 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
         data = self.openuv.data[DATA_PROTECTION_WINDOW]
 
         if not data:
+            self._available = False
             return
+
+        self._available = True
 
         for key in ("from_time", "to_time", "from_uv", "to_uv"):
             if not data.get(key):

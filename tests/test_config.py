@@ -82,7 +82,7 @@ def teardown():
 
 async def test_create_default_config(hass):
     """Test creation of default config."""
-    await config_util.async_create_default_config(hass, CONFIG_DIR)
+    await config_util.async_create_default_config(hass)
 
     assert os.path.isfile(YAML_PATH)
     assert os.path.isfile(SECRET_PATH)
@@ -91,20 +91,13 @@ async def test_create_default_config(hass):
     assert os.path.isfile(AUTOMATIONS_PATH)
 
 
-def test_find_config_file_yaml():
-    """Test if it finds a YAML config file."""
-    create_file(YAML_PATH)
-
-    assert YAML_PATH == config_util.find_config_file(CONFIG_DIR)
-
-
 async def test_ensure_config_exists_creates_config(hass):
     """Test that calling ensure_config_exists.
 
     If not creates a new config file.
     """
     with mock.patch("builtins.print") as mock_print:
-        await config_util.async_ensure_config_exists(hass, CONFIG_DIR)
+        await config_util.async_ensure_config_exists(hass)
 
     assert os.path.isfile(YAML_PATH)
     assert mock_print.called
@@ -113,7 +106,7 @@ async def test_ensure_config_exists_creates_config(hass):
 async def test_ensure_config_exists_uses_existing_config(hass):
     """Test that calling ensure_config_exists uses existing config."""
     create_file(YAML_PATH)
-    await config_util.async_ensure_config_exists(hass, CONFIG_DIR)
+    await config_util.async_ensure_config_exists(hass)
 
     with open(YAML_PATH) as f:
         content = f.read()
@@ -172,13 +165,9 @@ async def test_create_default_config_returns_none_if_write_error(hass):
 
     Non existing folder returns None.
     """
+    hass.config.config_dir = os.path.join(CONFIG_DIR, "non_existing_dir/")
     with mock.patch("builtins.print") as mock_print:
-        assert (
-            await config_util.async_create_default_config(
-                hass, os.path.join(CONFIG_DIR, "non_existing_dir/")
-            )
-            is None
-        )
+        assert await config_util.async_create_default_config(hass) is False
     assert mock_print.called
 
 
@@ -331,7 +320,6 @@ def test_config_upgrade_same_version(hass):
         assert opened_file.write.call_count == 0
 
 
-@mock.patch("homeassistant.config.find_config_file", mock.Mock())
 def test_config_upgrade_no_file(hass):
     """Test update of version on upgrade, with no version file."""
     mock_open = mock.mock_open()
@@ -359,7 +347,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
         "version": 1,
     }
     await config_util.async_process_ha_core_config(
-        hass, {"whitelist_external_dirs": "/tmp"}
+        hass, {"whitelist_external_dirs": "/etc"}
     )
 
     assert hass.config.latitude == 55
@@ -369,7 +357,7 @@ async def test_loading_configuration_from_storage(hass, hass_storage):
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
     assert len(hass.config.whitelist_external_dirs) == 2
-    assert "/tmp" in hass.config.whitelist_external_dirs
+    assert "/etc" in hass.config.whitelist_external_dirs
     assert hass.config.config_source == SOURCE_STORAGE
 
 
@@ -389,7 +377,7 @@ async def test_updating_configuration(hass, hass_storage):
     }
     hass_storage["core.config"] = dict(core_data)
     await config_util.async_process_ha_core_config(
-        hass, {"whitelist_external_dirs": "/tmp"}
+        hass, {"whitelist_external_dirs": "/etc"}
     )
     await hass.config.async_update(latitude=50)
 
@@ -414,7 +402,7 @@ async def test_override_stored_configuration(hass, hass_storage):
         "version": 1,
     }
     await config_util.async_process_ha_core_config(
-        hass, {"latitude": 60, "whitelist_external_dirs": "/tmp"}
+        hass, {"latitude": 60, "whitelist_external_dirs": "/etc"}
     )
 
     assert hass.config.latitude == 60
@@ -424,7 +412,7 @@ async def test_override_stored_configuration(hass, hass_storage):
     assert hass.config.units.name == CONF_UNIT_SYSTEM_METRIC
     assert hass.config.time_zone.zone == "Europe/Copenhagen"
     assert len(hass.config.whitelist_external_dirs) == 2
-    assert "/tmp" in hass.config.whitelist_external_dirs
+    assert "/etc" in hass.config.whitelist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
 
 
@@ -439,7 +427,7 @@ async def test_loading_configuration(hass):
             "name": "Huis",
             CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
             "time_zone": "America/New_York",
-            "whitelist_external_dirs": "/tmp",
+            "whitelist_external_dirs": "/etc",
         },
     )
 
@@ -450,7 +438,7 @@ async def test_loading_configuration(hass):
     assert hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
     assert hass.config.time_zone.zone == "America/New_York"
     assert len(hass.config.whitelist_external_dirs) == 2
-    assert "/tmp" in hass.config.whitelist_external_dirs
+    assert "/etc" in hass.config.whitelist_external_dirs
     assert hass.config.config_source == config_util.SOURCE_YAML
 
 
@@ -732,9 +720,7 @@ async def test_merge_id_schema(hass):
         integration = await async_get_integration(hass, domain)
         module = integration.get_component()
         typ, _ = config_util._identify_config_schema(module)
-        assert typ == expected_type, "{} expected {}, got {}".format(
-            domain, expected_type, typ
-        )
+        assert typ == expected_type, f"{domain} expected {expected_type}, got {typ}"
 
 
 async def test_merge_duplicate_keys(merge_log_err, hass):

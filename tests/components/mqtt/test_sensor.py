@@ -63,7 +63,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     assert state.state == "unknown"
 
     now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
-    with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now):
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "100")
         await hass.async_block_till_done()
@@ -82,7 +82,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     assert state.state == "100"
 
     # Next message resets timer
-    with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now):
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "101")
         await hass.async_block_till_done()

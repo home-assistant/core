@@ -103,13 +103,17 @@ async def test_handler_google_actions(hass):
     reqid = "5711642932632160983"
     data = {"requestId": reqid, "inputs": [{"intent": "action.devices.SYNC"}]}
 
-    config = await cloud.client.get_google_config()
-    resp = await cloud.client.async_google_message(data)
+    with patch(
+        "hass_nabucasa.Cloud._decode_claims",
+        return_value={"cognito:username": "myUserName"},
+    ):
+        await cloud.client.get_google_config()
+        resp = await cloud.client.async_google_message(data)
 
     assert resp["requestId"] == reqid
     payload = resp["payload"]
 
-    assert payload["agentUserId"] == config.cloud_user
+    assert payload["agentUserId"] == "myUserName"
 
     devices = payload["devices"]
     assert len(devices) == 1

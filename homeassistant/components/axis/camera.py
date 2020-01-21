@@ -11,7 +11,6 @@ from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE,
     CONF_HOST,
-    CONF_MAC,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -32,8 +31,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Axis camera video stream."""
     filter_urllib3_logging()
 
-    serial_number = config_entry.data[CONF_MAC]
-    device = hass.data[AXIS_DOMAIN][serial_number]
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     config = {
         CONF_NAME: config_entry.data[CONF_NAME],

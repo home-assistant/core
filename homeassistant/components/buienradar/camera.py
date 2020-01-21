@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 CONF_DIMENSION = "dimension"
 CONF_DELTA = "delta"
 
-RADAR_MAP_URL_TEMPLATE = "https://api.buienradar.nl/image/1.0/" "RadarMapNL?w={w}&h={h}"
+RADAR_MAP_URL_TEMPLATE = "https://api.buienradar.nl/image/1.0/RadarMapNL?w={w}&h={h}"
 
 _LOG = logging.getLogger(__name__)
 
@@ -134,7 +134,7 @@ class BuienradarCam(Camera):
 
         Uses ayncio conditions to make sure only one task enters the critical
         section at the same time. Otherwise, two http requests would start
-        when two tabs with home assistant are open.
+        when two tabs with Home Assistant are open.
 
         The condition is entered in two sections because otherwise the lock
         would be held while doing the http request.

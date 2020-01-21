@@ -130,6 +130,9 @@ class UniFiClientTracker(ScannerEntity):
         self.is_wired = self.client.mac not in controller.wireless_clients
         self.wired_bug = None
 
+        if self.is_wired != self.client.is_wired:
+            self.wired_bug = dt_util.utcnow() - self.controller.option_detection_time
+
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""

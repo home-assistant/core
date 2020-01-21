@@ -118,14 +118,14 @@ async def test_if_fires_on_state_change(hass, calls):
     hass.states.async_set("vacuum.entity", STATE_CLEANING)
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "cleaning - device - {} - docked - cleaning".format(
-        "vacuum.entity"
+    assert (
+        calls[0].data["some"] == "cleaning - device - vacuum.entity - docked - cleaning"
     )
 
     # Fake that the entity is docked
     hass.states.async_set("vacuum.entity", STATE_DOCKED)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == "docked - device - {} - cleaning - docked".format(
-        "vacuum.entity"
+    assert (
+        calls[1].data["some"] == "docked - device - vacuum.entity - cleaning - docked"
     )

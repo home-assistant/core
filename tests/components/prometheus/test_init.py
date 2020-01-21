@@ -1,6 +1,4 @@
 """The tests for the Prometheus exporter."""
-import asyncio
-
 import pytest
 
 from homeassistant import setup
@@ -51,14 +49,13 @@ async def prometheus_client(loop, hass, hass_client):
     return await hass_client()
 
 
-@asyncio.coroutine
-def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
+async def test_view(prometheus_client):  # pylint: disable=redefined-outer-name
     """Test prometheus metrics view."""
-    resp = yield from prometheus_client.get(prometheus.API_ENDPOINT)
+    resp = await prometheus_client.get(prometheus.API_ENDPOINT)
 
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/plain"
-    body = yield from resp.text()
+    body = await resp.text()
     body = body.split("\n")
 
     assert len(body) > 3

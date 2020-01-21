@@ -14,8 +14,6 @@ pr:
 
 resources:
   containers:
-  - container: 36
-    image: homeassistant/ci-azure:3.6
   - container: 37
     image: homeassistant/ci-azure:3.7
   repositories:
@@ -25,7 +23,7 @@ resources:
       endpoint: 'home-assistant'
 variables:
   - name: PythonMain
-    value: '36'
+    value: '37'
   - group: codecov
 
 stages:
@@ -56,8 +54,12 @@ stages:
       displayName: 'Run bandit'
     - script: |
         . venv/bin/activate
-        pre-commit run isort --all-files
+        pre-commit run isort --all-files --show-diff-on-failure
       displayName: 'Run isort'
+    - script: |
+        . venv/bin/activate
+        pre-commit run check-json --all-files
+      displayName: 'Run check-json'
   - job: 'Validate'
     pool:
       vmImage: 'ubuntu-latest'
@@ -95,7 +97,7 @@ stages:
           pre-commit install-hooks --config .pre-commit-config-all.yaml
     - script: |
         . venv/bin/activate
-        pre-commit run black --all-files
+        pre-commit run black --all-files --show-diff-on-failure
       displayName: 'Check Black formatting'
 
 - stage: 'Tests'
@@ -108,8 +110,6 @@ stages:
     strategy:
       maxParallel: 3
       matrix:
-        Python36:
-          python.container: '36'
         Python37:
           python.container: '37'
     container: $[ variables['python.container'] ]

@@ -9,8 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity
 
-# We need an import from .config_flow, without it .config_flow is never loaded.
-from .config_flow import HomekitControllerFlowHandler  # noqa: F401
+from .config_flow import normalize_hkid
 from .connection import HKDevice, get_accessory_information
 from .const import CONTROLLER, DOMAIN, ENTITY_MAP, KNOWN_DEVICES
 from .storage import EntityMapStorage
@@ -110,6 +109,16 @@ class HomeKitEntity(Entity):
             return
         setup_fn(char)
 
+    def get_hk_char_value(self, characteristic_type):
+        """Return the value for a given characteristic type enum."""
+        state = self._accessory.current_state.get(self._aid)
+        if not state:
+            return None
+        char = self._chars.get(CharacteristicsTypes.get_short(characteristic_type))
+        if not char:
+            return None
+        return state.get(char, {}).get("value")
+
     @callback
     def async_state_changed(self):
         """Collect new data from bridge and update the entity state in hass."""
@@ -180,6 +189,12 @@ async def async_setup_entry(hass, entry):
     """Set up a HomeKit connection on a config entry."""
     conn = HKDevice(hass, entry, entry.data)
     hass.data[KNOWN_DEVICES][conn.unique_id] = conn
+
+    # For backwards compat
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=normalize_hkid(conn.unique_id)
+        )
 
     if not await conn.async_setup():
         del hass.data[KNOWN_DEVICES][conn.unique_id]

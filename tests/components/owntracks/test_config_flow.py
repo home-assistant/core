@@ -126,7 +126,7 @@ async def test_user_not_supports_encryption(hass, not_supports_encryption):
 async def test_unload(hass):
     """Test unloading a config flow."""
     with patch(
-        "homeassistant.config_entries.ConfigEntries" ".async_forward_entry_setup"
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
     ) as mock_forward:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "import"}, data={}
@@ -140,7 +140,7 @@ async def test_unload(hass):
     assert entry.data["webhook_id"] in hass.data["webhook"]
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries" ".async_forward_entry_unload",
+        "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
         return_value=mock_coro(),
     ) as mock_unload:
         assert await hass.config_entries.async_unload(entry.entry_id)

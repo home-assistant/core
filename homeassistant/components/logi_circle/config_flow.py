@@ -207,5 +207,5 @@ class LogiCircleAuthCallbackView(HomeAssistantView):
             )
             return self.json_message("Authorisation code saved")
         return self.json_message(
-            "Authorisation code missing " "from query string", status_code=400
+            "Authorisation code missing from query string", status_code=400
         )

@@ -1,22 +1,14 @@
 """Support for SimpliSafe alarm systems."""
 import asyncio
-from datetime import timedelta
 import logging
 
 from simplipy import API
 from simplipy.errors import InvalidCredentialsError, SimplipyError
-from simplipy.system.v3 import LevelMap as V3Volume
+from simplipy.system.v3 import VOLUME_HIGH, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_OFF
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_TOKEN,
-    CONF_USERNAME,
-    STATE_HOME,
-)
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -30,7 +22,10 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    verify_domain_control,
+)
 
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
@@ -41,24 +36,21 @@ CONF_ACCOUNTS = "accounts"
 
 DATA_LISTENER = "listener"
 
-ATTR_ARMED_LIGHT_STATE = "armed_light_state"
-ATTR_ARRIVAL_STATE = "arrival_state"
+ATTR_ALARM_DURATION = "alarm_duration"
+ATTR_ALARM_VOLUME = "alarm_volume"
+ATTR_CHIME_VOLUME = "chime_volume"
+ATTR_ENTRY_DELAY_AWAY = "entry_delay_away"
+ATTR_ENTRY_DELAY_HOME = "entry_delay_home"
+ATTR_EXIT_DELAY_AWAY = "exit_delay_away"
+ATTR_EXIT_DELAY_HOME = "exit_delay_home"
+ATTR_LIGHT = "light"
 ATTR_PIN_LABEL = "label"
 ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
 ATTR_PIN_VALUE = "pin"
-ATTR_SECONDS = "seconds"
 ATTR_SYSTEM_ID = "system_id"
-ATTR_TRANSITION = "transition"
-ATTR_VOLUME = "volume"
-ATTR_VOLUME_PROPERTY = "volume_property"
+ATTR_VOICE_PROMPT_VOLUME = "voice_prompt_volume"
 
-STATE_AWAY = "away"
-STATE_ENTRY = "entry"
-STATE_EXIT = "exit"
-
-VOLUME_PROPERTY_ALARM = "alarm"
-VOLUME_PROPERTY_CHIME = "chime"
-VOLUME_PROPERTY_VOICE_PROMPT = "voice_prompt"
+VOLUMES = [VOLUME_OFF, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_HIGH]
 
 SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
 
@@ -66,28 +58,33 @@ SERVICE_REMOVE_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string}
 )
 
-SERVICE_SET_DELAY_SCHEMA = SERVICE_BASE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_ARRIVAL_STATE): vol.In((STATE_AWAY, STATE_HOME)),
-        vol.Required(ATTR_TRANSITION): vol.In((STATE_ENTRY, STATE_EXIT)),
-        vol.Required(ATTR_SECONDS): cv.positive_int,
-    }
-)
-
-SERVICE_SET_LIGHT_SCHEMA = SERVICE_BASE_SCHEMA.extend(
-    {vol.Required(ATTR_ARMED_LIGHT_STATE): cv.boolean}
-)
-
 SERVICE_SET_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {vol.Required(ATTR_PIN_LABEL): cv.string, vol.Required(ATTR_PIN_VALUE): cv.string}
 )
 
-SERVICE_SET_VOLUME_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Required(ATTR_VOLUME_PROPERTY): vol.In(
-            (VOLUME_PROPERTY_ALARM, VOLUME_PROPERTY_CHIME, VOLUME_PROPERTY_VOICE_PROMPT)
+        vol.Optional(ATTR_ALARM_DURATION): vol.All(
+            cv.time_period, lambda value: value.seconds, vol.Range(min=30, max=480)
         ),
-        vol.Required(ATTR_VOLUME): cv.string,
+        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
+        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
+        vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
+            cv.time_period, lambda value: value.seconds, vol.Range(min=30, max=255)
+        ),
+        vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
+            cv.time_period, lambda value: value.seconds, vol.Range(max=255)
+        ),
+        vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
+            cv.time_period, lambda value: value.seconds, vol.Range(min=45, max=255)
+        ),
+        vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
+            cv.time_period, lambda value: value.seconds, vol.Range(max=255)
+        ),
+        vol.Optional(ATTR_LIGHT): cv.boolean,
+        vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
+            vol.Coerce(int), vol.In(VOLUMES)
+        ),
     }
 )
 
@@ -96,7 +93,6 @@ ACCOUNT_CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CODE): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
     }
 )
 
@@ -156,7 +152,6 @@ async def async_setup(hass, config):
                     CONF_USERNAME: account[CONF_USERNAME],
                     CONF_PASSWORD: account[CONF_PASSWORD],
                     CONF_CODE: account.get(CONF_CODE),
-                    CONF_SCAN_INTERVAL: account[CONF_SCAN_INTERVAL],
                 },
             )
         )
@@ -198,7 +193,7 @@ async def async_setup_entry(hass, config_entry):
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
     hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = async_track_time_interval(
-        hass, refresh, timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
+        hass, refresh, DEFAULT_SCAN_INTERVAL
     )
 
     # Register the base station for each system:
@@ -247,47 +242,6 @@ async def async_setup_entry(hass, config_entry):
             return
 
     @verify_system_exists
-    @v3_only
-    @_verify_domain_control
-    async def set_alarm_duration(call):
-        """Set the duration of a running alarm."""
-        system = systems[call.data[ATTR_SYSTEM_ID]]
-        try:
-            await system.set_alarm_duration(call.data[ATTR_SECONDS])
-        except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
-            return
-
-    @verify_system_exists
-    @v3_only
-    @_verify_domain_control
-    async def set_delay(call):
-        """Set the delay duration for entry/exit, away/home (any combo)."""
-        system = systems[call.data[ATTR_SYSTEM_ID]]
-        coro = getattr(
-            system,
-            f"set_{call.data[ATTR_TRANSITION]}_delay_{call.data[ATTR_ARRIVAL_STATE]}",
-        )
-
-        try:
-            await coro(call.data[ATTR_SECONDS])
-        except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
-            return
-
-    @verify_system_exists
-    @v3_only
-    @_verify_domain_control
-    async def set_armed_light(call):
-        """Turn the base station light on/off."""
-        system = systems[call.data[ATTR_SYSTEM_ID]]
-        try:
-            await system.set_light(call.data[ATTR_ARMED_LIGHT_STATE])
-        except SimplipyError as err:
-            _LOGGER.error("Error during service call: %s", err)
-            return
-
-    @verify_system_exists
     @_verify_domain_control
     async def set_pin(call):
         """Set a PIN."""
@@ -301,30 +255,31 @@ async def async_setup_entry(hass, config_entry):
     @verify_system_exists
     @v3_only
     @_verify_domain_control
-    async def set_volume_property(call):
-        """Set a volume parameter in an appropriate service call."""
+    async def set_system_properties(call):
+        """Set one or more system parameters."""
         system = systems[call.data[ATTR_SYSTEM_ID]]
         try:
-            volume = V3Volume[call.data[ATTR_VOLUME]]
-        except KeyError:
-            _LOGGER.error("Unknown volume string: %s", call.data[ATTR_VOLUME])
-            return
+            await system.set_properties(
+                {
+                    prop: value
+                    for prop, value in call.data.items()
+                    if prop != ATTR_SYSTEM_ID
+                }
+            )
         except SimplipyError as err:
             _LOGGER.error("Error during service call: %s", err)
             return
-        else:
-            coro = getattr(system, f"set_{call.data[ATTR_VOLUME_PROPERTY]}_volume")
-            await coro(volume)
 
     for service, method, schema in [
         ("remove_pin", remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
-        ("set_alarm_duration", set_alarm_duration, SERVICE_SET_DELAY_SCHEMA),
-        ("set_delay", set_delay, SERVICE_SET_DELAY_SCHEMA),
-        ("set_armed_light", set_armed_light, SERVICE_SET_LIGHT_SCHEMA),
         ("set_pin", set_pin, SERVICE_SET_PIN_SCHEMA),
-        ("set_volume_property", set_volume_property, SERVICE_SET_VOLUME_SCHEMA),
+        (
+            "set_system_properties",
+            set_system_properties,
+            SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
+        ),
     ]:
-        hass.services.async_register(DOMAIN, service, method, schema=schema)
+        async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
     return True
 

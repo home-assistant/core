@@ -1,6 +1,7 @@
 """Allow users to set and activate scenes."""
 from collections import namedtuple
 import logging
+from typing import List
 
 import voluptuous as vol
 
@@ -17,7 +18,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import DOMAIN as HA_DOMAIN, State
+from homeassistant.core import DOMAIN as HA_DOMAIN, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_per_platform,
@@ -71,7 +72,7 @@ def _ensure_no_intersection(value):
 
 CONF_SCENE_ID = "scene_id"
 CONF_SNAPSHOT = "snapshot_entities"
-
+DATA_PLATFORM = f"homeassistant_scene"
 STATES_SCHEMA = vol.All(dict, _convert_states)
 
 PLATFORM_SCHEMA = vol.Schema(
@@ -108,8 +109,41 @@ SCENECONFIG = namedtuple("SceneConfig", [CONF_NAME, STATES])
 _LOGGER = logging.getLogger(__name__)
 
 
+@callback
+def scenes_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
+    """Return all scenes that reference the entity."""
+    if DATA_PLATFORM not in hass.data:
+        return []
+
+    platform = hass.data[DATA_PLATFORM]
+
+    results = []
+
+    for scene_entity in platform.entities.values():
+        if entity_id in scene_entity.scene_config.states:
+            results.append(scene_entity.entity_id)
+
+    return results
+
+
+@callback
+def entities_in_scene(hass: HomeAssistant, entity_id: str) -> List[str]:
+    """Return all entities in a scene."""
+    if DATA_PLATFORM not in hass.data:
+        return []
+
+    platform = hass.data[DATA_PLATFORM]
+
+    entity = platform.entities.get(entity_id)
+
+    if entity is None:
+        return []
+
+    return list(entity.scene_config.states)
+
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up home assistant scene entries."""
+    """Set up Home Assistant scene entries."""
     _process_scenes_config(hass, async_add_entities, config)
 
     # This platform can be loaded multiple times. Only first time register the service.
@@ -117,7 +151,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     # Store platform for later.
-    platform = entity_platform.current_platform.get()
+    platform = hass.data[DATA_PLATFORM] = entity_platform.current_platform.get()
 
     async def reload_config(call):
         """Reload the scene config."""

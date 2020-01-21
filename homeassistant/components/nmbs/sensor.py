@@ -92,7 +92,7 @@ class NMBSLiveBoard(Entity):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
-
+        self._unique_id = f"nmbs_live_{self._station}"
         self._attrs = {}
         self._state = None
 
@@ -100,6 +100,11 @@ class NMBSLiveBoard(Entity):
     def name(self):
         """Return the sensor default name."""
         return "NMBS Live"
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def icon(self):
@@ -125,6 +130,7 @@ class NMBSLiveBoard(Entity):
 
         attrs = {
             "departure": f"In {departure} minutes",
+            "departure_minutes": departure,
             "extra_train": int(self._attrs["isExtra"]) > 0,
             "vehicle_id": self._attrs["vehicle"],
             "monitored_station": self._station,
@@ -133,6 +139,7 @@ class NMBSLiveBoard(Entity):
 
         if delay > 0:
             attrs["delay"] = f"{delay} minutes"
+            attrs["delay_minutes"] = delay
 
         return attrs
 
@@ -195,6 +202,7 @@ class NMBSSensor(Entity):
 
         attrs = {
             "departure": f"In {departure} minutes",
+            "departure_minutes": departure,
             "destination": self._station_to,
             "direction": self._attrs["departure"]["direction"]["name"],
             "platform_arriving": self._attrs["arrival"]["platform"],
@@ -219,6 +227,7 @@ class NMBSSensor(Entity):
 
         if delay > 0:
             attrs["delay"] = f"{delay} minutes"
+            attrs["delay_minutes"] = delay
 
         return attrs
 
