@@ -161,7 +161,7 @@ def info_from_service(service):
             if isinstance(value, bytes):
                 properties[key] = value.decode("utf-8")
         except UnicodeDecodeError:
-            properties[key] = None
+            pass
 
     address = service.addresses[0]
 
