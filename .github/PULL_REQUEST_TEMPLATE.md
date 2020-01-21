@@ -23,9 +23,9 @@
 
 ## Type of change
 <!--
-  What types of changes does your PR introduce to our documention/website?
-  Put an `x` in the boxes that apply. You can also fill these out after
-  creating the PR.
+  What types of changes does your PR introduce to our Home Assistant?
+  NOTE: Please, check only 1! box! 
+  If your PR requires multiple boxes checked, you'll need to split it into multiple PRs.
 -->
 
 - [ ] Bugfix (non-breaking change which fixes an issue)
