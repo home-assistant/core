@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Kontoen er allerede konfigurert"
+            "already_configured": "Kontoen er allerede konfigurert"
         },
         "error": {
             "login": "Innloggingsfeil: vennligst sjekk e-postadressen og passordet ditt",
