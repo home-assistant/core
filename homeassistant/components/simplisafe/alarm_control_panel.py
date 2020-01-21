@@ -157,10 +157,10 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
 
     async def async_update(self):
         """Update alarm status."""
-        event_data = self._simplisafe.last_event_data[self._system.system_id]
+        last_event = self._simplisafe.last_event_data[self._system.system_id]
 
-        if event_data.get("pinName"):
-            self._changed_by = event_data["pinName"]
+        if last_event.get("pinName"):
+            self._changed_by = last_event["pinName"]
 
         if self._system.state == SystemStates.error:
             self._online = False
@@ -184,8 +184,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
             self._state = STATE_ALARM_DISARMED
         else:
             self._state = None
-
-        last_event = self._simplisafe.last_event_data[self._system.system_id]
 
         try:
             last_event_sensor_type = EntityTypes(last_event["sensorType"]).name
