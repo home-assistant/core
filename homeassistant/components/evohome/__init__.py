@@ -663,7 +663,8 @@ class EvoChild(EvoDevice):
         except IndexError:
             self._setpoints = {}
             _LOGGER.warning(
-                "Failed to get setpoints - please report as an issue", exc_info=True
+                "Failed to get setpoints - report as an issue if this error persists",
+                exc_info=True,
             )
 
         return self._setpoints

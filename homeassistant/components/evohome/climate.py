@@ -97,15 +97,7 @@ async def async_setup_platform(
 
     zones = []
     for zone in broker.tcs.zones.values():
-        if zone.zoneType == "Unknown":
-            _LOGGER.warning(
-                "Ignoring: %s (%s), id=%s, name=%s: invalid zone type",
-                zone.zoneType,
-                zone.modelType,
-                zone.zoneId,
-                zone.name,
-            )
-        else:
+        if zone.modelType == "HeatingZone" or zone.zoneType == "Thermostat":
             _LOGGER.debug(
                 "Adding: %s (%s), id=%s, name=%s",
                 zone.zoneType,
@@ -116,6 +108,16 @@ async def async_setup_platform(
 
             new_entity = EvoZone(broker, zone)
             zones.append(new_entity)
+
+        else:
+            _LOGGER.warning(
+                "Ignoring: %s (%s), id=%s, name=%s: unknown/invalid zone type, "
+                "- report as an issue if you feel this zone type should be supported",
+                zone.zoneType,
+                zone.modelType,
+                zone.zoneId,
+                zone.name,
+            )
 
     async_add_entities([controller] + zones, update_before_add=True)
 
