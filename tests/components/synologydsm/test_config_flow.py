@@ -7,6 +7,7 @@ import pytest
 from homeassistant import data_entry_flow
 from homeassistant.components.synologydsm.const import (
     DEFAULT_NAME,
+    DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SSL,
     DOMAIN,
@@ -91,6 +92,28 @@ async def test_user(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
+    # test without port + False SSL
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_NAME: NAME,
+            CONF_HOST: HOST,
+            CONF_SSL: False,
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == f"{HOST}:{DEFAULT_PORT}"
+    assert result["title"] == HOST
+    assert result["data"][CONF_NAME] == NAME
+    assert result["data"][CONF_HOST] == HOST
+    assert result["data"][CONF_PORT] == DEFAULT_PORT
+    assert not result["data"][CONF_SSL]
+    assert result["data"][CONF_USERNAME] == USERNAME
+    assert result["data"][CONF_PASSWORD] == PASSWORD
+
 
 async def test_import(hass: HomeAssistantType, service: MagicMock):
     """Test import step."""
@@ -129,7 +152,7 @@ async def test_import(hass: HomeAssistantType, service: MagicMock):
     assert result["data"][CONF_NAME] == NAME
     assert result["data"][CONF_HOST] == HOST_2
     assert result["data"][CONF_PORT] == PORT
-    assert result["data"][CONF_SSL] == DEFAULT_SSL
+    assert result["data"][CONF_SSL] == SSL
     assert result["data"][CONF_USERNAME] == USERNAME
     assert result["data"][CONF_PASSWORD] == PASSWORD
 
