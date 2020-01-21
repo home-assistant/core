@@ -1,6 +1,6 @@
 <!--
-You are amazing! Thanks for contributing to our project!
-Please, DO NOT DELETE ANY TEXT from this template! (unless instructed). Thanks.
+  You are amazing! Thanks for contributing to our project!
+  Please, DO NOT DELETE ANY TEXT from this template! (unless instructed).
 -->
 ## Breaking change
 <!--
