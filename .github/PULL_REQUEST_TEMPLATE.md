@@ -27,7 +27,7 @@
 - [ ] Bugfix (non-breaking change which fixes an issue)
 - [ ] New integration (thank you!)
 - [ ] New feature (which adds functionality to an existing integration)
-- [ ] Breaking change (fix/feature causing breaking existing functionality)
+- [ ] Breaking change (fix/feature causing existing functionality to break)
 - [ ] Code quality improvements to existing code or addition of tests
 
 ## Example entry for `configuration.yaml`:
