@@ -34,6 +34,11 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
+    def __init__(self):
+        """Initialize."""
+        self.brother = None
+        self.host = None
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -69,68 +74,41 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_abort(reason="connection_error")
 
-        try:
-            if "Brother" not in user_input["name"]:
-                raise ValueError
-        except (KeyError, ValueError):
+        if not user_input.get("name").startswith("Brother"):
             return self.async_abort(reason="not_brother_printer")
 
         # Hostname is format: brother.local.
-        host = user_input["hostname"].rstrip(".")
+        self.host = user_input["hostname"].rstrip(".")
 
         try:
-            brother = Brother(host)
-            await brother.async_update()
+            self.brother = Brother(self.host)
+            await self.brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel):
             return self.async_abort(reason="connection_error")
 
         # Check if already configured
-        await self.async_set_unique_id(brother.serial.lower())
+        await self.async_set_unique_id(self.brother.serial.lower())
         self._abort_if_unique_id_configured()
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context.update(
             {
-                CONF_HOST: host,
                 "title_placeholders": {
-                    "serial_number": brother.serial,
-                    "model": brother.model,
-                },
+                    "serial_number": self.brother.serial,
+                    "model": self.brother.model,
+                }
             }
         )
-        return self.async_show_form(
-            step_id="zeroconf_confirm",
-            data_schema=vol.Schema(
-                {vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES)}
-            ),
-            description_placeholders={
-                "serial_number": brother.serial,
-                "model": brother.model,
-            },
-        )
+        return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(self, user_input=None):
         """Handle a flow initiated by zeroconf."""
-        try:
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-            brother = Brother(self.context.get(CONF_HOST))
-            await brother.async_update()
-        except (ConnectionError, SnmpError, UnsupportedModel):
-            return self.async_abort(reason="connection_error")
         if user_input is not None:
-
-            # Check if already configured
-            await self.async_set_unique_id(brother.serial.lower())
-            self._abort_if_unique_id_configured()
-
-            title = f"{brother.model} {brother.serial}"
+            title = f"{self.brother.model} {self.brother.serial}"
             # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             return self.async_create_entry(
                 title=title,
-                data={
-                    CONF_HOST: self.context.get(CONF_HOST),
-                    CONF_TYPE: user_input[CONF_TYPE],
-                },
+                data={CONF_HOST: self.host, CONF_TYPE: user_input[CONF_TYPE]},
             )
         return self.async_show_form(
             step_id="zeroconf_confirm",
@@ -138,8 +116,8 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {vol.Optional(CONF_TYPE, default="laser"): vol.In(PRINTER_TYPES)}
             ),
             description_placeholders={
-                "serial_number": brother.serial,
-                "model": brother.model,
+                "serial_number": self.brother.serial,
+                "model": self.brother.model,
             },
         )
 
