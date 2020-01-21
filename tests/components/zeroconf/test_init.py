@@ -103,6 +103,6 @@ async def test_info_from_service_non_utf8(hass):
     )
     raw_info = info["properties"].pop("_raw", False)
     assert raw_info
-    assert len(info["properties"].keys()) == len(raw_info.keys())
+    assert len(info["properties"].keys()) <= len(raw_info.keys())
     assert "non-utf8-value" not in info["properties"]
     assert raw_info["non-utf8-value"] is not None
