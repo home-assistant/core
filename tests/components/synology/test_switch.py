@@ -1,14 +1,12 @@
 """Tests for the Synology Switch device initialization."""
-import logging
 from unittest.mock import MagicMock, Mock
 
+import requests
 from synology.surveillance_station import SurveillanceStation
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.synology import const
 from homeassistant.setup import async_setup_component
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def init_valid_switch(hass, mock_surveillance_station):
@@ -42,10 +40,8 @@ async def test_switch_initialized(hass):
 
 
 async def test_switch(hass):
-    """Test that switch is initialized if synology component data is present."""
+    """Test that switch normal functions."""
     mock_surveillance_station = MagicMock(spec=SurveillanceStation)
-
-    mock_surveillance_station.is_switched_on = MagicMock(return_value=True)
 
     await init_valid_switch(hass, mock_surveillance_station)
 
@@ -65,3 +61,36 @@ async def test_switch(hass):
     )
 
     mock_surveillance_station.set_home_mode.assert_called_with(True)
+
+
+async def test_switch_synology_errors(hass):
+    """Test switch functionality under Synology Surveillance failures."""
+    mock_surveillance_station = MagicMock(spec=SurveillanceStation)
+    mock_surveillance_station.side_effect = requests.exceptions.RequestException()
+    mock_surveillance_station.set_home_mode = MagicMock()
+    mock_surveillance_station.set_home_mode.side_effect = (
+        requests.exceptions.RequestException()
+    )
+    mock_surveillance_station.get_home_mode_status = MagicMock()
+    mock_surveillance_station.get_home_mode_status.side_effect = (
+        requests.exceptions.RequestException()
+    )
+
+    await init_valid_switch(hass, mock_surveillance_station)
+
+    switch_id = hass.states.async_entity_ids("switch")[0]
+
+    mock_surveillance_station.get_home_mode_status.assert_called()
+    assert hass.states.get(switch_id).state == "off"
+
+    await hass.services.async_call(
+        "switch", "turn_off", {"entity_id": switch_id}, blocking=True
+    )
+    mock_surveillance_station.set_home_mode.assert_called()
+    assert hass.states.get(switch_id).state == "off"
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": switch_id}, blocking=True
+    )
+    mock_surveillance_station.set_home_mode.assert_called()
+    assert hass.states.get(switch_id).state == "off"
