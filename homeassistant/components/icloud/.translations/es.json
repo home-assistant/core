@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Cuenta ya configurada"
+            "already_configured": "Cuenta ya configurada"
         },
         "error": {
             "login": "Error de inicio de sesi\u00f3n: compruebe su direcci\u00f3n de correo electr\u00f3nico y contrase\u00f1a",

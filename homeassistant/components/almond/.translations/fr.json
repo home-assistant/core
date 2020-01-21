@@ -6,6 +6,10 @@
             "missing_configuration": "Veuillez consulter la documentation pour savoir comment configurer Almond."
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Voulez-vous configurer Home Assistant pour se connecter \u00e0 Almond fourni par le module compl\u00e9mentaire Hass.io: {addon} ?",
+                "title": "Almonf via le module compl\u00e9mentaire Hass.io"
+            },
             "pick_implementation": {
                 "title": "S\u00e9lectionner une m\u00e9thode d'authentification"
             }

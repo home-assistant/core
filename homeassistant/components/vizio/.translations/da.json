@@ -3,6 +3,7 @@
         "abort": {
             "already_in_progress": "Konfigurationsproces for Vizio-komponenten er allerede i gang.",
             "already_setup": "Denne post er allerede blevet konfigureret.",
+            "already_setup_with_diff_host_and_name": "Denne post ser ud til allerede at v\u00e6re konfigureret med en anden v\u00e6rt og navn baseret p\u00e5 dens serienummer. Fjern eventuelle gamle poster fra din configuration.yaml og i menuen Integrationer, f\u00f8r du fors\u00f8ger at tilf\u00f8je denne enhed igen.",
             "host_exists": "Vizio-komponent med v\u00e6rt er allerede konfigureret.",
             "name_exists": "Vizio-komponent med navn er allerede konfigureret.",
             "updated_options": "Denne post er allerede konfigureret, men indstillingerne, der er defineret i konfigurationen, stemmer ikke overens med de tidligere importerede indstillingsv\u00e6rdier, s\u00e5 konfigurationsposten er blevet opdateret i overensstemmelse hermed.",
