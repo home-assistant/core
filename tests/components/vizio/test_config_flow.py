@@ -13,7 +13,6 @@ from homeassistant.components.vizio.const import (
     DEFAULT_VOLUME_STEP,
     DOMAIN,
     VIZIO_SCHEMA,
-    VIZIO_ZEROCONF_SERVICE_TYPE,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import (
@@ -65,6 +64,7 @@ MOCK_SPEAKER_CONFIG = {
     CONF_DEVICE_CLASS: DEVICE_CLASS_SPEAKER,
 }
 
+VIZIO_ZEROCONF_SERVICE_TYPE = "_viziocast._tcp.local."
 ZEROCONF_NAME = f"{NAME}.{VIZIO_ZEROCONF_SERVICE_TYPE}"
 ZEROCONF_HOST = HOST.split(":")[0]
 ZEROCONF_PORT = HOST.split(":")[1]
