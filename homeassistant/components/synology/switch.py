@@ -14,9 +14,10 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up a Synology Switches."""
-    if hass.data[DOMAIN_DATA]:
-        surveillance_client = hass.data[DOMAIN_DATA][DATA_SURVEILLANCE_CLIENT]
-        if surveillance_client:
+    if DOMAIN_DATA in hass.data:
+        data = hass.data[DOMAIN_DATA]
+        if (DATA_SURVEILLANCE_CLIENT in data) and (DATA_NAME in data):
+            surveillance_client = hass.data[DOMAIN_DATA][DATA_SURVEILLANCE_CLIENT]
             switches = [
                 SurveillanceHomeModeSwitch(
                     surveillance_client, hass.data[DOMAIN_DATA][DATA_NAME]
