@@ -1,5 +1,5 @@
 ---
-name: Bug report
+name: Report a bug with Home Assistant 
 about: Report an issue with Home Assistant
 ---
 <!-- READ THIS FIRST:
