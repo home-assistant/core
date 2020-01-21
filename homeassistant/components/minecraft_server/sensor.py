@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.const import CONF_NAME, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 
 from . import MinecraftServerEntity
 from .const import (
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Minecraft Server sensor platform."""
-    server = hass.data[DOMAIN][config_entry.data[CONF_NAME]]
+    server = hass.data[DOMAIN][config_entry.unique_id]
 
     # Create entities list.
     entities = [

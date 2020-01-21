@@ -22,6 +22,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     CONF_UPDATE_INTERVAL,
     DOMAIN,
+    MANUFACTURER,
     NAME_DESCRIPTION,
     NAME_LATENCY_TIME,
     NAME_PLAYERS_LIST,
@@ -55,7 +56,7 @@ async def async_setup_entry(hass, config_entry):
         config_entry.data[CONF_PORT],
         config_entry.data[CONF_UPDATE_INTERVAL],
     )
-    hass.data[DOMAIN][config_entry.data[CONF_NAME]] = server
+    hass.data[DOMAIN][config_entry.unique_id] = server
     await server.async_update(event_time=None)
 
     # Set up platform(s).
@@ -69,11 +70,11 @@ async def async_setup_entry(hass, config_entry):
 
 async def async_unload_entry(hass, config_entry):
     """Unload Minecraft Server config entry."""
-    name = config_entry.data[CONF_NAME]
-    server = hass.data[DOMAIN][name]
+    unique_id = config_entry.unique_id
+    server = hass.data[DOMAIN][unique_id]
 
     _LOGGER.debug(
-        "Removing of Minecraft Server config entry '%s' requested via UI.", name
+        "Unloading of Minecraft Server config entry '%s' requested.", unique_id
     )
 
     # Unload platforms.
@@ -84,7 +85,7 @@ async def async_unload_entry(hass, config_entry):
     _LOGGER.debug("Stopping periodic update...")
     server.stop_periodic_update()
     _LOGGER.debug("Deleting data...")
-    hass.data[DOMAIN].pop(name)
+    hass.data[DOMAIN].pop(unique_id)
 
     return True
 
@@ -137,6 +138,7 @@ class MinecraftServer:
         self._host = host
         self._port = port
         self._server_online = False
+        self._unique_id = f"{self._host.lower()}-{self._port}"
 
         # 3rd party library instance
         self._mcstatus = MCStatus(host, port)
@@ -152,9 +154,7 @@ class MinecraftServer:
         self._remove_track_time_interval = None
 
         # Dispatcher signal name
-        signal_name_suffix = self._name.replace(" ", "_")
-        signal_name_suffix = signal_name_suffix.lower()
-        self._signal_name = SIGNAL_NAME_PREFIX + signal_name_suffix
+        self._signal_name = SIGNAL_NAME_PREFIX + self._unique_id
 
         # Periodically update status.
         if update_interval == 0:
@@ -178,6 +178,22 @@ class MinecraftServer:
     def name(self):
         """Return server name."""
         return self._name
+
+    def unique_id(self):
+        """Return server unique ID."""
+        return self._unique_id
+
+    def host(self):
+        """Return server host."""
+        return self._host
+
+    def port(self):
+        """Return server port."""
+        return self._port
+
+    def signal_name(self):
+        """Return dispatcher signal name."""
+        return self._signal_name
 
     def description(self):
         """Return server description."""
@@ -376,12 +392,17 @@ class MinecraftServerEntity(Entity):
         self._sensor_name = name
         self._unit = unit
         self._icon = icon
+        self._unique_id = f"{self._server.unique_id()}-{self._sensor_name}"
+        self._device_info = {
+            "identifiers": {(DOMAIN, self._server.unique_id())},
+            "name": self._server.name(),
+            "manufacturer": MANUFACTURER,
+            "model": f"Minecraft Server ({self._server.version()})",
+            "sw_version": self._server.protocol_version(),
+        }
 
         # Subscribe to signal from server instance.
-        signal_name_suffix = self._server.name()
-        signal_name_suffix = signal_name_suffix.replace(" ", "_")
-        signal_name_suffix = signal_name_suffix.lower()
-        self._signal_name = SIGNAL_NAME_PREFIX + signal_name_suffix
+        self._signal_name = self._server.signal_name()
         async_dispatcher_connect(
             self._hass, self._signal_name, self._async_trigger_update
         )
@@ -395,6 +416,16 @@ class MinecraftServerEntity(Entity):
     def name(self):
         """Return sensor name."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return device information."""
+        return self._device_info
 
     @property
     def state(self):

@@ -13,6 +13,8 @@ SIGNAL_NAME_PREFIX = DOMAIN + "_" + "signal" + "_"
 
 KEY_SERVERS = "servers"
 
+MANUFACTURER = "Mojang AB"
+
 NAME_STATUS = "Status"
 NAME_DESCRIPTION = "Description"
 NAME_VERSION = "Version"

@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from . import MinecraftServer
-from .const import (
+from .const import (  # pylint: disable=unused-import
     CONF_UPDATE_INTERVAL,
     DEFAULT_HOST,
     DEFAULT_NAME,
@@ -42,36 +42,21 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         port = user_input[CONF_PORT]
         update_interval = user_input[CONF_UPDATE_INTERVAL]
 
-        name_exists = False
-
-        # Abort in case the host name was already configured before.
-        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            _LOGGER.debug(
-                "Config entry: name=%s, host=%s",
-                config_entry.data[CONF_NAME],
-                config_entry.data[CONF_HOST],
-            )
-            if config_entry.data[CONF_HOST] == host:
-                # Abort if a config entry exists with same host name.
-                return self.async_abort(reason="host_exists")
-            if config_entry.data[CONF_NAME] == name:
-                # Name already exists.
-                name_exists = True
+        # Abort in case the host was already configured before.
+        await self.async_set_unique_id(f"{host.lower()}-{port}")
+        self._abort_if_unique_id_configured()
 
         errors = {}
 
-        # Validate name configuration (no duplicate).
-        if name_exists:
-            errors["base"] = "name_exists"
         # Validate port configuration (limit to user and dynamic port range).
-        elif (port < 1024) or (port > 65535):
+        if (port < 1024) or (port > 65535):
             errors["base"] = "invalid_port"
         # Validate update interval configuration (min: 5s, max: 24h).
         elif (update_interval < 5) or (update_interval > 86400):
             errors["base"] = "invalid_update_interval"
         # Validate host and port via ping request to server.
         else:
-            server = MinecraftServer(self.hass, name=name, host=host, port=port,)
+            server = MinecraftServer(self.hass, name=name, host=host, port=port)
             await server.async_check_connection()
             if not server.online():
                 errors["base"] = "cannot_connect"
@@ -84,7 +69,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._show_config_form(user_input, errors=errors,)
 
         # Configuration data are available and no error was detected, create configuration entry.
-        return self.async_create_entry(title=name, data=user_input)
+        return self.async_create_entry(title=f"{host}:{port}", data=user_input)
 
     async def _show_config_form(
         self, user_input=None, errors=None,
