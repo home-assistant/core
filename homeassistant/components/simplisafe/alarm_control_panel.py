@@ -30,7 +30,6 @@ from .const import DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ALARM_ACTIVE = "alarm_active"
 ATTR_ALARM_DURATION = "alarm_duration"
 ATTR_ALARM_VOLUME = "alarm_volume"
 ATTR_BATTERY_BACKUP_POWER_LEVEL = "battery_backup_power_level"
