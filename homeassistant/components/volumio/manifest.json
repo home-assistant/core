@@ -1,8 +1,0 @@
-{
-  "domain": "volumio",
-  "name": "Volumio",
-  "documentation": "https://www.home-assistant.io/integrations/volumio",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
-}

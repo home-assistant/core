@@ -1,8 +1,0 @@
-{
-  "domain": "intesishome",
-  "name": "IntesisHome",
-  "documentation": "https://www.home-assistant.io/integrations/intesishome",
-  "dependencies": [],
-  "codeowners": ["@jnimmo"],
-  "requirements": ["pyintesishome==1.5"]
-}

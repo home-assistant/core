@@ -1,8 +1,0 @@
-{
-    "device_automation": {
-        "condition_type": {
-            "is_home": "{entity_name} est \u00e0 la maison",
-            "is_not_home": "{entity_name} n'est pas \u00e0 la maison"
-        }
-    }
-}

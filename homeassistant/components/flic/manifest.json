@@ -1,8 +1,0 @@
-{
-  "domain": "flic",
-  "name": "Flic",
-  "documentation": "https://www.home-assistant.io/integrations/flic",
-  "requirements": ["pyflic-homeassistant==0.4.dev0"],
-  "dependencies": [],
-  "codeowners": []
-}

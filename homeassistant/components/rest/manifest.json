@@ -1,8 +1,0 @@
-{
-  "domain": "rest",
-  "name": "RESTful",
-  "documentation": "https://www.home-assistant.io/integrations/rest",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
-}

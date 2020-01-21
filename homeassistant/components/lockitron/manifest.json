@@ -1,8 +1,0 @@
-{
-  "domain": "lockitron",
-  "name": "Lockitron",
-  "documentation": "https://www.home-assistant.io/integrations/lockitron",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
-}

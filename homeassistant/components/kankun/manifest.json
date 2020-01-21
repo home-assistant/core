@@ -1,8 +1,0 @@
-{
-  "domain": "kankun",
-  "name": "Kankun",
-  "documentation": "https://www.home-assistant.io/integrations/kankun",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
-}

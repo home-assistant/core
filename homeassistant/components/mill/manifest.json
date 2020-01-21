@@ -1,8 +1,0 @@
-{
-  "domain": "mill",
-  "name": "Mill",
-  "documentation": "https://www.home-assistant.io/integrations/mill",
-  "requirements": ["millheater==0.3.4"],
-  "dependencies": [],
-  "codeowners": ["@danielhiversen"]
-}

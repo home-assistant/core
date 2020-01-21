@@ -1,1 +1,0 @@
-"""The nad component."""

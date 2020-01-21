@@ -1,8 +1,0 @@
-{
-  "domain": "temper",
-  "name": "TEMPer",
-  "documentation": "https://www.home-assistant.io/integrations/temper",
-  "requirements": ["temperusb==1.5.3"],
-  "dependencies": [],
-  "codeowners": []
-}

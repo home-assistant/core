@@ -1,8 +1,0 @@
-{
-  "domain": "hikvision",
-  "name": "Hikvision",
-  "documentation": "https://www.home-assistant.io/integrations/hikvision",
-  "requirements": ["pyhik==0.2.5"],
-  "dependencies": [],
-  "codeowners": ["@mezz64"]
-}

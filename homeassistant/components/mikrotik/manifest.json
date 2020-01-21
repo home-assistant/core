@@ -1,8 +1,0 @@
-{
-  "domain": "mikrotik",
-  "name": "MikroTik",
-  "documentation": "https://www.home-assistant.io/integrations/mikrotik",
-  "requirements": ["librouteros==3.0.0"],
-  "dependencies": [],
-  "codeowners": []
-}

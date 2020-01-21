@@ -1,8 +1,0 @@
-{
-  "domain": "fixer",
-  "name": "Fixer",
-  "documentation": "https://www.home-assistant.io/integrations/fixer",
-  "requirements": ["fixerio==1.0.0a0"],
-  "dependencies": [],
-  "codeowners": ["@fabaff"]
-}

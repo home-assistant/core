@@ -1,8 +1,0 @@
-{
-  "domain": "clickatell",
-  "name": "Clickatell",
-  "documentation": "https://www.home-assistant.io/integrations/clickatell",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": []
-}

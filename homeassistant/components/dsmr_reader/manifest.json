@@ -1,8 +1,0 @@
-{
-  "domain": "dsmr_reader",
-  "name": "DSMR Reader",
-  "documentation": "https://www.home-assistant.io/integrations/dsmr_reader",
-  "requirements": [],
-  "dependencies": ["mqtt"],
-  "codeowners": ["@depl0y"]
-}

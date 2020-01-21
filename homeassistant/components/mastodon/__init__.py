@@ -1,1 +1,0 @@
-"""The mastodon component."""

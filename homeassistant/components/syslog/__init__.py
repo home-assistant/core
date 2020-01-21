@@ -1,1 +1,0 @@
-"""The syslog component."""

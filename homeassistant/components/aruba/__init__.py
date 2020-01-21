@@ -1,1 +1,0 @@
-"""The aruba component."""

@@ -1,8 +1,0 @@
-{
-  "domain": "smarty",
-  "name": "Salda Smarty",
-  "documentation": "https://www.home-assistant.io/integrations/smarty",
-  "requirements": ["pysmarty==0.8"],
-  "dependencies": [],
-  "codeowners": ["@z0mbieprocess"]
-}

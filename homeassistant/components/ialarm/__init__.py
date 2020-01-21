@@ -1,1 +1,0 @@
-"""The ialarm component."""

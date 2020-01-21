@@ -1,1 +1,0 @@
-"""The flexit component."""

@@ -1,8 +1,0 @@
-{
-  "domain": "microsoft_face",
-  "name": "Microsoft Face",
-  "documentation": "https://www.home-assistant.io/integrations/microsoft_face",
-  "requirements": [],
-  "dependencies": ["camera"],
-  "codeowners": []
-}

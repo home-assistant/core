@@ -1,9 +1,0 @@
-play_playlist:
-  description: Play a Spotify playlist.
-  fields:
-    media_content_id:
-      description: Spotify URI of the playlist.
-      example: 'spotify:playlist:0IpRnqCHSjun48oQRX1Dy7'
-    random_song:
-      description: True to select random song at start, False to start from beginning.
-      example: true
