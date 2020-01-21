@@ -1,3 +1,7 @@
+<!--
+You are amazing! Thanks for contributing to our project!
+Please, DO NOT DELETE ANY TEXT from this template! (unless instructed). Thanks.
+-->
 ## Breaking change
 <!--
   If your PR contains a breaking change for existing users, it is important
