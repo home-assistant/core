@@ -2,19 +2,10 @@
 from datetime import datetime, timedelta
 import logging
 
-from pygti.gti import GTI
-
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import (
-    ATTRIBUTION,
-    DEFAULT_NAME,
-    DOMAIN,
-    DOMAIN_DATA,
-    ICON,
-    UNIT_OF_MEASUREMENT,
-)
+from .const import DOMAIN, ICON, UNIT_OF_MEASUREMENT
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 MAX_LIST = 5
@@ -26,13 +17,13 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(
     hass, config, async_add_entities, discovery_info=None
 ):  # pylint: disable=unused-argument
-    """Setup sensor platform."""
+    """Set up the sensor platform."""
     # async_add_entities([HVVDepartureSensor(hass, discovery_info)], True)
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Setup sensor platform."""
+    """Set up the sensor platform."""
 
     data = HVVDepartureData(hass, config_entry)
 
@@ -43,6 +34,7 @@ class HVVDepartureSensor(Entity):
     """HVVDepartureSensor class."""
 
     def __init__(self, hass, config, data):
+        """Initialize."""
         self.hass = hass
         self.config = config
         self.station_name = self.config["station"]["name"]
@@ -98,6 +90,7 @@ class HVVDepartureSensor(Entity):
 
     @property
     def device_info(self):
+        """Return the device info for this sensor."""
         return {
             "identifiers": {
                 (DOMAIN, self.config["station"]["id"], self.config["station"]["type"])
@@ -133,9 +126,10 @@ class HVVDepartureSensor(Entity):
 
 
 class HVVDepartureData:
-    """Get the latest data and update the states"""
+    """Get the latest data and update the states."""
 
     def __init__(self, hass, entry):
+        """Initialize."""
         self.hass = hass
         self.entry = entry
         self.config = self.entry.data
@@ -143,7 +137,7 @@ class HVVDepartureData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        _LOGGER.debug("Updating HVV departure data")
+        """Update the HVV departure data."""
 
         try:
 

@@ -2,8 +2,6 @@
 from datetime import datetime, timedelta
 import logging
 
-from pygti.gti import GTI
-
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PROBLEM,
     BinarySensorDevice,
@@ -20,12 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(
     hass, config, async_add_entities, discovery_info=None
 ):  # pylint: disable=unused-argument
-    """Setup sensor platform."""
+    """Set up the sensor platform."""
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Setup sensor platform."""
+    """Set up the sensor platform."""
 
     data = HVVElevatorData(hass, config_entry)
 
@@ -55,6 +53,7 @@ class HVVElevatorBinarySensor(BinarySensorDevice):
     """HVV elevator binary sensor class."""
 
     def __init__(self, hass, config, data, lines, label, description):
+        """Inizialize."""
         self.hass = hass
         self.config = config
         self.data = data
@@ -96,6 +95,7 @@ class HVVElevatorBinarySensor(BinarySensorDevice):
 
     @property
     def device_info(self):
+        """Return the device info for this sensor."""
         return {
             "identifiers": {
                 (DOMAIN, self.config["station"]["id"], self.config["station"]["type"])
@@ -131,9 +131,10 @@ class HVVElevatorBinarySensor(BinarySensorDevice):
 
 
 class HVVElevatorData:
-    """Get the latest data and update the states"""
+    """Get the latest data and update the states."""
 
     def __init__(self, hass, entry):
+        """Initialize."""
         self.hass = hass
         self.entry = entry
         self.config = self.entry.data
@@ -142,7 +143,7 @@ class HVVElevatorData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """update hvv station data"""
+        """Update hvv station data."""
 
         try:
             self.data = self.hass.data[DOMAIN][self.entry.entry_id].stationInformation(
@@ -155,7 +156,7 @@ class HVVElevatorData:
             return False
 
     def get_elevator(self, lines, label):
-        """Get the elevator from the data by lines and label"""
+        """Get the elevator from the data by lines and label."""
 
         for partial_station in self.data["partialStations"]:
             if "elevators" in partial_station:

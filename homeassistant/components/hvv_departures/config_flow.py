@@ -29,7 +29,7 @@ SCHEMA_STEP_FINISH = vol.Schema(
 
 
 class GTIHub:
-    """GTI Hub"""
+    """GTI Hub."""
 
     def __init__(self, host, username, password):
         """Initialize."""
@@ -65,7 +65,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HVV."""
 
     VERSION = 1
-    # TODO pick one of the available connection classes in homeassistant/config_entries.py
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
@@ -76,7 +75,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hub = GTIHub(
                     user_input["host"], user_input["username"], user_input["password"]
                 )
-                info = await validate_input(self.hass, self.hub)
+
+                await validate_input(self.hass, self.hub)
 
                 self.data = user_input
 
@@ -96,7 +96,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_station(self, user_input=None):
-        """Handle the step where the user inputs his/her station"""
+        """Handle the step where the user inputs his/her station."""
         errors = {}
         if user_input is not None:
 
@@ -133,7 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_station_select(self, user_input=None):
-        """Handle the step where the user inputs his/her station"""
+        """Handle the step where the user inputs his/her station."""
         errors = {}
         if user_input is not None:
             self.data.update({"station": self.stations[user_input["station"]]})
@@ -167,7 +167,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_filter(self, user_input=None):
-        """Handle the step where the user inputs his/her station"""
+        """Handle the step where the user selects the lines."""
         errors = {}
         if user_input is not None:
 
@@ -178,8 +178,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
     async def async_step_finish(self, user_input=None):
-        """Handle the step where the user inputs his/her station"""
-        errors = {}
+        """Handle the step where the user finishes the setup."""
         if user_input is not None:
 
             self.data.update(user_input)
