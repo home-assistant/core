@@ -135,8 +135,6 @@ class ZHAGateway:
                 await coro
 
         for device in self.application_controller.devices.values():
-            if device.nwk == 0x0000:
-                continue
             init_tasks.append(
                 init_with_semaphore(self.async_device_restored(device), semaphore)
             )
@@ -160,9 +158,6 @@ class ZHAGateway:
 
     def raw_device_initialized(self, device):
         """Handle a device initialization without quirks loaded."""
-        if device.nwk == 0x0000:
-            return
-
         manuf = device.manufacturer
         async_dispatcher_send(
             self._hass,
@@ -336,9 +331,6 @@ class ZHAGateway:
 
     async def async_device_initialized(self, device):
         """Handle device joined and basic information discovered (async)."""
-        if device.nwk == 0x0000:
-            return
-
         zha_device = self._async_get_or_create_device(device)
 
         _LOGGER.debug(
