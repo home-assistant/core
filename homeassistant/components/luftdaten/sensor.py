@@ -24,11 +24,6 @@ from .const import ATTR_SENSOR_ID
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up an Luftdaten sensor based on existing config."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Luftdaten sensor based on a config entry."""
     luftdaten = hass.data[DOMAIN][DATA_LUFTDATEN_CLIENT][entry.entry_id]

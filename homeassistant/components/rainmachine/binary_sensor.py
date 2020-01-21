@@ -28,11 +28,6 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up  RainMachine binary sensors based on the old way."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine binary sensors based on a config entry."""
     rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
