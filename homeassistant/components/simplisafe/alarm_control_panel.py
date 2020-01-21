@@ -19,7 +19,9 @@ from homeassistant.const import (
     CONF_CODE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.util.dt import utc_from_timestamp
 
@@ -80,7 +82,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
         self._simplisafe = simplisafe
         self._state = None
 
-        self._attrs.update({ATTR_ALARM_ACTIVE: self._system.alarm_going_off})
         if self._system.version == 3:
             self._attrs.update(
                 {
@@ -168,16 +169,20 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
 
         self._online = True
 
-        if self._system.state == SystemStates.off:
-            self._state = STATE_ALARM_DISARMED
-        elif self._system.state in (SystemStates.home, SystemStates.home_count):
-            self._state = STATE_ALARM_ARMED_HOME
+        if self._system.alarm_going_off:
+            self._state = STATE_ALARM_TRIGGERED
+        elif self._system.state == SystemStates.away:
+            self._state = STATE_ALARM_ARMED_AWAY
         elif self._system.state in (
-            SystemStates.away,
             SystemStates.away_count,
             SystemStates.exit_delay,
+            SystemStates.home_count,
         ):
-            self._state = STATE_ALARM_ARMED_AWAY
+            self._state = STATE_ALARM_ARMING
+        elif self._system.state == SystemStates.home:
+            self._state = STATE_ALARM_ARMED_HOME
+        elif self._system.state == SystemStates.off:
+            self._state = STATE_ALARM_DISARMED
         else:
             self._state = None
 
