@@ -1,6 +1,8 @@
 """Test ZHA Core channels."""
+import asyncio
 from unittest import mock
 
+import asynctest
 import pytest
 import zigpy.types as t
 
@@ -33,7 +35,7 @@ async def zha_gateway(hass, setup_zha):
 
 @pytest.fixture
 def ep_channels():
-    """EndpointChannels fixture."""
+    """Endpoint Channels fixture."""
     ep_ch_mock = mock.MagicMock(spec_set=zha_channels.EndpointChannels)
     ep_ch_mock.id = 1
     return ep_ch_mock
@@ -320,14 +322,44 @@ def test_channel_power_config(m1, zha_device_mock):
     assert "1:0x0001" not in channels.endpoints[1].all_channels
     assert "2:0x0001" in channels.endpoints[2].all_channels
 
-    zha_device = zha_device(
-        {2: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0x0000},}
-    )
-    channels = zha_channels.Channels.new(zha_device)
-    assert "2:1" in channels.endpoints[2].all_channels
-
     zha_device = zha_device_mock(
         {2: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0x0000}}
     )
     channels = zha_channels.Channels.new(zha_device)
     assert "2:0x0001" in channels.endpoints[2].all_channels
+
+
+async def test_ep_channels_configure(channel):
+    """Test unclaimed channels."""
+
+    ch_1 = channel(zha_const.CHANNEL_ON_OFF, 6)
+    ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
+    ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
+    ch_3.async_configure = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
+    ch_3.async_initialize = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
+    ch_4 = channel(zha_const.CHANNEL_ON_OFF, 6)
+    ch_5 = channel(zha_const.CHANNEL_LEVEL, 8)
+    ch_5.async_configure = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
+    ch_5.async_initialize = asynctest.CoroutineMock(side_effect=asyncio.TimeoutError)
+
+    channels = mock.MagicMock(spec_set=zha_channels.Channels)
+    type(channels).semaphore = mock.PropertyMock(return_value=asyncio.Semaphore(3))
+    ep_channels = zha_channels.EndpointChannels(channels, mock.sentinel.ep)
+
+    claimed = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
+    relay = {ch_4.id: ch_4, ch_5.id: ch_5}
+
+    with mock.patch.dict(ep_channels.claimed_channels, claimed, clear=True):
+        with mock.patch.dict(ep_channels.relay_channels, relay, clear=True):
+            await ep_channels.async_configure()
+            await ep_channels.async_initialize(mock.sentinel.from_cache)
+
+    for ch in [*claimed.values(), *relay.values()]:
+        assert ch.async_initialize.call_count == 1
+        assert ch.async_initialize.await_count == 1
+        assert ch.async_initialize.call_args[0][0] is mock.sentinel.from_cache
+        assert ch.async_configure.call_count == 1
+        assert ch.async_configure.await_count == 1
+
+    assert ch_3.warning.call_count == 2
+    assert ch_5.warning.call_count == 2

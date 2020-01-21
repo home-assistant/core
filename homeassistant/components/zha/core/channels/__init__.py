@@ -4,6 +4,7 @@ Channels module for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+import asyncio
 import logging
 from typing import Any, Dict, List, Optional, Union
 
@@ -36,25 +37,10 @@ class Channels:
         """Initialize instance."""
         self._endpoints = {}
         self._power_config = None
+        self._semaphore = asyncio.Semaphore(3)
+        self._unique_id = str(zha_device.ieee)
         self._zdo_channel = base.ZDOChannel(zha_device.device.endpoints[0], zha_device)
         self._zha_device = zha_device
-        self._unique_id = str(zha_device.ieee)
-
-    @property
-    def claimed_channels(self) -> Dict[str, zha_typing.ChannelType]:
-        """Return all claimed channels."""
-        channels = {
-            ch_id: ch
-            for ep_id in sorted(self.endpoints)
-            for ch_id, ch in self.endpoints[ep_id].claimed_channels.items()
-        }
-        channels.update(
-            {
-                self.zdo_channel.id: self.zdo_channel,
-                self.power_configuration_ch.id: self.power_configuration_ch,
-            }
-        )
-        return channels
 
     @property
     def endpoints(self) -> Dict[int, "EndpointChannels"]:
@@ -71,6 +57,11 @@ class Channels:
         """Power configuration channel setter."""
         if self._power_config is None:
             self._power_config = channel
+
+    @property
+    def semaphore(self) -> asyncio.Semaphore:
+        """Return semaphore for concurrent tasks."""
+        return self._semaphore
 
     @property
     def zdo_channel(self) -> zha_typing.ZDOChannelType:
@@ -103,11 +94,17 @@ class Channels:
 
     async def async_initialize(self, from_cache: bool = False) -> None:
         """Initialize claimed channels."""
-        pass
+        await self.zdo_channel.async_initialize(from_cache)
+        self.zdo_channel.debug("'async_initialize' stage succeeded")
+        await asyncio.gather(
+            *(ep.async_initialize(from_cache) for ep in self.endpoints.values())
+        )
 
     async def async_configure(self) -> None:
         """Configure claimed channels."""
-        pass
+        await self.zdo_channel.async_configure()
+        self.zdo_channel.debug("'async_configure' stage succeeded")
+        await asyncio.gather(*(ep.async_configure() for ep in self.endpoints.values()))
 
     @callback
     def async_new_entity(
@@ -149,8 +146,8 @@ class EndpointChannels:
         self._channels = channels
         self._claimed_channels = {}
         self._id = ep_id
-        self._unique_id = f"{channels.unique_id}-{ep_id}"
         self._relay_channels = {}
+        self._unique_id = f"{channels.unique_id}-{ep_id}"
 
     @property
     def all_channels(self) -> Dict[str, zha_typing.ChannelType]:
@@ -250,6 +247,30 @@ class EndpointChannels:
             if cluster is not None:
                 ch = base.EventRelayChannel(cluster, self)
                 self.relay_channels[ch.id] = ch
+
+    async def async_initialize(self, from_cache: bool = False) -> None:
+        """Initialize claimed channels."""
+        await self._execute_channel_tasks("async_initialize", from_cache)
+
+    async def async_configure(self) -> None:
+        """Configure claimed channels."""
+        await self._execute_channel_tasks("async_configure")
+
+    async def _execute_channel_tasks(self, func_name: str, *args: Any) -> None:
+        """Add a throttled channel task and swallow exceptions."""
+
+        async def _throttle(coro):
+            async with self._channels.semaphore:
+                return await coro
+
+        channels = [*self.claimed_channels.values(), *self.relay_channels.values()]
+        tasks = [_throttle(getattr(ch, func_name)(*args)) for ch in channels]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for ch, outcome in zip(channels, results):
+            if isinstance(outcome, Exception):
+                ch.warning("'%s' stage failed: %s", func_name, str(outcome))
+                continue
+            ch.debug("'%s' stage succeeded", func_name)
 
     @callback
     def async_new_entity(

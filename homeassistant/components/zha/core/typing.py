@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Callable, TypeVar
 import zigpy.device
 import zigpy.endpoint
 import zigpy.zcl
+import zigpy.zdo
 
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 ChannelType = "ZigbeeChannel"
@@ -18,6 +19,7 @@ ZhaGatewayType = "ZHAGateway"
 ZigpyClusterType = zigpy.zcl.Cluster
 ZigpyDeviceType = zigpy.device.Device
 ZigpyEndpointType = zigpy.endpoint.Endpoint
+ZigpyZdoType = zigpy.zdo.ZDO
 
 if TYPE_CHECKING:
     import homeassistant.components.zha.core.channels as channels
