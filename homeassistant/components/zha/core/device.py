@@ -165,8 +165,10 @@ class ZHADevice(LogMixin):
     @property
     def device_type(self):
         """Return the logical device type for the device."""
-        device_type = self._zigpy_device.node_desc.logical_type
-        return device_type.name if device_type else UNKNOWN
+        node_descriptor = self._zigpy_device.node_desc
+        return (
+            node_descriptor.logical_type.name if node_descriptor.is_valid else UNKNOWN
+        )
 
     @property
     def power_source(self):
