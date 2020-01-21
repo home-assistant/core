@@ -25,9 +25,11 @@
 <!--
   What types of changes does your PR introduce to our Home Assistant?
   NOTE: Please, check only 1! box! 
-  If your PR requires multiple boxes checked, you'll need to split it into multiple PRs.
+  If your PR requires multiple boxes to be checked, you'll most likely need to
+  split it into multiple PRs. This makes things easier and faster to code review.
 -->
 
+- [ ] Dependency upgrade
 - [ ] Bugfix (non-breaking change which fixes an issue)
 - [ ] New integration (thank you!)
 - [ ] New feature (which adds functionality to an existing integration)
