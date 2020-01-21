@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "username_exists": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
         },
         "error": {
             "login": "\u767b\u5165\u932f\u8aa4\uff1a\u8acb\u78ba\u8a8d\u96fb\u5b50\u90f5\u4ef6\u8207\u79d8\u5bc6\u6b63\u78ba\u6027",
