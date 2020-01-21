@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.media_player import DEVICE_CLASS_SPEAKER, DEVICE_CLASS_TV
-from homeassistant.config_entries import SOURCE_ZEROCONF, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -64,10 +64,8 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self.import_schema = None
         self.user_schema = None
-        self.discovery_schema = None
-        self.show_form_for_zeroconf = True
+        self._must_show_form = None
 
     async def async_step_user(
         self, user_input: Dict[str, Any] = None
@@ -105,14 +103,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "tv_needs_token"
 
             if not errors:
-                # If config flow is initiated by zeroconf discovery, always require user to go through form to finish setup
-                # pylint: disable=no-member # Needed because of https://github.com/PyCQA/pylint/issues/3167
-                if (
-                    self.context is not None
-                    and self.context.get("source") == SOURCE_ZEROCONF
-                    and self.show_form_for_zeroconf
-                ):
-                    self.show_form_for_zeroconf = False
+                # Skip validating config and creating entry if form must be shown
+                if self._must_show_form:
+                    self._must_show_form = False
                 else:
                     # Abort flow if existing entry with same unique ID matches new config entry.
                     # Since name and host check have already passed, if an entry already exists,
@@ -134,12 +127,8 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         title=user_input[CONF_NAME], data=user_input
                     )
 
-        schema = (
-            self.discovery_schema
-            or self.user_schema
-            or self.import_schema
-            or _config_flow_schema({})
-        )
+        # Use user_input params as default values for schema if user_input is non-empty, otherwise use default schema
+        schema = self.user_schema or _config_flow_schema({})
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
@@ -168,9 +157,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_abort(reason="already_setup")
 
-        # Store import values in case setup fails so user can see error
-        self.import_schema = _config_flow_schema(import_config)
-
         return await self.async_step_user(user_input=import_config)
 
     async def async_step_zeroconf(
@@ -196,8 +182,8 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info[CONF_HOST]
         )
 
-        # Store discovery values so user can finish setup
-        self.discovery_schema = _config_flow_schema(discovery_info)
+        # Form must be shown after discovery so user can confirm/update configuration before ConfigEntry creation.
+        self._must_show_form = True
 
         return await self.async_step_user(user_input=discovery_info)
 
