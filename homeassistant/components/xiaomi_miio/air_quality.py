@@ -1,13 +1,14 @@
 """Support for Xiaomi Mi Air Quality Monitor (PM2.5)."""
 import logging
 
-import voluptuous as vol
 from miio import AirQualityMonitor, Device, DeviceException
+import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
-from homeassistant.exceptions import PlatformNotReady, NoEntitySpecifiedError
+from homeassistant.exceptions import NoEntitySpecifiedError, PlatformNotReady
+import homeassistant.helpers.config_validation as cv
+
 from .const import (
     MODEL_AIRQUALITYMONITOR_B1,
     MODEL_AIRQUALITYMONITOR_S1,
