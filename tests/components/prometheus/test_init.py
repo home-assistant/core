@@ -46,7 +46,9 @@ async def prometheus_client(loop, hass, hass_client):
     sensor4.entity_id = "sensor.wind_direction"
     await sensor4.async_update_ha_state()
 
-    sensor5 = DemoSensor(None, "SPS30 PM <1µm Weight concentration", 3.7069, None, "µg/m³", None)
+    sensor5 = DemoSensor(
+        None, "SPS30 PM <1µm Weight concentration", 3.7069, None, "µg/m³", None
+    )
     sensor5.hass = hass
     sensor5.entity_id = "sensor.sps30_pm_1um_weight_concentration"
     await sensor5.async_update_ha_state()
