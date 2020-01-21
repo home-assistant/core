@@ -18,7 +18,8 @@
                                         "shuffle": false,
                                         "source": true
                                     },
-                                    "icon": "mdi:speaker",
+                                    "speaker_group": {"platform": "ais", "show_group_count": true},
+                                    "icon": "mdi:monitor-speaker",
                                     "more_info": false,
                                     "name": " ",
                                     "shortcuts": {

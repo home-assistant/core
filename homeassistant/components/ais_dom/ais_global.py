@@ -1,8 +1,9 @@
 """
 Support for functionality to cache some data for AI-Speaker.
 """
-import socket
 import logging
+import socket
+
 import requests
 
 # LV settings
@@ -60,6 +61,7 @@ G_NAME_FOR_AUDIO_NATURE = {
     G_AN_BOOKMARK: "Zakładki",
 }
 
+G_SPEAKERS_GROUP_LIST = ["media_player.wbudowany_glosnik"]
 
 # tokens
 G_OFFLINE_MODE = False
