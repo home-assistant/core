@@ -31,7 +31,7 @@ from .const import (
     INSTEON_ENTITIES,
 )
 from .schemas import CONFIG_SCHEMA  # noqa F440
-from .utils import register_services
+from .utils import register_new_device_callback, register_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +72,14 @@ async def async_setup(hass, config):
 
     insteon_modem = conn.protocol
 
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN]["modem"] = insteon_modem
+    hass.data[DOMAIN][INSTEON_ENTITIES] = {}
+
+    register_services(hass, config, insteon_modem)
+    register_new_device_callback(hass, config, insteon_modem)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
+
     for device_override in overrides:
         #
         # Override the device default capabilities for a specific address
@@ -84,12 +92,6 @@ async def async_setup(hass, config):
                 insteon_modem.devices.add_override(
                     address, CONF_PRODUCT_KEY, device_override[prop]
                 )
-
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]["modem"] = insteon_modem
-    hass.data[DOMAIN][INSTEON_ENTITIES] = {}
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
 
     if x10_all_units_off_housecode:
         device = insteon_modem.add_x10_device(
@@ -118,7 +120,5 @@ async def async_setup(hass, config):
         device = insteon_modem.add_x10_device(housecode, unitcode, x10_type)
         if device and hasattr(device.states[0x01], "steps"):
             device.states[0x01].steps = steps
-
-    hass.async_add_job(register_services, hass, config, insteon_modem)
 
     return True

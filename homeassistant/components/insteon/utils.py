@@ -47,8 +47,27 @@ from .schemas import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def register_services(hass, config, insteon_modem):
-    """Register services used by insteon component."""
+def register_new_device_callback(hass, config, insteon_modem):
+    """Register callback for new Insteon device."""
+
+    def _fire_button_on_off_event(address, group, val):
+        # Firing an event when a button is pressed.
+        device = insteon_modem.devices[address.hex]
+        state_name = device.states[group].name
+        button = (
+            "" if state_name == BUTTON_PRESSED_STATE_NAME else state_name[-1].lower()
+        )
+        schema = {CONF_ADDRESS: address.hex}
+        if button != "":
+            schema[EVENT_CONF_BUTTON] = button
+        if val:
+            event = EVENT_BUTTON_ON
+        else:
+            event = EVENT_BUTTON_OFF
+        _LOGGER.debug(
+            "Firing event %s with address %s and button %s", event, address.hex, button
+        )
+        hass.bus.fire(event, schema)
 
     @callback
     def async_new_insteon_device(device):
@@ -83,24 +102,11 @@ def register_services(hass, config, insteon_modem):
                         )
                     )
 
-    def _fire_button_on_off_event(address, group, val):
-        # Firing an event when a button is pressed.
-        device = insteon_modem.devices[address.hex]
-        state_name = device.states[group].name
-        button = (
-            "" if state_name == BUTTON_PRESSED_STATE_NAME else state_name[-1].lower()
-        )
-        schema = {CONF_ADDRESS: address.hex}
-        if button != "":
-            schema[EVENT_CONF_BUTTON] = button
-        if val:
-            event = EVENT_BUTTON_ON
-        else:
-            event = EVENT_BUTTON_OFF
-        _LOGGER.debug(
-            "Firing event %s with address %s and button %s", event, address.hex, button
-        )
-        hass.bus.fire(event, schema)
+    insteon_modem.devices.add_device_callback(async_new_insteon_device)
+
+
+def register_services(hass, config, insteon_modem):
+    """Register services used by insteon component."""
 
     def add_all_link(service):
         """Add an INSTEON All-Link between two devices."""
@@ -167,8 +173,6 @@ def register_services(hass, config, insteon_modem):
         """Trigger an INSTEON scene ON."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
         insteon_modem.trigger_group_off(group)
-
-    insteon_modem.devices.add_device_callback(async_new_insteon_device)
 
     hass.services.register(
         DOMAIN, SRV_ADD_ALL_LINK, add_all_link, schema=ADD_ALL_LINK_SCHEMA
