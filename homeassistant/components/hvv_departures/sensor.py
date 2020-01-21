@@ -5,11 +5,13 @@ import logging
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, ICON, UNIT_OF_MEASUREMENT
+from .const import DOMAIN
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 MAX_LIST = 5
 MAX_TIME_OFFSET = 200
+ICON = "mdi:bus"
+UNIT_OF_MEASUREMENT = "min"
 
 _LOGGER = logging.getLogger(__name__)
 

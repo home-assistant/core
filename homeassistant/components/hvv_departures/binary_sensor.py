@@ -8,9 +8,10 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, ICON_ELEVATOR
+from .const import DOMAIN
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
+ICON = "mdi:elevator"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,7 +123,7 @@ class HVVElevatorBinarySensor(BinarySensorDevice):
     @property
     def icon(self):
         """Return the icon of the sensor."""
-        return ICON_ELEVATOR
+        return ICON
 
     @property
     def device_state_attributes(self):
