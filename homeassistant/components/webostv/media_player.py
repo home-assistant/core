@@ -229,8 +229,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         client_state = self._client.power_state.get("state")
         if client_state in [None, "Power Off", "Suspend", "Active Standby"]:
             return STATE_OFF
-        else:
-            return client_state
+
+        return client_state
 
     @property
     def is_volume_muted(self):
@@ -242,8 +242,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         if self._client.volume is not None:
             return self._client.volume / 100.0
-        else:
-            return None
+
+        return None
 
     @property
     def source(self):
@@ -260,8 +260,8 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         """Content type of current playing media."""
         if self._client.current_appId == LIVE_TV_APP_ID:
             return MEDIA_TYPE_CHANNEL
-        else:
-            return None
+
+        return None
 
     @property
     def media_title(self):
