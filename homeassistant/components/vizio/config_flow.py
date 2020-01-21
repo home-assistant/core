@@ -65,6 +65,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize config flow."""
         self.user_schema = None
+        self.import_schema = None
         self._must_show_form = None
 
     async def async_step_user(
@@ -128,7 +129,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
 
         # Use user_input params as default values for schema if user_input is non-empty, otherwise use default schema
-        schema = self.user_schema or _config_flow_schema({})
+        schema = self.user_schema or self.import_schema or _config_flow_schema({})
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
@@ -156,6 +157,9 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="updated_options")
 
                 return self.async_abort(reason="already_setup")
+
+        # Store import values in case setup fails so user can see error
+        self.import_schema = _config_flow_schema(import_config)
 
         return await self.async_step_user(user_input=import_config)
 
