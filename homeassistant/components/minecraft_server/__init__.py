@@ -44,8 +44,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Minecraft Server from a config entry."""
-    _LOGGER.debug("Setting up component...")
-
     if DOMAIN not in hass.data:
         hass.data.setdefault(DOMAIN, {})
 
@@ -66,8 +64,6 @@ async def async_setup_entry(hass, config_entry):
             hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
-    _LOGGER.debug("Component setup finished.")
-
     return True
 
 
@@ -82,7 +78,6 @@ async def async_unload_entry(hass, config_entry):
 
     # Unload platforms.
     for platform in PLATFORMS:
-        _LOGGER.debug("Unloading platform '%s'...", platform)
         await hass.config_entries.async_forward_entry_unload(config_entry, platform)
 
     # Clean up.
@@ -90,8 +85,6 @@ async def async_unload_entry(hass, config_entry):
     server.stop_periodic_update()
     _LOGGER.debug("Deleting data...")
     hass.data[DOMAIN].pop(name)
-
-    _LOGGER.debug("Unloading finished.")
 
     return True
 

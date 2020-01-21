@@ -22,8 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Minecraft Server sensor platform."""
-    _LOGGER.debug("Setting up platform...")
-
     server = hass.data[DOMAIN][config_entry.data[CONF_NAME]]
 
     # Create entities list.
@@ -39,10 +37,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ]
 
     # Add sensor entities.
-    _LOGGER.debug("Adding sensor entities...")
     async_add_entities(entities, True)
-
-    _LOGGER.debug("Platform setup finished.")
 
 
 class MinecraftServerStatusSensor(MinecraftServerEntity):
