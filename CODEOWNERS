@@ -302,6 +302,7 @@ homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc
 homeassistant/components/smartthings/* @andrewsayre
 homeassistant/components/smarty/* @z0mbieprocess
+homeassistant/components/sms/* @ocalvo
 homeassistant/components/smtp/* @fabaff
 homeassistant/components/solaredge_local/* @drobtravels @scheric
 homeassistant/components/solarlog/* @Ernst79
