@@ -10,16 +10,49 @@ from . import (
     PROVISION_SETTINGS,
     RESTRICTIONS_UNIVERSAL,
     SENSOR_UPDATE_TOPIC,
-    SENSORS,
-    TYPE_FLOW_SENSOR_CLICK_M3,
-    TYPE_FLOW_SENSOR_CONSUMED_LITERS,
-    TYPE_FLOW_SENSOR_START_INDEX,
-    TYPE_FLOW_SENSOR_WATERING_CLICKS,
-    TYPE_FREEZE_TEMP,
     RainMachineEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+TYPE_FLOW_SENSOR_CLICK_M3 = "flow_sensor_clicks_cubic_meter"
+TYPE_FLOW_SENSOR_CONSUMED_LITERS = "flow_sensor_consumed_liters"
+TYPE_FLOW_SENSOR_START_INDEX = "flow_sensor_start_index"
+TYPE_FLOW_SENSOR_WATERING_CLICKS = "flow_sensor_watering_clicks"
+TYPE_FREEZE_TEMP = "freeze_protect_temp"
+
+SENSORS = {
+    TYPE_FLOW_SENSOR_CLICK_M3: (
+        "Flow Sensor Clicks",
+        "mdi:water-pump",
+        "clicks/m^3",
+        None,
+    ),
+    TYPE_FLOW_SENSOR_CONSUMED_LITERS: (
+        "Flow Sensor Consumed Liters",
+        "mdi:water-pump",
+        "liter",
+        None,
+    ),
+    TYPE_FLOW_SENSOR_START_INDEX: (
+        "Flow Sensor Start Index",
+        "mdi:water-pump",
+        "index",
+        None,
+    ),
+    TYPE_FLOW_SENSOR_WATERING_CLICKS: (
+        "Flow Sensor Clicks",
+        "mdi:water-pump",
+        "clicks",
+        None,
+    ),
+    TYPE_FREEZE_TEMP: (
+        "Freeze Protect Temperature",
+        "mdi:thermometer",
+        "°C",
+        "temperature",
+    ),
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -27,8 +60,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensors = []
-    for sensor_type in rainmachine.sensor_conditions:
-        name, icon, unit, device_class = SENSORS[sensor_type]
+    for sensor_type, attrs in SENSORS.items():
+        name, icon, unit, device_class = attrs
         sensors.append(
             RainMachineSensor(rainmachine, sensor_type, name, icon, unit, device_class)
         )
