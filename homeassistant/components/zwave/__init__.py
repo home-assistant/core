@@ -126,8 +126,8 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema(
 SET_NODE_VALUE_SCHEMA = vol.Schema(
     {
         vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
-        vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
+        vol.Required(const.ATTR_VALUE_ID): vol.Any(vol.Coerce(int), cv.string),
+        vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(vol.Coerce(int), cv.string),
     }
 )
 
