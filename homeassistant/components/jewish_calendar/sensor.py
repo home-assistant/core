@@ -129,7 +129,7 @@ class JewishCalendarSensor(Entity):
         if self._type == "omer_count":
             return after_shkia_date.omer_day
         if self._type == "daf_yomi":
-            return hdate.HDate(today, diaspora=self._diaspora, hebrew=self._hebrew).daf_yomi
+            return hdate.HDate(dt_util.now().date(), diaspora=self._diaspora, hebrew=self._hebrew).daf_yomi
 
         return None
 
