@@ -19,12 +19,12 @@ from .const import (
     ATTR_DISTANCE,
     ATTR_DURATION,
     ATTR_DURATION_IN_TRAFFIC,
-    ATTR_MODE,
     ATTR_ORIGIN,
     ATTR_ORIGIN_NAME,
     ATTR_ROUTE,
     ATTR_ROUTE_MODE,
     ATTR_TRAFFIC_MODE,
+    ATTR_TRAVEL_MODE,
     ATTR_UNIT_SYSTEM,
     DOMAIN,
     UNIT_OF_MEASUREMENT,
@@ -98,7 +98,7 @@ class TravelTimeEntity(Entity):
         return None
 
     @property
-    def mode(self) -> str:
+    def travel_mode(self) -> str:
         """Get the mode of travelling e.g car for this entity."""
         return None
 
@@ -130,7 +130,7 @@ class TravelTimeEntity(Entity):
     @property
     def state(self) -> Optional[str]:
         """Return the state of the travel_time entity."""
-        return None
+        return self.duration
 
     @property
     def traffic_mode(self) -> Optional[str]:
@@ -169,8 +169,8 @@ class TravelTimeEntity(Entity):
         if self.duration_in_traffic is not None:
             res[ATTR_DURATION_IN_TRAFFIC] = self.duration_in_traffic
 
-        if self.mode is not None:
-            res[ATTR_MODE] = self.mode
+        if self.travel_mode is not None:
+            res[ATTR_TRAVEL_MODE] = self.travel_mode
 
         if self.origin is not None:
             res[ATTR_ORIGIN] = self.origin
