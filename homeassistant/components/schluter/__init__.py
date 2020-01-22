@@ -2,17 +2,10 @@
 from datetime import timedelta
 import logging
 
-import voluptuous as vol
+from requests import RequestException, Session
 from schluter.api import Api
 from schluter.authenticator import AuthenticationState, Authenticator
-from .const import DOMAIN
-from requests import RequestException, Session
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -20,12 +13,16 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
 
 DATA_SCHLUTER = "schluter"
-DOMAIN = "schluter"
 PLATFORMS = ["climate"]
 DEFAULT_TIMEOUT = 10
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
@@ -123,6 +120,7 @@ class SchluterData:
     """Schluter data object."""
 
     def __init__(self, hass, api, session_id):
+        """Initialize Schluter data."""
         self._hass = hass
         self._api = api
         self._session_id = session_id

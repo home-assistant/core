@@ -1,8 +1,9 @@
 """Support for Schluter thermostats."""
-import logging
-import voluptuous as vol
-from requests import RequestException
 from datetime import timedelta
+import logging
+
+from requests import RequestException
+import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
@@ -65,6 +66,7 @@ class SchluterThermostat(ClimateDevice):
 
     @property
     def should_poll(self):
+        """Return if platform should poll."""
         return True
 
     @property
