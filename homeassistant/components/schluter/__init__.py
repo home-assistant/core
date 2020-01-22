@@ -23,7 +23,6 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
-_CONFIGURING = {}
 
 DATA_SCHLUTER = "schluter"
 DOMAIN = "schluter"
@@ -68,9 +67,6 @@ def setup_schluter(hass, config, api, authenticator):
     state = authentication.state
 
     if state == AuthenticationState.AUTHENTICATED:
-        if DOMAIN in _CONFIGURING:
-            hass.components.configurator.request_done(_CONFIGURING.pop(DOMAIN))
-
         hass.data[DATA_SCHLUTER] = SchluterData(hass, api, authentication.session_id)
 
         for component in PLATFORMS:
