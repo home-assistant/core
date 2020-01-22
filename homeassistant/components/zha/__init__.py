@@ -89,9 +89,9 @@ async def async_setup_entry(hass, config_entry):
     Will automatically load components to support devices found on the network.
     """
 
+    hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED] = {}
     for component in COMPONENTS:
-        hass.data[DATA_ZHA][component] = hass.data[DATA_ZHA].get(component, [])
-        hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED] = {component: asyncio.Event()}
+        hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED][component] = asyncio.Event()
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
@@ -126,7 +126,7 @@ async def async_setup_entry(hass, config_entry):
         await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
 
     hass.bus.async_listen_once(ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown)
-    hass.async_create_task(zha_gateway.async_restore_devices())
+    hass.async_create_task(zha_gateway.async_load_devices())
     return True
 
 

@@ -25,7 +25,12 @@ from . import (  # noqa: F401 # pylint: disable=unused-import
     security,
     smartenergy,
 )
-from .. import const, registries as zha_regs, typing as zha_typing
+from .. import (
+    const,
+    device as zha_core_device,
+    registries as zha_regs,
+    typing as zha_typing,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,6 +120,9 @@ class Channels:
         channels: List[zha_typing.ChannelType],
     ):
         """Signal new entity addition."""
+        if self.zha_device.status == zha_core_device.DeviceStatus.INITIALIZED:
+            return
+
         self.async_send_signal(
             enqueue_signal, entity, (unique_id, self.zha_device, channels)
         )

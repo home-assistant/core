@@ -23,6 +23,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import HomeAssistantType
 
 from . import channels, typing as zha_typing
 from .const import (
@@ -78,7 +79,12 @@ class DeviceStatus(Enum):
 class ZHADevice(LogMixin):
     """ZHA Zigbee device object."""
 
-    def __init__(self, hass, zigpy_device, zha_gateway):
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        zigpy_device: zha_typing.ZigpyDeviceType,
+        zha_gateway: zha_typing.ZhaGatewayType,
+    ):
         """Initialize the gateway."""
         self.hass = hass
         self._zigpy_device = zigpy_device
@@ -102,7 +108,7 @@ class ZHADevice(LogMixin):
         )
         self._ha_device_id = None
         self.status = DeviceStatus.CREATED
-        self._channels = channels.Channels.new(self)
+        self._channels = channels.Channels(self)
 
     @property
     def device_id(self):
@@ -117,6 +123,17 @@ class ZHADevice(LogMixin):
     def device(self) -> zha_typing.ZigpyDeviceType:
         """Return underlying Zigpy device."""
         return self._zigpy_device
+
+    @property
+    def channels(self) -> zha_typing.ChannelsType:
+        """Return ZHA channels."""
+        return self._channels
+
+    @channels.setter
+    def channels(self, value: zha_typing.ChannelsType) -> None:
+        """Channels setter."""
+        assert isinstance(value, channels.Channels)
+        self._channels = value
 
     @property
     def name(self):
@@ -250,6 +267,19 @@ class ZHADevice(LogMixin):
     def set_available(self, available):
         """Set availability from restore and prevent signals."""
         self._available = available
+
+    @classmethod
+    def new(
+        cls,
+        hass: HomeAssistantType,
+        zigpy_dev: zha_typing.ZigpyDeviceType,
+        gateway: zha_typing.ZhaGatewayType,
+        restored: bool = False,
+    ):
+        """Create new device."""
+        zha_dev = cls(hass, zigpy_dev, gateway)
+        zha_dev.channels = channels.Channels.new(zha_dev)
+        return zha_dev
 
     def _check_available(self, *_):
         if self.last_seen is None:
