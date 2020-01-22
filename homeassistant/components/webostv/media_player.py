@@ -30,6 +30,7 @@ from homeassistant.const import (
     CONF_NAME,
     ENTITY_MATCH_ALL,
     STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.script import Script
@@ -230,7 +231,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         if client_state in [None, "Power Off", "Suspend", "Active Standby"]:
             return STATE_OFF
 
-        return client_state
+        return STATE_ON
 
     @property
     def is_volume_muted(self):
