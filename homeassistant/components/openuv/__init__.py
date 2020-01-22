@@ -178,7 +178,7 @@ async def async_unload_entry(hass, config_entry):
 async def async_migrate_entry(hass, config_entry):
     """Migrate the config entry upon new versions."""
     version = config_entry.version
-    data = config_entry.data
+    data = {**config_entry.data}
 
     _LOGGER.debug("Migrating from version %s", version)
 
@@ -188,7 +188,7 @@ async def async_migrate_entry(hass, config_entry):
         data.pop(CONF_SENSORS, None)
         version = config_entry.version = 2
         hass.config_entries.async_update_entry(config_entry, data=data)
-        _LOGGER.info("Migration to version %s successful", version)
+        _LOGGER.debug("Migration to version %s successful", version)
 
     return True
 
