@@ -317,11 +317,14 @@ async def websocket_add_group(hass, connection, msg):
     """Add a new ZHA group."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ha_device_registry = await async_get_registry(hass)
-    group_id = len(zha_gateway.application_controller.groups) + 1
     group_name = msg[GROUP_NAME]
     zigpy_group = async_get_group_by_name(zha_gateway, group_name)
     ret_group = None
     members = msg.get(ATTR_MEMBERS)
+    # we start with one to fill any gaps from a user removing existing groups
+    group_id = 1
+    while group_id in zha_gateway.application_controller.groups:
+        group_id += 1
 
     # guard against group already existing
     if zigpy_group is None:
