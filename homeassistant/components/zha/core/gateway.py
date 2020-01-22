@@ -155,6 +155,7 @@ class ZHAGateway:
                 await self.async_device_restored(device)
 
         zigpy_devices = self.application_controller.devices.values()
+        _LOGGER.debug("Loading battery powered devices")
         await asyncio.gather(
             *[
                 _throttle(dev)
@@ -162,12 +163,13 @@ class ZHAGateway:
                 if not dev.node_desc.is_mains_powered
             ]
         )
-        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
+        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES, False)
 
+        _LOGGER.debug("Loading mains powered devices")
         await asyncio.gather(
             *[_throttle(dev) for dev in zigpy_devices if dev.node_desc.is_mains_powered]
         )
-        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
+        async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES, False)
 
     def device_joined(self, device):
         """Handle device joined.

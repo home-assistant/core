@@ -28,6 +28,7 @@ from . import (  # noqa: F401 # pylint: disable=unused-import
 from .. import (
     const,
     device as zha_core_device,
+    discovery as zha_disc,
     registries as zha_regs,
     typing as zha_typing,
 )
@@ -86,10 +87,10 @@ class Channels:
     @classmethod
     def new(cls, zha_device: zha_typing.ZhaDeviceType) -> "Channels":
         """Create new instance."""
-        discovery = cls(zha_device)
+        channels = cls(zha_device)
         for ep_id in sorted(zha_device.device.endpoints):
-            discovery.add_endpoint(ep_id)
-        return discovery
+            channels.add_endpoint(ep_id)
+        return channels
 
     def add_endpoint(self, ep_id: int) -> None:
         """Add channels for a specific endpoint."""
@@ -218,6 +219,7 @@ class EndpointChannels:
         ep_chnls = cls(channels, ep_id)
         ep_chnls.add_all_channels()
         ep_chnls.add_relay_channels()
+        zha_disc.probe.discover_entities(ep_chnls)
         return ep_chnls
 
     @callback

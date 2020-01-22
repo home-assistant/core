@@ -49,12 +49,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation light from config entry."""
     entities = []
 
-    async def async_discover():
+    async def async_discover(update: bool = True):
         """Add enqueued entities."""
         if not entities:
             return
         to_add = [ent(*args) for ent, args in entities]
-        async_add_entities(to_add, update_before_add=True)
+        async_add_entities(to_add, update_before_add=update)
         entities.clear()
 
     def async_enqueue_entity(
