@@ -523,7 +523,7 @@ DEVICES = [
                 "channels": ["ias_zone"],
                 "entity_class": "IASZone",
                 "entity_id": "binary_sensor.heiman_co_v16_77665544_ias_zone",
-            },
+            }
         },
         "event_channels": [],
         "manufacturer": "Heiman",
@@ -547,7 +547,7 @@ DEVICES = [
                 "channels": ["ias_zone"],
                 "entity_class": "IASZone",
                 "entity_id": "binary_sensor.heiman_warningdevice_77665544_ias_zone",
-            },
+            }
         },
         "event_channels": [],
         "manufacturer": "Heiman",
@@ -1784,13 +1784,21 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": ["light.lumi_lumi_router_77665544_on_off_on_off"],
+        "entities": [
+            "binary_sensor.lumi_lumi_router_77665544_on_off",
+            "light.lumi_lumi_router_77665544_on_off_on_off",
+        ],
         "entity_map": {
+            ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
+                "channels": ["on_off", "on_off"],
+                "entity_class": "Opening",
+                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off_on_off",
+            },
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Light",
                 "entity_id": "light.lumi_lumi_router_77665544_on_off_on_off",
-            }
+            },
         },
         "event_channels": ["8:0x0006"],
         "manufacturer": "LUMI",
@@ -1808,13 +1816,21 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": ["light.lumi_lumi_router_77665544_on_off_on_off"],
+        "entities": [
+            "binary_sensor.lumi_lumi_router_77665544_on_off",
+            "light.lumi_lumi_router_77665544_on_off_on_off",
+        ],
         "entity_map": {
+            ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
+                "channels": ["on_off", "on_off"],
+                "entity_class": "Opening",
+                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off_on_off",
+            },
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Light",
                 "entity_id": "light.lumi_lumi_router_77665544_on_off_on_off",
-            }
+            },
         },
         "event_channels": ["8:0x0006"],
         "manufacturer": "LUMI",
@@ -1832,13 +1848,21 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": ["light.lumi_lumi_router_77665544_on_off_on_off"],
+        "entities": [
+            "binary_sensor.lumi_lumi_router_77665544_on_off",
+            "light.lumi_lumi_router_77665544_on_off_on_off",
+        ],
         "entity_map": {
+            ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
+                "channels": ["on_off", "on_off"],
+                "entity_class": "Opening",
+                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off_on_off",
+            },
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Light",
                 "entity_id": "light.lumi_lumi_router_77665544_on_off_on_off",
-            }
+            },
         },
         "event_channels": ["8:0x0006"],
         "manufacturer": "LUMI",
@@ -1862,7 +1886,7 @@ DEVICES = [
                 "channels": ["illuminance"],
                 "entity_class": "Illuminance",
                 "entity_id": "sensor.lumi_lumi_sen_ill_mgl01_77665544_illuminance",
-            },
+            }
         },
         "event_channels": [],
         "manufacturer": "LUMI",

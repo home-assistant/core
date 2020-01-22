@@ -14,6 +14,7 @@ from .core.const import (
     CHANNEL_POWER_CONFIGURATION,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    DATA_ZHA_PLATFORM_LOADED,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_ENQUEUE_ENTITY,
@@ -28,19 +29,21 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation device tracker from config entry."""
+    entities = []
 
     async def async_discover():
         """Add enqueued entities."""
-        entities = [ent(*args) for ent, args in hass.data[DATA_ZHA][DOMAIN]]
-        if entities:
-            async_add_entities(entities, update_before_add=True)
-        hass.data[DATA_ZHA][DOMAIN].clear()
+        if not entities:
+            return
+        to_add = [ent(*args) for ent, args in entities]
+        async_add_entities(to_add, update_before_add=True)
+        entities.clear()
 
     def async_enqueue_entity(
         entity: zha_typing.CALLABLE_T, args: Tuple[str, zha_typing.ZhaDeviceType, List]
     ):
         """Stash entity for later addition."""
-        hass.data[DATA_ZHA][DOMAIN].append((entity, args))
+        entities.append((entity, args))
 
     unsub = async_dispatcher_connect(hass, SIGNAL_ADD_ENTITIES, async_discover)
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
@@ -48,6 +51,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, f"{SIGNAL_ENQUEUE_ENTITY}_{DOMAIN}", async_enqueue_entity
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
+    hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED][DOMAIN].set()
 
 
 @STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)

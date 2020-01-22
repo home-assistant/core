@@ -19,6 +19,7 @@ from .core.const import (
     CHANNEL_DOORLOCK,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    DATA_ZHA_PLATFORM_LOADED,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_ENQUEUE_ENTITY,
@@ -38,19 +39,21 @@ VALUE_TO_STATE = dict(enumerate(STATE_LIST))
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation Door Lock from config entry."""
+    entities = []
 
     async def async_discover():
         """Add enqueued entities."""
-        entities = [ent(*args) for ent, args in hass.data[DATA_ZHA][DOMAIN]]
-        if entities:
-            async_add_entities(entities, update_before_add=True)
-        hass.data[DATA_ZHA][DOMAIN].clear()
+        if not entities:
+            return
+        to_add = [ent(*args) for ent, args in entities]
+        async_add_entities(to_add, update_before_add=True)
+        entities.clear()
 
     def async_enqueue_entity(
         entity: zha_typing.CALLABLE_T, args: Tuple[str, zha_typing.ZhaDeviceType, List]
     ):
         """Stash entity for later addition."""
-        hass.data[DATA_ZHA][DOMAIN].append((entity, args))
+        entities.append((entity, args))
 
     unsub = async_dispatcher_connect(hass, SIGNAL_ADD_ENTITIES, async_discover)
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
@@ -58,23 +61,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, f"{SIGNAL_ENQUEUE_ENTITY}_{DOMAIN}", async_enqueue_entity
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
-
-
-async def _async_setup_entities(
-    hass, config_entry, async_add_entities, discovery_infos
-):
-    """Set up the ZHA locks."""
-    entities = []
-    for discovery_info in discovery_infos:
-        zha_dev = discovery_info["zha_device"]
-        channels = discovery_info["channels"]
-
-        entity = ZHA_ENTITIES.get_entity(DOMAIN, zha_dev, channels, ZhaDoorLock)
-        if entity:
-            entities.append(entity(**discovery_info))
-
-    if entities:
-        async_add_entities(entities, update_before_add=True)
+    hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED][DOMAIN].set()
 
 
 @STRICT_MATCH(channel_names=CHANNEL_DOORLOCK)
