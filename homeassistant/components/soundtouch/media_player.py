@@ -209,7 +209,6 @@ class SoundTouchDevice(MediaPlayerDevice):
         self._sources = []
         self._sourcename = {}
         self._namesource = {}
-        _LOGGER.debug(f"CONF_RESOURCES: {self._resources}")
         if self._resources:
             for pair in self._resources:
                 source = pair["source"].upper()
@@ -218,9 +217,6 @@ class SoundTouchDevice(MediaPlayerDevice):
                 self._sourcename[source] = name
                 self._namesource[name] = source
                 self._namesource[source] = source
-        _LOGGER.debug(
-            f"_sources= {self._sources}, _sourcename={self._sourcename}, _namesource={self._namesource}"
-        )
 
     @property
     def config(self):
