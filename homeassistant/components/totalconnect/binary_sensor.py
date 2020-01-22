@@ -84,7 +84,7 @@ class TotalConnectBinarySensor(BinarySensorDevice):
             return DEVICE_CLASS_SMOKE
         if self._zone.is_type_carbon_monoxide():
             return DEVICE_CLASS_GAS
-        _LOGGER.info(
+        _LOGGER.warning(
             "Unknown Total Connect zone type %s returned by zone %s.",
             self._zone.zone_type_id,
             self._zone_id,
