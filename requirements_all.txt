@@ -655,7 +655,7 @@ hass-nabucasa==0.31
 hbmqtt==0.9.5
 
 # homeassistant.components.jewish_calendar
-hdate==0.9.3
+hdate==0.9.5
 
 # homeassistant.components.heatmiser
 heatmiserV3==1.1.18
