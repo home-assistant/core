@@ -80,8 +80,8 @@ class BrotherConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Hostname is format: brother.local.
         self.host = user_input["hostname"].rstrip(".")
 
+        self.brother = Brother(self.host)
         try:
-            self.brother = Brother(self.host)
             await self.brother.async_update()
         except (ConnectionError, SnmpError, UnsupportedModel):
             return self.async_abort(reason="connection_error")
