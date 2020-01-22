@@ -85,7 +85,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         }
 
         initialise_templates(hass, templates)
-        entity_ids = extract_entities(device, "light", None, templates)
+        entity_ids = extract_entities(
+            device, "light", device_config.get(CONF_ENTITY_ID), templates
+        )
 
         lights.append(
             LightTemplate(
