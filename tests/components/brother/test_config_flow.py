@@ -125,9 +125,6 @@ async def test_show_zeroconf_form(hass):
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("brother_printer_data.json")),
     ):
-        flow = config_flow.BrotherConfigFlow()
-        flow.hass = hass
-        flow.context = {"source": SOURCE_ZEROCONF}
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -143,10 +140,6 @@ async def test_show_zeroconf_form(hass):
 
 async def test_zeroconf_no_data(hass):
     """Test we abort if zeroconf provides no data."""
-    flow = config_flow.BrotherConfigFlow()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_ZEROCONF}
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}
     )
@@ -161,9 +154,6 @@ async def test_zeroconf_not_brother_printer_error(hass):
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("brother_printer_data.json")),
     ):
-        flow = config_flow.BrotherConfigFlow()
-        flow.hass = hass
-        flow.context = {"source": SOURCE_ZEROCONF}
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -181,9 +171,6 @@ async def test_zeroconf_no_device_name(hass):
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("brother_printer_data.json")),
     ):
-        flow = config_flow.BrotherConfigFlow()
-        flow.hass = hass
-        flow.context = {"source": SOURCE_ZEROCONF}
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -198,9 +185,6 @@ async def test_zeroconf_no_device_name(hass):
 async def test_zeroconf_snmp_error(hass):
     """Test we abort zeroconf flow on SNMP error."""
     with patch("brother.Brother._get_data", side_effect=SnmpError("error")):
-        flow = config_flow.BrotherConfigFlow()
-        flow.hass = hass
-        flow.context = {"source": SOURCE_ZEROCONF}
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
