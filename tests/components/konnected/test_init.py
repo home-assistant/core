@@ -1,22 +1,51 @@
 """Test Konnected setup process."""
-from unittest.mock import patch
+from asynctest import patch
+import pytest
 
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
+
+
+# pylint: disable=redefined-outer-name
+@pytest.fixture
+async def mock_panel():
+    """Mock a Konnected Panel bridge."""
+    with patch("konnected.Client", autospec=True) as konn_client:
+
+        def mock_constructor(host, port, websession):
+            """Fake the panel constructor."""
+            konn_client.host = host
+            konn_client.port = port
+            return konn_client
+
+        konn_client.side_effect = mock_constructor
+        konn_client.ClientError = config_flow.CannotConnect
+        konn_client.get_status.return_value = {
+            "hwVersion": "2.3.0",
+            "swVersion": "2.3.1",
+            "heap": 10000,
+            "uptime": 12222,
+            "ip": "192.168.1.90",
+            "port": 9123,
+            "sensors": [],
+            "actuators": [],
+            "dht_sensors": [],
+            "ds18b20_sensors": [],
+            "mac": "11:22:33:44:55:66",
+            "settings": {},
+        }
+        yield konn_client
 
 
 async def test_setup_with_no_config(hass):
     """Test that we do not discover anything or try to set up a Konnected panel."""
-    with patch.object(hass, "config_entries") as mock_config_entries, patch.object(
-        konnected, "configured_devices", return_value=[]
-    ):
-        assert await async_setup_component(hass, konnected.DOMAIN, {}) is True
+    assert await async_setup_component(hass, konnected.DOMAIN, {})
 
     # No flows started
-    assert len(mock_config_entries.flow.mock_calls) == 0
+    assert len(hass.config_entries.flow.async_progress()) == 0
 
     # Default access token used
     assert hass.data[konnected.DOMAIN][konnected.CONF_ACCESS_TOKEN] is not None
@@ -26,59 +55,54 @@ async def test_setup_with_no_config(hass):
 
 async def test_setup_defined_hosts_known_auth(hass):
     """Test we don't initiate a config entry if configured panel is known."""
-    with patch.object(hass, "config_entries") as mock_config_entries, patch.object(
-        konnected, "configured_devices", return_value=["aabbccddeeff", "112233445566"]
-    ):
-        assert (
-            await async_setup_component(
-                hass,
-                konnected.DOMAIN,
-                {
-                    konnected.DOMAIN: {
-                        konnected.CONF_ACCESS_TOKEN: "abcdefgh",
-                        konnected.CONF_DEVICES: [
-                            {
-                                config_flow.CONF_ID: "aabbccddeeff",
-                                config_flow.CONF_HOST: "0.0.0.0",
-                            },
-                        ],
-                    }
-                },
-            )
-            is True
-        )
+    MockConfigEntry(
+        domain="konnected", data={"host": "0.0.0.0", "id": "112233445566"}
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="konnected", data={"host": "1.2.3.4", "id": "aabbccddeeff"}
+    ).add_to_hass(hass)
 
-    # Flow started for discovered panel
-    assert len(mock_config_entries.flow.mock_calls) == 0
+    assert (
+        await async_setup_component(
+            hass,
+            konnected.DOMAIN,
+            {
+                konnected.DOMAIN: {
+                    konnected.CONF_ACCESS_TOKEN: "abcdefgh",
+                    konnected.CONF_DEVICES: [
+                        {
+                            config_flow.CONF_ID: "aabbccddeeff",
+                            config_flow.CONF_HOST: "0.0.0.0",
+                        },
+                    ],
+                }
+            },
+        )
+        is True
+    )
+
+    # Flow aborted
+    assert len(hass.config_entries.flow.async_progress()) == 0
 
 
 async def test_setup_defined_hosts_no_known_auth(hass):
     """Test we initiate config entry if config panel is not known."""
-    with patch.object(hass, "config_entries") as mock_config_entries, patch.object(
-        konnected, "configured_devices", return_value=[]
-    ):
-        mock_config_entries.flow.async_init.return_value = mock_coro()
-        assert (
-            await async_setup_component(
-                hass,
-                konnected.DOMAIN,
-                {
-                    konnected.DOMAIN: {
-                        konnected.CONF_ACCESS_TOKEN: "abcdefgh",
-                        konnected.CONF_DEVICES: [{konnected.CONF_ID: "aabbccddeeff"}],
-                    }
-                },
-            )
-            is True
+    assert (
+        await async_setup_component(
+            hass,
+            konnected.DOMAIN,
+            {
+                konnected.DOMAIN: {
+                    konnected.CONF_ACCESS_TOKEN: "abcdefgh",
+                    konnected.CONF_DEVICES: [{konnected.CONF_ID: "aabbccddeeff"}],
+                }
+            },
         )
+        is True
+    )
 
     # Flow started for discovered bridge
-    assert len(mock_config_entries.flow.mock_calls) == 1
-    assert mock_config_entries.flow.mock_calls[0][2]["data"] == {
-        config_flow.CONF_ID: "aabbccddeeff",
-        config_flow.CONF_BLINK: True,
-        config_flow.CONF_DISCOVERY: True,
-    }
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
 
 async def test_config_passed_to_config_entry(hass):
@@ -88,7 +112,7 @@ async def test_config_passed_to_config_entry(hass):
         data={config_flow.CONF_ID: "aabbccddeeff", config_flow.CONF_HOST: "0.0.0.0"},
     )
     entry.add_to_hass(hass)
-    with patch.object(konnected, "AlarmPanel") as mock_panel:
+    with patch.object(konnected, "AlarmPanel", autospec=True) as mock_int:
         assert (
             await async_setup_component(
                 hass,
@@ -103,42 +127,27 @@ async def test_config_passed_to_config_entry(hass):
             is True
         )
 
-    assert len(mock_panel.mock_calls) == 2
-    p_hass, p_entry = mock_panel.mock_calls[0][1]
+    assert len(mock_int.mock_calls) == 3
+    p_hass, p_entry = mock_int.mock_calls[0][1]
 
     assert p_hass is hass
     assert p_entry is entry
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass, mock_panel):
     """Test being able to unload an entry."""
     entry = MockConfigEntry(
         domain=konnected.DOMAIN, data={konnected.CONF_ID: "aabbccddeeff"}
     )
     entry.add_to_hass(hass)
 
-    with patch.object(konnected, "AlarmPanel") as mock_panel:
-
-        def mock_constructor(hass, entry):
-            """Fake the panel constructor."""
-            return mock_panel
-
-        def save_data():
-            hass.data[konnected.DOMAIN]["devices"]["aabbccddeeff"] = {"some": "thing"}
-
-        mock_panel.side_effect = mock_constructor
-        mock_panel.async_save_data.side_effect = save_data
-        mock_panel.async_save_data.return_value = mock_coro()
-        mock_panel.async_connect.return_value = mock_coro()
-        assert await async_setup_component(hass, konnected.DOMAIN, {}) is True
-
+    assert await async_setup_component(hass, konnected.DOMAIN, {}) is True
     assert hass.data[konnected.DOMAIN]["devices"].get("aabbccddeeff") is not None
-
     assert await konnected.async_unload_entry(hass, entry)
     assert hass.data[konnected.DOMAIN]["devices"] == {}
 
 
-async def test_api(hass, aiohttp_client):
+async def test_api(hass, aiohttp_client, mock_panel):
     """Test callback view."""
     await async_setup_component(hass, "http", {"http": {}})
 
@@ -175,41 +184,14 @@ async def test_api(hass, aiohttp_client):
     )
     entry.add_to_hass(hass)
 
-    with patch("konnected.Client") as mock_panel:
-
-        def mock_constructor(host, port, websession):
-            """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
-
-        mock_panel.side_effect = mock_constructor
-        mock_panel.get_status.return_value = mock_coro(
-            {
-                "hwVersion": "2.3.0",
-                "swVersion": "2.3.1",
-                "heap": 10000,
-                "uptime": 12222,
-                "ip": "192.168.1.90",
-                "port": 9123,
-                "sensors": [],
-                "actuators": [],
-                "dht_sensors": [],
-                "ds18b20_sensors": [],
-                "mac": "11:22:33:44:55:66",
-                "settings": {},
-            }
+    assert (
+        await async_setup_component(
+            hass,
+            konnected.DOMAIN,
+            {konnected.DOMAIN: {konnected.CONF_ACCESS_TOKEN: "abcdefgh"}},
         )
-        mock_panel.put_settings.return_value = mock_coro()
-
-        assert (
-            await async_setup_component(
-                hass,
-                konnected.DOMAIN,
-                {konnected.DOMAIN: {konnected.CONF_ACCESS_TOKEN: "abcdefgh"}},
-            )
-            is True
-        )
+        is True
+    )
 
     client = await aiohttp_client(hass.http.app)
 
@@ -301,7 +283,7 @@ async def test_api(hass, aiohttp_client):
     assert result == {"message": "ok"}
 
 
-async def test_state_updates(hass, aiohttp_client):
+async def test_state_updates(hass, aiohttp_client, mock_panel):
     """Test callback view."""
     await async_setup_component(hass, "http", {"http": {}})
 
@@ -338,41 +320,14 @@ async def test_state_updates(hass, aiohttp_client):
     )
     entry.add_to_hass(hass)
 
-    with patch("konnected.Client") as mock_panel:
-
-        def mock_constructor(host, port, websession):
-            """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
-
-        mock_panel.side_effect = mock_constructor
-        mock_panel.get_status.return_value = mock_coro(
-            {
-                "hwVersion": "2.3.0",
-                "swVersion": "2.3.1",
-                "heap": 10000,
-                "uptime": 12222,
-                "ip": "192.168.1.90",
-                "port": 9123,
-                "sensors": [],
-                "actuators": [],
-                "dht_sensors": [],
-                "ds18b20_sensors": [],
-                "mac": "11:22:33:44:55:66",
-                "settings": {},
-            }
+    assert (
+        await async_setup_component(
+            hass,
+            konnected.DOMAIN,
+            {konnected.DOMAIN: {konnected.CONF_ACCESS_TOKEN: "abcdefgh"}},
         )
-        mock_panel.put_settings.return_value = mock_coro()
-
-        assert (
-            await async_setup_component(
-                hass,
-                konnected.DOMAIN,
-                {konnected.DOMAIN: {konnected.CONF_ACCESS_TOKEN: "abcdefgh"}},
-            )
-            is True
-        )
+        is True
+    )
 
     client = await aiohttp_client(hass.http.app)
 

@@ -1,12 +1,45 @@
 """Test Konnected setup process."""
-from unittest.mock import patch
+from asynctest import patch
+import pytest
 
 from homeassistant.components.konnected import config_flow, panel
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
-async def test_create_and_setup(hass):
+# pylint: disable=redefined-outer-name
+@pytest.fixture
+async def mock_panel():
+    """Mock a Konnected Panel bridge."""
+    with patch("konnected.Client", autospec=True) as konn_client:
+
+        def mock_constructor(host, port, websession):
+            """Fake the panel constructor."""
+            konn_client.host = host
+            konn_client.port = port
+            return konn_client
+
+        konn_client.side_effect = mock_constructor
+        konn_client.ClientError = config_flow.CannotConnect
+        konn_client.get_status.return_value = {
+            "hwVersion": "2.3.0",
+            "swVersion": "2.3.1",
+            "heap": 10000,
+            "uptime": 12222,
+            "ip": "192.168.1.90",
+            "port": 9123,
+            "sensors": [],
+            "actuators": [],
+            "dht_sensors": [],
+            "ds18b20_sensors": [],
+            "mac": "11:22:33:44:55:66",
+            "model": "Konnected Pro",  # `model` field only included in pro
+            "settings": {},
+        }
+        yield konn_client
+
+
+async def test_create_and_setup(hass, mock_panel):
     """Test that we create a Konnected Panel and save the data."""
     device_config = config_flow.DEVICE_SCHEMA(
         {
@@ -45,40 +78,25 @@ async def test_create_and_setup(hass):
         panel.CONF_API_HOST: "192.168.1.1",
     }
 
-    with patch("konnected.Client") as mock_panel:
-
-        def mock_constructor(host, port, websession):
-            """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
-
-        mock_panel.side_effect = mock_constructor
-        mock_panel.ClientError = config_flow.CannotConnect
-        mock_panel.get_status.return_value = mock_coro(
-            {
-                "hwVersion": "2.3.0",
-                "swVersion": "2.3.1",
-                "heap": 10000,
-                "uptime": 12222,
-                "ip": "192.168.1.90",
-                "port": 9123,
-                "sensors": [],
-                "actuators": [],
-                "dht_sensors": [],
-                "ds18b20_sensors": [],
-                "mac": "11:22:33:44:55:66",
-                "settings": {},
-            }
-        )
-        mock_panel.put_settings.return_value = mock_coro()
-        mock_panel.put_device.return_value = mock_coro()
-        mock_panel.put_zone.return_value = mock_coro()
-
-        device = panel.AlarmPanel(hass, entry)
-        await device.async_save_data()
-        await device.async_connect()
-        await device.update_switch("1", 0)
+    # override get_status to reflect non-pro board
+    mock_panel.get_status.return_value = {
+        "hwVersion": "2.3.0",
+        "swVersion": "2.3.1",
+        "heap": 10000,
+        "uptime": 12222,
+        "ip": "192.168.1.90",
+        "port": 9123,
+        "sensors": [],
+        "actuators": [],
+        "dht_sensors": [],
+        "ds18b20_sensors": [],
+        "mac": "11:22:33:44:55:66",
+        "settings": {},
+    }
+    device = panel.AlarmPanel(hass, entry)
+    await device.async_save_data()
+    await device.async_connect()
+    await device.update_switch("1", 0)
 
     # confirm the correct api is used
     # pylint: disable=no-member
@@ -159,7 +177,7 @@ async def test_create_and_setup(hass):
     }
 
 
-async def test_create_and_setup_pro(hass):
+async def test_create_and_setup_pro(hass, mock_panel):
     """Test that we create a Konnected Pro Panel and save the data."""
     device_config = config_flow.DEVICE_SCHEMA(
         {
@@ -201,41 +219,10 @@ async def test_create_and_setup_pro(hass):
         panel.CONF_API_HOST: "192.168.1.1",
     }
 
-    with patch("konnected.Client") as mock_panel:
-
-        def mock_constructor(host, port, websession):
-            """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
-
-        mock_panel.side_effect = mock_constructor
-        mock_panel.ClientError = config_flow.CannotConnect
-        mock_panel.get_status.return_value = mock_coro(
-            {
-                "hwVersion": "2.3.0",
-                "swVersion": "2.3.1",
-                "heap": 10000,
-                "uptime": 12222,
-                "ip": "192.168.1.90",
-                "port": 9123,
-                "sensors": [],
-                "actuators": [],
-                "dht_sensors": [],
-                "ds18b20_sensors": [],
-                "mac": "11:22:33:44:55:66",
-                "model": "Konnected Pro",  # `model` field only included in pro
-                "settings": {},
-            }
-        )
-        mock_panel.put_settings.return_value = mock_coro()
-        mock_panel.put_device.return_value = mock_coro()
-        mock_panel.put_zone.return_value = mock_coro()
-
-        device = panel.AlarmPanel(hass, entry)
-        await device.async_save_data()
-        await device.async_connect()
-        await device.update_switch("2", 1)
+    device = panel.AlarmPanel(hass, entry)
+    await device.async_save_data()
+    await device.async_connect()
+    await device.update_switch("2", 1)
 
     # confirm the correct api is used
     # pylint: disable=no-member

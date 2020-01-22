@@ -1,35 +1,45 @@
 """Tests for Konnected Alarm Panel config flow."""
-from unittest.mock import patch
+from asynctest import patch
+import pytest
 
 from homeassistant.components.konnected import config_flow
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
-async def test_flow_works(hass, aioclient_mock):
-    """Test config flow ."""
-    flow = config_flow.KonnectedFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user()
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-    with patch("konnected.Client") as mock_panel:
+# pylint: disable=redefined-outer-name
+@pytest.fixture
+async def mock_panel():
+    """Mock a Konnected Panel bridge."""
+    with patch("konnected.Client", autospec=True) as konn_client:
 
         def mock_constructor(host, port, websession):
             """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
+            konn_client.host = host
+            konn_client.port = port
+            return konn_client
 
-        mock_panel.side_effect = mock_constructor
-        mock_panel.get_status.return_value = mock_coro(
-            {"mac": "11:22:33:44:55:66", "name": "Konnected"}
-        )
+        konn_client.side_effect = mock_constructor
+        mock_panel.ClientError = config_flow.CannotConnect
+        yield konn_client
 
-        result = await flow.async_step_user({"port": 1234, "host": "1.2.3.4"})
+
+async def test_flow_works(hass, mock_panel):
+    """Test config flow ."""
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    mock_panel.get_status.return_value = {
+        "mac": "11:22:33:44:55:66",
+        "name": "Konnected",
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"port": 1234, "host": "1.2.3.4"}
+    )
 
     assert mock_panel.host == "1.2.3.4"
     assert mock_panel.port == "1234"
@@ -38,8 +48,9 @@ async def test_flow_works(hass, aioclient_mock):
     assert result["type"] == "form"
     assert result["step_id"] == "io"
 
-    result = await flow.async_step_io(
-        {
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             "1": "Disabled",
             "2": "Binary Sensor",
             "3": "Digital Sensor",
@@ -47,42 +58,50 @@ async def test_flow_works(hass, aioclient_mock):
             "5": "Disabled",
             "6": "Binary Sensor",
             "out": "Switchable Output",
-        }
+        },
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_binary"
 
     # zone 2
-    result = await flow.async_step_options_binary({"type": "door"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"type": "door"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "options_binary"
 
     # zone 6
-    result = await flow.async_step_options_binary(
-        {"type": "window", "name": "winder", "inverse": True}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"type": "window", "name": "winder", "inverse": True},
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_digital"
 
     # zone 3
-    result = await flow.async_step_options_digital({"type": "dht"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"type": "dht"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "options_switch"
 
     # zone 4
-    result = await flow.async_step_options_switch({})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "options_switch"
 
     # zone out
-    result = await flow.async_step_options_switch(
-        {
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             "name": "switcher",
             "activation": "low",
             "momentary": 50,
             "pause": 100,
             "repeat": 4,
-        }
+        },
     )
     assert result["type"] == "create_entry"
     assert result["data"] == {
@@ -110,29 +129,22 @@ async def test_flow_works(hass, aioclient_mock):
     }
 
 
-async def test_pro_flow_works(hass, aioclient_mock):
+async def test_pro_flow_works(hass, mock_panel):
     """Test config flow ."""
-    flow = config_flow.KonnectedFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    with patch("konnected.Client") as mock_panel:
+    mock_panel.get_status.return_value = {
+        "mac": "11:22:33:44:55:66",
+        "name": "Konnected Pro",
+    }
 
-        def mock_constructor(host, port, websession):
-            """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
-
-        mock_panel.side_effect = mock_constructor
-        mock_panel.get_status.return_value = mock_coro(
-            {"mac": "11:22:33:44:55:66", "name": "Konnected Pro"}
-        )
-
-        result = await flow.async_step_user({"port": 1234, "host": "1.2.3.4"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"port": 1234, "host": "1.2.3.4"}
+    )
 
     assert mock_panel.host == "1.2.3.4"
     assert mock_panel.port == "1234"
@@ -141,8 +153,9 @@ async def test_pro_flow_works(hass, aioclient_mock):
     assert result["type"] == "form"
     assert result["step_id"] == "io"
 
-    result = await flow.async_step_io(
-        {
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             "1": "Disabled",
             "2": "Binary Sensor",
             "3": "Digital Sensor",
@@ -150,20 +163,14 @@ async def test_pro_flow_works(hass, aioclient_mock):
             "5": "Disabled",
             "6": "Binary Sensor",
             "7": "Digital Sensor",
-            "8": "Switchable Output",
-            "9": "Disabled",
-            "10": "Binary Sensor",
-            "11": "Digital Sensor",
-            "12": "Disabled",
-            "out1": "Switchable Output",
-            "alarm1": "Switchable Output",
-            "alarm2_out2": "Disabled",
-        }
+        },
     )
     assert result["type"] == "form"
     assert result["step_id"] == "io_ext"
-    result = await flow.async_step_io_ext(
-        {
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             "8": "Switchable Output",
             "9": "Disabled",
             "10": "Binary Sensor",
@@ -172,70 +179,86 @@ async def test_pro_flow_works(hass, aioclient_mock):
             "out1": "Switchable Output",
             "alarm1": "Switchable Output",
             "alarm2_out2": "Disabled",
-        }
+        },
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_binary"
 
     # zone 2
-    result = await flow.async_step_options_binary({"type": "door"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"type": "door"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "options_binary"
 
     # zone 6
-    result = await flow.async_step_options_binary(
-        {"type": "window", "name": "winder", "inverse": True}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"type": "window", "name": "winder", "inverse": True},
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_binary"
 
     # zone 10
-    result = await flow.async_step_options_binary({"type": "door"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"type": "door"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "options_digital"
 
     # zone 3
-    result = await flow.async_step_options_digital({"type": "dht"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"type": "dht"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "options_digital"
 
     # zone 7
-    result = await flow.async_step_options_digital(
-        {"type": "ds18b20", "name": "temper"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"type": "ds18b20", "name": "temper"}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_digital"
 
     # zone 11
-    result = await flow.async_step_options_digital({"type": "dht"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"type": "dht"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "options_switch"
 
     # zone 4
-    result = await flow.async_step_options_switch({})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "options_switch"
 
     # zone 8
-    result = await flow.async_step_options_switch(
-        {
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
             "name": "switcher",
             "activation": "low",
             "momentary": 50,
             "pause": 100,
             "repeat": 4,
-        }
+        },
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_switch"
 
     # zone out1
-    result = await flow.async_step_options_switch({})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "options_switch"
 
     # zone alarm1
-    result = await flow.async_step_options_switch({})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
     assert result["type"] == "create_entry"
     assert result["data"] == {
         "host": "1.2.3.4",
@@ -269,190 +292,155 @@ async def test_pro_flow_works(hass, aioclient_mock):
     }
 
 
-async def test_ssdp(hass):
+async def test_ssdp(hass, mock_panel):
     """Test a panel being discovered."""
-    flow = config_flow.KonnectedFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    mock_panel.get_status.return_value = {
+        "mac": "11:22:33:44:55:66",
+        "name": "Konnected",
+    }
 
-    with patch("konnected.Client") as mock_panel:
-
-        def mock_constructor(host, port, websession):
-            """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
-
-        mock_panel.side_effect = mock_constructor
-        mock_panel.get_status.return_value = mock_coro(
-            {"mac": "11:22:33:44:55:66", "name": "Konnected"}
-        )
-
-        result = await flow.async_step_ssdp(
-            {
-                "ssdp_location": "http://1.2.3.4:1234/Device.xml",
-                "manufacturer": config_flow.KONN_MANUFACTURER,
-                "modelName": config_flow.KONN_MODEL,
-            }
-        )
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "ssdp"},
+        data={
+            "ssdp_location": "http://1.2.3.4:1234/Device.xml",
+            "manufacturer": config_flow.KONN_MANUFACTURER,
+            "modelName": config_flow.KONN_MODEL,
+        },
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "io"
     assert result["description_placeholders"]["model"] == "Konnected Alarm Panel"
+
+    # ensure the discovered info is saved
+    # pylint: disable=protected-access
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
     assert flow.device_id == "112233445566"
     assert flow.model == config_flow.KONN_MODEL
     assert flow.host == "1.2.3.4"
     assert flow.port == "1234"
 
+    flow = next(
+        (
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["flow_id"] == result["flow_id"]
+        )
+    )
+    assert flow["context"]["device_id"] == "112233445566"
 
-async def test_ssdp_pro(hass):
+
+async def test_ssdp_pro(hass, mock_panel):
     """Test a Pro panel being discovered."""
-    flow = config_flow.KonnectedFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    mock_panel.get_status.return_value = {
+        "mac": "11:22:33:44:55:66",
+        "name": "Konnected Pro",
+    }
 
-    with patch("konnected.Client") as mock_panel:
-
-        def mock_constructor(host, port, websession):
-            """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
-
-        mock_panel.side_effect = mock_constructor
-        mock_panel.get_status.return_value = mock_coro(
-            {"mac": "11:22:33:44:55:66", "name": "Konnected Pro"}
-        )
-
-        result = await flow.async_step_ssdp(
-            {
-                "ssdp_location": "http://1.2.3.4:1234/Device.xml",
-                "manufacturer": config_flow.KONN_MANUFACTURER,
-                "modelName": config_flow.KONN_MODEL_PRO,
-            }
-        )
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "ssdp"},
+        data={
+            "ssdp_location": "http://1.2.3.4:1234/Device.xml",
+            "manufacturer": config_flow.KONN_MANUFACTURER,
+            "modelName": config_flow.KONN_MODEL_PRO,
+        },
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "io"
     assert result["description_placeholders"]["model"] == "Konnected Alarm Panel Pro"
+
+    # ensure the discovered info is saved
+    # pylint: disable=protected-access
+    flow = hass.config_entries.flow._progress[result["flow_id"]]
     assert flow.device_id == "112233445566"
     assert flow.model == config_flow.KONN_MODEL_PRO
     assert flow.host == "1.2.3.4"
     assert flow.port == "1234"
 
 
-async def test_import_cannot_connect(hass):
+async def test_import_cannot_connect(hass, mock_panel):
     """Test importing a host that we cannot connect to."""
-    flow = config_flow.KonnectedFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    with patch("konnected.Client") as mock_panel:
-
-        def mock_constructor(host, port, websession):
-            """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
-
-        mock_panel.side_effect = mock_constructor
-        mock_panel.get_status.side_effect = config_flow.CannotConnect
-        mock_panel.ClientError = config_flow.CannotConnect
-
-        result = await flow.async_step_import(
-            {"host": "0.0.0.0", "port": 1234, "id": "112233445566"}
-        )
+    mock_panel.get_status.side_effect = config_flow.CannotConnect
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "import"},
+        data={"host": "0.0.0.0", "port": 1234, "id": "112233445566"},
+    )
 
     # Create the entry even if panel isn't available - we'll update the host once we know it
     assert result["type"] == "create_entry"
 
 
-async def test_import_no_host_user_finish(hass):
+async def test_import_no_host_user_finish(hass, mock_panel):
     """Test importing a panel with no host info."""
-    flow = config_flow.KonnectedFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    mock_panel.get_status.return_value = {
+        "mac": "11:22:33:44:55:66",
+        "name": "Konnected Pro",
+    }
 
-    with patch("konnected.Client") as mock_panel:
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": "import"}, data={"id": "112233445566"}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
 
-        def mock_constructor(host, port, websession):
-            """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
+    # wait for user to enter host info to finish
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"host": "1.1.1.1", "port": 1234}
+    )
 
-        mock_panel.side_effect = mock_constructor
-        mock_panel.get_status.return_value = mock_coro(
-            {"mac": "11:22:33:44:55:66", "name": "Konnected Pro"}
-        )
-
-        result = await flow.async_step_import({"id": "112233445566"})
-        assert result["type"] == "form"
-        assert result["step_id"] == "user"
-
-        # wait for user to enter host info to finish
-        result = await flow.async_step_user({"host": "1.1.1.1", "port": 1234})
-
-        assert result["type"] == "create_entry"
+    assert result["type"] == "create_entry"
 
 
-async def test_import_no_host_ssdp_finish(hass):
+async def test_import_no_host_ssdp_finish(hass, mock_panel):
     """Test importing a panel with no host info."""
-    with patch("konnected.Client") as mock_panel:
+    mock_panel.get_status.return_value = {
+        "mac": "11:22:33:44:55:66",
+        "name": "Konnected Pro",
+    }
 
-        def mock_constructor(host, port, websession):
-            """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={"id": "112233445566"},
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
 
-        mock_panel.side_effect = mock_constructor
-        mock_panel.get_status.return_value = mock_coro(
-            {"mac": "11:22:33:44:55:66", "name": "Konnected Pro"}
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={"id": "112233445566"},
-        )
-        assert result["type"] == "form"
-        assert result["step_id"] == "user"
-
-        # second flow started by ssdp should hijack the first
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": SOURCE_SSDP},
-            data={
-                "ssdp_location": "http://1.2.3.4:1234/Device.xml",
-                "manufacturer": config_flow.KONN_MANUFACTURER,
-                "modelName": config_flow.KONN_MODEL_PRO,
-            },
-        )
-        assert result["type"] == "create_entry"
+    # second flow started by ssdp should hijack the first
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data={
+            "ssdp_location": "http://1.2.3.4:1234/Device.xml",
+            "manufacturer": config_flow.KONN_MANUFACTURER,
+            "modelName": config_flow.KONN_MODEL_PRO,
+        },
+    )
+    assert result["type"] == "create_entry"
 
 
 async def test_ssdp_already_configured(hass):
     """Test if a discovered panel has already been configured."""
     MockConfigEntry(domain="konnected", data={"host": "0.0.0.0"}).add_to_hass(hass)
-
-    flow = config_flow.KonnectedFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    result = await flow.async_step_ssdp(
-        {
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "ssdp"},
+        data={
             "ssdp_location": "http://0.0.0.0:1234/Device.xml",
             "manufacturer": config_flow.KONN_MANUFACTURER,
             "modelName": config_flow.KONN_MODEL_PRO,
-        }
+        },
     )
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp_host_update(hass):
+async def test_ssdp_host_update(hass, mock_panel):
     """Test if a discovered panel has already been configured but changed host."""
     device_config = config_flow.DEVICE_SCHEMA(
         {
@@ -485,30 +473,20 @@ async def test_ssdp_host_update(hass):
         }
     )
     MockConfigEntry(domain="konnected", data=device_config).add_to_hass(hass)
-    flow = config_flow.KonnectedFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    mock_panel.get_status.return_value = {
+        "mac": "11:22:33:44:55:66",
+        "name": "Konnected Pro",
+    }
 
-    with patch("konnected.Client") as mock_panel:
-
-        def mock_constructor(host, port, websession):
-            """Fake the panel constructor."""
-            mock_panel.host = host
-            mock_panel.port = port
-            return mock_panel
-
-        mock_panel.side_effect = mock_constructor
-        mock_panel.get_status.return_value = mock_coro(
-            {"mac": "11:22:33:44:55:66", "name": "Konnected Pro"}
-        )
-
-        result = await flow.async_step_ssdp(
-            {
-                "ssdp_location": "http://1.1.1.1:1234/Device.xml",
-                "manufacturer": config_flow.KONN_MANUFACTURER,
-                "modelName": config_flow.KONN_MODEL_PRO,
-            }
-        )
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "ssdp"},
+        data={
+            "ssdp_location": "http://1.1.1.1:1234/Device.xml",
+            "manufacturer": config_flow.KONN_MANUFACTURER,
+            "modelName": config_flow.KONN_MODEL_PRO,
+        },
+    )
 
     assert result["type"] == "create_entry"
     assert result["data"]["host"] == "1.1.1.1"
@@ -521,14 +499,17 @@ async def test_ssdp_host_update(hass):
     }
 
 
-async def test_import_existing_config(hass):
+async def test_import_existing_config(hass, mock_panel):
     """Test importing a host with an existing config file."""
-    flow = config_flow.KonnectedFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    mock_panel.get_status.return_value = {
+        "mac": "11:22:33:44:55:66",
+        "name": "Konnected Pro",
+    }
 
-    result = await flow.async_step_import(
-        {
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "import"},
+        data={
             "host": "1.2.3.4",
             "port": 1234,
             "id": "112233445566",
@@ -555,7 +536,7 @@ async def test_import_existing_config(hass):
                 {"zone": "out1"},
                 {"zone": "alarm1"},
             ],
-        }
+        },
     )
 
     assert result["type"] == "create_entry"
@@ -591,7 +572,7 @@ async def test_import_existing_config(hass):
     }
 
 
-async def test_import_existing_config_entry(hass):
+async def test_import_existing_config_entry(hass, mock_panel):
     """Test importing a host that has an existing config entry."""
     MockConfigEntry(
         domain="konnected", data={"host": "0.0.0.0", "id": "112233445566"}
@@ -601,12 +582,15 @@ async def test_import_existing_config_entry(hass):
     ).add_to_hass(hass)
     assert len(hass.config_entries.async_entries("konnected")) == 2
 
-    flow = config_flow.KonnectedFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    mock_panel.get_status.return_value = {
+        "mac": "11:22:33:44:55:66",
+        "name": "Konnected Pro",
+    }
 
-    result = await flow.async_step_import(
-        {
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "import"},
+        data={
             "host": "1.2.3.4",
             "port": 1234,
             "id": "112233445566",
@@ -615,24 +599,28 @@ async def test_import_existing_config_entry(hass):
                 {"zone": "6", "type": "window", "name": "winder", "inverse": True},
                 {"zone": "10", "type": "door"},
             ],
-        }
+        },
     )
 
     assert result["type"] == "create_entry"
 
-    # We did not process the result of this entry but already removed the old
-    # ones. So we should have 0 entries.
-    assert len(hass.config_entries.async_entries("konnected")) == 0
+    # We should have replaced the two old entries with an updated one.
+    assert len(hass.config_entries.async_entries("konnected")) == 1
+    hass.config_entries.async_entries("konnected")[0].data["id"] = "112233445566"
+    hass.config_entries.async_entries("konnected")[0].data["host"] = "1.2.3.4"
 
 
-async def test_import_pin_config(hass):
+async def test_import_pin_config(hass, mock_panel):
     """Test importing a host with an existing config file that specifies pin configs."""
-    flow = config_flow.KonnectedFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    mock_panel.get_status.return_value = {
+        "mac": "11:22:33:44:55:66",
+        "name": "Konnected Pro",
+    }
 
-    result = await flow.async_step_import(
-        {
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": "import"},
+        data={
             "host": "1.2.3.4",
             "port": 1234,
             "id": "112233445566",
@@ -656,7 +644,7 @@ async def test_import_pin_config(hass):
                 },
                 {"zone": "6"},
             ],
-        }
+        },
     )
 
     assert result["type"] == "create_entry"
