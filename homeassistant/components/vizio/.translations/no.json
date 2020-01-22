@@ -11,8 +11,8 @@
         },
         "error": {
             "cant_connect": "Kunne ikke koble til enheten. [Se gjennom dokumentene] (https://www.home-assistant.io/integrations/vizio/) og bekreft at: \n - Enheten er sl\u00e5tt p\u00e5 \n - Enheten er koblet til nettverket \n - Verdiene du fylte ut er n\u00f8yaktige \n f\u00f8r du pr\u00f8ver \u00e5 sende inn p\u00e5 nytt.",
-            "host_exists": "Vert er allerede konfigurert.",
-            "name_exists": "Navnet er allerede konfigurert.",
+            "host_exists": "Vizio-enhet med spesifisert vert allerede konfigurert.",
+            "name_exists": "Vizio-enhet med spesifisert navn allerede konfigurert.",
             "tv_needs_token": "N\u00e5r enhetstype er `tv`, er det n\u00f8dvendig med en gyldig tilgangstoken."
         },
         "step": {
