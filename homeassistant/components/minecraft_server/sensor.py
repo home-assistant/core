@@ -2,7 +2,7 @@
 
 import logging
 
-from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import MinecraftServerEntity
 from .const import (
@@ -53,7 +53,7 @@ class MinecraftServerStatusSensor(MinecraftServerEntity):
         if self._server.online() is True:
             state = STATE_ON
         else:
-            state = STATE_UNAVAILABLE
+            state = STATE_OFF
         self._state = state
 
 
