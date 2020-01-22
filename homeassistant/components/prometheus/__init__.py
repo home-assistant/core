@@ -168,7 +168,10 @@ class PrometheusMetrics:
         return "".join(
             [
                 c
-                if c in string.ascii_letters or c.isdigit() or c == "_" or c == ":"
+                if c in string.ascii_letters
+                or c in string.digits
+                or c == "_"
+                or c == ":"
                 else f"u{hex(ord(c))}"
                 for c in metric
             ]
