@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+import simplehound.core as hound
 
 import homeassistant.components.image_processing as ip
 import homeassistant.components.sighthound.image_processing as sh
@@ -53,6 +54,14 @@ def mock_image():
         return_value=b"Test",
     ) as image:
         yield image
+
+
+async def test_bad_api_key(hass, caplog):
+    """Catch bad api key."""
+    with patch("simplehound.core.cloud.detect", side_effect=hound.SimplehoundException):
+        await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+        assert "Sighthound error" in caplog.text
+        assert not hass.states.get(VALID_ENTITY_ID)
 
 
 async def test_setup_platform(hass, mock_detections):
