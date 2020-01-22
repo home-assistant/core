@@ -98,6 +98,5 @@ FLOWS = [
     "wled",
     "wwlln",
     "zha",
-    "zone",
     "zwave"
 ]

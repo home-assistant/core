@@ -190,7 +190,7 @@ aionotion==1.1.0
 aiopvapi==1.6.14
 
 # homeassistant.components.webostv
-aiopylgtv==0.2.7
+aiopylgtv==0.3.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
@@ -1690,7 +1690,7 @@ pyversasense==0.0.6
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.1
+pyvizio==0.1.4
 
 # homeassistant.components.velux
 pyvlx==0.2.12
