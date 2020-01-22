@@ -1,48 +1,76 @@
 """Tests for Philips Hue config flow."""
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import aiohue
+from asynctest import CoroutineMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.components.hue import config_flow, const
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
+
+
+@pytest.fixture(name="hue_setup", autouse=True)
+def hue_setup_fixture():
+    """Mock hue entry setup."""
+    with patch("homeassistant.components.hue.async_setup_entry", return_value=True):
+        yield
+
+
+def get_mock_bridge(
+    bridge_id="aabbccddeeff", host="1.2.3.4", mock_create_user=None, username=None
+):
+    """Return a mock bridge."""
+    mock_bridge = Mock()
+    mock_bridge.host = host
+    mock_bridge.username = username
+    mock_bridge.config.name = "Mock Bridge"
+    mock_bridge.id = bridge_id
+
+    if not mock_create_user:
+
+        async def create_user(username):
+            mock_bridge.username = username
+
+        mock_create_user = create_user
+
+    mock_bridge.create_user = mock_create_user
+    mock_bridge.initialize = CoroutineMock()
+
+    return mock_bridge
 
 
 async def test_flow_works(hass):
     """Test config flow ."""
-    mock_bridge = Mock()
-    mock_bridge.host = "1.2.3.4"
-    mock_bridge.username = None
-    mock_bridge.config.name = "Mock Bridge"
-    mock_bridge.id = "aabbccddeeff"
-
-    async def mock_create_user(username):
-        mock_bridge.username = username
-
-    mock_bridge.create_user = mock_create_user
-    mock_bridge.initialize.return_value = mock_coro()
-
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    mock_bridge = get_mock_bridge()
 
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
-        return_value=mock_coro([mock_bridge]),
+        return_value=[mock_bridge],
     ):
-        result = await flow.async_step_init()
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": "user"}
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "link"
 
-    assert flow.context["unique_id"] == "aabbccddeeff"
+    flow = next(
+        (
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["flow_id"] == result["flow_id"]
+        )
+    )
+    assert flow["context"]["unique_id"] == "aabbccddeeff"
 
-    result = await flow.async_step_link(user_input={})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == "create_entry"
     assert result["title"] == "Mock Bridge"
@@ -57,11 +85,12 @@ async def test_flow_works(hass):
 async def test_flow_no_discovered_bridges(hass, aioclient_mock):
     """Test config flow discovers no bridges."""
     aioclient_mock.get(const.API_NUPNP, json=[])
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == "abort"
+    assert result["reason"] == "no_bridges"
 
 
 async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
@@ -72,12 +101,12 @@ async def test_flow_all_discovered_bridges_exist(hass, aioclient_mock):
     MockConfigEntry(
         domain="hue", unique_id="bla", data={"host": "1.2.3.4"}
     ).add_to_hass(hass)
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
 
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == "abort"
+    assert result["reason"] == "all_configured"
 
 
 async def test_flow_one_bridge_discovered(hass, aioclient_mock):
@@ -85,11 +114,10 @@ async def test_flow_one_bridge_discovered(hass, aioclient_mock):
     aioclient_mock.get(
         const.API_NUPNP, json=[{"internalipaddress": "1.2.3.4", "id": "bla"}]
     )
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
 
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "link"
 
@@ -108,10 +136,10 @@ async def test_flow_two_bridges_discovered(hass, aioclient_mock):
             {"internalipaddress": "5.6.7.8", "id": "beer"},
         ],
     )
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "init"
 
@@ -134,38 +162,52 @@ async def test_flow_two_bridges_discovered_one_new(hass, aioclient_mock):
     MockConfigEntry(
         domain="hue", unique_id="bla", data={"host": "1.2.3.4"}
     ).add_to_hass(hass)
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
 
-    result = await flow.async_step_init()
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == "form"
     assert result["step_id"] == "link"
-    assert flow.bridge.host == "5.6.7.8"
+    flow = next(
+        (
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["flow_id"] == result["flow_id"]
+        )
+    )
+    assert flow["context"]["unique_id"] == "beer"
 
 
 async def test_flow_timeout_discovery(hass):
     """Test config flow ."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
         side_effect=asyncio.TimeoutError,
     ):
-        result = await flow.async_step_init()
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": "user"}
+        )
 
     assert result["type"] == "abort"
+    assert result["reason"] == "discover_timeout"
 
 
 async def test_flow_link_timeout(hass):
-    """Test config flow ."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.bridge = Mock()
+    """Test config flow."""
+    mock_bridge = get_mock_bridge(
+        mock_create_user=CoroutineMock(side_effect=asyncio.TimeoutError),
+    )
+    with patch(
+        "homeassistant.components.hue.config_flow.discover_nupnp",
+        return_value=[mock_bridge],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": "user"}
+        )
 
-    with patch("aiohue.Bridge.create_user", side_effect=asyncio.TimeoutError):
-        result = await flow.async_step_link({})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "link"
@@ -174,13 +216,20 @@ async def test_flow_link_timeout(hass):
 
 async def test_flow_link_button_not_pressed(hass):
     """Test config flow ."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.bridge = Mock(
-        username=None, create_user=Mock(side_effect=aiohue.LinkButtonNotPressed)
+    mock_bridge = get_mock_bridge(
+        mock_create_user=CoroutineMock(side_effect=aiohue.LinkButtonNotPressed),
     )
+    with patch(
+        "homeassistant.components.hue.config_flow.discover_nupnp",
+        return_value=[mock_bridge],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": "user"}
+        )
 
-    result = await flow.async_step_link({})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "link"
@@ -189,12 +238,20 @@ async def test_flow_link_button_not_pressed(hass):
 
 async def test_flow_link_unknown_host(hass):
     """Test config flow ."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.bridge = Mock()
+    mock_bridge = get_mock_bridge(
+        mock_create_user=CoroutineMock(side_effect=aiohue.RequestError),
+    )
+    with patch(
+        "homeassistant.components.hue.config_flow.discover_nupnp",
+        return_value=[mock_bridge],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": "user"}
+        )
 
-    with patch("aiohue.Bridge.create_user", side_effect=aiohue.RequestError):
-        result = await flow.async_step_link({})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "link"
@@ -203,16 +260,14 @@ async def test_flow_link_unknown_host(hass):
 
 async def test_bridge_ssdp(hass):
     """Test a bridge being discovered."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    result = await flow.async_step_ssdp(
-        {
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "ssdp"},
+        data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
             ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
             ssdp.ATTR_UPNP_SERIAL: "1234",
-        }
+        },
     )
 
     assert result["type"] == "form"
@@ -221,29 +276,27 @@ async def test_bridge_ssdp(hass):
 
 async def test_bridge_ssdp_discover_other_bridge(hass):
     """Test that discovery ignores other bridges."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_ssdp(
-        {ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.notphilips.com"}
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "ssdp"},
+        data={ssdp.ATTR_UPNP_MANUFACTURER_URL: "http://www.notphilips.com"},
     )
 
     assert result["type"] == "abort"
+    assert result["reason"] == "not_hue_bridge"
 
 
 async def test_bridge_ssdp_emulated_hue(hass):
     """Test if discovery info is from an emulated hue instance."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    result = await flow.async_step_ssdp(
-        {
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "ssdp"},
+        data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "Home Assistant Bridge",
             ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
             ssdp.ATTR_UPNP_SERIAL: "1234",
-        }
+        },
     )
 
     assert result["type"] == "abort"
@@ -252,17 +305,15 @@ async def test_bridge_ssdp_emulated_hue(hass):
 
 async def test_bridge_ssdp_espalexa(hass):
     """Test if discovery info is from an Espalexa based device."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    result = await flow.async_step_ssdp(
-        {
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "ssdp"},
+        data={
             ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "Espalexa (0.0.0.0)",
             ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
             ssdp.ATTR_UPNP_SERIAL: "1234",
-        }
+        },
     )
 
     assert result["type"] == "abort"
@@ -275,27 +326,25 @@ async def test_bridge_ssdp_already_configured(hass):
         domain="hue", unique_id="1234", data={"host": "0.0.0.0"}
     ).add_to_hass(hass)
 
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "ssdp"},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: "1234",
+        },
+    )
 
-    with pytest.raises(data_entry_flow.AbortFlow):
-        await flow.async_step_ssdp(
-            {
-                ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
-                ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
-                ssdp.ATTR_UPNP_SERIAL: "1234",
-            }
-        )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
 
 
 async def test_import_with_no_config(hass):
     """Test importing a host without an existing config file."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    result = await flow.async_step_import({"host": "0.0.0.0"})
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN, context={"source": "import"}, data={"host": "0.0.0.0"},
+    )
 
     assert result["type"] == "form"
     assert result["step_id"] == "link"
@@ -319,11 +368,9 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
 
     assert len(hass.config_entries.async_entries("hue")) == 2
 
-    bridge = Mock()
-    bridge.username = "username-abc"
-    bridge.config.name = "Mock Bridge"
-    bridge.host = "0.0.0.0"
-    bridge.id = "id-1234"
+    bridge = get_mock_bridge(
+        bridge_id="id-1234", host="2.2.2.2", username="username-abc"
+    )
 
     with patch(
         "aiohue.Bridge", return_value=bridge,
@@ -335,19 +382,15 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
     assert result["type"] == "form"
     assert result["step_id"] == "link"
 
-    with patch(
-        "homeassistant.components.hue.config_flow.authenticate_bridge",
-        return_value=mock_coro(),
-    ), patch(
-        "homeassistant.components.hue.async_setup_entry",
-        side_effect=lambda _, _2: mock_coro(True),
+    with patch("homeassistant.components.hue.config_flow.authenticate_bridge"), patch(
+        "homeassistant.components.hue.async_unload_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] == "create_entry"
     assert result["title"] == "Mock Bridge"
     assert result["data"] == {
-        "host": "0.0.0.0",
+        "host": "2.2.2.2",
         "username": "username-abc",
     }
     entries = hass.config_entries.async_entries("hue")
@@ -359,17 +402,15 @@ async def test_creating_entry_removes_entries_for_same_host_or_bridge(hass):
 
 async def test_bridge_homekit(hass):
     """Test a bridge being discovered via HomeKit."""
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
-
-    result = await flow.async_step_homekit(
-        {
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "homekit"},
+        data={
             "host": "0.0.0.0",
             "serial": "1234",
             "manufacturerURL": config_flow.HUE_MANUFACTURERURL,
             "properties": {"id": "aa:bb:cc:dd:ee:ff"},
-        }
+        },
     )
 
     assert result["type"] == "form"
@@ -382,11 +423,11 @@ async def test_bridge_homekit_already_configured(hass):
         domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
     ).add_to_hass(hass)
 
-    flow = config_flow.HueFlowHandler()
-    flow.hass = hass
-    flow.context = {}
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "homekit"},
+        data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+    )
 
-    with pytest.raises(data_entry_flow.AbortFlow):
-        await flow.async_step_homekit(
-            {"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}}
-        )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"

@@ -21,7 +21,7 @@ from homeassistant.helpers import aiohttp_client
 from .const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
-    CONF_BRIDGEID,
+    CONF_BRIDGE_ID,
     DEFAULT_ALLOW_CLIP_SENSOR,
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_PORT,
@@ -74,7 +74,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             for bridge in self.bridges:
                 if bridge[CONF_HOST] == user_input[CONF_HOST]:
-                    self.bridge_id = bridge[CONF_BRIDGEID]
+                    self.bridge_id = bridge[CONF_BRIDGE_ID]
                     self.deconz_config = {
                         CONF_HOST: bridge[CONF_HOST],
                         CONF_PORT: bridge[CONF_PORT],
@@ -216,15 +216,15 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the discovery component.
         """
         self.bridge_id = normalize_bridge_id(user_input[CONF_SERIAL])
-        gateway = self.hass.data.get(DOMAIN, {}).get(self.bridge_id)
 
-        if gateway:
-            return self._update_entry(
-                gateway.config_entry,
-                user_input[CONF_HOST],
-                user_input[CONF_PORT],
-                user_input[CONF_API_KEY],
-            )
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if self.bridge_id == entry.unique_id:
+                return self._update_entry(
+                    entry,
+                    user_input[CONF_HOST],
+                    user_input[CONF_PORT],
+                    user_input[CONF_API_KEY],
+                )
 
         await self.async_set_unique_id(self.bridge_id)
         self._hassio_discovery = user_input

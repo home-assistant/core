@@ -514,6 +514,18 @@ async def test_ws_update(hass, hass_ws_client, storage_setup):
             "id": 6,
             "type": "person/update",
             "person_id": persons[0]["id"],
+            "user_id": persons[0]["user_id"],
+        }
+    )
+    resp = await client.receive_json()
+
+    assert resp["success"]
+
+    resp = await client.send_json(
+        {
+            "id": 7,
+            "type": "person/update",
+            "person_id": persons[0]["id"],
             "name": "Updated Name",
             "device_trackers": [DEVICE_TRACKER_2],
             "user_id": None,
@@ -741,7 +753,7 @@ async def test_reload(hass, hass_admin_user):
                 {"name": "Person 3", "id": "id-3"},
             ]
         },
-    ), patch("homeassistant.config.find_config_file", return_value=""):
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_RELOAD,

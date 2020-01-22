@@ -1,20 +1,19 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Konto bereits konfiguriert"
+            "already_configured": "Konto bereits konfiguriert"
         },
         "error": {
-            "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfen Sie Ihre E-Mail & Passwort",
+            "login": "Login-Fehler: Bitte \u00fcberpr\u00fcfe deine E-Mail & Passwort",
             "send_verification_code": "Fehler beim Senden des Best\u00e4tigungscodes",
-            "username_exists": "Konto bereits konfiguriert",
-            "validate_verification_code": "Verifizierung des Verifizierungscodes fehlgeschlagen. W\u00e4hlen Sie ein vertrauensw\u00fcrdiges Ger\u00e4t aus und starten Sie die Verifizierung erneut"
+            "validate_verification_code": "Verifizierung des Verifizierungscodes fehlgeschlagen. W\u00e4hle ein vertrauensw\u00fcrdiges Ger\u00e4t aus und starte die Verifizierung erneut"
         },
         "step": {
             "trusted_device": {
                 "data": {
                     "trusted_device": "Vertrauensw\u00fcrdiges Ger\u00e4t"
                 },
-                "description": "W\u00e4hlen Sie Ihr vertrauensw\u00fcrdiges Ger\u00e4t aus",
+                "description": "W\u00e4hle dein vertrauensw\u00fcrdiges Ger\u00e4t aus",
                 "title": "iCloud vertrauensw\u00fcrdiges Ger\u00e4t"
             },
             "user": {
@@ -22,14 +21,14 @@
                     "password": "Passwort",
                     "username": "E-Mail"
                 },
-                "description": "Geben Sie Ihre Zugangsdaten ein",
+                "description": "Gib deine Zugangsdaten ein",
                 "title": "iCloud-Anmeldeinformationen"
             },
             "verification_code": {
                 "data": {
                     "verification_code": "Verifizierungscode"
                 },
-                "description": "Bitte geben Sie den Best\u00e4tigungscode ein, den Sie gerade von iCloud erhalten haben",
+                "description": "Bitte gib den Best\u00e4tigungscode ein, den du gerade von iCloud erhalten hast",
                 "title": "iCloud-Best\u00e4tigungscode"
             }
         },

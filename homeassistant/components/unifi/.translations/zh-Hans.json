@@ -22,5 +22,17 @@
             }
         },
         "title": "UniFi \u63a7\u5236\u5668"
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "detection_time": "\u8ddd\u79bb\u4e0a\u6b21\u53d1\u73b0\u591a\u5c11\u79d2\u540e\u8ba4\u4e3a\u79bb\u5f00",
+                    "track_clients": "\u8ddf\u8e2a\u7f51\u7edc\u5ba2\u6237\u7aef",
+                    "track_devices": "\u8ddf\u8e2a\u7f51\u7edc\u8bbe\u5907\uff08Ubiquiti \u8bbe\u5907\uff09",
+                    "track_wired_clients": "\u5305\u62ec\u6709\u7ebf\u7f51\u7edc\u5ba2\u6237\u7aef"
+                }
+            }
+        }
     }
 }

@@ -118,10 +118,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class WLEDEntity(Entity):
     """Defines a base WLED entity."""
 
-    def __init__(self, entry_id: str, wled: WLED, name: str, icon: str) -> None:
+    def __init__(
+        self,
+        entry_id: str,
+        wled: WLED,
+        name: str,
+        icon: str,
+        enabled_default: bool = True,
+    ) -> None:
         """Initialize the WLED entity."""
         self._attributes: Dict[str, Union[str, int, float]] = {}
         self._available = True
+        self._enabled_default = enabled_default
         self._entry_id = entry_id
         self._icon = icon
         self._name = name
@@ -142,6 +150,11 @@ class WLEDEntity(Entity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
 
     @property
     def should_poll(self) -> bool:
@@ -171,6 +184,9 @@ class WLEDEntity(Entity):
 
     async def async_update(self) -> None:
         """Update WLED entity."""
+        if not self.enabled:
+            return
+
         if self.wled.device is None:
             self._available = False
             return

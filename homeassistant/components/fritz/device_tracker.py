@@ -1,7 +1,7 @@
 """Support for FRITZ!Box routers."""
 import logging
 
-from fritzconnection import FritzHosts  # pylint: disable=import-error
+from fritzconnection.lib.fritzhosts import FritzHosts
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -68,7 +68,7 @@ class FritzBoxScanner(DeviceScanner):
         self._update_info()
         active_hosts = []
         for known_host in self.last_results:
-            if known_host["status"] == "1" and known_host.get("mac"):
+            if known_host["status"] and known_host.get("mac"):
                 active_hosts.append(known_host["mac"])
         return active_hosts
 

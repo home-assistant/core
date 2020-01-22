@@ -240,3 +240,16 @@ async def test_cors_defaults(hass):
 
     assert len(mock_setup.mock_calls) == 1
     assert mock_setup.mock_calls[0][1][1] == ["https://cast.home-assistant.io"]
+
+
+async def test_storing_config(hass, aiohttp_client, aiohttp_unused_port):
+    """Test that we store last working config."""
+    config = {http.CONF_SERVER_PORT: aiohttp_unused_port()}
+
+    await async_setup_component(hass, http.DOMAIN, {http.DOMAIN: config})
+
+    await hass.async_start()
+
+    assert await hass.components.http.async_get_last_config() == http.HTTP_SCHEMA(
+        config
+    )

@@ -27,6 +27,9 @@ ZEROCONF = {
     "_printer._tcp.local.": [
         "brother"
     ],
+    "_viziocast._tcp.local.": [
+        "vizio"
+    ],
     "_wled._tcp.local.": [
         "wled"
     ]
@@ -35,6 +38,9 @@ ZEROCONF = {
 HOMEKIT = {
     "BSB002": "hue",
     "LIFX": "lifx",
+    "Netatmo Relay": "netatmo",
+    "Presence": "netatmo",
     "TRADFRI": "tradfri",
+    "Welcome": "netatmo",
     "Wemo": "wemo"
 }

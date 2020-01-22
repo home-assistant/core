@@ -7,6 +7,9 @@
             "default": "Autenticaci\u00f3 exitosa amb Withings per al perfil seleccionat."
         },
         "step": {
+            "pick_implementation": {
+                "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
+            },
             "profile": {
                 "data": {
                     "profile": "Perfil"

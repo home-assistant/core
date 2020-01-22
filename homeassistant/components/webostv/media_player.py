@@ -118,6 +118,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
         self._customize = customize
         self._on_script = on_script
 
+        # Assume that the TV is not paused
+        self._paused = False
+
         # Assume that the TV is not muted
         self._muted = False
         self._volume = 0
@@ -290,7 +293,10 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     @cmd
     async def async_turn_off(self):
         """Turn off media player."""
-        await self._client.power_off()
+
+        # in some situations power_off may cause the TV to switch back on
+        if self._state != STATE_OFF:
+            await self._client.power_off()
 
     async def async_turn_on(self):
         """Turn on the media player."""
@@ -326,8 +332,11 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
 
     @cmd
     async def async_media_play_pause(self):
-        """Client pause command acts as a play-pause toggle."""
-        await self._client.pause()
+        """Simulate play pause media player."""
+        if self._paused:
+            await self.async_media_play()
+        else:
+            await self.async_media_pause()
 
     @cmd
     async def async_select_source(self, source):
@@ -351,7 +360,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
             partial_match_channel_id = None
             perfect_match_channel_id = None
 
-            for channel in self._client.get_channels():
+            for channel in await self._client.get_channels():
                 if media_id == channel["channelNumber"]:
                     perfect_match_channel_id = channel["channelId"]
                     continue
@@ -379,11 +388,13 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     @cmd
     async def async_media_play(self):
         """Send play command."""
+        self._paused = False
         await self._client.play()
 
     @cmd
     async def async_media_pause(self):
         """Send media pause command to media player."""
+        self._paused = True
         await self._client.pause()
 
     @cmd

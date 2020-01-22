@@ -7,12 +7,12 @@
             "unknown": "Unbekannter Fehler ist aufgetreten"
         },
         "error": {
-            "auth_error": "Authentifizierungsfehler, bitte versuchen Sie es erneut"
+            "auth_error": "Authentifizierungsfehler, bitte versuche es erneut"
         },
         "step": {
             "auth": {
-                "description": "So verkn\u00fcpfen Sie Ihr TelldusLive-Konto: \n 1. Klicken Sie auf den Link unten \n 2. Melden Sie sich bei Telldus Live an \n 3. Autorisieren Sie ** {app_name} ** (klicken Sie auf ** Yes **). \n 4. Kommen Sie hierher zur\u00fcck und klicken Sie auf ** SUBMIT **. \n\n [Link TelldusLive-Konto]({auth_url})",
-                "title": "Authentifizieren Sie sich gegen TelldusLive"
+                "description": "So verkn\u00fcpfest du dein TelldusLive-Konto: \n 1. Klicke auf den Link unten \n 2. Melde dich bei Telldus Live an \n 3. Autorisiere ** {app_name} ** (klicke auf ** Yes **). \n 4. Komme hierher zur\u00fcck und klicke auf ** SUBMIT **. \n\n [Link TelldusLive-Konto]({auth_url})",
+                "title": "Authentifiziere dich gegen TelldusLive"
             },
             "user": {
                 "data": {

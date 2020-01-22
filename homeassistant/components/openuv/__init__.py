@@ -289,8 +289,14 @@ class OpenUvEntity(Entity):
     def __init__(self, openuv):
         """Initialize."""
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._available = True
         self._name = None
         self.openuv = openuv
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def device_state_attributes(self):

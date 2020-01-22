@@ -44,11 +44,6 @@ UV_LEVEL_MODERATE = "Moderate"
 UV_LEVEL_LOW = "Low"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up an OpenUV sensor based on existing config."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Nest sensor based on a config entry."""
     openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.entry_id]
@@ -124,7 +119,14 @@ class OpenUvSensor(OpenUvEntity):
 
     async def async_update(self):
         """Update the state."""
-        data = self.openuv.data[DATA_UV]["result"]
+        data = self.openuv.data[DATA_UV].get("result")
+
+        if not data:
+            self._available = False
+            return
+
+        self._available = True
+
         if self._sensor_type == TYPE_CURRENT_OZONE_LEVEL:
             self._state = data["ozone"]
         elif self._sensor_type == TYPE_CURRENT_UV_INDEX:

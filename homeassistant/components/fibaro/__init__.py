@@ -426,11 +426,6 @@ class FibaroDevice(Entity):
             self.dont_know_message(cmd)
 
     @property
-    def hidden(self) -> bool:
-        """Return True if the entity should be hidden from UIs."""
-        return self.fibaro_device.visible is False
-
-    @property
     def current_power_w(self):
         """Return the current power usage in W."""
         if "power" in self.fibaro_device.properties:

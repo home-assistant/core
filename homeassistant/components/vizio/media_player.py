@@ -1,22 +1,12 @@
 """Vizio SmartCast Device support."""
-from datetime import timedelta
 import logging
+from typing import Callable, List
 
-from pyvizio import Vizio
-import voluptuous as vol
+from pyvizio import VizioAsync
 
 from homeassistant import util
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
-)
+from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
@@ -25,60 +15,96 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import VIZIO_SCHEMA, validate_auth
-from .const import CONF_VOLUME_STEP, DEFAULT_NAME, DEVICE_ID, ICON
+from .const import (
+    CONF_VOLUME_STEP,
+    DEFAULT_TIMEOUT,
+    DEFAULT_VOLUME_STEP,
+    DEVICE_ID,
+    DOMAIN,
+    ICON,
+    MIN_TIME_BETWEEN_FORCED_SCANS,
+    MIN_TIME_BETWEEN_SCANS,
+    SUPPORTED_COMMANDS,
+    VIZIO_DEVICE_CLASSES,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-COMMON_SUPPORTED_COMMANDS = (
-    SUPPORT_SELECT_SOURCE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-)
-
-SUPPORTED_COMMANDS = {
-    "soundbar": COMMON_SUPPORTED_COMMANDS,
-    "tv": (COMMON_SUPPORTED_COMMANDS | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK),
-}
+PARALLEL_UPDATES = 0
 
 
-PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend(VIZIO_SCHEMA), validate_auth)
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    config_entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up a Vizio media player entry."""
+    host = config_entry.data[CONF_HOST]
+    token = config_entry.data.get(CONF_ACCESS_TOKEN)
+    name = config_entry.data[CONF_NAME]
+    device_class = config_entry.data[CONF_DEVICE_CLASS]
 
+    # If config entry options not set up, set them up, otherwise assign values managed in options
+    if not config_entry.options:
+        volume_step = config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_VOLUME_STEP: volume_step}
+        )
+    else:
+        volume_step = config_entry.options[CONF_VOLUME_STEP]
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Vizio media player platform."""
-    host = config[CONF_HOST]
-    token = config.get(CONF_ACCESS_TOKEN)
-    name = config[CONF_NAME]
-    volume_step = config[CONF_VOLUME_STEP]
-    device_type = config[CONF_DEVICE_CLASS]
-    device = VizioDevice(host, token, name, volume_step, device_type)
-    if not device.validate_setup():
+    device = VizioAsync(
+        DEVICE_ID,
+        host,
+        name,
+        token,
+        VIZIO_DEVICE_CLASSES[device_class],
+        session=async_get_clientsession(hass, False),
+        timeout=DEFAULT_TIMEOUT,
+    )
+
+    if not await device.can_connect():
         fail_auth_msg = ""
         if token:
-            fail_auth_msg = " and auth token is correct"
+            fail_auth_msg = "and auth token '{token}' are correct."
+        else:
+            fail_auth_msg = "is correct."
         _LOGGER.error(
-            "Failed to set up Vizio platform, please check if host "
-            "is valid and available%s",
+            "Failed to connect to Vizio device, please check if host '{host}'"
+            "is valid and available. Also check if device class '{device_class}' %s",
             fail_auth_msg,
         )
-        return
+        raise PlatformNotReady
 
-    add_entities([device], True)
+    entity = VizioDevice(config_entry, device, name, volume_step, device_class)
+
+    async_add_entities([entity], True)
 
 
 class VizioDevice(MediaPlayerDevice):
     """Media Player implementation which performs REST requests to device."""
 
-    def __init__(self, host, token, name, volume_step, device_type):
+    def __init__(
+        self,
+        config_entry: ConfigEntry,
+        device: VizioAsync,
+        name: str,
+        volume_step: int,
+        device_class: str,
+    ) -> None:
         """Initialize Vizio device."""
+        self._config_entry = config_entry
+        self._async_unsub_listeners = []
 
         self._name = name
         self._state = None
@@ -86,141 +112,193 @@ class VizioDevice(MediaPlayerDevice):
         self._volume_step = volume_step
         self._current_input = None
         self._available_inputs = None
-        self._device_type = device_type
-        self._supported_commands = SUPPORTED_COMMANDS[device_type]
-        self._device = Vizio(DEVICE_ID, host, DEFAULT_NAME, token, device_type)
+        self._device_class = device_class
+        self._supported_commands = SUPPORTED_COMMANDS[device_class]
+        self._device = device
         self._max_volume = float(self._device.get_max_volume())
-        self._unique_id = None
-        self._icon = ICON[device_type]
+        self._icon = ICON[device_class]
+        self._available = True
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update(self):
+    async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-        is_on = self._device.get_power_state()
+        is_on = await self._device.get_power_state(False)
 
-        if not self._unique_id:
-            self._unique_id = self._device.get_esn()
+        if is_on is None:
+            self._available = False
+            return
 
-        if is_on:
-            self._state = STATE_ON
+        self._available = True
 
-            volume = self._device.get_current_volume()
-            if volume is not None:
-                self._volume_level = float(volume) / self._max_volume
-
-            input_ = self._device.get_current_input()
-            if input_ is not None:
-                self._current_input = input_.meta_name
-
-            inputs = self._device.get_inputs()
-            if inputs is not None:
-                self._available_inputs = [input_.name for input_ in inputs]
-
-        else:
-            if is_on is None:
-                self._state = None
-            else:
-                self._state = STATE_OFF
-
+        if not is_on:
+            self._state = STATE_OFF
             self._volume_level = None
             self._current_input = None
             self._available_inputs = None
+            return
+
+        self._state = STATE_ON
+
+        volume = await self._device.get_current_volume(False)
+        if volume is not None:
+            self._volume_level = float(volume) / self._max_volume
+
+        input_ = await self._device.get_current_input(False)
+        if input_ is not None:
+            self._current_input = input_.meta_name
+
+        inputs = await self._device.get_inputs(False)
+        if inputs is not None:
+            self._available_inputs = [input_.name for input_ in inputs]
+
+    @staticmethod
+    async def _async_send_update_options_signal(
+        hass: HomeAssistantType, config_entry: ConfigEntry
+    ) -> None:
+        """Send update event when when Vizio config entry is updated."""
+        # Move this method to component level if another entity ever gets added for a single config entry.
+        # See here: https://github.com/home-assistant/home-assistant/pull/30653#discussion_r366426121
+        async_dispatcher_send(hass, config_entry.entry_id, config_entry)
+
+    async def _async_update_options(self, config_entry: ConfigEntry) -> None:
+        """Update options if the update signal comes from this entity."""
+        self._volume_step = config_entry.options[CONF_VOLUME_STEP]
+
+    async def async_added_to_hass(self):
+        """Register callbacks when entity is added."""
+        # Register callback for when config entry is updated.
+        self._async_unsub_listeners.append(
+            self._config_entry.add_update_listener(
+                self._async_send_update_options_signal
+            )
+        )
+
+        # Register callback for update event
+        self._async_unsub_listeners.append(
+            async_dispatcher_connect(
+                self.hass, self._config_entry.entry_id, self._async_update_options
+            )
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks when entity is removed."""
+        for listener in self._async_unsub_listeners:
+            listener()
+
+        self._async_unsub_listeners.clear()
 
     @property
-    def state(self):
+    def available(self) -> bool:
+        """Return the availabiliity of the device."""
+        return self._available
+
+    @property
+    def state(self) -> str:
         """Return the state of the device."""
         return self._state
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return the icon of the device."""
         return self._icon
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float:
         """Return the volume level of the device."""
         return self._volume_level
 
     @property
-    def source(self):
+    def source(self) -> str:
         """Return current input of the device."""
         return self._current_input
 
     @property
-    def source_list(self):
+    def source_list(self) -> List:
         """Return list of available inputs of the device."""
         return self._available_inputs
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag device features that are supported."""
         return self._supported_commands
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return the unique id of the device."""
-        return self._unique_id
+        return self._config_entry.unique_id
 
-    def turn_on(self):
+    @property
+    def device_info(self):
+        """Return device registry information."""
+        return {
+            "identifiers": {(DOMAIN, self._config_entry.unique_id)},
+            "name": self.name,
+            "manufacturer": "VIZIO",
+        }
+
+    @property
+    def device_class(self):
+        """Return device class for entity."""
+        return self._device_class
+
+    async def async_turn_on(self) -> None:
         """Turn the device on."""
-        self._device.pow_on()
+        await self._device.pow_on()
 
-    def turn_off(self):
+    async def async_turn_off(self) -> None:
         """Turn the device off."""
-        self._device.pow_off()
+        await self._device.pow_off()
 
-    def mute_volume(self, mute):
+    async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute:
-            self._device.mute_on()
+            await self._device.mute_on()
         else:
-            self._device.mute_off()
+            await self._device.mute_off()
 
-    def media_previous_track(self):
+    async def async_media_previous_track(self) -> None:
         """Send previous channel command."""
-        self._device.ch_down()
+        await self._device.ch_down()
 
-    def media_next_track(self):
+    async def async_media_next_track(self) -> None:
         """Send next channel command."""
-        self._device.ch_up()
+        await self._device.ch_up()
 
-    def select_source(self, source):
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        self._device.input_switch(source)
+        await self._device.input_switch(source)
 
-    def volume_up(self):
+    async def async_volume_up(self) -> None:
         """Increasing volume of the device."""
-        self._device.vol_up(num=self._volume_step)
+        await self._device.vol_up(self._volume_step)
+
         if self._volume_level is not None:
             self._volume_level = min(
                 1.0, self._volume_level + self._volume_step / self._max_volume
             )
 
-    def volume_down(self):
+    async def async_volume_down(self) -> None:
         """Decreasing volume of the device."""
-        self._device.vol_down(num=self._volume_step)
+        await self._device.vol_down(self._volume_step)
+
         if self._volume_level is not None:
             self._volume_level = max(
                 0.0, self._volume_level - self._volume_step / self._max_volume
             )
 
-    def validate_setup(self):
-        """Validate if host is available and auth token is correct."""
-        return self._device.can_connect()
-
-    def set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
         if self._volume_level is not None:
             if volume > self._volume_level:
                 num = int(self._max_volume * (volume - self._volume_level))
+                await self._device.vol_up(num)
                 self._volume_level = volume
-                self._device.vol_up(num=num)
             elif volume < self._volume_level:
                 num = int(self._max_volume * (self._volume_level - volume))
+                await self._device.vol_down(num)
                 self._volume_level = volume
-                self._device.vol_down(num=num)

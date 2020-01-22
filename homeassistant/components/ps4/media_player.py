@@ -69,11 +69,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(device_list, update_before_add=True)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Not Implemented."""
-    pass
-
-
 class PS4Device(MediaPlayerDevice):
     """Representation of a PS4."""
 
