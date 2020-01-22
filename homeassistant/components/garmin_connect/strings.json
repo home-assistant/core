@@ -15,7 +15,7 @@
           "password": "Password",
           "username": "Username"
         },
-        "description": "Please enter your credentials.",
+        "description": "Enter your credentials.",
         "title": "Garmin Connect"
       }
     },

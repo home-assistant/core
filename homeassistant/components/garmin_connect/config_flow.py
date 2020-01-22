@@ -41,7 +41,10 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         errors = {}
         try:
-            garmin = Garmin(user_input[CONF_USERNAME], user_input[CONF_PASSWORD],)
+            unique_id = Garmin(
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+            ).get_full_name()
+
         except GarminConnectConnectionError:
             errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
@@ -51,13 +54,6 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except GarminConnectTooManyRequestsError:
             errors["base"] = "too_many_requests"
             return await self._show_setup_form(errors)
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-            return await self._show_setup_form(errors)
-
-        try:
-            unique_id = garmin.get_full_name()
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
