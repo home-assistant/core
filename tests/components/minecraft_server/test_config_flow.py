@@ -17,7 +17,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 USER_INPUT = {
     CONF_NAME: DEFAULT_NAME,
@@ -131,7 +131,8 @@ async def test_port_too_large(hass):
 async def test_connection_failed(hass):
     """Test error in case of a failed connection."""
     with patch(
-        "homeassistant.components.minecraft_server.MinecraftServer.async_check_connection"
+        "homeassistant.components.minecraft_server.MinecraftServer.async_check_connection",
+        return_value=mock_coro(None),
     ):
         with patch(
             "homeassistant.components.minecraft_server.MinecraftServer.online",
@@ -148,7 +149,8 @@ async def test_connection_failed(hass):
 async def test_connection_succeeded(hass):
     """Test config entry in case of a successful connection."""
     with patch(
-        "homeassistant.components.minecraft_server.MinecraftServer.async_check_connection"
+        "homeassistant.components.minecraft_server.MinecraftServer.async_check_connection",
+        return_value=mock_coro(None),
     ):
         with patch(
             "homeassistant.components.minecraft_server.MinecraftServer.online",
