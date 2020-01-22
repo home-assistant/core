@@ -20,7 +20,6 @@ from .core.const import (
     CHANNEL_ON_OFF,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    DATA_ZHA_PLATFORM_LOADED,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_ENQUEUE_ENTITY,
@@ -70,7 +69,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, f"{SIGNAL_ENQUEUE_ENTITY}_{light.DOMAIN}", async_enqueue_entity
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
-    hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED][light.DOMAIN].set()
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})

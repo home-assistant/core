@@ -11,7 +11,6 @@ import itertools
 import logging
 import os
 import traceback
-from typing import List
 
 import zigpy.device as zigpy_dev
 
@@ -32,7 +31,6 @@ from .const import (
     ATTR_NWK,
     ATTR_SIGNATURE,
     ATTR_TYPE,
-    COMPONENTS,
     CONF_BAUDRATE,
     CONF_DATABASE,
     CONF_RADIO_TYPE,
@@ -147,25 +145,28 @@ class ZHAGateway:
 
     async def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
-        data = self._hass.data[DATA_ZHA]
-        platforms = [data[DATA_ZHA_PLATFORM_LOADED][comp].wait() for comp in COMPONENTS]
-        await asyncio.gather(*platforms)
+        await self._hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED].wait()
 
         self._initialize_groups()
+        semaphore = asyncio.Semaphore(2)
 
-        async def _load(devices: List[zha_typing.ZigpyDeviceType]):
-            semaphore = asyncio.Semaphore(2)
-            for dev in devices:
-                async with semaphore:
-                    await self.async_device_restored(dev)
+        async def _throttle(device: zha_typing.ZigpyDeviceType):
+            async with semaphore:
+                await self.async_device_restored(device)
 
         zigpy_devices = self.application_controller.devices.values()
-        await _load(
-            [dev for dev in zigpy_devices if not dev.node_desc.is_mains_powered]
+        await asyncio.gather(
+            *[
+                _throttle(dev)
+                for dev in zigpy_devices
+                if not dev.node_desc.is_mains_powered
+            ]
         )
         async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
-        await _load([dev for dev in zigpy_devices if dev.node_desc.is_mains_powered])
+        await asyncio.gather(
+            *[_throttle(dev) for dev in zigpy_devices if dev.node_desc.is_mains_powered]
+        )
         async_dispatcher_send(self._hass, SIGNAL_ADD_ENTITIES)
 
     def device_joined(self, device):

@@ -89,15 +89,23 @@ async def async_setup_entry(hass, config_entry):
     Will automatically load components to support devices found on the network.
     """
 
-    hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED] = {}
-    for component in COMPONENTS:
-        hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED][component] = asyncio.Event()
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
-
     hass.data[DATA_ZHA] = hass.data.get(DATA_ZHA, {})
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS] = []
+    hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED] = asyncio.Event()
+    platforms = []
+    for component in COMPONENTS:
+        platforms.append(
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(config_entry, component)
+            )
+        )
+
+    async def _platforms_loaded():
+        await asyncio.gather(*platforms)
+        hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED].set()
+
+    hass.async_create_task(_platforms_loaded())
+
     config = hass.data[DATA_ZHA].get(DATA_ZHA_CONFIG, {})
 
     if config.get(CONF_ENABLE_QUIRKS, True):

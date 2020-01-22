@@ -16,7 +16,6 @@ from .core.const import (
     CHANNEL_COVER,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    DATA_ZHA_PLATFORM_LOADED,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_ENQUEUE_ENTITY,
@@ -54,7 +53,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, f"{SIGNAL_ENQUEUE_ENTITY}_{DOMAIN}", async_enqueue_entity
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
-    hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED][DOMAIN].set()
 
 
 @STRICT_MATCH(channel_names=CHANNEL_COVER)
