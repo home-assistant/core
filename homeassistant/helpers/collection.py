@@ -114,7 +114,7 @@ class ObservableCollection(ABC):
 
 
 class YamlCollection(ObservableCollection):
-    """Offer a fake CRUD interface on top of static YAML."""
+    """Offer a collection based on static data."""
 
     async def async_load(self, data: List[dict]) -> None:
         """Load the YAML collection. Overrides existing data."""
@@ -133,7 +133,7 @@ class YamlCollection(ObservableCollection):
                 event = CHANGE_ADDED
 
             self.data[item_id] = item
-            await self.notify_change(event, item[CONF_ID], item)
+            await self.notify_change(event, item_id, item)
 
         for item_id in old_ids:
             self.data.pop(item_id)
@@ -246,7 +246,7 @@ def attach_entity_component_collection(
         """Handle a collection change."""
         if change_type == CHANGE_ADDED:
             entity = create_entity(cast(dict, config))
-            await entity_component.async_add_entities([entity])
+            await entity_component.async_add_entities([entity])  # type: ignore
             entities[item_id] = entity
             return
 

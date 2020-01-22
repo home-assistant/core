@@ -271,8 +271,17 @@ async def async_handle_waypoint(hass, name_base, waypoint):
         return
 
     zone = zone_comp.Zone(
-        hass, pretty_name, lat, lon, rad, zone_comp.ICON_IMPORT, False
+        {
+            zone_comp.CONF_NAME: pretty_name,
+            zone_comp.CONF_LATITUDE: lat,
+            zone_comp.CONF_LONGITUDE: lon,
+            zone_comp.CONF_RADIUS: rad,
+            zone_comp.CONF_ICON: zone_comp.ICON_IMPORT,
+            zone_comp.CONF_PASSIVE: False,
+        },
+        False,
     )
+    zone.hass = hass
     zone.entity_id = entity_id
     await zone.async_update_ha_state()
 
