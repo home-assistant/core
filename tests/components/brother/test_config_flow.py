@@ -5,7 +5,6 @@ from asynctest import patch
 from brother import SnmpError, UnsupportedModel
 
 from homeassistant import data_entry_flow
-from homeassistant.components.brother import config_flow
 from homeassistant.components.brother.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_TYPE
@@ -119,25 +118,6 @@ async def test_device_exists_abort(hass):
         assert result["reason"] == "already_configured"
 
 
-async def test_show_zeroconf_form(hass):
-    """Test that the zeroconf form is served."""
-    with patch(
-        "brother.Brother._get_data",
-        return_value=json.loads(load_fixture("brother_printer_data.json")),
-    ):
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data={"hostname": "example.local.", "name": "Brother Printer"},
-        )
-
-        assert result["description_placeholders"]["model"] == "HL-L2340DW"
-        assert result["description_placeholders"]["serial_number"] == "0123456789"
-        assert result["step_id"] == "zeroconf_confirm"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-
-
 async def test_zeroconf_no_data(hass):
     """Test we abort if zeroconf provides no data."""
     result = await hass.config_entries.flow.async_init(
@@ -205,20 +185,21 @@ async def test_zeroconf_confirm_create_entry(hass):
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("brother_printer_data.json")),
     ):
-        flow = config_flow.BrotherConfigFlow()
-        flow.hass = hass
-        flow.context = {"source": SOURCE_ZEROCONF}
 
-        result = await flow.async_step_zeroconf(
-            {"hostname": "example.local.", "name": "Brother Printer"}
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_ZEROCONF},
+            data={"hostname": "example.local.", "name": "Brother Printer"},
         )
 
-        assert flow.context["title_placeholders"]["model"] == "HL-L2340DW"
-        assert flow.context["title_placeholders"]["serial_number"] == "0123456789"
         assert result["step_id"] == "zeroconf_confirm"
+        assert result["description_placeholders"]["model"] == "HL-L2340DW"
+        assert result["description_placeholders"]["serial_number"] == "0123456789"
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-        result = await flow.async_step_zeroconf_confirm(user_input={CONF_TYPE: "laser"})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_TYPE: "laser"}
+        )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "HL-L2340DW 0123456789"
