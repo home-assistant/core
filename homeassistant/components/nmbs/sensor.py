@@ -80,7 +80,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ]
 
     if station_live is not None:
-        sensors.append(NMBSLiveBoard(api_client, station_live))
+        sensors.append(
+            NMBSLiveBoard(api_client, station_live, name, station_from, station_to)
+        )
 
     add_entities(sensors, True)
 
@@ -88,11 +90,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class NMBSLiveBoard(Entity):
     """Get the next train from a station's liveboard."""
 
-    def __init__(self, api_client, live_station):
+    def __init__(self, api_client, live_station, name, station_from, station_to):
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
-        self._unique_id = f"nmbs_live_{self._station}"
+        self._name = name
+        self._station_from = station_from
+        self._station_to = station_to
         self._attrs = {}
         self._state = None
 
@@ -104,7 +108,12 @@ class NMBSLiveBoard(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._unique_id
+        unique_id = f"{self._station}_{self._station_from}_{self._station_to}"
+
+        if self._name:
+            unique_id = f"{self._station}_{self.name}"
+
+        return f"nmbs_live_{unique_id}"
 
     @property
     def icon(self):
