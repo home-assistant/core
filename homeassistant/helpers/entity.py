@@ -284,7 +284,7 @@ class Entity(ABC):
         self._async_write_ha_state()
 
     @callback
-    def async_write_ha_state(self):
+    def async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
@@ -294,7 +294,7 @@ class Entity(ABC):
                 f"No entity id specified for entity {self.name}"
             )
 
-        self._async_write_ha_state()
+        self._async_write_ha_state()  # type: ignore
 
     @callback
     def _async_write_ha_state(self):
