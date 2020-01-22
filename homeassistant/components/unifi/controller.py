@@ -5,9 +5,11 @@ import ssl
 
 from aiohttp import CookieJar
 import aiounifi
+from aiounifi.controller import SIGNAL_CONNECTION_STATE
 import async_timeout
 
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -58,6 +60,11 @@ class UniFiController:
         self.listeners = []
         self._site_name = None
         self._site_role = None
+
+    @property
+    def controller_id(self):
+        """Return the controller ID."""
+        return CONTROLLER_ID.format(host=self.host, site=self.site)
 
     @property
     def host(self):
@@ -130,15 +137,31 @@ class UniFiController:
                 return client.mac
         return None
 
+    @callback
+    def async_unifi_signalling_callback(self, signal, data):
+        """Handle messages back from UniFi library."""
+        if signal == SIGNAL_CONNECTION_STATE:
+            self.available = data
+            async_dispatcher_send(self.hass, self.signal_reachable)
+
+        elif signal == "event":
+            # async_dispatcher_send(self.hass, self.signal_update)
+            pass
+
+    @property
+    def signal_reachable(self) -> str:
+        """Integration specific event to signal a change in connection status."""
+        return f"unifi-reachable-{self.controller_id}"
+
     @property
     def signal_update(self):
         """Event specific per UniFi entry to signal new data."""
-        return f"unifi-update-{CONTROLLER_ID.format(host=self.host, site=self.site)}"
+        return f"unifi-update-{self.controller_id}"
 
     @property
     def signal_options_update(self):
         """Event specific per UniFi entry to signal new options."""
-        return f"unifi-options-{CONTROLLER_ID.format(host=self.host, site=self.site)}"
+        return f"unifi-options-{self.controller_id}"
 
     def update_wireless_clients(self):
         """Update set of known to be wireless clients."""
@@ -233,14 +256,16 @@ class UniFiController:
 
         self.import_configuration()
 
-        self.config_entry.add_update_listener(self.async_options_updated)
-
         for platform in SUPPORTED_PLATFORMS:
             hass.async_create_task(
                 hass.config_entries.async_forward_entry_setup(
                     self.config_entry, platform
                 )
             )
+
+        self.api.start_websocket()
+
+        self.config_entry.add_update_listener(self.async_options_updated)
 
         return True
 
@@ -296,12 +321,22 @@ class UniFiController:
                 self.config_entry, options=options
             )
 
+    @callback
+    def shutdown(self, event) -> None:
+        """Wrap the call to unifi.close.
+
+        Used as an argument to EventBus.async_listen_once.
+        """
+        self.api.stop_websocket()
+
     async def async_reset(self):
         """Reset this controller to default state.
 
         Will cancel any scheduled setup retry and will unload
         the config entry.
         """
+        self.api.stop_websocket()
+
         for platform in SUPPORTED_PLATFORMS:
             await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, platform
