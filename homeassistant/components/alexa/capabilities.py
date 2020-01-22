@@ -1203,7 +1203,10 @@ class AlexaModeController(AlexaCapability):
                 f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}",
                 [AlexaGlobalCatalog.VALUE_CLOSE],
             )
-            self._resource.add_mode(f"{cover.ATTR_POSITION}.custom", ["Custom"])
+            self._resource.add_mode(
+                f"{cover.ATTR_POSITION}.custom",
+                ["Custom", AlexaGlobalCatalog.SETTING_PRESET],
+            )
             return self._resource.serialize_capability_resources()
 
         return None
@@ -1397,7 +1400,7 @@ class AlexaRangeController(AlexaCapability):
             unit = self.entity.attributes.get(input_number.ATTR_UNIT_OF_MEASUREMENT)
 
             self._resource = AlexaPresetResource(
-                ["Value"],
+                ["Value", AlexaGlobalCatalog.SETTING_PRESET],
                 min_value=min_value,
                 max_value=max_value,
                 precision=precision,
