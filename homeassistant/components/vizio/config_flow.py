@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Dict
 
-from pyvizio import VizioAsync
+from pyvizio import VizioAsync, async_guess_device_type
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,6 +13,8 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
+    CONF_PORT,
+    CONF_TYPE,
 )
 from homeassistant.core import callback
 
@@ -64,6 +66,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self.import_schema = None
         self.user_schema = None
+        self._must_show_form = None
 
     async def async_step_user(
         self, user_input: Dict[str, Any] = None
@@ -101,24 +104,31 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "tv_needs_token"
 
             if not errors:
-                unique_id = await VizioAsync.get_unique_id(
-                    user_input[CONF_HOST],
-                    user_input.get(CONF_ACCESS_TOKEN),
-                    user_input[CONF_DEVICE_CLASS],
-                )
-
-                # Abort flow if existing component with same unique ID matches new config entry
-                if await self.async_set_unique_id(
-                    unique_id=unique_id, raise_on_progress=True
-                ):
-                    return self.async_abort(
-                        reason="already_setup_with_diff_host_and_name"
+                # Skip validating config and creating entry if form must be shown
+                if self._must_show_form:
+                    self._must_show_form = False
+                else:
+                    # Abort flow if existing entry with same unique ID matches new config entry.
+                    # Since name and host check have already passed, if an entry already exists,
+                    # It is likely a reconfigured device.
+                    unique_id = await VizioAsync.get_unique_id(
+                        user_input[CONF_HOST],
+                        user_input.get(CONF_ACCESS_TOKEN),
+                        user_input[CONF_DEVICE_CLASS],
                     )
 
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
+                    if await self.async_set_unique_id(
+                        unique_id=unique_id, raise_on_progress=True
+                    ):
+                        return self.async_abort(
+                            reason="already_setup_with_diff_host_and_name"
+                        )
 
+                    return self.async_create_entry(
+                        title=user_input[CONF_NAME], data=user_input
+                    )
+
+        # Use user_input params as default values for schema if user_input is non-empty, otherwise use default schema
         schema = self.user_schema or self.import_schema or _config_flow_schema({})
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
@@ -152,6 +162,34 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.import_schema = _config_flow_schema(import_config)
 
         return await self.async_step_user(user_input=import_config)
+
+    async def async_step_zeroconf(
+        self, discovery_info: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """Handle zeroconf discovery."""
+
+        discovery_info[
+            CONF_HOST
+        ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
+
+        # Check if new config entry matches any existing config entries and abort if so
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.data[CONF_HOST] == discovery_info[CONF_HOST]:
+                return self.async_abort(reason="already_setup")
+
+        # Set default name to discovered device name by stripping zeroconf service
+        # (`type`) from `name`
+        num_chars_to_strip = len(discovery_info[CONF_TYPE]) + 1
+        discovery_info[CONF_NAME] = discovery_info[CONF_NAME][:-num_chars_to_strip]
+
+        discovery_info[CONF_DEVICE_CLASS] = await async_guess_device_type(
+            discovery_info[CONF_HOST]
+        )
+
+        # Form must be shown after discovery so user can confirm/update configuration before ConfigEntry creation.
+        self._must_show_form = True
+
+        return await self.async_step_user(user_input=discovery_info)
 
 
 class VizioOptionsConfigFlow(config_entries.OptionsFlow):

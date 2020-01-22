@@ -26,6 +26,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CONF_VOLUME_STEP,
+    DEFAULT_TIMEOUT,
     DEFAULT_VOLUME_STEP,
     DEVICE_ID,
     DOMAIN,
@@ -46,7 +47,7 @@ async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
     async_add_entities: Callable[[List[Entity], bool], None],
-) -> bool:
+) -> None:
     """Set up a Vizio media player entry."""
     host = config_entry.data[CONF_HOST]
     token = config_entry.data.get(CONF_ACCESS_TOKEN)
@@ -69,6 +70,7 @@ async def async_setup_entry(
         token,
         VIZIO_DEVICE_CLASSES[device_class],
         session=async_get_clientsession(hass, False),
+        timeout=DEFAULT_TIMEOUT,
     )
 
     if not await device.can_connect():
