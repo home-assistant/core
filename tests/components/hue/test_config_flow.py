@@ -214,6 +214,26 @@ async def test_flow_link_timeout(hass):
     assert result["errors"] == {"base": "linking"}
 
 
+async def test_flow_link_unknown_error(hass):
+    """Test config flow."""
+    mock_bridge = get_mock_bridge(mock_create_user=CoroutineMock(side_effect=OSError),)
+    with patch(
+        "homeassistant.components.hue.config_flow.discover_nupnp",
+        return_value=[mock_bridge],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            const.DOMAIN, context={"source": "user"}
+        )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "link"
+    assert result["errors"] == {"base": "linking"}
+
+
 async def test_flow_link_button_not_pressed(hass):
     """Test config flow ."""
     mock_bridge = get_mock_bridge(
@@ -296,6 +316,36 @@ async def test_bridge_ssdp_emulated_hue(hass):
             ssdp.ATTR_UPNP_FRIENDLY_NAME: "Home Assistant Bridge",
             ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
             ssdp.ATTR_UPNP_SERIAL: "1234",
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_hue_bridge"
+
+
+async def test_bridge_ssdp_missing_location(hass):
+    """Test if discovery info is from an emulated hue instance."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "ssdp"},
+        data={
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: "1234",
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_hue_bridge"
+
+
+async def test_bridge_ssdp_missing_serial(hass):
+    """Test if discovery info is from an emulated hue instance."""
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "ssdp"},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://0.0.0.0/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
         },
     )
 
@@ -417,6 +467,22 @@ async def test_bridge_homekit(hass):
     assert result["step_id"] == "link"
 
 
+async def test_bridge_import_already_configured(hass):
+    """Test if a import flow aborts if host is already configured."""
+    MockConfigEntry(
+        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "import"},
+        data={"host": "0.0.0.0", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
 async def test_bridge_homekit_already_configured(hass):
     """Test if a HomeKit discovered bridge has already been configured."""
     MockConfigEntry(
@@ -431,3 +497,43 @@ async def test_bridge_homekit_already_configured(hass):
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
+
+
+async def test_ssdp_discovery_update_configuration(hass):
+    """Test if a discovered bridge is configured and updated with new host."""
+    entry = MockConfigEntry(
+        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "ssdp"},
+        data={
+            ssdp.ATTR_SSDP_LOCATION: "http://1.1.1.1/",
+            ssdp.ATTR_UPNP_MANUFACTURER_URL: config_flow.HUE_MANUFACTURERURL,
+            ssdp.ATTR_UPNP_SERIAL: "aabbccddeeff",
+        },
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "1.1.1.1"
+
+
+async def test_homekit_discovery_update_configuration(hass):
+    """Test if a discovered bridge is configured and updated with new host."""
+    entry = MockConfigEntry(
+        domain="hue", unique_id="aabbccddeeff", data={"host": "0.0.0.0"}
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        const.DOMAIN,
+        context={"source": "homekit"},
+        data={"host": "1.1.1.1", "properties": {"id": "aa:bb:cc:dd:ee:ff"}},
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+    assert entry.data["host"] == "1.1.1.1"

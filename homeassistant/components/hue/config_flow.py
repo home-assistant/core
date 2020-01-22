@@ -10,6 +10,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components import ssdp
+from homeassistant.const import CONF_HOST
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import aiohttp_client
 
 from .bridge import authenticate_bridge
@@ -49,6 +51,13 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             websession=aiohttp_client.async_get_clientsession(self.hass),
             bridge_id=bridge_id,
         )
+
+    def _update_existing_entry(self, bridge: aiohue.Bridge) -> None:
+        """Update existing config entry."""
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if bridge.id == entry.unique_id and bridge.host != entry.data[CONF_HOST]:
+                entry.data[CONF_HOST] = bridge.host
+                self.hass.config_entries.async_update_entry(entry)
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
@@ -169,7 +178,13 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         bridge = self._async_get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
 
         await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured()
+        try:
+            self._abort_if_unique_id_configured()
+        except AbortFlow as abort:
+            # Try to update an existing entry
+            self._update_existing_entry(bridge)
+            raise abort
+
         self.bridge = bridge
         return await self.async_step_link()
 
@@ -180,7 +195,13 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured()
+        try:
+            self._abort_if_unique_id_configured()
+        except AbortFlow as abort:
+            # Try to update an existing entry
+            self._update_existing_entry(bridge)
+            raise abort
+
         self.bridge = bridge
         return await self.async_step_link()
 
