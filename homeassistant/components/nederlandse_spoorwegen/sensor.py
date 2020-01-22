@@ -7,7 +7,13 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_API_KEY,
+    CONF_EMAIL,
+    CONF_NAME,
+    CONF_PASSWORD,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -37,12 +43,24 @@ ROUTE_SCHEMA = vol.Schema(
 ROUTES_SCHEMA = vol.All(cv.ensure_list, [ROUTE_SCHEMA])
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_API_KEY): cv.string, vol.Optional(CONF_ROUTES): ROUTES_SCHEMA}
+    {
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_EMAIL): cv.string,
+        vol.Optional(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_ROUTES): ROUTES_SCHEMA,
+    }
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
+
+    if config.get(CONF_EMAIL) or config.get(CONF_PASSWORD):
+        hass.components.persistent_notification.create(
+            'The Nederlandse Spoorwegen component requires a new API key now, please see the <a href="https://www.home-assistant.io/integrations/nederlandse_spoorwegen/">documentation</a> for upgrade instructions.',
+            title="NS upgrade error",
+            notification_id="nederlandse_spoorwegen_upgrade_error",
+        )
 
     nsapi = ns_api.NSAPI(config[CONF_API_KEY])
     try:
