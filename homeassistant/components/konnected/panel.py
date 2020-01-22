@@ -2,6 +2,8 @@
 import asyncio
 import logging
 
+import konnected
+
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_STATE,
@@ -93,8 +95,6 @@ class AlarmPanel:
     async def async_connect(self):
         """Connect to and setup a Konnected device."""
         try:
-            import konnected
-
             self.client = konnected.Client(
                 host=self.host,
                 port=str(self.port),
@@ -107,7 +107,7 @@ class AlarmPanel:
             _LOGGER.info(
                 "Connected to new %s device", self.status.get("model", "Konnected")
             )
-            _LOGGER.info(self.status)
+            _LOGGER.debug(self.status)
 
             await self.async_update_initial_states()
             # brief delay to allow processing of recent status req
@@ -120,7 +120,7 @@ class AlarmPanel:
 
         _LOGGER.info(
             "Set up Konnected device %s. Open http://%s:%s in a "
-            "web browser to view device status.",
+            "web browser to view device status",
             self.device_id,
             self.host,
             self.port,
@@ -166,7 +166,7 @@ class AlarmPanel:
             binary_sensors[zone] = {
                 CONF_TYPE: entity[CONF_TYPE],
                 CONF_NAME: entity.get(
-                    CONF_NAME, "Konnected {} Zone {}".format(self.device_id[6:], zone)
+                    CONF_NAME, f"Konnected {self.device_id[6:]} Zone {zone}"
                 ),
                 CONF_INVERSE: entity.get(CONF_INVERSE),
                 ATTR_STATE: None,
@@ -184,8 +184,7 @@ class AlarmPanel:
             act = {
                 CONF_ZONE: zone,
                 CONF_NAME: entity.get(
-                    CONF_NAME,
-                    "Konnected {} Actuator {}".format(self.device_id[6:], zone),
+                    CONF_NAME, f"Konnected {self.device_id[6:]} Actuator {zone}",
                 ),
                 ATTR_STATE: None,
                 CONF_ACTIVATION: entity[CONF_ACTIVATION],
@@ -203,7 +202,7 @@ class AlarmPanel:
             sensor = {
                 CONF_ZONE: zone,
                 CONF_NAME: entity.get(
-                    CONF_NAME, "Konnected {} Sensor {}".format(self.device_id[6:], zone)
+                    CONF_NAME, f"Konnected {self.device_id[6:]} Sensor {zone}"
                 ),
                 CONF_TYPE: entity[CONF_TYPE],
                 CONF_POLL_INTERVAL: entity.get(CONF_POLL_INTERVAL),
@@ -352,8 +351,6 @@ class AlarmPanel:
 
 async def get_status(hass, host, port):
     """Get the status of a Konnected Panel."""
-    import konnected
-
     client = konnected.Client(
         host, str(port), aiohttp_client.async_get_clientsession(hass)
     )

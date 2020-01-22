@@ -25,11 +25,6 @@ SENSOR_TYPES = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up sensors attached to a Konnected device."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up sensors attached to a Konnected device from a config entry."""
     data = hass.data[KONNECTED_DOMAIN]
@@ -101,7 +96,7 @@ class KonnectedSensor(Entity):
         # set entity name if given
         self._name = self._data.get(CONF_NAME)
         if self._name:
-            self._name += " " + SENSOR_TYPES[sensor_type][0]
+            self._name += f" {SENSOR_TYPES[sensor_type][0]}"
 
     @property
     def unique_id(self) -> str:

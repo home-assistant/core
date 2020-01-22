@@ -15,6 +15,7 @@
     "http"
   ],
   "codeowners": [
-    "@heythisisnate"
+    "@heythisisnate",
+    "@kit-klein"
   ]
 }

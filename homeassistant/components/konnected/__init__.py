@@ -87,7 +87,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     access_token = (
         cfg.get(CONF_ACCESS_TOKEN)
         or data_store.get(CONF_ACCESS_TOKEN)
-        or "".join(random.choices(string.ascii_uppercase + string.digits, k=20))
+        or "".join(random.choices(f"{string.ascii_uppercase}{string.digits}", k=20))
     )
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {
@@ -241,7 +241,7 @@ class KonnectedView(HomeAssistantView):
         device = data[CONF_DEVICES].get(device_id)
         if not device:
             return self.json_message(
-                "Device " + device_id + " not configured", status_code=HTTP_NOT_FOUND
+                f"Device {device_id} not configured", status_code=HTTP_NOT_FOUND
             )
 
         # Our data model is based on zone ids but we convert from/to pin ids
@@ -251,10 +251,13 @@ class KonnectedView(HomeAssistantView):
                 request.query.get(CONF_ZONE) or PIN_TO_ZONE[request.query[CONF_PIN]]
             )
             zone = next(
-                filter(
-                    lambda switch: switch[CONF_ZONE] == zone_num, device[CONF_SWITCHES]
+                (
+                    switch
+                    for switch in device[CONF_SWITCHES]
+                    if switch[CONF_ZONE] == zone_num
                 )
             )
+
         except StopIteration:
             zone = None
         except KeyError:
@@ -262,34 +265,29 @@ class KonnectedView(HomeAssistantView):
             zone_num = None
 
         if not zone:
+            target = request.query.get(
+                CONF_ZONE, request.query.get(CONF_PIN, "unknown")
+            )
             return self.json_message(
-                "Switch on zone or pin {} not configured".format(
-                    request.query.get(CONF_ZONE)
-                    or request.query.get(CONF_PIN, "unknown")
-                ),
+                f"Switch on zone or pin {target} not configured",
                 status_code=HTTP_NOT_FOUND,
             )
 
         resp = {}
         if request.query.get(CONF_ZONE):
-            resp.update({CONF_ZONE: zone_num})
+            resp[CONF_ZONE] = zone_num
         else:
-            resp.update({CONF_PIN: ZONE_TO_PIN[zone_num]})
+            resp[CONF_PIN] = ZONE_TO_PIN[zone_num]
 
         # Make sure entity is setup
         if zone.get(ATTR_ENTITY_ID):
-            resp.update(
-                {
-                    "state": self.binary_value(
-                        hass.states.get(zone.get(ATTR_ENTITY_ID)).state,
-                        zone[CONF_ACTIVATION],
-                    ),
-                }
+            resp["state"] = self.binary_value(
+                hass.states.get(zone.get(ATTR_ENTITY_ID)).state, zone[CONF_ACTIVATION],
             )
             return self.json(resp)
 
         _LOGGER.warning("Konnected entity not yet setup, returning default")
-        resp.update({"state": self.binary_value(STATE_OFF, zone[CONF_ACTIVATION])})
+        resp["state"] = self.binary_value(STATE_OFF, zone[CONF_ACTIVATION])
         return self.json(resp)
 
     async def put(self, request: Request, device_id) -> Response:

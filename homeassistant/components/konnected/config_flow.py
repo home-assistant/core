@@ -1,6 +1,5 @@
 """Config flow for konnected.io integration."""
 import asyncio
-from collections import OrderedDict
 import copy
 import logging
 from urllib.parse import urlparse
@@ -14,6 +13,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES as BIN_SENS_TYPES,
     DEVICE_CLASSES_SCHEMA,
 )
+from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER, ATTR_UPNP_MODEL_NAME
 from homeassistant.const import (
     CONF_BINARY_SENSORS,
     CONF_HOST,
@@ -50,6 +50,10 @@ from .panel import KONN_MODEL, KONN_MODEL_PRO, get_status
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_KONN_UPNP_MODEL_NAME = "model_name"  # standard upnp is modelName
+CONF_IO_DIS = "Disabled"
+CONF_IO_BIN = "Binary Sensor"
+CONF_IO_DIG = "Digital Sensor"
+CONF_IO_SWI = "Switchable Output"
 
 KONN_MANUFACTURER = "konnected.io"
 KONN_PANEL_MODEL_NAMES = {
@@ -57,72 +61,72 @@ KONN_PANEL_MODEL_NAMES = {
     KONN_MODEL_PRO: "Konnected Alarm Panel Pro",
 }
 
-DATA_SCHEMA_MANUAL = OrderedDict()
+DATA_SCHEMA_MANUAL = {}
 DATA_SCHEMA_MANUAL[vol.Required(CONF_HOST)] = str
 DATA_SCHEMA_MANUAL[vol.Required(CONF_PORT)] = int
 
-OPTIONS_IO_ANY = vol.In(
-    ["Disabled", "Binary Sensor", "Digital Sensor", "Switchable Output"]
-)
-OPTIONS_IO_INPUT_ONLY = vol.In(["Disabled", "Binary Sensor", "Digital Sensor"])
-OPTIONS_IO_OUTPUT_ONLY = vol.In(["Disabled", "Switchable Output"])
+OPTIONS_IO_ANY = vol.In([CONF_IO_DIS, CONF_IO_BIN, CONF_IO_DIG, CONF_IO_SWI])
+OPTIONS_IO_INPUT_ONLY = vol.In([CONF_IO_DIS, CONF_IO_BIN, CONF_IO_DIG])
+OPTIONS_IO_OUTPUT_ONLY = vol.In([CONF_IO_DIS, CONF_IO_SWI])
 
-DATA_SCHEMA_KONN_MODEL = OrderedDict()
-DATA_SCHEMA_KONN_MODEL[vol.Required("1", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL[vol.Required("2", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL[vol.Required("3", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL[vol.Required("4", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL[vol.Required("5", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL[vol.Required("6", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL[vol.Required("out", default="Disabled")] = OPTIONS_IO_OUTPUT_ONLY
-
-
-DATA_SCHEMA_KONN_MODEL_PRO_1 = OrderedDict()
-DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("1", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("2", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("3", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("4", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("5", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("6", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("7", default="Disabled")] = OPTIONS_IO_ANY
-
-DATA_SCHEMA_KONN_MODEL_PRO_2 = OrderedDict()
-DATA_SCHEMA_KONN_MODEL_PRO_2[vol.Required("8", default="Disabled")] = OPTIONS_IO_ANY
-DATA_SCHEMA_KONN_MODEL_PRO_2[
-    vol.Required("9", default="Disabled")
-] = OPTIONS_IO_INPUT_ONLY
-DATA_SCHEMA_KONN_MODEL_PRO_2[
-    vol.Required("11", default="Disabled")
-] = OPTIONS_IO_INPUT_ONLY
-DATA_SCHEMA_KONN_MODEL_PRO_2[
-    vol.Required("12", default="Disabled")
-] = OPTIONS_IO_INPUT_ONLY
-DATA_SCHEMA_KONN_MODEL_PRO_2[
-    vol.Required("alarm1", default="Disabled")
-] = OPTIONS_IO_OUTPUT_ONLY
-DATA_SCHEMA_KONN_MODEL_PRO_2[
-    vol.Required("out1", default="Disabled")
-] = OPTIONS_IO_OUTPUT_ONLY
-DATA_SCHEMA_KONN_MODEL_PRO_2[
-    vol.Required("alarm2_out2", default="Disabled")
+DATA_SCHEMA_KONN_MODEL = {}
+DATA_SCHEMA_KONN_MODEL[vol.Required("1", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL[vol.Required("2", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL[vol.Required("3", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL[vol.Required("4", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL[vol.Required("5", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL[vol.Required("6", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL[
+    vol.Required("out", default=CONF_IO_DIS)
 ] = OPTIONS_IO_OUTPUT_ONLY
 
 
-DATA_SCHEMA_BIN_SENSOR_OPTIONS = OrderedDict()
+DATA_SCHEMA_KONN_MODEL_PRO_1 = {}
+DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("1", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("2", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("3", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("4", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("5", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("6", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL_PRO_1[vol.Required("7", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+
+DATA_SCHEMA_KONN_MODEL_PRO_2 = {}
+DATA_SCHEMA_KONN_MODEL_PRO_2[vol.Required("8", default=CONF_IO_DIS)] = OPTIONS_IO_ANY
+DATA_SCHEMA_KONN_MODEL_PRO_2[
+    vol.Required("9", default=CONF_IO_DIS)
+] = OPTIONS_IO_INPUT_ONLY
+DATA_SCHEMA_KONN_MODEL_PRO_2[
+    vol.Required("11", default=CONF_IO_DIS)
+] = OPTIONS_IO_INPUT_ONLY
+DATA_SCHEMA_KONN_MODEL_PRO_2[
+    vol.Required("12", default=CONF_IO_DIS)
+] = OPTIONS_IO_INPUT_ONLY
+DATA_SCHEMA_KONN_MODEL_PRO_2[
+    vol.Required("alarm1", default=CONF_IO_DIS)
+] = OPTIONS_IO_OUTPUT_ONLY
+DATA_SCHEMA_KONN_MODEL_PRO_2[
+    vol.Required("out1", default=CONF_IO_DIS)
+] = OPTIONS_IO_OUTPUT_ONLY
+DATA_SCHEMA_KONN_MODEL_PRO_2[
+    vol.Required("alarm2_out2", default=CONF_IO_DIS)
+] = OPTIONS_IO_OUTPUT_ONLY
+
+
+DATA_SCHEMA_BIN_SENSOR_OPTIONS = {}
 DATA_SCHEMA_BIN_SENSOR_OPTIONS[
     vol.Required("type", default=DEVICE_CLASS_DOOR)
 ] = vol.In(BIN_SENS_TYPES)
 DATA_SCHEMA_BIN_SENSOR_OPTIONS[vol.Optional("name")] = str
 DATA_SCHEMA_BIN_SENSOR_OPTIONS[vol.Optional("inverse", default=False)] = bool
 
-DATA_SCHEMA_SENSOR_OPTIONS = OrderedDict()
+DATA_SCHEMA_SENSOR_OPTIONS = {}
 DATA_SCHEMA_SENSOR_OPTIONS[vol.Required("type")] = vol.In(["dht", "ds18b20"])
 DATA_SCHEMA_SENSOR_OPTIONS[vol.Optional("name")] = str
 DATA_SCHEMA_SENSOR_OPTIONS[vol.Optional("poll_interval")] = vol.All(
     int, vol.Range(min=1)
 )
 
-DATA_SCHEMA_SWITCH_OPTIONS = OrderedDict()
+DATA_SCHEMA_SWITCH_OPTIONS = {}
 DATA_SCHEMA_SWITCH_OPTIONS[vol.Optional("name")] = str
 DATA_SCHEMA_SWITCH_OPTIONS[vol.Optional("activation", default="high")] = vol.In(
     ["low", "high"]
@@ -132,7 +136,7 @@ DATA_SCHEMA_SWITCH_OPTIONS[vol.Optional("pause")] = int
 DATA_SCHEMA_SWITCH_OPTIONS[vol.Optional("repeat")] = int
 
 DATA_SCHEMA_OPTIONS = {
-    "Binary Sensor": DATA_SCHEMA_BIN_SENSOR_OPTIONS,
+    CONF_IO_BIN: DATA_SCHEMA_BIN_SENSOR_OPTIONS,
     "Sensor": DATA_SCHEMA_SENSOR_OPTIONS,
     "Switch": DATA_SCHEMA_SWITCH_OPTIONS,
 }
@@ -311,22 +315,13 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @property
     def cached_config(self):
         """Retrieve cached config for device."""
-        if self.hass.data.get(DOMAIN) and self.hass.data[DOMAIN].get("config_data"):
-            return self.hass.data[DOMAIN]["config_data"].get(self.device_id)
-        return None
+        return self.hass.data.get(DOMAIN, {}).get("config_data", {}).get(self.device_id)
 
     @callback
     def async_cache_config(self, config):
         """Cache the device config for shared usage."""
-        if DOMAIN not in self.hass.data:
-            self.hass.data[DOMAIN] = {}
-            self.hass.data[DOMAIN]["config_data"] = {}
-
-        self.hass.data[DOMAIN]["config_data"][self.device_id] = config
-
-    async def async_step_init(self, user_input=None):
-        """Needed in order to not require re-translation of strings."""
-        return await self.async_step_user(user_input)
+        domain_data = self.hass.data.setdefault(DOMAIN, {"config_data": {}})
+        domain_data["config_data"][self.device_id] = config
 
     async def async_step_import(self, import_info):
         """Import a configuration.yaml config.
@@ -386,7 +381,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
                 # try to obtain the mac address from the device
                 status = await get_status(self.hass, self.host, self.port)
-                self.device_id = status.get("mac").replace(":", "")
+                self.device_id = status["mac"].replace(":", "")
                 self.model = status.get("name", KONN_MODEL)
 
                 # finish if we have a cached data set (partial config imported earlier)
@@ -419,11 +414,6 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the SSDP component. It will check if the
         device is already configured and attempt to finish the config if not.
         """
-        from homeassistant.components.ssdp import (
-            ATTR_UPNP_MANUFACTURER,
-            ATTR_UPNP_MODEL_NAME,
-        )
-
         _LOGGER.debug(discovery_info)
 
         try:
@@ -510,7 +500,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # strip out disabled io and save for options cfg
             self.io_cfg = {}
             for key, value in user_input.items():
-                if value != "Disabled":
+                if value != CONF_IO_DIS:
                     self.io_cfg.update({key: value})
             return await self.async_step_io_ext()
 
@@ -545,7 +535,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # strip out disabled io and save for options cfg
             for key, value in user_input.items():
-                if value != "Disabled":
+                if value != CONF_IO_DIS:
                     self.io_cfg.update({key: value})
             return await self.async_step_options_binary()
 
@@ -580,7 +570,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="options_binary",
                 data_schema=vol.Schema(DATA_SCHEMA_BIN_SENSOR_OPTIONS),
                 description_placeholders={
-                    "zone": "Zone " + self.active_cfg
+                    "zone": f"Zone {self.active_cfg}"
                     if len(self.active_cfg) < 3
                     else self.active_cfg.upper
                 },
@@ -589,13 +579,13 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # find the next unconfigured binary sensor
         for key, value in self.io_cfg.items():
-            if value == "Binary Sensor":
+            if value == CONF_IO_BIN:
                 self.active_cfg = key
                 return self.async_show_form(
                     step_id="options_binary",
                     data_schema=vol.Schema(DATA_SCHEMA_BIN_SENSOR_OPTIONS),
                     description_placeholders={
-                        "zone": "Zone " + self.active_cfg
+                        "zone": "Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
                         else self.active_cfg.upper
                     },
@@ -619,7 +609,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="options_digital",
                 data_schema=vol.Schema(DATA_SCHEMA_SENSOR_OPTIONS),
                 description_placeholders={
-                    "zone": "Zone " + self.active_cfg
+                    "zone": "Zone {self.active_cfg}"
                     if len(self.active_cfg) < 3
                     else self.active_cfg.upper()
                 },
@@ -628,13 +618,13 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # find the next unconfigured binary sensor
         for key, value in self.io_cfg.items():
-            if value == "Digital Sensor":
+            if value == CONF_IO_DIG:
                 self.active_cfg = key
                 return self.async_show_form(
                     step_id="options_digital",
                     data_schema=vol.Schema(DATA_SCHEMA_SENSOR_OPTIONS),
                     description_placeholders={
-                        "zone": "Zone " + self.active_cfg
+                        "zone": "Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
                         else self.active_cfg.upper()
                     },
@@ -658,7 +648,7 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="options_switch",
                 data_schema=vol.Schema(DATA_SCHEMA_SWITCH_OPTIONS),
                 description_placeholders={
-                    "zone": "Zone " + self.active_cfg
+                    "zone": "Zone {self.active_cfg}"
                     if len(self.active_cfg) < 3
                     else self.active_cfg.upper()
                 },
@@ -667,13 +657,13 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # find the next unconfigured binary sensor
         for key, value in self.io_cfg.items():
-            if value == "Switchable Output":
+            if value == CONF_IO_SWI:
                 self.active_cfg = key
                 return self.async_show_form(
                     step_id="options_switch",
                     data_schema=vol.Schema(DATA_SCHEMA_SWITCH_OPTIONS),
                     description_placeholders={
-                        "zone": "Zone " + self.active_cfg
+                        "zone": "Zone {self.active_cfg}"
                         if len(self.active_cfg) < 3
                         else self.active_cfg.upper()
                     },

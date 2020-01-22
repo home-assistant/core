@@ -18,11 +18,6 @@ from .const import DOMAIN as KONNECTED_DOMAIN, SIGNAL_SENSOR_UPDATE
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up binary sensors attached to a Konnected device."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up binary sensors attached to a Konnected device from a config entry."""
     data = hass.data[KONNECTED_DOMAIN]
@@ -46,7 +41,7 @@ class KonnectedBinarySensor(BinarySensorDevice):
         self._zone_num = zone_num
         self._state = self._data.get(ATTR_STATE)
         self._device_class = self._data.get(CONF_TYPE)
-        self._unique_id = "{}-{}".format(device_id, zone_num)
+        self._unique_id = f"{device_id}-{zone_num}"
         self._name = self._data.get(CONF_NAME)
 
     @property
