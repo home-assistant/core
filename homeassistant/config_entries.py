@@ -824,17 +824,18 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         if self.unique_id is None:
             return
 
-        if update_entry is not None:
-            for entry in self._async_current_entries():
+        for entry in self._async_current_entries():
+            if entry.unique_id == self.unique_id:
                 if (
-                    entry.unique_id == self.unique_id
+                    self.hass is not None
+                    and update_entry is not None
                     and not update_entry.items() <= entry.data.items()
                 ):
-                    entry.data.update(update_entry)
-                    raise data_entry_flow.AbortFlow("already_configured")
+                    data = (entry.data or {}).copy()
+                    data.update(update_entry)
+                    self.hass.config_entries.async_update_entry(entry, data=data)
 
-        if self.unique_id in self._async_current_ids():
-            raise data_entry_flow.AbortFlow("already_configured")
+                raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_set_unique_id(
         self, unique_id: str, *, raise_on_progress: bool = True
