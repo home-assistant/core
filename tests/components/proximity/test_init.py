@@ -14,6 +14,7 @@ class TestProximity(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config.components.add("zone")
         self.hass.states.set(
             "zone.home",
             "zoning",
@@ -211,7 +212,7 @@ class TestProximity(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get("proximity.home")
         assert state.attributes.get("nearest") == "test1"
-        assert state.attributes.get("dir_of_travel") == "towards"
+        assert state.attributes.get("dir_of_travel") == "away_from"
 
     def test_device_tracker_test1_awaycloser(self):
         """Test for tracker state away closer."""
@@ -245,7 +246,7 @@ class TestProximity(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get("proximity.home")
         assert state.attributes.get("nearest") == "test1"
-        assert state.attributes.get("dir_of_travel") == "away_from"
+        assert state.attributes.get("dir_of_travel") == "towards"
 
     def test_all_device_trackers_in_ignored_zone(self):
         """Test for tracker in ignored zone."""
