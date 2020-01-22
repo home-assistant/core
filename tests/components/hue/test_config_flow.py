@@ -215,7 +215,7 @@ async def test_flow_link_timeout(hass):
 
 
 async def test_flow_link_unknown_error(hass):
-    """Test config flow."""
+    """Test if a unknown error happend during the linking processes."""
     mock_bridge = get_mock_bridge(mock_create_user=CoroutineMock(side_effect=OSError),)
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",
@@ -324,7 +324,7 @@ async def test_bridge_ssdp_emulated_hue(hass):
 
 
 async def test_bridge_ssdp_missing_location(hass):
-    """Test if discovery info is from an emulated hue instance."""
+    """Test if discovery info is missing a location attribute."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": "ssdp"},
@@ -339,7 +339,7 @@ async def test_bridge_ssdp_missing_location(hass):
 
 
 async def test_bridge_ssdp_missing_serial(hass):
-    """Test if discovery info is from an emulated hue instance."""
+    """Test if discovery info is a serial attribute."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": "ssdp"},
