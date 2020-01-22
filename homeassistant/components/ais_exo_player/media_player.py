@@ -138,11 +138,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         self._volume_level = volume
         vol = int(volume * 100)
-        self.hass.services.call(
-            "ais_ai_service",
-            "publish_command_to_frame",
-            {"key": "setVolume", "val": vol},
-        )
+        self._publish_command_to_frame("setVolume", vol)
 
     def select_sound_mode(self, sound_mode):
         self._sound_mode = sound_mode
@@ -191,6 +187,26 @@ class ExoPlayerDevice(MediaPlayerDevice):
         else:
             self._is_master = False
 
+    def _publish_command_to_frame(self, key, val):
+        if self._device_ip == "localhost":
+            self.hass.services.call(
+                "ais_ai_service",
+                "publish_command_to_frame",
+                {"key": key, "val": val, "ip": "localhost"},
+            )
+            for s in ais_global.G_SPEAKERS_GROUP_LIST:
+                attr = self.hass.states.get(s).attributes
+                if "device_ip" in attr and attr["device_ip"] != "localhost":
+                    self.hass.services.call(
+                        "ais_ai_service",
+                        "publish_command_to_frame",
+                        {"key": key, "val": val, "ip": attr["device_ip"]},
+                    )
+        else:
+            self.hass.services.call(
+                "ais_ai_service", "publish_command_to_frame", {"key": key, "val": val},
+            )
+
     @asyncio.coroutine
     def async_added_to_hass(self):
         pass
@@ -233,64 +249,33 @@ class ExoPlayerDevice(MediaPlayerDevice):
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         self._shuffle = shuffle
-        self.hass.services.call(
-            "ais_ai_service",
-            "publish_command_to_frame",
-            {"key": "setPlayerShuffle", "val": self._shuffle},
-        )
+        self._publish_command_to_frame("setPlayerShuffle", self._shuffle)
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
         if position == 0:
-            self.hass.services.call(
-                "ais_ai_service",
-                "publish_command_to_frame",
-                {"key": "seekTo", "val": -5000},
-            )
+            self._publish_command_to_frame("seekTo", -5000)
         elif position == 1:
-            self.hass.services.call(
-                "ais_ai_service",
-                "publish_command_to_frame",
-                {"key": "seekTo", "val": 5000},
-            )
+            self._publish_command_to_frame("seekTo", 5000)
         else:
-            self.hass.services.call(
-                "ais_ai_service",
-                "publish_command_to_frame",
-                {"key": "skipTo", "val": position * 1000},
-            )
+            self._publish_command_to_frame("skipTo", position * 1000)
             self._media_status_received_time = dt_util.utcnow()
             self._media_position = position * 1000
 
     def volume_up(self):
         """Service to send the exo the command for volume up."""
         self._volume_level = min(self._volume_level + 0.1, 1)
-        self.hass.services.call(
-            "ais_ai_service",
-            "publish_command_to_frame",
-            {"key": "upVolume", "val": True},
-        )
+        self._publish_command_to_frame("upVolume", True)
 
     def volume_down(self):
         """Service to send the exo the command for volume down."""
         self._volume_level = max(self._volume_level - 0.1, 0)
-        self.hass.services.call(
-            "ais_ai_service",
-            "publish_command_to_frame",
-            {"key": "downVolume", "val": True},
-        )
+        self._publish_command_to_frame("downVolume", True)
 
     def mute_volume(self, mute):
         """Service to send the exo the command for mute."""
         pass
         # TODO
-        #  self.hass.services.call(
-        #     'ais_ai_service',
-        #     'publish_command_to_frame', {
-        #         "key": 'downVolume',
-        #         "val": True
-        #     }
-        # )
 
     @property
     def sound_mode(self):
@@ -428,11 +413,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
 
     def media_play(self):
         """Service to send the ExoPlayer the command for play/pause."""
-        self.hass.services.call(
-            "ais_ai_service",
-            "publish_command_to_frame",
-            {"key": "pauseAudio", "val": False, "ip": self._device_ip},
-        )
+        self._publish_command_to_frame("pauseAudio", False)
         self._playing = True
         self._status = 3
 
@@ -440,20 +421,12 @@ class ExoPlayerDevice(MediaPlayerDevice):
         """Service to send the ExoPlayer the command for play/pause."""
         # to have more accurate media_position
         self._fetch_status()
-        self.hass.services.call(
-            "ais_ai_service",
-            "publish_command_to_frame",
-            {"key": "pauseAudio", "val": True, "ip": self._device_ip},
-        )
+        self._publish_command_to_frame("pauseAudio", True)
         self._playing = False
 
     def media_stop(self):
         """Service to send the ExoPlayer the command for stop."""
-        self.hass.services.call(
-            "ais_ai_service",
-            "publish_command_to_frame",
-            {"key": "pauseAudio", "val": True, "ip": self._device_ip},
-        )
+        self._publish_command_to_frame("pauseAudio", True)
         self._playing = False
 
     def media_next_track(self):
@@ -516,15 +489,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 "setMediaPosition": self._media_position,
             }
 
-            self.hass.services.call(
-                "ais_ai_service",
-                "publish_command_to_frame",
-                {
-                    "key": "playAudioFullInfo",
-                    "val": j_media_info,
-                    "ip": self._device_ip,
-                },
-            )
+            self._publish_command_to_frame("playAudioFullInfo", j_media_info)
 
             # go to media player context on localhost
             if self._device_ip == "localhost":
@@ -570,11 +535,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
                     "media_stream_image": self._stream_image,
                     "media_album_name": self._album_name,
                 }
-                self.hass.services.call(
-                    "ais_ai_service",
-                    "publish_command_to_frame",
-                    {"key": "setAudioInfo", "val": j_media_info, "ip": self._device_ip},
-                )
+                self._publish_command_to_frame("setAudioInfo", j_media_info)
             except Exception as e:
                 _LOGGER.debug("problem to publish setAudioInfo: " + str(e))
 
@@ -653,8 +614,4 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._media_content_id = media_content_id
             self._media_position = 0
             self._media_status_received_time = dt_util.utcnow()
-            self.hass.services.call(
-                "ais_ai_service",
-                "publish_command_to_frame",
-                {"key": "playAudio", "val": media_content_id, "ip": self._device_ip},
-            )
+            self._publish_command_to_frame("playAudio", media_content_id)

@@ -111,6 +111,21 @@ class LovelaceStorage:
             _LOGGER.debug("Processing " + aisview["path"])
             view_found = False
             for idx, view in enumerate(config["views"]):
+                if view["path"] in (
+                    "audio",
+                    "dev",
+                    "ais_audio",
+                    "ais_dev",
+                    "ais_zigbee",
+                ):
+                    if view["path"] == "ais_dev":
+                        config["views"].remove(view)
+                        break
+                    elif "visible" in view:
+                        if not view["visible"]:
+                            config["views"].remove(view)
+                            break
+
                 if "path" in view:
                     if aisview["path"] == view["path"]:
                         _LOGGER.debug(aisview["path"] + " -> COPY")
@@ -274,5 +289,5 @@ def _config_info(mode, config):
         "mode": mode,
         "resources": len(config.get("resources", [])),
         "views": len(config.get("views", [])),
-        "ais views": 2,
+        "ais views": 1,
     }
