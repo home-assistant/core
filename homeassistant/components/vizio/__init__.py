@@ -43,7 +43,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         for entry in config[DOMAIN]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
+                    handler=DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
                 )
             )
 
@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     """Load the saved entities."""
     for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
+            hass.config_entries.async_forward_entry_setup(entry=entry, domain=platform)
         )
 
     return True
@@ -65,7 +65,9 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> boo
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
+                hass.config_entries.async_forward_entry_unload(
+                    entry=entry, domain=platform
+                )
                 for platform in PLATFORMS
             ]
         )
