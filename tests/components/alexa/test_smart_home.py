@@ -1553,9 +1553,37 @@ async def test_cover_position_range(hass):
     assert properties["namespace"] == "Alexa.RangeController"
     assert properties["value"] == 100
 
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        "cover#test_range",
+        "cover.open_cover",
+        hass,
+        payload={"rangeValueDelta": "99"},
+        instance="cover.position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 100
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        "cover#test_range",
+        "cover.close_cover",
+        hass,
+        payload={"rangeValueDelta": "-99"},
+        instance="cover.position",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 0
+
     await assert_range_changes(
         hass,
-        [(25, "-5"), (35, "5"), (0, "-99"), (100, "99")],
+        [(25, "-5"), (35, "5")],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "cover#test_range",
@@ -2769,9 +2797,37 @@ async def test_cover_tilt_position_range(hass):
     assert properties["namespace"] == "Alexa.RangeController"
     assert properties["value"] == 100
 
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        "cover#test_tilt_range",
+        "cover.open_cover_tilt",
+        hass,
+        payload={"rangeValueDelta": "99"},
+        instance="cover.tilt",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 100
+
+    call, msg = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "AdjustRangeValue",
+        "cover#test_tilt_range",
+        "cover.close_cover_tilt",
+        hass,
+        payload={"rangeValueDelta": "-99"},
+        instance="cover.tilt",
+    )
+    properties = msg["context"]["properties"][0]
+    assert properties["name"] == "rangeValue"
+    assert properties["namespace"] == "Alexa.RangeController"
+    assert properties["value"] == 0
+
     await assert_range_changes(
         hass,
-        [(25, "-5"), (35, "5"), (0, "-99"), (100, "99")],
+        [(25, "-5"), (35, "5")],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "cover#test_tilt_range",
