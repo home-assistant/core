@@ -3,6 +3,7 @@ import logging
 import re
 
 from libsoundtouch import soundtouch_device
+from libsoundtouch.utils import Source
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -33,13 +34,12 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
-    BLUETOOTH_SOURCE,
     DOMAIN,
     SERVICE_ADD_ZONE_SLAVE,
     SERVICE_CREATE_ZONE,
     SERVICE_PLAY_EVERYWHERE,
     SERVICE_REMOVE_ZONE_SLAVE,
-    Source,
+    ExtendSource,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -205,18 +205,19 @@ class SoundTouchDevice(MediaPlayerDevice):
         self._status = self._device.status()
         self._volume = self._device.volume()
         self._config = config
+        self._supported_features = SUPPORT_SOUNDTOUCH
         self._resources = config.get("resources")
         self._sources = []
         self._sourcename = {}
         self._namesource = {}
         if self._resources:
+            self._supported_features |= SUPPORT_SELECT_SOURCE
             for pair in self._resources:
                 source = pair["source"].upper()
                 name = pair["name"]
                 self._sources.append(name)
                 self._sourcename[source] = name
                 self._namesource[name] = source
-                self._namesource[source] = source
 
     @property
     def config(self):
@@ -259,11 +260,7 @@ class SoundTouchDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return (
-            (SUPPORT_SOUNDTOUCH | SUPPORT_SELECT_SOURCE)
-            if len(self._sources) > 0
-            else SUPPORT_SOUNDTOUCH
-        )
+        return self._supported_features
 
     def turn_off(self):
         """Turn off media player."""
@@ -438,9 +435,13 @@ class SoundTouchDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Set the input source."""
-        source_account = self._namesource.get(source)
-        if source_account == BLUETOOTH_SOURCE:
+        source_account = (
+            source if source in self._sourcename else self._namesource.get(source)
+        )
+        if source_account == Source.BLUETOOTH.value:
             self._device.select_source_bluetooth()
         elif source_account:
-            self._device.select_content_item(Source.PRODUCT_SOURCE, source_account)
+            self._device.select_content_item(
+                ExtendSource.PRODUCT_SOURCE, source_account
+            )
         self._status = self._device.status()
