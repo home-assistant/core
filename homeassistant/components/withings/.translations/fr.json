@@ -7,6 +7,9 @@
             "default": "Authentifi\u00e9 avec succ\u00e8s \u00e0 Withings pour le profil s\u00e9lectionn\u00e9."
         },
         "step": {
+            "pick_implementation": {
+                "title": "Choisissez une m\u00e9thode d'authentification"
+            },
             "profile": {
                 "data": {
                     "profile": "Profil"
