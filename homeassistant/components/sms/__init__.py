@@ -2,21 +2,27 @@
 import logging
 
 import gammu
+import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE
+from homeassistant.helpers import config_validation as cv
 
-from .const import DOMAIN, STATE_MACHINE
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
     """Configure Gammu state machine."""
     conf = config[DOMAIN]
     device = conf.get(CONF_DEVICE)
-    sm = gammu.StateMachine()
-    sm.SetConfig(0, dict(Device=device, Connection="at"))
-    sm.Init()
+    gateway = gammu.StateMachine()
+    gateway.SetConfig(0, dict(Device=device, Connection="at"))
+    gateway.Init()
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][STATE_MACHINE] = sm
+    hass.data[DOMAIN] = gateway
     return True

@@ -7,7 +7,7 @@ from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationSer
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_PHONE_NUMBER, DOMAIN, STATE_MACHINE
+from .const import CONF_PHONE_NUMBER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,17 +18,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the SMS notification service."""
-    state_machine = hass.data[DOMAIN][STATE_MACHINE]
+    gateway = hass.data[DOMAIN]
     number = config[CONF_PHONE_NUMBER]
-    return SMSNotificationService(state_machine, number)
+    return SMSNotificationService(gateway, number)
 
 
 class SMSNotificationService(BaseNotificationService):
     """Implement the notification service for SMS."""
 
-    def __init__(self, state_machine, number):
+    def __init__(self, gateway, number):
         """Initialize the service."""
-        self.state_machine = state_machine
+        self.gateway = gateway
         self.number = number
 
     def send_message(self, message="", **kwargs):
@@ -40,4 +40,4 @@ class SMSNotificationService(BaseNotificationService):
             "SMSC": {"Location": 1},
             "Number": self.number,
         }
-        self.state_machine.SendSMS(gammu_message)
+        self.gateway.SendSMS(gammu_message)

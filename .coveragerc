@@ -640,8 +640,7 @@ omit =
     homeassistant/components/smappee/*
     homeassistant/components/smarty/*
     homeassistant/components/smarthab/*
-    homeassistant/components/sms/__init__.py
-    homeassistant/components/sms/notify.py
+    homeassistant/components/sms/*
     homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/media_player.py
     homeassistant/components/snmp/*
