@@ -854,6 +854,9 @@ konnected==1.2.0
 # homeassistant.components.kostal_plenticore
 kostal_plenticore==0.2.0
 
+# homeassistant.components.kraken
+krakenex==2.1.0
+
 # homeassistant.components.eufy
 lakeside==0.12
 
@@ -1495,6 +1498,9 @@ pykmtronic==0.3.0
 
 # homeassistant.components.kodi
 pykodi==0.2.5
+
+# homeassistant.components.kraken
+pykrakenapi==0.1.8
 
 # homeassistant.components.kulersky
 pykulersky==0.5.2

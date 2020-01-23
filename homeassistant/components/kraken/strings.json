@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This integration is already configured."
+        },
+        "error": {},
+        "step": {
+            "user": {
+                "data": {},
+                "description": "This will setup the Kraken.com integration.",
+                "title": "Kraken.com"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Update interval",
+                    "tracked_asset_pairs": "Tracked Asset Pairs"
+                },
+                "description": "Configure options for Kraken"
+            }
+        }
+    }
+}
