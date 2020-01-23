@@ -908,7 +908,7 @@ async def async_api_arm(hass, config, directive, context):
         entity.domain, service, data, blocking=False, context=context
     )
 
-    # return 0 until alarm integration supports this
+    # return 0 until alarm integration supports an exit delay
     payload = {"exitDelayInSeconds": 0}
 
     response = directive.response(
