@@ -18,8 +18,8 @@ about: Report an issue with Home Assistant
 
 ## Environment
 <!--
-  Provide details about the versions you are using, which helps us reproducing
-  and finding the issue quicker. Version information is found in the
+  Provide details about the versions you are using, which helps us to reproduce
+  and find the issue quicker. Version information is found in the
   Home Assistant frontend: Developer tools -> Info.
 -->
 
