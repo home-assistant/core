@@ -1871,6 +1871,9 @@ somecomfort==0.5.2
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
 
+# homeassistant.components.marytts
+speak2mary==1.4.0
+
 # homeassistant.components.speedtestdotnet
 speedtest-cli==2.1.2
 
