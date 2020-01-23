@@ -301,6 +301,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
     def update(self) -> None:
         """Update state and attributes."""
+        if not self.enabled:
+            return
+
         if not self._session.valid_token or self._spotify is None:
             run_coroutine_threadsafe(
                 self._session.async_ensure_token_valid(), self.hass.loop
