@@ -98,7 +98,27 @@ class SamsungTVDevice(MediaPlayerDevice):
 
     def update(self):
         """Update state of device."""
-        self.send_key("KEY")
+        if self._power_off_in_progress():
+            self._state = STATE_OFF
+        else:
+            if self._remote is not None:
+                # Close the current remote connection
+                self._remote.close()
+                self._remote = None
+
+            try:
+                self.get_remote()
+                if self._remote:
+                    self._state = STATE_ON
+            except (
+                samsung_exceptions.UnhandledResponse,
+                samsung_exceptions.AccessDenied,
+            ):
+                # We got a response so it's working.
+                self._state = STATE_ON
+            except (OSError, WebSocketException):
+                # Different reasons, e.g. hostname not resolveable
+                self._state = STATE_OFF
 
     def get_remote(self):
         """Create or return a remote control instance."""
@@ -128,19 +148,12 @@ class SamsungTVDevice(MediaPlayerDevice):
                     # BrokenPipe can occur when the commands is sent to fast
                     # WebSocketException can occur when timed out
                     self._remote = None
-            self._state = STATE_ON
         except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
             # We got a response so it's on.
-            self._state = STATE_ON
-            self._remote = None
             LOGGER.debug("Failed sending command %s", key, exc_info=True)
-            return
         except OSError:
             # Different reasons, e.g. hostname not resolveable
-            self._state = STATE_OFF
-            self._remote = None
-        if self._power_off_in_progress():
-            self._state = STATE_OFF
+            pass
 
     def _power_off_in_progress(self):
         return (
