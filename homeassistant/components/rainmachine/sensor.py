@@ -27,30 +27,35 @@ SENSORS = {
         "mdi:water-pump",
         "clicks/m^3",
         None,
+        False,
     ),
     TYPE_FLOW_SENSOR_CONSUMED_LITERS: (
         "Flow Sensor Consumed Liters",
         "mdi:water-pump",
         "liter",
         None,
+        False,
     ),
     TYPE_FLOW_SENSOR_START_INDEX: (
         "Flow Sensor Start Index",
         "mdi:water-pump",
         "index",
         None,
+        False,
     ),
     TYPE_FLOW_SENSOR_WATERING_CLICKS: (
         "Flow Sensor Clicks",
         "mdi:water-pump",
         "clicks",
         None,
+        False,
     ),
     TYPE_FREEZE_TEMP: (
         "Freeze Protect Temperature",
         "mdi:thermometer",
         "°C",
         "temperature",
+        True,
     ),
 }
 
@@ -60,10 +65,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
     rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensors = []
-    for sensor_type, attrs in SENSORS.items():
-        name, icon, unit, device_class = attrs
+    for (
+        sensor_type,
+        (name, icon, unit, device_class, enabled_by_default),
+    ) in SENSORS.items():
         sensors.append(
-            RainMachineSensor(rainmachine, sensor_type, name, icon, unit, device_class)
+            RainMachineSensor(
+                rainmachine,
+                sensor_type,
+                name,
+                icon,
+                unit,
+                device_class,
+                enabled_by_default,
+            )
         )
 
     async_add_entities(sensors, True)
@@ -72,16 +87,31 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class RainMachineSensor(RainMachineEntity):
     """A sensor implementation for raincloud device."""
 
-    def __init__(self, rainmachine, sensor_type, name, icon, unit, device_class):
+    def __init__(
+        self,
+        rainmachine,
+        sensor_type,
+        name,
+        icon,
+        unit,
+        device_class,
+        enabled_by_default,
+    ):
         """Initialize."""
         super().__init__(rainmachine)
 
         self._device_class = device_class
+        self._enabled_by_default = enabled_by_default
         self._icon = icon
         self._name = name
         self._sensor_type = sensor_type
         self._state = None
         self._unit = unit
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Determine whether an entity is enabled by default."""
+        return self._enabled_by_default
 
     @property
     def icon(self) -> str:
