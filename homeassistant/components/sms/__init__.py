@@ -20,7 +20,7 @@ async def async_setup(hass, config):
     """Configure Gammu state machine."""
     conf = config[DOMAIN]
     device = conf.get(CONF_DEVICE)
-    gateway = gammu.StateMachine()
+    gateway = gammu.StateMachine()  # pylint: disable=no-member
     gateway.SetConfig(0, dict(Device=device, Connection="at"))
     gateway.Init()
     hass.data[DOMAIN] = {}
