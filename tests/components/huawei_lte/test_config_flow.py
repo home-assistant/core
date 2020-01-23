@@ -10,7 +10,13 @@ from homeassistant import data_entry_flow
 from homeassistant.components import ssdp
 from homeassistant.components.huawei_lte.config_flow import ConfigFlowHandler
 from homeassistant.components.huawei_lte.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_RECIPIENT,
+    CONF_URL,
+    CONF_USERNAME,
+)
 
 from tests.common import MockConfigEntry
 
@@ -18,6 +24,11 @@ FIXTURE_USER_INPUT = {
     CONF_URL: "http://192.168.1.1/",
     CONF_USERNAME: "admin",
     CONF_PASSWORD: "secret",
+}
+
+FIXTURE_USER_INPUT_OPTIONS = {
+    CONF_NAME: DOMAIN,
+    CONF_RECIPIENT: "+15555551234",
 }
 
 
@@ -160,3 +171,23 @@ async def test_ssdp(flow):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert flow.context[CONF_URL] == url
+
+
+async def test_options(flow):
+    """Test options produce expected data."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=FIXTURE_USER_INPUT, options=FIXTURE_USER_INPUT_OPTIONS
+    )
+    config_entry.add_to_hass(flow.hass)
+
+    result = await flow.async_get_options_flow(config_entry).async_step_init()
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "init"
+
+    recipient = "+15555550000"
+    result = await flow.async_get_options_flow(config_entry).async_step_init(
+        {CONF_RECIPIENT: recipient}
+    )
+    assert result["data"][CONF_NAME] == DOMAIN
+    assert result["data"][CONF_RECIPIENT] == [recipient]

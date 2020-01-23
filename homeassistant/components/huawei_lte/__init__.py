@@ -506,6 +506,19 @@ async def async_signal_options_update(
     async_dispatcher_send(hass, UPDATE_OPTIONS_SIGNAL, config_entry)
 
 
+async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
+    """Migrate config entry to new version."""
+    if config_entry.version == 1:
+        options = config_entry.options
+        recipient = options[CONF_RECIPIENT]
+        if isinstance(recipient, str):
+            options[CONF_RECIPIENT] = [x.strip() for x in recipient.split(",")]
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, options=options)
+        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+    return True
+
+
 @attr.s
 class HuaweiLteBaseEntity(Entity):
     """Huawei LTE entity base class."""
