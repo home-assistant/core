@@ -5,19 +5,18 @@ import gammu
 
 from homeassistant.const import CONF_DEVICE
 
-DOMAIN = "sms"
-
+from .const import DOMAIN, STATE_MACHINE
 
 _LOGGER = logging.getLogger(__name__)
-
-STATE_MACHINE = gammu.StateMachine()
-CONF_PHONE_NUMBER = "phone_number"
 
 
 async def async_setup(hass, config):
     """Configure Gammu state machine."""
     conf = config[DOMAIN]
     device = conf.get(CONF_DEVICE)
-    STATE_MACHINE.SetConfig(0, dict(Device=device, Connection="at"))
-    STATE_MACHINE.Init()
+    state_machine = gammu.StateMachine()
+    state_machine.SetConfig(0, dict(Device=device, Connection="at"))
+    state_machine.Init()
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][STATE_MACHINE] = state_machine
     return True
