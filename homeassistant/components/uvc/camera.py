@@ -213,7 +213,8 @@ class UnifiVideoCamera(Camera):
         """Return the source of the stream."""
         for channel in self._caminfo["channels"]:
             if channel["isRtspEnabled"]:
-                return channel["rtspUris"][0]
+                hostRtspIndexes = [i for i, item in enumerate(channel["rtspUris"]) if re.search(self._nvr._host, item)]
+                return channel["rtspUris"][hostRtspIndexes[0]]
 
         return None
 
