@@ -45,8 +45,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     binary_sensors = []
-    for sensor_type, attrs in BINARY_SENSORS.items():
-        name, icon = attrs
+    for sensor_type, (name, icon) in BINARY_SENSORS.items():
         binary_sensors.append(
             RainMachineBinarySensor(rainmachine, sensor_type, name, icon)
         )
