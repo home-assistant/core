@@ -288,7 +288,7 @@ class RainMachine:
         elif api_category == RESTRICTIONS_UNIVERSAL:
             data = await self.client.restrictions.universal()
 
-        self.data[api_category] = data
+        return data
 
     @callback
     def async_deregister_api_interest(self, api_category):
@@ -314,9 +314,15 @@ class RainMachine:
 
         self._api_category_count[api_category] += 1
 
-        # If the data hasn't been fetched for a particular category yet, do it:
+        # If an entity is already attempting to query the API for this category, wait
+        # until that's done before moving forward:
         if api_category not in self.data:
-            await self._async_fetch_from_api(api_category)
+            self.data[api_category] = asyncio.current_task()
+            data = await self._async_fetch_from_api(api_category)
+            self.data[api_category] = data
+        else:
+            if isinstance(self.data[api_category], asyncio.Task):
+                await self.data[api_category]
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
@@ -327,11 +333,13 @@ class RainMachine:
             tasks[category] = self._async_fetch_from_api(category)
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
-        for category, result in zip(tasks, results):
+        for api_category, result in zip(tasks, results):
             if isinstance(result, RainMachineError):
                 _LOGGER.error(
-                    "There was an error while updating %s: %s", category, result
+                    "There was an error while updating %s: %s", api_category, result
                 )
+                continue
+            self.data[api_category] = result
 
         async_dispatcher_send(self.hass, SENSOR_UPDATE_TOPIC)
 
