@@ -15,7 +15,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -73,20 +72,7 @@ async def async_setup_entry(
         timeout=DEFAULT_TIMEOUT,
     )
 
-    if not await device.can_connect():
-        fail_auth_msg = ""
-        if token:
-            fail_auth_msg = "and auth token '{token}' are correct."
-        else:
-            fail_auth_msg = "is correct."
-        _LOGGER.error(
-            "Failed to connect to Vizio device, please check if host '{host}'"
-            "is valid and available. Also check if device class '{device_class}' %s",
-            fail_auth_msg,
-        )
-        raise PlatformNotReady
-
-    entity = VizioDevice(config_entry, device, name, volume_step, device_class,)
+    entity = VizioDevice(config_entry, device, name, volume_step, device_class)
 
     async_add_entities([entity], update_before_add=True)
 
