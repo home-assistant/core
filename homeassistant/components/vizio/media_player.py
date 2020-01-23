@@ -176,7 +176,7 @@ class VizioDevice(MediaPlayerDevice):
         # Register callback for update event
         self._async_unsub_listeners.append(
             async_dispatcher_connect(
-                self.hass, self._config_entry.entry_id, self._async_update_options,
+                self.hass, self._config_entry.entry_id, self._async_update_options
             )
         )
 
