@@ -1,0 +1,8 @@
+{
+  "domain": "xiaomi",
+  "name": "Xiaomi",
+  "documentation": "https://www.home-assistant.io/integrations/xiaomi",
+  "requirements": [],
+  "dependencies": ["ffmpeg"],
+  "codeowners": []
+}

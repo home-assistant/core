@@ -1,7 +1,12 @@
 config/*
+config2/*
 
 tests/testing_config/deps
 tests/testing_config/home-assistant.log
+
+# hass-release
+data/
+.token
 
 # Hide sublime text stuff
 *.sublime-project
@@ -16,9 +21,12 @@ Icon
 # Thumbnails
 ._*
 
+# IntelliJ IDEA
 .idea
+*.iml
 
 # pytest
+.pytest_cache
 .cache
 
 # GITHUB Proposed Python stuff:
@@ -42,6 +50,7 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+pip-wheel-metadata
 
 # Logs
 *.log
@@ -50,8 +59,12 @@ pip-log.txt
 # Unit test / coverage reports
 .coverage
 .tox
+coverage.xml
 nosetests.xml
 htmlcov/
+test-reports/
+test-results.xml
+test-output.xml
 
 # Translations
 *.mo
@@ -74,11 +87,13 @@ pip-selfcheck.json
 venv
 .venv
 Pipfile*
+share/*
+Scripts/
 
 # vimmy stuff
 *.swp
 *.swo
-
+tags
 ctags.tmp
 
 # vagrant stuff
@@ -87,10 +102,32 @@ virtualization/vagrant/.vagrant
 virtualization/vagrant/config
 
 # Visual Studio Code
-.vscode
+.vscode/*
+!.vscode/cSpell.json
+!.vscode/extensions.json
+!.vscode/tasks.json
 
 # Built docs
 docs/build
 
 # Windows Explorer
 desktop.ini
+/home-assistant.pyproj
+/home-assistant.sln
+/.vs/*
+
+# mypy
+/.mypy_cache/*
+/.dmypy.json
+
+# Secrets
+.lokalise_token
+
+# monkeytype
+monkeytype.sqlite3
+
+# This is left behind by Azure Restore Cache
+tmp_cache
+
+# python-language-server / Rope
+.ropeproject

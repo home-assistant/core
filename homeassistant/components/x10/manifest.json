@@ -1,0 +1,8 @@
+{
+  "domain": "x10",
+  "name": "Heyu X10",
+  "documentation": "https://www.home-assistant.io/integrations/x10",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

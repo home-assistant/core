@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Kontot \u00e4r redan registrerat",
+            "invalid_credentials": "Ogiltiga autentiseringsuppgifter"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Kod (f\u00f6r Home Assistant)",
+                    "password": "L\u00f6senord",
+                    "username": "E-postadress"
+                },
+                "title": "Fyll i din information"
+            }
+        },
+        "title": "SimpliSafe"
+    }
+}

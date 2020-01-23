@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "user_privilege": "A felhaszn\u00e1l\u00f3nak rendszergazd\u00e1nak kell lennie"
+        },
+        "error": {
+            "faulty_credentials": "Rossz felhaszn\u00e1l\u00f3i hiteles\u00edt\u0151 adatok",
+            "service_unavailable": "Nincs el\u00e9rhet\u0151 szolg\u00e1ltat\u00e1s"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Hoszt",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "site": "Site azonos\u00edt\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v",
+                    "verify_ssl": "Vez\u00e9rl\u0151 megfelel\u0151 tan\u00fas\u00edtv\u00e1nnyal"
+                },
+                "title": "UniFi vez\u00e9rl\u0151 be\u00e1ll\u00edt\u00e1sa"
+            }
+        },
+        "title": "UniFi Vez\u00e9rl\u0151"
+    }
+}

@@ -1,0 +1,22 @@
+{
+  "domain": "netatmo",
+  "name": "Netatmo",
+  "documentation": "https://www.home-assistant.io/integrations/netatmo",
+  "requirements": [
+    "pyatmo==3.2.2"
+  ],
+  "dependencies": [
+    "webhook"
+  ],
+  "codeowners": [
+    "@cgtobi"
+  ],
+  "config_flow": true,
+  "homekit": {
+    "models": [
+      "Netatmo Relay",
+      "Presence",
+      "Welcome"
+    ]
+  }
+}

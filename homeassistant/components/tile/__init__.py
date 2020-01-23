@@ -1,0 +1,1 @@
+"""The tile component."""

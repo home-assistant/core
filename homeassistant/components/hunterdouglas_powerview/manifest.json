@@ -1,0 +1,8 @@
+{
+  "domain": "hunterdouglas_powerview",
+  "name": "Hunter Douglas PowerView",
+  "documentation": "https://www.home-assistant.io/integrations/hunterdouglas_powerview",
+  "requirements": ["aiopvapi==1.6.14"],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,8 @@
+{
+  "domain": "konnected",
+  "name": "Konnected",
+  "documentation": "https://www.home-assistant.io/integrations/konnected",
+  "requirements": ["konnected==0.1.5"],
+  "dependencies": ["http"],
+  "codeowners": ["@heythisisnate"]
+}

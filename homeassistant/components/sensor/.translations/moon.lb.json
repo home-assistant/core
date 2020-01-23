@@ -1,0 +1,12 @@
+{
+    "state": {
+        "first_quarter": "\u00c9ischt V\u00e9ierel",
+        "full_moon": "Vollmound",
+        "last_quarter": "L\u00e4scht V\u00e9ierel",
+        "new_moon": "Neimound",
+        "waning_crescent": "Ofhuelende Mound",
+        "waning_gibbous": "Dr\u00ebtt V\u00e9ierel",
+        "waxing_crescent": "Zouhuelende Mound",
+        "waxing_gibbous": "Zweet V\u00e9ierel"
+    }
+}

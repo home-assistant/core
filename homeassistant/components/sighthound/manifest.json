@@ -1,0 +1,12 @@
+{
+        "domain": "sighthound",
+        "name": "Sighthound",
+        "documentation": "https://www.home-assistant.io/integrations/sighthound",
+        "requirements": [
+                "simplehound==0.3"
+        ],
+        "dependencies": [],
+        "codeowners": [
+                "@robmarkcole"
+        ]
+}

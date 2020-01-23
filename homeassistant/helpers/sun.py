@@ -1,22 +1,31 @@
 """Helpers for sun events."""
 import datetime
+from typing import TYPE_CHECKING, Optional, Union
 
+from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import callback
+from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 
-DATA_LOCATION_CACHE = 'astral_location_cache'
+from .typing import HomeAssistantType
+
+if TYPE_CHECKING:
+    import astral  # pylint: disable=unused-import
+
+DATA_LOCATION_CACHE = "astral_location_cache"
 
 
 @callback
-def get_astral_location(hass):
+@bind_hass
+def get_astral_location(hass: HomeAssistantType) -> "astral.Location":
     """Get an astral location for the current Home Assistant configuration."""
     from astral import Location
 
     latitude = hass.config.latitude
     longitude = hass.config.longitude
-    timezone = hass.config.time_zone.zone
+    timezone = str(hass.config.time_zone)
     elevation = hass.config.elevation
-    info = ('', '', latitude, longitude, timezone, elevation)
+    info = ("", "", latitude, longitude, timezone, elevation)
 
     # Cache astral locations so they aren't recreated with the same args
     if DATA_LOCATION_CACHE not in hass.data:
@@ -29,11 +38,27 @@ def get_astral_location(hass):
 
 
 @callback
-def get_astral_event_next(hass, event, utc_point_in_time=None, offset=None):
+@bind_hass
+def get_astral_event_next(
+    hass: HomeAssistantType,
+    event: str,
+    utc_point_in_time: Optional[datetime.datetime] = None,
+    offset: Optional[datetime.timedelta] = None,
+) -> datetime.datetime:
     """Calculate the next specified solar event."""
-    import astral
-
     location = get_astral_location(hass)
+    return get_location_astral_event_next(location, event, utc_point_in_time, offset)
+
+
+@callback
+def get_location_astral_event_next(
+    location: "astral.Location",
+    event: str,
+    utc_point_in_time: Optional[datetime.datetime] = None,
+    offset: Optional[datetime.timedelta] = None,
+) -> datetime.datetime:
+    """Calculate the next specified solar event."""
+    from astral import AstralError
 
     if offset is None:
         offset = datetime.timedelta()
@@ -44,21 +69,30 @@ def get_astral_event_next(hass, event, utc_point_in_time=None, offset=None):
     mod = -1
     while True:
         try:
-            next_dt = getattr(location, event)(
-                dt_util.as_local(utc_point_in_time).date() +
-                datetime.timedelta(days=mod),
-                local=False) + offset
+            next_dt: datetime.datetime = (
+                getattr(location, event)(
+                    dt_util.as_local(utc_point_in_time).date()
+                    + datetime.timedelta(days=mod),
+                    local=False,
+                )
+                + offset
+            )
             if next_dt > utc_point_in_time:
                 return next_dt
-        except astral.AstralError:
+        except AstralError:
             pass
         mod += 1
 
 
 @callback
-def get_astral_event_date(hass, event, date=None):
+@bind_hass
+def get_astral_event_date(
+    hass: HomeAssistantType,
+    event: str,
+    date: Union[datetime.date, datetime.datetime, None] = None,
+) -> Optional[datetime.datetime]:
     """Calculate the astral event time for the specified date."""
-    import astral
+    from astral import AstralError
 
     location = get_astral_location(hass)
 
@@ -69,19 +103,22 @@ def get_astral_event_date(hass, event, date=None):
         date = dt_util.as_local(date).date()
 
     try:
-        return getattr(location, event)(date, local=False)
-    except astral.AstralError:
+        return getattr(location, event)(date, local=False)  # type: ignore
+    except AstralError:
         # Event never occurs for specified date.
         return None
 
 
 @callback
-def is_up(hass, utc_point_in_time=None):
+@bind_hass
+def is_up(
+    hass: HomeAssistantType, utc_point_in_time: Optional[datetime.datetime] = None
+) -> bool:
     """Calculate if the sun is currently up."""
     if utc_point_in_time is None:
         utc_point_in_time = dt_util.utcnow()
 
-    next_sunrise = get_astral_event_next(hass, 'sunrise', utc_point_in_time)
-    next_sunset = get_astral_event_next(hass, 'sunset', utc_point_in_time)
+    next_sunrise = get_astral_event_next(hass, SUN_EVENT_SUNRISE, utc_point_in_time)
+    next_sunset = get_astral_event_next(hass, SUN_EVENT_SUNSET, utc_point_in_time)
 
     return next_sunrise > next_sunset

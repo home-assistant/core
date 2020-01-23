@@ -1,0 +1,12 @@
+{
+    "state": {
+        "first_quarter": "Eerste kwartier",
+        "full_moon": "Volle maan",
+        "last_quarter": "Laatste kwartier",
+        "new_moon": "Nieuwe maan",
+        "waning_crescent": "Krimpende, sikkelvormige maan",
+        "waning_gibbous": "Krimpende, vooruitspringende maan",
+        "waxing_crescent": "Wassende, sikkelvormige maan",
+        "waxing_gibbous": "Wassende, vooruitspringende maan"
+    }
+}

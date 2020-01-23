@@ -1,0 +1,8 @@
+{
+  "domain": "jewish_calendar",
+  "name": "Jewish Calendar",
+  "documentation": "https://www.home-assistant.io/integrations/jewish_calendar",
+  "requirements": ["hdate==0.9.3"],
+  "dependencies": [],
+  "codeowners": ["@tsvi"]
+}

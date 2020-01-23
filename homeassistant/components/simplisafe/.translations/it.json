@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Account gi\u00e0 registrato",
+            "invalid_credentials": "Credenziali non valide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Codice (Home Assistant)",
+                    "password": "Password",
+                    "username": "Indirizzo E-mail"
+                },
+                "title": "Inserisci i tuoi dati"
+            }
+        },
+        "title": "SimpliSafe"
+    }
+}

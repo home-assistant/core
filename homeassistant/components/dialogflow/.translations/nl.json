@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "not_internet_accessible": "Uw Home Assistant instantie moet toegankelijk zijn vanaf het internet om Dialogflow-berichten te ontvangen.",
+            "one_instance_allowed": "Slechts \u00e9\u00e9n instantie is nodig."
+        },
+        "create_entry": {
+            "default": "Om evenementen naar de Home Assistant te verzenden, moet u [webhookintegratie van Dialogflow]({dialogflow_url}) instellen. \n\n Vul de volgende info in: \n\n - URL: `{webhook_url}` \n - Method: POST \n - Content Type: application/json \n\nZie [de documentatie]({docs_url}) voor verdere informatie."
+        },
+        "step": {
+            "user": {
+                "description": "Weet u zeker dat u Dialogflow wilt instellen?",
+                "title": "Stel de Twilio Dialogflow in"
+            }
+        },
+        "title": "Dialogflow"
+    }
+}

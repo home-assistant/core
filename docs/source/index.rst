@@ -19,4 +19,4 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. _Home Assistant developers: https://home-assistant.io/developers/
+.. _Home Assistant developers: https://developers.home-assistant.io/

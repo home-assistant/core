@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Kun en enkelt konfiguration af MQTT er tilladt."
+        },
+        "error": {
+            "cannot_connect": "Kunne ikke oprette forbindelse til broker"
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Aktiv\u00e9r automatisk fund",
+                    "password": "Adgangskode",
+                    "port": "Port",
+                    "username": "Brugernavn"
+                },
+                "description": "Indtast venligst forbindelsesindstillinger for din MQTT-broker.",
+                "title": "MQTT"
+            },
+            "hassio_confirm": {
+                "data": {
+                    "discovery": "Aktiv\u00e9r opdagelse"
+                },
+                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til MQTT-brokeren, der leveres af hass.io-tilf\u00f8jelsen {addon}?",
+                "title": "MQTT-broker via Hass.io-tilf\u00f8jelse"
+            }
+        },
+        "title": "MQTT"
+    }
+}

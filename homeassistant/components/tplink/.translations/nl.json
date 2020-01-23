@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Geen TP-Link apparaten gevonden op het netwerk.",
+            "single_instance_allowed": "Slechts \u00e9\u00e9n configuratie is nodig."
+        },
+        "step": {
+            "confirm": {
+                "description": "Wil je TP-Link slimme apparaten instellen?",
+                "title": "TP-Link Smart Home"
+            }
+        },
+        "title": "TP-Link Smart Home"
+    }
+}

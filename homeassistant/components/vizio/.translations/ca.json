@@ -1,0 +1,29 @@
+{
+    "config": {
+        "error": {
+            "host_exists": "L'amfitri\u00f3 ja est\u00e0 configurat.",
+            "name_exists": "El nom ja est\u00e0 configurat."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Testimoni d'acc\u00e9s",
+                    "device_class": "Tipus de dispositiu",
+                    "host": "<Amfitri\u00f3/IP>:<Port>",
+                    "name": "Nom"
+                },
+                "title": "Configuraci\u00f3 del client de Vizio SmartCast"
+            }
+        },
+        "title": "Vizio SmartCast"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "volume_step": "Mida del pas de volum"
+                }
+            }
+        }
+    }
+}

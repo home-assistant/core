@@ -4,17 +4,26 @@ This file contains the original models definitions before schema tracking was
 implemented. It is used to test the schema migration logic.
 """
 
-import json
 from datetime import datetime
+import json
 import logging
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Index, Integer,
-                        String, Text, distinct)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    distinct,
+)
 from sqlalchemy.ext.declarative import declarative_base
 
-import homeassistant.util.dt as dt_util
 from homeassistant.core import Event, EventOrigin, State, split_entity_id
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
+import homeassistant.util.dt as dt_util
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
@@ -26,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 class Events(Base):  # type: ignore
     """Event history data."""
 
-    __tablename__ = 'events'
+    __tablename__ = "events"
     event_id = Column(Integer, primary_key=True)
     event_type = Column(String(32), index=True)
     event_data = Column(Text)
@@ -37,10 +46,12 @@ class Events(Base):  # type: ignore
     @staticmethod
     def from_event(event):
         """Create an event database object from a native event."""
-        return Events(event_type=event.event_type,
-                      event_data=json.dumps(event.data, cls=JSONEncoder),
-                      origin=str(event.origin),
-                      time_fired=event.time_fired)
+        return Events(
+            event_type=event.event_type,
+            event_data=json.dumps(event.data, cls=JSONEncoder),
+            origin=str(event.origin),
+            time_fired=event.time_fired,
+        )
 
     def to_native(self):
         """Convert to a natve HA Event."""
@@ -49,7 +60,7 @@ class Events(Base):  # type: ignore
                 self.event_type,
                 json.loads(self.event_data),
                 EventOrigin(self.origin),
-                _process_timestamp(self.time_fired)
+                _process_timestamp(self.time_fired),
             )
         except ValueError:
             # When json.loads fails
@@ -57,45 +68,44 @@ class Events(Base):  # type: ignore
             return None
 
 
-class States(Base):   # type: ignore
+class States(Base):  # type: ignore
     """State change history."""
 
-    __tablename__ = 'states'
+    __tablename__ = "states"
     state_id = Column(Integer, primary_key=True)
     domain = Column(String(64))
     entity_id = Column(String(255))
     state = Column(String(255))
     attributes = Column(Text)
-    event_id = Column(Integer, ForeignKey('events.event_id'))
+    event_id = Column(Integer, ForeignKey("events.event_id"))
     last_changed = Column(DateTime(timezone=True), default=datetime.utcnow)
     last_updated = Column(DateTime(timezone=True), default=datetime.utcnow)
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
 
-    __table_args__ = (Index('states__state_changes',
-                            'last_changed', 'last_updated', 'entity_id'),
-                      Index('states__significant_changes',
-                            'domain', 'last_updated', 'entity_id'), )
+    __table_args__ = (
+        Index("states__state_changes", "last_changed", "last_updated", "entity_id"),
+        Index("states__significant_changes", "domain", "last_updated", "entity_id"),
+    )
 
     @staticmethod
     def from_event(event):
         """Create object from a state_changed event."""
-        entity_id = event.data['entity_id']
-        state = event.data.get('new_state')
+        entity_id = event.data["entity_id"]
+        state = event.data.get("new_state")
 
         dbstate = States(entity_id=entity_id)
 
         # State got deleted
         if state is None:
-            dbstate.state = ''
+            dbstate.state = ""
             dbstate.domain = split_entity_id(entity_id)[0]
-            dbstate.attributes = '{}'
+            dbstate.attributes = "{}"
             dbstate.last_changed = event.time_fired
             dbstate.last_updated = event.time_fired
         else:
             dbstate.domain = state.domain
             dbstate.state = state.state
-            dbstate.attributes = json.dumps(dict(state.attributes),
-                                            cls=JSONEncoder)
+            dbstate.attributes = json.dumps(dict(state.attributes), cls=JSONEncoder)
             dbstate.last_changed = state.last_changed
             dbstate.last_updated = state.last_updated
 
@@ -105,10 +115,11 @@ class States(Base):   # type: ignore
         """Convert to an HA state object."""
         try:
             return State(
-                self.entity_id, self.state,
+                self.entity_id,
+                self.state,
                 json.loads(self.attributes),
                 _process_timestamp(self.last_changed),
-                _process_timestamp(self.last_updated)
+                _process_timestamp(self.last_updated),
             )
         except ValueError:
             # When json.loads fails
@@ -116,10 +127,10 @@ class States(Base):   # type: ignore
             return None
 
 
-class RecorderRuns(Base):   # type: ignore
+class RecorderRuns(Base):  # type: ignore
     """Representation of recorder run."""
 
-    __tablename__ = 'recorder_runs'
+    __tablename__ = "recorder_runs"
     run_id = Column(Integer, primary_key=True)
     start = Column(DateTime(timezone=True), default=datetime.utcnow)
     end = Column(DateTime(timezone=True))
@@ -136,10 +147,11 @@ class RecorderRuns(Base):   # type: ignore
 
         session = Session.object_session(self)
 
-        assert session is not None, 'RecorderRuns need to be persisted'
+        assert session is not None, "RecorderRuns need to be persisted"
 
         query = session.query(distinct(States.entity_id)).filter(
-            States.last_updated >= self.start)
+            States.last_updated >= self.start
+        )
 
         if point_in_time is not None:
             query = query.filter(States.last_updated < point_in_time)
@@ -157,7 +169,6 @@ def _process_timestamp(ts):
     """Process a timestamp into datetime object."""
     if ts is None:
         return None
-    elif ts.tzinfo is None:
+    if ts.tzinfo is None:
         return dt_util.UTC.localize(ts)
-    else:
-        return dt_util.as_utc(ts)
+    return dt_util.as_utc(ts)

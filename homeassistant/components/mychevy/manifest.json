@@ -1,0 +1,8 @@
+{
+  "domain": "mychevy",
+  "name": "myChevrolet",
+  "documentation": "https://www.home-assistant.io/integrations/mychevy",
+  "requirements": ["mychevy==1.2.0"],
+  "dependencies": [],
+  "codeowners": []
+}

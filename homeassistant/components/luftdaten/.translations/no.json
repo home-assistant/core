@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "communication_error": "Kan ikke kommunisere med Luftdaten API",
+            "invalid_sensor": "Sensor er ikke tilgjengelig eller ugyldig",
+            "sensor_exists": "Sensor er allerede registrert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "show_on_map": "Vis p\u00e5 kart",
+                    "station_id": "Luftdaten Sensor ID"
+                },
+                "title": "Definer Luftdaten"
+            }
+        },
+        "title": "Luftdaten"
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Conta j\u00e1 registada",
+            "invalid_credentials": "Credenciais inv\u00e1lidas"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "C\u00f3digo (para Home Assistant)",
+                    "password": "Palavra-passe",
+                    "username": "Endere\u00e7o de e-mail"
+                },
+                "title": "Preencha as suas informa\u00e7\u00f5es"
+            }
+        },
+        "title": "SimpliSafe"
+    }
+}

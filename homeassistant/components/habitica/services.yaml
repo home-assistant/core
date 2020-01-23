@@ -1,0 +1,15 @@
+# Describes the format for Habitica service
+
+---
+api_call:
+  description: Call Habitica api
+  fields:
+    name:
+      description: Habitica's username to call for
+      example: 'xxxNotAValidNickxxx'
+    path:
+      description: "Items from API URL in form of an array with method attached at the end. Consult https://habitica.com/apidoc/. Example uses https://habitica.com/apidoc/#api-Task-CreateUserTasks"
+      example: '["tasks", "user", "post"]'
+    args:
+      description: Any additional json or url parameter arguments. See apidoc mentioned for path. Example uses same api endpoint
+      example: '{"text": "Use API from Home Assistant", "type": "todo"}'

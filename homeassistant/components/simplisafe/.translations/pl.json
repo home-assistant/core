@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Konto jest ju\u017c zarejestrowane",
+            "invalid_credentials": "Nieprawid\u0142owe dane uwierzytelniaj\u0105ce"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Kod (dla Home Assistant'a)",
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail"
+                },
+                "title": "Wprowad\u017a dane"
+            }
+        },
+        "title": "SimpliSafe"
+    }
+}

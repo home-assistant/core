@@ -1,0 +1,8 @@
+{
+  "domain": "octoprint",
+  "name": "OctoPrint",
+  "documentation": "https://www.home-assistant.io/integrations/octoprint",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

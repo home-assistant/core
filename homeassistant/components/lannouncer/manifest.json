@@ -1,0 +1,8 @@
+{
+  "domain": "lannouncer",
+  "name": "LANnouncer",
+  "documentation": "https://www.home-assistant.io/integrations/lannouncer",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": []
+}

@@ -1,0 +1,12 @@
+{
+  "domain": "mcp23017",
+  "name": "MCP23017 I/O Expander",
+  "documentation": "https://www.home-assistant.io/integrations/mcp23017",
+  "requirements": [
+    "RPi.GPIO==0.7.0",
+    "adafruit-blinka==1.2.1",
+    "adafruit-circuitpython-mcp230xx==1.1.2"
+  ],
+  "dependencies": [],
+  "codeowners": ["@jardiamj"]
+}

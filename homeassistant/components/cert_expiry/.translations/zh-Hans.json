@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "connection_timeout": "\u8fde\u63a5\u5230\u6b64\u4e3b\u673a\u65f6\u7684\u8d85\u65f6"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u8bc1\u4e66\u7684\u4e3b\u673a\u540d",
+                    "name": "\u8bc1\u4e66\u7684\u540d\u79f0",
+                    "port": "\u8bc1\u4e66\u7684\u7aef\u53e3"
+                }
+            }
+        }
+    }
+}

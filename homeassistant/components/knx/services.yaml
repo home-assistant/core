@@ -1,0 +1,9 @@
+send:
+  description: "Send arbitrary data directly to the KNX bus."
+  fields:
+    address:
+      description: "Group address(es) to write to."
+      example: "1/1/0"
+    payload:
+      description: "Payload to send to the bus. Integers are treated as DPT 1/2/3 payloads. For DPTs > 6 bits send a list. Each value represents 1 octet (0-255). Pad with 0 to DPT byte length."
+      example: "[0, 4]"

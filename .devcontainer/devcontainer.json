@@ -1,0 +1,33 @@
+{
+  "name": "Home Assistant Dev",
+  "context": "..",
+  "dockerFile": "../Dockerfile.dev",
+  "postCreateCommand": "mkdir -p config && pip3 install -e .",
+  "appPort": 8123,
+  "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+  "extensions": [
+    "ms-python.python",
+    "visualstudioexptteam.vscodeintellicode",
+    "ms-azure-devops.azure-pipelines",
+    "redhat.vscode-yaml",
+    "esbenp.prettier-vscode"
+  ],
+  "settings": {
+    "python.pythonPath": "/usr/local/bin/python",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true,
+    "python.formatting.provider": "black",
+    "editor.formatOnPaste": false,
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "files.trimTrailingWhitespace": true,
+    "terminal.integrated.shell.linux": "/bin/bash",
+    "yaml.customTags": [
+      "!secret scalar",
+      "!include_dir_named scalar",
+      "!include_dir_list scalar",
+      "!include_dir_merge_list scalar",
+      "!include_dir_merge_named scalar"
+    ]
+  }
+}

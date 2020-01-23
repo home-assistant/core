@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Anda hanya dapat mengonfigurasi satu akun Nest.",
+            "authorize_url_fail": "Kesalahan tidak dikenal terjadi ketika menghasilkan URL otorisasi.",
+            "authorize_url_timeout": "Waktu tunggu menghasilkan otorisasi url telah habis.",
+            "no_flows": "Anda harus mengonfigurasi Nest sebelum dapat mengautentikasi dengan Nest. [Silakan baca instruksi] (https://www.home-assistant.io/components/nest/)."
+        },
+        "error": {
+            "internal_error": "Kesalahan Internal memvalidasi kode",
+            "invalid_code": "Kode salah",
+            "timeout": "Waktu tunggu memvalidasi kode telah habis.",
+            "unknown": "Error tidak diketahui saat memvalidasi kode"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Penyedia"
+                },
+                "description": "Pilih melalui penyedia autentikasi mana yang ingin Anda autentikasi dengan Nest.",
+                "title": "Penyedia Otentikasi"
+            },
+            "link": {
+                "data": {
+                    "code": "Kode PIN"
+                },
+                "description": "Untuk menautkan akun Nest Anda, [beri kuasa akun Anda] ( {url} ). \n\n Setelah otorisasi, salin-tempel kode pin yang disediakan di bawah ini.",
+                "title": "Hubungkan Akun Nest"
+            }
+        },
+        "title": "Nest"
+    }
+}

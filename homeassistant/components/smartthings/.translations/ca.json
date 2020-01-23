@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "app_not_installed": "Assegura't que has instal\u00b7lat i autoritzat l'aplicaci\u00f3 SmartApp de Home Assistant i torna-ho a provar.",
+            "app_setup_error": "No s'ha pogut configurar SmartApp. Siusplau, torna-ho a provar.",
+            "base_url_not_https": "L'`base_url` per al component `http` ha d'estar configurat i comen\u00e7ar amb `https://`.",
+            "token_already_setup": "El testimoni d'autenticaci\u00f3 ja ha estat configurat.",
+            "token_forbidden": "El testimoni d'autenticaci\u00f3 no t\u00e9 cont\u00e9 els apartats OAuth obligatoris.",
+            "token_invalid_format": "El testimoni d'autenticaci\u00f3 ha d'estar en format UID/GUID",
+            "token_unauthorized": "El testimoni d'autenticaci\u00f3 no \u00e9s v\u00e0lid o ja no t\u00e9 autoritzaci\u00f3.",
+            "webhook_error": "SmartThings no ha pogut validar l'adre\u00e7a final configurada a `base_url`. Revisa els requisits del component."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Testimoni d'acc\u00e9s"
+                },
+                "description": "Introdueix un [testimoni d'acc\u00e9s personal]({token_url}) de SmartThings que s'ha creat a trav\u00e9s les [instruccions]({component_url}).",
+                "title": "Introdueix el testimoni d'autenticaci\u00f3 personal"
+            },
+            "wait_install": {
+                "description": "Instal\u00b7la l'SmartApp de Home Assistant en almenys una ubicaci\u00f3 i prem a Envia.",
+                "title": "Instal\u00b7laci\u00f3 de SmartApp"
+            }
+        },
+        "title": "SmartThings"
+    }
+}

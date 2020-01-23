@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "\u4e0d\u660e\u306a\u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8"
+                }
+            }
+        },
+        "title": "Philips Hue"
+    }
+}

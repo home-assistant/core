@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "enable_sensors": "Trafik sens\u00f6rleri ekleyin"
+                }
+            }
+        }
+    }
+}

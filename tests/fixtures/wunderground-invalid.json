@@ -1,0 +1,18 @@
+{
+    "response": {
+        "version": "0.1",
+        "termsofService": "http://www.wunderground.com/weather/api/d/terms.html",
+        "features": {
+            "conditions": 1,
+            "alerts": 1,
+            "forecast": 1
+        }
+    },
+    "current_observation": {
+        "image": {
+            "url": "http://icons.wxug.com/graphics/wu2/logo_130x80.png",
+            "title": "Weather Underground",
+            "link": "http://www.wunderground.com"
+        }
+    }
+}
