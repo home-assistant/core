@@ -28,6 +28,7 @@ SENSORS = {
         "clicks/m^3",
         None,
         False,
+        PROVISION_SETTINGS,
     ),
     TYPE_FLOW_SENSOR_CONSUMED_LITERS: (
         "Flow Sensor Consumed Liters",
@@ -35,6 +36,7 @@ SENSORS = {
         "liter",
         None,
         False,
+        PROVISION_SETTINGS,
     ),
     TYPE_FLOW_SENSOR_START_INDEX: (
         "Flow Sensor Start Index",
@@ -42,6 +44,7 @@ SENSORS = {
         "index",
         None,
         False,
+        PROVISION_SETTINGS,
     ),
     TYPE_FLOW_SENSOR_WATERING_CLICKS: (
         "Flow Sensor Clicks",
@@ -49,6 +52,7 @@ SENSORS = {
         "clicks",
         None,
         False,
+        PROVISION_SETTINGS,
     ),
     TYPE_FREEZE_TEMP: (
         "Freeze Protect Temperature",
@@ -56,6 +60,7 @@ SENSORS = {
         "°C",
         "temperature",
         True,
+        RESTRICTIONS_UNIVERSAL,
     ),
 }
 
@@ -63,13 +68,8 @@ SENSORS = {
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine sensors based on a config entry."""
     rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
-
-    sensors = []
-    for (
-        sensor_type,
-        (name, icon, unit, device_class, enabled_by_default),
-    ) in SENSORS.items():
-        sensors.append(
+    async_add_entities(
+        [
             RainMachineSensor(
                 rainmachine,
                 sensor_type,
@@ -78,10 +78,14 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 unit,
                 device_class,
                 enabled_by_default,
+                api_category,
             )
-        )
-
-    async_add_entities(sensors, True)
+            for (
+                sensor_type,
+                (name, icon, unit, device_class, enabled_by_default, api_category),
+            ) in SENSORS.items()
+        ],
+    )
 
 
 class RainMachineSensor(RainMachineEntity):
@@ -96,10 +100,12 @@ class RainMachineSensor(RainMachineEntity):
         unit,
         device_class,
         enabled_by_default,
+        api_category,
     ):
         """Initialize."""
         super().__init__(rainmachine)
 
+        self._api_category = api_category
         self._device_class = device_class
         self._enabled_by_default = enabled_by_default
         self._icon = icon
@@ -151,6 +157,8 @@ class RainMachineSensor(RainMachineEntity):
         self._dispatcher_handlers.append(
             async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, update)
         )
+        await self.rainmachine.async_register_api_interest(self._api_category)
+        update()
 
     async def async_update(self):
         """Update the sensor's state."""
@@ -182,3 +190,8 @@ class RainMachineSensor(RainMachineEntity):
             self._state = self.rainmachine.data[RESTRICTIONS_UNIVERSAL][
                 "freezeProtectTemp"
             ]
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listeners and deregister API interest."""
+        super().async_will_remove_from_hass()
+        self.rainmachine.async_deregister_api_interest(self._api_category)

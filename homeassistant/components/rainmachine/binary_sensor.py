@@ -28,40 +28,64 @@ TYPE_RAINSENSOR = "rainsensor"
 TYPE_WEEKDAY = "weekday"
 
 BINARY_SENSORS = {
-    TYPE_FLOW_SENSOR: ("Flow Sensor", "mdi:water-pump", True),
-    TYPE_FREEZE: ("Freeze Restrictions", "mdi:cancel", True),
-    TYPE_FREEZE_PROTECTION: ("Freeze Protection", "mdi:weather-snowy", True),
-    TYPE_HOT_DAYS: ("Extra Water on Hot Days", "mdi:thermometer-lines", True),
-    TYPE_HOURLY: ("Hourly Restrictions", "mdi:cancel", False),
-    TYPE_MONTH: ("Month Restrictions", "mdi:cancel", False),
-    TYPE_RAINDELAY: ("Rain Delay Restrictions", "mdi:cancel", False),
-    TYPE_RAINSENSOR: ("Rain Sensor Restrictions", "mdi:cancel", False),
-    TYPE_WEEKDAY: ("Weekday Restrictions", "mdi:cancel", False),
+    TYPE_FLOW_SENSOR: ("Flow Sensor", "mdi:water-pump", True, PROVISION_SETTINGS),
+    TYPE_FREEZE: ("Freeze Restrictions", "mdi:cancel", True, RESTRICTIONS_CURRENT),
+    TYPE_FREEZE_PROTECTION: (
+        "Freeze Protection",
+        "mdi:weather-snowy",
+        True,
+        RESTRICTIONS_UNIVERSAL,
+    ),
+    TYPE_HOT_DAYS: (
+        "Extra Water on Hot Days",
+        "mdi:thermometer-lines",
+        True,
+        RESTRICTIONS_UNIVERSAL,
+    ),
+    TYPE_HOURLY: ("Hourly Restrictions", "mdi:cancel", False, RESTRICTIONS_CURRENT),
+    TYPE_MONTH: ("Month Restrictions", "mdi:cancel", False, RESTRICTIONS_CURRENT),
+    TYPE_RAINDELAY: (
+        "Rain Delay Restrictions",
+        "mdi:cancel",
+        False,
+        RESTRICTIONS_CURRENT,
+    ),
+    TYPE_RAINSENSOR: (
+        "Rain Sensor Restrictions",
+        "mdi:cancel",
+        False,
+        RESTRICTIONS_CURRENT,
+    ),
+    TYPE_WEEKDAY: ("Weekday Restrictions", "mdi:cancel", False, RESTRICTIONS_CURRENT),
 }
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine binary sensors based on a config entry."""
     rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
-
-    binary_sensors = []
-    for sensor_type, (name, icon, enabled_by_default) in BINARY_SENSORS.items():
-        binary_sensors.append(
+    async_add_entities(
+        [
             RainMachineBinarySensor(
-                rainmachine, sensor_type, name, icon, enabled_by_default
+                rainmachine, sensor_type, name, icon, enabled_by_default, api_category
             )
-        )
-
-    async_add_entities(binary_sensors, True)
+            for (
+                sensor_type,
+                (name, icon, enabled_by_default, api_category),
+            ) in BINARY_SENSORS.items()
+        ],
+    )
 
 
 class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
     """A sensor implementation for raincloud device."""
 
-    def __init__(self, rainmachine, sensor_type, name, icon, enabled_by_default):
+    def __init__(
+        self, rainmachine, sensor_type, name, icon, enabled_by_default, api_category
+    ):
         """Initialize the sensor."""
         super().__init__(rainmachine)
 
+        self._api_category = api_category
         self._enabled_by_default = enabled_by_default
         self._icon = icon
         self._name = name
@@ -106,6 +130,8 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
         self._dispatcher_handlers.append(
             async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, update)
         )
+        await self.rainmachine.async_register_api_interest(self._api_category)
+        update()
 
     async def async_update(self):
         """Update the state."""
@@ -133,3 +159,8 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
             self._state = self.rainmachine.data[RESTRICTIONS_CURRENT]["rainSensor"]
         elif self._sensor_type == TYPE_WEEKDAY:
             self._state = self.rainmachine.data[RESTRICTIONS_CURRENT]["weekDay"]
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listeners and deregister API interest."""
+        super().async_will_remove_from_hass()
+        self.rainmachine.async_deregister_api_interest(self._api_category)
