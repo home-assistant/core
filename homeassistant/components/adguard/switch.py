@@ -10,9 +10,9 @@ from homeassistant.components.adguard.const import (
     DATA_ADGUARD_VERION,
     DOMAIN,
 )
+from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,14 +45,16 @@ async def async_setup_entry(
     async_add_entities(switches, True)
 
 
-class AdGuardHomeSwitch(ToggleEntity, AdGuardHomeDeviceEntity):
+class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchDevice):
     """Defines a AdGuard Home switch."""
 
-    def __init__(self, adguard, name: str, icon: str, key: str):
+    def __init__(
+        self, adguard, name: str, icon: str, key: str, enabled_default: bool = True
+    ):
         """Initialize AdGuard Home switch."""
         self._state = False
         self._key = key
-        super().__init__(adguard, name, icon)
+        super().__init__(adguard, name, icon, enabled_default)
 
     @property
     def unique_id(self) -> str:
@@ -204,7 +206,13 @@ class AdGuardHomeQueryLogSwitch(AdGuardHomeSwitch):
 
     def __init__(self, adguard) -> None:
         """Initialize AdGuard Home switch."""
-        super().__init__(adguard, "AdGuard Query Log", "mdi:shield-check", "querylog")
+        super().__init__(
+            adguard,
+            "AdGuard Query Log",
+            "mdi:shield-check",
+            "querylog",
+            enabled_default=False,
+        )
 
     async def _adguard_turn_off(self) -> None:
         """Turn off the switch."""
