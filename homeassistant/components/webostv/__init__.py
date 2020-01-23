@@ -30,6 +30,9 @@ ATTR_BUTTON = "button"
 SERVICE_COMMAND = "command"
 ATTR_COMMAND = "command"
 
+SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
+ATTR_SOUND_OUTPUT = "sound_output"
+
 CUSTOMIZE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}
 )
@@ -60,9 +63,12 @@ BUTTON_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_BUTTON): cv.string})
 
 COMMAND_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_COMMAND): cv.string})
 
+SOUND_OUTPUT_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_SOUND_OUTPUT): cv.string})
+
 SERVICE_TO_METHOD = {
     SERVICE_BUTTON: {"method": "async_button", "schema": BUTTON_SCHEMA},
     SERVICE_COMMAND: {"method": "async_command", "schema": COMMAND_SCHEMA},
+    SERVICE_SELECT_SOUND_OUTPUT: {"method": "async_select_sound_output", "schema": SOUND_OUTPUT_SCHEMA},
 }
 
 _LOGGER = logging.getLogger(__name__)
