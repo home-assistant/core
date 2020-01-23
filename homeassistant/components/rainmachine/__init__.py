@@ -10,12 +10,10 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_BINARY_SENSORS,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
-    CONF_SENSORS,
     CONF_SSL,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -266,24 +264,6 @@ async def async_unload_entry(hass, config_entry):
     ]
 
     await asyncio.gather(*tasks)
-
-    return True
-
-
-async def async_migrate_entry(hass, config_entry):
-    """Migrate the config entry upon new versions."""
-    version = config_entry.version
-    data = {**config_entry.data}
-
-    _LOGGER.debug("Migrating from version %s", version)
-
-    # 1 -> 2: Remove unused condition data:
-    if version == 1:
-        data.pop(CONF_BINARY_SENSORS, None)
-        data.pop(CONF_SENSORS, None)
-        version = config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry, data=data)
-        _LOGGER.debug("Migration to version %s successful", version)
 
     return True
 

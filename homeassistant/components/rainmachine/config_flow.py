@@ -33,7 +33,7 @@ def configured_instances(hass):
 class RainMachineFlowHandler(config_entries.ConfigFlow):
     """Handle a RainMachine config flow."""
 
-    VERSION = 2
+    VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
