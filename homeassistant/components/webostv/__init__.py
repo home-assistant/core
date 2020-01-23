@@ -70,7 +70,7 @@ SERVICE_TO_METHOD = {
     SERVICE_COMMAND: {"method": "async_command", "schema": COMMAND_SCHEMA},
     SERVICE_SELECT_SOUND_OUTPUT: {
         "method": "async_select_sound_output",
-        "schema": SOUND_OUTPUT_SCHEMA
+        "schema": SOUND_OUTPUT_SCHEMA,
     },
 }
 
