@@ -307,9 +307,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             run_coroutine_threadsafe(
                 self._session.async_ensure_token_valid(), self.hass.loop
             ).result()
-
             self._spotify = Spotify(auth=self._session.token["access_token"])
-            self._me = self._spotify.me()
 
         current = self._spotify.current_playback()
         self._currently_playing = current or {}
