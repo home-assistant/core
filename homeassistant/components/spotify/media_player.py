@@ -32,15 +32,11 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.config_entry_oauth2_flow import (
-    OAuth2Session,
-    async_get_config_entry_implementation,
-)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import DOMAIN
+from .const import DATA_SPOTIFY_CLIENT, DATA_SPOTIFY_ME, DATA_SPOTIFY_SESSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,24 +73,29 @@ async def async_setup_entry(
     async_add_entities: Callable[[List[Entity], bool], None],
 ) -> None:
     """Set up Spotify based on a config entry."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
-    session = OAuth2Session(hass, entry, implementation)
-    spotify = SpotifyMediaPlayer(session, entry.data[CONF_ID], entry.data[CONF_NAME])
+    spotify = SpotifyMediaPlayer(
+        hass.data[DOMAIN][entry.entry_id][DATA_SPOTIFY_SESSION],
+        hass.data[DOMAIN][entry.entry_id][DATA_SPOTIFY_CLIENT],
+        hass.data[DOMAIN][entry.entry_id][DATA_SPOTIFY_ME],
+        entry.data[CONF_ID],
+        entry.data[CONF_NAME],
+    )
     async_add_entities([spotify], True)
 
 
 class SpotifyMediaPlayer(MediaPlayerDevice):
     """Representation of a Spotify controller."""
 
-    def __init__(self, session, user_id, name):
+    def __init__(self, session, spotify: Spotify, me: dict, user_id: str, name: str):
         """Initialize."""
-        self._name = f"Spotify {name}"
         self._id = user_id
+        self._me = me
+        self._name = f"Spotify {name}"
         self._session = session
+        self._spotify = spotify
 
         self._currently_playing: Optional[dict] = {}
         self._devices: Optional[List[dict]] = []
-        self._me: Optional[dict] = None
         self._playlist: Optional[dict] = None
         self._spotify: Spotify = None
 
@@ -241,9 +242,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def supported_features(self) -> int:
         """Return the media player features that are supported."""
-        if (
-            self._me is not None and self._me["product"] != "premium"
-        ) or self._currently_playing.get("device", {}).get("is_restricted", True):
+        if self._me["product"] != "premium":
             return 0
         return SUPPORT_SPOTIFY
 
