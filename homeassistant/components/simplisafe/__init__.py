@@ -332,10 +332,15 @@ class SimpliSafe:
             # apparently); so, if we detect that we're in such a situation, try a last-
             # ditch effort by re-authenticating with the stored token:
             if self._emergency_refresh_token:
-                # If we've already tried this, log the error and suggest a HASS restart:
+                # If we've already tried this, log the error, suggest a HASS restart,
+                # and stop the time tracker:
                 _LOGGER.error(
                     "SimpliSafe authentication disconnected. Please restart HASS."
                 )
+                remove_listener = self._hass.data[DOMAIN][DATA_LISTENER].pop(
+                    self._config_entry.entry_id
+                )
+                remove_listener()
                 return
 
             _LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
