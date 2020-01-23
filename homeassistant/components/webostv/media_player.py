@@ -63,6 +63,7 @@ LIVE_TV_APP_ID = "com.webos.app.livetv"
 
 ATTR_SOUND_OUTPUT = "sound_output"
 
+
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the LG WebOS TV platform."""
 
@@ -295,10 +296,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         attributes = {}
-        if (
-            self._client.sound_output is not None
-            and self.state != STATE_OFF
-        ):
+        if self._client.sound_output is not None and self.state != STATE_OFF:
             attributes[ATTR_SOUND_OUTPUT] = self._client.sound_output
         return attributes
 
