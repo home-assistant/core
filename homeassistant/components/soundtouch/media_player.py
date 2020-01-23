@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_RESOURCES,
     CONF_SOURCE,
+    STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
@@ -49,6 +50,7 @@ MAP_STATUS = {
     "BUFFERING_STATE": STATE_PLAYING,
     "PAUSE_STATE": STATE_PAUSED,
     "STOP_STATE": STATE_OFF,
+    "INVALID_PLAY_STATUS": STATE_IDLE,
 }
 
 DATA_SOUNDTOUCH = "soundtouch"
@@ -110,7 +112,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if host in [device.config["host"] for device in hass.data[DATA_SOUNDTOUCH]]:
             return
 
-        remote_config = {"id": "ha.component.soundtouch", "host": host, "port": port}
+        remote_config = {
+            "id": "ha.component.soundtouch",
+            "host": host,
+            "port": port,
+            "resources": None,
+        }
         bose_soundtouch_entity = SoundTouchDevice(None, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
         add_entities([bose_soundtouch_entity])
@@ -206,7 +213,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         self._volume = self._device.volume()
         self._config = config
         self._supported_features = SUPPORT_SOUNDTOUCH
-        self._resources = config.get("resources")
+        self._resources = config["resources"]
         self._sources = []
         self._sourcename = {}
         self._namesource = {}
@@ -249,7 +256,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Return the state of the device."""
         if self._status.source == "STANDBY":
             return STATE_OFF
-
+        _LOGGER.debug("soundtouch state: %s", self._status)
         return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
 
     @property
