@@ -76,8 +76,8 @@ async def async_setup(hass, config):
     hass.data[DOMAIN]["modem"] = insteon_modem
     hass.data[DOMAIN][INSTEON_ENTITIES] = {}
 
-    register_services(hass, config, insteon_modem)
     register_new_device_callback(hass, config, insteon_modem)
+    hass.async_add_job(register_services, hass, config, insteon_modem)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
 
     for device_override in overrides:
