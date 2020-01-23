@@ -163,6 +163,9 @@ class GdacsEvent(GeolocationEvent):
         self._population = feed_entry.population
         self._severity = feed_entry.severity
         self._vulnerability = feed_entry.vulnerability
+        # Round vulnerability value if presented as float.
+        if isinstance(self._vulnerability, float):
+            self._vulnerability = round(self._vulnerability, 1)
         self._version = feed_entry.version
 
     @property
