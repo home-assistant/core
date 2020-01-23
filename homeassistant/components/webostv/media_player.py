@@ -61,6 +61,7 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 LIVE_TV_APP_ID = "com.webos.app.livetv"
 
+ATTR_SOUND_OUTPUT = "sound_output"
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the LG WebOS TV platform."""
@@ -290,6 +291,17 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
             return SUPPORT_WEBOSTV | SUPPORT_TURN_ON
         return SUPPORT_WEBOSTV
 
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        attributes = {}
+        if (
+            self._client.sound_output is not None
+            and self.state != STATE_OFF
+        ):
+            attributes[ATTR_SOUND_OUTPUT] = self._client.sound_output
+        return attributes
+
     @cmd
     async def async_turn_off(self):
         """Turn off media player."""
@@ -320,6 +332,11 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     async def async_mute_volume(self, mute):
         """Send mute command."""
         await self._client.set_mute(mute)
+
+    @cmd
+    async def async_select_sound_output(self, sound_output):
+        """Select the sound output."""
+        await self._client.change_sound_output(sound_output)
 
     @cmd
     async def async_media_play_pause(self):
