@@ -24,6 +24,12 @@ ZEROCONF = {
     "_hap._tcp.local.": [
         "homekit_controller"
     ],
+    "_printer._tcp.local.": [
+        "brother"
+    ],
+    "_viziocast._tcp.local.": [
+        "vizio"
+    ],
     "_wled._tcp.local.": [
         "wled"
     ]

@@ -7,7 +7,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
 from . import (
-    BINARY_SENSORS,
     DATA_OPENUV_CLIENT,
     DATA_PROTECTION_WINDOW,
     DOMAIN,
@@ -17,15 +16,13 @@ from . import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
 ATTR_PROTECTION_WINDOW_ENDING_TIME = "end_time"
 ATTR_PROTECTION_WINDOW_ENDING_UV = "end_uv"
 ATTR_PROTECTION_WINDOW_STARTING_TIME = "start_time"
 ATTR_PROTECTION_WINDOW_STARTING_UV = "start_uv"
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up an OpenUV sensor based on existing config."""
-    pass
+BINARY_SENSORS = {TYPE_PROTECTION_WINDOW: ("Protection Window", "mdi:sunglasses")}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -33,10 +30,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.entry_id]
 
     binary_sensors = []
-    for sensor_type in openuv.binary_sensor_conditions:
-        name, icon = BINARY_SENSORS[sensor_type]
+    for kind, attrs in BINARY_SENSORS.items():
+        name, icon = attrs
         binary_sensors.append(
-            OpenUvBinarySensor(openuv, sensor_type, name, icon, entry.entry_id)
+            OpenUvBinarySensor(openuv, kind, name, icon, entry.entry_id)
         )
 
     async_add_entities(binary_sensors, True)
@@ -100,7 +97,10 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
         data = self.openuv.data[DATA_PROTECTION_WINDOW]
 
         if not data:
+            self._available = False
             return
+
+        self._available = True
 
         for key in ("from_time", "to_time", "from_uv", "to_uv"):
             if not data.get(key):

@@ -54,7 +54,7 @@ def mock_lj(hass):
         mock_lj.on_switch_pressed.side_effect = on_switch_pressed
         mock_lj.on_switch_released.side_effect = on_switch_released
 
-        config = {"litejet": {"port": "/tmp/this_will_be_mocked"}}
+        config = {"litejet": {"port": "/dev/serial/by-id/mock-litejet"}}
         assert hass.loop.run_until_complete(
             setup.async_setup_component(hass, litejet.DOMAIN, config)
         )

@@ -43,13 +43,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._trusted_device = None
         self._verification_code = None
 
-    def _configuration_exists(self, username: str) -> bool:
-        """Return True if username exists in configuration."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_USERNAME] == username:
-                return True
-        return False
-
     async def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
@@ -90,9 +83,10 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_GPS_ACCURACY_THRESHOLD, DEFAULT_GPS_ACCURACY_THRESHOLD
         )
 
-        if self._configuration_exists(self._username):
-            errors[CONF_USERNAME] = "username_exists"
-            return await self._show_setup_form(user_input, errors)
+        # Check if already configured
+        if self.unique_id is None:
+            await self.async_set_unique_id(self._username)
+            self._abort_if_unique_id_configured()
 
         try:
             self.api = await self.hass.async_add_executor_job(
@@ -119,9 +113,6 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
-        if self._configuration_exists(user_input[CONF_USERNAME]):
-            return self.async_abort(reason="username_exists")
-
         return await self.async_step_user(user_input)
 
     async def async_step_trusted_device(self, user_input=None, errors=None):

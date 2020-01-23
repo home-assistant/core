@@ -1,8 +1,20 @@
 {
     "config": {
+        "abort": {
+            "already_setup": "Questa voce \u00e8 gi\u00e0 stata configurata."
+        },
         "error": {
             "host_exists": "Host gi\u00e0 configurato.",
-            "name_exists": "Nome gi\u00e0 configurato."
+            "name_exists": "Nome gi\u00e0 configurato.",
+            "tv_needs_token": "Quando Device Type \u00e8 `tv`, \u00e8 necessario un token di accesso valido."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Token di accesso",
+                    "device_class": "Tipo di dispositivo"
+                }
+            }
         }
     }
 }

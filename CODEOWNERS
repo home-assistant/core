@@ -129,6 +129,7 @@ homeassistant/components/google_cloud/* @lufton
 homeassistant/components/google_translate/* @awarecan
 homeassistant/components/google_travel_time/* @robbiet480
 homeassistant/components/gpsd/* @fabaff
+homeassistant/components/greeneye_monitor/* @jkeljo
 homeassistant/components/group/* @home-assistant/core
 homeassistant/components/growatt_server/* @indykoning
 homeassistant/components/gtfs/* @robbiet480
@@ -168,7 +169,7 @@ homeassistant/components/intent/* @home-assistant/core
 homeassistant/components/intesishome/* @jnimmo
 homeassistant/components/ios/* @robbiet480
 homeassistant/components/iperf3/* @rohankapoorcom
-homeassistant/components/ipma/* @dgomes
+homeassistant/components/ipma/* @dgomes @abmantis
 homeassistant/components/iqvia/* @bachya
 homeassistant/components/irish_rail_transport/* @ttroy50
 homeassistant/components/izone/* @Swamp-Ig
@@ -297,6 +298,7 @@ homeassistant/components/shodan/* @fabaff
 homeassistant/components/signal_messenger/* @bbernhard
 homeassistant/components/simplisafe/* @bachya
 homeassistant/components/sinch/* @bendikrb
+homeassistant/components/sisyphus/* @jkeljo
 homeassistant/components/slide/* @ualex73
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smarthab/* @outadoc

@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Kont ass scho konfigur\u00e9iert"
+            "already_configured": "Kont ass scho konfigur\u00e9iert"
         },
         "error": {
             "login": "Feeler beim Login: iwwerpr\u00e9ift \u00e4r E-Mail & Passwuert",
             "send_verification_code": "Feeler beim sch\u00e9cken vum Verifikatiouns Code",
-            "username_exists": "Kont ass scho konfigur\u00e9iert",
             "validate_verification_code": "Feeler beim iwwerpr\u00e9iwe vum Verifikatiouns Code, wielt ee vertrauten Apparat aus a start d'Iwwerpr\u00e9iwung nei"
         },
         "step": {

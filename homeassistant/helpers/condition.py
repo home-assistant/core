@@ -473,7 +473,7 @@ def zone(
     if latitude is None or longitude is None:
         return False
 
-    return zone_cmp.zone.in_zone(
+    return zone_cmp.in_zone(
         zone_ent, latitude, longitude, entity.attributes.get(ATTR_GPS_ACCURACY, 0)
     )
 

@@ -9,7 +9,6 @@ from . import (
     DATA_OPENUV_CLIENT,
     DATA_UV,
     DOMAIN,
-    SENSORS,
     TOPIC_UPDATE,
     TYPE_CURRENT_OZONE_LEVEL,
     TYPE_CURRENT_UV_INDEX,
@@ -43,10 +42,42 @@ UV_LEVEL_HIGH = "High"
 UV_LEVEL_MODERATE = "Moderate"
 UV_LEVEL_LOW = "Low"
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up an OpenUV sensor based on existing config."""
-    pass
+SENSORS = {
+    TYPE_CURRENT_OZONE_LEVEL: ("Current Ozone Level", "mdi:vector-triangle", "du"),
+    TYPE_CURRENT_UV_INDEX: ("Current UV Index", "mdi:weather-sunny", "index"),
+    TYPE_CURRENT_UV_LEVEL: ("Current UV Level", "mdi:weather-sunny", None),
+    TYPE_MAX_UV_INDEX: ("Max UV Index", "mdi:weather-sunny", "index"),
+    TYPE_SAFE_EXPOSURE_TIME_1: (
+        "Skin Type 1 Safe Exposure Time",
+        "mdi:timer",
+        "minutes",
+    ),
+    TYPE_SAFE_EXPOSURE_TIME_2: (
+        "Skin Type 2 Safe Exposure Time",
+        "mdi:timer",
+        "minutes",
+    ),
+    TYPE_SAFE_EXPOSURE_TIME_3: (
+        "Skin Type 3 Safe Exposure Time",
+        "mdi:timer",
+        "minutes",
+    ),
+    TYPE_SAFE_EXPOSURE_TIME_4: (
+        "Skin Type 4 Safe Exposure Time",
+        "mdi:timer",
+        "minutes",
+    ),
+    TYPE_SAFE_EXPOSURE_TIME_5: (
+        "Skin Type 5 Safe Exposure Time",
+        "mdi:timer",
+        "minutes",
+    ),
+    TYPE_SAFE_EXPOSURE_TIME_6: (
+        "Skin Type 6 Safe Exposure Time",
+        "mdi:timer",
+        "minutes",
+    ),
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -54,11 +85,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.entry_id]
 
     sensors = []
-    for sensor_type in openuv.sensor_conditions:
-        name, icon, unit = SENSORS[sensor_type]
-        sensors.append(
-            OpenUvSensor(openuv, sensor_type, name, icon, unit, entry.entry_id)
-        )
+    for kind, attrs in SENSORS.items():
+        name, icon, unit = attrs
+        sensors.append(OpenUvSensor(openuv, kind, name, icon, unit, entry.entry_id))
 
     async_add_entities(sensors, True)
 
@@ -124,7 +153,14 @@ class OpenUvSensor(OpenUvEntity):
 
     async def async_update(self):
         """Update the state."""
-        data = self.openuv.data[DATA_UV]["result"]
+        data = self.openuv.data[DATA_UV].get("result")
+
+        if not data:
+            self._available = False
+            return
+
+        self._available = True
+
         if self._sensor_type == TYPE_CURRENT_OZONE_LEVEL:
             self._state = data["ozone"]
         elif self._sensor_type == TYPE_CURRENT_UV_INDEX:

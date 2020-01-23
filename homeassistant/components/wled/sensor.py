@@ -50,13 +50,14 @@ class WLEDSensor(WLEDDeviceEntity):
         icon: str,
         unit_of_measurement: str,
         key: str,
+        enabled_default: bool = True,
     ) -> None:
         """Initialize WLED sensor."""
         self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._key = key
 
-        super().__init__(entry_id, wled, name, icon)
+        super().__init__(entry_id, wled, name, icon, enabled_default)
 
     @property
     def unique_id(self) -> str:
@@ -109,6 +110,7 @@ class WLEDUptimeSensor(WLEDSensor):
             "mdi:clock-outline",
             None,
             "uptime",
+            enabled_default=False,
         )
 
     @property
@@ -134,6 +136,7 @@ class WLEDFreeHeapSensor(WLEDSensor):
             "mdi:memory",
             DATA_BYTES,
             "free_heap",
+            enabled_default=False,
         )
 
     async def _wled_update(self) -> None:

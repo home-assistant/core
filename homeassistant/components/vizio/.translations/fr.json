@@ -3,6 +3,7 @@
         "abort": {
             "already_in_progress": "Flux de configuration pour le composant Vizio d\u00e9j\u00e0 en cours.",
             "already_setup": "Cette entr\u00e9e a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9e.",
+            "already_setup_with_diff_host_and_name": "Cette entr\u00e9e semble avoir d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9e avec un h\u00f4te et un nom diff\u00e9rents en fonction de son num\u00e9ro de s\u00e9rie. Veuillez supprimer toutes les anciennes entr\u00e9es de votre configuration.yaml et du menu Int\u00e9grations avant de r\u00e9essayer d'ajouter ce p\u00e9riph\u00e9rique.",
             "host_exists": "Composant Vizio avec h\u00f4te d\u00e9j\u00e0 configur\u00e9.",
             "name_exists": "Composant Vizio dont le nom est d\u00e9j\u00e0 configur\u00e9.",
             "updated_options": "Cette entr\u00e9e a d\u00e9j\u00e0 \u00e9t\u00e9 configur\u00e9e mais les options d\u00e9finies dans la configuration ne correspondent pas aux valeurs des options pr\u00e9c\u00e9demment import\u00e9es, de sorte que l'entr\u00e9e de configuration a \u00e9t\u00e9 mise \u00e0 jour en cons\u00e9quence.",

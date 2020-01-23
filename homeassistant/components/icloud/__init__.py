@@ -141,6 +141,10 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     max_interval = entry.data[CONF_MAX_INTERVAL]
     gps_accuracy_threshold = entry.data[CONF_GPS_ACCURACY_THRESHOLD]
 
+    # For backwards compat
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(entry, unique_id=username)
+
     icloud_dir = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     account = IcloudAccount(
@@ -258,14 +262,14 @@ class IcloudAccount:
 
         self._icloud_dir = icloud_dir
 
-        self.api = None
+        self.api: PyiCloudService = None
         self._owner_fullname = None
         self._family_members_fullname = {}
         self._devices = {}
 
         self.unsub_device_tracker = None
 
-    def setup(self):
+    def setup(self) -> None:
         """Set up an iCloud account."""
         try:
             self.api = PyiCloudService(
@@ -281,7 +285,8 @@ class IcloudAccount:
             # Gets device owners infos
             user_info = self.api.devices.response["userInfo"]
         except PyiCloudNoDevicesException:
-            _LOGGER.error("No iCloud Devices found")
+            _LOGGER.error("No iCloud device found")
+            return
 
         self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
 
@@ -304,7 +309,18 @@ class IcloudAccount:
         try:
             api_devices = self.api.devices
         except PyiCloudNoDevicesException:
-            _LOGGER.error("No iCloud Devices found")
+            _LOGGER.error("No iCloud device found")
+            return
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error("Unknown iCloud error: %s", err)
+            self._fetch_interval = 5
+            dispatcher_send(self.hass, SERVICE_UPDATE)
+            track_point_in_utc_time(
+                self.hass,
+                self.keep_alive,
+                utcnow() + timedelta(minutes=self._fetch_interval),
+            )
+            return
 
         # Gets devices infos
         for device in api_devices:
@@ -326,8 +342,8 @@ class IcloudAccount:
                 self._devices[device_id] = IcloudDevice(self, device, status)
                 self._devices[device_id].update(status)
 
-        dispatcher_send(self.hass, SERVICE_UPDATE)
         self._fetch_interval = self._determine_interval()
+        dispatcher_send(self.hass, SERVICE_UPDATE)
         track_point_in_utc_time(
             self.hass,
             self.keep_alive,

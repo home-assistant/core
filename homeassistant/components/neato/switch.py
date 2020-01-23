@@ -18,11 +18,6 @@ SWITCH_TYPE_SCHEDULE = "schedule"
 SWITCH_TYPES = {SWITCH_TYPE_SCHEDULE: ["Schedule"]}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Neato switches."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Neato switch with config entry."""
     dev = []

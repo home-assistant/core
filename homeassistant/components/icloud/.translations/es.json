@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Cuenta ya configurada"
+            "already_configured": "Cuenta ya configurada"
         },
         "error": {
             "login": "Error de inicio de sesi\u00f3n: compruebe su direcci\u00f3n de correo electr\u00f3nico y contrase\u00f1a",
             "send_verification_code": "Error al enviar el c\u00f3digo de verificaci\u00f3n",
-            "username_exists": "Cuenta ya configurada",
             "validate_verification_code": "No se pudo verificar el c\u00f3digo de verificaci\u00f3n, elegir un dispositivo de confianza e iniciar la verificaci\u00f3n de nuevo"
         },
         "step": {
