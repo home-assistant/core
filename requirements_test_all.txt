@@ -530,9 +530,6 @@ python-ecobee-api==0.1.4
 # homeassistant.components.darksky
 python-forecastio==1.4.0
 
-# homeassistant.components.sms
-python-gammu==2.12
-
 # homeassistant.components.izone
 python-izone==1.1.1
 
