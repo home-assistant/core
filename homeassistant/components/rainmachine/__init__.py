@@ -293,7 +293,9 @@ class RainMachine:
     @callback
     def async_deregister_api_interest(self, api_category):
         """Decrement the number of entities with data needs from an API category."""
-        if self._api_category_count[api_category] == 0:
+        # If this deregistration should leave us with no registration at all, remove the
+        # time interval:
+        if sum(self._api_category_count.values()) == 0:
             if self._async_unsub_dispatcher_connect:
                 self._async_unsub_dispatcher_connect()
                 self._async_unsub_dispatcher_connect = None
