@@ -14,9 +14,9 @@ async def async_setup(hass, config):
     """Configure Gammu state machine."""
     conf = config[DOMAIN]
     device = conf.get(CONF_DEVICE)
-    state_machine = gammu.StateMachine()
-    state_machine.SetConfig(0, dict(Device=device, Connection="at"))
-    state_machine.Init()
+    sm = gammu.StateMachine()
+    sm.SetConfig(0, dict(Device=device, Connection="at"))
+    sm.Init()
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][STATE_MACHINE] = state_machine
+    hass.data[DOMAIN][STATE_MACHINE] = sm
     return True
