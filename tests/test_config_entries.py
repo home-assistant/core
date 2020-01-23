@@ -1101,7 +1101,7 @@ async def test_unique_id_update_existing_entry(hass, manager):
 
         async def async_step_user(self, user_input=None):
             await self.async_set_unique_id("mock-unique-id")
-            await self._abort_if_unique_id_configured(update_entry={"host": "1.1.1.1"})
+            await self._abort_if_unique_id_configured(updates={"host": "1.1.1.1"})
 
     with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
         result = await manager.flow.async_init(

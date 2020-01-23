@@ -817,24 +817,18 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         raise data_entry_flow.UnknownHandler
 
     @callback
-    def _abort_if_unique_id_configured(
-        self, update_entry: Dict[Any, Any] = None
-    ) -> None:
+    def _abort_if_unique_id_configured(self, updates: Dict[Any, Any] = None) -> None:
         """Abort if the unique ID is already configured."""
+        assert self.hass
         if self.unique_id is None:
             return
 
         for entry in self._async_current_entries():
             if entry.unique_id == self.unique_id:
-                if (
-                    self.hass is not None
-                    and update_entry is not None
-                    and not update_entry.items() <= entry.data.items()
-                ):
-                    data = (entry.data or {}).copy()
-                    data.update(update_entry)
-                    self.hass.config_entries.async_update_entry(entry, data=data)
-
+                if updates is not None and not updates.items() <= entry.data.items():
+                    self.hass.config_entries.async_update_entry(
+                        entry, data={**entry.data, **updates}
+                    )
                 raise data_entry_flow.AbortFlow("already_configured")
 
     async def async_set_unique_id(
