@@ -474,7 +474,7 @@ eliqonline==1.2.2
 elkm1-lib==0.7.15
 
 # homeassistant.components.emulated_roku
-emulated_roku==0.2.0
+emulated_roku==0.2.1
 
 # homeassistant.components.enocean
 enocean==0.50
