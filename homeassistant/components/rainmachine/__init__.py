@@ -288,15 +288,12 @@ class RainMachine:
         elif api_category == RESTRICTIONS_UNIVERSAL:
             data = await self.client.restrictions.universal()
 
-        _LOGGER.debug('Fetched "%s" API with result: %s', api_category, data)
-
         self.data[api_category] = data
 
     @callback
     def async_deregister_api_interest(self, api_category):
         """Decrement the number of entities with data needs from an API category."""
         if self._api_category_count[api_category] == 0:
-            _LOGGER.debug("No more entities require API: %s", api_category)
             if self._async_unsub_dispatcher_connect:
                 self._async_unsub_dispatcher_connect()
                 self._async_unsub_dispatcher_connect = None
@@ -307,7 +304,6 @@ class RainMachine:
         """Increment the number of entities with data needs from an API category."""
         # If this is the first registration we have, start a time interval:
         if not self._async_unsub_dispatcher_connect:
-            _LOGGER.debug("Registering time interval for API: %s", api_category)
             self._async_unsub_dispatcher_connect = async_track_time_interval(
                 self.hass,
                 self.async_update,
@@ -327,8 +323,6 @@ class RainMachine:
             if count == 0:
                 continue
             tasks[category] = self._async_fetch_from_api(category)
-
-        _LOGGER.debug("Updating data: %s", tasks)
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         for category, result in zip(tasks, results):
