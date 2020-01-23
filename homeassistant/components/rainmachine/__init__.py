@@ -267,6 +267,7 @@ class RainMachine:
         """Initialize."""
         self._async_unsub_dispatcher_connect = None
         self._scan_interval_seconds = scan_interval
+        self._lock = asyncio.Lock()
         self.client = client
         self.data = {}
         self.default_zone_runtime = default_zone_runtime
@@ -314,15 +315,12 @@ class RainMachine:
 
         self._api_category_count[api_category] += 1
 
-        # If an entity is already attempting to query the API for this category, wait
-        # until that's done before moving forward:
-        if api_category not in self.data:
-            self.data[api_category] = asyncio.current_task()
-            data = await self._async_fetch_from_api(api_category)
-            self.data[api_category] = data
-        else:
-            if isinstance(self.data[api_category], asyncio.Task):
-                await self.data[api_category]
+        # Lock API updates in case multiple entities are trying to call the same API
+        # endpoint at once:
+        async with self._lock:
+            if api_category in self.data:
+                return
+            self.data[api_category] = await self._async_fetch_from_api(api_category)
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
