@@ -58,15 +58,15 @@ async def async_setup_entry(
     if not config_entry.options:
         volume_step = config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
         hass.config_entries.async_update_entry(
-            entry=config_entry, options={CONF_VOLUME_STEP: volume_step}
+            config_entry, options={CONF_VOLUME_STEP: volume_step}
         )
     else:
         volume_step = config_entry.options[CONF_VOLUME_STEP]
 
     device = VizioAsync(
-        device_id=DEVICE_ID,
-        ip=host,
-        name=name,
+        DEVICE_ID,
+        host,
+        name,
         auth_token=token,
         device_type=VIZIO_DEVICE_CLASSES[device_class],
         session=async_get_clientsession(hass, False),
@@ -86,15 +86,9 @@ async def async_setup_entry(
         )
         raise PlatformNotReady
 
-    entity = VizioDevice(
-        config_entry=config_entry,
-        device=device,
-        name=name,
-        volume_step=volume_step,
-        device_class=device_class,
-    )
+    entity = VizioDevice(config_entry, device, name, volume_step, device_class,)
 
-    async_add_entities(new_entities=[entity], update_before_add=True)
+    async_add_entities([entity], update_before_add=True)
 
 
 class VizioDevice(MediaPlayerDevice):
@@ -175,16 +169,14 @@ class VizioDevice(MediaPlayerDevice):
         # Register callback for when config entry is updated.
         self._async_unsub_listeners.append(
             self._config_entry.add_update_listener(
-                listener=self._async_send_update_options_signal
+                self._async_send_update_options_signal
             )
         )
 
         # Register callback for update event
         self._async_unsub_listeners.append(
             async_dispatcher_connect(
-                hass=self.hass,
-                signal=self._config_entry.entry_id,
-                target=self._async_update_options,
+                self.hass, self._config_entry.entry_id, self._async_update_options,
             )
         )
 
@@ -279,7 +271,7 @@ class VizioDevice(MediaPlayerDevice):
 
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        await self._device.input_switch(name=source)
+        await self._device.input_switch(source)
 
     async def async_volume_up(self) -> None:
         """Increasing volume of the device."""

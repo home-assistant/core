@@ -136,13 +136,13 @@ async def test_user_flow_minimum_fields(
     """Test user config flow with minimum fields."""
     # test form shows
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        flow_id=result["flow_id"],
+        result["flow_id"],
         user_input={
             CONF_NAME: NAME,
             CONF_HOST: HOST,
@@ -165,14 +165,14 @@ async def test_user_flow_all_fields(
     """Test user config flow with all fields."""
     # test form shows
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        flow_id=result["flow_id"],
+        result["flow_id"],
         user_input={
             CONF_NAME: NAME,
             CONF_HOST: HOST,
@@ -192,7 +192,7 @@ async def test_user_flow_all_fields(
 async def test_options_flow(hass: HomeAssistantType) -> None:
     """Test options config flow."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_SPEAKER_CONFIG)
-    entry.add_to_hass(hass=hass)
+    entry.add_to_hass(hass)
 
     assert not entry.options
 
@@ -202,7 +202,7 @@ async def test_options_flow(hass: HomeAssistantType) -> None:
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
-        flow_id=result["flow_id"], user_input={CONF_VOLUME_STEP: VOLUME_STEP}
+        result["flow_id"], user_input={CONF_VOLUME_STEP: VOLUME_STEP}
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -219,12 +219,12 @@ async def test_user_host_already_configured(
     entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, options={CONF_VOLUME_STEP: VOLUME_STEP}
     )
-    entry.add_to_hass(hass=hass)
+    entry.add_to_hass(hass)
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
     fail_entry[CONF_NAME] = "newtestname"
 
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
+        DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -240,13 +240,13 @@ async def test_user_name_already_configured(
     entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, options={CONF_VOLUME_STEP: VOLUME_STEP}
     )
-    entry.add_to_hass(hass=hass)
+    entry.add_to_hass(hass)
 
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
     fail_entry[CONF_HOST] = "0.0.0.0"
 
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
+        DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -262,7 +262,7 @@ async def test_user_esn_already_exists(
     # Set up new entry
     MockConfigEntry(
         domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
-    ).add_to_hass(hass=hass)
+    ).add_to_hass(hass)
 
     # Set up new entry with same unique_id but different host and name
     fail_entry = MOCK_SPEAKER_CONFIG.copy()
@@ -270,7 +270,7 @@ async def test_user_esn_already_exists(
     fail_entry[CONF_NAME] = NAME2
 
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
+        DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -282,7 +282,7 @@ async def test_user_error_on_could_not_connect(
 ) -> None:
     """Test with could_not_connect during user_setup."""
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_USER_VALID_TV_CONFIG
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -296,7 +296,7 @@ async def test_user_error_on_tv_needs_token(
 ) -> None:
     """Test when config fails custom validation for non null access token when device_class = tv during user setup."""
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN, context={"source": SOURCE_USER}, data=MOCK_INVALID_TV_CONFIG
+        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_INVALID_TV_CONFIG
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -310,7 +310,7 @@ async def test_import_flow_minimum_fields(
 ) -> None:
     """Test import config flow with minimum fields."""
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN,
+        DOMAIN,
         context={"source": SOURCE_IMPORT},
         data=vol.Schema(VIZIO_SCHEMA)(
             {CONF_HOST: HOST, CONF_DEVICE_CLASS: DEVICE_CLASS_SPEAKER}
@@ -332,7 +332,7 @@ async def test_import_flow_all_fields(
 ) -> None:
     """Test import config flow with all fields."""
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN,
+        DOMAIN,
         context={"source": SOURCE_IMPORT},
         data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
     )
@@ -357,11 +357,11 @@ async def test_import_entity_already_configured(
         data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
         options={CONF_VOLUME_STEP: VOLUME_STEP},
     )
-    entry.add_to_hass(hass=hass)
+    entry.add_to_hass(hass)
     fail_entry = vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG.copy())
 
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN, context={"source": SOURCE_IMPORT}, data=fail_entry
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=fail_entry
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -375,7 +375,7 @@ async def test_import_flow_update_options(
 ) -> None:
     """Test import config flow with updated options."""
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN,
+        DOMAIN,
         context={"source": SOURCE_IMPORT},
         data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
     )
@@ -388,7 +388,7 @@ async def test_import_flow_update_options(
     updated_config = MOCK_IMPORT_VALID_TV_CONFIG.copy()
     updated_config[CONF_VOLUME_STEP] = VOLUME_STEP + 1
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN,
+        DOMAIN,
         context={"source": SOURCE_IMPORT},
         data=vol.Schema(VIZIO_SCHEMA)(updated_config),
     )
@@ -410,7 +410,7 @@ async def test_zeroconf_flow(
     """Test zeroconf config flow."""
     discovery_info = MOCK_ZEROCONF_ENTRY.copy()
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
 
     # Form should always show even if all required properties are discovered
@@ -422,7 +422,7 @@ async def test_zeroconf_flow(
     user_input = result["data_schema"](discovery_info)
 
     result = await hass.config_entries.flow.async_configure(
-        flow_id=result["flow_id"], user_input=user_input
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -441,12 +441,12 @@ async def test_zeroconf_flow_already_configured(
     entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, options={CONF_VOLUME_STEP: VOLUME_STEP}
     )
-    entry.add_to_hass(hass=hass)
+    entry.add_to_hass(hass)
 
     # Try rediscovering same device
     discovery_info = MOCK_ZEROCONF_ENTRY.copy()
     result = await hass.config_entries.flow.async_init(
-        handler=DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
 
     # Flow should abort because device is already setup

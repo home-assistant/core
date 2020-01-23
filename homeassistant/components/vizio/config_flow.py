@@ -30,9 +30,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=dangerous-default-value
-def _get_config_flow_schema(input_dict: Dict[str, Any] = dict()) -> vol.Schema:
+def _get_config_flow_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
     """Return schema defaults based on user input/config dict. Retain info already provided for future form views by setting them as defaults in schema."""
+    if input_dict is None:
+        input_dict = {}
+
     return vol.Schema(
         {
             vol.Required(
@@ -87,7 +89,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> VizioOptionsConfigFlow:
         """Get the options flow for this handler."""
-        return VizioOptionsConfigFlow(config_entry=config_entry)
+        return VizioOptionsConfigFlow(config_entry)
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -102,7 +104,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
-            self._user_schema = _get_config_flow_schema(input_dict=user_input)
+            self._user_schema = _get_config_flow_schema(user_input)
 
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -162,7 +164,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: Dict[str, Any]) -> Dict[str, Any]:
         """Import a config entry from configuration.yaml."""
         # Check if new config entry matches any existing config entries
-        for entry in self.hass.config_entries.async_entries(domain=DOMAIN):
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
             if entry.data[CONF_HOST] == import_config[CONF_HOST] and entry.data[
                 CONF_NAME
             ] == import_config.get(CONF_NAME):
@@ -206,7 +208,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         discovery_info[CONF_NAME] = discovery_info[CONF_NAME][:-num_chars_to_strip]
 
         discovery_info[CONF_DEVICE_CLASS] = await async_guess_device_type(
-            ip=discovery_info[CONF_HOST]
+            discovery_info[CONF_HOST]
         )
 
         # Form must be shown after discovery so user can confirm/update configuration before ConfigEntry creation.
