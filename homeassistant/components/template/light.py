@@ -172,19 +172,6 @@ class LightTemplate(Light):
         self._entities = entity_ids
         self._available = True
 
-        if self._template is not None:
-            self._template.hass = self.hass
-        if self._level_template is not None:
-            self._level_template.hass = self.hass
-        if self._icon_template is not None:
-            self._icon_template.hass = self.hass
-        if self._entity_picture_template is not None:
-            self._entity_picture_template.hass = self.hass
-        if self._availability_template is not None:
-            self._availability_template.hass = self.hass
-        if self._temperature_template is not None:
-            self._temperature_template.hass = self.hass
-
     @property
     def brightness(self):
         """Return the brightness of the light."""
