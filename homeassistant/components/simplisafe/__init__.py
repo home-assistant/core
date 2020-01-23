@@ -111,6 +111,13 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @callback
+def _async_get_refresh_token(hass, config_entry):
+    """Retrieve a refresh token from the config entry."""
+    entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    return entry.data[CONF_TOKEN]
+
+
+@callback
 def _async_save_refresh_token(hass, config_entry, token):
     hass.config_entries.async_update_entry(
         config_entry, data={**config_entry.data, CONF_TOKEN: token}
@@ -307,6 +314,7 @@ class SimpliSafe:
         """Initialize."""
         self._api = api
         self._config_entry = config_entry
+        self._emergency_refresh_token = None
         self._hass = hass
         self.last_event_data = {}
         self.systems = systems
@@ -316,6 +324,25 @@ class SimpliSafe:
         try:
             await system.update()
             latest_event = await system.get_latest_event()
+        except InvalidCredentialsError:
+            # SimpliSafe's cloud is a little shaky. At times, a 500 or 502 will
+            # seemingly harm simplisafe-python's existing access token _and_ refresh
+            # token, thus preventing the integration from recovering. However, the
+            # refresh token stored in the config entry escapes unscathed (again,
+            # apparently); so, if we detect that we're in such a situation, try a last-
+            # ditch effort by re-authenticating with the stored token:
+            if self._emergency_refresh_token:
+                # If we've already tried this, log the error and suggest a HASS restart:
+                _LOGGER.error(
+                    "SimpliSafe authentication disconnected. Please restart HASS."
+                )
+                return
+
+            _LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
+            self._emergency_refresh_token = _async_get_refresh_token(
+                self._hass, self._config_entry
+            )
+            await self._api.refresh_access_token(self._emergency_refresh_token)
         except SimplipyError as err:
             _LOGGER.error(
                 'SimpliSafe error while updating "%s": %s', system.address, err
