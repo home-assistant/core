@@ -158,7 +158,7 @@ class RainMachineSensor(RainMachineEntity):
             async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, update)
         )
         await self.rainmachine.async_register_api_interest(self._api_category)
-        update()
+        await self.async_update()
 
     async def async_update(self):
         """Update the sensor's state."""
