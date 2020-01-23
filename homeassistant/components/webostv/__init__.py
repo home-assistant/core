@@ -68,7 +68,10 @@ SOUND_OUTPUT_SCHEMA = CALL_SCHEMA.extend({vol.Required(ATTR_SOUND_OUTPUT): cv.st
 SERVICE_TO_METHOD = {
     SERVICE_BUTTON: {"method": "async_button", "schema": BUTTON_SCHEMA},
     SERVICE_COMMAND: {"method": "async_command", "schema": COMMAND_SCHEMA},
-    SERVICE_SELECT_SOUND_OUTPUT: {"method": "async_select_sound_output", "schema": SOUND_OUTPUT_SCHEMA},
+    SERVICE_SELECT_SOUND_OUTPUT: {
+        "method": "async_select_sound_output",
+        "schema": SOUND_OUTPUT_SCHEMA
+    },
 }
 
 _LOGGER = logging.getLogger(__name__)
