@@ -10,15 +10,11 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
-    CONF_BINARY_SENSORS,
     CONF_IP_ADDRESS,
-    CONF_MONITORED_CONDITIONS,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
-    CONF_SENSORS,
     CONF_SSL,
-    CONF_SWITCHES,
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
@@ -57,82 +53,6 @@ DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
 DEFAULT_ICON = "mdi:water"
 DEFAULT_ZONE_RUN = 60 * 10
 
-TYPE_FLOW_SENSOR = "flow_sensor"
-TYPE_FLOW_SENSOR_CLICK_M3 = "flow_sensor_clicks_cubic_meter"
-TYPE_FLOW_SENSOR_CONSUMED_LITERS = "flow_sensor_consumed_liters"
-TYPE_FLOW_SENSOR_START_INDEX = "flow_sensor_start_index"
-TYPE_FLOW_SENSOR_WATERING_CLICKS = "flow_sensor_watering_clicks"
-TYPE_FREEZE = "freeze"
-TYPE_FREEZE_PROTECTION = "freeze_protection"
-TYPE_FREEZE_TEMP = "freeze_protect_temp"
-TYPE_HOT_DAYS = "extra_water_on_hot_days"
-TYPE_HOURLY = "hourly"
-TYPE_MONTH = "month"
-TYPE_RAINDELAY = "raindelay"
-TYPE_RAINSENSOR = "rainsensor"
-TYPE_WEEKDAY = "weekday"
-
-BINARY_SENSORS = {
-    TYPE_FLOW_SENSOR: ("Flow Sensor", "mdi:water-pump"),
-    TYPE_FREEZE: ("Freeze Restrictions", "mdi:cancel"),
-    TYPE_FREEZE_PROTECTION: ("Freeze Protection", "mdi:weather-snowy"),
-    TYPE_HOT_DAYS: ("Extra Water on Hot Days", "mdi:thermometer-lines"),
-    TYPE_HOURLY: ("Hourly Restrictions", "mdi:cancel"),
-    TYPE_MONTH: ("Month Restrictions", "mdi:cancel"),
-    TYPE_RAINDELAY: ("Rain Delay Restrictions", "mdi:cancel"),
-    TYPE_RAINSENSOR: ("Rain Sensor Restrictions", "mdi:cancel"),
-    TYPE_WEEKDAY: ("Weekday Restrictions", "mdi:cancel"),
-}
-
-SENSORS = {
-    TYPE_FLOW_SENSOR_CLICK_M3: (
-        "Flow Sensor Clicks",
-        "mdi:water-pump",
-        "clicks/m^3",
-        None,
-    ),
-    TYPE_FLOW_SENSOR_CONSUMED_LITERS: (
-        "Flow Sensor Consumed Liters",
-        "mdi:water-pump",
-        "liter",
-        None,
-    ),
-    TYPE_FLOW_SENSOR_START_INDEX: (
-        "Flow Sensor Start Index",
-        "mdi:water-pump",
-        "index",
-        None,
-    ),
-    TYPE_FLOW_SENSOR_WATERING_CLICKS: (
-        "Flow Sensor Clicks",
-        "mdi:water-pump",
-        "clicks",
-        None,
-    ),
-    TYPE_FREEZE_TEMP: (
-        "Freeze Protect Temperature",
-        "mdi:thermometer",
-        "°C",
-        "temperature",
-    ),
-}
-
-BINARY_SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(BINARY_SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(BINARY_SENSORS)]
-        )
-    }
-)
-
-SENSOR_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)): vol.All(
-            cv.ensure_list, [vol.In(SENSORS)]
-        )
-    }
-)
-
 SERVICE_ALTER_PROGRAM = vol.Schema({vol.Required(CONF_PROGRAM_ID): cv.positive_int})
 
 SERVICE_ALTER_ZONE = vol.Schema({vol.Required(CONF_ZONE_ID): cv.positive_int})
@@ -156,9 +76,6 @@ SERVICE_STOP_PROGRAM_SCHEMA = vol.Schema(
 
 SERVICE_STOP_ZONE_SCHEMA = vol.Schema({vol.Required(CONF_ZONE_ID): cv.positive_int})
 
-SWITCH_SCHEMA = vol.Schema({vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int})
-
-
 CONTROLLER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IP_ADDRESS): cv.string,
@@ -166,12 +83,9 @@ CONTROLLER_SCHEMA = vol.Schema(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
-        vol.Optional(CONF_BINARY_SENSORS, default={}): BINARY_SENSOR_SCHEMA,
-        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-        vol.Optional(CONF_SWITCHES, default={}): SWITCH_SCHEMA,
+        vol.Optional(CONF_ZONE_RUN_TIME): cv.positive_int,
     }
 )
-
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -227,14 +141,7 @@ async def async_setup_entry(hass, config_entry):
             ssl=config_entry.data[CONF_SSL],
         )
         rainmachine = RainMachine(
-            client,
-            config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
-                CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)
-            ),
-            config_entry.data.get(CONF_SENSORS, {}).get(
-                CONF_MONITORED_CONDITIONS, list(SENSORS)
-            ),
-            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
+            client, config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
         )
         await rainmachine.async_update()
     except RainMachineError as err:
@@ -364,54 +271,20 @@ async def async_unload_entry(hass, config_entry):
 class RainMachine:
     """Define a generic RainMachine object."""
 
-    def __init__(
-        self, client, binary_sensor_conditions, sensor_conditions, default_zone_runtime
-    ):
+    def __init__(self, client, default_zone_runtime):
         """Initialize."""
-        self.binary_sensor_conditions = binary_sensor_conditions
         self.client = client
         self.data = {}
         self.default_zone_runtime = default_zone_runtime
         self.device_mac = self.client.mac
-        self.sensor_conditions = sensor_conditions
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-
-        tasks = {}
-
-        if TYPE_FLOW_SENSOR in self.binary_sensor_conditions or any(
-            c in self.sensor_conditions
-            for c in (
-                TYPE_FLOW_SENSOR_CLICK_M3,
-                TYPE_FLOW_SENSOR_CONSUMED_LITERS,
-                TYPE_FLOW_SENSOR_START_INDEX,
-                TYPE_FLOW_SENSOR_WATERING_CLICKS,
-            )
-        ):
-            tasks[PROVISION_SETTINGS] = self.client.provisioning.settings()
-
-        if any(
-            c in self.binary_sensor_conditions
-            for c in (
-                TYPE_FREEZE,
-                TYPE_HOURLY,
-                TYPE_MONTH,
-                TYPE_RAINDELAY,
-                TYPE_RAINSENSOR,
-                TYPE_WEEKDAY,
-            )
-        ):
-            tasks[RESTRICTIONS_CURRENT] = self.client.restrictions.current()
-
-        if (
-            any(
-                c in self.binary_sensor_conditions
-                for c in (TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS)
-            )
-            or TYPE_FREEZE_TEMP in self.sensor_conditions
-        ):
-            tasks[RESTRICTIONS_UNIVERSAL] = self.client.restrictions.universal()
+        tasks = {
+            PROVISION_SETTINGS: self.client.provisioning.settings(),
+            RESTRICTIONS_CURRENT: self.client.restrictions.current(),
+            RESTRICTIONS_UNIVERSAL: self.client.restrictions.universal(),
+        }
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         for operation, result in zip(tasks, results):

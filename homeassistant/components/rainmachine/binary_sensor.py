@@ -6,26 +6,38 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import (
-    BINARY_SENSORS,
     DATA_CLIENT,
     DOMAIN as RAINMACHINE_DOMAIN,
     PROVISION_SETTINGS,
     RESTRICTIONS_CURRENT,
     RESTRICTIONS_UNIVERSAL,
     SENSOR_UPDATE_TOPIC,
-    TYPE_FLOW_SENSOR,
-    TYPE_FREEZE,
-    TYPE_FREEZE_PROTECTION,
-    TYPE_HOT_DAYS,
-    TYPE_HOURLY,
-    TYPE_MONTH,
-    TYPE_RAINDELAY,
-    TYPE_RAINSENSOR,
-    TYPE_WEEKDAY,
     RainMachineEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+TYPE_FLOW_SENSOR = "flow_sensor"
+TYPE_FREEZE = "freeze"
+TYPE_FREEZE_PROTECTION = "freeze_protection"
+TYPE_HOT_DAYS = "extra_water_on_hot_days"
+TYPE_HOURLY = "hourly"
+TYPE_MONTH = "month"
+TYPE_RAINDELAY = "raindelay"
+TYPE_RAINSENSOR = "rainsensor"
+TYPE_WEEKDAY = "weekday"
+
+BINARY_SENSORS = {
+    TYPE_FLOW_SENSOR: ("Flow Sensor", "mdi:water-pump", True),
+    TYPE_FREEZE: ("Freeze Restrictions", "mdi:cancel", True),
+    TYPE_FREEZE_PROTECTION: ("Freeze Protection", "mdi:weather-snowy", True),
+    TYPE_HOT_DAYS: ("Extra Water on Hot Days", "mdi:thermometer-lines", True),
+    TYPE_HOURLY: ("Hourly Restrictions", "mdi:cancel", False),
+    TYPE_MONTH: ("Month Restrictions", "mdi:cancel", False),
+    TYPE_RAINDELAY: ("Rain Delay Restrictions", "mdi:cancel", False),
+    TYPE_RAINSENSOR: ("Rain Sensor Restrictions", "mdi:cancel", False),
+    TYPE_WEEKDAY: ("Weekday Restrictions", "mdi:cancel", False),
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -33,10 +45,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
     rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     binary_sensors = []
-    for sensor_type in rainmachine.binary_sensor_conditions:
-        name, icon = BINARY_SENSORS[sensor_type]
+    for sensor_type, (name, icon, enabled_by_default) in BINARY_SENSORS.items():
         binary_sensors.append(
-            RainMachineBinarySensor(rainmachine, sensor_type, name, icon)
+            RainMachineBinarySensor(
+                rainmachine, sensor_type, name, icon, enabled_by_default
+            )
         )
 
     async_add_entities(binary_sensors, True)
@@ -45,14 +58,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
     """A sensor implementation for raincloud device."""
 
-    def __init__(self, rainmachine, sensor_type, name, icon):
+    def __init__(self, rainmachine, sensor_type, name, icon, enabled_by_default):
         """Initialize the sensor."""
         super().__init__(rainmachine)
 
+        self._enabled_by_default = enabled_by_default
         self._icon = icon
         self._name = name
         self._sensor_type = sensor_type
         self._state = None
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Determine whether an entity is enabled by default."""
+        return self._enabled_by_default
 
     @property
     def icon(self) -> str:
