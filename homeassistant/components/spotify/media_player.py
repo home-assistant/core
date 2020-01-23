@@ -5,7 +5,8 @@ from datetime import timedelta
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
-from spotipy import Spotify
+from aiohttp import ClientError
+from spotipy import Spotify, SpotifyException
 import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice
@@ -83,6 +84,24 @@ async def async_setup_entry(
     async_add_entities([spotify], True)
 
 
+def spotify_exception_handler(func):
+    """Decorate Spotify calls to handle Spotify exception.
+
+    A decorator that wraps the passed in function, catches Spotify errors,
+    aiohttp exceptions and handles the availability of the media player.
+    """
+
+    def wrapper(self, *args, **kwargs):
+        try:
+            result = func(self, *args, **kwargs)
+            self.player_available = True
+            return result
+        except (SpotifyException, ClientError):
+            self.player_available = False
+
+    return wrapper
+
+
 class SpotifyMediaPlayer(MediaPlayerDevice):
     """Representation of a Spotify controller."""
 
@@ -99,6 +118,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._playlist: Optional[dict] = None
         self._spotify: Spotify = None
 
+        self.player_available = False
+
     @property
     def name(self) -> str:
         """Return the name."""
@@ -108,6 +129,11 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def icon(self) -> str:
         """Return the icon."""
         return ICON
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.player_available
 
     @property
     def unique_id(self) -> str:
@@ -244,30 +270,37 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             return 0
         return SUPPORT_SPOTIFY
 
+    @spotify_exception_handler
     def set_volume_level(self, volume: int) -> None:
         """Set the volume level."""
         self._spotify.volume(int(volume * 100))
 
+    @spotify_exception_handler
     def media_play(self) -> None:
         """Start or resume playback."""
         self._spotify.start_playback()
 
+    @spotify_exception_handler
     def media_pause(self) -> None:
         """Pause playback."""
         self._spotify.pause_playback()
 
+    @spotify_exception_handler
     def media_previous_track(self) -> None:
         """Skip to previous track."""
         self._spotify.previous_track()
 
+    @spotify_exception_handler
     def media_next_track(self) -> None:
         """Skip to next track."""
         self._spotify.next_track()
 
+    @spotify_exception_handler
     def media_seek(self, position):
         """Send seek command."""
         self._spotify.seek_track(int(position * 1000))
 
+    @spotify_exception_handler
     def play_media(self, media_type: str, media_id: str, **kwargs) -> None:
         """Play media."""
         kwargs = {}
@@ -286,6 +319,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
         self._spotify.start_playback(**kwargs)
 
+    @spotify_exception_handler
     def select_source(self, source: str) -> None:
         """Select playback device."""
         for device in self._devices:
@@ -295,10 +329,12 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                 )
                 return
 
+    @spotify_exception_handler
     def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         self._spotify.shuffle(shuffle)
 
+    @spotify_exception_handler
     def update(self) -> None:
         """Update state and attributes."""
         if not self.enabled:
