@@ -1,7 +1,7 @@
 """The sms component."""
 import logging
 
-import gammu
+import gammu  # pylint: disable=import-error, no-member
 import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICE
