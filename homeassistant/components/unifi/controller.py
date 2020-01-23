@@ -144,9 +144,8 @@ class UniFiController:
             self.available = data
             async_dispatcher_send(self.hass, self.signal_reachable)
 
-        elif signal == "event":
-            # async_dispatcher_send(self.hass, self.signal_update)
-            pass
+        elif signal == "new_data" and data:
+            async_dispatcher_send(self.hass, self.signal_update)
 
     @property
     def signal_reachable(self) -> str:
@@ -231,7 +230,9 @@ class UniFiController:
 
         try:
             self.api = await get_controller(
-                self.hass, **self.config_entry.data[CONF_CONTROLLER]
+                self.hass,
+                **self.config_entry.data[CONF_CONTROLLER],
+                async_callback=self.async_unifi_signalling_callback,
             )
             await self.api.initialize()
 
@@ -349,7 +350,9 @@ class UniFiController:
         return True
 
 
-async def get_controller(hass, host, username, password, port, site, verify_ssl):
+async def get_controller(
+    hass, host, username, password, port, site, verify_ssl, async_callback
+):
     """Create a controller object and verify authentication."""
     sslcontext = None
 
@@ -370,6 +373,7 @@ async def get_controller(hass, host, username, password, port, site, verify_ssl)
         site=site,
         websession=session,
         sslcontext=sslcontext,
+        callback=async_callback,
     )
 
     try:
