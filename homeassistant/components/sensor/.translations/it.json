@@ -8,7 +8,7 @@
             "is_pressure": "Pressione attuale di {entity_name}",
             "is_signal_strength": "Potenza del segnale attuale di {entity_name}",
             "is_temperature": "Temperatura attuale di {entity_name}",
-            "is_timestamp": "Data e ora attuali di {nome_entit\u00e0}",
+            "is_timestamp": "Data e ora attuali di {entity_name}",
             "is_value": "Valore attuale di {entity_name}"
         },
         "trigger_type": {
