@@ -5,6 +5,7 @@ import sys
 from . import (
     codeowners,
     config_flow,
+    coverage,
     dependencies,
     json,
     manifest,
@@ -18,6 +19,7 @@ PLUGINS = [
     json,
     codeowners,
     config_flow,
+    coverage,
     dependencies,
     manifest,
     services,
@@ -48,7 +50,11 @@ def main():
     integrations = Integration.load_dir(pathlib.Path("homeassistant/components"))
 
     for plugin in PLUGINS:
-        plugin.validate(integrations, config)
+        try:
+            plugin.validate(integrations, config)
+        except RuntimeError as err:
+            print(err)
+            return 1
 
     # When we generate, all errors that are fixable will be ignored,
     # as generating them will be fixed.

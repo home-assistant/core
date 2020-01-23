@@ -306,7 +306,6 @@ omit =
     homeassistant/components/homematic/notify.py
     homeassistant/components/homeworks/*
     homeassistant/components/honeywell/climate.py
-    homeassistant/components/hook/switch.py
     homeassistant/components/horizon/media_player.py
     homeassistant/components/hp_ilo/sensor.py
     homeassistant/components/htu21d/sensor.py
@@ -752,7 +751,6 @@ omit =
     homeassistant/components/twitch/sensor.py
     homeassistant/components/twitter/notify.py
     homeassistant/components/ubee/device_tracker.py
-    homeassistant/components/uber/sensor.py
     homeassistant/components/ubus/device_tracker.py
     homeassistant/components/ue_smart_radio/media_player.py
     homeassistant/components/unifiled/*
