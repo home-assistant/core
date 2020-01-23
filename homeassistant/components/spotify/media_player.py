@@ -311,8 +311,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._currently_playing = current or {}
 
         self._playlist = None
-        if current.get("context", {}).get("type") == MEDIA_TYPE_PLAYLIST:
+        context = self._currently_playing.get("context")
+        if context is not None and context["type"] == MEDIA_TYPE_PLAYLIST:
             self._playlist = self._spotify.playlist(current["context"]["uri"])
 
-        devices = self._spotify.devices()
-        self._devices = devices["devices"] if devices is not None else []
+        devices = self._spotify.devices() or {}
+        self._devices = devices.get("devices", [])
