@@ -3,7 +3,7 @@ from ziggonext import ZiggoNext
 
 from homeassistant.helpers.entity import Entity
 
-from .const import ZIGGO_API
+from .const import DOMAIN, ZIGGO_API
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
@@ -43,6 +43,19 @@ class ZiggoSensor(Entity):
         This is the only method that should fetch new data for Home Assistant.
         """
         self._box = self._api.settopBoxes[self._box_id]
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self._box_id + "_channel")
+            },
+            "name": self._box.name + " channel",
+            "manufacturer": "-",
+            "model": "-",
+        }
 
     @property
     def unique_id(self):

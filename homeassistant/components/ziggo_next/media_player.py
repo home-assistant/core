@@ -42,17 +42,15 @@ class ZiggoNextMediaPlayer(MediaPlayerDevice):
 
     @property
     def device_info(self):
-        """Retusns device info."""
+        """Return device info."""
         return {
             "identifiers": {
                 # Serial numbers are unique identifiers within a specific domain
                 (DOMAIN, self.box_id)
             },
             "name": self.box_name,
-            # "manufacturer": self.light.manufacturername,
-            # "model": self.light.productname,
-            # "sw_version": self.light.swversion,
-            # "via_device": (hue.DOMAIN, self.api.bridgeid),
+            "manufacturer": "Ziggo",
+            "model": "Mediabox Next",
         }
 
     def __init__(self, box_id: str, name: str, api: ZiggoNext):
