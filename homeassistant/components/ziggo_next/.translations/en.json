@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect, please try again",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "username": "E-mailaddress",
+                    "password": "Password",
+                    "country_code": "Country code"
+                },
+                "title": "Your Ziggo credentials"
+            }
+        },
+        "title": "Ziggo Next"
+    }
+}

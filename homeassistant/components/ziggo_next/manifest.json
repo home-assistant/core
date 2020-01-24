@@ -1,0 +1,16 @@
+{
+  "domain": "ziggo_next",
+  "name": "Ziggo Next",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/ziggo_next",
+  "requirements": [
+    "ziggonext==0.5.9"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@Sholofly"
+  ]
+}

@@ -99,5 +99,10 @@ FLOWS = [
     "wled",
     "wwlln",
     "zha",
+<<<<<<< HEAD
+=======
+    "ziggo_next",
+    "zone",
+>>>>>>> Setup Ziggo acount using the config entry
     "zwave"
 ]
