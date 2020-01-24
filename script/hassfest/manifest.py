@@ -29,6 +29,8 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Required("dependencies"): [str],
         vol.Optional("after_dependencies"): [str],
         vol.Required("codeowners"): [str],
+        vol.Optional("logo"): str,
+        vol.Optional("icon"): str,
     }
 )
 
