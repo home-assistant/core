@@ -7,11 +7,9 @@ from typing import Any, Callable, Dict, List, Optional
 
 from aiohttp import ClientError
 from spotipy import Spotify, SpotifyException
-import voluptuous as vol
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_PLAYLIST,
     SUPPORT_NEXT_TRACK,
@@ -33,23 +31,12 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util.dt import utc_from_timestamp
 
 from .const import DATA_SPOTIFY_CLIENT, DATA_SPOTIFY_ME, DATA_SPOTIFY_SESSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_PLAY_PLAYLIST = "play_playlist"
-ATTR_RANDOM_SONG = "random_song"
-
-PLAY_PLAYLIST_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
-        vol.Optional(ATTR_RANDOM_SONG, default=False): cv.boolean,
-    }
-)
 
 ICON = "mdi:spotify"
 
