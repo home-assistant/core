@@ -202,3 +202,41 @@ def test_discover_probe_single_cluster():
     assert ep_channels.async_new_entity.call_args[0][0] == zha_const.SWITCH
     assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity
     assert ep_channels.async_new_entity.call_args[0][3] == mock.sentinel.claimed
+
+
+@pytest.mark.parametrize("device_info", DEVICES)
+async def test_discover_endpoint(device_info, channels_mock, hass):
+    """Test device discovery."""
+
+    with mock.patch(
+        "homeassistant.components.zha.core.channels.Channels.async_new_entity"
+    ) as new_ent:
+        channels = channels_mock(
+            device_info["endpoints"],
+            manufacturer=device_info["manufacturer"],
+            model=device_info["model"],
+            node_desc=device_info["node_descriptor"],
+        )
+
+    assert device_info["event_channels"] == sorted(
+        [
+            ch.id
+            for ep in channels.endpoints.values()
+            for ch in ep.relay_channels.values()
+        ]
+    )
+    assert new_ent.call_count == len(
+        [
+            device_info
+            for device_info in device_info["entity_map"].values()
+            if not device_info.get("default_match", False)
+        ]
+    )
+
+    for call_args in new_ent.call_args_list:
+        comp, ent_cls, unique_id, channels = call_args[0]
+        map_id = (comp, unique_id)
+        assert map_id in device_info["entity_map"]
+        entity_info = device_info["entity_map"][map_id]
+        assert set([ch.name for ch in channels]) == set(entity_info["channels"])
+        assert ent_cls.__name__ == entity_info["entity_class"]

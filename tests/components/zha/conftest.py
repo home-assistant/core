@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+import asyncio
 from unittest import mock
 
 import asynctest
