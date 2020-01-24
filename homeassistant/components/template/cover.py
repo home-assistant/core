@@ -134,7 +134,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         }
 
         initialise_templates(hass, templates)
-        entity_ids = extract_entities(device, "cover", None, templates)
+        entity_ids = extract_entities(
+            device, "cover", device_config.get(CONF_ENTITY_ID), templates
+        )
 
         covers.append(
             CoverTemplate(
