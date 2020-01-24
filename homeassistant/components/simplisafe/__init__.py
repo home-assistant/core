@@ -111,13 +111,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 @callback
-def _async_get_refresh_token(hass, config_entry):
-    """Retrieve a refresh token from the config entry."""
-    entry = hass.config_entries.async_get_entry(config_entry.entry_id)
-    return entry.data[CONF_TOKEN]
-
-
-@callback
 def _async_save_refresh_token(hass, config_entry, token):
     hass.config_entries.async_update_entry(
         config_entry, data={**config_entry.data, CONF_TOKEN: token}
@@ -314,7 +307,7 @@ class SimpliSafe:
         """Initialize."""
         self._api = api
         self._config_entry = config_entry
-        self._emergency_refresh_token = None
+        self._emergency_refresh_token_used = False
         self._hass = hass
         self.last_event_data = {}
         self.systems = systems
@@ -331,7 +324,7 @@ class SimpliSafe:
             # refresh token stored in the config entry escapes unscathed (again,
             # apparently); so, if we detect that we're in such a situation, try a last-
             # ditch effort by re-authenticating with the stored token:
-            if self._emergency_refresh_token:
+            if self._emergency_refresh_token_used:
                 # If we've already tried this, log the error, suggest a HASS restart,
                 # and stop the time tracker:
                 _LOGGER.error(
@@ -344,10 +337,8 @@ class SimpliSafe:
                 return
 
             _LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
-            self._emergency_refresh_token = _async_get_refresh_token(
-                self._hass, self._config_entry
-            )
-            await self._api.refresh_access_token(self._emergency_refresh_token)
+            self._emergency_refresh_token_used = True
+            await self._api.refresh_access_token(self._config_entry.data[CONF_TOKEN])
         except SimplipyError as err:
             _LOGGER.error(
                 'SimpliSafe error while updating "%s": %s', system.address, err
@@ -361,8 +352,8 @@ class SimpliSafe:
 
         # If we've reached this point using an emergency refresh token, we're in the
         # clear and we can discard it:
-        if self._emergency_refresh_token:
-            self._emergency_refresh_token = None
+        if self._emergency_refresh_token_used:
+            self._emergency_refresh_token_used = False
 
     async def async_update(self):
         """Get updated data from SimpliSafe."""
