@@ -23,7 +23,9 @@ MANIFEST_SCHEMA = vol.Schema(
             vol.All([vol.All(vol.Schema({}, extra=vol.ALLOW_EXTRA), vol.Length(min=1))])
         ),
         vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
-        vol.Required("documentation"): str,
+        vol.Required(
+            "documentation"
+        ): vol.Url(),  # pylint: disable=no-value-for-parameter
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Required("requirements"): [str],
         vol.Required("dependencies"): [str],
