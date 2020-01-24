@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.gdacs import (
+    CONF_CATEGORIES,
     DOMAIN,
     FEED,
     async_setup_entry,
@@ -34,6 +35,7 @@ def config_entry():
             CONF_RADIUS: 25,
             CONF_UNIT_SYSTEM: "metric",
             CONF_SCAN_INTERVAL: 300.0,
+            CONF_CATEGORIES: [],
         },
         title="-41.2, 174.7",
     )
@@ -70,6 +72,7 @@ async def test_step_import(hass):
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: "metric",
         CONF_SCAN_INTERVAL: timedelta(minutes=4),
+        CONF_CATEGORIES: ["Drought", "Earthquake"],
     }
 
     flow = config_flow.GdacsFlowHandler()
@@ -84,6 +87,7 @@ async def test_step_import(hass):
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: "metric",
         CONF_SCAN_INTERVAL: 240.0,
+        CONF_CATEGORIES: ["Drought", "Earthquake"],
     }
 
 
@@ -105,6 +109,7 @@ async def test_step_user(hass):
         CONF_RADIUS: 25,
         CONF_UNIT_SYSTEM: "metric",
         CONF_SCAN_INTERVAL: 300.0,
+        CONF_CATEGORIES: [],
     }
 
 
