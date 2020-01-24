@@ -1,6 +1,7 @@
 """Support for SMS notification services."""
 import logging
 
+import gammu  # pylint: disable=import-error, no-member
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
@@ -40,4 +41,7 @@ class SMSNotificationService(BaseNotificationService):
             "SMSC": {"Location": 1},
             "Number": self.number,
         }
-        self.gateway.SendSMS(gammu_message)
+        try:
+            self.gateway.SendSMS(gammu_message)
+        except gammu.GSMError as exc:  # pylint: disable=no-member
+            _LOGGER.error("Sending to {0} failed: {1}".format(self.number, exc))
