@@ -1,4 +1,5 @@
 """This component provides support for RainMachine programs and zones."""
+import asyncio
 from datetime import datetime
 import logging
 
@@ -99,17 +100,27 @@ async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine switches based on a config entry."""
     rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
+    tasks = {
+        "programs": rainmachine.client.programs.all(include_inactive=True),
+        "zones": rainmachine.client.zones.all(include_inactive=True),
+    }
+
     entities = []
+    results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+    for kind, result in zip(tasks, results):
+        if isinstance(result, RequestError):
+            _LOGGER.error("There was an error while retrieving %s: %s", kind, result)
+            continue
 
-    programs = await rainmachine.client.programs.all(include_inactive=True)
-    for program in programs:
-        entities.append(RainMachineProgram(rainmachine, program))
-
-    zones = await rainmachine.client.zones.all(include_inactive=True)
-    for zone in zones:
-        entities.append(
-            RainMachineZone(rainmachine, zone, rainmachine.default_zone_runtime)
-        )
+        for entity in result:
+            if kind == "programs":
+                entities.append(RainMachineProgram(rainmachine, entity))
+            else:
+                entities.append(
+                    RainMachineZone(
+                        rainmachine, entity, rainmachine.default_zone_runtime
+                    )
+                )
 
     async_add_entities(entities, True)
 
