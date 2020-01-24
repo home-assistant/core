@@ -36,6 +36,12 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the weblink component."""
+    _LOGGER.warning(
+        "The weblink integration has been deprecated and is pending for removal "
+        "in Home Assistant 0.107.0. Please use this instead: "
+        "https://www.home-assistant.io/lovelace/entities/#weblink"
+    )
+
     links = config.get(DOMAIN)
 
     for link in links.get(CONF_ENTITIES):

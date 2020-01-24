@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Dir k\u00ebnnt n\u00ebmmen een eenzegen Netatmo Kont konfigur\u00e9ieren.",
+            "authorize_url_timeout": "Z\u00e4it Iwwerschreidung beim gener\u00e9ieren vun der Autorisatiouns URL.",
+            "missing_configuration": "Netatmo Komponent ass nach net konfigur\u00e9iert. Follegt w.e.g der Dokumentatioun."
+        },
+        "create_entry": {
+            "default": "Erfollegr\u00e4ich mat Netatmo authentifiz\u00e9iert."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Wielt Authentifikatiouns Method aus"
+            }
+        },
+        "title": "Netatmo"
+    }
+}

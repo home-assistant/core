@@ -45,7 +45,7 @@ def exactly_two_period_keys(conf):
     """Ensure exactly 2 of CONF_PERIOD_KEYS are provided."""
     if sum(param in conf for param in CONF_PERIOD_KEYS) != 2:
         raise vol.Invalid(
-            "You must provide exactly 2 of the following:" " start, end, duration"
+            "You must provide exactly 2 of the following: start, end, duration"
         )
     return conf
 
@@ -262,7 +262,7 @@ class HistoryStatsSensor(Entity):
                     )
                 except ValueError:
                     _LOGGER.error(
-                        "Parsing error: start must be a datetime" "or a timestamp"
+                        "Parsing error: start must be a datetime or a timestamp"
                     )
                     return
 
@@ -281,7 +281,7 @@ class HistoryStatsSensor(Entity):
                     )
                 except ValueError:
                     _LOGGER.error(
-                        "Parsing error: end must be a datetime " "or a timestamp"
+                        "Parsing error: end must be a datetime or a timestamp"
                     )
                     return
 

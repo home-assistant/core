@@ -19,6 +19,7 @@ CONF_ENTITY_CONFIG = "entity_config"
 CONF_ENDPOINT = "endpoint"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
+CONF_LOCALE = "locale"
 
 ATTR_UID = "uid"
 ATTR_UPDATE_DATE = "updateDate"
@@ -42,6 +43,20 @@ API_CHANGE = "change"
 
 CONF_DESCRIPTION = "description"
 CONF_DISPLAY_CATEGORIES = "display_categories"
+CONF_SUPPORTED_LOCALES = (
+    "de-DE",
+    "en-AU",
+    "en-CA",
+    "en-GB",
+    "en-IN",
+    "en-US",
+    "es-ES",
+    "es-MX",
+    "fr-CA",
+    "fr-FR",
+    "it-IT",
+    "ja-JP",
+)
 
 API_TEMP_UNITS = {TEMP_FAHRENHEIT: "FAHRENHEIT", TEMP_CELSIUS: "CELSIUS"}
 
@@ -67,20 +82,6 @@ PERCENTAGE_FAN_MAP = {
     fan.SPEED_LOW: 33,
     fan.SPEED_MEDIUM: 66,
     fan.SPEED_HIGH: 100,
-}
-
-RANGE_FAN_MAP = {
-    fan.SPEED_OFF: 0,
-    fan.SPEED_LOW: 1,
-    fan.SPEED_MEDIUM: 2,
-    fan.SPEED_HIGH: 3,
-}
-
-SPEED_FAN_MAP = {
-    0: fan.SPEED_OFF,
-    1: fan.SPEED_LOW,
-    2: fan.SPEED_MEDIUM,
-    3: fan.SPEED_HIGH,
 }
 
 

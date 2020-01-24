@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components import ssdp
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 
 from .bridge import authenticate_bridge
@@ -17,7 +18,7 @@ from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
 from .errors import AuthenticationRequired, CannotConnect
 
 HUE_MANUFACTURERURL = "http://www.philips.com"
-HUE_IGNORED_BRIDGE_NAMES = ["HASS Bridge", "Espalexa"]
+HUE_IGNORED_BRIDGE_NAMES = ["Home Assistant Bridge", "Espalexa"]
 
 
 class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -148,7 +149,7 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host is already configured and delegate to the import step if not.
         """
         # Filter out non-Hue bridges #1
-        if discovery_info[ssdp.ATTR_UPNP_MANUFACTURER_URL] != HUE_MANUFACTURERURL:
+        if discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL) != HUE_MANUFACTURERURL:
             return self.async_abort(reason="not_hue_bridge")
 
         # Filter out non-Hue bridges #2
@@ -169,7 +170,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         bridge = self._async_get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
 
         await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: bridge.host})
+
         self.bridge = bridge
         return await self.async_step_link()
 
@@ -180,7 +182,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: bridge.host})
+
         self.bridge = bridge
         return await self.async_step_link()
 

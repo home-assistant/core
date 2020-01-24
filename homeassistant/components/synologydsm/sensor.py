@@ -231,6 +231,9 @@ class SynoNasUtilSensor(SynoNasSensor):
         if self.var_id in network_sensors or self.var_id in memory_sensors:
             attr = getattr(self._api.utilisation, self.var_id)(False)
 
+            if attr is None:
+                return None
+
             if self.var_id in network_sensors:
                 return round(attr / 1024.0, 1)
             if self.var_id in memory_sensors:

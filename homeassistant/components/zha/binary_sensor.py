@@ -28,7 +28,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
     ZHA_DISCOVERY_NEW,
 )
-from .core.registries import ZHA_ENTITIES, MatchRule
+from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,11 +44,6 @@ CLASS_MAPPING = {
 }
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation binary sensors."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -85,7 +80,8 @@ async def _async_setup_entities(
         if entity:
             entities.append(entity(**discovery_info))
 
-    async_add_entities(entities, update_before_add=True)
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
 
 class BinarySensor(ZhaEntity, BinarySensorDevice):
@@ -141,28 +137,28 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         self._state = await self._channel.get_attribute_value(attribute)
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ACCELEROMETER}))
+@STRICT_MATCH(channel_names=CHANNEL_ACCELEROMETER)
 class Accelerometer(BinarySensor):
     """ZHA BinarySensor."""
 
     DEVICE_CLASS = DEVICE_CLASS_MOVING
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_OCCUPANCY}))
+@STRICT_MATCH(channel_names=CHANNEL_OCCUPANCY)
 class Occupancy(BinarySensor):
     """ZHA BinarySensor."""
 
     DEVICE_CLASS = DEVICE_CLASS_OCCUPANCY
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ON_OFF}))
+@STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
 class Opening(BinarySensor):
     """ZHA BinarySensor."""
 
     DEVICE_CLASS = DEVICE_CLASS_OPENING
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ZONE}))
+@STRICT_MATCH(channel_names=CHANNEL_ZONE)
 class IASZone(BinarySensor):
     """ZHA IAS BinarySensor."""
 

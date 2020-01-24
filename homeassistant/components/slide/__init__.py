@@ -60,8 +60,7 @@ async def async_setup(hass, config):
         for slide in result:
             if "device_id" not in slide:
                 _LOGGER.error(
-                    "Found invalid Slide entry, device_id is " "missing. Entry=%s",
-                    slide,
+                    "Found invalid Slide entry, device_id is missing. Entry=%s", slide,
                 )
                 continue
 
@@ -104,7 +103,7 @@ async def async_setup(hass, config):
                     )
             elif "code" in slide["device_info"]:
                 _LOGGER.warning(
-                    "Slide %s (%s) is offline with " "code=%s",
+                    "Slide %s (%s) is offline with code=%s",
                     slide["id"],
                     slidenew["mac"],
                     slide["device_info"]["code"],

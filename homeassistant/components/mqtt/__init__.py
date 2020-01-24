@@ -136,10 +136,10 @@ def valid_topic(value: Any) -> str:
         raise vol.Invalid("MQTT topic name/filter must not be empty.")
     if len(raw_value) > 65535:
         raise vol.Invalid(
-            "MQTT topic name/filter must not be longer than " "65535 encoded bytes."
+            "MQTT topic name/filter must not be longer than 65535 encoded bytes."
         )
     if "\0" in value:
-        raise vol.Invalid("MQTT topic name/filter must not contain null " "character.")
+        raise vol.Invalid("MQTT topic name/filter must not contain null character.")
     return value
 
 
@@ -151,7 +151,7 @@ def valid_subscribe_topic(value: Any) -> str:
             i < len(value) - 1 and value[i + 1] != "/"
         ):
             raise vol.Invalid(
-                "Single-level wildcard must occupy an entire " "level of the filter"
+                "Single-level wildcard must occupy an entire level of the filter"
             )
 
     index = value.find("#")
@@ -164,7 +164,7 @@ def valid_subscribe_topic(value: Any) -> str:
             )
         if len(value) > 1 and value[index - 1] != "/":
             raise vol.Invalid(
-                "Multi-level wildcard must be after a topic " "level separator."
+                "Multi-level wildcard must be after a topic level separator."
             )
 
     return value

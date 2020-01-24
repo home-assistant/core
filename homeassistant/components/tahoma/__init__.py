@@ -34,8 +34,11 @@ CONFIG_SCHEMA = vol.Schema(
 TAHOMA_COMPONENTS = ["scene", "sensor", "cover", "switch", "binary_sensor"]
 
 TAHOMA_TYPES = {
+    "io:AwningValanceIOComponent": "cover",
     "io:ExteriorVenetianBlindIOComponent": "cover",
+    "io:DiscreteGarageOpenerIOComponent": "cover",
     "io:HorizontalAwningIOComponent": "cover",
+    "io:GarageOpenerIOComponent": "cover",
     "io:LightIOSystemSensor": "sensor",
     "io:OnOffIOComponent": "switch",
     "io:OnOffLightIOComponent": "switch",
@@ -45,11 +48,10 @@ TAHOMA_TYPES = {
     "io:RollerShutterWithLowSpeedManagementIOComponent": "cover",
     "io:SomfyBasicContactIOSystemSensor": "sensor",
     "io:SomfyContactIOSystemSensor": "sensor",
+    "io:TemperatureIOSystemSensor": "sensor",
     "io:VerticalExteriorAwningIOComponent": "cover",
     "io:VerticalInteriorBlindVeluxIOComponent": "cover",
     "io:WindowOpenerVeluxIOComponent": "cover",
-    "io:GarageOpenerIOComponent": "cover",
-    "io:DiscreteGarageOpenerIOComponent": "cover",
     "rtds:RTDSContactSensor": "sensor",
     "rtds:RTDSMotionSensor": "sensor",
     "rtds:RTDSSmokeSensor": "smoke",
@@ -59,6 +61,7 @@ TAHOMA_TYPES = {
     "rts:ExteriorVenetianBlindRTSComponent": "cover",
     "rts:GarageDoor4TRTSComponent": "switch",
     "rts:RollerShutterRTSComponent": "cover",
+    "rts:OnOffRTSComponent": "switch",
     "rts:VenetianBlindRTSComponent": "cover",
 }
 

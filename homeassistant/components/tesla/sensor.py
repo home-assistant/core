@@ -8,15 +8,11 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.util.distance import convert
 
 from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Tesla sensor platform."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -24,10 +20,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     controller = hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"]
     entities = []
     for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["sensor"]:
-        if device.bin_type == 0x4:
+        if device.type == "temperature sensor":
             entities.append(TeslaSensor(device, controller, config_entry, "inside"))
             entities.append(TeslaSensor(device, controller, config_entry, "outside"))
-        elif device.bin_type in [0xA, 0xB, 0x5]:
+        else:
             entities.append(TeslaSensor(device, controller, config_entry))
     async_add_entities(entities, True)
 
@@ -38,7 +34,7 @@ class TeslaSensor(TeslaDevice, Entity):
     def __init__(self, tesla_device, controller, config_entry, sensor_type=None):
         """Initialize of the sensor."""
         self.current_value = None
-        self._unit = None
+        self.units = None
         self.last_changed_time = None
         self.type = sensor_type
         super().__init__(tesla_device, controller, config_entry)
@@ -61,7 +57,7 @@ class TeslaSensor(TeslaDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return self._unit
+        return self.units
 
     async def async_update(self):
         """Update the state from the sensor."""
@@ -69,32 +65,34 @@ class TeslaSensor(TeslaDevice, Entity):
         await super().async_update()
         units = self.tesla_device.measurement
 
-        if self.tesla_device.bin_type == 0x4:
+        if self.tesla_device.type == "temperature sensor":
             if self.type == "outside":
                 self.current_value = self.tesla_device.get_outside_temp()
             else:
                 self.current_value = self.tesla_device.get_inside_temp()
             if units == "F":
-                self._unit = TEMP_FAHRENHEIT
+                self.units = TEMP_FAHRENHEIT
             else:
-                self._unit = TEMP_CELSIUS
-        elif self.tesla_device.bin_type == 0xA or self.tesla_device.bin_type == 0xB:
+                self.units = TEMP_CELSIUS
+        elif self.tesla_device.type in ["range sensor", "mileage sensor"]:
             self.current_value = self.tesla_device.get_value()
-            tesla_dist_unit = self.tesla_device.measurement
-            if tesla_dist_unit == "LENGTH_MILES":
-                self._unit = LENGTH_MILES
+            if units == "LENGTH_MILES":
+                self.units = LENGTH_MILES
             else:
-                self._unit = LENGTH_KILOMETERS
-                self.current_value /= 0.621371
-                self.current_value = round(self.current_value, 2)
+                self.units = LENGTH_KILOMETERS
+                self.current_value = round(
+                    convert(self.current_value, LENGTH_MILES, LENGTH_KILOMETERS), 2
+                )
+        elif self.tesla_device.type == "charging rate sensor":
+            self.current_value = self.tesla_device.charging_rate
+            self.units = units
+            self._attributes = {
+                "time_left": self.tesla_device.time_left,
+                "added_range": self.tesla_device.added_range,
+                "charge_current_request": self.tesla_device.charge_current_request,
+                "charger_actual_current": self.tesla_device.charger_actual_current,
+                "charger_voltage": self.tesla_device.charger_voltage,
+            }
         else:
             self.current_value = self.tesla_device.get_value()
-            if self.tesla_device.bin_type == 0x5:
-                self._unit = units
-            elif self.tesla_device.bin_type in (0xA, 0xB):
-                if units == "LENGTH_MILES":
-                    self._unit = LENGTH_MILES
-                else:
-                    self._unit = LENGTH_KILOMETERS
-                    self.current_value /= 0.621371
-                    self.current_value = round(self.current_value, 2)
+            self.units = units

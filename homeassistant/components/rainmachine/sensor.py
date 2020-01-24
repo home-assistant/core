@@ -10,21 +10,54 @@ from . import (
     PROVISION_SETTINGS,
     RESTRICTIONS_UNIVERSAL,
     SENSOR_UPDATE_TOPIC,
-    SENSORS,
-    TYPE_FLOW_SENSOR_CLICK_M3,
-    TYPE_FLOW_SENSOR_CONSUMED_LITERS,
-    TYPE_FLOW_SENSOR_START_INDEX,
-    TYPE_FLOW_SENSOR_WATERING_CLICKS,
-    TYPE_FREEZE_TEMP,
     RainMachineEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
+TYPE_FLOW_SENSOR_CLICK_M3 = "flow_sensor_clicks_cubic_meter"
+TYPE_FLOW_SENSOR_CONSUMED_LITERS = "flow_sensor_consumed_liters"
+TYPE_FLOW_SENSOR_START_INDEX = "flow_sensor_start_index"
+TYPE_FLOW_SENSOR_WATERING_CLICKS = "flow_sensor_watering_clicks"
+TYPE_FREEZE_TEMP = "freeze_protect_temp"
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up RainMachine sensors based on the old way."""
-    pass
+SENSORS = {
+    TYPE_FLOW_SENSOR_CLICK_M3: (
+        "Flow Sensor Clicks",
+        "mdi:water-pump",
+        "clicks/m^3",
+        None,
+        False,
+    ),
+    TYPE_FLOW_SENSOR_CONSUMED_LITERS: (
+        "Flow Sensor Consumed Liters",
+        "mdi:water-pump",
+        "liter",
+        None,
+        False,
+    ),
+    TYPE_FLOW_SENSOR_START_INDEX: (
+        "Flow Sensor Start Index",
+        "mdi:water-pump",
+        "index",
+        None,
+        False,
+    ),
+    TYPE_FLOW_SENSOR_WATERING_CLICKS: (
+        "Flow Sensor Clicks",
+        "mdi:water-pump",
+        "clicks",
+        None,
+        False,
+    ),
+    TYPE_FREEZE_TEMP: (
+        "Freeze Protect Temperature",
+        "mdi:thermometer",
+        "°C",
+        "temperature",
+        True,
+    ),
+}
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -32,10 +65,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
     rainmachine = hass.data[RAINMACHINE_DOMAIN][DATA_CLIENT][entry.entry_id]
 
     sensors = []
-    for sensor_type in rainmachine.sensor_conditions:
-        name, icon, unit, device_class = SENSORS[sensor_type]
+    for (
+        sensor_type,
+        (name, icon, unit, device_class, enabled_by_default),
+    ) in SENSORS.items():
         sensors.append(
-            RainMachineSensor(rainmachine, sensor_type, name, icon, unit, device_class)
+            RainMachineSensor(
+                rainmachine,
+                sensor_type,
+                name,
+                icon,
+                unit,
+                device_class,
+                enabled_by_default,
+            )
         )
 
     async_add_entities(sensors, True)
@@ -44,16 +87,31 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class RainMachineSensor(RainMachineEntity):
     """A sensor implementation for raincloud device."""
 
-    def __init__(self, rainmachine, sensor_type, name, icon, unit, device_class):
+    def __init__(
+        self,
+        rainmachine,
+        sensor_type,
+        name,
+        icon,
+        unit,
+        device_class,
+        enabled_by_default,
+    ):
         """Initialize."""
         super().__init__(rainmachine)
 
         self._device_class = device_class
+        self._enabled_by_default = enabled_by_default
         self._icon = icon
         self._name = name
         self._sensor_type = sensor_type
         self._state = None
         self._unit = unit
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Determine whether an entity is enabled by default."""
+        return self._enabled_by_default
 
     @property
     def icon(self) -> str:
@@ -72,7 +130,7 @@ class RainMachineSensor(RainMachineEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return "{0}_{1}".format(
             self.rainmachine.device_mac.replace(":", ""), self._sensor_type
         )
@@ -97,14 +155,14 @@ class RainMachineSensor(RainMachineEntity):
     async def async_update(self):
         """Update the sensor's state."""
         if self._sensor_type == TYPE_FLOW_SENSOR_CLICK_M3:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS].get(
+            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
                 "flowSensorClicksPerCubicMeter"
             )
         elif self._sensor_type == TYPE_FLOW_SENSOR_CONSUMED_LITERS:
-            clicks = self.rainmachine.data[PROVISION_SETTINGS].get(
+            clicks = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
                 "flowSensorWateringClicks"
             )
-            clicks_per_m3 = self.rainmachine.data[PROVISION_SETTINGS].get(
+            clicks_per_m3 = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
                 "flowSensorClicksPerCubicMeter"
             )
 
@@ -113,11 +171,11 @@ class RainMachineSensor(RainMachineEntity):
             else:
                 self._state = None
         elif self._sensor_type == TYPE_FLOW_SENSOR_START_INDEX:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS].get(
+            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
                 "flowSensorStartIndex"
             )
         elif self._sensor_type == TYPE_FLOW_SENSOR_WATERING_CLICKS:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS].get(
+            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
                 "flowSensorWateringClicks"
             )
         elif self._sensor_type == TYPE_FREEZE_TEMP:

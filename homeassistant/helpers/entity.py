@@ -284,7 +284,7 @@ class Entity(ABC):
         self._async_write_ha_state()
 
     @callback
-    def async_write_ha_state(self):
+    def async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
@@ -294,7 +294,7 @@ class Entity(ABC):
                 f"No entity id specified for entity {self.name}"
             )
 
-        self._async_write_ha_state()
+        self._async_write_ha_state()  # type: ignore
 
     @callback
     def _async_write_ha_state(self):
@@ -311,7 +311,9 @@ class Entity(ABC):
 
         start = timer()
 
-        attr = self.capability_attributes or {}
+        attr = self.capability_attributes
+        attr = dict(attr) if attr else {}
+
         if not self.available:
             state = STATE_UNAVAILABLE
         else:
@@ -471,8 +473,9 @@ class Entity(ABC):
             self._on_remove = []
         self._on_remove.append(func)
 
-    async def async_remove(self):
+    async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
+        assert self.hass is not None
         await self.async_internal_will_remove_from_hass()
         await self.async_will_remove_from_hass()
 
@@ -560,7 +563,7 @@ class Entity(ABC):
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return "<Entity {}: {}>".format(self.name, self.state)
+        return f"<Entity {self.name}: {self.state}>"
 
     # call an requests
     async def async_request_call(self, coro):

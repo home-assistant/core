@@ -11,11 +11,6 @@ from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Glances sensors is done through async_setup_entry."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Glances sensors."""
 

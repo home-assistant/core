@@ -100,7 +100,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     await v2bridge.start()
 
     async def async_stop_bridge(event: EventType) -> None:
-        """On homeassistant stop, gracefully stop the bridge if running."""
+        """On Home Assistant stop, gracefully stop the bridge if running."""
         await v2bridge.stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_bridge)

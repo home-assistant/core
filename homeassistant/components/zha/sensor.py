@@ -12,14 +12,21 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_TEMPERATURE,
     DOMAIN,
 )
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, POWER_WATT, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    POWER_WATT,
+    STATE_UNKNOWN,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.util.temperature import fahrenheit_to_celsius
 
 from .core.const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
+    CHANNEL_MULTISTATE_INPUT,
     CHANNEL_POWER_CONFIGURATION,
     CHANNEL_PRESSURE,
     CHANNEL_SMARTENERGY_METERING,
@@ -30,7 +37,7 @@ from .core.const import (
     SIGNAL_STATE_ATTR,
     ZHA_DISCOVERY_NEW,
 )
-from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES, MatchRule
+from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import ZhaEntity
 
 PARALLEL_UPDATES = 5
@@ -54,11 +61,6 @@ BATTERY_SIZES = {
 
 CHANNEL_ST_HUMIDITY_CLUSTER = f"channel_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation sensors."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -90,7 +92,8 @@ async def _async_setup_entities(
     for discovery_info in discovery_infos:
         entities.append(await make_sensor(discovery_info))
 
-    async_add_entities(entities, update_before_add=True)
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
 
 async def make_sensor(discovery_info):
@@ -120,7 +123,7 @@ class Sensor(ZhaEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        self._device_state_attributes = await self.async_state_attr_provider()
+        self._device_state_attributes.update(await self.async_state_attr_provider())
 
         await self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
@@ -144,8 +147,6 @@ class Sensor(ZhaEntity):
         """Return the state of the entity."""
         if self._state is None:
             return None
-        if isinstance(self._state, float):
-            return str(round(self._state, 2))
         return self._state
 
     def async_set_state(self, state):
@@ -159,7 +160,6 @@ class Sensor(ZhaEntity):
     def async_restore_last_state(self, last_state):
         """Restore previous state."""
         self._state = last_state.state
-        self._unit = last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     @callback
     async def async_state_attr_provider(self):
@@ -175,7 +175,7 @@ class Sensor(ZhaEntity):
         return round(float(value * self._multiplier) / self._divisor)
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_POWER_CONFIGURATION}))
+@STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
 class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
@@ -202,8 +202,14 @@ class Battery(Sensor):
             state_attrs["battery_quantity"] = battery_quantity
         return state_attrs
 
+    def async_update_state_attribute(self, key, value):
+        """Update a single device state attribute."""
+        if key == "battery_voltage":
+            self._device_state_attributes[key] = round(value / 10, 1)
+            self.async_schedule_update_ha_state()
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ELECTRICAL_MEASUREMENT}))
+
+@STRICT_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurement(Sensor):
     """Active power measurement."""
 
@@ -218,11 +224,26 @@ class ElectricalMeasurement(Sensor):
 
     def formatter(self, value) -> int:
         """Return 'normalized' value."""
-        return round(value * self._channel.multiplier / self._channel.divisor)
+        value = value * self._channel.multiplier / self._channel.divisor
+        if value < 100 and self._channel.divisor > 1:
+            return round(value, self._decimals)
+        return round(value)
 
 
-@STRICT_MATCH(MatchRule(generic_ids={CHANNEL_ST_HUMIDITY_CLUSTER}))
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_HUMIDITY}))
+@STRICT_MATCH(channel_names=CHANNEL_MULTISTATE_INPUT)
+class Text(Sensor):
+    """Sensor that displays string values."""
+
+    _device_class = None
+    _unit = None
+
+    def formatter(self, value) -> str:
+        """Return string value."""
+        return value
+
+
+@STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)
+@STRICT_MATCH(channel_names=CHANNEL_HUMIDITY)
 class Humidity(Sensor):
     """Humidity sensor."""
 
@@ -231,7 +252,7 @@ class Humidity(Sensor):
     _unit = "%"
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_ILLUMINANCE}))
+@STRICT_MATCH(channel_names=CHANNEL_ILLUMINANCE)
 class Illuminance(Sensor):
     """Illuminance Sensor."""
 
@@ -244,7 +265,7 @@ class Illuminance(Sensor):
         return round(pow(10, ((value - 1) / 10000)), 1)
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_SMARTENERGY_METERING}))
+@STRICT_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
@@ -260,7 +281,7 @@ class SmartEnergyMetering(Sensor):
         return self._channel.unit_of_measurement
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_PRESSURE}))
+@STRICT_MATCH(channel_names=CHANNEL_PRESSURE)
 class Pressure(Sensor):
     """Pressure sensor."""
 
@@ -269,10 +290,21 @@ class Pressure(Sensor):
     _unit = "hPa"
 
 
-@STRICT_MATCH(MatchRule(channel_names={CHANNEL_TEMPERATURE}))
+@STRICT_MATCH(channel_names=CHANNEL_TEMPERATURE)
 class Temperature(Sensor):
     """Temperature Sensor."""
 
     _device_class = DEVICE_CLASS_TEMPERATURE
     _divisor = 100
     _unit = TEMP_CELSIUS
+
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        if last_state.state == STATE_UNKNOWN:
+            return
+        if last_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) != TEMP_CELSIUS:
+            ftemp = float(last_state.state)
+            self._state = round(fahrenheit_to_celsius(ftemp), 1)
+            return
+        self._state = last_state.state

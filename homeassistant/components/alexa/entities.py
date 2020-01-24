@@ -19,6 +19,8 @@ from homeassistant.components import (
     script,
     sensor,
     switch,
+    timer,
+    vacuum,
 )
 from homeassistant.components.climate import const as climate
 from homeassistant.const import (
@@ -61,6 +63,7 @@ from .capabilities import (
     AlexaStepSpeaker,
     AlexaTemperatureSensor,
     AlexaThermostatController,
+    AlexaTimeHoldController,
     AlexaToggleController,
 )
 from .const import CONF_DESCRIPTION, CONF_DISPLAY_CATEGORIES
@@ -255,20 +258,31 @@ class AlexaEntity:
     def serialize_properties(self):
         """Yield each supported property in API format."""
         for interface in self.interfaces():
+            if not interface.properties_proactively_reported():
+                continue
+
             for prop in interface.serialize_properties():
                 yield prop
 
     def serialize_discovery(self):
         """Serialize the entity for discovery."""
-        return {
+        result = {
             "displayCategories": self.display_categories(),
             "cookie": {},
             "endpointId": self.alexa_id(),
             "friendlyName": self.friendly_name(),
             "description": self.description(),
             "manufacturerName": "Home Assistant",
-            "capabilities": [i.serialize_discovery() for i in self.interfaces()],
         }
+
+        locale = self.config.locale
+        capabilities = []
+        for i in self.interfaces():
+            if locale in i.supported_locales:
+                capabilities.append(i.serialize_discovery())
+        result["capabilities"] = capabilities
+
+        return result
 
 
 @callback
@@ -396,9 +410,7 @@ class CoverCapabilities(AlexaEntity):
                 self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_POSITION}"
             )
         if supported & cover.SUPPORT_SET_TILT_POSITION:
-            yield AlexaRangeController(
-                self.entity, instance=f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}"
-            )
+            yield AlexaRangeController(self.entity, instance=f"{cover.DOMAIN}.tilt")
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)
 
@@ -695,5 +707,50 @@ class InputNumberCapabilities(AlexaEntity):
         yield AlexaRangeController(
             self.entity, instance=f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}"
         )
+        yield AlexaEndpointHealth(self.hass, self.entity)
+        yield Alexa(self.hass)
+
+
+@ENTITY_ADAPTERS.register(timer.DOMAIN)
+class TimerCapabilities(AlexaEntity):
+    """Class to represent Timer capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        yield AlexaTimeHoldController(self.entity, allow_remote_resume=True)
+        yield Alexa(self.entity)
+
+
+@ENTITY_ADAPTERS.register(vacuum.DOMAIN)
+class VacuumCapabilities(AlexaEntity):
+    """Class to represent vacuum capabilities."""
+
+    def default_display_categories(self):
+        """Return the display categories for this entity."""
+        return [DisplayCategory.OTHER]
+
+    def interfaces(self):
+        """Yield the supported interfaces."""
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if (supported & vacuum.SUPPORT_TURN_ON) and (
+            supported & vacuum.SUPPORT_TURN_OFF
+        ):
+            yield AlexaPowerController(self.entity)
+
+        if supported & vacuum.SUPPORT_FAN_SPEED:
+            yield AlexaRangeController(
+                self.entity, instance=f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}"
+            )
+
+        if supported & vacuum.SUPPORT_PAUSE:
+            support_resume = bool(supported & vacuum.SUPPORT_START)
+            yield AlexaTimeHoldController(
+                self.entity, allow_remote_resume=support_resume
+            )
+
         yield AlexaEndpointHealth(self.hass, self.entity)
         yield Alexa(self.hass)

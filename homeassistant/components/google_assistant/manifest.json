@@ -1,6 +1,6 @@
 {
   "domain": "google_assistant",
-  "name": "Google assistant",
+  "name": "Google Assistant",
   "documentation": "https://www.home-assistant.io/integrations/google_assistant",
   "requirements": [],
   "dependencies": ["http"],

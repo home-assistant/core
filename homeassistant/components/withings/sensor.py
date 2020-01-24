@@ -177,7 +177,11 @@ WITHINGS_ATTRIBUTES = [
         const.MEAS_SPO2_PCT, MeasureType.SP02, "SP02", const.UOM_PERCENT, None
     ),
     WithingsMeasureAttribute(
-        const.MEAS_HYDRATION, MeasureType.HYDRATION, "Hydration", "", "mdi:water"
+        const.MEAS_HYDRATION,
+        MeasureType.HYDRATION,
+        "Hydration",
+        const.UOM_PERCENT,
+        "mdi:water",
     ),
     WithingsMeasureAttribute(
         const.MEAS_PWV,
@@ -309,7 +313,7 @@ class WithingsHealthSensor(Entity):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return "withings_{}_{}_{}".format(
             self._slug, self._user_id, slugify(self._attribute.measurement)
         )

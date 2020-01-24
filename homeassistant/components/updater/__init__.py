@@ -109,7 +109,7 @@ async def async_setup(hass, config):
         if newest is None or "dev" in current_version:
             return
 
-        # Load data from supervisor on hass.io
+        # Load data from supervisor on Hass.io
         if hass.components.hassio.is_hassio():
             newest = hass.components.hassio.get_homeassistant_version()
 

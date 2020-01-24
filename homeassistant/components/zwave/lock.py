@@ -153,11 +153,6 @@ CLEAR_USERCODE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave locks."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave Lock from Config Entry."""
 
@@ -270,7 +265,7 @@ class ZwaveLock(ZWaveDeviceEntity, LockDevice):
                 workaround = DEVICE_MAPPINGS[specific_sensor_key]
                 if workaround & WORKAROUND_V2BTZE:
                     self._v2btze = 1
-                    _LOGGER.debug("Polycontrol Danalock v2 BTZE " "workaround enabled")
+                    _LOGGER.debug("Polycontrol Danalock v2 BTZE workaround enabled")
                 if workaround & WORKAROUND_DEVICE_STATE:
                     self._state_workaround = True
                     _LOGGER.debug("Notification device state workaround enabled")
@@ -299,7 +294,7 @@ class ZwaveLock(ZWaveDeviceEntity, LockDevice):
                 ):
                     self._state = LOCK_STATUS.get(str(notification_data))
                     _LOGGER.debug(
-                        "Lock state set from Access Control value and is %s, " "get=%s",
+                        "Lock state set from Access Control value and is %s, get=%s",
                         str(notification_data),
                         self.state,
                     )

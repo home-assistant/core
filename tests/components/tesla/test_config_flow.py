@@ -131,12 +131,12 @@ async def test_option_flow(hass):
     entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.flow.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.flow.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_SCAN_INTERVAL: 350}
     )
     assert result["type"] == "create_entry"
@@ -148,12 +148,12 @@ async def test_option_flow_input_floor(hass):
     entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.flow.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] == "form"
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.flow.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={CONF_SCAN_INTERVAL: 1}
     )
     assert result["type"] == "create_entry"

@@ -9,20 +9,15 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Tesla switch platform."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
     controller = hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"]
     entities = []
     for device in hass.data[TESLA_DOMAIN][config_entry.entry_id]["devices"]["switch"]:
-        if device.bin_type == 0x8:
+        if device.type == "charger switch":
             entities.append(ChargerSwitch(device, controller, config_entry))
             entities.append(UpdateSwitch(device, controller, config_entry))
-        elif device.bin_type == 0x9:
+        elif device.type == "maxrange switch":
             entities.append(RangeSwitch(device, controller, config_entry))
     async_add_entities(entities, True)
 
