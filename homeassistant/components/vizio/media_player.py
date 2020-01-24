@@ -76,17 +76,19 @@ async def async_setup_entry(
     if not await device.can_connect():
         fail_auth_msg = ""
         if token:
-            fail_auth_msg = "and auth token '{token}' are correct."
+            fail_auth_msg = f"and auth token '{token}' are correct."
         else:
             fail_auth_msg = "is correct."
-        _LOGGER.error(
-            "Failed to connect to Vizio device, please check if host '{host}'"
-            "is valid and available. Also check if device class '{device_class}' %s",
+        _LOGGER.warning(
+            "Failed to connect to Vizio device, please check if host '%s' "
+            "is valid and available. Also check if device class '%s' %s",
+            host,
+            device_class,
             fail_auth_msg,
         )
         raise PlatformNotReady
 
-    entity = VizioDevice(config_entry, device, name, volume_step, device_class,)
+    entity = VizioDevice(config_entry, device, name, volume_step, device_class)
 
     async_add_entities([entity], update_before_add=True)
 
