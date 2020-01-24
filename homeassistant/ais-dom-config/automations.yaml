@@ -184,18 +184,6 @@
       data_template:
         radio_type: "{{ states('input_select.radio_type') }}"
 
-- id: '201807081923024'
-  alias: 'AIS Select Radio Player'
-  initial_state: True
-  hide_entity: True
-  trigger:
-    platform: state
-    entity_id: input_select.radio_player
-  action:
-    - service: ais_cloud.select_media_player
-      data_template:
-        media_player_type: "Radio"
-
 - id: '201807081923025'
   alias: 'AIS Change Player Speed'
   initial_state: True

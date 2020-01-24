@@ -10,6 +10,7 @@ media_player:
   - platform: ais_exo_player
     name: wbudowany_glosnik
     ip_address: localhost
+    unique_id: "1111111111111111111"
 
 input_number:
   media_player_speed:

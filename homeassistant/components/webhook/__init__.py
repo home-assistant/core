@@ -80,7 +80,16 @@ async def async_handle_webhook(hass, webhook_id, request):
         return Response(status=200)
 
     try:
-        response = await webhook["handler"](hass, webhook_id, request)
+        # ais
+        response = None
+        if webhook_id == "aisdomprocesscommandfromframe":
+            import homeassistant.components.ais_ai_service as ai
+
+            rj = await request.json()
+            if "ais_gate_client_id" in rj:
+                response = await ai.async_process_json_from_frame(hass, rj)
+        if response is None:
+            response = await webhook["handler"](hass, webhook_id, request)
         if response is None:
             response = Response(status=200)
         return response
