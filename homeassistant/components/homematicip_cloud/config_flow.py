@@ -78,6 +78,9 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
             authtoken = await self.auth.async_register()
             if authtoken:
                 _LOGGER.info("Write config entry for HomematicIP Cloud")
+
+                await self.async_set_unique_id(self.auth.config.get(HMIPC_HAPID))
+
                 return self.async_create_entry(
                     title=self.auth.config.get(HMIPC_HAPID),
                     data={
@@ -101,8 +104,9 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
         if hapid in configured_haps(self.hass):
             return self.async_abort(reason="already_configured")
 
-        _LOGGER.info("Imported authentication for %s", hapid)
+        await self.async_set_unique_id(hapid)
 
+        _LOGGER.info("Imported authentication for %s", hapid)
         return self.async_create_entry(
             title=hapid,
             data={HMIPC_AUTHTOKEN: authtoken, HMIPC_HAPID: hapid, HMIPC_NAME: name},

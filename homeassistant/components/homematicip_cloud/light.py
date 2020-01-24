@@ -25,7 +25,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericDevice
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP Cloud lights from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
     entities = []
     for device in hap.home.devices:
         if isinstance(device, AsyncBrandSwitchMeasuring):

@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID
+from . import DOMAIN as HMIPC_DOMAIN
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
     async_add_entities([HomematicipAlarmControlPanel(hap)])
 
 

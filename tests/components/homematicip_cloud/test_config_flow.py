@@ -15,6 +15,7 @@ async def test_flow_works(hass):
     }
     flow = config_flow.HomematicipCloudFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
     hap = hmipc.HomematicipAuth(hass, config)
     with patch.object(hap, "get_auth", return_value=mock_coro()), patch.object(
@@ -129,6 +130,7 @@ async def test_import_config(hass):
     """Test importing a host with an existing config file."""
     flow = config_flow.HomematicipCloudFlowHandler()
     flow.hass = hass
+    flow.context = {}
 
     result = await flow.async_step_import(
         {
