@@ -1,6 +1,7 @@
 """Validate manifests."""
 import pathlib
 import sys
+from time import monotonic
 
 from . import (
     codeowners,
@@ -51,8 +52,14 @@ def main():
 
     for plugin in PLUGINS:
         try:
+            start = monotonic()
+            print(f"Validating {plugin.__name__.split('.')[-1]}...", end="")
             plugin.validate(integrations, config)
+            print(" done in {:.2f}s".format(monotonic() - start))
         except RuntimeError as err:
+            print()
+            print()
+            print("Error!")
             print(err)
             return 1
 
