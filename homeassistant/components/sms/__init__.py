@@ -12,7 +12,8 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA,
+    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.isdevice})},
+    extra=vol.ALLOW_EXTRA,
 )
 
 

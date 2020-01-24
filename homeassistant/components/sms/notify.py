@@ -4,22 +4,22 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_RECIPIENT
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_PHONE_NUMBER, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_PHONE_NUMBER): cv.string, vol.Optional(CONF_NAME): cv.string}
+    {vol.Required(CONF_RECIPIENT): cv.string, vol.Optional(CONF_NAME): cv.string}
 )
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the SMS notification service."""
     gateway = hass.data[DOMAIN]
-    number = config[CONF_PHONE_NUMBER]
+    number = config[CONF_RECIPIENT]
     return SMSNotificationService(gateway, number)
 
 
