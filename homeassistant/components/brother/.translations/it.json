@@ -9,6 +9,7 @@
             "snmp_error": "Server SNMP spento o stampante non supportata.",
             "wrong_host": "Nome host o indirizzo IP non valido."
         },
+        "flow_title": "Stampante Brother: {model} {serial_number}",
         "step": {
             "user": {
                 "data": {
@@ -17,6 +18,13 @@
                 },
                 "description": "Configurare l'integrazione della stampante Brother. In caso di problemi con la configurazione, visitare: https://www.home-assistant.io/integrations/brother",
                 "title": "Stampante Brother"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Tipo di stampante"
+                },
+                "description": "Vuoi aggiungere la stampante Brother {model} con il numero seriale `{serial_number}` a Home Assistant?",
+                "title": "Trovata stampante Brother"
             }
         },
         "title": "Stampante Brother"
