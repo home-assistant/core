@@ -91,7 +91,7 @@ class JewishCalendarSensor(Entity):
         if today_times.havdalah and now > today_times.havdalah:
             after_tzais_date = date.next_day
 
-        self._state = self.get_state(after_shkia_date, after_tzais_date)
+        self._state = self.get_state(date, after_shkia_date, after_tzais_date)
         _LOGGER.debug("New value for %s: %s", self._type, self._state)
 
     def make_zmanim(self, date):
@@ -112,7 +112,7 @@ class JewishCalendarSensor(Entity):
 
         return {}
 
-    def get_state(self, after_shkia_date, after_tzais_date):
+    def get_state(self, date, after_shkia_date, after_tzais_date):
         """For a given type of sensor, return the state."""
         # Terminology note: by convention in py-libhdate library, "upcoming"
         # refers to "current" or "upcoming" dates.
@@ -129,7 +129,7 @@ class JewishCalendarSensor(Entity):
         if self._type == "omer_count":
             return after_shkia_date.omer_day
         if self._type == "daf_yomi":
-            return hdate.HDate(dt_util.now().date(), diaspora=self._diaspora, hebrew=self._hebrew).daf_yomi
+            return date.daf_yomi
 
         return None
 
@@ -159,7 +159,7 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
 
         return attrs
 
-    def get_state(self, after_shkia_date, after_tzais_date):
+    def get_state(self, date, after_shkia_date, after_tzais_date):
         """For a given type of sensor, return the state."""
         if self._type == "upcoming_shabbat_candle_lighting":
             times = self.make_zmanim(
