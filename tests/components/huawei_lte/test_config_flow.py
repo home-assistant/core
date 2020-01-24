@@ -181,13 +181,13 @@ async def test_options(flow):
     )
     config_entry.add_to_hass(flow.hass)
 
-    result = await flow.async_get_options_flow(config_entry).async_step_init()
+    result = await flow.hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
     recipient = "+15555550000"
-    result = await flow.async_get_options_flow(config_entry).async_step_init(
-        {CONF_RECIPIENT: recipient}
+    result = await flow.hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_RECIPIENT: recipient}
     )
     assert result["data"][CONF_NAME] == DOMAIN
     assert result["data"][CONF_RECIPIENT] == [recipient]
