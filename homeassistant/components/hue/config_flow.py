@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, core
 from homeassistant.components import ssdp
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import aiohttp_client
 
 from .bridge import authenticate_bridge
@@ -169,7 +170,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         bridge = self._async_get_bridge(host, discovery_info[ssdp.ATTR_UPNP_SERIAL])
 
         await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: bridge.host})
+
         self.bridge = bridge
         return await self.async_step_link()
 
@@ -180,7 +182,8 @@ class HueFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         await self.async_set_unique_id(bridge.id)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(updates={CONF_HOST: bridge.host})
+
         self.bridge = bridge
         return await self.async_step_link()
 
