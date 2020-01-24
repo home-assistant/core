@@ -10,6 +10,7 @@ mypy==0.761
 pre-commit==1.21.0
 pylint==2.4.4
 astroid==2.3.3
+pylint-strict-informational==0.1
 pytest-aiohttp==0.3.0
 pytest-cov==2.8.1
 pytest-sugar==0.9.2
