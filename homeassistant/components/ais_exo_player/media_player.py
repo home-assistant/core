@@ -28,7 +28,6 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.const import (
     CONF_IP_ADDRESS,
-    CONF_MAC,
     CONF_NAME,
     STATE_IDLE,
     STATE_OFF,
@@ -66,16 +65,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is not None:
         name = discovery_info.get(CONF_NAME)
         _ip = discovery_info.get(CONF_IP_ADDRESS)
-        _mac = discovery_info.get(CONF_MAC)
+        _unique_id = discovery_info.get("unique_id")
     else:
         name = config.get(CONF_NAME)
         _ip = config.get(CONF_IP_ADDRESS)
-        if _ip == "localhost":
-            _mac = "1111111111111111111"
-        else:
-            _mac = config.get(CONF_IP_ADDRESS).replace(".", "")
+        _unique_id = config.get("unique_id")
 
-    device = ExoPlayerDevice(_ip, _mac, name)
+    device = ExoPlayerDevice(_ip, _unique_id, name)
     _LOGGER.info("device: " + str(device))
     async_add_devices([device], True)
 
@@ -122,8 +118,27 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 ais_global.G_SPEAKERS_GROUP_LIST.remove(player)
         _update_state()
 
+    @asyncio.coroutine
+    def update_attributes(service):
+        entity_id = service.data["entity_id"]
+        ip = service.data[CONF_IP_ADDRESS]
+
+        # update state
+        state = hass.states.get("media_player." + entity_id).state
+        attributes = hass.states.get("media_player." + entity_id).attributes
+        new_attr = {}
+        list_idx = -1
+        for itm in attributes:
+            list_idx = list_idx + 1
+            new_attr[list_idx] = attributes[itm]
+        new_attr[CONF_IP_ADDRESS] = ip
+        hass.states.async_set("media_player." + entity_id, state, new_attr)
+
     hass.services.async_register("ais_exo_player", "join", join)
     hass.services.async_register("ais_exo_player", "unjoin", unjoin)
+    hass.services.async_register(
+        "ais_exo_player", "update_attributes", update_attributes
+    )
 
 
 class ExoPlayerDevice(MediaPlayerDevice):
@@ -150,10 +165,10 @@ class ExoPlayerDevice(MediaPlayerDevice):
         pass
 
     # pylint: disable=no-member
-    def __init__(self, device_ip, device_mac, name):
+    def __init__(self, device_ip, unique_id, name):
         """Initialize the ExoPlayer device."""
         self._device_ip = device_ip
-        self._device_mac = device_mac
+        self._unique_id = unique_id
         self._name = name
         self._status = None
         self._playing = False
@@ -386,8 +401,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
     @property
     def device_state_attributes(self):
         """Return the specific state attributes of the player."""
-        attr = {"device_ip": self._device_ip}
-        # attr['device_mac'] = self._device_mac
+        attr = {"device_ip": self._device_ip, "unique_id": self._unique_id}
         """List members in group."""
         attr[ATTR_AIS_GROUP] = ais_global.G_SPEAKERS_GROUP_LIST
 
@@ -402,7 +416,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return self._device_mac
+        return self._unique_id
 
     @property
     def media_position_updated_at(self):

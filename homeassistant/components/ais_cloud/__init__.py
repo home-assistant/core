@@ -9,10 +9,10 @@ import requests
 from homeassistant.components.ais_dom import ais_global
 from homeassistant.const import (
     CONF_IP_ADDRESS,
-    CONF_MAC,
     CONF_NAME,
     EVENT_PLATFORM_DISCOVERED,
     EVENT_STATE_CHANGED,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.util import slugify
@@ -93,10 +93,6 @@ def async_setup(hass, config):
         _LOGGER.info("get_podcast_tracks")
         data.get_podcast_tracks(call)
 
-    def select_media_player(call):
-        _LOGGER.info("select_media_player")
-        data.select_media_player(call)
-
     def get_rss_news_category(call):
         _LOGGER.info("get_rss_news_category")
         data.get_rss_news_category(call)
@@ -162,7 +158,6 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "get_podcast_types", get_podcast_types)
     hass.services.async_register(DOMAIN, "get_podcast_names", get_podcast_names)
     hass.services.async_register(DOMAIN, "get_podcast_tracks", get_podcast_tracks)
-    hass.services.async_register(DOMAIN, "select_media_player", select_media_player)
     hass.services.async_register(DOMAIN, "get_rss_news_category", get_rss_news_category)
     hass.services.async_register(DOMAIN, "get_rss_news_channels", get_rss_news_channels)
     hass.services.async_register(DOMAIN, "get_rss_news_items", get_rss_news_items)
@@ -219,19 +214,7 @@ def async_setup(hass, config):
     def state_changed(state_event):
         """ Called on state change """
         entity_id = state_event.data.get("entity_id")
-        if entity_id.startswith("media_player."):
-            _new = state_event.data["new_state"].attributes
-            if state_event.data["old_state"] is None:
-                _old = {"friendly_name": "new ais dome device"}
-            else:
-                _old = state_event.data["old_state"].attributes
-            # check if name was changed
-            if "friendly_name" in _new and "friendly_name" in _old:
-                if _new["friendly_name"] != _old["friendly_name"]:
-                    hass.async_add_job(
-                        hass.services.async_call("ais_cloud", "get_players")
-                    )
-        elif entity_id == "input_select.assistant_voice":
+        if entity_id == "input_select.assistant_voice":
             # old_voice = state_event.data["old_state"].state
             new_voice = state_event.data["new_state"].state
             if new_voice == "Jola online":
@@ -1217,54 +1200,50 @@ class AisColudData:
                 },
             )
 
-    def select_media_player(self, call):
-        if "media_player_type" not in call.data:
-            _LOGGER.error("No media_player_type")
-            return
-        player_name = None
-        _url = None
-        _audio_info = {}
-        # TODO
-        if player_name is not None:
-            player = get_player_data(player_name)
-        if _url is not None:
-            # play media on selected device
-            _audio_info["media_content_id"] = check_url(_url)
-            # set stream image and title
-            self.hass.services.call(
-                "media_player",
-                "play_media",
-                {
-                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "ais_content_info",
-                    "media_content_id": json.dumps(_audio_info),
-                },
-            )
-
     def get_players(self, call, hass):
         global G_PLAYERS
         G_PLAYERS = []
         players_lv = []
         if "device_name" in call.data:
             # check if this device already exists
-            name = slugify(call.data.get("device_name"))
-            m_player = hass.states.get("media_player." + name)
+            entity_id = slugify(
+                call.data.get("device_name") + "_" + call.data.get("unique_id")
+            )
+            m_player = hass.states.get("media_player." + entity_id)
+            do_disco = False
             if m_player is None:
-                _LOGGER.info("Adding new ais dom player " + name)
+                do_disco = True
+            else:
+                if m_player.state == STATE_UNAVAILABLE:
+                    do_disco = True
+            if do_disco:
+                _LOGGER.info("Adding new ais dom player " + entity_id)
                 hass.async_run_job(
                     async_load_platform(
                         hass,
                         "media_player",
                         "ais_exo_player",
                         {
-                            CONF_NAME: call.data.get("device_name"),
+                            CONF_NAME: call.data.get("device_name")
+                            + "_"
+                            + call.data.get("unique_id"),
                             CONF_IP_ADDRESS: call.data.get(CONF_IP_ADDRESS),
-                            CONF_MAC: call.data.get(CONF_MAC),
+                            "unique_id": call.data.get("unique_id"),
                         },
                         hass.config,
                     )
                 )
-
+            else:
+                # update player info
+                _LOGGER.info("Update player info " + entity_id)
+                self.hass.services.call(
+                    "ais_exo_player",
+                    "update_attributes",
+                    {
+                        "entity_id": entity_id,
+                        CONF_IP_ADDRESS: call.data.get(CONF_IP_ADDRESS),
+                    },
+                )
         # take the info about normal players
         entities = hass.states.async_all()
         for entity in entities:

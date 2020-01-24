@@ -590,7 +590,7 @@ def _scan_ais_player(hass, call):
             model = json_ws_resp["Model"]
             manufacturer = json_ws_resp["Manufacturer"]
             ip = json_ws_resp["IPAddressIPv4"]
-            mac = json_ws_resp["MacWlan0"]
+            unique_id = json_ws_resp["ais_gate_client_id"]
             dsm.DOM_DEVICES.append(
                 "- " + model + " " + manufacturer + ", http://" + ip + ":8180"
             )
@@ -600,9 +600,9 @@ def _scan_ais_player(hass, call):
                     "ais_cloud",
                     "get_players",
                     {
-                        "device_name": model + " " + manufacturer + "(" + ip + ")",
+                        "device_name": model + " " + manufacturer,
                         CONF_IP_ADDRESS: ip,
-                        CONF_MAC: mac,
+                        "unique_id": unique_id,
                     },
                 )
             )

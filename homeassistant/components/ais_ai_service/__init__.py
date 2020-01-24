@@ -3,62 +3,62 @@ Support for functionality to have conversations with AI-Speaker.
 
 """
 import asyncio
+import datetime
+import json
 import logging
 import re
-import warnings
-import json
-import voluptuous as vol
-import datetime
-import requests
-from homeassistant import core
-from homeassistant.loader import bind_hass
-from homeassistant.components import conversation
-from homeassistant.core import HomeAssistant, Context
 from typing import Optional
+import warnings
 
+from aiohttp.web import Response, json_response
+import requests
+import voluptuous as vol
 
+from homeassistant import core
+from homeassistant.components import ais_cloud, ais_drives_service, conversation
+import homeassistant.components.ais_dom.ais_global as ais_global
+import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    SERVICE_OPEN_COVER,
-    SERVICE_CLOSE_COVER,
-    STATE_ON,
-    STATE_OFF,
-    STATE_HOME,
-    STATE_NOT_HOME,
-    STATE_UNKNOWN,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_PLAYING,
-    STATE_PAUSED,
-    STATE_IDLE,
-    STATE_STANDBY,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
     STATE_ALARM_DISARMING,
     STATE_ALARM_TRIGGERED,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_HOME,
+    STATE_IDLE,
     STATE_LOCKED,
-    STATE_UNLOCKED,
-    STATE_UNAVAILABLE,
+    STATE_NOT_HOME,
+    STATE_OFF,
     STATE_OK,
+    STATE_ON,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_PAUSED,
+    STATE_PLAYING,
     STATE_PROBLEM,
-    ATTR_ASSUMED_STATE,
+    STATE_STANDBY,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    STATE_UNLOCKED,
 )
-from homeassistant.helpers import intent, config_validation as cv
-from homeassistant.components import ais_cloud
-import homeassistant.components.mqtt as mqtt
-import homeassistant.components.ais_dom.ais_global as ais_global
-from homeassistant.components import ais_drives_service
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import config_validation as cv, event, intent
+from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
-from homeassistant.helpers import event
 
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -2195,6 +2195,71 @@ def get_groups(hass):
             group["entities"] = all_unique_fans
 
 
+# new way to communicate with frame
+async def async_process_json_from_frame(hass, json_req):
+    res = {"ais": "ok"}
+    topic = json_req["topic"]
+    payload = json_req["payload"]
+    ais_gate_client_id = json_req["ais_gate_client_id"]
+    if topic == "ais/player_auto_discovery":
+        # parse the json storing the result on the response object
+        model = payload["Model"]
+        manufacturer = payload["Manufacturer"]
+        ip = payload["IPAddressIPv4"]
+        # add the device to the speakers lists
+        hass.async_add_job(
+            hass.services.async_call(
+                "ais_cloud",
+                "get_players",
+                {
+                    "device_name": model + " " + manufacturer,
+                    CONF_IP_ADDRESS: ip,
+                    "unique_id": ais_gate_client_id,
+                },
+            )
+        )
+    elif topic == "ais/player_status":
+        _LOGGER.info("payload: " + str(payload))
+        _LOGGER.info("payload: " + str(type(payload)))
+        # try to get current volume
+        try:
+            ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = (
+                payload.get("currentVolume", 0) / 100
+            )
+        except Exception:
+            _LOGGER.warning(
+                "ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL: "
+                + str(ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
+            )
+        # find the correct player
+        for entity in hass.states.async_all():
+            if entity.entity_id.startswith("media_player."):
+                if "unique_id" in entity.attributes:
+                    if ais_gate_client_id == entity.attributes["unique_id"]:
+                        json_string = json.dumps(payload)
+                        _LOGGER.error("exo_info: ----------------------")
+                        _LOGGER.error("json_string: " + json_string)
+                        _LOGGER.error(type(json_string))
+                        _LOGGER.error("exo_info: ----------------------")
+                        hass.async_run_job(
+                            hass.services.async_call(
+                                "media_player",
+                                "play_media",
+                                {
+                                    "entity_id": entity.entity_id,
+                                    "media_content_type": "exo_info",
+                                    "media_content_id": json_string,
+                                },
+                            )
+                        )
+    elif topic == "ais/speech_command":
+        hass.async_run_job(
+            hass.services.async_call("conversation", "process", {"text": payload})
+        )
+        res = {"ais": "ok", "say_it": "przyjołem kommendę - bez odbioru!"}
+    return json_response(res)
+
+
 @asyncio.coroutine
 async def async_setup(hass, config):
     """Register the process service."""
@@ -2332,6 +2397,7 @@ async def async_setup(hass, config):
                 ip = service.data["ip"]
         _publish_command_to_frame(hass, key, val, ip)
 
+    # old
     def process_command_from_frame(service):
         _process_command_from_frame(hass, service)
 
@@ -2947,6 +3013,9 @@ def _process_command_from_frame(hass, service):
         import ast
 
         service.data = ast.literal_eval(service.data["web_hook_json"])
+    if "topic" not in service.data:
+        return
+
     if service.data["topic"] == "ais/speech_command":
         hass.async_run_job(
             hass.services.async_call(
@@ -3183,6 +3252,14 @@ def _process_command_from_frame(hass, service):
                 "ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL: "
                 + str(ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
             )
+        _LOGGER.error("player_status: ----------------------")
+        _LOGGER.error("player_status: " + str(service.data["payload"]))
+        _LOGGER.error("player_status: ----------------------")
+        if "ais_gate_client_id" in service.data:
+            json_string = json.dumps(service.data["payload"])
+        else:
+            json_string = service.data["payload"]
+
         hass.async_run_job(
             hass.services.async_call(
                 "media_player",
@@ -3190,7 +3267,7 @@ def _process_command_from_frame(hass, service):
                 {
                     "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                     "media_content_type": "exo_info",
-                    "media_content_id": service.data["payload"],
+                    "media_content_id": json_string,
                 },
             )
         )
