@@ -1,4 +1,5 @@
 """Validate coverage files."""
+from pathlib import Path
 from typing import Dict
 
 from .model import Config, Integration
@@ -6,23 +7,44 @@ from .model import Config, Integration
 
 def validate(integrations: Dict[str, Integration], config: Config):
     """Validate coverage."""
-    codeowners_path = config.root / ".coveragerc"
+    coverage_path = config.root / ".coveragerc"
 
-    referenced = set()
+    not_found = []
+    checking = False
 
-    with codeowners_path.open("rt") as fp:
+    with coverage_path.open("rt") as fp:
         for line in fp:
             line = line.strip()
 
-            if not line.startswith("homeassistant/components/"):
+            if not line or line.startswith("#"):
                 continue
 
-            referenced.add(line.split("/")[2])
+            if not checking:
+                if line == "omit =":
+                    checking = True
+                continue
 
-    for domain in integrations:
-        referenced.discard(domain)
+            # Finished
+            if line == "[report]":
+                break
 
-    if referenced:
-        raise RuntimeError(
-            f".coveragerc references invalid integrations: {', '.join(referenced)}"
+            path = Path(line)
+
+            # Discard wildcard
+            while "*" in path.name:
+                path = path.parent
+
+            if not path.exists():
+                not_found.append(line)
+
+    if not not_found:
+        return
+
+    errors = []
+
+    if not_found:
+        errors.append(
+            f".coveragerc references files that don't exist: {', '.join(not_found)}."
         )
+
+    raise RuntimeError(" ".join(errors))
