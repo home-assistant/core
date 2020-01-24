@@ -3,7 +3,7 @@ import asyncio
 from datetime import datetime
 import logging
 
-from regenmaschine.errors import RequestError
+from regenmaschine.errors import RainMachineError
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import ATTR_ID
@@ -108,7 +108,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     entities = []
     results = await asyncio.gather(*tasks.values(), return_exceptions=True)
     for kind, result in zip(tasks, results):
-        if isinstance(result, RequestError):
+        if isinstance(result, RainMachineError):
             _LOGGER.error("There was an error while retrieving %s: %s", kind, result)
             continue
 
@@ -192,7 +192,7 @@ class RainMachineProgram(RainMachineSwitch):
         try:
             await self.rainmachine.client.programs.stop(self._rainmachine_entity_id)
             async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
-        except RequestError as err:
+        except RainMachineError as err:
             _LOGGER.error(
                 'Unable to turn off program "%s": %s', self.unique_id, str(err)
             )
@@ -202,7 +202,7 @@ class RainMachineProgram(RainMachineSwitch):
         try:
             await self.rainmachine.client.programs.start(self._rainmachine_entity_id)
             async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
-        except RequestError as err:
+        except RainMachineError as err:
             _LOGGER.error(
                 'Unable to turn on program "%s": %s', self.unique_id, str(err)
             )
@@ -231,7 +231,7 @@ class RainMachineProgram(RainMachineSwitch):
                     ATTR_ZONES: ", ".join(z["name"] for z in self.zones),
                 }
             )
-        except RequestError as err:
+        except RainMachineError as err:
             _LOGGER.error(
                 'Unable to update info for program "%s": %s', self.unique_id, str(err)
             )
@@ -269,7 +269,7 @@ class RainMachineZone(RainMachineSwitch):
         """Turn the zone off."""
         try:
             await self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
-        except RequestError as err:
+        except RainMachineError as err:
             _LOGGER.error('Unable to turn off zone "%s": %s', self.unique_id, str(err))
 
     async def async_turn_on(self, **kwargs) -> None:
@@ -278,7 +278,7 @@ class RainMachineZone(RainMachineSwitch):
             await self.rainmachine.client.zones.start(
                 self._rainmachine_entity_id, self._run_time
             )
-        except RequestError as err:
+        except RainMachineError as err:
             _LOGGER.error('Unable to turn on zone "%s": %s', self.unique_id, str(err))
 
     async def async_update(self) -> None:
@@ -316,7 +316,7 @@ class RainMachineZone(RainMachineSwitch):
                     ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(self._obj.get("type")),
                 }
             )
-        except RequestError as err:
+        except RainMachineError as err:
             _LOGGER.error(
                 'Unable to update info for zone "%s": %s', self.unique_id, str(err)
             )
