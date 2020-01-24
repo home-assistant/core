@@ -359,14 +359,9 @@ class SimpliSafe:
 
         self.last_event_data[system.system_id] = latest_event
 
-        if self._api.refresh_token_dirty:
-            _async_save_refresh_token(
-                self._hass, self._config_entry, self._api.refresh_token
-            )
-
+        # If we've reached this point using an emergency refresh token, we're in the
+        # clear and we can discard it:
         if self._emergency_refresh_token:
-            # If we've reached this point using an emergency refresh token, we're in the
-            # clear and we can discard it:
             self._emergency_refresh_token = None
 
     async def async_update(self):
