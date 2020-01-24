@@ -22,8 +22,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_POSTCODE): cv.string,
         vol.Required(CONF_HOUSE_NUMBER): cv.string,
-        vol.Optional(CONF_HOUSE_NUMBER_EXTENSION, default=''): cv.string,
-        vol.Optional(CONF_COUNTRY_CODE, default='NL'): cv.string,
+        vol.Optional(CONF_HOUSE_NUMBER_EXTENSION, default=""): cv.string,
+        vol.Optional(CONF_COUNTRY_CODE, default="NL"): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -35,18 +35,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         postal_code=config[CONF_POSTCODE],
         house_nr=config[CONF_HOUSE_NUMBER],
         house_nr_extension=config[CONF_HOUSE_NUMBER_EXTENSION],
-        country_code=config[CONF_COUNTRY_CODE]
+        country_code=config[CONF_COUNTRY_CODE],
     )
 
     try:
         each_upcoming = client.upcoming_of_each()
-        _LOGGER.info(f'avri: {each_upcoming}')
+        _LOGGER.info(f"avri: {each_upcoming}")
     except AvriException as ex:
         _LOGGER.error("Avri platform error.", ex)
         return
     else:
         for upcoming in each_upcoming:
-            add_entities([AvriWasteUpcoming(config[CONF_NAME], client, upcoming.name)], True)
+            add_entities(
+                [AvriWasteUpcoming(config[CONF_NAME], client, upcoming.name)], True
+            )
 
 
 class AvriWasteUpcoming(Entity):
@@ -67,9 +69,11 @@ class AvriWasteUpcoming(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return (f"{self.name}"
-                f"{self.client.country_code}{self.client.postal_code}"
-                f"{self.client.house_nr}{self.client.house_nr_extension}")
+        return (
+            f"{self.name}"
+            f"{self.client.country_code}{self.client.postal_code}"
+            f"{self.client.house_nr}{self.client.house_nr_extension}"
+        )
 
     @property
     def state(self):
