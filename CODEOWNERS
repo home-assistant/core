@@ -315,6 +315,7 @@ homeassistant/components/songpal/* @rytilahti
 homeassistant/components/spaceapi/* @fabaff
 homeassistant/components/speedtestdotnet/* @rohankapoorcom
 homeassistant/components/spider/* @peternijssen
+homeassistant/components/spotify/* @frenck
 homeassistant/components/sql/* @dgomes
 homeassistant/components/starline/* @anonym-tsk
 homeassistant/components/statistics/* @fabaff
