@@ -318,9 +318,8 @@ class RainMachine:
         # Lock API updates in case multiple entities are trying to call the same API
         # endpoint at once:
         async with self._lock:
-            if api_category in self.data:
-                return
-            self.data[api_category] = await self._async_fetch_from_api(api_category)
+            if api_category not in self.data:
+                self.data[api_category] = await self._async_fetch_from_api(api_category)
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
