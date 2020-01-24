@@ -67,14 +67,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     spotify = Spotify(auth=session.token["access_token"])
 
     try:
-        me = await hass.async_add_executor_job(spotify.me)
+        current_user = await hass.async_add_executor_job(spotify.me)
     except SpotifyException:
         raise ConfigEntryNotReady
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SPOTIFY_CLIENT: spotify,
-        DATA_SPOTIFY_ME: me,
+        DATA_SPOTIFY_ME: current_user,
         DATA_SPOTIFY_SESSION: session,
     }
 
