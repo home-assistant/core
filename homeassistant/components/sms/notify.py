@@ -44,4 +44,4 @@ class SMSNotificationService(BaseNotificationService):
         try:
             self.gateway.SendSMS(gammu_message)
         except gammu.GSMError as exc:  # pylint: disable=no-member
-            _LOGGER.error("Sending to {0} failed: {1}".format(self.number, exc))
+            _LOGGER.error("Sending to %s failed: %s", self.number, exc)

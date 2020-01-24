@@ -28,5 +28,5 @@ async def async_setup(hass, config):
         hass.data[DOMAIN] = gateway
         return True
     except gammu.GSMError as exc:  # pylint: disable=no-member
-        _LOGGER.error("Failed to initialize, error {0}".format(exc))
+        _LOGGER.error("Failed to initialize, error %s", exc)
         return False
