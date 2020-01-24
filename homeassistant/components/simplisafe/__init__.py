@@ -370,6 +370,11 @@ class SimpliSafe:
 
         await asyncio.gather(*tasks)
 
+        if self._api.refresh_token_dirty:
+            _async_save_refresh_token(
+                self._hass, self._config_entry, self._api.refresh_token
+            )
+
 
 class SimpliSafeEntity(Entity):
     """Define a base SimpliSafe entity."""
