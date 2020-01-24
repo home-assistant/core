@@ -6,6 +6,7 @@ import ssl
 from aiohttp import CookieJar
 import aiounifi
 from aiounifi.controller import SIGNAL_CONNECTION_STATE
+from aiounifi.events import WIRELESS_CLIENT_CONNECTED, WIRELESS_GUEST_CONNECTED
 import async_timeout
 
 from homeassistant.const import CONF_HOST
@@ -143,9 +144,17 @@ class UniFiController:
         if signal == SIGNAL_CONNECTION_STATE:
             self.available = data
             async_dispatcher_send(self.hass, self.signal_reachable)
+            # try to login
 
         elif signal == "new_data" and data:
-            async_dispatcher_send(self.hass, self.signal_update)
+            if "event" in data:
+                if data["event"].event in (
+                    WIRELESS_CLIENT_CONNECTED,
+                    WIRELESS_GUEST_CONNECTED,
+                ):
+                    self.update_wireless_clients()
+            else:
+                async_dispatcher_send(self.hass, self.signal_update)
 
     @property
     def signal_reachable(self) -> str:
@@ -177,52 +186,6 @@ class UniFiController:
             self.wireless_clients |= new_wireless_clients
             unifi_wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
             unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
-
-    async def request_update(self):
-        """Request an update."""
-        if self.progress is not None:
-            return await self.progress
-
-        self.progress = self.hass.async_create_task(self.async_update())
-        await self.progress
-
-        self.progress = None
-
-    async def async_update(self):
-        """Update UniFi controller information."""
-        failed = False
-
-        try:
-            with async_timeout.timeout(10):
-                await self.api.clients.update()
-                await self.api.devices.update()
-                if self.option_block_clients:
-                    await self.api.clients_all.update()
-
-        except aiounifi.LoginRequired:
-            try:
-                with async_timeout.timeout(5):
-                    await self.api.login()
-
-            except (asyncio.TimeoutError, aiounifi.AiounifiException):
-                failed = True
-                if self.available:
-                    LOGGER.error("Unable to reach controller %s", self.host)
-                    self.available = False
-
-        except (asyncio.TimeoutError, aiounifi.AiounifiException):
-            failed = True
-            if self.available:
-                LOGGER.error("Unable to reach controller %s", self.host)
-                self.available = False
-
-        if not failed and not self.available:
-            LOGGER.info("Reconnected to controller %s", self.host)
-            self.available = True
-
-        self.update_wireless_clients()
-
-        async_dispatcher_send(self.hass, self.signal_update)
 
     async def async_setup(self):
         """Set up a UniFi controller."""
