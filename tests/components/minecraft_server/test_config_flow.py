@@ -1,6 +1,6 @@
 """Test the Minecraft Server config flow."""
 
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from homeassistant.components.minecraft_server.const import (
     CONF_UPDATE_INTERVAL,
@@ -136,7 +136,7 @@ async def test_connection_failed(hass):
     ):
         with patch(
             "homeassistant.components.minecraft_server.MinecraftServer.online",
-            return_value=False,
+            new_callable=PropertyMock(return_value=False),
         ):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
@@ -154,14 +154,17 @@ async def test_connection_succeeded(hass):
     ):
         with patch(
             "homeassistant.components.minecraft_server.MinecraftServer.online",
-            return_value=True,
+            new_callable=PropertyMock(return_value=True),
         ):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
             )
 
             assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-            assert result["title"] == f"{USER_INPUT[CONF_HOST]}:{USER_INPUT[CONF_PORT]}"
+            assert (
+                result["title"]
+                == f"{USER_INPUT[CONF_HOST].lower()}:{USER_INPUT[CONF_PORT]}"
+            )
             assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
             assert result["data"][CONF_HOST] == USER_INPUT[CONF_HOST]
             assert result["data"][CONF_PORT] == USER_INPUT[CONF_PORT]

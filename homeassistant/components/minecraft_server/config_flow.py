@@ -1,6 +1,4 @@
 """Config flow for Minecraft Server integration."""
-import logging
-
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,18 +15,12 @@ from .const import (  # pylint: disable=unused-import
     DOMAIN,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Minecraft Server."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    def __init__(self):
-        """Initialize Minecraft Server config flow."""
-        pass
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
@@ -37,13 +29,13 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._show_config_form()
 
         # User inputs.
-        name = user_input[CONF_NAME]
         host = user_input[CONF_HOST]
         port = user_input[CONF_PORT]
         update_interval = user_input[CONF_UPDATE_INTERVAL]
 
         # Abort in case the host was already configured before.
-        await self.async_set_unique_id(f"{host.lower()}-{port}")
+        unique_id = f"{host.lower()}-{port}"
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
         errors = {}
@@ -56,20 +48,21 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_update_interval"
         # Validate host and port via ping request to server.
         else:
-            server = MinecraftServer(self.hass, name=name, host=host, port=port)
+            server = MinecraftServer(
+                self.hass, unique_id, user_input, skip_periodic_update=True
+            )
             await server.async_check_connection()
-            if not server.online():
+            if not server.online:
                 errors["base"] = "cannot_connect"
             del server
 
         # Configuration data are available, but an error was detected.
         # Show configuration form with error message.
         if "base" in errors:
-            _LOGGER.error("Error occured during config flow: %s", errors["base"])
-            return await self._show_config_form(user_input, errors=errors,)
+            return await self._show_config_form(user_input, errors=errors)
 
         # Configuration data are available and no error was detected, create configuration entry.
-        return self.async_create_entry(title=f"{host}:{port}", data=user_input)
+        return self.async_create_entry(title=f"{host.lower()}:{port}", data=user_input)
 
     async def _show_config_form(
         self, user_input=None, errors=None,

@@ -19,19 +19,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    CONF_UPDATE_INTERVAL,
-    DOMAIN,
-    MANUFACTURER,
-    NAME_DESCRIPTION,
-    NAME_LATENCY_TIME,
-    NAME_PLAYERS_LIST,
-    NAME_PLAYERS_MAX,
-    NAME_PLAYERS_ONLINE,
-    NAME_PROTOCOL_VERSION,
-    NAME_VERSION,
-    SIGNAL_NAME_PREFIX,
-)
+from .const import CONF_UPDATE_INTERVAL, DOMAIN, MANUFACTURER, SIGNAL_NAME_PREFIX
 
 PLATFORMS = ["sensor"]
 
@@ -45,19 +33,13 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up Minecraft Server from a config entry."""
-    if DOMAIN not in hass.data:
-        hass.data.setdefault(DOMAIN, {})
+    hass.data.setdefault(DOMAIN, {})
 
     # Create and store server instance.
-    server = MinecraftServer(
-        hass,
-        config_entry.data[CONF_NAME],
-        config_entry.data[CONF_HOST],
-        config_entry.data[CONF_PORT],
-        config_entry.data[CONF_UPDATE_INTERVAL],
-    )
-    hass.data[DOMAIN][config_entry.unique_id] = server
-    await server.async_update(event_time=None)
+    unique_id = config_entry.unique_id
+    server = MinecraftServer(hass, unique_id, config_entry.data)
+    hass.data[DOMAIN][unique_id] = server
+    await server.async_update()
 
     # Set up platform(s).
     for platform in PLATFORMS:
@@ -73,18 +55,12 @@ async def async_unload_entry(hass, config_entry):
     unique_id = config_entry.unique_id
     server = hass.data[DOMAIN][unique_id]
 
-    _LOGGER.debug(
-        "Unloading of Minecraft Server config entry '%s' requested.", unique_id
-    )
-
     # Unload platforms.
     for platform in PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(config_entry, platform)
 
     # Clean up.
-    _LOGGER.debug("Stopping periodic update...")
     server.stop_periodic_update()
-    _LOGGER.debug("Deleting data...")
     hass.data[DOMAIN].pop(unique_id)
 
     return True
@@ -121,27 +97,28 @@ class MinecraftServer:
     _RETRIES_PING = 3
     _RETRIES_STATUS = 3
 
-    def __init__(self, hass, name, host, port, update_interval=0):
+    def __init__(self, hass, unique_id, config_data, skip_periodic_update=False):
         """Initialize server instance."""
-        _LOGGER.debug("Initializing Minecraft server '%s'...", name)
-        _LOGGER.debug(
-            "Configuration: host='%s', port=%s, update_interval=%s",
-            host,
-            port,
-            update_interval,
-        )
-
         self._hass = hass
+        self._unique_id = unique_id
 
         # Server data
-        self._name = name
-        self._host = host
-        self._port = port
+        self._name = config_data[CONF_NAME]
+        self._host = config_data[CONF_HOST]
+        self._port = config_data[CONF_PORT]
+        self._update_interval = config_data[CONF_UPDATE_INTERVAL]
         self._server_online = False
-        self._unique_id = f"{self._host.lower()}-{self._port}"
+
+        _LOGGER.debug(
+            "Initializing '%s' (host='%s', port=%s, update_interval=%s)...",
+            self._name,
+            self._host,
+            self._port,
+            self._update_interval,
+        )
 
         # 3rd party library instance
-        self._mcstatus = MCStatus(host, port)
+        self._mcstatus = MCStatus(self._host, self._port)
 
         # Data provided by 3rd party library
         self._description = STATE_UNKNOWN
@@ -151,168 +128,145 @@ class MinecraftServer:
         self._players_online = STATE_UNKNOWN
         self._players_max = STATE_UNKNOWN
         self._players_list = STATE_UNAVAILABLE
-        self._remove_track_time_interval = None
 
         # Dispatcher signal name
         self._signal_name = SIGNAL_NAME_PREFIX + self._unique_id
 
         # Periodically update status.
-        if update_interval == 0:
-            _LOGGER.debug("Setting up periodic update skipped.")
+        if skip_periodic_update:
+            _LOGGER.debug("Got request to skip setup of periodic update.")
         else:
-            _LOGGER.debug("Setting up periodic update...")
-            self._remove_track_time_interval = async_track_time_interval(
-                self._hass, self.async_update, timedelta(seconds=update_interval),
+            self._stop_track_time_interval = async_track_time_interval(
+                self._hass, self.async_update, timedelta(seconds=self._update_interval),
             )
+
+    @property
+    def name(self):
+        """Return server name."""
+        return self._name
+
+    @property
+    def unique_id(self):
+        """Return server unique ID."""
+        return self._unique_id
+
+    @property
+    def host(self):
+        """Return server host."""
+        return self._host
+
+    @property
+    def port(self):
+        """Return server port."""
+        return self._port
+
+    @property
+    def signal_name(self):
+        """Return dispatcher signal name."""
+        return self._signal_name
+
+    @property
+    def description(self):
+        """Return server description."""
+        return self._description
+
+    @property
+    def version(self):
+        """Return server version."""
+        return self._version
+
+    @property
+    def protocol_version(self):
+        """Return server protocol version."""
+        return self._protocol_version
+
+    @property
+    def latency_time(self):
+        """Return server latency time."""
+        return self._latency
+
+    @property
+    def players_online(self):
+        """Return online players on server."""
+        return self._players_online
+
+    @property
+    def players_max(self):
+        """Return maximum number of players on server."""
+        return self._players_max
+
+    @property
+    def players_list(self):
+        """Return players list on server."""
+        return self._players_list
+
+    @property
+    def online(self):
+        """Return server connection status."""
+        return self._server_online
 
     def stop_periodic_update(self):
         """Stop periodic execution of update method."""
-        if self._remove_track_time_interval is not None:
-            self._remove_track_time_interval()
-            _LOGGER.debug("Periodic update stopped.")
+        if self._stop_track_time_interval is not None:
+            self._stop_track_time_interval()
         else:
             _LOGGER.debug(
                 "Listener was not started, stopping of periodic update skipped."
             )
 
-    def name(self):
-        """Return server name."""
-        return self._name
-
-    def unique_id(self):
-        """Return server unique ID."""
-        return self._unique_id
-
-    def host(self):
-        """Return server host."""
-        return self._host
-
-    def port(self):
-        """Return server port."""
-        return self._port
-
-    def signal_name(self):
-        """Return dispatcher signal name."""
-        return self._signal_name
-
-    def description(self):
-        """Return server description."""
-        return self._description
-
-    def version(self):
-        """Return server version."""
-        return self._version
-
-    def protocol_version(self):
-        """Return server protocol version."""
-        return self._protocol_version
-
-    def latency_time(self):
-        """Return server latency time."""
-        return self._latency
-
-    def players_online(self):
-        """Return online players on server."""
-        return self._players_online
-
-    def players_max(self):
-        """Return maximum number of players on server."""
-        return self._players_max
-
-    def players_list(self):
-        """Return players list on server."""
-        return self._players_list
-
     async def async_check_connection(self):
         """Check server connection using a 'ping' request and store result."""
-        ping_response = None
-        exception = None
-
-        _LOGGER.debug("Pinging server...")
-
         try:
-            ping_response = await self._hass.async_add_executor_job(
+            await self._hass.async_add_executor_job(
                 self._mcstatus.ping, self._RETRIES_PING
             )
-        except IOError as error:
-            exception = error
-            _LOGGER.debug("Error occured while trying to ping the server (%s).", error)
-        if (exception is None) and (ping_response is not None):
             self._server_online = True
-            _LOGGER.debug("Ping was successful. Server is online.")
-        else:
+        except IOError as error:
+            _LOGGER.debug("Error occured while trying to ping the server (%s).", error)
             self._server_online = False
-            _LOGGER.debug("Ping failed. Server is unavailable.")
 
-    def online(self):
-        """Return server connection status."""
-        return self._server_online
-
-    async def async_update(self, event_time):
+    async def async_update(self, now=None):
         """Get server data from 3rd party library and update properties."""
         # Check connection status.
-        server_online_old = self.online()
+        server_online_old = self.online
         await self.async_check_connection()
-        server_online = self.online()
+        server_online = self.online
 
         # Inform user once about connection state changes if necessary.
         if (server_online_old is True) and (server_online is False):
             _LOGGER.warning("Connection to server lost.")
         elif (server_online_old is False) and (server_online is True):
-            _LOGGER.info("Connection to server established.")
-        else:
-            _LOGGER.debug("Connection status to server didn't change.")
+            _LOGGER.info("Connection to server (re-)established.")
 
         # Try to update the server data if server is online.
-        exception = None
         if server_online:
             try:
                 await self._async_status_request()
             except IOError as error:
-                exception = error
-            if exception is not None:
                 _LOGGER.debug(
-                    "Error occured while trying to update the server data (%s).",
-                    exception,
+                    "Error occured while trying to update the server data (%s).", error
                 )
-
-        # Either connection to server lost or error occured while requesting data?
-        if (not server_online) or (exception is not None):
-            # Set all properties to unknown until server connection is established again.
-            self._description = STATE_UNKNOWN
-            self._version = STATE_UNKNOWN
-            self._protocol_version = STATE_UNKNOWN
+        else:
+            # Set all properties except description and version information to
+            # unknown until server connection is established again.
             self._players_online = STATE_UNKNOWN
             self._players_max = STATE_UNKNOWN
             self._players_list = STATE_UNKNOWN
             self._latency = STATE_UNKNOWN
 
-        # Print debug data.
-        self._print_data()
-
-        # Send notification to sensors.
-        _LOGGER.debug("Sending signal '%s'.", self._signal_name)
-        await self._async_notify()
-
-    async def _async_notify(self):
-        """Notify all sensor platforms about new data."""
+        # Notify sensors about new data.
         async_dispatcher_send(self._hass, self._signal_name)
 
     async def _async_status_request(self):
         """Request server status and update properties."""
-        _LOGGER.debug("Requesting status information...")
-
-        status_response = None
         try:
             status_response = await self._hass.async_add_executor_job(
                 self._mcstatus.status, self._RETRIES_STATUS
             )
         except IOError:
+            _LOGGER.debug("Error while requesting server status (IOError).")
             raise IOError
-
-        if status_response is not None:
-            _LOGGER.debug("Got status response. Updating properties...")
-
+        else:
             self._description = status_response.description["text"]
 
             # Remove color codes.
@@ -349,36 +303,6 @@ class MinecraftServer:
                     self._players_list = self._players_list[:-4] + "...]"
                     _LOGGER.debug("Players list length > 255 (truncated).")
 
-    def _print_data(self):
-        """Print properties."""
-        _LOGGER.debug(
-            """Properties of '%s' (%s:%s):
-            %s: %s
-            %s: %s
-            %s: %s
-            %s: %s
-            %s: %s
-            %s: %s
-            %s: %s""",
-            self._name,
-            self._host,
-            self._port,
-            NAME_DESCRIPTION,
-            self._description,
-            NAME_VERSION,
-            self._version,
-            NAME_PROTOCOL_VERSION,
-            self._protocol_version,
-            NAME_LATENCY_TIME,
-            self._latency,
-            NAME_PLAYERS_ONLINE,
-            self._players_online,
-            NAME_PLAYERS_MAX,
-            self._players_max,
-            NAME_PLAYERS_LIST,
-            self._players_list,
-        )
-
 
 class MinecraftServerEntity(Entity):
     """Representation of a Minecraft Server base entity."""
@@ -388,29 +312,19 @@ class MinecraftServerEntity(Entity):
         self._server = server
         self._hass = hass
         self._state = None
-        self._name = server.name() + " " + name
+        self._name = server.name + " " + name
         self._sensor_name = name
         self._unit = unit
         self._icon = icon
-        self._unique_id = f"{self._server.unique_id()}-{self._sensor_name}"
+        self._unique_id = f"{self._server.unique_id}-{self._sensor_name}"
         self._device_info = {
-            "identifiers": {(DOMAIN, self._server.unique_id())},
-            "name": self._server.name(),
+            "identifiers": {(DOMAIN, self._server.unique_id)},
+            "name": self._server.name,
             "manufacturer": MANUFACTURER,
-            "model": f"Minecraft Server ({self._server.version()})",
-            "sw_version": self._server.protocol_version(),
+            "model": f"Minecraft Server ({self._server.version})",
+            "sw_version": self._server.protocol_version,
         }
-
-        # Subscribe to signal from server instance.
-        self._signal_name = self._server.signal_name()
-        async_dispatcher_connect(
-            self._hass, self._signal_name, self._async_trigger_update
-        )
-
-    async def _async_trigger_update(self):
-        """Triggers update of properties after receiving signal from server instance."""
-        _LOGGER.debug("%s: Received signal '%s'.", self._sensor_name, self._signal_name)
-        self.async_schedule_update_ha_state(force_refresh=True)
+        self._disconnect_dispatcher = None
 
     @property
     def name(self):
@@ -450,3 +364,17 @@ class MinecraftServerEntity(Entity):
     async def async_update(self):
         """Fetch sensor data from the server."""
         raise NotImplementedError()
+
+    async def async_added_to_hass(self):
+        """Connect dispatcher to signal from server."""
+        self._disconnect_dispatcher = async_dispatcher_connect(
+            self._hass, self._server.signal_name, self._async_update_callback
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher before removal."""
+        self._disconnect_dispatcher()
+
+    async def _async_update_callback(self):
+        """Triggers update of properties after receiving signal from server."""
+        self.async_schedule_update_ha_state(force_refresh=True)

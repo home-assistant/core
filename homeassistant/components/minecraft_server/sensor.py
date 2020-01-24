@@ -1,7 +1,5 @@
 """The Minecraft Server sensor platform."""
 
-import logging
-
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import MinecraftServerEntity
@@ -16,8 +14,6 @@ from .const import (
     NAME_STATUS,
     NAME_VERSION,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -49,12 +45,10 @@ class MinecraftServerStatusSensor(MinecraftServerEntity):
 
     async def async_update(self):
         """Update status."""
-        state = None
-        if self._server.online() is True:
-            state = STATE_ON
+        if self._server.online:
+            self._state = STATE_ON
         else:
-            state = STATE_OFF
-        self._state = state
+            self._state = STATE_OFF
 
 
 class MinecraftServerDescriptionSensor(MinecraftServerEntity):
@@ -68,7 +62,7 @@ class MinecraftServerDescriptionSensor(MinecraftServerEntity):
 
     async def async_update(self):
         """Update description."""
-        self._state = self._server.description()
+        self._state = self._server.description
 
 
 class MinecraftServerVersionSensor(MinecraftServerEntity):
@@ -80,7 +74,7 @@ class MinecraftServerVersionSensor(MinecraftServerEntity):
 
     async def async_update(self):
         """Update version."""
-        self._state = self._server.version()
+        self._state = self._server.version
 
 
 class MinecraftServerProtocolVersionSensor(MinecraftServerEntity):
@@ -94,7 +88,7 @@ class MinecraftServerProtocolVersionSensor(MinecraftServerEntity):
 
     async def async_update(self):
         """Update protocol version."""
-        self._state = self._server.protocol_version()
+        self._state = self._server.protocol_version
 
 
 class MinecraftServerLatencyTimeSensor(MinecraftServerEntity):
@@ -106,7 +100,7 @@ class MinecraftServerLatencyTimeSensor(MinecraftServerEntity):
 
     async def async_update(self):
         """Update latency time."""
-        self._state = self._server.latency_time()
+        self._state = self._server.latency_time
 
 
 class MinecraftServerPlayersOnlineSensor(MinecraftServerEntity):
@@ -120,7 +114,7 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerEntity):
 
     async def async_update(self):
         """Update online players."""
-        self._state = self._server.players_online()
+        self._state = self._server.players_online
 
 
 class MinecraftServerPlayersMaxSensor(MinecraftServerEntity):
@@ -134,7 +128,7 @@ class MinecraftServerPlayersMaxSensor(MinecraftServerEntity):
 
     async def async_update(self):
         """Update maximum number of players."""
-        self._state = self._server.players_max()
+        self._state = self._server.players_max
 
 
 class MinecraftServerPlayersListSensor(MinecraftServerEntity):
@@ -148,4 +142,4 @@ class MinecraftServerPlayersListSensor(MinecraftServerEntity):
 
     async def async_update(self):
         """Update players list."""
-        self._state = self._server.players_list()
+        self._state = self._server.players_list
