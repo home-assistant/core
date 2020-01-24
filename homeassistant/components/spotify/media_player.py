@@ -305,10 +305,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         """Play media."""
         kwargs = {}
 
-        if not media_id.startswith("spotify:"):
-            _LOGGER.error("Media ID must be Spotify URI ('spotify:')")
-            return
-
         if media_type == MEDIA_TYPE_MUSIC:
             kwargs["uris"] = [media_id]
         elif media_type == MEDIA_TYPE_PLAYLIST:
