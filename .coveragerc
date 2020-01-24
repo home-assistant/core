@@ -6,7 +6,6 @@ omit =
     homeassistant/helpers/signal.py
     homeassistant/helpers/typing.py
     homeassistant/scripts/*.py
-    homeassistant/util/async.py
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/abode/__init__.py
@@ -32,7 +31,6 @@ omit =
     homeassistant/components/airly/const.py
     homeassistant/components/airvisual/sensor.py
     homeassistant/components/aladdin_connect/cover.py
-    homeassistant/components/alarm_control_panel/manual_mqtt.py
     homeassistant/components/alarmdecoder/*
     homeassistant/components/alarmdotcom/alarm_control_panel.py
     homeassistant/components/alpha_vantage/sensor.py
@@ -261,7 +259,6 @@ omit =
     homeassistant/components/geizhals/sensor.py
     homeassistant/components/gios/__init__.py
     homeassistant/components/gios/air_quality.py
-    homeassistant/components/gios/consts.py
     homeassistant/components/github/sensor.py
     homeassistant/components/gitlab_ci/sensor.py
     homeassistant/components/gitter/sensor.py
@@ -306,7 +303,6 @@ omit =
     homeassistant/components/homematic/notify.py
     homeassistant/components/homeworks/*
     homeassistant/components/honeywell/climate.py
-    homeassistant/components/hook/switch.py
     homeassistant/components/horizon/media_player.py
     homeassistant/components/hp_ilo/sensor.py
     homeassistant/components/htu21d/sensor.py
@@ -534,7 +530,6 @@ omit =
     homeassistant/components/plex/media_player.py
     homeassistant/components/plex/sensor.py
     homeassistant/components/plex/server.py
-    homeassistant/components/plex/websockets.py
     homeassistant/components/plugwise/*
     homeassistant/components/plum_lightpad/*
     homeassistant/components/pocketcasts/sensor.py
@@ -728,7 +723,6 @@ omit =
     homeassistant/components/torque/sensor.py
     homeassistant/components/totalconnect/*
     homeassistant/components/touchline/climate.py
-    homeassistant/components/tplink/device_tracker.py
     homeassistant/components/tplink/switch.py
     homeassistant/components/tplink_lte/*
     homeassistant/components/traccar/device_tracker.py
@@ -753,7 +747,6 @@ omit =
     homeassistant/components/twitch/sensor.py
     homeassistant/components/twitter/notify.py
     homeassistant/components/ubee/device_tracker.py
-    homeassistant/components/uber/sensor.py
     homeassistant/components/ubus/device_tracker.py
     homeassistant/components/ue_smart_radio/media_player.py
     homeassistant/components/unifiled/*
@@ -831,7 +824,6 @@ omit =
     homeassistant/components/zestimate/sensor.py
     homeassistant/components/zha/__init__.py
     homeassistant/components/zha/api.py
-    homeassistant/components/zha/const.py
     homeassistant/components/zha/core/channels/*
     homeassistant/components/zha/core/const.py
     homeassistant/components/zha/core/device.py
@@ -839,7 +831,6 @@ omit =
     homeassistant/components/zha/core/helpers.py
     homeassistant/components/zha/core/patches.py
     homeassistant/components/zha/core/registries.py
-    homeassistant/components/zha/device_entity.py
     homeassistant/components/zha/entity.py
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py
