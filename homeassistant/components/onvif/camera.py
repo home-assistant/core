@@ -8,7 +8,6 @@ import asyncio
 import datetime as dt
 import logging
 import os
-from time import sleep
 
 from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedError
 from haffmpeg.camera import CameraMjpeg
@@ -63,7 +62,6 @@ ZOOM_IN = "ZOOM_IN"
 CONTINUOUS_MOVE = "ContinuousMove"
 RELATIVE_MOVE = "RelativeMove"
 ABSOLUTE_MOVE = "AbsoluteMove"
-PTZ_NONE = "NONE"
 
 SERVICE_PTZ = "onvif_ptz"
 
@@ -82,22 +80,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_EXTRA_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
         vol.Optional(CONF_PROFILE, default=DEFAULT_PROFILE): vol.All(
             vol.Coerce(int), vol.Range(min=0)
-        )
+        ),
     }
 )
 
 SERVICE_PTZ_SCHEMA = vol.Schema(
     {
         ATTR_ENTITY_ID: cv.entity_ids,
-        vol.Optional(ATTR_PAN, default=PTZ_NONE): vol.In([DIR_LEFT, DIR_RIGHT, PTZ_NONE]),
-        vol.Optional(ATTR_TILT, default=PTZ_NONE): vol.In([DIR_UP, DIR_DOWN, PTZ_NONE]),
-        vol.Optional(ATTR_ZOOM, default=PTZ_NONE): vol.In([ZOOM_OUT, ZOOM_IN, PTZ_NONE]),
+        vol.Optional(ATTR_PAN, default=None): vol.In([DIR_LEFT, DIR_RIGHT, None]),
+        vol.Optional(ATTR_TILT, default=None): vol.In([DIR_UP, DIR_DOWN, None]),
+        vol.Optional(ATTR_ZOOM, default=None): vol.In([ZOOM_OUT, ZOOM_IN, None]),
         ATTR_MOVE_MODE: vol.In(
-            [CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE, PTZ_NONE]
+            [CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE, None]
         ),
         vol.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
         vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
-        vol.Optional(ATTR_SPEED, default=0.5): cv.small_float
+        vol.Optional(ATTR_SPEED, default=0.5): cv.small_float,
     }
 )
 
@@ -114,7 +112,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         distance = service.data[ATTR_DISTANCE]
         speed = service.data[ATTR_SPEED]
         move_mode = service.data[ATTR_MOVE_MODE]
-        continuous_timeout = service.data[ATTR_CONTINUOUS_DURATION]
+        continuous_duration = service.data[ATTR_CONTINUOUS_DURATION]
         all_cameras = hass.data[ONVIF_DATA][ENTITIES]
         entity_ids = await async_extract_entity_ids(hass, service)
         target_cameras = []
@@ -401,7 +399,7 @@ class ONVIFHassCamera(Camera):
                     }
 
                     await self._ptz_service.ContinuousMove(req)
-                    sleep(continuous_duration)
+                    await asyncio.sleep(continuous_duration)
                     req = self._ptz_service.create_type("Stop")
                     req.ProfileToken = await self.async_obtain_profile_token()
                     await self._ptz_service.Stop({"ProfileToken": req.ProfileToken})
