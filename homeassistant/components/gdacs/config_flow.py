@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_CATEGORIES, DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,5 +72,8 @@ class GdacsFlowHandler(config_entries.ConfigFlow):
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds
+
+        categories = user_input.get(CONF_CATEGORIES, [])
+        user_input[CONF_CATEGORIES] = categories
 
         return self.async_create_entry(title=identifier, data=user_input)

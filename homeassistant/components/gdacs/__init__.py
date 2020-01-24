@@ -24,6 +24,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .config_flow import configured_instances
 from .const import (
+    CONF_CATEGORIES,
     DEFAULT_RADIUS,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -47,6 +48,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
+                vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
+                    cv.ensure_list, [cv.string]
+                ),
             }
         )
     },
@@ -64,6 +68,7 @@ async def async_setup(hass, config):
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
     scan_interval = conf[CONF_SCAN_INTERVAL]
+    categories = conf[CONF_CATEGORIES]
 
     identifier = f"{latitude}, {longitude}"
     if identifier in configured_instances(hass):
@@ -78,6 +83,7 @@ async def async_setup(hass, config):
                 CONF_LONGITUDE: longitude,
                 CONF_RADIUS: conf[CONF_RADIUS],
                 CONF_SCAN_INTERVAL: scan_interval,
+                CONF_CATEGORIES: categories,
             },
         )
     )
@@ -128,6 +134,7 @@ class GdacsFeedEntityManager:
             config_entry.data[CONF_LATITUDE],
             config_entry.data[CONF_LONGITUDE],
         )
+        categories = config_entry.data[CONF_CATEGORIES]
         websession = aiohttp_client.async_get_clientsession(hass)
         self._feed_manager = GdacsFeedManager(
             websession,
@@ -136,6 +143,7 @@ class GdacsFeedEntityManager:
             self._remove_entity,
             coordinates,
             filter_radius=radius_in_km,
+            filter_categories=categories,
             status_async_callback=self._status_update,
         )
         self._config_entry_id = config_entry.entry_id
