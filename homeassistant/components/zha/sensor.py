@@ -25,6 +25,7 @@ from homeassistant.util.temperature import fahrenheit_to_celsius
 
 from .core import typing as zha_typing
 from .core.const import (
+    CHANNEL_ANALOG_INPUT,
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
@@ -160,6 +161,13 @@ class Sensor(ZhaEntity):
                 float(value * self._multiplier) / self._divisor, self._decimals
             )
         return round(float(value * self._multiplier) / self._divisor)
+
+
+@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT)
+class AnalogInput(Sensor):
+    """Sensor that displays analog input values."""
+
+    pass
 
 
 @STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
