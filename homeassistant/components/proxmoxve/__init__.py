@@ -19,8 +19,6 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-# Disable constant logs of requests to Proxmox
-logging.getLogger("proxmoxer.core").setLevel(level=logging.WARNING)
 
 DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
