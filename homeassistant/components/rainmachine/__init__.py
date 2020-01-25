@@ -348,14 +348,14 @@ class RainMachine:
         _LOGGER.debug("Updating data for RainMachine")
 
         # Always update program data and zone data (since we should reasonably
-        # anticipate that the user wants switches to control the device):
+        # anticipate that the user won't disable the switch entities):
         tasks = {
             DATA_PROGRAMS: self._async_fetch_from_api(DATA_PROGRAMS),
             DATA_ZONES: self._async_fetch_from_api(DATA_ZONES),
             DATA_ZONES_DETAILS: self._async_fetch_from_api(DATA_ZONES_DETAILS),
         }
 
-        # Add an API task only if there is at least one "interested" entity:
+        # Add an task for any API call if there is at least one interested entity:
         for category, count in self._api_category_count.items():
             if count == 0:
                 continue
