@@ -12,12 +12,12 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from . import (
+from . import RainMachineEntity
+from .const import (
     DATA_CLIENT,
     DOMAIN as RAINMACHINE_DOMAIN,
     PROGRAM_UPDATE_TOPIC,
     ZONE_UPDATE_TOPIC,
-    RainMachineEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)

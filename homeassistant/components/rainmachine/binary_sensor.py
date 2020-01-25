@@ -5,14 +5,14 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
+from . import RainMachineEntity
+from .const import (
     DATA_CLIENT,
     DOMAIN as RAINMACHINE_DOMAIN,
     PROVISION_SETTINGS,
     RESTRICTIONS_CURRENT,
     RESTRICTIONS_UNIVERSAL,
     SENSOR_UPDATE_TOPIC,
-    RainMachineEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)

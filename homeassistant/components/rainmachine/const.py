@@ -16,4 +16,6 @@ PROVISION_SETTINGS = "provision.settings"
 RESTRICTIONS_CURRENT = "restrictions.current"
 RESTRICTIONS_UNIVERSAL = "restrictions.universal"
 
-TOPIC_UPDATE = "update_{0}"
+PROGRAM_UPDATE_TOPIC = f"{DOMAIN}_program_update"
+SENSOR_UPDATE_TOPIC = f"{DOMAIN}_data_update"
+ZONE_UPDATE_TOPIC = f"{DOMAIN}_zone_update"

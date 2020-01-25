@@ -31,18 +31,17 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
     DOMAIN,
+    PROGRAM_UPDATE_TOPIC,
     PROVISION_SETTINGS,
     RESTRICTIONS_CURRENT,
     RESTRICTIONS_UNIVERSAL,
+    SENSOR_UPDATE_TOPIC,
+    ZONE_UPDATE_TOPIC,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_LISTENER = "listener"
-
-PROGRAM_UPDATE_TOPIC = f"{DOMAIN}_program_update"
-SENSOR_UPDATE_TOPIC = f"{DOMAIN}_data_update"
-ZONE_UPDATE_TOPIC = f"{DOMAIN}_zone_update"
 
 CONF_CONTROLLERS = "controllers"
 CONF_PROGRAM_ID = "program_id"
