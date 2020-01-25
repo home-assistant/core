@@ -510,7 +510,6 @@ omit =
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
-    homeassistant/components/owlet/*
     homeassistant/components/panasonic_bluray/media_player.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
