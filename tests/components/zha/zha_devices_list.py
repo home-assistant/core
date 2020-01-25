@@ -45,10 +45,7 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": [
-            "binary_sensor.centralite_3130_77665544_on_off",
-            "sensor.centralite_3130_77665544_power",
-        ],
+        "entities": ["sensor.centralite_3130_77665544_power"],
         "event_channels": [6, 8],
         "manufacturer": "CentraLite",
         "model": "3130",
@@ -1372,10 +1369,7 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": [
-            "binary_sensor.osram_lightify_dimming_switch_77665544_on_off",
-            "sensor.osram_lightify_dimming_switch_77665544_power",
-        ],
+        "entities": ["sensor.osram_lightify_dimming_switch_77665544_power"],
         "event_channels": [6, 8],
         "manufacturer": "OSRAM",
         "model": "LIGHTIFY Dimming Switch",
@@ -1593,7 +1587,6 @@ DEVICES = [
             }
         },
         "entities": [
-            "binary_sensor.securifi_ltd_unk_model_77665544_on_off",
             "sensor.securifi_ltd_unk_model_77665544_electrical_measurement",
             "sensor.securifi_ltd_unk_model_77665544_power",
             "switch.securifi_ltd_unk_model_77665544_on_off",
