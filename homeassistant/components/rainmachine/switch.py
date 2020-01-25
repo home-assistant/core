@@ -149,6 +149,58 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
             self._rainmachine_entity_id,
         )
 
+    async def _async_run_turn_off_coro(self, api_coro) -> None:
+        """Turn the program off."""
+        try:
+            resp = await api_coro
+        except RequestError as err:
+            _LOGGER.error(
+                'Unable to turn off %s "%s": %s',
+                self._switch_type,
+                self.unique_id,
+                str(err),
+            )
+            return
+
+        if resp["statusCode"] != 0:
+            _LOGGER.error(
+                'Unable to turn off %s "%s": %s',
+                self._switch_type,
+                self.unique_id,
+                resp["message"],
+            )
+            return
+
+        # If the API call is successful, immediately assume the switch is off:
+        self._is_on = False
+        self.async_write_ha_state()
+
+    async def _async_run_turn_on_coro(self, api_coro) -> None:
+        """Turn the program on."""
+        try:
+            resp = await api_coro
+        except RequestError as err:
+            _LOGGER.error(
+                'Unable to turn on %s "%s": %s',
+                self._switch_type,
+                self.unique_id,
+                str(err),
+            )
+            return
+
+        if resp["statusCode"] != 0:
+            _LOGGER.error(
+                'Unable to turn on %s "%s": %s',
+                self._switch_type,
+                self.unique_id,
+                resp["message"],
+            )
+            return
+
+        # If the API call is successful, immediately assume the switch is off:
+        self._is_on = True
+        self.async_write_ha_state()
+
 
 class RainMachineProgram(RainMachineSwitch):
     """A RainMachine program."""
@@ -172,25 +224,17 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the program off."""
-        try:
-            await self.rainmachine.client.programs.stop(self._rainmachine_entity_id)
-        except RequestError as err:
-            _LOGGER.error(
-                'Unable to turn off program "%s": %s', self.unique_id, str(err)
-            )
-        else:
-            async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
+        await self._async_run_turn_off_coro(
+            self.rainmachine.client.programs.stop(self._rainmachine_entity_id)
+        )
+        async_dispatcher_send(self.hass, ZONE_UPDATE_TOPIC)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the program on."""
-        try:
-            await self.rainmachine.client.programs.start(self._rainmachine_entity_id)
-        except RequestError as err:
-            _LOGGER.error(
-                'Unable to turn on program "%s": %s', self.unique_id, str(err)
-            )
-        else:
-            async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
+        await self._async_run_turn_on_coro(
+            self.rainmachine.client.programs.start(self._rainmachine_entity_id)
+        )
+        async_dispatcher_send(self.hass, ZONE_UPDATE_TOPIC)
 
     async def async_update(self) -> None:
         """Update info for the program."""
@@ -244,23 +288,15 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
-        try:
-            await self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
-        except RequestError as err:
-            _LOGGER.error('Unable to turn off zone "%s": %s', self.unique_id, str(err))
-        else:
-            self._is_on = False
+        await self._async_run_turn_off_coro(
+            self.rainmachine.client.zones.start(self._rainmachine_entity_id)
+        )
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
-        try:
-            await self.rainmachine.client.zones.start(
-                self._rainmachine_entity_id, self._run_time
-            )
-        except RequestError as err:
-            _LOGGER.error('Unable to turn on zone "%s": %s', self.unique_id, str(err))
-        else:
-            self._is_on = True
+        await self._async_run_turn_on_coro(
+            self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
+        )
 
     async def async_update(self) -> None:
         """Update info for the zone."""
