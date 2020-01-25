@@ -25,7 +25,7 @@ MOCK_CONF = {
 def mock_garmin():
     """Mock Garmin."""
     with patch("homeassistant.components.garmin_connect.config_flow.Garmin") as garmin:
-        garmin().get_full_name.return_value = "First Lastname"
+        garmin.return_value.get_full_name.return_value = MOCK_CONF[CONF_ID]
         yield garmin
 
 
@@ -46,7 +46,6 @@ async def test_step_user(hass, mock_garmin_connect):
         data={"username": "my@email.address", "password": "mypassw0rd"},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "First Lastname"
     assert result["data"] == MOCK_CONF
 
 
