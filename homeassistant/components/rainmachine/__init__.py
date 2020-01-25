@@ -306,6 +306,7 @@ class RainMachine:
                 self._async_cancel_time_interval_listener()
                 self._async_cancel_time_interval_listener = None
             return
+
         self._api_category_count[api_category] -= 1
 
     async def async_fetch_from_api(self, api_category):
