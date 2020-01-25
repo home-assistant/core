@@ -7,9 +7,8 @@ from homeassistant.components.konnected import config_flow, panel
 from tests.common import MockConfigEntry
 
 
-# pylint: disable=redefined-outer-name
-@pytest.fixture
-async def mock_panel():
+@pytest.fixture(name="mock_panel")
+async def mock_panel_fixture():
     """Mock a Konnected Panel bridge."""
     with patch("konnected.Client", autospec=True) as konn_client:
 
@@ -41,11 +40,28 @@ async def mock_panel():
 
 async def test_create_and_setup(hass, mock_panel):
     """Test that we create a Konnected Panel and save the data."""
-    device_config = config_flow.DEVICE_SCHEMA(
+    device_config = config_flow.CONFIG_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,
             "id": "112233445566",
+            "model": "Konnected Pro",
+            "access_token": "11223344556677889900",
+            "default_options": config_flow.OPTIONS_SCHEMA({config_flow.CONF_IO: {}}),
+        }
+    )
+
+    device_options = config_flow.OPTIONS_SCHEMA(
+        {
+            "io": {
+                "1": "Binary Sensor",
+                "2": "Binary Sensor",
+                "3": "Binary Sensor",
+                "4": "Digital Sensor",
+                "5": "Digital Sensor",
+                "6": "Switchable Output",
+                "out": "Switchable Output",
+            },
             "binary_sensors": [
                 {"zone": "1", "type": "door"},
                 {"zone": "2", "type": "window", "name": "winder", "inverse": True},
@@ -70,11 +86,13 @@ async def test_create_and_setup(hass, mock_panel):
     )
 
     entry = MockConfigEntry(
-        domain="konnected", title="Konnected Alarm Panel", data=device_config
+        domain="konnected",
+        title="Konnected Alarm Panel",
+        data=device_config,
+        options=device_options,
     )
     entry.add_to_hass(hass)
     hass.data[panel.DOMAIN] = {
-        panel.CONF_ACCESS_TOKEN: "some_token",
         panel.CONF_API_HOST: "192.168.1.1",
     }
 
@@ -110,7 +128,7 @@ async def test_create_and_setup(hass, mock_panel):
         "actuators": [{"trigger": 0, "pin": "8"}, {"trigger": 1, "pin": "9"}],
         "dht_sensors": [{"poll_interval": 3, "pin": "6"}],
         "ds18b20_sensors": [{"pin": "7"}],
-        "auth_token": "some_token",
+        "auth_token": "11223344556677889900",
         "blink": True,
         "discovery": True,
         "endpoint": "192.168.1.1/api/konnected",
@@ -179,11 +197,31 @@ async def test_create_and_setup(hass, mock_panel):
 
 async def test_create_and_setup_pro(hass, mock_panel):
     """Test that we create a Konnected Pro Panel and save the data."""
-    device_config = config_flow.DEVICE_SCHEMA(
+    device_config = config_flow.CONFIG_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,
             "id": "112233445566",
+            "model": "Konnected Pro",
+            "access_token": "11223344556677889900",
+            "default_options": config_flow.OPTIONS_SCHEMA({config_flow.CONF_IO: {}}),
+        }
+    )
+
+    device_options = config_flow.OPTIONS_SCHEMA(
+        {
+            "io": {
+                "2": "Binary Sensor",
+                "6": "Binary Sensor",
+                "10": "Binary Sensor",
+                "3": "Digital Sensor",
+                "7": "Digital Sensor",
+                "11": "Digital Sensor",
+                "4": "Switchable Output",
+                "8": "Switchable Output",
+                "out1": "Switchable Output",
+                "alarm1": "Switchable Output",
+            },
             "binary_sensors": [
                 {"zone": "2", "type": "door"},
                 {"zone": "6", "type": "window", "name": "winder", "inverse": True},
@@ -211,11 +249,13 @@ async def test_create_and_setup_pro(hass, mock_panel):
     )
 
     entry = MockConfigEntry(
-        domain="konnected", title="Konnected Pro Alarm Panel", data=device_config
+        domain="konnected",
+        title="Konnected Pro Alarm Panel",
+        data=device_config,
+        options=device_options,
     )
     entry.add_to_hass(hass)
     hass.data[panel.DOMAIN] = {
-        panel.CONF_ACCESS_TOKEN: "some_token",
         panel.CONF_API_HOST: "192.168.1.1",
     }
 
@@ -244,7 +284,7 @@ async def test_create_and_setup_pro(hass, mock_panel):
             {"poll_interval": 5, "zone": "11"},
         ],
         "ds18b20_sensors": [{"zone": "7"}],
-        "auth_token": "some_token",
+        "auth_token": "11223344556677889900",
         "blink": True,
         "discovery": True,
         "endpoint": "192.168.1.1/api/konnected",

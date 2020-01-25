@@ -3,8 +3,6 @@ import asyncio
 import hmac
 import json
 import logging
-import random
-import string
 
 from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.web import Request, Response
@@ -30,11 +28,10 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, storage
+from homeassistant.helpers import config_validation as cv
 
 from .config_flow import (  # Loading the config flow file will register the flow
     DEVICE_SCHEMA_YAML,
-    configured_devices,
 )
 from .const import (
     CONF_ACTIVATION,
@@ -50,9 +47,6 @@ from .handlers import HANDLERS
 from .panel import AlarmPanel
 
 _LOGGER = logging.getLogger(__name__)
-
-STORAGE_VERSION = 1
-STORAGE_KEY = DOMAIN
 
 # pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
@@ -78,44 +72,23 @@ async def async_setup(hass: HomeAssistant, config: dict):
     if cfg is None:
         cfg = {}
 
-    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    data_store = await store.async_load()
-    if data_store is None:
-        data_store = {}
-
-    # create a token if none in yaml or storage
-    access_token = (
-        cfg.get(CONF_ACCESS_TOKEN)
-        or data_store.get(CONF_ACCESS_TOKEN)
-        or "".join(random.choices(f"{string.ascii_uppercase}{string.digits}", k=20))
-    )
     if DOMAIN not in hass.data:
         hass.data[DOMAIN] = {
-            CONF_ACCESS_TOKEN: access_token,
+            CONF_ACCESS_TOKEN: cfg.get(CONF_ACCESS_TOKEN),
             CONF_API_HOST: cfg.get(CONF_API_HOST),
             CONF_DEVICES: {},
-            "config_data": {},
         }
 
-    # save off the access token
-    await store.async_save({CONF_ACCESS_TOKEN: access_token})
-
-    hass.http.register_view(KonnectedView(access_token))
+    hass.http.register_view(KonnectedView)
 
     # Check if they have yaml configured devices
     if CONF_DEVICES not in cfg:
         return True
 
-    configured = configured_devices(hass)
     devices = cfg[CONF_DEVICES]
-
     if devices:
         for device in devices:
-            # If configured, the panel is already imported and needs to be managed via config entries
-            if device["id"] in configured:
-                continue
-
-            # No existing config entry found, try importing it. Use
+            # Attempt to importing the cfg. Use
             # hass.async_add_job to avoid a deadlock.
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
@@ -147,6 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         # this will trigger a retry in the future
         raise config_entries.ConfigEntryNotReady
 
+    entry.add_update_listener(async_entry_updated)
     return True
 
 
@@ -166,6 +140,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     return unload_ok
 
 
+async def async_entry_updated(hass: HomeAssistant, entry: ConfigEntry):
+    """Reload the config entry when options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 class KonnectedView(HomeAssistantView):
     """View creates an endpoint to receive push updates from the device."""
 
@@ -173,9 +152,8 @@ class KonnectedView(HomeAssistantView):
     name = "api:konnected"
     requires_auth = False  # Uses access token from configuration
 
-    def __init__(self, auth_token):
+    def __init__(self):
         """Initialize the view."""
-        self.auth_token = auth_token
 
     @staticmethod
     def binary_value(state, activation):
@@ -190,7 +168,21 @@ class KonnectedView(HomeAssistantView):
         data = hass.data[DOMAIN]
 
         auth = request.headers.get(AUTHORIZATION, None)
-        if auth is None or not hmac.compare_digest(f"Bearer {self.auth_token}", auth):
+        tokens = (
+            [hass.data[DOMAIN][CONF_ACCESS_TOKEN]]
+            if hass.data[DOMAIN].get(CONF_ACCESS_TOKEN)
+            else []
+        )
+        tokens.extend(
+            [
+                entry.data[CONF_ACCESS_TOKEN]
+                for entry in hass.config_entries.async_entries(DOMAIN)
+            ]
+        )
+        if auth is None or not next(
+            (True for token in tokens if hmac.compare_digest(f"Bearer {token}", auth)),
+            False,
+        ):
             return self.json_message("unauthorized", status_code=HTTP_UNAUTHORIZED)
 
         try:  # Konnected 2.2.0 and above supports JSON payloads

@@ -63,9 +63,8 @@ class AlarmPanel:
         """Initialize the Konnected device."""
         self.hass = hass
         self.config_entry = config_entry
-        self.config = (
-            config_entry.data
-        )  # a configuration.yaml device config contained in a device entry
+        self.config = config_entry.data
+        self.options = config_entry.options
         self.host = self.config.get(CONF_HOST)
         self.port = self.config.get(CONF_PORT)
         self.client = None
@@ -160,7 +159,7 @@ class AlarmPanel:
     async def async_save_data(self):
         """Save the device configuration to `hass.data`."""
         binary_sensors = {}
-        for entity in self.config.get(CONF_BINARY_SENSORS) or []:
+        for entity in self.options.get(CONF_BINARY_SENSORS) or []:
             zone = entity[CONF_ZONE]
 
             binary_sensors[zone] = {
@@ -178,7 +177,7 @@ class AlarmPanel:
             )
 
         actuators = []
-        for entity in self.config.get(CONF_SWITCHES) or []:
+        for entity in self.options.get(CONF_SWITCHES) or []:
             zone = entity[CONF_ZONE]
 
             act = {
@@ -196,7 +195,7 @@ class AlarmPanel:
             _LOGGER.debug("Set up switch %s", act)
 
         sensors = []
-        for entity in self.config.get(CONF_SENSORS) or []:
+        for entity in self.options.get(CONF_SENSORS) or []:
             zone = entity[CONF_ZONE]
 
             sensor = {
@@ -219,8 +218,8 @@ class AlarmPanel:
             CONF_BINARY_SENSORS: binary_sensors,
             CONF_SENSORS: sensors,
             CONF_SWITCHES: actuators,
-            CONF_BLINK: self.config.get(CONF_BLINK),
-            CONF_DISCOVERY: self.config.get(CONF_DISCOVERY),
+            CONF_BLINK: self.options.get(CONF_BLINK),
+            CONF_DISCOVERY: self.options.get(CONF_DISCOVERY),
             CONF_HOST: self.host,
             CONF_PORT: self.port,
             "panel": self,
@@ -305,12 +304,10 @@ class AlarmPanel:
             "actuators": self.async_actuator_configuration(),
             "dht_sensors": self.async_dht_sensor_configuration(),
             "ds18b20_sensors": self.async_ds18b20_sensor_configuration(),
-            "auth_token": self.hass.data[DOMAIN].get(
-                CONF_ACCESS_TOKEN
-            ),  # one common token to all devices
+            "auth_token": self.config.get(CONF_ACCESS_TOKEN),
             "endpoint": desired_api_endpoint,
-            "blink": self.config.get(CONF_BLINK),
-            "discovery": self.config.get(CONF_DISCOVERY),
+            "blink": self.options.get(CONF_BLINK, True),
+            "discovery": self.options.get(CONF_DISCOVERY, True),
         }
 
     @callback

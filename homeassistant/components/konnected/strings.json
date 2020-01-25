@@ -7,11 +7,30 @@
         "description": "Please enter the host information for your Konnected Panel.",
         "data": {
           "host": "Konnected device IP address",
-          "port": "Konnected device port",
-          "inverse": "Invert the open/close state"
+          "port": "Konnected device port"
         }
       },
-      "io": {
+      "confirm": {
+        "title": "Konnected Device Ready",
+        "description": "Model: {model}\nHost: {host}\nPort: {port}\n\nYou can configure the IO and panel behavior in the Konnected Alarm Panel settings."
+      }
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to a Konnected Panel at {host}:{port}"
+    },
+    "abort": {
+      "unknown": "Unknown error occurred",
+      "cannot_connect": "Unable to connect to the Konnected Panel",
+      "wrong_device": "MAC address of device at host does not match config entry",
+      "already_configured": "Device is already configured",
+      "already_in_progress": "Config flow for device is already in progress.",
+      "not_konn_panel": "Not a recognized Konnected.io device"
+    }
+  },
+  "options": {
+    "title": "Konnected Alarm Panel Options",
+    "step": {
+      "options_io": {
         "title": "Configure I/O",
         "description": "Discovered a {model} at {host}. Select the base configuration of each I/O below - depending on the I/O it may allow for binary sensors (open/close contacts), digital sensors (dht and ds18b20), or switchable outputs. You'll be able to configure detailed options in the next steps.",
         "data": {
@@ -25,7 +44,7 @@
           "out": "OUT"
         }
       },
-      "io_ext": {
+      "options_io_ext": {
         "title": "Configure Extended I/O",
         "description": "Select the configuration of the remaining I/O below.  You'll be able to configure detailed options in the next steps.",
         "data": {
@@ -67,18 +86,16 @@
           "pause": "Pause between pulses (ms) (optional)",
           "repeat": "Times to repeat (-1=infinite) (optional)"
         }
+      },
+      "options_misc": {
+        "title": "Configure Misc",
+        "description": "Please select the desired behavior for your panel",
+        "data": {
+          "blink": "Blink panel LED on when sending state change"
+        }
       }
     },
-    "error": {
-      "register_failed": "Failed to register, please try again",
-      "linking": "Unknown linking error occurred."
-    },
-    "abort": {
-      "unknown": "Unknown error occurred",
-      "cannot_connect": "Unable to connect to the Konnected Panel",
-      "already_configured": "Device is already configured",
-      "already_in_progress": "Config flow for device is already in progress.",
-      "not_konn_panel": "Not a recognized Konnected.io device"
-    }
+    "error": {},
+    "abort": {}
   }
 }

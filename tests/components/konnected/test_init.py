@@ -9,9 +9,8 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
 
-# pylint: disable=redefined-outer-name
-@pytest.fixture
-async def mock_panel():
+@pytest.fixture(name="mock_panel")
+async def mock_panel_fixture():
     """Mock a Konnected Panel bridge."""
     with patch("konnected.Client", autospec=True) as konn_client:
 
@@ -47,8 +46,8 @@ async def test_setup_with_no_config(hass):
     # No flows started
     assert len(hass.config_entries.flow.async_progress()) == 0
 
-    # Default access token used
-    assert hass.data[konnected.DOMAIN][konnected.CONF_ACCESS_TOKEN] is not None
+    # Nothing saved from configuration.yaml
+    assert hass.data[konnected.DOMAIN][konnected.CONF_ACCESS_TOKEN] is None
     assert hass.data[konnected.DOMAIN][konnected.CONF_API_HOST] is None
     assert konnected.YAML_CONFIGS not in hass.data[konnected.DOMAIN]
 
@@ -56,10 +55,14 @@ async def test_setup_with_no_config(hass):
 async def test_setup_defined_hosts_known_auth(hass):
     """Test we don't initiate a config entry if configured panel is known."""
     MockConfigEntry(
-        domain="konnected", data={"host": "0.0.0.0", "id": "112233445566"}
+        domain="konnected",
+        unique_id="112233445566",
+        data={"host": "0.0.0.0", "id": "112233445566"},
     ).add_to_hass(hass)
     MockConfigEntry(
-        domain="konnected", data={"host": "1.2.3.4", "id": "aabbccddeeff"}
+        domain="konnected",
+        unique_id="aabbccddeeff",
+        data={"host": "1.2.3.4", "id": "aabbccddeeff"},
     ).add_to_hass(hass)
 
     assert (
@@ -73,6 +76,7 @@ async def test_setup_defined_hosts_known_auth(hass):
                         {
                             config_flow.CONF_ID: "aabbccddeeff",
                             config_flow.CONF_HOST: "0.0.0.0",
+                            config_flow.CONF_PORT: 1234,
                         },
                     ],
                 }
@@ -80,6 +84,9 @@ async def test_setup_defined_hosts_known_auth(hass):
         )
         is True
     )
+
+    assert hass.data[konnected.DOMAIN][konnected.CONF_ACCESS_TOKEN] == "abcdefgh"
+    assert konnected.YAML_CONFIGS not in hass.data[konnected.DOMAIN]
 
     # Flow aborted
     assert len(hass.config_entries.flow.async_progress()) == 0
@@ -151,11 +158,28 @@ async def test_api(hass, aiohttp_client, mock_panel):
     """Test callback view."""
     await async_setup_component(hass, "http", {"http": {}})
 
-    device_config = config_flow.DEVICE_SCHEMA(
+    device_config = config_flow.CONFIG_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,
             "id": "112233445566",
+            "model": "Konnected Pro",
+            "access_token": "abcdefgh",
+            "default_options": config_flow.OPTIONS_SCHEMA({config_flow.CONF_IO: {}}),
+        }
+    )
+
+    device_options = config_flow.OPTIONS_SCHEMA(
+        {
+            "io": {
+                "1": "Binary Sensor",
+                "2": "Binary Sensor",
+                "3": "Binary Sensor",
+                "4": "Digital Sensor",
+                "5": "Digital Sensor",
+                "6": "Switchable Output",
+                "out": "Switchable Output",
+            },
             "binary_sensors": [
                 {"zone": "1", "type": "door"},
                 {"zone": "2", "type": "window", "name": "winder", "inverse": True},
@@ -180,7 +204,10 @@ async def test_api(hass, aiohttp_client, mock_panel):
     )
 
     entry = MockConfigEntry(
-        domain="konnected", title="Konnected Alarm Panel", data=device_config
+        domain="konnected",
+        title="Konnected Alarm Panel",
+        data=device_config,
+        options=device_options,
     )
     entry.add_to_hass(hass)
 
@@ -188,7 +215,7 @@ async def test_api(hass, aiohttp_client, mock_panel):
         await async_setup_component(
             hass,
             konnected.DOMAIN,
-            {konnected.DOMAIN: {konnected.CONF_ACCESS_TOKEN: "abcdefgh"}},
+            {konnected.DOMAIN: {konnected.CONF_ACCESS_TOKEN: "globaltoken"}},
         )
         is True
     )
@@ -265,6 +292,15 @@ async def test_api(hass, aiohttp_client, mock_panel):
 
     resp = await client.post(
         "/api/konnected/device/112233445566",
+        headers={"Authorization": "Bearer globaltoken"},
+        json={"zone": "1", "state": 1},
+    )
+    assert resp.status == 200
+    result = await resp.json()
+    assert result == {"message": "ok"}
+
+    resp = await client.post(
+        "/api/konnected/device/112233445566",
         headers={"Authorization": "Bearer abcdefgh"},
         json={"zone": "4", "temp": 22, "humi": 20},
     )
@@ -287,11 +323,28 @@ async def test_state_updates(hass, aiohttp_client, mock_panel):
     """Test callback view."""
     await async_setup_component(hass, "http", {"http": {}})
 
-    device_config = config_flow.DEVICE_SCHEMA(
+    device_config = config_flow.CONFIG_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,
             "id": "112233445566",
+            "model": "Konnected Pro",
+            "access_token": "abcdefgh",
+            "default_options": config_flow.OPTIONS_SCHEMA({config_flow.CONF_IO: {}}),
+        }
+    )
+
+    device_options = config_flow.OPTIONS_SCHEMA(
+        {
+            "io": {
+                "1": "Binary Sensor",
+                "2": "Binary Sensor",
+                "3": "Binary Sensor",
+                "4": "Digital Sensor",
+                "5": "Digital Sensor",
+                "6": "Switchable Output",
+                "out": "Switchable Output",
+            },
             "binary_sensors": [
                 {"zone": "1", "type": "door"},
                 {"zone": "2", "type": "window", "name": "winder", "inverse": True},
@@ -316,7 +369,10 @@ async def test_state_updates(hass, aiohttp_client, mock_panel):
     )
 
     entry = MockConfigEntry(
-        domain="konnected", title="Konnected Alarm Panel", data=device_config
+        domain="konnected",
+        title="Konnected Alarm Panel",
+        data=device_config,
+        options=device_options,
     )
     entry.add_to_hass(hass)
 
@@ -324,7 +380,7 @@ async def test_state_updates(hass, aiohttp_client, mock_panel):
         await async_setup_component(
             hass,
             konnected.DOMAIN,
-            {konnected.DOMAIN: {konnected.CONF_ACCESS_TOKEN: "abcdefgh"}},
+            {konnected.DOMAIN: {konnected.CONF_ACCESS_TOKEN: "1122334455"}},
         )
         is True
     )
