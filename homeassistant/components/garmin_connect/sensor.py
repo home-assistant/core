@@ -37,24 +37,36 @@ async def async_setup_entry(
         _LOGGER.error("Unknown error occured during Garmin Connect Client update.")
 
     entities = []
-    for resource in GARMIN_ENTITY_LIST:
-        sensor_type = resource
-        name = GARMIN_ENTITY_LIST[resource][0]
-        unit = GARMIN_ENTITY_LIST[resource][1]
-        icon = GARMIN_ENTITY_LIST[resource][2]
-        device_class = GARMIN_ENTITY_LIST[resource][3]
+    for (
+        sensor_type,
+        (name, unit, icon, device_class, enabled_by_default),
+    ) in GARMIN_ENTITY_LIST.items():
+        # for resource in GARMIN_ENTITY_LIST:
+        #     sensor_type = resource
+        #     name = GARMIN_ENTITY_LIST[resource][0]
+        #     unit = GARMIN_ENTITY_LIST[resource][1]
+        #     icon = GARMIN_ENTITY_LIST[resource][2]
+        #     device_class = GARMIN_ENTITY_LIST[resource][3]
 
         _LOGGER.debug(
-            "Registering entity: %s, %s, %s, %s, %s",
+            "Registering entity: %s, %s, %s, %s, %s, %s",
             sensor_type,
             name,
             unit,
             icon,
             device_class,
+            enabled_by_default,
         )
         entities.append(
             GarminConnectSensor(
-                garmin_data, unique_id, sensor_type, name, unit, icon, device_class
+                garmin_data,
+                unique_id,
+                sensor_type,
+                name,
+                unit,
+                icon,
+                device_class,
+                enabled_by_default,
             )
         )
 
@@ -64,15 +76,27 @@ async def async_setup_entry(
 class GarminConnectSensor(Entity):
     """Representation of a Garmin Connect Sensor."""
 
-    def __init__(self, data, unique_id, sensor_type, name, unit, icon, device_class):
+    def __init__(
+        self,
+        data,
+        unique_id,
+        sensor_type,
+        name,
+        unit,
+        icon,
+        device_class,
+        enabled_default: bool = True,
+    ):
         """Initialize."""
         self._data = data
         self._unique_id = unique_id
         self._type = sensor_type
-        self._device_class = device_class
         self._name = name
-        self._icon = icon
         self._unit = unit
+        self._icon = icon
+        self._device_class = device_class
+        self._enabled_default = enabled_default
+        self._available = True
         self._state = None
 
     @property
@@ -131,12 +155,25 @@ class GarminConnectSensor(Entity):
         pass
 
     @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added to the entity registry."""
+        return self._enabled_default
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
+
+    @property
     def device_class(self):
         """Return the device class of the sensor."""
         return self._device_class
 
     async def async_update(self):
         """Update the data from Garmin Connect."""
+        if not self.enabled:
+            return
+
         await self._data.async_update()
         if not self._data.data:
             _LOGGER.error("Didn't receive data from Garmin Connect")

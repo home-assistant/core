@@ -95,10 +95,8 @@ class GarminConnectData:
         except (
             GarminConnectAuthenticationError,
             GarminConnectTooManyRequestsError,
+            GarminConnectConnectionError,
         ) as err:
-            _LOGGER.error("Error occured during Garmin Connect stats update: %s", err)
-            return
-        except (GarminConnectConnectionError) as err:
             _LOGGER.error("Error occured during Garmin Connect stats update: %s", err)
             raise PlatformNotReady
         except Exception:  # pylint: disable=broad-except
