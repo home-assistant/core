@@ -295,6 +295,10 @@ class RainMachine:
 
         return data
 
+    async def _async_update_listener_action(self, now):
+        """Define an async_track_time_interval action to update data."""
+        await self.async_update()
+
     @callback
     def async_deregister_api_interest(self, api_category):
         """Decrement the number of entities with data needs from an API category."""
@@ -313,7 +317,7 @@ class RainMachine:
         if not self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect = async_track_time_interval(
                 self.hass,
-                self.async_update,
+                self._async_update_listener_action,
                 timedelta(seconds=self._scan_interval_seconds),
             )
 
