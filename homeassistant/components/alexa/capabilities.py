@@ -10,6 +10,11 @@ from homeassistant.components import (
     vacuum,
 )
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 import homeassistant.components.climate.const as climate
 import homeassistant.components.media_player.const as media_player
 from homeassistant.const import (
@@ -1082,10 +1087,23 @@ class AlexaSecurityPanelController(AlexaCapability):
     def configuration(self):
         """Return configuration object with supported authorization types."""
         code_format = self.entity.attributes.get(ATTR_CODE_FORMAT)
+        supported = self.entity.attributes[ATTR_SUPPORTED_FEATURES]
+        configuration = {}
+
+        supported_arm_states = [{"value": "DISARMED"}]
+        if supported & SUPPORT_ALARM_ARM_AWAY:
+            supported_arm_states.append({"value": "ARMED_AWAY"})
+        if supported & SUPPORT_ALARM_ARM_HOME:
+            supported_arm_states.append({"value": "ARMED_STAY"})
+        if supported & SUPPORT_ALARM_ARM_NIGHT:
+            supported_arm_states.append({"value": "ARMED_NIGHT"})
+
+        configuration["supportedArmStates"] = supported_arm_states
 
         if code_format == FORMAT_NUMBER:
-            return {"supportedAuthorizationTypes": [{"type": "FOUR_DIGIT_PIN"}]}
-        return None
+            configuration["supportedAuthorizationTypes"] = [{"type": "FOUR_DIGIT_PIN"}]
+
+        return configuration
 
 
 class AlexaModeController(AlexaCapability):
