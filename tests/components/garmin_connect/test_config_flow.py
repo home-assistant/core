@@ -8,12 +8,16 @@ from garminconnect import (
 )
 import pytest
 
-# from homeassistant.components.garmin_connect.const import DOMAIN
+from homeassistant.components.garmin_connect.const import DOMAIN
 from homeassistant import data_entry_flow
 from homeassistant.components.garmin_connect import config_flow
-from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_ID,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 
-# from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry
 
 MOCK_CONF = {
     CONF_ID: "First Lastname",
@@ -110,13 +114,13 @@ async def test_unknown_error(hass):
         assert result["errors"] == {"base": "unknown"}
 
 
-# async def test_abort_if_already_setup(hass):
-#     """Test abort if already setup."""
-#     flow = init_config_flow(hass)
+async def test_abort_if_already_setup(hass, mock_garmin_connect):
+    """Test abort if already setup."""
+    flow = init_config_flow(hass)
 
-#     MockConfigEntry(domain=DOMAIN, data=MOCK_CONF).add_to_hass(hass)
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONF)
+    entry.add_to_hass(hass)
 
-#     with patch("homeassistant.components.garmin_connect.config_flow.Garmin"):
-#         result = await flow.async_step_user(MOCK_CONF)
-#         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-#         assert result["reason"] == "already_setup"
+    result = await flow.async_step_user(MOCK_CONF)
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_setup"

@@ -41,12 +41,6 @@ async def async_setup_entry(
         sensor_type,
         (name, unit, icon, device_class, enabled_by_default),
     ) in GARMIN_ENTITY_LIST.items():
-        # for resource in GARMIN_ENTITY_LIST:
-        #     sensor_type = resource
-        #     name = GARMIN_ENTITY_LIST[resource][0]
-        #     unit = GARMIN_ENTITY_LIST[resource][1]
-        #     icon = GARMIN_ENTITY_LIST[resource][2]
-        #     device_class = GARMIN_ENTITY_LIST[resource][3]
 
         _LOGGER.debug(
             "Registering entity: %s, %s, %s, %s, %s, %s",
