@@ -908,8 +908,11 @@ async def async_api_arm(hass, config, directive, context):
         entity.domain, service, data, blocking=False, context=context
     )
 
+    # return 0 until alarm integration supports an exit delay
+    payload = {"exitDelayInSeconds": 0}
+
     response = directive.response(
-        name="Arm.Response", namespace="Alexa.SecurityPanelController"
+        name="Arm.Response", namespace="Alexa.SecurityPanelController", payload=payload
     )
 
     response.add_context_property(
@@ -928,6 +931,12 @@ async def async_api_disarm(hass, config, directive, context):
     """Process a Security Panel Disarm request."""
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
+    response = directive.response()
+
+    # Per Alexa Documentation: If you receive a Disarm directive, and the system is already disarmed,
+    # respond with a success response, not an error response.
+    if entity.state == STATE_ALARM_DISARMED:
+        return response
 
     payload = directive.payload
     if "authorization" in payload:
@@ -941,7 +950,6 @@ async def async_api_disarm(hass, config, directive, context):
         msg = "Invalid Code"
         raise AlexaSecurityPanelUnauthorizedError(msg)
 
-    response = directive.response()
     response.add_context_property(
         {
             "name": "armState",
