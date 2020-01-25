@@ -156,7 +156,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
                 'Unable to turn off %s "%s": %s',
                 self._switch_type,
                 self.unique_id,
-                str(err),
+                err,
             )
             return
 
@@ -177,10 +177,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
             resp = await api_coro
         except RequestError as err:
             _LOGGER.error(
-                'Unable to turn on %s "%s": %s',
-                self._switch_type,
-                self.unique_id,
-                str(err),
+                'Unable to turn on %s "%s": %s', self._switch_type, self.unique_id, err,
             )
             return
 
