@@ -1036,7 +1036,6 @@ DEVICES = [
             }
         },
         "entities": [
-            "binary_sensor.keen_home_inc_sv02_610_mp_1_3_77665544_manufacturer_specific",
             "light.keen_home_inc_sv02_610_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_pressure",
@@ -1062,12 +1061,6 @@ DEVICES = [
                 "channels": ["pressure"],
                 "entity_class": "Pressure",
                 "entity_id": "sensor.keen_home_inc_sv02_610_mp_1_3_77665544_pressure",
-            },
-            ("binary_sensor", "00:11:22:33:44:55:66:77-1-64514"): {
-                "channels": ["manufacturer_specific"],
-                "entity_class": "BinarySensor",
-                "entity_id": "binary_sensor.keen_home_inc_sv02_610_mp_1_3_77665544_manufacturer_specific",
-                "default_match": True,
             },
         },
         "event_channels": [],
@@ -1101,7 +1094,6 @@ DEVICES = [
             }
         },
         "entities": [
-            "binary_sensor.keen_home_inc_sv02_612_mp_1_2_77665544_manufacturer_specific",
             "light.keen_home_inc_sv02_612_mp_1_2_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_pressure",
@@ -1127,12 +1119,6 @@ DEVICES = [
                 "channels": ["pressure"],
                 "entity_class": "Pressure",
                 "entity_id": "sensor.keen_home_inc_sv02_612_mp_1_2_77665544_pressure",
-            },
-            ("binary_sensor", "00:11:22:33:44:55:66:77-1-64514"): {
-                "channels": ["manufacturer_specific"],
-                "entity_class": "BinarySensor",
-                "entity_id": "binary_sensor.keen_home_inc_sv02_612_mp_1_2_77665544_manufacturer_specific",
-                "default_match": True,
             },
         },
         "event_channels": [],
@@ -1166,7 +1152,6 @@ DEVICES = [
             }
         },
         "entities": [
-            "binary_sensor.keen_home_inc_sv02_612_mp_1_3_77665544_manufacturer_specific",
             "light.keen_home_inc_sv02_612_mp_1_3_77665544_level_on_off",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_power",
             "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_pressure",
@@ -1192,12 +1177,6 @@ DEVICES = [
                 "channels": ["pressure"],
                 "entity_class": "Pressure",
                 "entity_id": "sensor.keen_home_inc_sv02_612_mp_1_3_77665544_pressure",
-            },
-            ("binary_sensor", "00:11:22:33:44:55:66:77-1-64514"): {
-                "channels": ["manufacturer_specific"],
-                "entity_class": "BinarySensor",
-                "entity_id": "binary_sensor.keen_home_inc_sv02_612_mp_1_3_77665544_manufacturer_specific",
-                "default_match": True,
             },
         },
         "event_channels": [],
