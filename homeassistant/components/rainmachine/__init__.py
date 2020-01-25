@@ -191,6 +191,7 @@ async def async_setup_entry(hass, config_entry):
         """Pause watering for a set number of seconds."""
         await rainmachine.client.watering.pause_all(call.data[CONF_SECONDS])
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
     @_verify_domain_control
     async def start_program(call):
@@ -211,6 +212,7 @@ async def async_setup_entry(hass, config_entry):
         """Stop all watering."""
         await rainmachine.client.watering.stop_all()
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
     @_verify_domain_control
     async def stop_program(call):
@@ -229,6 +231,7 @@ async def async_setup_entry(hass, config_entry):
         """Unpause watering."""
         await rainmachine.client.watering.unpause_all()
         async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
     for service, method, schema in [
         ("disable_program", disable_program, SERVICE_ALTER_PROGRAM),
