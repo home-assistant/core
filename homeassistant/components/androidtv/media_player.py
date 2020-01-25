@@ -26,6 +26,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
@@ -59,6 +60,7 @@ SUPPORT_ANDROIDTV = (
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_STOP
     | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_STEP
 )
 
@@ -630,6 +632,11 @@ class AndroidTVDevice(ADBDevice):
     def mute_volume(self, mute):
         """Mute the volume."""
         self.aftv.mute_volume()
+
+    @adb_decorator()
+    def set_volume_level(self, volume):
+        """Set the volume level."""
+        self.aftv.set_volume_level(volume)
 
     @adb_decorator()
     def volume_down(self):
