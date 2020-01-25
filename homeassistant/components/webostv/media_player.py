@@ -227,11 +227,10 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        client_state = self._client.power_state.get("state")
-        if client_state in [None, "Power Off", "Suspend", "Active Standby"]:
-            return STATE_OFF
+        if self._client.is_on:
+            return STATE_ON
 
-        return STATE_ON
+        return STATE_OFF
 
     @property
     def is_volume_muted(self):
