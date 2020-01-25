@@ -178,7 +178,6 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the program off."""
-
         try:
             await self.rainmachine.client.programs.stop(self._rainmachine_entity_id)
             async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
@@ -189,7 +188,6 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the program on."""
-
         try:
             await self.rainmachine.client.programs.start(self._rainmachine_entity_id)
             async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
@@ -200,7 +198,6 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_update(self) -> None:
         """Update info for the program."""
-
         try:
             self._obj = await self.rainmachine.client.programs.get(
                 self._rainmachine_entity_id
@@ -259,7 +256,6 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
-
         try:
             await self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
         except RequestError as err:
@@ -267,7 +263,6 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
-
         try:
             await self.rainmachine.client.zones.start(
                 self._rainmachine_entity_id, self._run_time
@@ -277,7 +272,6 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_update(self) -> None:
         """Update info for the zone."""
-
         try:
             self._obj = await self.rainmachine.client.zones.get(
                 self._rainmachine_entity_id
