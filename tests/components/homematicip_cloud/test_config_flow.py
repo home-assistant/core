@@ -26,6 +26,15 @@ async def test_flow_works(hass):
     assert result["step_id"] == "link"
     assert result["errors"] == {"base": "press_the_button"}
 
+    flow = next(
+        (
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["flow_id"] == result["flow_id"]
+        )
+    )
+    assert flow["context"]["unique_id"] == "ABC123"
+
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
         return_value=mock_coro(True),
@@ -128,9 +137,7 @@ async def test_init_flow_show_form(hass):
 
 async def test_init_already_configured(hass):
     """Test accesspoint is already configured."""
-    MockConfigEntry(
-        domain=const.DOMAIN, data={const.HMIPC_HAPID: "ABC123"}
-    ).add_to_hass(hass)
+    MockConfigEntry(domain=const.DOMAIN, unique_id="ABC123").add_to_hass(hass)
     config = {
         const.HMIPC_HAPID: "ABC123",
         const.HMIPC_PIN: "123",
@@ -138,7 +145,7 @@ async def test_init_already_configured(hass):
     }
 
     with patch(
-        "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_setup",
+        "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
         return_value=mock_coro(True),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -179,9 +186,7 @@ async def test_import_config(hass):
 
 async def test_import_existing_config(hass):
     """Test abort of an existing accesspoint from config."""
-    MockConfigEntry(
-        domain=const.DOMAIN, data={const.HMIPC_HAPID: "ABC123"}, unique_id="ABC123"
-    ).add_to_hass(hass)
+    MockConfigEntry(domain=const.DOMAIN, unique_id="ABC123").add_to_hass(hass)
     config = {
         const.HMIPC_HAPID: "ABC123",
         const.HMIPC_AUTHTOKEN: "123",

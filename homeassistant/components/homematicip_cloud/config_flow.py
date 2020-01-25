@@ -1,11 +1,9 @@
 """Config flow to configure the HomematicIP Cloud component."""
-from typing import Any, Dict, Set
+from typing import Any, Dict
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     _LOGGER,
@@ -16,15 +14,6 @@ from .const import (
     HMIPC_PIN,
 )
 from .hap import HomematicipAuth
-
-
-@callback
-def configured_haps(hass: HomeAssistantType) -> Set[str]:
-    """Return a set of the configured access points."""
-    return set(
-        entry.data[HMIPC_HAPID]
-        for entry in hass.config_entries.async_entries(HMIPC_DOMAIN)
-    )
 
 
 @config_entries.HANDLERS.register(HMIPC_DOMAIN)
@@ -48,8 +37,9 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
 
         if user_input is not None:
             user_input[HMIPC_HAPID] = user_input[HMIPC_HAPID].replace("-", "").upper()
-            if user_input[HMIPC_HAPID] in configured_haps(self.hass):
-                return self.async_abort(reason="already_configured")
+
+            await self.async_set_unique_id(user_input[HMIPC_HAPID])
+            self._abort_if_unique_id_configured()
 
             self.auth = HomematicipAuth(self.hass, user_input)
             connected = await self.auth.async_setup()
@@ -77,9 +67,6 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
         if pressed:
             authtoken = await self.auth.async_register()
             if authtoken:
-                await self.async_set_unique_id(self.auth.config.get(HMIPC_HAPID))
-                self._abort_if_unique_id_configured()
-
                 _LOGGER.info("Write config entry for HomematicIP Cloud")
                 return self.async_create_entry(
                     title=self.auth.config.get(HMIPC_HAPID),

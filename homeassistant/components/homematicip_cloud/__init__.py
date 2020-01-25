@@ -17,7 +17,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .config_flow import configured_haps
 from .const import (
     CONF_ACCESSPOINT,
     CONF_AUTHTOKEN,
@@ -130,7 +129,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     accesspoints = config.get(DOMAIN, [])
 
     for conf in accesspoints:
-        if conf[CONF_ACCESSPOINT] not in configured_haps(hass):
+        if conf[CONF_ACCESSPOINT] not in set(
+            entry.data[HMIPC_HAPID]
+            for entry in hass.config_entries.async_entries(DOMAIN)
+        ):
             hass.async_add_job(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
