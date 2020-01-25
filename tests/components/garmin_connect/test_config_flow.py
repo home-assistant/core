@@ -8,14 +8,10 @@ from garminconnect import (
 )
 import pytest
 
-from homeassistant.components.garmin_connect.const import DOMAIN
 from homeassistant import data_entry_flow
 from homeassistant.components.garmin_connect import config_flow
-from homeassistant.const import (
-    CONF_ID,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-)
+from homeassistant.components.garmin_connect.const import DOMAIN
+from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
 from tests.common import MockConfigEntry
 
