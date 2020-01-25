@@ -7,9 +7,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from . import RainMachineEntity
 from .const import (
     DATA_CLIENT,
+    DATA_PROVISION_SETTINGS,
+    DATA_RESTRICTIONS_UNIVERSAL,
     DOMAIN as RAINMACHINE_DOMAIN,
-    PROVISION_SETTINGS,
-    RESTRICTIONS_UNIVERSAL,
     SENSOR_UPDATE_TOPIC,
 )
 
@@ -28,7 +28,7 @@ SENSORS = {
         "clicks/m^3",
         None,
         False,
-        PROVISION_SETTINGS,
+        DATA_PROVISION_SETTINGS,
     ),
     TYPE_FLOW_SENSOR_CONSUMED_LITERS: (
         "Flow Sensor Consumed Liters",
@@ -36,7 +36,7 @@ SENSORS = {
         "liter",
         None,
         False,
-        PROVISION_SETTINGS,
+        DATA_PROVISION_SETTINGS,
     ),
     TYPE_FLOW_SENSOR_START_INDEX: (
         "Flow Sensor Start Index",
@@ -44,7 +44,7 @@ SENSORS = {
         "index",
         None,
         False,
-        PROVISION_SETTINGS,
+        DATA_PROVISION_SETTINGS,
     ),
     TYPE_FLOW_SENSOR_WATERING_CLICKS: (
         "Flow Sensor Clicks",
@@ -52,7 +52,7 @@ SENSORS = {
         "clicks",
         None,
         False,
-        PROVISION_SETTINGS,
+        DATA_PROVISION_SETTINGS,
     ),
     TYPE_FREEZE_TEMP: (
         "Freeze Protect Temperature",
@@ -60,7 +60,7 @@ SENSORS = {
         "°C",
         "temperature",
         True,
-        RESTRICTIONS_UNIVERSAL,
+        DATA_RESTRICTIONS_UNIVERSAL,
     ),
 }
 
@@ -163,31 +163,31 @@ class RainMachineSensor(RainMachineEntity):
     async def async_update(self):
         """Update the sensor's state."""
         if self._sensor_type == TYPE_FLOW_SENSOR_CLICK_M3:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
+            self._state = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
                 "flowSensorClicksPerCubicMeter"
             )
         elif self._sensor_type == TYPE_FLOW_SENSOR_CONSUMED_LITERS:
-            clicks = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
+            clicks = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
                 "flowSensorWateringClicks"
             )
-            clicks_per_m3 = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
-                "flowSensorClicksPerCubicMeter"
-            )
+            clicks_per_m3 = self.rainmachine.data[DATA_PROVISION_SETTINGS][
+                "system"
+            ].get("flowSensorClicksPerCubicMeter")
 
             if clicks and clicks_per_m3:
                 self._state = (clicks * 1000) / clicks_per_m3
             else:
                 self._state = None
         elif self._sensor_type == TYPE_FLOW_SENSOR_START_INDEX:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
+            self._state = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
                 "flowSensorStartIndex"
             )
         elif self._sensor_type == TYPE_FLOW_SENSOR_WATERING_CLICKS:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
+            self._state = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
                 "flowSensorWateringClicks"
             )
         elif self._sensor_type == TYPE_FREEZE_TEMP:
-            self._state = self.rainmachine.data[RESTRICTIONS_UNIVERSAL][
+            self._state = self.rainmachine.data[DATA_RESTRICTIONS_UNIVERSAL][
                 "freezeProtectTemp"
             ]
 

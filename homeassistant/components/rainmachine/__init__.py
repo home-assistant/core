@@ -27,14 +27,14 @@ from homeassistant.helpers.service import verify_domain_control
 from .config_flow import configured_instances
 from .const import (
     DATA_CLIENT,
+    DATA_PROVISION_SETTINGS,
+    DATA_RESTRICTIONS_CURRENT,
+    DATA_RESTRICTIONS_UNIVERSAL,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
     DOMAIN,
     PROGRAM_UPDATE_TOPIC,
-    PROVISION_SETTINGS,
-    RESTRICTIONS_CURRENT,
-    RESTRICTIONS_UNIVERSAL,
     SENSOR_UPDATE_TOPIC,
     ZONE_UPDATE_TOPIC,
 )
@@ -273,9 +273,9 @@ class RainMachine:
         self.hass = hass
 
         self._api_category_count = {
-            PROVISION_SETTINGS: 0,
-            RESTRICTIONS_CURRENT: 0,
-            RESTRICTIONS_UNIVERSAL: 0,
+            DATA_PROVISION_SETTINGS: 0,
+            DATA_RESTRICTIONS_CURRENT: 0,
+            DATA_RESTRICTIONS_UNIVERSAL: 0,
         }
         self._api_category_locks = {
             PROVISION_SETTINGS: asyncio.Lock(),
@@ -285,11 +285,11 @@ class RainMachine:
 
     async def _async_fetch_from_api(self, api_category):
         """Execute the appropriate coroutine to fetch particular data from the API."""
-        if api_category == PROVISION_SETTINGS:
+        if api_category == DATA_PROVISION_SETTINGS:
             data = await self.client.provisioning.settings()
-        elif api_category == RESTRICTIONS_CURRENT:
+        elif api_category == DATA_RESTRICTIONS_CURRENT:
             data = await self.client.restrictions.current()
-        elif api_category == RESTRICTIONS_UNIVERSAL:
+        elif api_category == DATA_RESTRICTIONS_UNIVERSAL:
             data = await self.client.restrictions.universal()
 
         return data
