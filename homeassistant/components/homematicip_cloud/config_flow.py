@@ -77,10 +77,10 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
         if pressed:
             authtoken = await self.auth.async_register()
             if authtoken:
-                _LOGGER.info("Write config entry for HomematicIP Cloud")
-
                 await self.async_set_unique_id(self.auth.config.get(HMIPC_HAPID))
+                self._abort_if_unique_id_configured()
 
+                _LOGGER.info("Write config entry for HomematicIP Cloud")
                 return self.async_create_entry(
                     title=self.auth.config.get(HMIPC_HAPID),
                     data={
@@ -96,15 +96,12 @@ class HomematicipCloudFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_import(self, import_info) -> Dict[str, Any]:
         """Import a new access point as a config entry."""
-        hapid = import_info[HMIPC_HAPID]
+        hapid = import_info[HMIPC_HAPID].replace("-", "").upper()
         authtoken = import_info[HMIPC_AUTHTOKEN]
         name = import_info[HMIPC_NAME]
 
-        hapid = hapid.replace("-", "").upper()
-        if hapid in configured_haps(self.hass):
-            return self.async_abort(reason="already_configured")
-
         await self.async_set_unique_id(hapid)
+        self._abort_if_unique_id_configured()
 
         _LOGGER.info("Imported authentication for %s", hapid)
         return self.async_create_entry(
