@@ -267,7 +267,6 @@ class RainMachine:
         """Initialize."""
         self._async_unsub_dispatcher_connect = None
         self._scan_interval_seconds = scan_interval
-        self._lock = asyncio.Lock()
         self.client = client
         self.data = {}
         self.default_zone_runtime = default_zone_runtime
@@ -278,6 +277,11 @@ class RainMachine:
             PROVISION_SETTINGS: 0,
             RESTRICTIONS_CURRENT: 0,
             RESTRICTIONS_UNIVERSAL: 0,
+        }
+        self._api_category_locks = {
+            PROVISION_SETTINGS: asyncio.Lock(),
+            RESTRICTIONS_CURRENT: asyncio.Lock(),
+            RESTRICTIONS_UNIVERSAL: asyncio.Lock(),
         }
 
     async def _async_fetch_from_api(self, api_category):
@@ -317,7 +321,7 @@ class RainMachine:
 
         # Lock API updates in case multiple entities are trying to call the same API
         # endpoint at once:
-        async with self._lock:
+        async with self._api_category_locks[api_category]:
             if api_category not in self.data:
                 self.data[api_category] = await self._async_fetch_from_api(api_category)
 
