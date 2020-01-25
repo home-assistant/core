@@ -1,13 +1,13 @@
 """Tests for HomematicIP Cloud config flow."""
-from unittest.mock import patch
+from asynctest import patch
 
 from homeassistant.components.homematicip_cloud import const
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 async def test_flow_works(hass):
-    """Test config flow ."""
+    """Test config flow."""
     config = {
         const.HMIPC_HAPID: "ABC123",
         const.HMIPC_PIN: "123",
@@ -16,7 +16,7 @@ async def test_flow_works(hass):
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
-        return_value=mock_coro(False),
+        return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": "user"}, data=config
@@ -37,13 +37,13 @@ async def test_flow_works(hass):
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
-        return_value=mock_coro(True),
+        return_value=True,
     ), patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_setup",
-        return_value=mock_coro(True),
+        return_value=True,
     ), patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_register",
-        return_value=mock_coro(True),
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -65,7 +65,7 @@ async def test_flow_init_connection_error(hass):
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_setup",
-        return_value=mock_coro(False),
+        return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": "user"}, data=config
@@ -85,13 +85,13 @@ async def test_flow_link_connection_error(hass):
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
-        return_value=mock_coro(True),
+        return_value=True,
     ), patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_setup",
-        return_value=mock_coro(True),
+        return_value=True,
     ), patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_register",
-        return_value=mock_coro(False),
+        return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": "user"}, data=config
@@ -111,10 +111,10 @@ async def test_flow_link_press_button(hass):
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
-        return_value=mock_coro(False),
+        return_value=False,
     ), patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_setup",
-        return_value=mock_coro(True),
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": "user"}, data=config
@@ -146,7 +146,7 @@ async def test_init_already_configured(hass):
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
-        return_value=mock_coro(True),
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": "user"}, data=config
@@ -166,13 +166,13 @@ async def test_import_config(hass):
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
-        return_value=mock_coro(True),
+        return_value=True,
     ), patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_setup",
-        return_value=mock_coro(True),
+        return_value=True,
     ), patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_register",
-        return_value=mock_coro(True),
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": "import"}, data=config
@@ -195,13 +195,13 @@ async def test_import_existing_config(hass):
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
-        return_value=mock_coro(True),
+        return_value=True,
     ), patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_setup",
-        return_value=mock_coro(True),
+        return_value=True,
     ), patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_register",
-        return_value=mock_coro(True),
+        return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN, context={"source": "import"}, data=config
