@@ -136,7 +136,6 @@ class MelCloudDevice:
 async def mel_api_setup(hass, token) -> Optional[List[MelCloudDevice]]:
     """Create a MELCloud instance only once."""
     session = hass.helpers.aiohttp_client.async_get_clientsession()
-    print("setup")
     try:
         with timeout(10):
             client = Client(
