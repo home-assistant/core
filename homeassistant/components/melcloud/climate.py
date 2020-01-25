@@ -95,21 +95,31 @@ class MelCloudClimate(ClimateDevice):
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         mode = self._api.device.operation_mode
-        if mode is None:
+        if not self._api.device.power or mode is None:
             return HVAC_MODE_OFF
         return HVAC_MODE_LOOKUP.get(mode)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
+        if hvac_mode == HVAC_MODE_OFF:
+            await self._api.device.set({"power": False})
+            return
+
         operation_mode = HVAC_MODE_REVERSE_LOOKUP.get(hvac_mode, None)
         if operation_mode is None:
             raise ValueError(f"Invalid hvac_mode [{hvac_mode}]")
-        await self._api.device.set({"operation_mode": operation_mode})
+
+        props = {"operation_mode": operation_mode}
+        if self.hvac_mode == HVAC_MODE_OFF:
+            props["power"] = True
+        await self._api.device.set(props)
 
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
-        return list(map(HVAC_MODE_LOOKUP.get, self._api.device.operation_modes()))
+        return [HVAC_MODE_OFF] + list(
+            map(HVAC_MODE_LOOKUP.get, self._api.device.operation_modes())
+        )
 
     @property
     def current_temperature(self) -> Optional[float]:
