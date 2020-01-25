@@ -7,9 +7,12 @@ LOGGER = logging.getLogger(__package__)
 DOMAIN = "rainmachine"
 
 DATA_CLIENT = "client"
+DATA_PROGRAMS = "programs"
 DATA_PROVISION_SETTINGS = "provision.settings"
 DATA_RESTRICTIONS_CURRENT = "restrictions.current"
 DATA_RESTRICTIONS_UNIVERSAL = "restrictions.universal"
+DATA_ZONES = "zones"
+DATA_ZONES_DETAILS = "zones_details"
 
 DEFAULT_PORT = 8080
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)

@@ -2,7 +2,6 @@
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import RainMachineEntity
@@ -118,11 +117,6 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
         return self._state
 
     @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
-    @property
     def unique_id(self) -> str:
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return "{0}_{1}".format(
@@ -131,14 +125,8 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
         self._dispatcher_handlers.append(
-            async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, update)
+            async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, self._update_state)
         )
         await self.rainmachine.async_register_api_interest(self._api_category)
         await self.async_update()

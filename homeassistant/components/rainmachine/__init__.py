@@ -27,9 +27,12 @@ from homeassistant.helpers.service import verify_domain_control
 from .config_flow import configured_instances
 from .const import (
     DATA_CLIENT,
+    DATA_PROGRAMS,
     DATA_PROVISION_SETTINGS,
     DATA_RESTRICTIONS_CURRENT,
     DATA_RESTRICTIONS_UNIVERSAL,
+    DATA_ZONES,
+    DATA_ZONES_DETAILS,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SSL,
@@ -149,6 +152,9 @@ async def async_setup_entry(hass, config_entry):
         _LOGGER.error("An error occurred: %s", err)
         raise ConfigEntryNotReady
 
+    # Update the data object, which at this point (prior to any sensors registering
+    # "interest" in the API), will focus on grabbing the latest program and zone data:
+    await rainmachine.async_update()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = rainmachine
 
     for component in ("binary_sensor", "sensor", "switch"):
@@ -264,7 +270,7 @@ class RainMachine:
 
     def __init__(self, hass, client, default_zone_runtime, scan_interval):
         """Initialize."""
-        self._async_unsub_dispatcher_connect = None
+        self._async_cancel_time_interval_listener = None
         self._scan_interval_seconds = scan_interval
         self.client = client
         self.data = {}
@@ -278,19 +284,28 @@ class RainMachine:
             DATA_RESTRICTIONS_UNIVERSAL: 0,
         }
         self._api_category_locks = {
-            PROVISION_SETTINGS: asyncio.Lock(),
-            RESTRICTIONS_CURRENT: asyncio.Lock(),
-            RESTRICTIONS_UNIVERSAL: asyncio.Lock(),
+            DATA_PROVISION_SETTINGS: asyncio.Lock(),
+            DATA_RESTRICTIONS_CURRENT: asyncio.Lock(),
+            DATA_RESTRICTIONS_UNIVERSAL: asyncio.Lock(),
         }
 
     async def _async_fetch_from_api(self, api_category):
         """Execute the appropriate coroutine to fetch particular data from the API."""
-        if api_category == DATA_PROVISION_SETTINGS:
+        if api_category == DATA_PROGRAMS:
+            data = await self.client.programs.all(include_inactive=True)
+        elif api_category == DATA_PROVISION_SETTINGS:
             data = await self.client.provisioning.settings()
         elif api_category == DATA_RESTRICTIONS_CURRENT:
             data = await self.client.restrictions.current()
         elif api_category == DATA_RESTRICTIONS_UNIVERSAL:
             data = await self.client.restrictions.universal()
+        elif api_category == DATA_ZONES:
+            data = await self.client.zones.all(include_inactive=True)
+        elif api_category == DATA_ZONES_DETAILS:
+            # This API call needs to be separate from the DATA_ZONES one above because,
+            # maddeningly, the DATA_ZONES_DETAILS API call doesn't include the current
+            # state of the zone:
+            data = await self.client.zones.all(details=True, include_inactive=True)
 
         return data
 
@@ -304,17 +319,17 @@ class RainMachine:
         # If this deregistration should leave us with no registration at all, remove the
         # time interval:
         if sum(self._api_category_count.values()) == 0:
-            if self._async_unsub_dispatcher_connect:
-                self._async_unsub_dispatcher_connect()
-                self._async_unsub_dispatcher_connect = None
+            if self._async_cancel_time_interval_listener:
+                self._async_cancel_time_interval_listener()
+                self._async_cancel_time_interval_listener = None
             return
         self._api_category_count[api_category] += 1
 
     async def async_register_api_interest(self, api_category):
         """Increment the number of entities with data needs from an API category."""
         # If this is the first registration we have, start a time interval:
-        if not self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect = async_track_time_interval(
+        if not self._async_cancel_time_interval_listener:
+            self._async_cancel_time_interval_listener = async_track_time_interval(
                 self.hass,
                 self._async_update_listener_action,
                 timedelta(seconds=self._scan_interval_seconds),
@@ -322,15 +337,25 @@ class RainMachine:
 
         self._api_category_count[api_category] += 1
 
-        # Lock API updates in case multiple entities are trying to call the same API
-        # endpoint at once:
+        # If a sensor registers interest in a particular API call and the data doesn't
+        # exist for it yet, make the API call and grab the data:
         async with self._api_category_locks[api_category]:
             if api_category not in self.data:
                 self.data[api_category] = await self._async_fetch_from_api(api_category)
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-        tasks = {}
+        _LOGGER.debug("Updating data for RainMachine")
+
+        # Always update program data and zone data (since we should reasonably
+        # anticipate that the user wants switches to control the device):
+        tasks = {
+            DATA_PROGRAMS: self._async_fetch_from_api(DATA_PROGRAMS),
+            DATA_ZONES: self._async_fetch_from_api(DATA_ZONES),
+            DATA_ZONES_DETAILS: self._async_fetch_from_api(DATA_ZONES_DETAILS),
+        }
+
+        # Add an API task only if there is at least one "interested" entity:
         for category, count in self._api_category_count.items():
             if count == 0:
                 continue
@@ -345,6 +370,9 @@ class RainMachine:
                 continue
             self.data[api_category] = result
 
+        # Sending PROGRAM_UPDATE_TOPIC will cover both programs and zones while
+        # SENSOR_UPDATE_TOPIC will cover binary sensors and regular sensors:
+        async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
         async_dispatcher_send(self.hass, SENSOR_UPDATE_TOPIC)
 
 
@@ -387,6 +415,16 @@ class RainMachineEntity(Entity):
     def name(self) -> str:
         """Return the name of the entity."""
         return self._name
+
+    @property
+    def should_poll(self):
+        """Disable polling."""
+        return False
+
+    @callback
+    def _update_state(self):
+        """Update the state."""
+        self.async_schedule_update_ha_state(True)
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listener when removed."""

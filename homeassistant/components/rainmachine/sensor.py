@@ -1,7 +1,6 @@
 """This platform provides support for sensor data from RainMachine."""
 import logging
 
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import RainMachineEntity
@@ -125,11 +124,6 @@ class RainMachineSensor(RainMachineEntity):
         return self._icon
 
     @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
-    @property
     def state(self) -> str:
         """Return the name of the entity."""
         return self._state
@@ -148,14 +142,8 @@ class RainMachineSensor(RainMachineEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
         self._dispatcher_handlers.append(
-            async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, update)
+            async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, self._update_state)
         )
         await self.rainmachine.async_register_api_interest(self._api_category)
         await self.async_update()
