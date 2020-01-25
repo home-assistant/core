@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_SSL,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -127,7 +128,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, config_entry):
     """Set up RainMachine as config entry."""
-
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
@@ -141,9 +141,11 @@ async def async_setup_entry(hass, config_entry):
             ssl=config_entry.data[CONF_SSL],
         )
         rainmachine = RainMachine(
-            client, config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
+            hass,
+            client,
+            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
+            config_entry.data[CONF_SCAN_INTERVAL],
         )
-        await rainmachine.async_update()
     except RainMachineError as err:
         _LOGGER.error("An error occurred: %s", err)
         raise ConfigEntryNotReady
@@ -154,16 +156,6 @@ async def async_setup_entry(hass, config_entry):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
-
-    async def refresh(event_time):
-        """Refresh RainMachine sensor data."""
-        _LOGGER.debug("Updating RainMachine sensor data")
-        await rainmachine.async_update()
-        async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
-
-    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = async_track_time_interval(
-        hass, refresh, timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
-    )
 
     @_verify_domain_control
     async def disable_program(call):
@@ -271,30 +263,86 @@ async def async_unload_entry(hass, config_entry):
 class RainMachine:
     """Define a generic RainMachine object."""
 
-    def __init__(self, client, default_zone_runtime):
+    def __init__(self, hass, client, default_zone_runtime, scan_interval):
         """Initialize."""
+        self._async_unsub_dispatcher_connect = None
+        self._scan_interval_seconds = scan_interval
         self.client = client
         self.data = {}
         self.default_zone_runtime = default_zone_runtime
         self.device_mac = self.client.mac
+        self.hass = hass
+
+        self._api_category_count = {
+            PROVISION_SETTINGS: 0,
+            RESTRICTIONS_CURRENT: 0,
+            RESTRICTIONS_UNIVERSAL: 0,
+        }
+        self._api_category_locks = {
+            PROVISION_SETTINGS: asyncio.Lock(),
+            RESTRICTIONS_CURRENT: asyncio.Lock(),
+            RESTRICTIONS_UNIVERSAL: asyncio.Lock(),
+        }
+
+    async def _async_fetch_from_api(self, api_category):
+        """Execute the appropriate coroutine to fetch particular data from the API."""
+        if api_category == PROVISION_SETTINGS:
+            data = await self.client.provisioning.settings()
+        elif api_category == RESTRICTIONS_CURRENT:
+            data = await self.client.restrictions.current()
+        elif api_category == RESTRICTIONS_UNIVERSAL:
+            data = await self.client.restrictions.universal()
+
+        return data
+
+    @callback
+    def async_deregister_api_interest(self, api_category):
+        """Decrement the number of entities with data needs from an API category."""
+        # If this deregistration should leave us with no registration at all, remove the
+        # time interval:
+        if sum(self._api_category_count.values()) == 0:
+            if self._async_unsub_dispatcher_connect:
+                self._async_unsub_dispatcher_connect()
+                self._async_unsub_dispatcher_connect = None
+            return
+        self._api_category_count[api_category] += 1
+
+    async def async_register_api_interest(self, api_category):
+        """Increment the number of entities with data needs from an API category."""
+        # If this is the first registration we have, start a time interval:
+        if not self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect = async_track_time_interval(
+                self.hass,
+                self.async_update,
+                timedelta(seconds=self._scan_interval_seconds),
+            )
+
+        self._api_category_count[api_category] += 1
+
+        # Lock API updates in case multiple entities are trying to call the same API
+        # endpoint at once:
+        async with self._api_category_locks[api_category]:
+            if api_category not in self.data:
+                self.data[api_category] = await self._async_fetch_from_api(api_category)
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-        tasks = {
-            PROVISION_SETTINGS: self.client.provisioning.settings(),
-            RESTRICTIONS_CURRENT: self.client.restrictions.current(),
-            RESTRICTIONS_UNIVERSAL: self.client.restrictions.universal(),
-        }
+        tasks = {}
+        for category, count in self._api_category_count.items():
+            if count == 0:
+                continue
+            tasks[category] = self._async_fetch_from_api(category)
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
-        for operation, result in zip(tasks, results):
+        for api_category, result in zip(tasks, results):
             if isinstance(result, RainMachineError):
                 _LOGGER.error(
-                    "There was an error while updating %s: %s", operation, result
+                    "There was an error while updating %s: %s", api_category, result
                 )
                 continue
+            self.data[api_category] = result
 
-            self.data[operation] = result
+        async_dispatcher_send(self.hass, SENSOR_UPDATE_TOPIC)
 
 
 class RainMachineEntity(Entity):
