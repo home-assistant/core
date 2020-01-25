@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN
+from .const import ATTR_MEMO_TEXT, ATTR_MODULE_ADDRESS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,6 +79,29 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             _LOGGER.error("An error occurred: %s", err)
 
     hass.services.async_register(DOMAIN, "sync_clock", syn_clock, schema=vol.Schema({}))
+
+    def set_memo_text(service):
+        """Handle Memo Text service call."""
+        try:
+            controller.get_module(service.data[ATTR_MODULE_ADDRESS]).set_memo_text(
+                service.data[ATTR_MEMO_TEXT]
+            )
+        except velbus.util.VelbusException as err:
+            _LOGGER.error("An error occurred: %s", err)
+
+    hass.services.async_register(
+        DOMAIN,
+        "set_memo_text",
+        set_memo_text,
+        vol.Schema(
+            {
+                vol.Required(ATTR_MODULE_ADDRESS): vol.All(
+                    vol.Coerce(int), vol.Range(min=0, max=255)
+                ),
+                vol.Optional(ATTR_MEMO_TEXT, default=""): cv.string,
+            }
+        ),
+    )
 
     return True
 
