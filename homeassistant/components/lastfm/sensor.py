@@ -114,6 +114,6 @@ class LastfmSensor(Entity):
     def icon(self):
         """Return the icon to use in the frontend."""
         return ICON
-    
+
     def __generate_entity_id(user):
         return user.replace('.', '_')
