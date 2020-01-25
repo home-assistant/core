@@ -7,6 +7,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,10 +41,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         each_upcoming = client.upcoming_of_each()
-        _LOGGER.info(f"avri: {each_upcoming}")
     except AvriException as ex:
-        _LOGGER.error("Avri platform error.", ex)
-        return
+        raise PlatformNotReady from ex
     else:
         for upcoming in each_upcoming:
             add_entities(
@@ -98,4 +97,4 @@ class AvriWasteUpcoming(Entity):
             else:
                 self._state = None
         except AvriException as ex:
-            _LOGGER.error("Avri platform error.", ex)
+            _LOGGER.error("Avri platform error. %s", ex)
