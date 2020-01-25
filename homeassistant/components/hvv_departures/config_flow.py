@@ -1,10 +1,12 @@
 """Config flow for HVV integration."""
 import logging
 
-from pygti.gti import GTI
+from pygti.auth import GTI_DEFAULT_HOST
+from pygti.gti import GTI, Auth
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
 
@@ -12,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCHEMA_STEP_USER = vol.Schema(
     {
-        vol.Required("host", default="http://api-test.geofox.de"): str,
+        vol.Required("host", default=GTI_DEFAULT_HOST): str,
         vol.Required("username"): str,
         vol.Required("password"): str,
     }
@@ -31,19 +33,19 @@ SCHEMA_STEP_FINISH = vol.Schema(
 class GTIHub:
     """GTI Hub."""
 
-    def __init__(self, host, username, password):
+    def __init__(self, host, username, password, session):
         """Initialize."""
         self.host = host
         self.username = username
         self.password = password
 
-        self.gti = GTI(self.username, self.password, self.host)
+        self.gti = GTI(Auth(session, self.username, self.password, self.host))
 
     async def authenticate(self) -> bool:
         """Test if we can authenticate with the host."""
 
-        return_code = self.gti.init().get("returnCode")
-        return return_code == "OK"
+        return_code = await self.gti.init()
+        return return_code.get("returnCode") == "OK"
 
 
 async def validate_input(hass: core.HomeAssistant, hub: GTIHub):
@@ -69,8 +71,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             try:
+                session = aiohttp_client.async_get_clientsession(self.hass)
                 self.hub = GTIHub(
-                    user_input["host"], user_input["username"], user_input["password"]
+                    user_input["host"],
+                    user_input["username"],
+                    user_input["password"],
+                    session,
                 )
 
                 if not await self.hub.authenticate():
@@ -98,7 +104,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
 
-            cn = self.hub.gti.checkName(
+            cn = await self.hub.gti.checkName(
                 {"theName": {"name": user_input["station"]}, "maxList": 20}
             )
 
@@ -138,7 +144,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # get departures to get the correct filters
 
-            dl = self.hub.gti.departureList(
+            dl = await self.hub.gti.departureList(
                 {
                     "station": self.data["station"],
                     "time": {"date": "heute", "time": "jetzt"},
@@ -182,7 +188,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.data.update(user_input)
 
             # get station information
-            si = self.hub.gti.stationInformation({"station": self.data["station"]})
+            si = await self.hub.gti.stationInformation(
+                {"station": self.data["station"]}
+            )
 
             self.data.update({"stationInformation": si})
 

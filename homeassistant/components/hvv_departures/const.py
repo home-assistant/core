@@ -2,3 +2,4 @@
 
 DOMAIN = "hvv_departures"
 DEFAULT_NAME = DOMAIN
+MANUFACTURER = "HVV"

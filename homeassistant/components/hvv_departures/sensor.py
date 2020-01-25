@@ -2,18 +2,29 @@
 from datetime import datetime, timedelta
 import logging
 
-from pygti.gti import GTI
+from pygti.gti import GTI, Auth
 
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import DOMAIN
+from .const import DOMAIN, MANUFACTURER
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
-MAX_LIST = 5
+MAX_LIST = 10
 MAX_TIME_OFFSET = 200
 ICON = "mdi:bus"
 UNIT_OF_MEASUREMENT = "min"
+
+ATTR_DEPARTURE = "departure"
+ATTR_LINE = "line"
+ATTR_ORIGIN = "origin"
+ATTR_DIRECTION = "direction"
+ATTR_TYPE = "type"
+ATTR_ID = "id"
+ATTR_DELAY = "delay"
+ATTR_NEXT = "next"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,67 +32,102 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(
     hass, config, async_add_entities, discovery_info=None
 ):  # pylint: disable=unused-argument
-    """Set up the sensor platform."""
-    # async_add_entities([HVVDepartureSensor(hass, discovery_info)], True)
+    """Set up the sensor platform.
+
+    Skipped, as setup through configuration.yaml is not supported.
+    """
+
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the sensor platform."""
 
-    data = HVVDepartureData(hass, config_entry)
-
-    async_add_devices([HVVDepartureSensor(hass, config_entry, data)], True)
+    session = aiohttp_client.async_get_clientsession(hass)
+    async_add_devices([HVVDepartureSensor(hass, config_entry, session)], True)
 
 
 class HVVDepartureSensor(Entity):
     """HVVDepartureSensor class."""
 
-    def __init__(self, hass, entry, data):
+    def __init__(self, hass, entry, session):
         """Initialize."""
         self.hass = hass
         self.entry = entry
         self.config = self.entry.data
         self.station_name = self.config["station"]["name"]
-        self.data = data
         self.attr = {}
         self._state = None
         self._name = f"Departures at {self.station_name}"
 
+        self.gti = GTI(
+            Auth(
+                session,
+                self.config["username"],
+                self.config["password"],
+                self.config["host"],
+            )
+        )
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Update the sensor."""
 
-        self.data.update()
+        try:
 
-        if (
-            self.data.data["returnCode"] == "OK"
-            and len(self.data.data["departures"]) > 0
-        ):
-            departure = self.data.data["departures"][0]
-            self._state = departure["timeOffset"] + departure.get("delay", 0) // 60
+            departure_time = datetime.now() + timedelta(minutes=self.config["offset"])
 
-            self.attr["line"] = departure["line"]["name"]
-            self.attr["origin"] = departure["line"]["origin"]
-            self.attr["direction"] = departure["line"]["direction"]
-            self.attr["type"] = departure["line"]["type"]["shortInfo"]
-            self.attr["id"] = departure["line"]["id"]
+            payload = {
+                "station": self.config["station"],
+                "time": {
+                    "date": departure_time.strftime("%d.%m.%Y"),
+                    "time": departure_time.strftime("%H:%M"),
+                },
+                "maxList": MAX_LIST,
+                "maxTimeOffset": MAX_TIME_OFFSET,
+                "useRealtime": self.config["realtime"],
+                "filter": self.config["filter"],
+            }
 
-            if len(self.data.data["departures"]) > 1:
+            data = await self.gti.departureList(payload)
+
+            if data["returnCode"] == "OK" and len(data["departures"]) > 0:
+                departure = data["departures"][0]
+                self._state = (
+                    departure_time
+                    + timedelta(minutes=departure["timeOffset"])
+                    + timedelta(seconds=departure.get("delay", 0))
+                )
+
+                self.attr[ATTR_LINE] = departure["line"]["name"]
+                self.attr[ATTR_ORIGIN] = departure["line"]["origin"]
+                self.attr[ATTR_DIRECTION] = departure["line"]["direction"]
+                self.attr[ATTR_TYPE] = departure["line"]["type"]["shortInfo"]
+                self.attr[ATTR_ID] = departure["line"]["id"]
+                self.attr[ATTR_DELAY] = departure.get("delay", 0)
+
                 departures = []
-                for departure in self.data.data["departures"][1:]:
+                for departure in data["departures"]:
                     departures.append(
                         {
-                            "departure": departure["timeOffset"]
-                            + departure.get("delay", 0) // 60,
-                            "line": departure["line"]["name"],
-                            "origin": departure["line"]["origin"],
-                            "direction": departure["line"]["direction"],
-                            "type": departure["line"]["type"]["shortInfo"],
-                            "id": departure["line"]["id"],
+                            ATTR_DEPARTURE: departure_time
+                            + timedelta(minutes=departure["timeOffset"])
+                            + timedelta(seconds=departure.get("delay", 0)),
+                            ATTR_LINE: departure["line"]["name"],
+                            ATTR_ORIGIN: departure["line"]["origin"],
+                            ATTR_DIRECTION: departure["line"]["direction"],
+                            ATTR_TYPE: departure["line"]["type"]["shortInfo"],
+                            ATTR_ID: departure["line"]["id"],
+                            ATTR_DELAY: departure.get("delay", 0),
                         }
                     )
-                self.attr["next"] = departures
-        else:
+                self.attr[ATTR_NEXT] = departures
+            else:
+                self._state = None
+                self.attr = {}
+
+        except Exception as error:
+            _LOGGER.error("Error occurred while fetching data: %r", error)
             self._state = None
             self.attr = {}
 
@@ -106,7 +152,7 @@ class HVVDepartureSensor(Entity):
                 )
             },
             "name": self.config["station"]["name"],
-            "manufacturer": "HVV",
+            "manufacturer": MANUFACTURER,
         }
 
     @property
@@ -125,48 +171,11 @@ class HVVDepartureSensor(Entity):
         return ICON
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return UNIT_OF_MEASUREMENT
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return self.attr
-
-
-class HVVDepartureData:
-    """Get the latest data and update the states."""
-
-    def __init__(self, hass, entry):
-        """Initialize."""
-        self.hass = hass
-        self.entry = entry
-        self.config = self.entry.data
-        self.last_update = None
-        self.gti = GTI(
-            self.config["username"], self.config["password"], self.config["host"]
-        )
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update the HVV departure data."""
-
-        try:
-
-            payload = {
-                "station": self.config["station"],
-                "time": {"date": "heute", "time": "jetzt"},
-                "maxList": MAX_LIST,
-                "maxTimeOffset": MAX_TIME_OFFSET,
-                "useRealtime": self.config["realtime"],
-                "filter": self.config["filter"],
-            }
-
-            self.data = self.gti.departureList(payload)
-
-            self.last_update = datetime.today().strftime("%Y-%m-%d %H:%M")
-        except Exception as error:
-            _LOGGER.error("Error occurred while fetching data: %r", error)
-            self.data = None
-            return False
