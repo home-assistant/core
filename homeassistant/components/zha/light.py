@@ -1,16 +1,39 @@
 """Lights on Zigbee Home Automation networks."""
+from collections import Counter
 from datetime import timedelta
 import functools
+import itertools
 import logging
 import random
+from typing import Any, Callable, Iterator, List, Optional, Tuple
 
 from zigpy.zcl.foundation import Status
 
 from homeassistant.components import light
-from homeassistant.const import STATE_ON
-from homeassistant.core import callback
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_EFFECT,
+    ATTR_EFFECT_LIST,
+    ATTR_HS_COLOR,
+    ATTR_MAX_MIREDS,
+    ATTR_MIN_MIREDS,
+    ATTR_WHITE_VALUE,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT,
+    SUPPORT_FLASH,
+    SUPPORT_TRANSITION,
+    SUPPORT_WHITE_VALUE,
+)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import CALLBACK_TYPE, State, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_state_change,
+    async_track_time_interval,
+)
 import homeassistant.util.color as color_util
 
 from .core import discovery
@@ -29,7 +52,7 @@ from .core.const import (
 )
 from .core.registries import ZHA_ENTITIES
 from .core.typing import ZhaDeviceType
-from .entity import ZhaEntity
+from .entity import BaseZhaEntity, ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +70,16 @@ FLASH_EFFECTS = {light.FLASH_SHORT: EFFECT_BLINK, light.FLASH_LONG: EFFECT_BREAT
 UNSUPPORTED_ATTRIBUTE = 0x86
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
 PARALLEL_UPDATES = 0
+
+SUPPORT_GROUP_LIGHT = (
+    SUPPORT_BRIGHTNESS
+    | SUPPORT_COLOR_TEMP
+    | SUPPORT_EFFECT
+    | SUPPORT_FLASH
+    | SUPPORT_COLOR
+    | SUPPORT_TRANSITION
+    | SUPPORT_WHITE_VALUE
+)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -410,3 +443,293 @@ class HueLight(Light):
     """Representation of a HUE light which does not report attributes."""
 
     _REFRESH_INTERVAL = (3, 5)
+
+
+class LightGroup(BaseZhaEntity, light.Light):
+    """Representation of a light group."""
+
+    def __init__(
+        self, entity_ids: List[str], unique_id, group_id, zha_device, **kwargs
+    ) -> None:
+        """Initialize a light group."""
+        super().__init__(unique_id, zha_device, **kwargs)
+        self._name = f"{zha_device.name}_group_{group_id}"
+        self._group_id = group_id
+        self._entity_ids = entity_ids
+        self._is_on = False
+        self._available = False
+        self._brightness: Optional[int] = None
+        self._hs_color: Optional[Tuple[float, float]] = None
+        self._color_temp: Optional[int] = None
+        self._min_mireds: Optional[int] = 154
+        self._max_mireds: Optional[int] = 500
+        self._white_value: Optional[int] = None
+        self._effect_list: Optional[List[str]] = None
+        self._effect: Optional[str] = None
+        self._supported_features: int = 0
+        self._async_unsub_state_changed: Optional[CALLBACK_TYPE] = None
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+
+        @callback
+        def async_state_changed_listener(
+            entity_id: str, old_state: State, new_state: State
+        ):
+            """Handle child updates."""
+            self.async_schedule_update_ha_state(True)
+
+        assert self.hass is not None
+        self._async_unsub_state_changed = async_track_state_change(
+            self.hass, self._entity_ids, async_state_changed_listener
+        )
+        await self.async_update()
+
+    async def async_will_remove_from_hass(self):
+        """Handle removal from Home Assistant."""
+        if self._async_unsub_state_changed is not None:
+            self._async_unsub_state_changed()
+            self._async_unsub_state_changed = None
+
+    @property
+    def name(self) -> str:
+        """Return the name of the entity."""
+        return self._name
+
+    @property
+    def is_on(self) -> bool:
+        """Return the on/off state of the light group."""
+        return self._is_on
+
+    @property
+    def available(self) -> bool:
+        """Return whether the light group is available."""
+        return self._available
+
+    @property
+    def brightness(self) -> Optional[int]:
+        """Return the brightness of this light group between 0..255."""
+        return self._brightness
+
+    @property
+    def hs_color(self) -> Optional[Tuple[float, float]]:
+        """Return the HS color value [float, float]."""
+        return self._hs_color
+
+    @property
+    def color_temp(self) -> Optional[int]:
+        """Return the CT color value in mireds."""
+        return self._color_temp
+
+    @property
+    def min_mireds(self) -> Optional[int]:
+        """Return the coldest color_temp that this light group supports."""
+        return self._min_mireds
+
+    @property
+    def max_mireds(self) -> Optional[int]:
+        """Return the warmest color_temp that this light group supports."""
+        return self._max_mireds
+
+    @property
+    def white_value(self) -> Optional[int]:
+        """Return the white value of this light group between 0..255."""
+        return self._white_value
+
+    @property
+    def effect_list(self) -> Optional[List[str]]:
+        """Return the list of supported effects."""
+        return self._effect_list
+
+    @property
+    def effect(self) -> Optional[str]:
+        """Return the current effect."""
+        return self._effect
+
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return self._supported_features
+
+    @property
+    def should_poll(self) -> bool:
+        """No polling needed for a light group."""
+        return False
+
+    async def async_turn_on(self, **kwargs):
+        """Forward the turn_on command to all lights in the light group."""
+        group = self.zha_device.gateway.get_group(self._group_id)
+        if group is not None:
+            cluster = group.endpoint[6]
+            await cluster.command(1, expect_reply=True)
+        """
+        data = {ATTR_ENTITY_ID: self._entity_ids}
+        emulate_color_temp_entity_ids = []
+
+        if ATTR_BRIGHTNESS in kwargs:
+            data[ATTR_BRIGHTNESS] = kwargs[ATTR_BRIGHTNESS]
+
+        if ATTR_HS_COLOR in kwargs:
+            data[ATTR_HS_COLOR] = kwargs[ATTR_HS_COLOR]
+
+        if ATTR_COLOR_TEMP in kwargs:
+            data[ATTR_COLOR_TEMP] = kwargs[ATTR_COLOR_TEMP]
+
+            # Create a new entity list to mutate
+            updated_entities = list(self._entity_ids)
+
+            # Walk through initial entity ids, split entity lists by support
+            for entity_id in self._entity_ids:
+                state = self.hass.states.get(entity_id)
+                if not state:
+                    continue
+                support = state.attributes.get(ATTR_SUPPORTED_FEATURES)
+                # Only pass color temperature to supported entity_ids
+                if bool(support & SUPPORT_COLOR) and not bool(
+                    support & SUPPORT_COLOR_TEMP
+                ):
+                    emulate_color_temp_entity_ids.append(entity_id)
+                    updated_entities.remove(entity_id)
+                    data[ATTR_ENTITY_ID] = updated_entities
+
+        if ATTR_WHITE_VALUE in kwargs:
+            data[ATTR_WHITE_VALUE] = kwargs[ATTR_WHITE_VALUE]
+
+        if ATTR_EFFECT in kwargs:
+            data[ATTR_EFFECT] = kwargs[ATTR_EFFECT]
+
+        if ATTR_TRANSITION in kwargs:
+            data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
+
+        if ATTR_FLASH in kwargs:
+            data[ATTR_FLASH] = kwargs[ATTR_FLASH]
+
+        if not emulate_color_temp_entity_ids:
+            await self.hass.services.async_call(
+                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+            )
+            return
+
+        emulate_color_temp_data = data.copy()
+        temp_k = color_util.color_temperature_mired_to_kelvin(
+            emulate_color_temp_data[ATTR_COLOR_TEMP]
+        )
+        hs_color = color_util.color_temperature_to_hs(temp_k)
+        emulate_color_temp_data[ATTR_HS_COLOR] = hs_color
+        del emulate_color_temp_data[ATTR_COLOR_TEMP]
+
+        emulate_color_temp_data[ATTR_ENTITY_ID] = emulate_color_temp_entity_ids
+
+        await asyncio.gather(
+            self.hass.services.async_call(
+                light.DOMAIN, light.SERVICE_TURN_ON, data, blocking=True
+            ),
+            self.hass.services.async_call(
+                light.DOMAIN,
+                light.SERVICE_TURN_ON,
+                emulate_color_temp_data,
+                blocking=True,
+            ),
+        )
+        """
+
+    async def async_turn_off(self, **kwargs):
+        """Forward the turn_off command to all lights in the light group."""
+        group = self.zha_device.gateway.get_group(self._group_id)
+        if group is not None:
+            cluster = group.endpoint[6]
+            await cluster.command(0, expect_reply=True)
+        """
+        data = {ATTR_ENTITY_ID: self._entity_ids}
+
+        if ATTR_TRANSITION in kwargs:
+            data[ATTR_TRANSITION] = kwargs[ATTR_TRANSITION]
+
+        await self.hass.services.async_call(
+            light.DOMAIN, light.SERVICE_TURN_OFF, data, blocking=True
+        )
+        """
+
+    async def async_update(self):
+        """Query all members and determine the light group state."""
+        all_states = [self.hass.states.get(x) for x in self._entity_ids]
+        states: List[State] = list(filter(None, all_states))
+        on_states = [state for state in states if state.state == STATE_ON]
+
+        self._is_on = len(on_states) > 0
+        self._available = any(state.state != STATE_UNAVAILABLE for state in states)
+
+        self._brightness = _reduce_attribute(on_states, ATTR_BRIGHTNESS)
+
+        self._hs_color = _reduce_attribute(on_states, ATTR_HS_COLOR, reduce=_mean_tuple)
+
+        self._white_value = _reduce_attribute(on_states, ATTR_WHITE_VALUE)
+
+        self._color_temp = _reduce_attribute(on_states, ATTR_COLOR_TEMP)
+        self._min_mireds = _reduce_attribute(
+            states, ATTR_MIN_MIREDS, default=154, reduce=min
+        )
+        self._max_mireds = _reduce_attribute(
+            states, ATTR_MAX_MIREDS, default=500, reduce=max
+        )
+
+        self._effect_list = None
+        all_effect_lists = list(_find_state_attributes(states, ATTR_EFFECT_LIST))
+        if all_effect_lists:
+            # Merge all effects from all effect_lists with a union merge.
+            self._effect_list = list(set().union(*all_effect_lists))
+
+        self._effect = None
+        all_effects = list(_find_state_attributes(on_states, ATTR_EFFECT))
+        if all_effects:
+            # Report the most common effect.
+            effects_count = Counter(itertools.chain(all_effects))
+            self._effect = effects_count.most_common(1)[0][0]
+
+        self._supported_features = 0
+        for support in _find_state_attributes(states, ATTR_SUPPORTED_FEATURES):
+            # Merge supported features by emulating support for every feature
+            # we find.
+            self._supported_features |= support
+        # Bitwise-and the supported features with the GroupedLight's features
+        # so that we don't break in the future when a new feature is added.
+        self._supported_features &= SUPPORT_GROUP_LIGHT
+
+
+def _find_state_attributes(states: List[State], key: str) -> Iterator[Any]:
+    """Find attributes with matching key from states."""
+    for state in states:
+        value = state.attributes.get(key)
+        if value is not None:
+            yield value
+
+
+def _mean_int(*args):
+    """Return the mean of the supplied values."""
+    return int(sum(args) / len(args))
+
+
+def _mean_tuple(*args):
+    """Return the mean values along the columns of the supplied values."""
+    return tuple(sum(l) / len(l) for l in zip(*args))
+
+
+def _reduce_attribute(
+    states: List[State],
+    key: str,
+    default: Optional[Any] = None,
+    reduce: Callable[..., Any] = _mean_int,
+) -> Any:
+    """Find the first attribute matching key from states.
+
+    If none are found, return default.
+    """
+    attrs = list(_find_state_attributes(states, key))
+
+    if not attrs:
+        return default
+
+    if len(attrs) == 1:
+        return attrs[0]
+
+    return reduce(*attrs)
