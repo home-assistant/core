@@ -116,4 +116,4 @@ class LastfmSensor(Entity):
         return ICON
 
     def __generate_entity_id(user):
-        return user.replace('.', '_')
+        return user.replace(".", "_")
