@@ -110,9 +110,6 @@ class NMBSLiveBoard(Entity):
         """Return a unique ID."""
         unique_id = f"{self._station}_{self._station_from}_{self._station_to}"
 
-        if self._name:
-            unique_id = f"{self._station}_{self.name}"
-
         return f"nmbs_live_{unique_id}"
 
     @property
