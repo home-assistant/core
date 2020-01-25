@@ -21,6 +21,10 @@ from homeassistant.helpers.device_registry import (
     async_get_registry as get_dev_reg,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_device,
+    async_get_registry as get_ent_reg,
+)
 
 from .const import (
     ATTR_IEEE,
@@ -90,6 +94,7 @@ class ZHAGateway:
         self._device_registry = collections.defaultdict(list)
         self.zha_storage = None
         self.ha_device_registry = None
+        self.ha_entity_registry = None
         self.application_controller = None
         self.radio_description = None
         hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
@@ -105,6 +110,7 @@ class ZHAGateway:
         """Initialize controller and connect radio."""
         self.zha_storage = await async_get_registry(self._hass)
         self.ha_device_registry = await get_dev_reg(self._hass)
+        self.ha_entity_registry = await get_ent_reg(self._hass)
 
         usb_path = self._config_entry.data.get(CONF_USB_PATH)
         baudrate = self._config.get(CONF_BAUDRATE, DEFAULT_BAUDRATE)
@@ -141,6 +147,43 @@ class ZHAGateway:
                 init_with_semaphore(self.async_device_restored(device), semaphore)
             )
         await asyncio.gather(*init_tasks)
+
+        coordinator = next(
+            device for device in self._devices.values() if device.nwk == 0x0000
+        )
+
+        for group_id in self.application_controller.groups:
+            group = self.application_controller.groups[group_id]
+            discovery_info = {
+                "component": "light",
+                "group_id": group_id,
+                "zha_device": coordinator,
+                "unique_id": f"{coordinator.ieee}_{group_id}",
+                "channels": [],
+            }
+            discovery_info["member_devices"] = [
+                str(member_ieee[0])
+                for member_ieee in group.members.keys()
+                if member_ieee[0] in self.devices
+            ]
+
+            discovery_info["member_device_ids"] = [
+                self.ha_device_registry.async_get_device(
+                    {(DOMAIN, member_ieee)}, set()
+                ).id
+                for member_ieee in discovery_info["member_devices"]
+            ]
+
+            discovery_info["entity_ids"] = []
+
+            for device_id in discovery_info["member_device_ids"]:
+                entities = async_entries_for_device(self.ha_entity_registry, device_id)
+                for entity in entities:
+                    discovery_info["entity_ids"].append(entity.entity_id)
+
+            self._hass.data[DATA_ZHA]["light"][
+                discovery_info["unique_id"]
+            ] = discovery_info
 
     def device_joined(self, device):
         """Handle device joined.
