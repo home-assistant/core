@@ -61,6 +61,7 @@ async def test_update_device_config(hass, hass_client):
                 {"name": "Beer", "entities": ["light.top", "light.bottom"]}
             ),
         )
+        await hass.async_block_till_done()
 
     assert resp.status == 200
     result = await resp.json()

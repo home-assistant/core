@@ -12,7 +12,7 @@ CONFIG_PATH = "customize.yaml"
 async def async_setup(hass):
     """Set up the Customize config API."""
 
-    async def hook(hass):
+    async def hook(action, config_key):
         """post_write_hook for Config View that reloads groups."""
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
 
