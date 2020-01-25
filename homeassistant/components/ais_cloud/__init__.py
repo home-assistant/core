@@ -1205,10 +1205,17 @@ class AisColudData:
         G_PLAYERS = []
         players_lv = []
         if "device_name" in call.data:
+            unique_id = None
+            if "ais_gate_client_id" in call.data:
+                unique_id = call.data.get("ais_gate_client_id")
+            elif "MacWlan0" in call.data:
+                unique_id = call.data.get("MacWlan0")
+            elif "MacEth0" in call.data:
+                unique_id = call.data.get("MacEth0")
+            if unique_id is None:
+                return
             # check if this device already exists
-            entity_id = slugify(
-                call.data.get("device_name") + "_" + call.data.get("unique_id")
-            )
+            entity_id = slugify(call.data.get("device_name") + "_" + unique_id)
             m_player = hass.states.get("media_player." + entity_id)
             do_disco = False
             if m_player is None:
