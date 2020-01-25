@@ -307,6 +307,7 @@ class SimpliSafe:
         """Initialize."""
         self._api = api
         self._config_entry = config_entry
+        self._emergency_refresh_token_used = False
         self._hass = hass
         self.last_event_data = {}
         self.systems = systems
@@ -316,6 +317,28 @@ class SimpliSafe:
         try:
             await system.update()
             latest_event = await system.get_latest_event()
+        except InvalidCredentialsError:
+            # SimpliSafe's cloud is a little shaky. At times, a 500 or 502 will
+            # seemingly harm simplisafe-python's existing access token _and_ refresh
+            # token, thus preventing the integration from recovering. However, the
+            # refresh token stored in the config entry escapes unscathed (again,
+            # apparently); so, if we detect that we're in such a situation, try a last-
+            # ditch effort by re-authenticating with the stored token:
+            if self._emergency_refresh_token_used:
+                # If we've already tried this, log the error, suggest a HASS restart,
+                # and stop the time tracker:
+                _LOGGER.error(
+                    "SimpliSafe authentication disconnected. Please restart HASS."
+                )
+                remove_listener = self._hass.data[DOMAIN][DATA_LISTENER].pop(
+                    self._config_entry.entry_id
+                )
+                remove_listener()
+                return
+
+            _LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
+            self._emergency_refresh_token_used = True
+            await self._api.refresh_access_token(self._config_entry.data[CONF_TOKEN])
         except SimplipyError as err:
             _LOGGER.error(
                 'SimpliSafe error while updating "%s": %s', system.address, err
@@ -327,16 +350,21 @@ class SimpliSafe:
 
         self.last_event_data[system.system_id] = latest_event
 
-        if self._api.refresh_token_dirty:
-            _async_save_refresh_token(
-                self._hass, self._config_entry, self._api.refresh_token
-            )
+        # If we've reached this point using an emergency refresh token, we're in the
+        # clear and we can discard it:
+        if self._emergency_refresh_token_used:
+            self._emergency_refresh_token_used = False
 
     async def async_update(self):
         """Get updated data from SimpliSafe."""
         tasks = [self._update_system(system) for system in self.systems.values()]
 
         await asyncio.gather(*tasks)
+
+        if self._api.refresh_token_dirty:
+            _async_save_refresh_token(
+                self._hass, self._config_entry, self._api.refresh_token
+            )
 
 
 class SimpliSafeEntity(Entity):
