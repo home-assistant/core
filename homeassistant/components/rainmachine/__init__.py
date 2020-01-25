@@ -373,6 +373,11 @@ class RainMachine:
     async def async_update_programs_and_zones(self):
         """Update program and zone data.
 
+        Program and zone updates always go together because of how linked they are:
+        programs affect zones and certain combinations of zones affect programs.
+        :wa
+
+
         Note that this call does not take into account interested entities when making
         the API calls; we make the reasonable assumption that switches will always be
         enabled.
