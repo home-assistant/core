@@ -54,7 +54,7 @@ class VelbusCover(VelbusEntity, CoverDevice):
         Velbus: 100 = closed, 0 = open
         """
         pos = self._module.get_position(self._channel)
-        return abs(pos-100)
+        return abs(pos - 100)
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -80,7 +80,6 @@ class VelbusCover(VelbusEntity, CoverDevice):
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         try:
-            self._module.set(self._channel, abs(kwargs[ATTR_POSITION] - 100) )
+            self._module.set(self._channel, abs(kwargs[ATTR_POSITION] - 100))
         except VelbusException as err:
             _LOGGER.error("A Velbus error occurred: %s", err)
-        
