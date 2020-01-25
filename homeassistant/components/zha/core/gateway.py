@@ -18,7 +18,10 @@ from homeassistant.helpers.device_registry import (
     async_get_registry as get_dev_reg,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
+from homeassistant.helpers.entity_registry import (
+    async_entries_for_device,
+    async_get_registry as get_ent_reg,
+)
 
 from . import discovery, typing as zha_typing
 from .const import (
@@ -190,6 +193,43 @@ class ZHAGateway:
                 if dev.is_mains_powered
             ]
         )
+
+        coordinator = next(
+            device for device in self._devices.values() if device.nwk == 0x0000
+        )
+
+        for group_id in self.application_controller.groups:
+            group = self.application_controller.groups[group_id]
+            discovery_info = {
+                "component": "light",
+                "group_id": group_id,
+                "zha_device": coordinator,
+                "unique_id": f"{coordinator.ieee}_{group_id}",
+                "channels": [],
+            }
+            discovery_info["member_devices"] = [
+                str(member_ieee[0])
+                for member_ieee in group.members.keys()
+                if member_ieee[0] in self.devices
+            ]
+
+            discovery_info["member_device_ids"] = [
+                self.ha_device_registry.async_get_device(
+                    {(DOMAIN, member_ieee)}, set()
+                ).id
+                for member_ieee in discovery_info["member_devices"]
+            ]
+
+            discovery_info["entity_ids"] = []
+
+            for device_id in discovery_info["member_device_ids"]:
+                entities = async_entries_for_device(self.ha_entity_registry, device_id)
+                for entity in entities:
+                    discovery_info["entity_ids"].append(entity.entity_id)
+
+            self._hass.data[DATA_ZHA]["light"][
+                discovery_info["unique_id"]
+            ] = discovery_info
 
     def device_joined(self, device):
         """Handle device joined.
