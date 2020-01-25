@@ -1,19 +1,21 @@
-"""
-Support for Homematic lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.homematic/
-"""
+"""Support for Homematic lights."""
 import logging
 
-from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_HS_COLOR, SUPPORT_COLOR,
-    ATTR_EFFECT, SUPPORT_EFFECT, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_EFFECT,
+    Light,
+)
+
+from .const import ATTR_DISCOVER_DEVICES
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['homematic']
 
 SUPPORT_HOMEMATIC = SUPPORT_BRIGHTNESS
 
@@ -28,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMLight(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMLight(HMDevice, Light):
@@ -38,7 +40,7 @@ class HMLight(HMDevice, Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         # Is dimmer?
-        if self._state == 'LEVEL':
+        if self._state == "LEVEL":
             return int(self._hm_get_state() * 255)
         return None
 
@@ -53,17 +55,20 @@ class HMLight(HMDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if 'COLOR' in self._hmdevice.WRITENODE:
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR | SUPPORT_EFFECT
-        return SUPPORT_BRIGHTNESS
+        features = SUPPORT_BRIGHTNESS
+        if "COLOR" in self._hmdevice.WRITENODE:
+            features |= SUPPORT_COLOR
+        if "PROGRAM" in self._hmdevice.WRITENODE:
+            features |= SUPPORT_EFFECT
+        return features
 
     @property
     def hs_color(self):
         """Return the hue and saturation color value [float, float]."""
         if not self.supported_features & SUPPORT_COLOR:
             return None
-        hue, sat = self._hmdevice.get_hs_color()
-        return hue*360.0, sat*100.0
+        hue, sat = self._hmdevice.get_hs_color(self._channel)
+        return hue * 360.0, sat * 100.0
 
     @property
     def effect_list(self):
@@ -81,6 +86,9 @@ class HMLight(HMDevice, Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on and/or change color or color effect settings."""
+        if ATTR_TRANSITION in kwargs:
+            self._hmdevice.setValue("RAMP_TIME", kwargs[ATTR_TRANSITION])
+
         if ATTR_BRIGHTNESS in kwargs and self._state == "LEVEL":
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             self._hmdevice.set_level(percent_bright, self._channel)
@@ -89,8 +97,10 @@ class HMLight(HMDevice, Light):
 
         if ATTR_HS_COLOR in kwargs:
             self._hmdevice.set_hs_color(
-                hue=kwargs[ATTR_HS_COLOR][0]/360.0,
-                saturation=kwargs[ATTR_HS_COLOR][1]/100.0)
+                hue=kwargs[ATTR_HS_COLOR][0] / 360.0,
+                saturation=kwargs[ATTR_HS_COLOR][1] / 100.0,
+                channel=self._channel,
+            )
         if ATTR_EFFECT in kwargs:
             self._hmdevice.set_effect(kwargs[ATTR_EFFECT])
 
@@ -105,4 +115,6 @@ class HMLight(HMDevice, Light):
         self._data[self._state] = None
 
         if self.supported_features & SUPPORT_COLOR:
-            self._data.update({"COLOR": None, "PROGRAM": None})
+            self._data.update({"COLOR": None})
+        if self.supported_features & SUPPORT_EFFECT:
+            self._data.update({"PROGRAM": None})

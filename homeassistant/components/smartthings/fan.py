@@ -1,49 +1,42 @@
-"""
-Support for fans through the SmartThings cloud API.
+"""Support for fans through the SmartThings cloud API."""
+from typing import Optional, Sequence
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/smartthings.fan/
-"""
+from pysmartthings import Capability
 
 from homeassistant.components.fan import (
-    SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
-    FanEntity)
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_OFF,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
-DEPENDENCIES = ['smartthings']
-
-VALUE_TO_SPEED = {
-    0: SPEED_OFF,
-    1: SPEED_LOW,
-    2: SPEED_MEDIUM,
-    3: SPEED_HIGH,
-}
-SPEED_TO_VALUE = {
-    v: k for k, v in VALUE_TO_SPEED.items()}
-
-
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
+VALUE_TO_SPEED = {0: SPEED_OFF, 1: SPEED_LOW, 2: SPEED_MEDIUM, 3: SPEED_HIGH}
+SPEED_TO_VALUE = {v: k for k, v in VALUE_TO_SPEED.items()}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add fans for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
-        [SmartThingsFan(device) for device in broker.devices.values()
-         if is_fan(device)])
+        [
+            SmartThingsFan(device)
+            for device in broker.devices.values()
+            if broker.any_assigned(device.device_id, "fan")
+        ]
+    )
 
 
-def is_fan(device):
-    """Determine if the device should be represented as a fan."""
-    from pysmartthings import Capability
+def get_capabilities(capabilities: Sequence[str]) -> Optional[Sequence[str]]:
+    """Return all capabilities supported if minimum required are present."""
+    supported = [Capability.switch, Capability.fan_speed]
     # Must have switch and fan_speed
-    return all(capability in device.capabilities
-               for capability in [Capability.switch, Capability.fan_speed])
+    if all(capability in capabilities for capability in supported):
+        return supported
 
 
 class SmartThingsFan(SmartThingsEntity, FanEntity):

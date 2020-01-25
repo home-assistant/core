@@ -1,31 +1,34 @@
-"""
-Support for monitoring the state of Digital Ocean droplets.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.digital_ocean/
-"""
+"""Support for monitoring the state of Digital Ocean droplets."""
 import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.components.digital_ocean import (
-    CONF_DROPLETS, ATTR_CREATED_AT, ATTR_DROPLET_ID, ATTR_DROPLET_NAME,
-    ATTR_FEATURES, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
-    ATTR_REGION, ATTR_VCPUS, CONF_ATTRIBUTION, DATA_DIGITAL_OCEAN)
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import ATTR_ATTRIBUTION
+import homeassistant.helpers.config_validation as cv
+
+from . import (
+    ATTR_CREATED_AT,
+    ATTR_DROPLET_ID,
+    ATTR_DROPLET_NAME,
+    ATTR_FEATURES,
+    ATTR_IPV4_ADDRESS,
+    ATTR_IPV6_ADDRESS,
+    ATTR_MEMORY,
+    ATTR_REGION,
+    ATTR_VCPUS,
+    ATTRIBUTION,
+    CONF_DROPLETS,
+    DATA_DIGITAL_OCEAN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Droplet'
-DEFAULT_DEVICE_CLASS = 'moving'
-DEPENDENCIES = ['digital_ocean']
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string]),
-})
+DEFAULT_NAME = "Droplet"
+DEFAULT_DEVICE_CLASS = "moving"
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_DROPLETS): vol.All(cv.ensure_list, [cv.string])}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -65,7 +68,7 @@ class DigitalOceanBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.data.status == 'active'
+        return self.data.status == "active"
 
     @property
     def device_class(self):
@@ -76,7 +79,7 @@ class DigitalOceanBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the Digital Ocean droplet."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_CREATED_AT: self.data.created_at,
             ATTR_DROPLET_ID: self.data.id,
             ATTR_DROPLET_NAME: self.data.name,
@@ -84,7 +87,7 @@ class DigitalOceanBinarySensor(BinarySensorDevice):
             ATTR_IPV4_ADDRESS: self.data.ip_address,
             ATTR_IPV6_ADDRESS: self.data.ip_v6_address,
             ATTR_MEMORY: self.data.memory,
-            ATTR_REGION: self.data.region['name'],
+            ATTR_REGION: self.data.region["name"],
             ATTR_VCPUS: self.data.vcpus,
         }
 

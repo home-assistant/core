@@ -1,36 +1,40 @@
-"""
-Support for WeMo humidifier.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/fan.wemo/
-"""
+"""Support for WeMo humidifier."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
-import requests
 import async_timeout
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.fan import (
-    DOMAIN, SUPPORT_SET_SPEED, FanEntity,
-    SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH)
-from homeassistant.exceptions import PlatformNotReady
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_OFF,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
 from homeassistant.const import ATTR_ENTITY_ID
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-DEPENDENCIES = ['wemo']
+from .const import (
+    DOMAIN as WEMO_DOMAIN,
+    SERVICE_RESET_FILTER_LIFE,
+    SERVICE_SET_HUMIDITY,
+)
+
 SCAN_INTERVAL = timedelta(seconds=10)
-DATA_KEY = 'fan.wemo'
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_HUMIDITY = 'current_humidity'
-ATTR_TARGET_HUMIDITY = 'target_humidity'
-ATTR_FAN_MODE = 'fan_mode'
-ATTR_FILTER_LIFE = 'filter_life'
-ATTR_FILTER_EXPIRED = 'filter_expired'
-ATTR_WATER_LEVEL = 'water_level'
+ATTR_CURRENT_HUMIDITY = "current_humidity"
+ATTR_TARGET_HUMIDITY = "target_humidity"
+ATTR_FAN_MODE = "fan_mode"
+ATTR_FILTER_LIFE = "filter_life"
+ATTR_FILTER_EXPIRED = "filter_expired"
+ATTR_WATER_LEVEL = "water_level"
 
 # The WEMO_ constants below come from pywemo itself
 WEMO_ON = 1
@@ -53,9 +57,7 @@ WEMO_WATER_EMPTY = 0
 WEMO_WATER_LOW = 1
 WEMO_WATER_GOOD = 2
 
-SUPPORTED_SPEEDS = [
-    SPEED_OFF, SPEED_LOW,
-    SPEED_MEDIUM, SPEED_HIGH]
+SUPPORTED_SPEEDS = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 SUPPORTED_FEATURES = SUPPORT_SET_SPEED
 
@@ -67,60 +69,53 @@ WEMO_FAN_SPEED_TO_HASS = {
     WEMO_FAN_LOW: SPEED_LOW,  # Reusing SPEED_LOW
     WEMO_FAN_MEDIUM: SPEED_MEDIUM,
     WEMO_FAN_HIGH: SPEED_HIGH,  # Reusing SPEED_HIGH
-    WEMO_FAN_MAXIMUM: SPEED_HIGH
+    WEMO_FAN_MAXIMUM: SPEED_HIGH,
 }
 
 # Because we reused mappings in the previous dict, we have to filter them
 # back out in this dict, or else we would have duplicate keys
-HASS_FAN_SPEED_TO_WEMO = {v: k for (k, v) in WEMO_FAN_SPEED_TO_HASS.items()
-                          if k not in [WEMO_FAN_LOW, WEMO_FAN_HIGH]}
+HASS_FAN_SPEED_TO_WEMO = {
+    v: k
+    for (k, v) in WEMO_FAN_SPEED_TO_HASS.items()
+    if k not in [WEMO_FAN_LOW, WEMO_FAN_HIGH]
+}
 
-SERVICE_SET_HUMIDITY = 'wemo_set_humidity'
+SET_HUMIDITY_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+        vol.Required(ATTR_TARGET_HUMIDITY): vol.All(
+            vol.Coerce(float), vol.Range(min=0, max=100)
+        ),
+    }
+)
 
-SET_HUMIDITY_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_TARGET_HUMIDITY):
-        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
-})
-
-SERVICE_RESET_FILTER_LIFE = 'wemo_reset_filter_life'
-
-RESET_FILTER_LIFE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
-})
+RESET_FILTER_LIFE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_ids})
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up discovered WeMo humidifiers."""
-    from pywemo import discovery
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up WeMo binary sensors."""
+    entities = []
 
-    if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = {}
+    async def _discovered_wemo(device):
+        """Handle a discovered Wemo device."""
+        entity = WemoHumidifier(device)
+        entities.append(entity)
+        async_add_entities([entity])
 
-    if discovery_info is None:
-        return
+    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.fan", _discovered_wemo)
 
-    location = discovery_info['ssdp_description']
-    mac = discovery_info['mac_address']
-
-    try:
-        device = WemoHumidifier(
-            discovery.device_from_description(location, mac))
-    except (requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout) as err:
-        _LOGGER.error('Unable to access %s (%s)', location, err)
-        raise PlatformNotReady
-
-    hass.data[DATA_KEY][device.entity_id] = device
-    add_entities([device])
+    await asyncio.gather(
+        *[
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("fan")
+        ]
+    )
 
     def service_handle(service):
         """Handle the WeMo humidifier services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
-        humidifiers = [device for device in
-                       hass.data[DATA_KEY].values() if
-                       device.entity_id in entity_ids]
+        humidifiers = [entity for entity in entities if entity.entity_id in entity_ids]
 
         if service.service == SERVICE_SET_HUMIDITY:
             target_humidity = service.data.get(ATTR_TARGET_HUMIDITY)
@@ -132,13 +127,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 humidifier.reset_filter_life()
 
     # Register service(s)
-    hass.services.register(
-        DOMAIN, SERVICE_SET_HUMIDITY, service_handle,
-        schema=SET_HUMIDITY_SCHEMA)
+    hass.services.async_register(
+        WEMO_DOMAIN, SERVICE_SET_HUMIDITY, service_handle, schema=SET_HUMIDITY_SCHEMA
+    )
 
-    hass.services.register(
-        DOMAIN, SERVICE_RESET_FILTER_LIFE, service_handle,
-        schema=RESET_FILTER_LIFE_SCHEMA)
+    hass.services.async_register(
+        WEMO_DOMAIN,
+        SERVICE_RESET_FILTER_LIFE,
+        service_handle,
+        schema=RESET_FILTER_LIFE_SCHEMA,
+    )
 
 
 class WemoHumidifier(FanEntity):
@@ -165,8 +163,7 @@ class WemoHumidifier(FanEntity):
         """Update the state by the Wemo device."""
         _LOGGER.info("Subscription update for %s", self.name)
         updated = self.wemo.subscription_update(_type, _params)
-        self.hass.add_job(
-            self._async_locked_subscription_callback(not updated))
+        self.hass.add_job(self._async_locked_subscription_callback(not updated))
 
     async def _async_locked_subscription_callback(self, force_update):
         """Handle an update from a subscription."""
@@ -198,9 +195,19 @@ class WemoHumidifier(FanEntity):
         return self._available
 
     @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "name": self.wemo.name,
+            "identifiers": {(WEMO_DOMAIN, self.wemo.serialnumber)},
+            "model": self.wemo.model_name,
+            "manufacturer": "Belkin",
+        }
+
+    @property
     def icon(self):
         """Return the icon of device based on its type."""
-        return 'mdi:water-percent'
+        return "mdi:water-percent"
 
     @property
     def device_state_attributes(self):
@@ -211,7 +218,7 @@ class WemoHumidifier(FanEntity):
             ATTR_FAN_MODE: self._fan_mode,
             ATTR_WATER_LEVEL: self._water_level,
             ATTR_FILTER_LIFE: self._filter_life,
-            ATTR_FILTER_EXPIRED: self._filter_expired
+            ATTR_FILTER_EXPIRED: self._filter_expired,
         }
 
     @property
@@ -230,11 +237,11 @@ class WemoHumidifier(FanEntity):
         return SUPPORTED_FEATURES
 
     async def async_added_to_hass(self):
-        """Wemo humidifier added to HASS."""
+        """Wemo humidifier added to Home Assistant."""
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = self.hass.components.wemo.SUBSCRIPTION_REGISTRY
+        registry = self.hass.data[WEMO_DOMAIN]["registry"]
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 
@@ -254,7 +261,7 @@ class WemoHumidifier(FanEntity):
             with async_timeout.timeout(5):
                 await asyncio.shield(self._async_locked_update(True))
         except asyncio.TimeoutError:
-            _LOGGER.warning('Lost connection to %s', self.name)
+            _LOGGER.warning("Lost connection to %s", self.name)
             self._available = False
 
     async def _async_locked_update(self, force_update):
@@ -278,11 +285,10 @@ class WemoHumidifier(FanEntity):
                 self._last_fan_on_mode = self.wemo.fan_mode
 
             if not self._available:
-                _LOGGER.info('Reconnected to %s', self.name)
+                _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
         except AttributeError as err:
-            _LOGGER.warning("Could not update status for %s (%s)",
-                            self.name, err)
+            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
 
     def turn_on(self, speed: str = None, **kwargs) -> None:

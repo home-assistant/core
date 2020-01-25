@@ -1,18 +1,12 @@
-"""
-Support for HomeMatic switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.homematic/
-"""
+"""Support for HomeMatic switches."""
 import logging
 
-from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import STATE_UNKNOWN
+
+from .const import ATTR_DISCOVER_DEVICES
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['homematic']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -25,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMSwitch(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMSwitch(HMDevice, SwitchDevice):
@@ -61,8 +55,8 @@ class HMSwitch(HMDevice, SwitchDevice):
     def _init_data_struct(self):
         """Generate the data dictionary (self._data) from metadata."""
         self._state = "STATE"
-        self._data.update({self._state: STATE_UNKNOWN})
+        self._data.update({self._state: None})
 
         # Need sensor values for SwitchPowermeter
         for node in self._hmdevice.SENSORNODE:
-            self._data.update({node: STATE_UNKNOWN})
+            self._data.update({node: None})

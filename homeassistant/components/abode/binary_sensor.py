@@ -1,50 +1,43 @@
-"""
-This component provides HA binary_sensor support for Abode Security System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.abode/
-"""
+"""Support for Abode Security System binary sensors."""
 import logging
 
-from homeassistant.components.abode import (AbodeDevice, AbodeAutomation,
-                                            DOMAIN as ABODE_DOMAIN)
+import abodepy.helpers.constants as CONST
+import abodepy.helpers.timeline as TIMELINE
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-
-DEPENDENCIES = ['abode']
+from . import AbodeAutomation, AbodeDevice
+from .const import DOMAIN, SIGNAL_TRIGGER_QUICK_ACTION
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a sensor for an Abode device."""
-    import abodepy.helpers.constants as CONST
-    import abodepy.helpers.timeline as TIMELINE
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Abode binary sensor devices."""
+    data = hass.data[DOMAIN]
 
-    data = hass.data[ABODE_DOMAIN]
+    device_types = [
+        CONST.TYPE_CONNECTIVITY,
+        CONST.TYPE_MOISTURE,
+        CONST.TYPE_MOTION,
+        CONST.TYPE_OCCUPANCY,
+        CONST.TYPE_OPENING,
+    ]
 
-    device_types = [CONST.TYPE_CONNECTIVITY, CONST.TYPE_MOISTURE,
-                    CONST.TYPE_MOTION, CONST.TYPE_OCCUPANCY,
-                    CONST.TYPE_OPENING]
+    entities = []
 
-    devices = []
     for device in data.abode.get_devices(generic_type=device_types):
-        if data.is_excluded(device):
-            continue
+        entities.append(AbodeBinarySensor(data, device))
 
-        devices.append(AbodeBinarySensor(data, device))
+    for automation in data.abode.get_automations(generic_type=CONST.TYPE_QUICK_ACTION):
+        entities.append(
+            AbodeQuickActionBinarySensor(
+                data, automation, TIMELINE.AUTOMATION_EDIT_GROUP
+            )
+        )
 
-    for automation in data.abode.get_automations(
-            generic_type=CONST.TYPE_QUICK_ACTION):
-        if data.is_automation_excluded(automation):
-            continue
-
-        devices.append(AbodeQuickActionBinarySensor(
-            data, automation, TIMELINE.AUTOMATION_EDIT_GROUP))
-
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(entities)
 
 
 class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
@@ -63,6 +56,12 @@ class AbodeBinarySensor(AbodeDevice, BinarySensorDevice):
 
 class AbodeQuickActionBinarySensor(AbodeAutomation, BinarySensorDevice):
     """A binary sensor implementation for Abode quick action automations."""
+
+    async def async_added_to_hass(self):
+        """Subscribe Abode events."""
+        await super().async_added_to_hass()
+        signal = SIGNAL_TRIGGER_QUICK_ACTION.format(self.entity_id)
+        async_dispatcher_connect(self.hass, signal, self.trigger)
 
     def trigger(self):
         """Trigger a quick automation."""

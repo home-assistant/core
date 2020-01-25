@@ -1,9 +1,4 @@
-"""
-Support for Keene Electronics IR-IP devices.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/remote.kira/
-"""
+"""Support for Keene Electronics IR-IP devices."""
 import functools as ft
 import logging
 
@@ -11,7 +6,7 @@ from homeassistant.components import remote
 from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-DOMAIN = 'kira'
+DOMAIN = "kira"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,8 +44,7 @@ class KiraRemote(Entity):
     def send_command(self, command, **kwargs):
         """Send a command to one device."""
         for single_command in command:
-            code_tuple = (single_command,
-                          kwargs.get(remote.ATTR_DEVICE))
+            code_tuple = (single_command, kwargs.get(remote.ATTR_DEVICE))
             _LOGGER.info("Sending Command: %s to %s", *code_tuple)
             self._kira.sendCode(code_tuple)
 
@@ -59,5 +53,4 @@ class KiraRemote(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(ft.partial(
-            self.send_command, command, **kwargs))
+        return self.hass.async_add_job(ft.partial(self.send_command, command, **kwargs))

@@ -1,42 +1,33 @@
-"""
-Support for binary sensor using the PiFace Digital I/O module on a RPi.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.rpi_pfio/
-"""
+"""Support for binary sensor using the PiFace Digital I/O module on a RPi."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.components import rpi_pfio
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_INVERT_LOGIC = 'invert_logic'
-CONF_PORTS = 'ports'
-CONF_SETTLE_TIME = 'settle_time'
+CONF_INVERT_LOGIC = "invert_logic"
+CONF_PORTS = "ports"
+CONF_SETTLE_TIME = "settle_time"
 
 DEFAULT_INVERT_LOGIC = False
 DEFAULT_SETTLE_TIME = 20
 
-DEPENDENCIES = ['rpi_pfio']
+PORT_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_SETTLE_TIME, default=DEFAULT_SETTLE_TIME): cv.positive_int,
+        vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
+    }
+)
 
-PORT_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_SETTLE_TIME, default=DEFAULT_SETTLE_TIME):
-        cv.positive_int,
-    vol.Optional(CONF_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean,
-})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_PORTS, default={}): vol.Schema({
-        cv.positive_int: PORT_SCHEMA,
-    })
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Optional(CONF_PORTS, default={}): vol.Schema({cv.positive_int: PORT_SCHEMA})}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -48,8 +39,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         settle_time = port_entity[CONF_SETTLE_TIME] / 1000
         invert_logic = port_entity[CONF_INVERT_LOGIC]
 
-        binary_sensors.append(RPiPFIOBinarySensor(
-            hass, port, name, settle_time, invert_logic))
+        binary_sensors.append(
+            RPiPFIOBinarySensor(hass, port, name, settle_time, invert_logic)
+        )
     add_entities(binary_sensors, True)
 
     rpi_pfio.activate_listener(hass)

@@ -1,41 +1,35 @@
-"""
-Camera support for the Skybell HD Doorbell.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.skybell/
-"""
+"""Camera support for the Skybell HD Doorbell."""
 from datetime import timedelta
 import logging
 
 import requests
 import voluptuous as vol
 
-from homeassistant.components.camera import PLATFORM_SCHEMA
+from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.camera import Camera
-from homeassistant.components.skybell import (
-    DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
-
-DEPENDENCIES = ['skybell']
+from . import DOMAIN as SKYBELL_DOMAIN, SkybellDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=90)
 
-IMAGE_AVATAR = 'avatar'
-IMAGE_ACTIVITY = 'activity'
+IMAGE_AVATAR = "avatar"
+IMAGE_ACTIVITY = "activity"
 
-CONF_ACTIVITY_NAME = 'activity_name'
-CONF_AVATAR_NAME = 'avatar_name'
+CONF_ACTIVITY_NAME = "activity_name"
+CONF_AVATAR_NAME = "avatar_name"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]):
-        vol.All(cv.ensure_list, [vol.In([IMAGE_AVATAR, IMAGE_ACTIVITY])]),
-    vol.Optional(CONF_ACTIVITY_NAME): cv.string,
-    vol.Optional(CONF_AVATAR_NAME): cv.string,
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=[IMAGE_AVATAR]): vol.All(
+            cv.ensure_list, [vol.In([IMAGE_AVATAR, IMAGE_ACTIVITY])]
+        ),
+        vol.Optional(CONF_ACTIVITY_NAME): cv.string,
+        vol.Optional(CONF_AVATAR_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -49,8 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
     for device in skybell.get_devices():
         for camera_type in cond:
-            sensors.append(SkybellCamera(device, camera_type,
-                                         names.get(camera_type)))
+            sensors.append(SkybellCamera(device, camera_type, names.get(camera_type)))
 
     add_entities(sensors, True)
 
@@ -64,7 +57,7 @@ class SkybellCamera(SkybellDevice, Camera):
         SkybellDevice.__init__(self, device)
         Camera.__init__(self)
         if name is not None:
-            self._name = "{} {}".format(self._device.name, name)
+            self._name = f"{self._device.name} {name}"
         else:
             self._name = self._device.name
         self._url = None
@@ -90,8 +83,7 @@ class SkybellCamera(SkybellDevice, Camera):
             self._url = self.image_url
 
             try:
-                self._response = requests.get(
-                    self._url, stream=True, timeout=10)
+                self._response = requests.get(self._url, stream=True, timeout=10)
             except requests.HTTPError as err:
                 _LOGGER.warning("Failed to get camera image: %s", err)
                 self._response = None

@@ -1,36 +1,26 @@
-"""
-This component provides HA lock support for Abode Security System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.abode/
-"""
+"""Support for the Abode Security System locks."""
 import logging
 
-from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
+import abodepy.helpers.constants as CONST
+
 from homeassistant.components.lock import LockDevice
 
-
-DEPENDENCIES = ['abode']
+from . import AbodeDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode lock devices."""
-    import abodepy.helpers.constants as CONST
+    data = hass.data[DOMAIN]
 
-    data = hass.data[ABODE_DOMAIN]
+    entities = []
 
-    devices = []
     for device in data.abode.get_devices(generic_type=CONST.TYPE_LOCK):
-        if data.is_excluded(device):
-            continue
+        entities.append(AbodeLock(data, device))
 
-        devices.append(AbodeLock(data, device))
-
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(entities)
 
 
 class AbodeLock(AbodeDevice, LockDevice):

@@ -1,40 +1,34 @@
-"""
-Support for SCSGate components.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/scsgate/
-"""
+"""Support for SCSGate components."""
 import logging
 from threading import Lock
 
+from scsgate.connection import Connection
+from scsgate.messages import ScenarioTriggeredMessage, StateMessage
+from scsgate.reactor import Reactor
+from scsgate.tasks import GetStatusTask
 import voluptuous as vol
 
-from homeassistant.const import (CONF_DEVICE, CONF_NAME)
+from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['scsgate==0.1.0']
-
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_STATE = 'state'
+ATTR_STATE = "state"
 
-CONF_SCS_ID = 'scs_id'
+CONF_SCS_ID = "scs_id"
 
-DOMAIN = 'scsgate'
+DOMAIN = "scsgate"
 
 SCSGATE = None
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.string})}, extra=vol.ALLOW_EXTRA
+)
 
-SCSGATE_SCHEMA = vol.Schema({
-    vol.Required(CONF_SCS_ID): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
-})
+SCSGATE_SCHEMA = vol.Schema(
+    {vol.Required(CONF_SCS_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
+)
 
 
 def setup(hass, config):
@@ -71,23 +65,22 @@ class SCSGate:
         self._device_being_registered = None
         self._device_being_registered_lock = Lock()
 
-        from scsgate.connection import Connection
         connection = Connection(device=device, logger=self._logger)
 
-        from scsgate.reactor import Reactor
         self._reactor = Reactor(
-            connection=connection, logger=self._logger,
-            handle_message=self.handle_message)
+            connection=connection,
+            logger=self._logger,
+            handle_message=self.handle_message,
+        )
 
     def handle_message(self, message):
         """Handle a messages seen on the bus."""
-        from scsgate.messages import StateMessage, ScenarioTriggeredMessage
 
-        self._logger.debug("Received message {}".format(message))
-        if not isinstance(message, StateMessage) and \
-           not isinstance(message, ScenarioTriggeredMessage):
-            msg = "Ignored message {} - not relevant type".format(
-                message)
+        self._logger.debug(f"Received message {message}")
+        if not isinstance(message, StateMessage) and not isinstance(
+            message, ScenarioTriggeredMessage
+        ):
+            msg = f"Ignored message {message} - not relevant type"
             self._logger.debug(msg)
             return
 
@@ -103,12 +96,14 @@ class SCSGate:
             try:
                 self._devices[message.entity].process_event(message)
             except Exception as exception:  # pylint: disable=broad-except
-                msg = "Exception while processing event: {}".format(exception)
+                msg = f"Exception while processing event: {exception}"
                 self._logger.error(msg)
         else:
             self._logger.info(
                 "Ignoring state message for device {} because unknown".format(
-                    message.entity))
+                    message.entity
+                )
+            )
 
     @property
     def devices(self):
@@ -136,7 +131,6 @@ class SCSGate:
 
     def _activate_next_device(self):
         """Start the activation of the first device."""
-        from scsgate.tasks import GetStatusTask
 
         with self._devices_to_register_lock:
             while self._devices_to_register:

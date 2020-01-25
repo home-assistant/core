@@ -1,28 +1,21 @@
-"""
-Support for ISY994 locks.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.isy994/
-"""
+"""Support for ISY994 locks."""
 import logging
 from typing import Callable
 
-from homeassistant.components.lock import LockDevice, DOMAIN
-from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
-                                             ISYDevice)
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN
+from homeassistant.components.lock import DOMAIN, LockDevice
+from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 from homeassistant.helpers.typing import ConfigType
+
+from . import ISY994_NODES, ISY994_PROGRAMS, ISYDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-VALUE_TO_STATE = {
-    0: STATE_UNLOCKED,
-    100: STATE_LOCKED
-}
+VALUE_TO_STATE = {0: STATE_UNLOCKED, 100: STATE_LOCKED}
 
 
-def setup_platform(hass, config: ConfigType,
-                   add_entities: Callable[[list], None], discovery_info=None):
+def setup_platform(
+    hass, config: ConfigType, add_entities: Callable[[list], None], discovery_info=None
+):
     """Set up the ISY994 lock platform."""
     devices = []
     for node in hass.data[ISY994_NODES][DOMAIN]:
@@ -57,24 +50,22 @@ class ISYLockDevice(ISYDevice, LockDevice):
     def lock(self, **kwargs) -> None:
         """Send the lock command to the ISY994 device."""
         # Hack until PyISY is updated
-        req_url = self._conn.compileURL(['nodes', self.unique_id, 'cmd',
-                                         'SECMD', '1'])
+        req_url = self._conn.compileURL(["nodes", self.unique_id, "cmd", "SECMD", "1"])
         response = self._conn.request(req_url)
 
         if response is None:
-            _LOGGER.error('Unable to lock device')
+            _LOGGER.error("Unable to lock device")
 
         self._node.update(0.5)
 
     def unlock(self, **kwargs) -> None:
         """Send the unlock command to the ISY994 device."""
         # Hack until PyISY is updated
-        req_url = self._conn.compileURL(['nodes', self.unique_id, 'cmd',
-                                         'SECMD', '0'])
+        req_url = self._conn.compileURL(["nodes", self.unique_id, "cmd", "SECMD", "0"])
         response = self._conn.request(req_url)
 
         if response is None:
-            _LOGGER.error('Unable to lock device')
+            _LOGGER.error("Unable to lock device")
 
         self._node.update(0.5)
 

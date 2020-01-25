@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Konfigurationsablauf f\u00fcr die Vizio-Komponente wird bereits ausgef\u00fchrt.",
+            "already_setup": "Dieser Eintrag wurde bereits eingerichtet.",
+            "host_exists": "Vizio-Komponent mit bereits konfiguriertem Host.",
+            "name_exists": "Vizio-Komponent mit bereits konfiguriertem Namen.",
+            "updated_options": "Dieser Eintrag wurde bereits eingerichtet, aber die in der Konfiguration definierten Optionen stimmen nicht mit den zuvor importierten Optionswerten \u00fcberein, daher wurde der Konfigurationseintrag entsprechend aktualisiert.",
+            "updated_volume_step": "Dieser Eintrag wurde bereits eingerichtet, aber die Lautst\u00e4rken-Schrittgr\u00f6\u00dfe in der Konfiguration stimmt nicht mit dem Konfigurationseintrag \u00fcberein, sodass der Konfigurationseintrag entsprechend aktualisiert wurde."
+        },
+        "error": {
+            "cant_connect": "Es konnte keine Verbindung zum Ger\u00e4t hergestellt werden. [\u00dcberpr\u00fcfen Sie die Dokumentation] (https://www.home-assistant.io/integrations/vizio/) und \u00fcberpr\u00fcfen Sie Folgendes erneut:\n- Das Ger\u00e4t ist eingeschaltet\n- Das Ger\u00e4t ist mit dem Netzwerk verbunden\n- Die von Ihnen eingegebenen Werte sind korrekt\nbevor sie versuchen, erneut zu \u00fcbermitteln.",
+            "host_exists": "Host bereits konfiguriert.",
+            "name_exists": "Name bereits konfiguriert.",
+            "tv_needs_token": "Wenn der Ger\u00e4tetyp \"TV\" ist, wird ein g\u00fcltiger Zugriffstoken ben\u00f6tigt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Zugangstoken",
+                    "device_class": "Ger\u00e4tetyp",
+                    "host": "<Host/IP>:<Port>",
+                    "name": "Name"
+                },
+                "title": "Richten Sie den Vizio SmartCast-Client ein"
+            }
+        },
+        "title": "Vizio SmartCast"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "API Request Timeout (Sekunden)",
+                    "volume_step": "Lautst\u00e4rken-Schrittgr\u00f6\u00dfe"
+                },
+                "title": "Aktualisieren Sie die Vizo SmartCast-Optionen"
+            }
+        },
+        "title": "Aktualisieren Sie die Vizo SmartCast-Optionen"
+    }
+}

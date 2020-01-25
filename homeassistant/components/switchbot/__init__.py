@@ -1,0 +1,1 @@
+"""The switchbot component."""

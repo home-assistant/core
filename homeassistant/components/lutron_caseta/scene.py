@@ -1,21 +1,14 @@
-"""
-Support for Lutron Caseta scenes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.lutron_caseta/
-"""
+"""Support for Lutron Caseta scenes."""
 import logging
 
-from homeassistant.components.lutron_caseta import LUTRON_CASETA_SMARTBRIDGE
 from homeassistant.components.scene import Scene
+
+from . import LUTRON_CASETA_SMARTBRIDGE
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['lutron_caseta']
 
-
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Lutron Caseta lights."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]

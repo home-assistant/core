@@ -1,21 +1,11 @@
-"""
-Remote control support for Apple TV.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/remote.apple_tv/
-"""
-
-from homeassistant.components.apple_tv import (
-    ATTR_ATV, ATTR_POWER, DATA_APPLE_TV)
+"""Remote control support for Apple TV."""
 from homeassistant.components import remote
-from homeassistant.const import (CONF_NAME, CONF_HOST)
+from homeassistant.const import CONF_HOST, CONF_NAME
+
+from . import ATTR_ATV, ATTR_POWER, DATA_APPLE_TV
 
 
-DEPENDENCIES = ['apple_tv']
-
-
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Apple TV remote platform."""
     if not discovery_info:
         return

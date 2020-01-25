@@ -1,51 +1,44 @@
-"""
-Support for Digital Ocean.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/digital_ocean/
-"""
-import logging
+"""Support for Digital Ocean."""
 from datetime import timedelta
+import logging
 
+import digitalocean
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-
-REQUIREMENTS = ['python-digitalocean==1.13.2']
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CREATED_AT = 'created_at'
-ATTR_DROPLET_ID = 'droplet_id'
-ATTR_DROPLET_NAME = 'droplet_name'
-ATTR_FEATURES = 'features'
-ATTR_IPV4_ADDRESS = 'ipv4_address'
-ATTR_IPV6_ADDRESS = 'ipv6_address'
-ATTR_MEMORY = 'memory'
-ATTR_REGION = 'region'
-ATTR_VCPUS = 'vcpus'
+ATTR_CREATED_AT = "created_at"
+ATTR_DROPLET_ID = "droplet_id"
+ATTR_DROPLET_NAME = "droplet_name"
+ATTR_FEATURES = "features"
+ATTR_IPV4_ADDRESS = "ipv4_address"
+ATTR_IPV6_ADDRESS = "ipv6_address"
+ATTR_MEMORY = "memory"
+ATTR_REGION = "region"
+ATTR_VCPUS = "vcpus"
 
-CONF_ATTRIBUTION = 'Data provided by Digital Ocean'
-CONF_DROPLETS = 'droplets'
+ATTRIBUTION = "Data provided by Digital Ocean"
 
-DATA_DIGITAL_OCEAN = 'data_do'
-DIGITAL_OCEAN_PLATFORMS = ['switch', 'binary_sensor']
-DOMAIN = 'digital_ocean'
+CONF_DROPLETS = "droplets"
+
+DATA_DIGITAL_OCEAN = "data_do"
+DIGITAL_OCEAN_PLATFORMS = ["switch", "binary_sensor"]
+DOMAIN = "digital_ocean"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_ACCESS_TOKEN): cv.string,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {DOMAIN: vol.Schema({vol.Required(CONF_ACCESS_TOKEN): cv.string})},
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 def setup(hass, config):
     """Set up the Digital Ocean component."""
-    import digitalocean
 
     conf = config[DOMAIN]
     access_token = conf.get(CONF_ACCESS_TOKEN)
@@ -70,7 +63,6 @@ class DigitalOcean:
 
     def __init__(self, access_token):
         """Initialize the Digital Ocean connection."""
-        import digitalocean
 
         self._access_token = access_token
         self.data = None

@@ -11,8 +11,16 @@
                 "data": {
                     "radio_type": "Tipo de r\u00e1dio",
                     "usb_path": "Caminho do Dispositivo USB"
-                }
+                },
+                "title": "ZHA"
             }
+        },
+        "title": "ZHA"
+    },
+    "device_automation": {
+        "action_type": {
+            "squawk": "Squawk",
+            "warn": "Aviso"
         }
     }
 }

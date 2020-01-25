@@ -1,37 +1,84 @@
 addon_install:
-  description: Install a HassIO docker addon.
+  description: Install a Hass.io docker add-on.
   fields:
-    addon: {description: Name of addon., example: smb_config}
-    version: {description: Optional or it will be use the latest version., example: '0.2'}
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+    version:
+      description: Optional or it will be use the latest version.
+      example: "0.2"
+
 addon_start:
-  description: Start a HassIO docker addon.
+  description: Start a Hass.io docker add-on.
   fields:
-    addon: {description: Name of addon., example: smb_config}
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+
+addon_restart:
+  description: Restart a Hass.io docker add-on.
+  fields:
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+
+addon_stdin:
+  description: Write data to a Hass.io docker add-on stdin .
+  fields:
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+
 addon_stop:
-  description: Stop a HassIO docker addon.
+  description: Stop a Hass.io docker add-on.
   fields:
-    addon: {description: Name of addon., example: smb_config}
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+
 addon_uninstall:
-  description: Uninstall a HassIO docker addon.
+  description: Uninstall a Hass.io docker add-on.
   fields:
-    addon: {description: Name of addon., example: smb_config}
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+
 addon_update:
-  description: Update a HassIO docker addon.
+  description: Update a Hass.io docker add-on.
   fields:
-    addon: {description: Name of addon., example: smb_config}
-    version: {description: Optional or it will be use the latest version., example: '0.2'}
+    addon:
+      description: The add-on slug.
+      example: core_ssh
+    version:
+      description: Optional or it will be use the latest version.
+      example: "0.2"
+
 homeassistant_update:
-  description: Update HomeAssistant docker image.
+  description: Update the Home Assistant docker image.
   fields:
-    version: {description: Optional or it will be use the latest version., example: 0.40.1}
-host_reboot: {description: Reboot host computer.}
-host_shutdown: {description: Poweroff host computer.}
+    version:
+      description: Optional or it will be use the latest version.
+      example: 0.40.1
+
+host_reboot:
+  description: Reboot the host system.
+
+host_shutdown:
+  description: Poweroff the host system.
+
 host_update:
-  description: Update host computer.
+  description: Update the host system.
   fields:
-    version: {description: Optional or it will be use the latest version., example: '0.3'}
-supervisor_reload: {description: Reload HassIO supervisor addons/updates/configs.}
+    version:
+      description: Optional or it will be use the latest version.
+      example: "0.3"
+
+supervisor_reload:
+  description: Reload the Hass.io supervisor.
+
 supervisor_update:
-  description: Update HassIO supervisor.
+  description: Update the Hass.io supervisor.
   fields:
-    version: {description: Optional or it will be use the latest version., example: '0.3'}
+    version:
+      description: Optional or it will be use the latest version.
+      example: "0.3"

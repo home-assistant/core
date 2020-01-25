@@ -1,43 +1,36 @@
-"""
-This component provides HA alarm_control_panel support for Abode System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.abode/
-"""
+"""Support for Abode Security System alarm control panels."""
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.abode import CONF_ATTRIBUTION, AbodeDevice
-from homeassistant.components.abode import DOMAIN as ABODE_DOMAIN
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED)
+    ATTR_ATTRIBUTION,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_DISARMED,
+)
 
-DEPENDENCIES = ['abode']
+from . import AbodeDevice
+from .const import ATTRIBUTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-ICON = 'mdi:security'
+ICON = "mdi:security"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up an alarm control panel for an Abode device."""
-    data = hass.data[ABODE_DOMAIN]
-
-    alarm_devices = [AbodeAlarm(data, data.abode.get_alarm(), data.name)]
-
-    data.devices.extend(alarm_devices)
-
-    add_entities(alarm_devices)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Abode alarm control panel device."""
+    data = hass.data[DOMAIN]
+    async_add_entities(
+        [AbodeAlarm(data, await hass.async_add_executor_job(data.abode.get_alarm))]
+    )
 
 
 class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
     """An alarm_control_panel implementation for Abode."""
-
-    def __init__(self, data, device, name):
-        """Initialize the alarm control panel."""
-        super().__init__(data, device)
-        self._name = name
 
     @property
     def icon(self):
@@ -57,6 +50,11 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
             state = None
         return state
 
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._device.set_standby()
@@ -70,16 +68,11 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
         self._device.set_away()
 
     @property
-    def name(self):
-        """Return the name of the alarm."""
-        return self._name or super().name
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'device_id': self._device.device_id,
-            'battery_backup': self._device.battery,
-            'cellular_backup': self._device.is_cellular,
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            "device_id": self._device.device_id,
+            "battery_backup": self._device.battery,
+            "cellular_backup": self._device.is_cellular,
         }

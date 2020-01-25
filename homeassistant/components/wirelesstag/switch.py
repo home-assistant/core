@@ -1,45 +1,38 @@
-"""
-Switch implementation for Wireless Sensor Tags (wirelesstag.net) platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.wirelesstag/
-"""
+"""Switch implementation for Wireless Sensor Tags (wirelesstag.net)."""
 import logging
 
 import voluptuous as vol
 
-
-from homeassistant.components.wirelesstag import (
-    DOMAIN as WIRELESSTAG_DOMAIN,
-    WirelessTagBaseSensor)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS)
+from homeassistant.const import CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['wirelesstag']
+from . import DOMAIN as WIRELESSTAG_DOMAIN, WirelessTagBaseSensor
 
 _LOGGER = logging.getLogger(__name__)
 
-ARM_TEMPERATURE = 'temperature'
-ARM_HUMIDITY = 'humidity'
-ARM_MOTION = 'motion'
-ARM_LIGHT = 'light'
-ARM_MOISTURE = 'moisture'
+ARM_TEMPERATURE = "temperature"
+ARM_HUMIDITY = "humidity"
+ARM_MOTION = "motion"
+ARM_LIGHT = "light"
+ARM_MOISTURE = "moisture"
 
 # Switch types: Name, tag sensor type
 SWITCH_TYPES = {
-    ARM_TEMPERATURE: ['Arm Temperature', 'temperature'],
-    ARM_HUMIDITY: ['Arm Humidity', 'humidity'],
-    ARM_MOTION: ['Arm Motion', 'motion'],
-    ARM_LIGHT: ['Arm Light', 'light'],
-    ARM_MOISTURE: ['Arm Moisture', 'moisture']
+    ARM_TEMPERATURE: ["Arm Temperature", "temperature"],
+    ARM_HUMIDITY: ["Arm Humidity", "humidity"],
+    ARM_MOTION: ["Arm Motion", "motion"],
+    ARM_LIGHT: ["Arm Light", "light"],
+    ARM_MOISTURE: ["Arm Moisture", "moisture"],
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SWITCH_TYPES)]),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
+            cv.ensure_list, [vol.In(SWITCH_TYPES)]
+        )
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -64,8 +57,7 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchDevice):
         super().__init__(api, tag)
         self._switch_type = switch_type
         self.sensor_type = SWITCH_TYPES[self._switch_type][1]
-        self._name = '{} {}'.format(self._tag.name,
-                                    SWITCH_TYPES[self._switch_type][0])
+        self._name = "{} {}".format(self._tag.name, SWITCH_TYPES[self._switch_type][0])
 
     def turn_on(self, **kwargs):
         """Turn on the switch."""
@@ -87,5 +79,5 @@ class WirelessTagSwitch(WirelessTagBaseSensor, SwitchDevice):
     @property
     def principal_value(self):
         """Provide actual value of switch."""
-        attr_name = 'is_{}_sensor_armed'.format(self.sensor_type)
+        attr_name = f"is_{self.sensor_type}_sensor_armed"
         return getattr(self._tag, attr_name, False)

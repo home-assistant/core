@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Kun en enkelt konfigurasjon av MQTT er tillatt."
+            "single_instance_allowed": "Kun en konfigurasjon av MQTT er tillatt."
         },
         "error": {
             "cannot_connect": "Kan ikke koble til megleren."
@@ -22,7 +22,7 @@
                 "data": {
                     "discovery": "Aktiver oppdagelse"
                 },
-                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til MQTT megler gitt av hass.io tillegget {addon}?",
+                "description": "Vil du konfigurere Home Assistant til \u00e5 koble til MQTT broker som er levert av Hass.io-tillegget (addon)?",
                 "title": "MQTT megler via Hass.io tillegg"
             }
         },

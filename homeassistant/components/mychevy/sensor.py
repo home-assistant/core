@@ -1,34 +1,32 @@
-"""Support for MyChevy sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.mychevy/
-"""
-
+"""Support for MyChevy sensors."""
 import logging
 
-from homeassistant.components.mychevy import (
-    EVSensorConfig, DOMAIN as MYCHEVY_DOMAIN, MYCHEVY_ERROR, MYCHEVY_SUCCESS,
-    UPDATE_TOPIC, ERROR_TOPIC
-)
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util import slugify
 
+from . import (
+    DOMAIN as MYCHEVY_DOMAIN,
+    ERROR_TOPIC,
+    MYCHEVY_ERROR,
+    MYCHEVY_SUCCESS,
+    UPDATE_TOPIC,
+    EVSensorConfig,
+)
+
+_LOGGER = logging.getLogger(__name__)
+
 BATTERY_SENSOR = "batteryLevel"
 
 SENSORS = [
     EVSensorConfig("Mileage", "totalMiles", "miles", "mdi:speedometer"),
-    EVSensorConfig("Electric Range", "electricRange", "miles",
-                   "mdi:speedometer"),
+    EVSensorConfig("Electric Range", "electricRange", "miles", "mdi:speedometer"),
     EVSensorConfig("Charged By", "estimatedFullChargeBy"),
     EVSensorConfig("Charge Mode", "chargeMode"),
-    EVSensorConfig("Battery Level", BATTERY_SENSOR, "%", "mdi:battery",
-                   ["charging"])
+    EVSensorConfig("Battery Level", BATTERY_SENSOR, "%", "mdi:battery", ["charging"]),
 ]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -58,10 +56,10 @@ class MyChevyStatus(Entity):
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.success)
+            UPDATE_TOPIC, self.success
+        )
 
-        self.hass.helpers.dispatcher.async_dispatcher_connect(
-            ERROR_TOPIC, self.error)
+        self.hass.helpers.dispatcher.async_dispatcher_connect(ERROR_TOPIC, self.error)
 
     @callback
     def success(self):
@@ -76,7 +74,8 @@ class MyChevyStatus(Entity):
         """Update state, trigger updates."""
         _LOGGER.error(
             "Connection to mychevy website failed. "
-            "This probably means the mychevy to OnStar link is down")
+            "This probably means the mychevy to OnStar link is down"
+        )
         self._state = MYCHEVY_ERROR
         self.async_schedule_update_ha_state()
 
@@ -107,7 +106,6 @@ class EVSensor(Entity):
     The only real difference between sensors is which units and what
     attribute from the car object they are returning. All logic can be
     built with just setting subclass attributes.
-
     """
 
     def __init__(self, connection, config, car_vid):
@@ -123,14 +121,16 @@ class EVSensor(Entity):
         self._car_vid = car_vid
 
         self.entity_id = ENTITY_ID_FORMAT.format(
-            '{}_{}_{}'.format(MYCHEVY_DOMAIN,
-                              slugify(self._car.name),
-                              slugify(self._name)))
+            "{}_{}_{}".format(
+                MYCHEVY_DOMAIN, slugify(self._car.name), slugify(self._name)
+            )
+        )
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            UPDATE_TOPIC, self.async_update_callback)
+            UPDATE_TOPIC, self.async_update_callback
+        )
 
     @property
     def _car(self):

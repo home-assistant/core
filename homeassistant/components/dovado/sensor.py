@@ -1,51 +1,38 @@
-"""
-Support for sensors from the Dovado router.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dovado/
-"""
+"""Support for sensors from the Dovado router."""
+from datetime import timedelta
 import logging
 import re
-from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.dovado import DOMAIN as DOVADO_DOMAIN
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_SENSORS
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+from . import DOMAIN as DOVADO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['dovado']
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
-SENSOR_UPLOAD = 'upload'
-SENSOR_DOWNLOAD = 'download'
-SENSOR_SIGNAL = 'signal'
-SENSOR_NETWORK = 'network'
-SENSOR_SMS_UNREAD = 'sms'
+SENSOR_UPLOAD = "upload"
+SENSOR_DOWNLOAD = "download"
+SENSOR_SIGNAL = "signal"
+SENSOR_NETWORK = "network"
+SENSOR_SMS_UNREAD = "sms"
 
 SENSORS = {
-    SENSOR_NETWORK: ('signal strength', 'Network', None,
-                     'mdi:access-point-network'),
-    SENSOR_SIGNAL: ('signal strength', 'Signal Strength', '%',
-                    'mdi:signal'),
-    SENSOR_SMS_UNREAD: ('sms unread', 'SMS unread', '',
-                        'mdi:message-text-outline'),
-    SENSOR_UPLOAD: ('traffic modem tx', 'Sent', 'GB',
-                    'mdi:cloud-upload'),
-    SENSOR_DOWNLOAD: ('traffic modem rx', 'Received', 'GB',
-                      'mdi:cloud-download'),
+    SENSOR_NETWORK: ("signal strength", "Network", None, "mdi:access-point-network"),
+    SENSOR_SIGNAL: ("signal strength", "Signal Strength", "%", "mdi:signal"),
+    SENSOR_SMS_UNREAD: ("sms unread", "SMS unread", "", "mdi:message-text-outline"),
+    SENSOR_UPLOAD: ("traffic modem tx", "Sent", "GB", "mdi:cloud-upload"),
+    SENSOR_DOWNLOAD: ("traffic modem rx", "Received", "GB", "mdi:cloud-download"),
 }
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SENSORS): vol.All(
-        cv.ensure_list, [vol.In(SENSORS)]
-    ),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_SENSORS): vol.All(cv.ensure_list, [vol.In(SENSORS)])}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -69,6 +56,7 @@ class DovadoSensor(Entity):
         self._state = self._compute_state()
 
     def _compute_state(self):
+        """Compute the state of the sensor."""
         state = self._data.state.get(SENSORS[self._sensor][0])
         if self._sensor == SENSOR_NETWORK:
             match = re.search(r"\((.+)\)", state)
@@ -112,5 +100,4 @@ class DovadoSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {k: v for k, v in self._data.state.items()
-                if k not in ['date', 'time']}
+        return {k: v for k, v in self._data.state.items() if k not in ["date", "time"]}

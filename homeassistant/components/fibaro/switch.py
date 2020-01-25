@@ -1,17 +1,11 @@
-"""
-Support for Fibaro switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.fibaro/
-"""
+"""Support for Fibaro switches."""
 import logging
 
-from homeassistant.util import convert
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.components.fibaro import (
-    FIBARO_DEVICES, FibaroDevice)
+from homeassistant.util import convert
 
-DEPENDENCIES = ['fibaro']
+from . import FIBARO_DEVICES, FibaroDevice
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -21,8 +15,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     add_entities(
-        [FibaroSwitch(device) for
-         device in hass.data[FIBARO_DEVICES]['switch']], True)
+        [FibaroSwitch(device) for device in hass.data[FIBARO_DEVICES]["switch"]], True
+    )
 
 
 class FibaroSwitch(FibaroDevice, SwitchDevice):
@@ -47,14 +41,14 @@ class FibaroSwitch(FibaroDevice, SwitchDevice):
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        if 'power' in self.fibaro_device.interfaces:
+        if "power" in self.fibaro_device.interfaces:
             return convert(self.fibaro_device.properties.power, float, 0.0)
         return None
 
     @property
     def today_energy_kwh(self):
         """Return the today total energy usage in kWh."""
-        if 'energy' in self.fibaro_device.interfaces:
+        if "energy" in self.fibaro_device.interfaces:
             return convert(self.fibaro_device.properties.energy, float, 0.0)
         return None
 

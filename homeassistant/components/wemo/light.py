@@ -1,56 +1,60 @@
-"""
-Support for Belkin WeMo lights.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light.wemo/
-"""
+"""Support for Belkin WeMo lights."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
-import requests
 import async_timeout
 
 from homeassistant import util
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR, SUPPORT_TRANSITION)
-from homeassistant.exceptions import PlatformNotReady
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP,
+    ATTR_HS_COLOR,
+    ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
+    SUPPORT_TRANSITION,
+    Light,
+)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
-DEPENDENCIES = ['wemo']
+from .const import DOMAIN as WEMO_DOMAIN
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR |
-                SUPPORT_TRANSITION)
+SUPPORT_WEMO = (
+    SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR | SUPPORT_TRANSITION
+)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up discovered WeMo switches."""
-    from pywemo import discovery
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up WeMo lights."""
 
-    if discovery_info is not None:
-        location = discovery_info['ssdp_description']
-        mac = discovery_info['mac_address']
-
-        try:
-            device = discovery.device_from_description(location, mac)
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.Timeout) as err:
-            _LOGGER.error('Unable to access %s (%s)', location, err)
-            raise PlatformNotReady
-
-        if device.model_name == 'Dimmer':
-            add_entities([WemoDimmer(device)])
+    async def _discovered_wemo(device):
+        """Handle a discovered Wemo device."""
+        if device.model_name == "Dimmer":
+            async_add_entities([WemoDimmer(device)])
         else:
-            setup_bridge(device, add_entities)
+            await hass.async_add_executor_job(
+                setup_bridge, hass, device, async_add_entities
+            )
+
+    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.light", _discovered_wemo)
+
+    await asyncio.gather(
+        *[
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("light")
+        ]
+    )
 
 
-def setup_bridge(bridge, add_entities):
+def setup_bridge(hass, bridge, async_add_entities):
     """Set up a WeMo link."""
     lights = {}
 
@@ -67,7 +71,7 @@ def setup_bridge(bridge, add_entities):
                 new_lights.append(lights[light_id])
 
         if new_lights:
-            add_entities(new_lights)
+            hass.add_job(async_add_entities, new_lights)
 
     update_lights()
 
@@ -90,7 +94,7 @@ class WemoLight(Light):
         self._unique_id = self.wemo.uniqueID
 
     async def async_added_to_hass(self):
-        """Wemo light added to HASS."""
+        """Wemo light added to Home Assistant."""
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
@@ -103,6 +107,16 @@ class WemoLight(Light):
     def name(self):
         """Return the name of the light."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "name": self.wemo.name,
+            "identifiers": {(WEMO_DOMAIN, self.wemo.serialnumber)},
+            "model": self.wemo.model_name,
+            "manufacturer": "Belkin",
+        }
 
     @property
     def brightness(self):
@@ -146,8 +160,7 @@ class WemoLight(Light):
 
         if ATTR_COLOR_TEMP in kwargs:
             colortemp = kwargs[ATTR_COLOR_TEMP]
-            self.wemo.set_temperature(mireds=colortemp,
-                                      transition=transitiontime)
+            self.wemo.set_temperature(mireds=colortemp, transition=transitiontime)
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
@@ -165,12 +178,12 @@ class WemoLight(Light):
         self._update_lights(no_throttle=force_update)
         self._state = self.wemo.state
 
-        self._is_on = self._state.get('onoff') != 0
-        self._brightness = self._state.get('level', 255)
-        self._color_temp = self._state.get('temperature_mireds')
+        self._is_on = self._state.get("onoff") != 0
+        self._brightness = self._state.get("level", 255)
+        self._color_temp = self._state.get("temperature_mireds")
         self._available = True
 
-        xy_color = self._state.get('color_xy')
+        xy_color = self._state.get("color_xy")
 
         if xy_color:
             self._hs_color = color_util.color_xy_to_hs(*xy_color)
@@ -187,7 +200,7 @@ class WemoLight(Light):
             with async_timeout.timeout(5):
                 await asyncio.shield(self._async_locked_update(True))
         except asyncio.TimeoutError:
-            _LOGGER.warning('Lost connection to %s', self.name)
+            _LOGGER.warning("Lost connection to %s", self.name)
             self._available = False
 
     async def _async_locked_update(self, force_update):
@@ -214,8 +227,7 @@ class WemoDimmer(Light):
         """Update the state by the Wemo device."""
         _LOGGER.debug("Subscription update for %s", self.name)
         updated = self.wemo.subscription_update(_type, _params)
-        self.hass.add_job(
-            self._async_locked_subscription_callback(not updated))
+        self.hass.add_job(self._async_locked_subscription_callback(not updated))
 
     async def _async_locked_subscription_callback(self, force_update):
         """Handle an update from a subscription."""
@@ -227,11 +239,11 @@ class WemoDimmer(Light):
         self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
-        """Wemo dimmer added to HASS."""
+        """Wemo dimmer added to Home Assistant."""
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = self.hass.components.wemo.SUBSCRIPTION_REGISTRY
+        registry = self.hass.data[WEMO_DOMAIN]["registry"]
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 
@@ -251,7 +263,7 @@ class WemoDimmer(Light):
             with async_timeout.timeout(5):
                 await asyncio.shield(self._async_locked_update(True))
         except asyncio.TimeoutError:
-            _LOGGER.warning('Lost connection to %s', self.name)
+            _LOGGER.warning("Lost connection to %s", self.name)
             self._available = False
             self.wemo.reconnect_with_device()
 
@@ -294,11 +306,10 @@ class WemoDimmer(Light):
             self._brightness = int((wemobrightness * 255) / 100)
 
             if not self._available:
-                _LOGGER.info('Reconnected to %s', self.name)
+                _LOGGER.info("Reconnected to %s", self.name)
                 self._available = True
         except AttributeError as err:
-            _LOGGER.warning("Could not update status for %s (%s)",
-                            self.name, err)
+            _LOGGER.warning("Could not update status for %s (%s)", self.name, err)
             self._available = False
 
     def turn_on(self, **kwargs):

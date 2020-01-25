@@ -23,7 +23,7 @@
             "options": {
                 "data": {
                     "allow_clip_sensor": "Tillat importering av virtuelle sensorar",
-                    "allow_deconz_groups": "Tillat importering av deCONZ-grupper"
+                    "allow_deconz_groups": "Tillat \u00e5 importera deCONZ-grupper"
                 },
                 "title": "Ekstra konfigurasjonsalternativ for deCONZ"
             }

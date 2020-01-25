@@ -1,14 +1,13 @@
-"""
-Support for Tuya cover.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/cover.tuya/
-"""
+"""Support for Tuya covers."""
 from homeassistant.components.cover import (
-    CoverDevice, ENTITY_ID_FORMAT, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP)
-from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
+    ENTITY_ID_FORMAT,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    SUPPORT_STOP,
+    CoverDevice,
+)
 
-DEPENDENCIES = ['tuya']
+from . import DATA_TUYA, TuyaDevice
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -16,7 +15,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
     tuya = hass.data[DATA_TUYA]
-    dev_ids = discovery_info.get('dev_ids')
+    dev_ids = discovery_info.get("dev_ids")
     devices = []
     for dev_id in dev_ids:
         device = tuya.get_device_by_id(dev_id)

@@ -1,0 +1,9 @@
+{
+  "domain": "uptime",
+  "name": "Uptime",
+  "documentation": "https://www.home-assistant.io/integrations/uptime",
+  "requirements": [],
+  "dependencies": [],
+  "codeowners": [],
+  "quality_scale": "internal"
+}

@@ -1,28 +1,30 @@
-"""
-Support for Vera lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.vera/
-"""
+"""Support for Vera lights."""
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    ENTITY_ID_FORMAT,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    Light,
+)
 import homeassistant.util.color as color_util
 
-_LOGGER = logging.getLogger(__name__)
+from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
-DEPENDENCIES = ['vera']
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vera lights."""
     add_entities(
-        [VeraLight(device, hass.data[VERA_CONTROLLER]) for
-         device in hass.data[VERA_DEVICES]['light']], True)
+        [
+            VeraLight(device, hass.data[VERA_CONTROLLER])
+            for device in hass.data[VERA_DEVICES]["light"]
+        ],
+        True,
+    )
 
 
 class VeraLight(VeraDevice, Light):

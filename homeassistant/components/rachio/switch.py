@@ -1,46 +1,43 @@
-"""
-Integration with the Rachio Iro sprinkler system controller.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.rachio/
-"""
+"""Integration with the Rachio Iro sprinkler system controller."""
 from abc import abstractmethod
 from datetime import timedelta
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.rachio import (CONF_MANUAL_RUN_MINS,
-                                             DOMAIN as DOMAIN_RACHIO,
-                                             KEY_DEVICE_ID,
-                                             KEY_ENABLED,
-                                             KEY_ID,
-                                             KEY_NAME,
-                                             KEY_ON,
-                                             KEY_SUBTYPE,
-                                             KEY_SUMMARY,
-                                             KEY_ZONE_ID,
-                                             KEY_ZONE_NUMBER,
-                                             SIGNAL_RACHIO_CONTROLLER_UPDATE,
-                                             SIGNAL_RACHIO_ZONE_UPDATE,
-                                             SUBTYPE_ZONE_STARTED,
-                                             SUBTYPE_ZONE_STOPPED,
-                                             SUBTYPE_ZONE_COMPLETED,
-                                             SUBTYPE_SLEEP_MODE_ON,
-                                             SUBTYPE_SLEEP_MODE_OFF)
 from homeassistant.helpers.dispatcher import dispatcher_connect
 
-DEPENDENCIES = ['rachio']
+from . import (
+    CONF_MANUAL_RUN_MINS,
+    DOMAIN as DOMAIN_RACHIO,
+    KEY_DEVICE_ID,
+    KEY_ENABLED,
+    KEY_ID,
+    KEY_NAME,
+    KEY_ON,
+    KEY_SUBTYPE,
+    KEY_SUMMARY,
+    KEY_ZONE_ID,
+    KEY_ZONE_NUMBER,
+    SIGNAL_RACHIO_CONTROLLER_UPDATE,
+    SIGNAL_RACHIO_ZONE_UPDATE,
+    SUBTYPE_SLEEP_MODE_OFF,
+    SUBTYPE_SLEEP_MODE_ON,
+    SUBTYPE_ZONE_COMPLETED,
+    SUBTYPE_ZONE_STARTED,
+    SUBTYPE_ZONE_STOPPED,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ZONE_SUMMARY = 'Summary'
-ATTR_ZONE_NUMBER = 'Zone number'
+ATTR_ZONE_SUMMARY = "Summary"
+ATTR_ZONE_NUMBER = "Zone number"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Rachio switches."""
-    manual_run_time = timedelta(minutes=hass.data[DOMAIN_RACHIO].config.get(
-        CONF_MANUAL_RUN_MINS))
+    manual_run_time = timedelta(
+        minutes=hass.data[DOMAIN_RACHIO].config.get(CONF_MANUAL_RUN_MINS)
+    )
     _LOGGER.info("Rachio run time is %s", str(manual_run_time))
 
     # Add all zones from all controllers as switches
@@ -75,7 +72,7 @@ class RachioSwitch(SwitchDevice):
     @property
     def name(self) -> str:
         """Get a name for this switch."""
-        return "Switch on {}".format(self._controller.name)
+        return f"Switch on {self._controller.name}"
 
     @property
     def is_on(self) -> bool:
@@ -107,20 +104,21 @@ class RachioStandbySwitch(RachioSwitch):
 
     def __init__(self, hass, controller):
         """Instantiate a new Rachio standby mode switch."""
-        dispatcher_connect(hass, SIGNAL_RACHIO_CONTROLLER_UPDATE,
-                           self._handle_any_update)
-        super().__init__(controller, poll=False)
+        dispatcher_connect(
+            hass, SIGNAL_RACHIO_CONTROLLER_UPDATE, self._handle_any_update
+        )
+        super().__init__(controller, poll=True)
         self._poll_update(controller.init_data)
 
     @property
     def name(self) -> str:
         """Return the name of the standby switch."""
-        return "{} in standby mode".format(self._controller.name)
+        return f"{self._controller.name} in standby mode"
 
     @property
     def unique_id(self) -> str:
-        """Return a unique id by combinining controller id and purpose."""
-        return "{}-standby".format(self._controller.controller_id)
+        """Return a unique id by combining controller id and purpose."""
+        return f"{self._controller.controller_id}-standby"
 
     @property
     def icon(self) -> str:
@@ -130,16 +128,15 @@ class RachioStandbySwitch(RachioSwitch):
     def _poll_update(self, data=None) -> bool:
         """Request the state from the API."""
         if data is None:
-            data = self._controller.rachio.device.get(
-                self._controller.controller_id)[1]
+            data = self._controller.rachio.device.get(self._controller.controller_id)[1]
 
         return not data[KEY_ON]
 
     def _handle_update(self, *args, **kwargs) -> None:
         """Update the state using webhook data."""
-        if args[0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_ON:
+        if args[0][0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_ON:
             self._state = True
-        elif args[0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_OFF:
+        elif args[0][0][KEY_SUBTYPE] == SUBTYPE_SLEEP_MODE_OFF:
             self._state = False
 
         self.schedule_update_ha_state()
@@ -167,13 +164,11 @@ class RachioZone(RachioSwitch):
         super().__init__(controller)
 
         # Listen for all zone updates
-        dispatcher_connect(hass, SIGNAL_RACHIO_ZONE_UPDATE,
-                           self._handle_update)
+        dispatcher_connect(hass, SIGNAL_RACHIO_ZONE_UPDATE, self._handle_update)
 
     def __str__(self):
         """Display the zone as a string."""
-        return 'Rachio Zone "{}" on {}'.format(self.name,
-                                               str(self._controller))
+        return 'Rachio Zone "{}" on {}'.format(self.name, str(self._controller))
 
     @property
     def zone_id(self) -> str:
@@ -187,9 +182,8 @@ class RachioZone(RachioSwitch):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique id by combinining controller id and zone number."""
-        return "{}-zone-{}".format(self._controller.controller_id,
-                                   self.zone_id)
+        """Return a unique id by combining controller id and zone number."""
+        return f"{self._controller.controller_id}-zone-{self.zone_id}"
 
     @property
     def icon(self) -> str:
@@ -204,10 +198,7 @@ class RachioZone(RachioSwitch):
     @property
     def state_attributes(self) -> dict:
         """Return the optional state attributes."""
-        return {
-            ATTR_ZONE_NUMBER: self._zone_number,
-            ATTR_ZONE_SUMMARY: self._summary,
-        }
+        return {ATTR_ZONE_NUMBER: self._zone_number, ATTR_ZONE_SUMMARY: self._summary}
 
     def turn_on(self, **kwargs) -> None:
         """Start watering this zone."""
@@ -215,8 +206,7 @@ class RachioZone(RachioSwitch):
         self.turn_off()
 
         # Start this zone
-        self._controller.rachio.zone.start(self.zone_id,
-                                           self._manual_run_time.seconds)
+        self._controller.rachio.zone.start(self.zone_id, self._manual_run_time.seconds)
         _LOGGER.debug("Watering %s on %s", self.name, self._controller.name)
 
     def turn_off(self, **kwargs) -> None:
@@ -237,8 +227,7 @@ class RachioZone(RachioSwitch):
 
         if args[0][KEY_SUBTYPE] == SUBTYPE_ZONE_STARTED:
             self._state = True
-        elif args[0][KEY_SUBTYPE] in [SUBTYPE_ZONE_STOPPED,
-                                      SUBTYPE_ZONE_COMPLETED]:
+        elif args[0][KEY_SUBTYPE] in [SUBTYPE_ZONE_STOPPED, SUBTYPE_ZONE_COMPLETED]:
             self._state = False
 
         self.schedule_update_ha_state()

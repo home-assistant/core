@@ -7,15 +7,13 @@ ValueType = Union[
     # Example: entities.all = { read: true, control: true }
     Mapping[str, bool],
     bool,
-    None
+    None,
 ]
 
-SubCategoryType = Union[
-    # Example: entities.domains = { light: … }
-    Mapping[str, ValueType],
-    bool,
-    None
-]
+# Example: entities.domains = { light: … }
+SubCategoryDict = Mapping[str, ValueType]
+
+SubCategoryType = Union[SubCategoryDict, bool, None]
 
 CategoryType = Union[
     # Example: entities.domains
@@ -23,7 +21,7 @@ CategoryType = Union[
     # Example: entities.all
     Mapping[str, ValueType],
     bool,
-    None
+    None,
 ]
 
 # Example: { entities: … }

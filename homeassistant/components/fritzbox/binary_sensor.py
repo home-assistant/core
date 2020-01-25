@@ -1,17 +1,11 @@
-"""
-Support for Fritzbox binary sensors.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.fritzbox/
-"""
+"""Support for Fritzbox binary sensors."""
 import logging
 
 import requests
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.fritzbox import DOMAIN as FRITZBOX_DOMAIN
 
-DEPENDENCIES = ['fritzbox']
+from . import DOMAIN as FRITZBOX_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +40,7 @@ class FritzboxBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return 'window'
+        return "window"
 
     @property
     def is_on(self):

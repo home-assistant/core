@@ -1,13 +1,9 @@
-"""
-Support for MAX! Window Shutter via MAX! Cube.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/maxcube/
-"""
+"""Support for MAX! binary sensors via MAX! Cube."""
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.maxcube import DATA_KEY
+
+from . import DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,13 +14,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for handler in hass.data[DATA_KEY].values():
         cube = handler.cube
         for device in cube.devices:
-            name = "{} {}".format(
-                cube.room_by_id(device.room_id).name, device.name)
+            name = "{} {}".format(cube.room_by_id(device.room_id).name, device.name)
 
             # Only add Window Shutters
             if cube.is_windowshutter(device):
-                devices.append(
-                    MaxCubeShutter(handler, name, device.rf_address))
+                devices.append(MaxCubeShutter(handler, name, device.rf_address))
 
     if devices:
         add_entities(devices)
@@ -36,7 +30,7 @@ class MaxCubeShutter(BinarySensorDevice):
     def __init__(self, handler, name, rf_address):
         """Initialize MAX! Cube BinarySensorDevice."""
         self._name = name
-        self._sensor_type = 'window'
+        self._sensor_type = "window"
         self._rf_address = rf_address
         self._cubehandle = handler
         self._state = None

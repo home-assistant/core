@@ -1,0 +1,8 @@
+{
+  "domain": "luci",
+  "name": "OpenWRT (luci)",
+  "documentation": "https://www.home-assistant.io/integrations/luci",
+  "requirements": ["openwrt-luci-rpc==1.1.2"],
+  "dependencies": [],
+  "codeowners": ["@fbradyirl", "@mzdrale"]
+}

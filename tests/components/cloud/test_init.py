@@ -1,177 +1,187 @@
 """Test the cloud component."""
-import asyncio
-import json
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components import cloud
-from homeassistant.util.dt import utcnow
+from homeassistant.components.cloud.const import DOMAIN
+from homeassistant.components.cloud.prefs import STORAGE_KEY
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Context
+from homeassistant.exceptions import Unauthorized
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
 
 
-@pytest.fixture
-def mock_os():
-    """Mock os module."""
-    with patch('homeassistant.components.cloud.os') as os:
-        os.path.isdir.return_value = True
-        yield os
-
-
-@asyncio.coroutine
-def test_constructor_loads_info_from_constant():
+async def test_constructor_loads_info_from_config(hass):
     """Test non-dev mode loads info from SERVERS constant."""
-    hass = MagicMock(data={})
-    with patch.dict(cloud.SERVERS, {
-        'beer': {
-            'cognito_client_id': 'test-cognito_client_id',
-            'user_pool_id': 'test-user_pool_id',
-            'region': 'test-region',
-            'relayer': 'test-relayer',
-            'google_actions_sync_url': 'test-google_actions_sync_url',
-            'subscription_info_url': 'test-subscription-info-url',
-            'cloudhook_create_url': 'test-cloudhook_create_url',
-        }
-    }):
-        result = yield from cloud.async_setup(hass, {
-            'cloud': {cloud.CONF_MODE: 'beer'}
-        })
+    with patch("hass_nabucasa.Cloud.start", return_value=mock_coro()):
+        result = await async_setup_component(
+            hass,
+            "cloud",
+            {
+                "http": {},
+                "cloud": {
+                    cloud.CONF_MODE: cloud.MODE_DEV,
+                    "cognito_client_id": "test-cognito_client_id",
+                    "user_pool_id": "test-user_pool_id",
+                    "region": "test-region",
+                    "relayer": "test-relayer",
+                    "subscription_info_url": "http://test-subscription-info-url",
+                    "cloudhook_create_url": "http://test-cloudhook_create_url",
+                    "remote_api_url": "http://test-remote_api_url",
+                    "alexa_access_token_url": "http://test-alexa-token-url",
+                    "acme_directory_server": "http://test-acme-directory-server",
+                    "google_actions_report_state_url": "http://test-google-actions-report-state-url",
+                },
+            },
+        )
         assert result
 
-    cl = hass.data['cloud']
-    assert cl.mode == 'beer'
-    assert cl.cognito_client_id == 'test-cognito_client_id'
-    assert cl.user_pool_id == 'test-user_pool_id'
-    assert cl.region == 'test-region'
-    assert cl.relayer == 'test-relayer'
-    assert cl.google_actions_sync_url == 'test-google_actions_sync_url'
-    assert cl.subscription_info_url == 'test-subscription-info-url'
-    assert cl.cloudhook_create_url == 'test-cloudhook_create_url'
-
-
-@asyncio.coroutine
-def test_constructor_loads_info_from_config():
-    """Test non-dev mode loads info from SERVERS constant."""
-    hass = MagicMock(data={})
-
-    result = yield from cloud.async_setup(hass, {
-        'cloud': {
-            cloud.CONF_MODE: cloud.MODE_DEV,
-            'cognito_client_id': 'test-cognito_client_id',
-            'user_pool_id': 'test-user_pool_id',
-            'region': 'test-region',
-            'relayer': 'test-relayer',
-        }
-    })
-    assert result
-
-    cl = hass.data['cloud']
+    cl = hass.data["cloud"]
     assert cl.mode == cloud.MODE_DEV
-    assert cl.cognito_client_id == 'test-cognito_client_id'
-    assert cl.user_pool_id == 'test-user_pool_id'
-    assert cl.region == 'test-region'
-    assert cl.relayer == 'test-relayer'
+    assert cl.cognito_client_id == "test-cognito_client_id"
+    assert cl.user_pool_id == "test-user_pool_id"
+    assert cl.region == "test-region"
+    assert cl.relayer == "test-relayer"
+    assert cl.subscription_info_url == "http://test-subscription-info-url"
+    assert cl.cloudhook_create_url == "http://test-cloudhook_create_url"
+    assert cl.remote_api_url == "http://test-remote_api_url"
+    assert cl.alexa_access_token_url == "http://test-alexa-token-url"
+    assert cl.acme_directory_server == "http://test-acme-directory-server"
+    assert (
+        cl.google_actions_report_state_url
+        == "http://test-google-actions-report-state-url"
+    )
 
 
-async def test_initialize_loads_info(mock_os, hass):
-    """Test initialize will load info from config file."""
-    mock_os.path.isfile.return_value = True
-    mopen = mock_open(read_data=json.dumps({
-        'id_token': 'test-id-token',
-        'access_token': 'test-access-token',
-        'refresh_token': 'test-refresh-token',
-    }))
+async def test_remote_services(hass, mock_cloud_fixture, hass_read_only_user):
+    """Setup cloud component and test services."""
+    cloud = hass.data[DOMAIN]
 
-    cl = cloud.Cloud(hass, cloud.MODE_DEV, None, None)
-    cl.iot = MagicMock()
-    cl.iot.connect.return_value = mock_coro()
+    assert hass.services.has_service(DOMAIN, "remote_connect")
+    assert hass.services.has_service(DOMAIN, "remote_disconnect")
 
-    with patch('homeassistant.components.cloud.open', mopen, create=True), \
-            patch('homeassistant.components.cloud.Cloud._decode_claims'):
-        await cl.async_start(None)
+    with patch(
+        "hass_nabucasa.remote.RemoteUI.connect", return_value=mock_coro()
+    ) as mock_connect:
+        await hass.services.async_call(DOMAIN, "remote_connect", blocking=True)
 
-    assert cl.id_token == 'test-id-token'
-    assert cl.access_token == 'test-access-token'
-    assert cl.refresh_token == 'test-refresh-token'
-    assert len(cl.iot.connect.mock_calls) == 1
+    assert mock_connect.called
+    assert cloud.client.remote_autostart
 
+    with patch(
+        "hass_nabucasa.remote.RemoteUI.disconnect", return_value=mock_coro()
+    ) as mock_disconnect:
+        await hass.services.async_call(DOMAIN, "remote_disconnect", blocking=True)
 
-@asyncio.coroutine
-def test_logout_clears_info(mock_os, hass):
-    """Test logging out disconnects and removes info."""
-    cl = cloud.Cloud(hass, cloud.MODE_DEV, None, None)
-    cl.iot = MagicMock()
-    cl.iot.disconnect.return_value = mock_coro()
+    assert mock_disconnect.called
+    assert not cloud.client.remote_autostart
 
-    yield from cl.logout()
+    # Test admin access required
+    non_admin_context = Context(user_id=hass_read_only_user.id)
 
-    assert len(cl.iot.disconnect.mock_calls) == 1
-    assert cl.id_token is None
-    assert cl.access_token is None
-    assert cl.refresh_token is None
-    assert len(mock_os.remove.mock_calls) == 1
+    with patch(
+        "hass_nabucasa.remote.RemoteUI.connect", return_value=mock_coro()
+    ) as mock_connect, pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN, "remote_connect", blocking=True, context=non_admin_context
+        )
 
+    assert mock_connect.called is False
 
-@asyncio.coroutine
-def test_write_user_info():
-    """Test writing user info works."""
-    mopen = mock_open()
+    with patch(
+        "hass_nabucasa.remote.RemoteUI.disconnect", return_value=mock_coro()
+    ) as mock_disconnect, pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN, "remote_disconnect", blocking=True, context=non_admin_context
+        )
 
-    cl = cloud.Cloud(MagicMock(), cloud.MODE_DEV, None, None)
-    cl.id_token = 'test-id-token'
-    cl.access_token = 'test-access-token'
-    cl.refresh_token = 'test-refresh-token'
-
-    with patch('homeassistant.components.cloud.open', mopen, create=True):
-        cl.write_user_info()
-
-    handle = mopen()
-
-    assert len(handle.write.mock_calls) == 1
-    data = json.loads(handle.write.mock_calls[0][1][0])
-    assert data == {
-        'access_token': 'test-access-token',
-        'id_token': 'test-id-token',
-        'refresh_token': 'test-refresh-token',
-    }
+    assert mock_disconnect.called is False
 
 
-@asyncio.coroutine
-def test_subscription_expired(hass):
-    """Test subscription being expired after 3 days of expiration."""
-    cl = cloud.Cloud(hass, cloud.MODE_DEV, None, None)
-    token_val = {
-        'custom:sub-exp': '2017-11-13'
-    }
-    with patch.object(cl, '_decode_claims', return_value=token_val), \
-            patch('homeassistant.util.dt.utcnow',
-                  return_value=utcnow().replace(year=2017, month=11, day=13)):
-        assert not cl.subscription_expired
+async def test_startup_shutdown_events(hass, mock_cloud_fixture):
+    """Test if the cloud will start on startup event."""
+    with patch("hass_nabucasa.Cloud.start", return_value=mock_coro()) as mock_start:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
 
-    with patch.object(cl, '_decode_claims', return_value=token_val), \
-            patch('homeassistant.util.dt.utcnow',
-                  return_value=utcnow().replace(
-                      year=2017, month=11, day=19, hour=23, minute=59,
-                      second=59)):
-        assert not cl.subscription_expired
+    assert mock_start.called
 
-    with patch.object(cl, '_decode_claims', return_value=token_val), \
-            patch('homeassistant.util.dt.utcnow',
-                  return_value=utcnow().replace(
-                      year=2017, month=11, day=20, hour=0, minute=0,
-                      second=0)):
-        assert cl.subscription_expired
+    with patch("hass_nabucasa.Cloud.stop", return_value=mock_coro()) as mock_stop:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+    assert mock_stop.called
 
 
-@asyncio.coroutine
-def test_subscription_not_expired(hass):
-    """Test subscription not being expired."""
-    cl = cloud.Cloud(hass, cloud.MODE_DEV, None, None)
-    token_val = {
-        'custom:sub-exp': '2017-11-13'
-    }
-    with patch.object(cl, '_decode_claims', return_value=token_val), \
-            patch('homeassistant.util.dt.utcnow',
-                  return_value=utcnow().replace(year=2017, month=11, day=9)):
-        assert not cl.subscription_expired
+async def test_setup_existing_cloud_user(hass, hass_storage):
+    """Test setup with API push default data."""
+    user = await hass.auth.async_create_system_user("Cloud test")
+    hass_storage[STORAGE_KEY] = {"version": 1, "data": {"cloud_user": user.id}}
+    with patch("hass_nabucasa.Cloud.start", return_value=mock_coro()):
+        result = await async_setup_component(
+            hass,
+            "cloud",
+            {
+                "http": {},
+                "cloud": {
+                    cloud.CONF_MODE: cloud.MODE_DEV,
+                    "cognito_client_id": "test-cognito_client_id",
+                    "user_pool_id": "test-user_pool_id",
+                    "region": "test-region",
+                    "relayer": "test-relayer",
+                },
+            },
+        )
+        assert result
+
+    assert hass_storage[STORAGE_KEY]["data"]["cloud_user"] == user.id
+
+
+async def test_on_connect(hass, mock_cloud_fixture):
+    """Test cloud on connect triggers."""
+    cl = hass.data["cloud"]
+
+    assert len(cl.iot._on_connect) == 3
+
+    assert len(hass.states.async_entity_ids("binary_sensor")) == 0
+
+    assert "async_setup" in str(cl.iot._on_connect[-1])
+    await cl.iot._on_connect[-1]()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids("binary_sensor")) == 1
+
+    with patch(
+        "homeassistant.helpers.discovery.async_load_platform", side_effect=mock_coro
+    ) as mock_load:
+        await cl.iot._on_connect[-1]()
+        await hass.async_block_till_done()
+
+    assert len(mock_load.mock_calls) == 0
+
+
+async def test_remote_ui_url(hass, mock_cloud_fixture):
+    """Test getting remote ui url."""
+    cl = hass.data["cloud"]
+
+    # Not logged in
+    with pytest.raises(cloud.CloudNotAvailable):
+        cloud.async_remote_ui_url(hass)
+
+    with patch.object(cloud, "async_is_logged_in", return_value=True):
+        # Remote not enabled
+        with pytest.raises(cloud.CloudNotAvailable):
+            cloud.async_remote_ui_url(hass)
+
+        await cl.client.prefs.async_update(remote_enabled=True)
+
+        # No instance domain
+        with pytest.raises(cloud.CloudNotAvailable):
+            cloud.async_remote_ui_url(hass)
+
+        cl.remote._instance_domain = "example.com"
+
+        assert cloud.async_remote_ui_url(hass) == "https://example.com"

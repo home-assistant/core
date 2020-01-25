@@ -1,0 +1,9 @@
+{
+  "domain": "script",
+  "name": "Scripts",
+  "documentation": "https://www.home-assistant.io/integrations/script",
+  "requirements": [],
+  "dependencies": ["group"],
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
+}

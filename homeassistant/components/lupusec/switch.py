@@ -1,17 +1,12 @@
-"""
-This component provides HA switch support for Lupusec Security System.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.lupusec/
-"""
-import logging
+"""Support for Lupusec Security System switches."""
 from datetime import timedelta
+import logging
 
-from homeassistant.components.lupusec import (LupusecDevice,
-                                              DOMAIN as LUPUSEC_DOMAIN)
+import lupupy.constants as CONST
+
 from homeassistant.components.switch import SwitchDevice
 
-DEPENDENCIES = ['lupusec']
+from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
 SCAN_INTERVAL = timedelta(seconds=2)
 
@@ -22,8 +17,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Lupusec switch devices."""
     if discovery_info is None:
         return
-
-    import lupupy.constants as CONST
 
     data = hass.data[LUPUSEC_DOMAIN]
 

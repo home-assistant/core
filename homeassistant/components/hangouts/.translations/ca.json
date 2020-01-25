@@ -14,13 +14,16 @@
                 "data": {
                     "2fa": "Pin 2FA"
                 },
+                "description": "buit",
                 "title": "Verificaci\u00f3 en dos passos"
             },
             "user": {
                 "data": {
+                    "authorization_code": "Codi d'autoritzaci\u00f3 (necessari per a l'autenticaci\u00f3 manual)",
                     "email": "Correu electr\u00f2nic",
                     "password": "Contrasenya"
                 },
+                "description": "buit",
                 "title": "Inici de sessi\u00f3 de Google Hangouts"
             }
         },

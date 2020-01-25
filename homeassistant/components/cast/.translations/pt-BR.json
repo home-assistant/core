@@ -7,9 +7,9 @@
         "step": {
             "confirm": {
                 "description": "Deseja configurar o Google Cast?",
-                "title": ""
+                "title": "Google Cast"
             }
         },
-        "title": ""
+        "title": "Google Cast"
     }
 }

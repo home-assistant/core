@@ -1,30 +1,27 @@
-"""
-Support for monitoring a Sense energy sensor.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.sense/
-"""
+"""Support for monitoring a Sense energy sensor."""
 from datetime import timedelta
 import logging
 
-from homeassistant.components.sense import SENSE_DATA
+from sense_energy import SenseAPITimeoutException
+
+from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+from . import SENSE_DATA
+
 _LOGGER = logging.getLogger(__name__)
 
-ACTIVE_NAME = 'Energy'
-ACTIVE_TYPE = 'active'
+ACTIVE_NAME = "Energy"
+ACTIVE_TYPE = "active"
 
-CONSUMPTION_NAME = 'Usage'
+CONSUMPTION_NAME = "Usage"
 
-DEPENDENCIES = ['sense']
-
-ICON = 'mdi:flash'
+ICON = "mdi:flash"
 
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=300)
 
-PRODUCTION_NAME = 'Production'
+PRODUCTION_NAME = "Production"
 
 
 class SensorConfig:
@@ -38,32 +35,31 @@ class SensorConfig:
 
 # Sensor types/ranges
 SENSOR_TYPES = {
-    'active': SensorConfig(ACTIVE_NAME, ACTIVE_TYPE),
-    'daily': SensorConfig('Daily', 'DAY'),
-    'weekly': SensorConfig('Weekly', 'WEEK'),
-    'monthly': SensorConfig('Monthly', 'MONTH'),
-    'yearly': SensorConfig('Yearly', 'YEAR'),
+    "active": SensorConfig(ACTIVE_NAME, ACTIVE_TYPE),
+    "daily": SensorConfig("Daily", "DAY"),
+    "weekly": SensorConfig("Weekly", "WEEK"),
+    "monthly": SensorConfig("Monthly", "MONTH"),
+    "yearly": SensorConfig("Yearly", "YEAR"),
 }
 
 # Production/consumption variants
 SENSOR_VARIANTS = [PRODUCTION_NAME.lower(), CONSUMPTION_NAME.lower()]
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Sense sensor."""
     if discovery_info is None:
         return
-
     data = hass.data[SENSE_DATA]
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
-    def update_trends():
+    async def update_trends():
         """Update the daily power usage."""
-        data.update_trend_data()
+        await data.update_trend_data()
 
-    def update_active():
+    async def update_active():
         """Update the active power usage."""
-        data.get_realtime()
+        await data.update_realtime()
 
     devices = []
     for typ in SENSOR_TYPES.values():
@@ -75,10 +71,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 update_call = update_active
             else:
                 update_call = update_trends
-            devices.append(Sense(
-                data, name, sensor_type, is_production, update_call))
+            devices.append(Sense(data, name, sensor_type, is_production, update_call))
 
-    add_entities(devices)
+    async_add_entities(devices)
 
 
 class Sense(Entity):
@@ -87,7 +82,7 @@ class Sense(Entity):
     def __init__(self, data, name, sensor_type, is_production, update_call):
         """Initialize the Sense sensor."""
         name_type = PRODUCTION_NAME if is_production else CONSUMPTION_NAME
-        self._name = "{} {}".format(name, name_type)
+        self._name = f"{name} {name_type}"
         self._data = data
         self._sensor_type = sensor_type
         self.update_sensor = update_call
@@ -95,9 +90,9 @@ class Sense(Entity):
         self._state = None
 
         if sensor_type == ACTIVE_TYPE:
-            self._unit_of_measurement = 'W'
+            self._unit_of_measurement = POWER_WATT
         else:
-            self._unit_of_measurement = 'kWh'
+            self._unit_of_measurement = ENERGY_KILO_WATT_HOUR
 
     @property
     def name(self):
@@ -119,11 +114,11 @@ class Sense(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data, update state."""
-        from sense_energy import SenseAPITimeoutException
+
         try:
-            self.update_sensor()
+            await self.update_sensor()
         except SenseAPITimeoutException:
             _LOGGER.error("Timeout retrieving data")
             return
@@ -134,6 +129,5 @@ class Sense(Entity):
             else:
                 self._state = round(self._data.active_power)
         else:
-            state = self._data.get_trend(
-                self._sensor_type, self._is_production)
+            state = self._data.get_trend(self._sensor_type, self._is_production)
             self._state = round(state, 1)

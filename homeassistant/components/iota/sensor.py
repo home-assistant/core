@@ -1,37 +1,30 @@
-"""
-Support for IOTA wallets.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/iota
-"""
-import logging
+"""Support for IOTA wallet sensors."""
 from datetime import timedelta
+import logging
 
-from homeassistant.components.iota import IotaDevice, CONF_WALLETS
 from homeassistant.const import CONF_NAME
+
+from . import CONF_WALLETS, IotaDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_TESTNET = 'testnet'
-ATTR_URL = 'url'
+ATTR_TESTNET = "testnet"
+ATTR_URL = "url"
 
-CONF_IRI = 'iri'
-CONF_SEED = 'seed'
-CONF_TESTNET = 'testnet'
-
-DEPENDENCIES = ['iota']
+CONF_IRI = "iri"
+CONF_SEED = "seed"
+CONF_TESTNET = "testnet"
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the IOTA sensor."""
-    # Add sensors for wallet balance
     iota_config = discovery_info
-    sensors = [IotaBalanceSensor(wallet, iota_config)
-               for wallet in iota_config[CONF_WALLETS]]
+    sensors = [
+        IotaBalanceSensor(wallet, iota_config) for wallet in iota_config[CONF_WALLETS]
+    ]
 
-    # Add sensor for node information
     sensors.append(IotaNodeSensor(iota_config=iota_config))
 
     add_entities(sensors)
@@ -43,14 +36,17 @@ class IotaBalanceSensor(IotaDevice):
     def __init__(self, wallet_config, iota_config):
         """Initialize the sensor."""
         super().__init__(
-            name=wallet_config[CONF_NAME], seed=wallet_config[CONF_SEED],
-            iri=iota_config[CONF_IRI], is_testnet=iota_config[CONF_TESTNET])
+            name=wallet_config[CONF_NAME],
+            seed=wallet_config[CONF_SEED],
+            iri=iota_config[CONF_IRI],
+            is_testnet=iota_config[CONF_TESTNET],
+        )
         self._state = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} Balance'.format(self._name)
+        return f"{self._name} Balance"
 
     @property
     def state(self):
@@ -60,11 +56,11 @@ class IotaBalanceSensor(IotaDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return 'IOTA'
+        return "IOTA"
 
     def update(self):
         """Fetch new balance from IRI."""
-        self._state = self.api.get_inputs()['totalBalance']
+        self._state = self.api.get_inputs()["totalBalance"]
 
 
 class IotaNodeSensor(IotaDevice):
@@ -73,15 +69,18 @@ class IotaNodeSensor(IotaDevice):
     def __init__(self, iota_config):
         """Initialize the sensor."""
         super().__init__(
-            name='Node Info', seed=None, iri=iota_config[CONF_IRI],
-            is_testnet=iota_config[CONF_TESTNET])
+            name="Node Info",
+            seed=None,
+            iri=iota_config[CONF_IRI],
+            is_testnet=iota_config[CONF_TESTNET],
+        )
         self._state = None
         self._attr = {ATTR_URL: self.iri, ATTR_TESTNET: self.is_testnet}
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'IOTA Node'
+        return "IOTA Node"
 
     @property
     def state(self):
@@ -96,7 +95,7 @@ class IotaNodeSensor(IotaDevice):
     def update(self):
         """Fetch new attributes IRI node."""
         node_info = self.api.get_node_info()
-        self._state = node_info.get('appVersion')
+        self._state = node_info.get("appVersion")
 
         # convert values to raw string formats
         self._attr.update({k: str(v) for k, v in node_info.items()})

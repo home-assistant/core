@@ -1,21 +1,13 @@
-"""
-Implements LightwaveRF lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lightwave/
-"""
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.lightwave import LIGHTWAVE_LINK
+"""Support for LightwaveRF lights."""
+from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
 from homeassistant.const import CONF_NAME
 
-DEPENDENCIES = ['lightwave']
+from . import LIGHTWAVE_LINK
 
 MAX_BRIGHTNESS = 255
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Find and return LightWave lights."""
     if not discovery_info:
         return
@@ -75,7 +67,8 @@ class LWRFLight(Light):
 
         if self._brightness != MAX_BRIGHTNESS:
             self._lwlink.turn_on_with_brightness(
-                self._device_id, self._name, self._brightness)
+                self._device_id, self._name, self._brightness
+            )
         else:
             self._lwlink.turn_on_light(self._device_id, self._name)
 

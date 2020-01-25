@@ -1,1 +1,1 @@
-"""Thinkingcleaner integration."""
+"""Support for Thinkingcleaner devices."""

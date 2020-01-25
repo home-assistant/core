@@ -1,24 +1,17 @@
-"""
-Support for Lutron switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.lutron/
-"""
+"""Support for Lutron switches."""
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.lutron import (
-    LutronDevice, LUTRON_DEVICES, LUTRON_CONTROLLER)
+
+from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['lutron']
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lutron switches."""
     devs = []
-    for (area_name, device) in hass.data[LUTRON_DEVICES]['switch']:
+    for (area_name, device) in hass.data[LUTRON_DEVICES]["switch"]:
         dev = LutronSwitch(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 
@@ -27,6 +20,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class LutronSwitch(LutronDevice, SwitchDevice):
     """Representation of a Lutron Switch."""
+
+    def __init__(self, area_name, lutron_device, controller):
+        """Initialize the switch."""
+        self._prev_state = None
+        super().__init__(area_name, lutron_device, controller)
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -40,10 +38,15 @@ class LutronSwitch(LutronDevice, SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         attr = {}
-        attr['lutron_integration_id'] = self._lutron_device.id
+        attr["lutron_integration_id"] = self._lutron_device.id
         return attr
 
     @property
     def is_on(self):
         """Return true if device is on."""
         return self._lutron_device.last_level() > 0
+
+    def update(self):
+        """Call when forcing a refresh of the device."""
+        if self._prev_state is None:
+            self._prev_state = self._lutron_device.level > 0

@@ -1,19 +1,16 @@
-"""
-Support for August lock.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/lock.august/
-"""
-import logging
+"""Support for August lock."""
 from datetime import timedelta
+import logging
 
-from homeassistant.components.august import DATA_AUGUST
+from august.activity import ActivityType
+from august.lock import LockStatus
+
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
 
-_LOGGER = logging.getLogger(__name__)
+from . import DATA_AUGUST
 
-DEPENDENCIES = ['august']
+_LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -57,10 +54,9 @@ class AugustLock(LockDevice):
 
         self._lock_detail = self._data.get_lock_detail(self._lock.device_id)
 
-        from august.activity import ActivityType
         activity = self._data.get_latest_device_activity(
-            self._lock.device_id,
-            ActivityType.LOCK_OPERATION)
+            self._lock.device_id, ActivityType.LOCK_OPERATION
+        )
 
         if activity is not None:
             self._changed_by = activity.operated_by
@@ -78,7 +74,7 @@ class AugustLock(LockDevice):
     @property
     def is_locked(self):
         """Return true if device is on."""
-        from august.lock import LockStatus
+
         return self._lock_status is LockStatus.LOCKED
 
     @property
@@ -92,6 +88,9 @@ class AugustLock(LockDevice):
         if self._lock_detail is None:
             return None
 
-        return {
-            ATTR_BATTERY_LEVEL: self._lock_detail.battery_level,
-        }
+        return {ATTR_BATTERY_LEVEL: self._lock_detail.battery_level}
+
+    @property
+    def unique_id(self) -> str:
+        """Get the unique id of the lock."""
+        return f"{self._lock.device_id:s}_lock"

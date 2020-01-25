@@ -1,20 +1,12 @@
-"""
-Support for AVM Fritz!Box smarthome temperature sensor only devices.
-
-For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/sensor.fritzbox/
-"""
+"""Support for AVM Fritz!Box smarthome temperature sensor only devices."""
 import logging
 
 import requests
 
-from homeassistant.components.fritzbox import DOMAIN as FRITZBOX_DOMAIN
-from homeassistant.components.fritzbox import (
-    ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED)
-from homeassistant.helpers.entity import Entity
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = ['fritzbox']
+from . import ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED, DOMAIN as FRITZBOX_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +20,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for fritz in fritz_list:
         device_list = fritz.get_devices()
         for device in device_list:
-            if (device.has_temperature_sensor
-                    and not device.has_switch
-                    and not device.has_thermostat):
+            if (
+                device.has_temperature_sensor
+                and not device.has_switch
+                and not device.has_thermostat
+            ):
                 devices.append(FritzBoxTempSensor(device, fritz))
 
     add_entities(devices)

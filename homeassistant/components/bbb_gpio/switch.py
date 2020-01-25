@@ -1,37 +1,31 @@
-"""
-Allows to configure a switch using BeagleBone Black GPIO.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.bbb_gpio/
-"""
+"""Allows to configure a switch using BeagleBone Black GPIO."""
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.components import bbb_gpio
-from homeassistant.const import (DEVICE_DEFAULT_NAME, CONF_NAME)
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['bbb_gpio']
+CONF_PINS = "pins"
+CONF_INITIAL = "initial"
+CONF_INVERT_LOGIC = "invert_logic"
 
-CONF_PINS = 'pins'
-CONF_INITIAL = 'initial'
-CONF_INVERT_LOGIC = 'invert_logic'
+PIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_INITIAL, default=False): cv.boolean,
+        vol.Optional(CONF_INVERT_LOGIC, default=False): cv.boolean,
+    }
+)
 
-PIN_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_INITIAL, default=False): cv.boolean,
-    vol.Optional(CONF_INVERT_LOGIC, default=False): cv.boolean,
-})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PINS, default={}):
-        vol.Schema({cv.string: PIN_SCHEMA}),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_PINS, default={}): vol.Schema({cv.string: PIN_SCHEMA})}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

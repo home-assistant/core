@@ -1,32 +1,39 @@
-"""
-Fans on Zigbee Home Automation networks.
-
-For more details on this platform, please refer to the documentation
-at https://home-assistant.io/components/fan.zha/
-"""
+"""Fans on Zigbee Home Automation networks."""
+import functools
 import logging
 
 from homeassistant.components.fan import (
-    DOMAIN, SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, SPEED_OFF, SUPPORT_SET_SPEED,
-    FanEntity)
+    DOMAIN,
+    SPEED_HIGH,
+    SPEED_LOW,
+    SPEED_MEDIUM,
+    SPEED_OFF,
+    SUPPORT_SET_SPEED,
+    FanEntity,
+)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from .core import helpers
-from .core.const import (
-    DATA_ZHA, DATA_ZHA_DISPATCHERS, REPORT_CONFIG_OP, ZHA_DISCOVERY_NEW)
-from .entity import ZhaEntity
 
-DEPENDENCIES = ['zha']
+from .core.const import (
+    CHANNEL_FAN,
+    DATA_ZHA,
+    DATA_ZHA_DISPATCHERS,
+    SIGNAL_ATTR_UPDATED,
+    ZHA_DISCOVERY_NEW,
+)
+from .core.registries import ZHA_ENTITIES
+from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 # Additional speeds in zigbee's ZCL
 # Spec is unclear as to what this value means. On King Of Fans HBUniversal
 # receiver, this means Very High.
-SPEED_ON = 'on'
+SPEED_ON = "on"
 # The fan speed is self-regulated
-SPEED_AUTO = 'auto'
+SPEED_AUTO = "auto"
 # When the heated/cooled space is occupied, the fan is always on
-SPEED_SMART = 'smart'
+SPEED_SMART = "smart"
 
 SPEED_LIST = [
     SPEED_OFF,
@@ -35,63 +42,72 @@ SPEED_LIST = [
     SPEED_HIGH,
     SPEED_ON,
     SPEED_AUTO,
-    SPEED_SMART
+    SPEED_SMART,
 ]
 
-VALUE_TO_SPEED = {i: speed for i, speed in enumerate(SPEED_LIST)}
+VALUE_TO_SPEED = dict(enumerate(SPEED_LIST))
 SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
-
-
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
-    """Old way of setting up Zigbee Home Automation fans."""
-    pass
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation fan from config entry."""
+
     async def async_discover(discovery_info):
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    [discovery_info])
+        await _async_setup_entities(
+            hass, config_entry, async_add_entities, [discovery_info]
+        )
 
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover)
+        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover
+    )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
     fans = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
     if fans is not None:
-        await _async_setup_entities(hass, config_entry, async_add_entities,
-                                    fans.values())
+        await _async_setup_entities(
+            hass, config_entry, async_add_entities, fans.values()
+        )
         del hass.data[DATA_ZHA][DOMAIN]
 
 
-async def _async_setup_entities(hass, config_entry, async_add_entities,
-                                discovery_infos):
+async def _async_setup_entities(
+    hass, config_entry, async_add_entities, discovery_infos
+):
     """Set up the ZHA fans."""
     entities = []
     for discovery_info in discovery_infos:
-        entities.append(ZhaFan(**discovery_info))
+        zha_dev = discovery_info["zha_device"]
+        channels = discovery_info["channels"]
 
-    async_add_entities(entities, update_before_add=True)
+        entity = ZHA_ENTITIES.get_entity(DOMAIN, zha_dev, channels, ZhaFan)
+        if entity:
+            entities.append(entity(**discovery_info))
+
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
 
+@STRICT_MATCH(channel_names=CHANNEL_FAN)
 class ZhaFan(ZhaEntity, FanEntity):
     """Representation of a ZHA fan."""
 
-    _domain = DOMAIN
-    value_attribute = 0  # fan_mode
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Init this sensor."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._fan_channel = self.cluster_channels.get(CHANNEL_FAN)
 
-    @property
-    def zcl_reporting_config(self) -> dict:
-        """Return a dict of attribute reporting configuration."""
-        return {
-            self.cluster: {self.value_attribute: REPORT_CONFIG_OP}
-        }
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        await self.async_accept_signal(
+            self._fan_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+        )
 
-    @property
-    def cluster(self):
-        """Fan ZCL Cluster."""
-        return self._endpoint.fan
+    @callback
+    def async_restore_last_state(self, last_state):
+        """Restore previous state."""
+        self._state = VALUE_TO_SPEED.get(last_state.state, last_state.state)
 
     @property
     def supported_features(self) -> int:
@@ -115,6 +131,16 @@ class ZhaFan(ZhaEntity, FanEntity):
             return False
         return self._state != SPEED_OFF
 
+    @property
+    def device_state_attributes(self):
+        """Return state attributes."""
+        return self.state_attributes
+
+    def async_set_state(self, state):
+        """Handle state update from channel."""
+        self._state = VALUE_TO_SPEED.get(state, self._state)
+        self.async_schedule_update_ha_state()
+
     async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the entity on."""
         if speed is None:
@@ -128,31 +154,13 @@ class ZhaFan(ZhaEntity, FanEntity):
 
     async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        from zigpy.exceptions import DeliveryError
-        try:
-            await self._endpoint.fan.write_attributes(
-                {'fan_mode': SPEED_TO_VALUE[speed]}
-            )
-        except DeliveryError as ex:
-            _LOGGER.error("%s: Could not set speed: %s", self.entity_id, ex)
-            return
-
-        self._state = speed
-        self.async_schedule_update_ha_state()
+        await self._fan_channel.async_set_speed(SPEED_TO_VALUE[speed])
+        self.async_set_state(speed)
 
     async def async_update(self):
-        """Retrieve latest state."""
-        result = await helpers.safe_read(self.cluster, ['fan_mode'],
-                                         allow_cache=False,
-                                         only_cache=(not self._initialized))
-        new_value = result.get('fan_mode', None)
-        self._state = VALUE_TO_SPEED.get(new_value, None)
-
-    def attribute_updated(self, attribute, value):
-        """Handle attribute update from device."""
-        attr_name = self.cluster.attributes.get(attribute, [attribute])[0]
-        _LOGGER.debug("%s: Attribute report '%s'[%s] = %s",
-                      self.entity_id, self.cluster.name, attr_name, value)
-        if attribute == self.value_attribute:
-            self._state = VALUE_TO_SPEED.get(value, self._state)
-            self.async_schedule_update_ha_state()
+        """Attempt to retrieve on off state from the fan."""
+        await super().async_update()
+        if self._fan_channel:
+            state = await self._fan_channel.get_attribute_value("fan_mode")
+            if state is not None:
+                self._state = VALUE_TO_SPEED.get(state, self._state)

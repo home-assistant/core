@@ -1,20 +1,18 @@
-"""
-Support for IP Webcam settings.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.android_ip_webcam/
-"""
-
+"""Support for Android IP Webcam settings."""
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.android_ip_webcam import (
-    KEY_MAP, ICON_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST,
-    CONF_NAME, CONF_SWITCHES)
 
-DEPENDENCIES = ['android_ip_webcam']
+from . import (
+    CONF_HOST,
+    CONF_NAME,
+    CONF_SWITCHES,
+    DATA_IP_WEBCAM,
+    ICON_MAP,
+    KEY_MAP,
+    AndroidIPCamEntity,
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the IP Webcam switch platform."""
     if discovery_info is None:
         return
@@ -41,7 +39,7 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
 
         self._setting = setting
         self._mapped_name = KEY_MAP.get(self._setting, self._setting)
-        self._name = '{} {}'.format(name, self._mapped_name)
+        self._name = f"{name} {self._mapped_name}"
         self._state = False
 
     @property
@@ -60,11 +58,11 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn device on."""
-        if self._setting == 'torch':
+        if self._setting == "torch":
             await self._ipcam.torch(activate=True)
-        elif self._setting == 'focus':
+        elif self._setting == "focus":
             await self._ipcam.focus(activate=True)
-        elif self._setting == 'video_recording':
+        elif self._setting == "video_recording":
             await self._ipcam.record(record=True)
         else:
             await self._ipcam.change_setting(self._setting, True)
@@ -73,11 +71,11 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
 
     async def async_turn_off(self, **kwargs):
         """Turn device off."""
-        if self._setting == 'torch':
+        if self._setting == "torch":
             await self._ipcam.torch(activate=False)
-        elif self._setting == 'focus':
+        elif self._setting == "focus":
             await self._ipcam.focus(activate=False)
-        elif self._setting == 'video_recording':
+        elif self._setting == "video_recording":
             await self._ipcam.record(record=False)
         else:
             await self._ipcam.change_setting(self._setting, False)
@@ -87,4 +85,4 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
     @property
     def icon(self):
         """Return the icon for the switch."""
-        return ICON_MAP.get(self._setting, 'mdi:flash')
+        return ICON_MAP.get(self._setting, "mdi:flash")

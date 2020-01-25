@@ -1,33 +1,28 @@
-"""
-Support for KNX scenes.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/scene.knx/
-"""
+"""Support for KNX scenes."""
 import voluptuous as vol
+from xknx.devices import Scene as XknxScene
 
-from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
 from homeassistant.components.scene import CONF_PLATFORM, Scene
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-CONF_ADDRESS = 'address'
-CONF_SCENE_NUMBER = 'scene_number'
+from . import ATTR_DISCOVER_DEVICES, DATA_KNX
 
-DEFAULT_NAME = 'KNX SCENE'
-DEPENDENCIES = ['knx']
+CONF_SCENE_NUMBER = "scene_number"
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'knx',
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Required(CONF_ADDRESS): cv.string,
-    vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
-})
+DEFAULT_NAME = "KNX SCENE"
+PLATFORM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PLATFORM): "knx",
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_ADDRESS): cv.string,
+        vol.Required(CONF_SCENE_NUMBER): cv.positive_int,
+    }
+)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the scenes for KNX platform."""
     if discovery_info is not None:
         async_add_entities_discovery(hass, discovery_info, async_add_entities)
@@ -48,12 +43,12 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 @callback
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up scene for KNX platform configured within platform."""
-    import xknx
-    scene = xknx.devices.Scene(
+    scene = XknxScene(
         hass.data[DATA_KNX].xknx,
-        name=config.get(CONF_NAME),
-        group_address=config.get(CONF_ADDRESS),
-        scene_number=config.get(CONF_SCENE_NUMBER))
+        name=config[CONF_NAME],
+        group_address=config[CONF_ADDRESS],
+        scene_number=config[CONF_SCENE_NUMBER],
+    )
     hass.data[DATA_KNX].xknx.devices.add(scene)
     async_add_entities([KNXScene(scene)])
 

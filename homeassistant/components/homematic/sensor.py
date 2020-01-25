@@ -1,82 +1,75 @@
-"""
-The HomeMatic sensor platform.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.homematic/
-"""
+"""Support for HomeMatic sensors."""
 import logging
 
-from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_POWER,
+    DEVICE_CLASS_TEMPERATURE,
+    ENERGY_WATT_HOUR,
+    POWER_WATT,
+)
+
+from .const import ATTR_DISCOVER_DEVICES
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['homematic']
-
 HM_STATE_HA_CAST = {
-    'RotaryHandleSensor': {0: 'closed',
-                           1: 'tilted',
-                           2: 'open'},
-    'RotaryHandleSensorIP': {0: 'closed',
-                             1: 'tilted',
-                             2: 'open'},
-    'WaterSensor': {0: 'dry',
-                    1: 'wet',
-                    2: 'water'},
-    'CO2Sensor': {0: 'normal',
-                  1: 'added',
-                  2: 'strong'},
-    'IPSmoke': {0: 'off',
-                1: 'primary',
-                2: 'intrusion',
-                3: 'secondary'},
-    'RFSiren': {0: 'disarmed',
-                1: 'extsens_armed',
-                2: 'allsens_armed',
-                3: 'alarm_blocked'},
+    "RotaryHandleSensor": {0: "closed", 1: "tilted", 2: "open"},
+    "RotaryHandleSensorIP": {0: "closed", 1: "tilted", 2: "open"},
+    "WaterSensor": {0: "dry", 1: "wet", 2: "water"},
+    "CO2Sensor": {0: "normal", 1: "added", 2: "strong"},
+    "IPSmoke": {0: "off", 1: "primary", 2: "intrusion", 3: "secondary"},
+    "RFSiren": {
+        0: "disarmed",
+        1: "extsens_armed",
+        2: "allsens_armed",
+        3: "alarm_blocked",
+    },
 }
 
 HM_UNIT_HA_CAST = {
-    'HUMIDITY': '%',
-    'TEMPERATURE': '°C',
-    'ACTUAL_TEMPERATURE': '°C',
-    'BRIGHTNESS': '#',
-    'POWER': 'W',
-    'CURRENT': 'mA',
-    'VOLTAGE': 'V',
-    'ENERGY_COUNTER': 'Wh',
-    'GAS_POWER': 'm3',
-    'GAS_ENERGY_COUNTER': 'm3',
-    'LUX': 'lx',
-    'ILLUMINATION': 'lx',
-    'CURRENT_ILLUMINATION': 'lx',
-    'AVERAGE_ILLUMINATION': 'lx',
-    'LOWEST_ILLUMINATION': 'lx',
-    'HIGHEST_ILLUMINATION': 'lx',
-    'RAIN_COUNTER': 'mm',
-    'WIND_SPEED': 'km/h',
-    'WIND_DIRECTION': '°',
-    'WIND_DIRECTION_RANGE': '°',
-    'SUNSHINEDURATION': '#',
-    'AIR_PRESSURE': 'hPa',
-    'FREQUENCY': 'Hz',
-    'VALUE': '#',
+    "HUMIDITY": "%",
+    "TEMPERATURE": "°C",
+    "ACTUAL_TEMPERATURE": "°C",
+    "BRIGHTNESS": "#",
+    "POWER": POWER_WATT,
+    "CURRENT": "mA",
+    "VOLTAGE": "V",
+    "ENERGY_COUNTER": ENERGY_WATT_HOUR,
+    "GAS_POWER": "m3",
+    "GAS_ENERGY_COUNTER": "m3",
+    "LUX": "lx",
+    "ILLUMINATION": "lx",
+    "CURRENT_ILLUMINATION": "lx",
+    "AVERAGE_ILLUMINATION": "lx",
+    "LOWEST_ILLUMINATION": "lx",
+    "HIGHEST_ILLUMINATION": "lx",
+    "RAIN_COUNTER": "mm",
+    "WIND_SPEED": "km/h",
+    "WIND_DIRECTION": "°",
+    "WIND_DIRECTION_RANGE": "°",
+    "SUNSHINEDURATION": "#",
+    "AIR_PRESSURE": "hPa",
+    "FREQUENCY": "Hz",
+    "VALUE": "#",
 }
 
-HM_ICON_HA_CAST = {
-    'WIND_SPEED': 'mdi:weather-windy',
-    'HUMIDITY': 'mdi:water-percent',
-    'TEMPERATURE': 'mdi:thermometer',
-    'ACTUAL_TEMPERATURE': 'mdi:thermometer',
-    'LUX': 'mdi:weather-sunny',
-    'CURRENT_ILLUMINATION': 'mdi:weather-sunny',
-    'AVERAGE_ILLUMINATION': 'mdi:weather-sunny',
-    'LOWEST_ILLUMINATION': 'mdi:weather-sunny',
-    'HIGHEST_ILLUMINATION': 'mdi:weather-sunny',
-    'BRIGHTNESS': 'mdi:invert-colors',
-    'POWER': 'mdi:flash-red-eye',
-    'CURRENT': 'mdi:flash-red-eye',
+HM_DEVICE_CLASS_HA_CAST = {
+    "HUMIDITY": DEVICE_CLASS_HUMIDITY,
+    "TEMPERATURE": DEVICE_CLASS_TEMPERATURE,
+    "ACTUAL_TEMPERATURE": DEVICE_CLASS_TEMPERATURE,
+    "LUX": DEVICE_CLASS_ILLUMINANCE,
+    "CURRENT_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
+    "AVERAGE_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
+    "LOWEST_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
+    "HIGHEST_ILLUMINATION": DEVICE_CLASS_ILLUMINANCE,
+    "POWER": DEVICE_CLASS_POWER,
+    "CURRENT": DEVICE_CLASS_POWER,
 }
+
+HM_ICON_HA_CAST = {"WIND_SPEED": "mdi:weather-windy", "BRIGHTNESS": "mdi:invert-colors"}
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -89,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMSensor(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMSensor(HMDevice):
@@ -101,7 +94,7 @@ class HMSensor(HMDevice):
         # Does a cast exist for this class?
         name = self._hmdevice.__class__.__name__
         if name in HM_STATE_HA_CAST:
-            return HM_STATE_HA_CAST[name].get(self._hm_get_state(), None)
+            return HM_STATE_HA_CAST[name].get(self._hm_get_state())
 
         # No cast, return original value
         return self._hm_get_state()
@@ -109,16 +102,21 @@ class HMSensor(HMDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return HM_UNIT_HA_CAST.get(self._state, None)
+        return HM_UNIT_HA_CAST.get(self._state)
+
+    @property
+    def device_class(self):
+        """Return the device class to use in the frontend, if any."""
+        return HM_DEVICE_CLASS_HA_CAST.get(self._state)
 
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return HM_ICON_HA_CAST.get(self._state, None)
+        return HM_ICON_HA_CAST.get(self._state)
 
     def _init_data_struct(self):
         """Generate a data dictionary (self._data) from metadata."""
         if self._state:
-            self._data.update({self._state: STATE_UNKNOWN})
+            self._data.update({self._state: None})
         else:
             _LOGGER.critical("Unable to initialize sensor: %s", self._name)

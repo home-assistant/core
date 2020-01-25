@@ -1,0 +1,8 @@
+{
+  "domain": "qnap",
+  "name": "QNAP",
+  "documentation": "https://www.home-assistant.io/integrations/qnap",
+  "requirements": ["qnapstats==0.2.7"],
+  "dependencies": [],
+  "codeowners": ["@colinodell"]
+}

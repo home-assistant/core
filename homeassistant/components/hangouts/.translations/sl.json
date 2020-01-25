@@ -19,6 +19,7 @@
             },
             "user": {
                 "data": {
+                    "authorization_code": "Koda pooblastila (potrebna za ro\u010dno overjanje)",
                     "email": "E-po\u0161tni naslov",
                     "password": "Geslo"
                 },

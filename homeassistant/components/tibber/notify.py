@@ -1,16 +1,14 @@
-"""
-Tibber platform for notify component.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.tibber/
-"""
+"""Support for Tibber notifications."""
 import asyncio
 import logging
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService)
-from homeassistant.components.tibber import DOMAIN as TIBBER_DOMAIN
+    ATTR_TITLE,
+    ATTR_TITLE_DEFAULT,
+    BaseNotificationService,
+)
 
+from . import DOMAIN as TIBBER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -9,10 +9,10 @@
         },
         "step": {
             "user": {
-                "description": "Est\u00e0s segur que vols configurar el Webhook Geofency?",
-                "title": "Configuraci\u00f3 del Webhook Geofency"
+                "description": "Est\u00e0s segur que vols configurar el Webhook de Geofency?",
+                "title": "Configuraci\u00f3 del Webhook de Geofency"
             }
         },
-        "title": "Webhook Geofency"
+        "title": "Webhook de Geofency"
     }
 }

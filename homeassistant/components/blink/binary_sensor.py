@@ -1,14 +1,8 @@
-"""
-Support for Blink system camera control.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.blink.
-"""
-from homeassistant.components.blink import BLINK_DATA, BINARY_SENSORS
+"""Support for Blink system camera control."""
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 
-DEPENDENCIES = ['blink']
+from . import BINARY_SENSORS, BLINK_DATA
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -32,11 +26,11 @@ class BlinkBinarySensor(BinarySensorDevice):
         self.data = data
         self._type = sensor_type
         name, icon = BINARY_SENSORS[sensor_type]
-        self._name = "{} {} {}".format(BLINK_DATA, camera, name)
+        self._name = f"{BLINK_DATA} {camera} {name}"
         self._icon = icon
         self._camera = data.cameras[camera]
         self._state = None
-        self._unique_id = "{}-{}".format(self._camera.serial, self._type)
+        self._unique_id = f"{self._camera.serial}-{self._type}"
 
     @property
     def name(self):

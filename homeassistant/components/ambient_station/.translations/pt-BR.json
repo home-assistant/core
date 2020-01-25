@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Chave de aplicativo e / ou chave de API j\u00e1 registrada",
+            "invalid_key": "Chave de API e / ou chave de aplicativo inv\u00e1lidas",
+            "no_devices": "Nenhum dispositivo encontrado na conta"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Chave API",
+                    "app_key": "Chave de aplicativo"
+                },
+                "title": "Preencha suas informa\u00e7\u00f5es"
+            }
+        },
+        "title": "Ambiente PWS"
+    }
+}

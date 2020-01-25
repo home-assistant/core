@@ -1,12 +1,9 @@
-"""
-Support for Freebox devices (Freebox v6 and Freebox mini 4K).
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/freebox/
-"""
+"""Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
 import logging
 import socket
 
+from aiofreepybox import Freepybox
+from aiofreepybox.exceptions import HttpRequestError
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_FREEBOX
@@ -14,21 +11,21 @@ from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['aiofreepybox==0.0.6']
-
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "freebox"
 DATA_FREEBOX = DOMAIN
 
-FREEBOX_CONFIG_FILE = 'freebox.conf'
+FREEBOX_CONFIG_FILE = "freebox.conf"
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.port
-    })
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {vol.Required(CONF_HOST): cv.string, vol.Required(CONF_PORT): cv.port}
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -37,8 +34,8 @@ async def async_setup(hass, config):
 
     async def discovery_dispatch(service, discovery_info):
         if conf is None:
-            host = discovery_info.get('properties', {}).get('api_domain')
-            port = discovery_info.get('properties', {}).get('https_port')
+            host = discovery_info.get("properties", {}).get("api_domain")
+            port = discovery_info.get("properties", {}).get("https_port")
             _LOGGER.info("Discovered Freebox server: %s:%s", host, port)
             await async_setup_freebox(hass, config, host, port)
 
@@ -54,35 +51,37 @@ async def async_setup(hass, config):
 
 async def async_setup_freebox(hass, config, host, port):
     """Start up the Freebox component platforms."""
-    from aiofreepybox import Freepybox
-    from aiofreepybox.exceptions import HttpRequestError
 
     app_desc = {
-        'app_id': 'hass',
-        'app_name': 'Home Assistant',
-        'app_version': '0.65',
-        'device_name': socket.gethostname()
-        }
+        "app_id": "hass",
+        "app_name": "Home Assistant",
+        "app_version": "0.65",
+        "device_name": socket.gethostname(),
+    }
 
     token_file = hass.config.path(FREEBOX_CONFIG_FILE)
-    api_version = 'v1'
+    api_version = "v6"
 
-    fbx = Freepybox(
-        app_desc=app_desc,
-        token_file=token_file,
-        api_version=api_version)
+    fbx = Freepybox(app_desc=app_desc, token_file=token_file, api_version=api_version)
 
     try:
         await fbx.open(host, port)
     except HttpRequestError:
-        _LOGGER.exception('Failed to connect to Freebox')
+        _LOGGER.exception("Failed to connect to Freebox")
     else:
         hass.data[DATA_FREEBOX] = fbx
 
-        hass.async_create_task(async_load_platform(
-            hass, 'sensor', DOMAIN, {}, config))
-        hass.async_create_task(async_load_platform(
-            hass, 'device_tracker', DOMAIN, {}, config))
+        async def async_freebox_reboot(call):
+            """Handle reboot service call."""
+            await fbx.system.reboot()
+
+        hass.services.async_register(DOMAIN, "reboot", async_freebox_reboot)
+
+        hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
+        hass.async_create_task(
+            async_load_platform(hass, "device_tracker", DOMAIN, {}, config)
+        )
+        hass.async_create_task(async_load_platform(hass, "switch", DOMAIN, {}, config))
 
         async def close_fbx(event):
             """Close Freebox connection on HA Stop."""

@@ -1,0 +1,9 @@
+{
+  "domain": "switch",
+  "name": "Switch",
+  "documentation": "https://www.home-assistant.io/integrations/switch",
+  "requirements": [],
+  "dependencies": ["group"],
+  "codeowners": [],
+  "quality_scale": "internal"
+}

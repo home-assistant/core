@@ -1,32 +1,25 @@
-"""
-Allow users to set and activate scenes.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/scene/
-"""
-import asyncio
+"""Allow users to set and activate scenes."""
 import importlib
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_PLATFORM, SERVICE_TURN_ON)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON
+from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.state import HASS_DOMAIN
 
-DOMAIN = 'scene'
-STATE = 'scening'
-STATES = 'states'
+# mypy: allow-untyped-defs, no-check-untyped-defs
+
+DOMAIN = "scene"
+STATE = "scening"
+STATES = "states"
 
 
 def _hass_domain_validator(config):
     """Validate platform in config for homeassistant domain."""
     if CONF_PLATFORM not in config:
-        config = {
-            CONF_PLATFORM: HASS_DOMAIN, STATES: config}
+        config = {CONF_PLATFORM: HA_DOMAIN, STATES: config}
 
     return config
 
@@ -35,12 +28,17 @@ def _platform_validator(config):
     """Validate it is a valid  platform."""
     try:
         platform = importlib.import_module(
-            'homeassistant.components.scene.{}'.format(
-                config[CONF_PLATFORM]))
+            ".{}".format(config[CONF_PLATFORM]), __name__
+        )
     except ImportError:
-        raise vol.Invalid('Invalid platform specified') from None
+        try:
+            platform = importlib.import_module(
+                "homeassistant.components.{}.scene".format(config[CONF_PLATFORM])
+            )
+        except ImportError:
+            raise vol.Invalid("Invalid platform specified") from None
 
-    if not hasattr(platform, 'PLATFORM_SCHEMA'):
+    if not hasattr(platform, "PLATFORM_SCHEMA"):
         return config
 
     return platform.PLATFORM_SCHEMA(config)
@@ -49,15 +47,11 @@ def _platform_validator(config):
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
         _hass_domain_validator,
-        vol.Schema({
-            vol.Required(CONF_PLATFORM): str
-        }, extra=vol.ALLOW_EXTRA),
-        _platform_validator
-    ), extra=vol.ALLOW_EXTRA)
-
-SCENE_SERVICE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-})
+        vol.Schema({vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA),
+        _platform_validator,
+    ),
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -66,18 +60,12 @@ async def async_setup(hass, config):
     component = hass.data[DOMAIN] = EntityComponent(logger, DOMAIN, hass)
 
     await component.async_setup(config)
+    # Ensure Home Assistant platform always loaded.
+    await component.async_setup_platform(
+        HA_DOMAIN, {"platform": "homeasistant", STATES: []}
+    )
 
-    async def async_handle_scene_service(service):
-        """Handle calls to the switch services."""
-        target_scenes = component.async_extract_from_service(service)
-
-        tasks = [scene.async_activate() for scene in target_scenes]
-        if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_scene_service,
-        schema=SCENE_SERVICE_SCHEMA)
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_activate")
 
     return True
 

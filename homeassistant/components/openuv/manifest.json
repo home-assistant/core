@@ -1,0 +1,9 @@
+{
+  "domain": "openuv",
+  "name": "Openuv",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/openuv",
+  "requirements": ["pyopenuv==1.0.9"],
+  "dependencies": [],
+  "codeowners": ["@bachya"]
+}

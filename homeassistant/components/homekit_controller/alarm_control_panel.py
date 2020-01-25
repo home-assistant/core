@@ -1,22 +1,26 @@
-"""
-Support for Homekit Alarm Control Panel.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/alarm_control_panel.homekit_controller/
-"""
+"""Support for Homekit Alarm Control Panel."""
 import logging
 
-from homeassistant.components.homekit_controller import (HomeKitEntity,
-                                                         KNOWN_ACCESSORIES)
+from homekit.model.characteristics import CharacteristicsTypes
+
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 from homeassistant.const import (
-    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT, STATE_ALARM_TRIGGERED)
-from homeassistant.const import ATTR_BATTERY_LEVEL
+    ATTR_BATTERY_LEVEL,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED,
+    STATE_ALARM_TRIGGERED,
+)
 
-DEPENDENCIES = ['homekit_controller']
+from . import KNOWN_DEVICES, HomeKitEntity
 
-ICON = 'mdi:security'
+ICON = "mdi:security"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +29,7 @@ CURRENT_STATE_MAP = {
     1: STATE_ALARM_ARMED_AWAY,
     2: STATE_ALARM_ARMED_NIGHT,
     3: STATE_ALARM_DISARMED,
-    4: STATE_ALARM_TRIGGERED
+    4: STATE_ALARM_TRIGGERED,
 }
 
 TARGET_STATE_MAP = {
@@ -36,13 +40,19 @@ TARGET_STATE_MAP = {
 }
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Homekit Alarm Control Panel support."""
-    if discovery_info is None:
-        return
-    accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
-    add_entities([HomeKitAlarmControlPanel(accessory, discovery_info)],
-                 True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Homekit alarm control panel."""
+    hkid = config_entry.data["AccessoryPairingID"]
+    conn = hass.data[KNOWN_DEVICES][hkid]
+
+    def async_add_service(aid, service):
+        if service["stype"] != "security-system":
+            return False
+        info = {"aid": aid, "iid": service["iid"]}
+        async_add_entities([HomeKitAlarmControlPanel(conn, info)], True)
+        return True
+
+    conn.add_listener(async_add_service)
 
 
 class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
@@ -56,8 +66,6 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
 
     def get_characteristic_types(self):
         """Define the homekit characteristics the entity cares about."""
-        # pylint: disable=import-error
-        from homekit.model.characteristics import CharacteristicsTypes
         return [
             CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT,
             CharacteristicsTypes.SECURITY_SYSTEM_STATE_TARGET,
@@ -80,28 +88,37 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
         """Return the state of the device."""
         return self._state
 
-    def alarm_disarm(self, code=None):
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
+
+    async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        self.set_alarm_state(STATE_ALARM_DISARMED, code)
+        await self.set_alarm_state(STATE_ALARM_DISARMED, code)
 
-    def alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code=None):
         """Send arm command."""
-        self.set_alarm_state(STATE_ALARM_ARMED_AWAY, code)
+        await self.set_alarm_state(STATE_ALARM_ARMED_AWAY, code)
 
-    def alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code=None):
         """Send stay command."""
-        self.set_alarm_state(STATE_ALARM_ARMED_HOME, code)
+        await self.set_alarm_state(STATE_ALARM_ARMED_HOME, code)
 
-    def alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code=None):
         """Send night command."""
-        self.set_alarm_state(STATE_ALARM_ARMED_NIGHT, code)
+        await self.set_alarm_state(STATE_ALARM_ARMED_NIGHT, code)
 
-    def set_alarm_state(self, state, code=None):
+    async def set_alarm_state(self, state, code=None):
         """Send state command."""
-        characteristics = [{'aid': self._aid,
-                            'iid': self._chars['security-system-state.target'],
-                            'value': TARGET_STATE_MAP[state]}]
-        self.put_characteristics(characteristics)
+        characteristics = [
+            {
+                "aid": self._aid,
+                "iid": self._chars["security-system-state.target"],
+                "value": TARGET_STATE_MAP[state],
+            }
+        ]
+        await self._accessory.put_characteristics(characteristics)
 
     @property
     def device_state_attributes(self):
@@ -109,6 +126,4 @@ class HomeKitAlarmControlPanel(HomeKitEntity, AlarmControlPanel):
         if self._battery_level is None:
             return None
 
-        return {
-            ATTR_BATTERY_LEVEL: self._battery_level,
-        }
+        return {ATTR_BATTERY_LEVEL: self._battery_level}

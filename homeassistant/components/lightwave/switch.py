@@ -1,18 +1,11 @@
-"""
-Implements LightwaveRF switches.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.lightwave/
-"""
-from homeassistant.components.lightwave import LIGHTWAVE_LINK
+"""Support for LightwaveRF switches."""
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_NAME
 
-DEPENDENCIES = ['lightwave']
+from . import LIGHTWAVE_LINK
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Find and return LightWave switches."""
     if not discovery_info:
         return

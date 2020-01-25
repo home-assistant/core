@@ -1,39 +1,31 @@
-"""
-Support for switching Arduino pins on and off.
-
-So far only digital pins are supported.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/switch.arduino/
-"""
+"""Support for switching Arduino pins on and off."""
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components import arduino
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['arduino']
-
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PINS = 'pins'
-CONF_TYPE = 'digital'
-CONF_NEGATE = 'negate'
-CONF_INITIAL = 'initial'
+CONF_PINS = "pins"
+CONF_TYPE = "digital"
+CONF_NEGATE = "negate"
+CONF_INITIAL = "initial"
 
-PIN_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_INITIAL, default=False): cv.boolean,
-    vol.Optional(CONF_NEGATE, default=False): cv.boolean,
-})
+PIN_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_INITIAL, default=False): cv.boolean,
+        vol.Optional(CONF_NEGATE, default=False): cv.boolean,
+    }
+)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PINS, default={}):
-        vol.Schema({cv.positive_int: PIN_SCHEMA}),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_PINS, default={}): vol.Schema({cv.positive_int: PIN_SCHEMA})}
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -59,7 +51,7 @@ class ArduinoSwitch(SwitchDevice):
         self._pin = pin
         self._name = options.get(CONF_NAME)
         self.pin_type = CONF_TYPE
-        self.direction = 'out'
+        self.direction = "out"
 
         self._state = options.get(CONF_INITIAL)
 

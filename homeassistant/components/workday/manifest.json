@@ -1,0 +1,9 @@
+{
+  "domain": "workday",
+  "name": "Workday",
+  "documentation": "https://www.home-assistant.io/integrations/workday",
+  "requirements": ["holidays==0.9.12"],
+  "dependencies": [],
+  "codeowners": ["@fabaff"],
+  "quality_scale": "internal"
+}

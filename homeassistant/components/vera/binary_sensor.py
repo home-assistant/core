@@ -1,17 +1,9 @@
-"""
-Support for Vera binary sensors.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.vera/
-"""
+"""Support for Vera binary sensors."""
 import logging
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, ENTITY_ID_FORMAT)
-from homeassistant.components.vera import (
-    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
+from homeassistant.components.binary_sensor import ENTITY_ID_FORMAT, BinarySensorDevice
 
-DEPENDENCIES = ['vera']
+from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,8 +11,12 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Vera controller devices."""
     add_entities(
-        [VeraBinarySensor(device, hass.data[VERA_CONTROLLER])
-         for device in hass.data[VERA_DEVICES]['binary_sensor']], True)
+        [
+            VeraBinarySensor(device, hass.data[VERA_CONTROLLER])
+            for device in hass.data[VERA_DEVICES]["binary_sensor"]
+        ],
+        True,
+    )
 
 
 class VeraBinarySensor(VeraDevice, BinarySensorDevice):

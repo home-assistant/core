@@ -1,47 +1,52 @@
-"""
-Support for the light on the Sisyphus Kinetic Art Table.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.sisyphus/
-"""
+"""Support for the light on the Sisyphus Kinetic Art Table."""
 import logging
 
-from homeassistant.const import CONF_NAME
+import aiohttp
+
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
-from homeassistant.components.sisyphus import DATA_SISYPHUS
+from homeassistant.const import CONF_HOST
+from homeassistant.exceptions import PlatformNotReady
+
+from . import DATA_SISYPHUS
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['sisyphus']
 
 SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a single Sisyphus table."""
-    name = discovery_info[CONF_NAME]
-    add_entities(
-        [SisyphusLight(name, hass.data[DATA_SISYPHUS][name])],
-        update_before_add=True)
+    host = discovery_info[CONF_HOST]
+    try:
+        table_holder = hass.data[DATA_SISYPHUS][host]
+        table = await table_holder.get_table()
+    except aiohttp.ClientError:
+        raise PlatformNotReady()
+
+    add_entities([SisyphusLight(table_holder.name, table)], update_before_add=True)
 
 
 class SisyphusLight(Light):
-    """Represents a Sisyphus table as a light."""
+    """Representation of a Sisyphus table as a light."""
 
     def __init__(self, name, table):
-        """
-        Constructor.
-
-        :param name: name of the table
-        :param table: sisyphus-control Table object
-        """
+        """Initialize the Sisyphus table."""
         self._name = name
         self._table = table
 
     async def async_added_to_hass(self):
         """Add listeners after this object has been initialized."""
-        self._table.add_listener(
-            lambda: self.async_schedule_update_ha_state(False))
+        self._table.add_listener(lambda: self.async_schedule_update_ha_state(False))
+
+    @property
+    def available(self):
+        """Return true if the table is responding to heartbeats."""
+        return self._table.is_connected
+
+    @property
+    def unique_id(self):
+        """Return the UUID of the table."""
+        return self._table.id
 
     @property
     def name(self):

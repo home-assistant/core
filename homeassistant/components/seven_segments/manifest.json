@@ -1,0 +1,8 @@
+{
+  "domain": "seven_segments",
+  "name": "Seven Segments OCR",
+  "documentation": "https://www.home-assistant.io/integrations/seven_segments",
+  "requirements": ["pillow==6.2.1"],
+  "dependencies": [],
+  "codeowners": []
+}
