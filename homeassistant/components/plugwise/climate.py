@@ -1,4 +1,4 @@
-"""Plugwise Climate component for HomeAssistant."""
+"""Plugwise Climate component for Home Assistant."""
 
 import logging
 
