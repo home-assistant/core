@@ -17,6 +17,11 @@
                 },
                 "description": "Configurez l'int\u00e9gration de l'imprimante Brother. Si vous avez des probl\u00e8mes avec la configuration, allez \u00e0 : https://www.home-assistant.io/integrations/brother",
                 "title": "Imprimante Brother"
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Type d'imprimante"
+                }
             }
         },
         "title": "Imprimante Brother"
