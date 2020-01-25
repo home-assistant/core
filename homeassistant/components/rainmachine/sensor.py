@@ -145,7 +145,7 @@ class RainMachineSensor(RainMachineEntity):
         self._dispatcher_handlers.append(
             async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, self._update_state)
         )
-        await self.rainmachine.async_register_api_interest(self._api_category)
+        await self.rainmachine.async_register_sensor_api_interest(self._api_category)
         await self.async_update()
 
     async def async_update(self):
@@ -182,4 +182,4 @@ class RainMachineSensor(RainMachineEntity):
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listeners and deregister API interest."""
         super().async_will_remove_from_hass()
-        self.rainmachine.async_deregister_api_interest(self._api_category)
+        self.rainmachine.async_deregister_sensor_api_interest(self._api_category)

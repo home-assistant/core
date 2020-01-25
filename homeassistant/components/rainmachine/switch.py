@@ -6,10 +6,7 @@ from regenmaschine.errors import RequestError
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import ATTR_ID
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import RainMachineEntity
 from .const import (
@@ -96,6 +93,9 @@ VEGETATION_MAP = {
     99: "Other",
 }
 
+SWITCH_TYPE_PROGRAM = "program"
+SWITCH_TYPE_ZONE = "zone"
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up RainMachine switches based on a config entry."""
@@ -105,9 +105,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     for program in rainmachine.data[DATA_PROGRAMS]:
         entities.append(RainMachineProgram(rainmachine, program))
     for zone in rainmachine.data[DATA_ZONES]:
-        entities.append(
-            RainMachineZone(rainmachine, zone, rainmachine.default_zone_runtime)
-        )
+        entities.append(RainMachineZone(rainmachine, zone))
 
     async_add_entities(entities, True)
 
@@ -115,7 +113,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class RainMachineSwitch(RainMachineEntity, SwitchDevice):
     """A class to represent a generic RainMachine switch."""
 
-    def __init__(self, rainmachine, switch_type, obj):
+    def __init__(self, rainmachine, obj):
         """Initialize a generic RainMachine switch."""
         super().__init__(rainmachine)
 
@@ -123,7 +121,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
         self._name = obj["name"]
         self._obj = obj
         self._rainmachine_entity_id = obj["uid"]
-        self._switch_type = switch_type
+        self._switch_type = None
 
     @property
     def available(self) -> bool:
@@ -149,8 +147,15 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
             self._rainmachine_entity_id,
         )
 
-    async def _async_run_turn_off_coro(self, api_coro) -> None:
+    async def _async_run_turn_off_coro(self) -> None:
         """Turn the program off."""
+        if self._switch_type == SWITCH_TYPE_PROGRAM:
+            api_coro = self.rainmachine.client.programs.stop(
+                self._rainmachine_entity_id
+            )
+        else:
+            api_coro = self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
+
         try:
             resp = await api_coro
         except RequestError as err:
@@ -171,12 +176,19 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
             )
             return
 
-        # If the API call is successful, immediately assume the switch is off:
-        self._is_on = False
-        self.async_write_ha_state()
+        self.hass.async_create_task(self.rainmachine.async_update_programs_and_zones())
 
-    async def _async_run_turn_on_coro(self, api_coro) -> None:
+    async def _async_run_turn_on_coro(self) -> None:
         """Turn the program on."""
+        if self._switch_type == SWITCH_TYPE_PROGRAM:
+            api_coro = self.rainmachine.client.programs.start(
+                self._rainmachine_entity_id
+            )
+        else:
+            api_coro = self.rainmachine.client.zones.start(
+                self._rainmachine_entity_id, self.rainmachine.default_zone_runtime
+            )
+
         try:
             resp = await api_coro
         except RequestError as err:
@@ -197,9 +209,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
             )
             return
 
-        # If the API call is successful, immediately assume the switch is off:
-        self._is_on = True
-        self.async_write_ha_state()
+        self.hass.async_create_task(self.rainmachine.async_update_programs_and_zones())
 
 
 class RainMachineProgram(RainMachineSwitch):
@@ -207,7 +217,8 @@ class RainMachineProgram(RainMachineSwitch):
 
     def __init__(self, rainmachine, obj):
         """Initialize a generic RainMachine switch."""
-        super().__init__(rainmachine, "program", obj)
+        super().__init__(rainmachine, obj)
+        self._switch_type = SWITCH_TYPE_PROGRAM
 
     @property
     def zones(self) -> list:
@@ -224,17 +235,11 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the program off."""
-        await self._async_run_turn_off_coro(
-            self.rainmachine.client.programs.stop(self._rainmachine_entity_id)
-        )
-        async_dispatcher_send(self.hass, ZONE_UPDATE_TOPIC)
+        await self._async_run_turn_off_coro()
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the program on."""
-        await self._async_run_turn_on_coro(
-            self.rainmachine.client.programs.start(self._rainmachine_entity_id)
-        )
-        async_dispatcher_send(self.hass, ZONE_UPDATE_TOPIC)
+        await self._async_run_turn_on_coro()
 
     async def async_update(self) -> None:
         """Update info for the program."""
@@ -268,12 +273,10 @@ class RainMachineProgram(RainMachineSwitch):
 class RainMachineZone(RainMachineSwitch):
     """A RainMachine zone."""
 
-    def __init__(self, rainmachine, obj, zone_run_time):
+    def __init__(self, rainmachine, obj):
         """Initialize a RainMachine zone."""
-        super().__init__(rainmachine, "zone", obj)
-
-        self._obj = {}
-        self._run_time = zone_run_time
+        super().__init__(rainmachine, obj)
+        self._switch_type = SWITCH_TYPE_ZONE
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -288,15 +291,11 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
-        await self._async_run_turn_off_coro(
-            self.rainmachine.client.zones.start(self._rainmachine_entity_id)
-        )
+        await self._async_run_turn_off_coro()
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
-        await self._async_run_turn_on_coro(
-            self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
-        )
+        await self._async_run_turn_on_coro()
 
     async def async_update(self) -> None:
         """Update info for the zone."""

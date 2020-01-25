@@ -289,7 +289,23 @@ class RainMachine:
             DATA_RESTRICTIONS_UNIVERSAL: asyncio.Lock(),
         }
 
-    async def _async_fetch_from_api(self, api_category):
+    async def _async_update_listener_action(self, now):
+        """Define an async_track_time_interval action to update data."""
+        await self.async_update()
+
+    @callback
+    def async_deregister_sensor_api_interest(self, api_category):
+        """Decrement the number of entities with data needs from an API category."""
+        # If this deregistration should leave us with no registration at all, remove the
+        # time interval:
+        if sum(self._api_category_count.values()) == 0:
+            if self._async_cancel_time_interval_listener:
+                self._async_cancel_time_interval_listener()
+                self._async_cancel_time_interval_listener = None
+            return
+        self._api_category_count[api_category] += 1
+
+    async def async_fetch_from_api(self, api_category):
         """Execute the appropriate coroutine to fetch particular data from the API."""
         if api_category == DATA_PROGRAMS:
             data = await self.client.programs.all(include_inactive=True)
@@ -307,25 +323,9 @@ class RainMachine:
             # state of the zone:
             data = await self.client.zones.all(details=True, include_inactive=True)
 
-        return data
+        self.data[api_category] = data
 
-    async def _async_update_listener_action(self, now):
-        """Define an async_track_time_interval action to update data."""
-        await self.async_update()
-
-    @callback
-    def async_deregister_api_interest(self, api_category):
-        """Decrement the number of entities with data needs from an API category."""
-        # If this deregistration should leave us with no registration at all, remove the
-        # time interval:
-        if sum(self._api_category_count.values()) == 0:
-            if self._async_cancel_time_interval_listener:
-                self._async_cancel_time_interval_listener()
-                self._async_cancel_time_interval_listener = None
-            return
-        self._api_category_count[api_category] += 1
-
-    async def async_register_api_interest(self, api_category):
+    async def async_register_sensor_api_interest(self, api_category):
         """Increment the number of entities with data needs from an API category."""
         # If this is the first registration we have, start a time interval:
         if not self._async_cancel_time_interval_listener:
@@ -341,25 +341,24 @@ class RainMachine:
         # exist for it yet, make the API call and grab the data:
         async with self._api_category_locks[api_category]:
             if api_category not in self.data:
-                self.data[api_category] = await self._async_fetch_from_api(api_category)
+                await self.async_fetch_from_api(api_category)
 
     async def async_update(self):
+        """Update all RainMachine data."""
+        tasks = [self.async_update_programs_and_zones(), self.async_update_sensors()]
+
+        await asyncio.gather(*tasks)
+
+    async def async_update_sensors(self):
         """Update sensor/binary sensor data."""
-        _LOGGER.debug("Updating data for RainMachine")
+        _LOGGER.debug("Updating sensor data for RainMachine")
 
-        # Always update program data and zone data (since we should reasonably
-        # anticipate that the user won't disable the switch entities):
-        tasks = {
-            DATA_PROGRAMS: self._async_fetch_from_api(DATA_PROGRAMS),
-            DATA_ZONES: self._async_fetch_from_api(DATA_ZONES),
-            DATA_ZONES_DETAILS: self._async_fetch_from_api(DATA_ZONES_DETAILS),
-        }
-
-        # Add an task for any API call if there is at least one interested entity:
+        # Fetch an API category if there is at least one interested entity:
+        tasks = {}
         for category, count in self._api_category_count.items():
             if count == 0:
                 continue
-            tasks[category] = self._async_fetch_from_api(category)
+            tasks[category] = self.async_fetch_from_api(category)
 
         results = await asyncio.gather(*tasks.values(), return_exceptions=True)
         for api_category, result in zip(tasks, results):
@@ -368,12 +367,34 @@ class RainMachine:
                     "There was an error while updating %s: %s", api_category, result
                 )
                 continue
-            self.data[api_category] = result
 
-        # Sending PROGRAM_UPDATE_TOPIC will cover both programs and zones while
-        # SENSOR_UPDATE_TOPIC will cover binary sensors and regular sensors:
-        async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
         async_dispatcher_send(self.hass, SENSOR_UPDATE_TOPIC)
+
+    async def async_update_programs_and_zones(self):
+        """Update program and zone data.
+
+        Note that this call does not take into account interested entities when making
+        the API calls; we make the reasonable assumption that switches will always be
+        enabled.
+        """
+        _LOGGER.debug("Updating program and zone data for RainMachine")
+
+        tasks = {
+            DATA_PROGRAMS: self.async_fetch_from_api(DATA_PROGRAMS),
+            DATA_ZONES: self.async_fetch_from_api(DATA_ZONES),
+            DATA_ZONES_DETAILS: self.async_fetch_from_api(DATA_ZONES_DETAILS),
+        }
+
+        results = await asyncio.gather(*tasks.values(), return_exceptions=True)
+        for api_category, result in zip(tasks, results):
+            if isinstance(result, RainMachineError):
+                _LOGGER.error(
+                    "There was an error while updating %s: %s", api_category, result
+                )
+                continue
+
+        async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
+        async_dispatcher_send(self.hass, ZONE_UPDATE_TOPIC)
 
 
 class RainMachineEntity(Entity):
