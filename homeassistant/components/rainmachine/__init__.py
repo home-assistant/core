@@ -346,7 +346,6 @@ class RainMachine:
     async def async_update(self):
         """Update all RainMachine data."""
         tasks = [self.async_update_programs_and_zones(), self.async_update_sensors()]
-
         await asyncio.gather(*tasks)
 
     async def async_update_sensors(self):
