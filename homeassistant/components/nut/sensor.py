@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_RESOURCES,
+    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     POWER_WATT,
     STATE_UNKNOWN,
@@ -33,7 +34,7 @@ DEFAULT_PORT = 3493
 KEY_STATUS = "ups.status"
 KEY_STATUS_DISPLAY = "ups.status.display"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=60)
 
 SENSOR_TYPES = {
     "ups.status.display": ["Status", "", "mdi:information-outline"],
@@ -146,6 +147,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
         vol.Required(CONF_RESOURCES): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
     }
 )
 
@@ -158,8 +160,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     alias = config.get(CONF_ALIAS)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    scan_interval = config.get(CONF_SCAN_INTERVAL)
 
-    data = PyNUTData(host, port, alias, username, password)
+    data = PyNUTData(host, port, alias, username, password, scan_interval)
 
     if data.status is None:
         _LOGGER.error("NUT Sensor has no data, unable to set up")
@@ -269,7 +272,7 @@ class PyNUTData:
     updates from the server.
     """
 
-    def __init__(self, host, port, alias, username, password):
+    def __init__(self, host, port, alias, username, password, scan_interval):
         """Initialize the data object."""
 
         self._host = host
@@ -277,6 +280,7 @@ class PyNUTData:
         self._alias = alias
         self._username = username
         self._password = password
+        self.update = Throttle(scan_interval)(self._update)
 
         self.pynuterror = PyNUTError
         # Establish client with persistent=False to open/close connection on
@@ -312,7 +316,6 @@ class PyNUTData:
             _LOGGER.debug("Error getting NUT vars for host %s: %s", self._host, err)
             return None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self, **kwargs):
+    def _update(self, **kwargs):
         """Fetch the latest status from NUT."""
         self._status = self._get_status()
