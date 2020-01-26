@@ -39,7 +39,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = MIN_TIME_BETWEEN_SCANS
 
 
 async def async_setup_entry(
@@ -126,10 +127,23 @@ class VizioDevice(MediaPlayerDevice):
         is_on = await self._device.get_power_state(log_api_exception=False)
 
         if is_on is None:
-            self._available = False
+            if self._available:
+                _LOGGER.warning(
+                    "Can't connect to device '%s - %s'. Entity will be unavailable "
+                    "until connection is restored.",
+                    self._name,
+                    self._config_entry.data[CONF_HOST],
+                )
+                self._available = False
             return
 
-        self._available = True
+        if not self._available:
+            _LOGGER.info(
+                "Connection to device '%s - %s' restored!",
+                self._name,
+                self._config_entry.data[CONF_HOST],
+            )
+            self._available = True
 
         if not is_on:
             self._state = STATE_OFF
@@ -241,6 +255,11 @@ class VizioDevice(MediaPlayerDevice):
             "name": self.name,
             "manufacturer": "VIZIO",
         }
+
+    @property
+    def entity_registry_enabled_default(self):
+        """Return whether entity should be enabled or disabled when first added."""
+        return True
 
     @property
     def device_class(self):
