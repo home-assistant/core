@@ -3,8 +3,8 @@ from datetime import timedelta
 import logging
 
 from eagle200_reader import EagleReader
-from uEagle import Eagle as LegacyReader
 from requests.exceptions import ConnectionError as ConnectError, HTTPError, Timeout
+from uEagle import Eagle as LegacyReader
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
