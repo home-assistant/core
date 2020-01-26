@@ -7,6 +7,7 @@ from aiohttp import CookieJar
 import aiounifi
 from aiounifi.controller import SIGNAL_CONNECTION_STATE
 from aiounifi.events import WIRELESS_CLIENT_CONNECTED, WIRELESS_GUEST_CONNECTED
+from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
 
 from homeassistant.const import CONF_HOST
@@ -43,6 +44,7 @@ from .const import (
 )
 from .errors import AuthenticationRequired, CannotConnect
 
+RETRY_TIMER = 15
 SUPPORTED_PLATFORMS = ["device_tracker", "sensor", "switch"]
 
 
@@ -142,9 +144,18 @@ class UniFiController:
     def async_unifi_signalling_callback(self, signal, data):
         """Handle messages back from UniFi library."""
         if signal == SIGNAL_CONNECTION_STATE:
-            self.available = data
-            async_dispatcher_send(self.hass, self.signal_reachable)
-            # try to login
+
+            if data == STATE_DISCONNECTED and self.available:
+                LOGGER.error("Lost connection to UniFi")
+
+            if (data == STATE_RUNNING and not self.available) or (
+                data == STATE_DISCONNECTED and self.available
+            ):
+                self.available = data == STATE_RUNNING
+                async_dispatcher_send(self.hass, self.signal_reachable)
+
+                if not self.available:
+                    self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
 
         elif signal == "new_data" and data:
             if "event" in data:
@@ -189,8 +200,6 @@ class UniFiController:
 
     async def async_setup(self):
         """Set up a UniFi controller."""
-        hass = self.hass
-
         try:
             self.api = await get_controller(
                 self.hass,
@@ -214,15 +223,15 @@ class UniFiController:
             LOGGER.error("Unknown error connecting with UniFi controller: %s", err)
             return False
 
-        wireless_clients = hass.data[UNIFI_WIRELESS_CLIENTS]
+        wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
 
         self.import_configuration()
 
         for platform in SUPPORTED_PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(
+            self.hass.async_create_task(
+                self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, platform
                 )
             )
@@ -284,6 +293,22 @@ class UniFiController:
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options=options
             )
+
+    @callback
+    def reconnect(self) -> None:
+        """Prepare to reconnect UniFi session."""
+        LOGGER.debug("Reconnecting to UniFi in %i.", RETRY_TIMER)
+        self.hass.loop.create_task(self.async_reconnect())
+
+    async def async_reconnect(self) -> None:
+        """Try to reconnect UniFi session."""
+        try:
+            with async_timeout.timeout(5):
+                await self.api.login()
+                self.api.start_websocket()
+
+        except (asyncio.TimeoutError, aiounifi.AiounifiException):
+            self.hass.loop.call_later(RETRY_TIMER, self.reconnect)
 
     @callback
     def shutdown(self, event) -> None:
