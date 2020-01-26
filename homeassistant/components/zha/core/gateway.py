@@ -328,7 +328,7 @@ class ZHAGateway:
                 ZHA_GW_MSG,
                 {
                     ATTR_TYPE: gateway_message_type,
-                    ZHA_GW_MSG_GROUP_INFO: zha_group.async_get_group_info(),
+                    ZHA_GW_MSG_GROUP_INFO: zha_group.async_get_info(),
                 },
             )
 
@@ -372,6 +372,13 @@ class ZHAGateway:
         return self.groups.get(group_id)
 
     @callback
+    def async_get_group_by_name(self, group_name):
+        """Get ZHA group by name."""
+        for group in self.groups.values():
+            if group.name == group_name:
+                return group
+        return None
+
     def async_get_group_by_name(self, group_name):
         """Get ZHA group by name."""
         for group in self.groups.values():
