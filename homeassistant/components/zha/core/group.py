@@ -4,6 +4,7 @@ Group for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+import asyncio
 import logging
 
 from homeassistant.core import callback
@@ -66,8 +67,38 @@ class ZHAGroup(LogMixin):
                 all_entity_ids.append(entity.entity_id)
         return all_entity_ids
 
+    async def async_add_members(self, member_ieee_addresses):
+        """Add members to this group."""
+        if len(member_ieee_addresses) > 1:
+            tasks = []
+            for ieee in member_ieee_addresses:
+                tasks.append(
+                    self._zha_gateway.devices[ieee].async_add_to_group(self.group_id)
+                )
+            await asyncio.gather(*tasks)
+        else:
+            await self._zha_gateway.devices[
+                member_ieee_addresses[0]
+            ].async_add_to_group(self.group_id)
+
+    async def async_remove_members(self, member_ieee_addresses):
+        """Remove members from this group."""
+        if len(member_ieee_addresses) > 1:
+            tasks = []
+            for ieee in member_ieee_addresses:
+                tasks.append(
+                    self._zha_gateway.devices[ieee].async_remove_from_group(
+                        self.group_id
+                    )
+                )
+            await asyncio.gather(*tasks)
+        else:
+            await self._zha_gateway.devices[
+                member_ieee_addresses[0]
+            ].async_remove_from_group(self.group_id)
+
     @callback
-    def async_get_group_info(self):
+    def async_get_info(self):
         """Get ZHA group info."""
         group_info = {}
         group_info["group_id"] = self.group_id
