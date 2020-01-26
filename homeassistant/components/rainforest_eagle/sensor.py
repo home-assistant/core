@@ -43,14 +43,14 @@ SENSORS = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
+        vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Required(CONF_CLOUD_ID): cv.string,
         vol.Required(CONF_INSTALL_CODE): cv.string,
-        vol.Optional(CONF_IP_ADDRESS, default=""): cv.string,
     }
 )
 
 
-def hwtest(cloud_id, install_code, ip_address=None):
+def hwtest(cloud_id, install_code, ip_address):
     """Try API call 'device_list' to see if target device is Legacy or Eagle-200."""
     reader = LeagleReader(cloud_id, install_code, ip_address)
     response = reader.post_cmd("device_list")
@@ -61,18 +61,9 @@ def hwtest(cloud_id, install_code, ip_address=None):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the Eagle-200 sensor."""
+    ip_address = config[CONF_IP_ADDRESS]
     cloud_id = config[CONF_CLOUD_ID]
     install_code = config[CONF_INSTALL_CODE]
-    if config[CONF_IP_ADDRESS] == "":
-        from zeroconf import Zeroconf
-
-        zc = Zeroconf()
-        info = zc.get_service_info(
-            "_http._tcp.local.", "eagle-{}._http._tcp.local.".format(cloud_id)
-        )
-        ip_address = "{}.{}.{}.{}".format(*info.address)
-    else:
-        ip_address = config[CONF_IP_ADDRESS]
 
     try:
         eagle_reader = hwtest(cloud_id, install_code, ip_address)
