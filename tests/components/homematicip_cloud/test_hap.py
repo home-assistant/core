@@ -26,7 +26,7 @@ async def test_auth_setup(hass):
     """Test auth setup for client registration."""
     config = {HMIPC_HAPID: "ABC123", HMIPC_PIN: "123", HMIPC_NAME: "hmip"}
     hmip_auth = HomematicipAuth(hass, config)
-    with patch.object(hmip_auth, "get_auth", return_value=CoroutineMock()):
+    with patch.object(hmip_auth, "get_auth", return_value=None):
         assert await hmip_auth.async_setup()
 
 
