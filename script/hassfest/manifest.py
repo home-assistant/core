@@ -1,12 +1,15 @@
 """Manifest validation."""
 from typing import Dict
+from urllib.parse import urlparse
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from .model import Integration
 
-DOCUMENTATION_URL_PREFIX = "https://www.home-assistant.io/integrations/"
+DOCUMENTATION_URL_SCHEMA = "https"
+DOCUMENTATION_URL_HOST = "www.home-assistant.io"
+DOCUMENTATION_URL_PATH_PREFIX = "/integrations/"
 DOCUMENTATION_URL_EXCEPTIONS = ["https://www.home-assistant.io/hassio"]
 
 SUPPORTED_QUALITY_SCALES = [
@@ -18,14 +21,20 @@ SUPPORTED_QUALITY_SCALES = [
 
 
 def documentation_url(value: str) -> str:
-    """Validate that a documentation url starts with the correct prefix."""
-    if (
-        not value.startswith(DOCUMENTATION_URL_PREFIX)
-        and value not in DOCUMENTATION_URL_EXCEPTIONS
-    ):
+    """Validate that a documentation url has the correct path and domain."""
+    if value in DOCUMENTATION_URL_EXCEPTIONS:
+        return value
+
+    parsed_url = urlparse(value)
+    if not parsed_url.scheme == DOCUMENTATION_URL_SCHEMA:
+        raise vol.Invalid("Documentation url is not prefixed with https")
+    if not parsed_url.netloc == DOCUMENTATION_URL_HOST:
+        raise vol.Invalid("Documentation url not hosted at www.home-assistant.io")
+    if not parsed_url.path.startswith(DOCUMENTATION_URL_PATH_PREFIX):
         raise vol.Invalid(
-            "Documentation url didn't begin with %s".format(DOCUMENTATION_URL_PREFIX)
+            "Documentation url does not begin with www.home-assistant.io/integrations"
         )
+
     return value
 
 
@@ -40,8 +49,8 @@ MANIFEST_SCHEMA = vol.Schema(
         ),
         vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
         vol.Required("documentation"): vol.All(
-            vol.Url(), documentation_url
-        ),  # pylint: disable=no-value-for-parameter
+            vol.Url(), documentation_url  # pylint: disable=no-value-for-parameter
+        ),
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Required("requirements"): [str],
         vol.Required("dependencies"): [str],
