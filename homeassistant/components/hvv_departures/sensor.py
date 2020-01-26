@@ -14,8 +14,8 @@ from homeassistant.util import Throttle
 from .const import DOMAIN, MANUFACTURER
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
-MAX_LIST = 10
-MAX_TIME_OFFSET = 200
+MAX_LIST = 20
+MAX_TIME_OFFSET = 360
 ICON = "mdi:bus"
 UNIT_OF_MEASUREMENT = "min"
 
@@ -48,18 +48,19 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the sensor platform."""
 
     session = aiohttp_client.async_get_clientsession(hass)
-    async_add_devices([HVVDepartureSensor(hass, config_entry, session)], True)
+
+    sensor = HVVDepartureSensor(hass, config_entry, session)
+    async_add_devices([sensor], True)
 
 
 class HVVDepartureSensor(Entity):
     """HVVDepartureSensor class."""
 
-    def __init__(self, hass, entry, session):
+    def __init__(self, hass, config_entry, session):
         """Initialize."""
         self.hass = hass
-        self.entry = entry
-        self.config = self.entry.data
-        self.station_name = self.config["station"]["name"]
+        self.config_entry = config_entry
+        self.station_name = self.config_entry.data["station"]["name"]
         self.attr = {}
         self._available = False
         self._state = None
@@ -69,35 +70,39 @@ class HVVDepartureSensor(Entity):
         self.gti = GTI(
             Auth(
                 session,
-                self.config["username"],
-                self.config["password"],
-                self.config["host"],
+                self.config_entry.data["username"],
+                self.config_entry.data["password"],
+                self.config_entry.data["host"],
             )
         )
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    async def async_update(self, **kwargs):
         """Update the sensor."""
 
         try:
 
-            departure_time = datetime.now() + timedelta(minutes=self.config["offset"])
+            departure_time = datetime.now() + timedelta(
+                minutes=self.config_entry.options.get("offset", 0)
+            )
 
             payload = {
-                "station": self.config["station"],
+                "station": self.config_entry.data["station"],
                 "time": {
                     "date": departure_time.strftime("%d.%m.%Y"),
                     "time": departure_time.strftime("%H:%M"),
                 },
                 "maxList": MAX_LIST,
                 "maxTimeOffset": MAX_TIME_OFFSET,
-                "useRealtime": self.config["realtime"],
-                "filter": self.config["filter"],
+                "useRealtime": self.config_entry.options.get("realtime", False),
             }
+
+            if "filter" in self.config_entry.options:
+                payload.update({"filter": self.config_entry.options["filter"]})
 
             data = await self.gti.departureList(payload)
 
-            if data["returnCode"] == "OK" and len(data["departures"]) > 0:
+            if data["returnCode"] == "OK" and len(data.get("departures", [])) > 0:
 
                 if self._last_error == ClientConnectorError:
                     _LOGGER.debug("Network available again")
@@ -160,10 +165,10 @@ class HVVDepartureSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique ID to use for this sensor."""
-        station_id = self.config["station"]["id"]
-        station_type = self.config["station"]["type"]
+        station_id = self.config_entry.data["station"]["id"]
+        station_type = self.config_entry.data["station"]["type"]
 
-        return f"{DOMAIN}-{self.entry.entry_id}-{station_id}-{station_type}"
+        return f"{DOMAIN}-{self.config_entry.entry_id}-{station_id}-{station_type}"
 
     @property
     def device_info(self):
@@ -172,12 +177,12 @@ class HVVDepartureSensor(Entity):
             "identifiers": {
                 (
                     DOMAIN,
-                    self.entry.entry_id,
-                    self.config["station"]["id"],
-                    self.config["station"]["type"],
+                    self.config_entry.entry_id,
+                    self.config_entry.data["station"]["id"],
+                    self.config_entry.data["station"]["type"],
                 )
             },
-            "name": self.config["station"]["name"],
+            "name": self.config_entry.data["station"]["name"],
             "manufacturer": MANUFACTURER,
         }
 

@@ -22,15 +22,10 @@
           "station": "Station/Address"
         }
       },
-      "filter": {
-        "title": "Filter lines",
+      "options": {
+        "title": "Options",
         "data": {
-          "filter": "Filter"
-        }
-      },
-      "finish": {
-        "title": "Departure settings",
-        "data": {
+          "filter": "Select lines",
           "offset": "Offset (minutes)",
           "realtime": "Use realtime data"
         }
@@ -44,6 +39,19 @@
     },
     "abort": {
       "already_configured": "Device is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Options",
+        "description": "Change options for this departure sensor",
+        "data": {
+          "filter": "Select lines",
+          "offset": "Offset (minutes)",
+          "realtime": "Use realtime data"
+        }
+      }
     }
   }
 }

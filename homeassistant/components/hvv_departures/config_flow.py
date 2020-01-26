@@ -6,6 +6,7 @@ from pygti.gti import GTI, Auth
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -22,10 +23,11 @@ SCHEMA_STEP_USER = vol.Schema(
 
 SCHEMA_STEP_STATION = vol.Schema({vol.Required("station"): str})
 
-SCHEMA_STEP_FINISH = vol.Schema(
+SCHEMA_STEP_OPTIONS = vol.Schema(
     {
+        vol.Required("filter"): vol.In([]),
         vol.Required("offset", default=0): vol.All(int, vol.Range(min=0)),
-        vol.Optional("realtime", default=False): bool,
+        vol.Optional("realtime", default=True): bool,
     }
 )
 
@@ -142,61 +144,107 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.data.update({"station": self.stations[user_input["station"]]})
 
-            # get departures to get the correct filters
-
-            dl = await self.hub.gti.departureList(
-                {
-                    "station": self.data["station"],
-                    "time": {"date": "heute", "time": "jetzt"},
-                    "maxList": 5,
-                    "maxTimeOffset": 200,
-                    "useRealtime": True,
-                    "returnFilters": True,
-                }
+            # get station information
+            station_information = await self.hub.gti.stationInformation(
+                {"station": self.data["station"]}
             )
 
             self.filters = {
                 "{}, {}".format(x["serviceName"], x["label"]): x
                 for x in dl.get("filter")
             }
+            self.data.update({"stationInformation": station_information})
 
-            schema = vol.Schema({"filter": vol.In(self.filters.keys())})
+            title = self.data["station"]["name"]
 
-            return self.async_show_form(
-                step_id="filter", data_schema=schema, errors=errors
-            )
+            return self.async_create_entry(title=title, data=self.data)
 
         return self.async_show_form(
             step_id="station_select", data_schema=SCHEMA_STEP_STATION, errors=errors
         )
 
-    async def async_step_filter(self, user_input=None):
-        """Handle the step where the user selects the lines."""
-        errors = {}
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get options flow."""
+        return OptionsFlowHandler(config_entry)
+
+
+class OptionsFlowHandler(config_entries.OptionsFlow):
+    """Options flow handler."""
+
+    def __init__(self, config_entry):
+        """Initialize HVV Departures options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
+        self.filters = []
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
         if user_input is not None:
 
-            self.data.update({"filter": [self.filters[user_input["filter"]]]})
+            options = {
+                "filter": [self.filters[user_input["filter"]]],
+                "offset": user_input["offset"],
+                "realtime": user_input["realtime"],
+            }
 
-            return self.async_show_form(
-                step_id="finish", data_schema=SCHEMA_STEP_FINISH, errors=errors
+            return self.async_create_entry(title="", data=options)
+
+        session = aiohttp_client.async_get_clientsession(self.hass)
+        self.hub = GTIHub(
+            self.config_entry.data["host"],
+            self.config_entry.data["username"],
+            self.config_entry.data["password"],
+            session,
+        )
+
+        if not await self.hub.authenticate():
+            raise InvalidAuth
+
+        departure_list = await self.hub.gti.departureList(
+            {
+                "station": self.config_entry.data["station"],
+                "time": {"date": "heute", "time": "jetzt"},
+                "maxList": 5,
+                "maxTimeOffset": 200,
+                "useRealtime": True,
+                "returnFilters": True,
+            }
+        )
+
+        self.filters = dict(
+            [
+                ("{}, {}".format(x["serviceName"], x["label"]), x)
+                for x in departure_list.get("filter")
+            ]
+        )
+
+        if "filter" in self.config_entry.options:
+            old_filter = "{}, {}".format(
+                self.config_entry.options["filter"][0]["serviceName"],
+                self.config_entry.options["filter"][0]["label"],
             )
+        else:
+            old_filter = None
 
-    async def async_step_finish(self, user_input=None):
-        """Handle the step where the user finishes the setup."""
-        if user_input is not None:
-
-            self.data.update(user_input)
-
-            # get station information
-            si = await self.hub.gti.stationInformation(
-                {"station": self.data["station"]}
-            )
-
-            self.data.update({"stationInformation": si})
-
-            title = self.data["station"]["name"]
-
-            return self.async_create_entry(title=title, data=self.data)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("filter", default=old_filter): vol.In(
+                        self.filters.keys()
+                    ),
+                    vol.Required(
+                        "offset", default=self.config_entry.options.get("offset", 0)
+                    ): vol.All(int, vol.Range(min=0)),
+                    vol.Optional(
+                        "realtime",
+                        default=self.config_entry.options.get("realtime", True),
+                    ): bool,
+                }
+            ),
+        )
 
 
 class CannotConnect(exceptions.HomeAssistantError):

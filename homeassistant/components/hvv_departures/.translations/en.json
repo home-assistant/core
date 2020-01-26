@@ -10,18 +10,13 @@
             "unknown": "Unexpected error"
         },
         "step": {
-            "filter": {
+            "options": {
                 "data": {
-                    "filter": "Filter"
-                },
-                "title": "Filter lines"
-            },
-            "finish": {
-                "data": {
+                    "filter": "Select lines",
                     "offset": "Offset (minutes)",
                     "realtime": "Use realtime data"
                 },
-                "title": "Departure settings"
+                "title": "Options"
             },
             "station": {
                 "data": {
@@ -45,5 +40,18 @@
             }
         },
         "title": "HVV Departures"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "Select lines",
+                    "offset": "Offset (minutes)",
+                    "realtime": "Use realtime data"
+                },
+                "description": "Change options for this departure sensor",
+                "title": "Options"
+            }
+        }
     }
 }
