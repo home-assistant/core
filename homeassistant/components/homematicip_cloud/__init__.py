@@ -17,7 +17,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
-from .config_flow import configured_haps
 from .const import (
     CONF_ACCESSPOINT,
     CONF_AUTHTOKEN,
@@ -130,7 +129,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     accesspoints = config.get(DOMAIN, [])
 
     for conf in accesspoints:
-        if conf[CONF_ACCESSPOINT] not in configured_haps(hass):
+        if conf[CONF_ACCESSPOINT] not in set(
+            entry.data[HMIPC_HAPID]
+            for entry in hass.config_entries.async_entries(DOMAIN)
+        ):
             hass.async_add_job(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
@@ -274,7 +276,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         anonymize = service.data[ATTR_ANONYMIZE]
 
         for hap in hass.data[DOMAIN].values():
-            hap_sgtin = hap.config_entry.title
+            hap_sgtin = hap.config_entry.unique_id
 
             if anonymize:
                 hap_sgtin = hap_sgtin[-4:]
@@ -331,9 +333,17 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Set up an access point from a config entry."""
+
+    # 0.104 introduced config entry unique id, this makes upgrading possible
+    if entry.unique_id is None:
+        new_data = dict(entry.data)
+
+        hass.config_entries.async_update_entry(
+            entry, unique_id=new_data[HMIPC_HAPID], data=new_data
+        )
+
     hap = HomematicipHAP(hass, entry)
-    hapid = entry.data[HMIPC_HAPID].replace("-", "").upper()
-    hass.data[DOMAIN][hapid] = hap
+    hass.data[DOMAIN][entry.unique_id] = hap
 
     if not await hap.async_setup():
         return False
@@ -356,5 +366,5 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hap = hass.data[DOMAIN].pop(entry.data[HMIPC_HAPID])
+    hap = hass.data[DOMAIN].pop(entry.unique_id)
     return await hap.async_reset()
