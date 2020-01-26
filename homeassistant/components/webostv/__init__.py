@@ -3,7 +3,7 @@ import asyncio
 import logging
 
 from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
-from const import ATTR_SOUND_OUTPUT
+from .const import ATTR_SOUND_OUTPUT
 import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
