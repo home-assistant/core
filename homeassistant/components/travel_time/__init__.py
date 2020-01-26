@@ -25,7 +25,6 @@ from .const import (
     ATTR_ROUTE_MODE,
     ATTR_TRAFFIC_MODE,
     ATTR_TRAVEL_MODE,
-    ATTR_UNIT_SYSTEM,
     DOMAIN,
     UNIT_OF_MEASUREMENT,
 )
@@ -143,11 +142,6 @@ class TravelTimeEntity(Entity):
         return UNIT_OF_MEASUREMENT
 
     @property
-    def unit_system(self) -> str:
-        """Get the unit system of the travel_time entity."""
-        return self.hass.config.units.name
-
-    @property
     def state_attributes(self,) -> Optional[Dict[str, Union[None, float, str, bool]]]:
         """Return the state attributes."""
         res = {}
@@ -186,8 +180,5 @@ class TravelTimeEntity(Entity):
 
         if self.traffic_mode is not None:
             res[ATTR_TRAFFIC_MODE] = self.traffic_mode
-
-        if self.unit_system is not None:
-            res[ATTR_UNIT_SYSTEM] = self.unit_system
 
         return res
