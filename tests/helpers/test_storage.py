@@ -1,6 +1,7 @@
 """Tests for the storage helper."""
 import asyncio
 from datetime import timedelta
+from ipaddress import IPv4Address
 import json
 from unittest.mock import Mock
 
@@ -46,6 +47,15 @@ async def test_custom_encoder(hass):
     await store.async_save(Mock())
     data = await store.async_load()
     assert data == "9"
+
+
+async def test_save_ipaddress(hass):
+    """Test that default encoder can save ip addresses."""
+
+    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
+    await store.async_save(IPv4Address("192.168.1.1"))
+    data = await store.async_load()
+    assert data == "192.168.1.1"
 
 
 async def test_loading_non_existing(hass, store):

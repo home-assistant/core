@@ -1,5 +1,6 @@
 """Helper to help store data."""
 import asyncio
+from ipaddress import IPv4Address, IPv4Network, IPv6Address, IPv6Network
 from json import JSONEncoder
 import logging
 import os
@@ -52,6 +53,33 @@ async def async_migrator(
     return config
 
 
+class StorageJsonEncoder(JSONEncoder):
+    """Helper class to serialize common object types.
+
+    The default json encoder doesn't know what to do with some
+    of these types, which are commonly used in HASS (e.g. http component)
+    """
+
+    _STORAGE_TYPE_MAP: Dict[Type[Any], Callable[[Any], Any]] = {
+        # Always store IP addresses and networks as strings
+        IPv4Address: str,
+        IPv4Network: str,
+        IPv6Address: str,
+        IPv6Network: str,
+    }
+
+    def default(self, obj):
+        """Encode the passed in object.
+
+        If the type is known to us, do it ourselves. Otherwise,
+        pass it on and let JSONEncoder deal with it. If it doesn't know
+        what to do, it will raise TypeError.
+        """
+        if type(obj) in self._STORAGE_TYPE_MAP:
+            return self._STORAGE_TYPE_MAP[type(obj)](obj)
+        return JSONEncoder.default(self, obj)
+
+
 @bind_hass
 class Store:
     """Class to help storing data."""
@@ -63,7 +91,7 @@ class Store:
         key: str,
         private: bool = False,
         *,
-        encoder: Optional[Type[JSONEncoder]] = None,
+        encoder: Optional[Type[JSONEncoder]] = StorageJsonEncoder,
     ):
         """Initialize storage class."""
         self.version = version
