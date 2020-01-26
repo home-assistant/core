@@ -38,18 +38,6 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
-async def test_unload(
-    hass: HomeAssistantType, vizio_connect, vizio_bypass_setup
-) -> None:
-    """Test loading with options and unloading config entry."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=vol.Schema(VIZIO_SCHEMA)(MOCK_SPEAKER_CONFIG),
-    )
-    assert await result["result"].async_unload(hass)
-
-
 async def test_user_flow_minimum_fields(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,
