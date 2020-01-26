@@ -1,12 +1,17 @@
 {
     "config": {
         "abort": {
+            "authorize_url_timeout": "Timeout ved generering af godkendelses-url.",
+            "missing_configuration": "Withings-integrationen er ikke konfigureret. F\u00f8lg venligst dokumentationen.",
             "no_flows": "Du skal konfigurere Withings, f\u00f8r du kan godkende med den. L\u00e6s venligst dokumentationen."
         },
         "create_entry": {
-            "default": "Godkendt med Withings for den valgte profil."
+            "default": "Godkendt med Withings."
         },
         "step": {
+            "pick_implementation": {
+                "title": "V\u00e6lg godkendelsesmetode"
+            },
             "profile": {
                 "data": {
                     "profile": "Profile"

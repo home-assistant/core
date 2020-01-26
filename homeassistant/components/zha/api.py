@@ -317,11 +317,14 @@ async def websocket_add_group(hass, connection, msg):
     """Add a new ZHA group."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ha_device_registry = await async_get_registry(hass)
-    group_id = len(zha_gateway.application_controller.groups) + 1
     group_name = msg[GROUP_NAME]
     zigpy_group = async_get_group_by_name(zha_gateway, group_name)
     ret_group = None
     members = msg.get(ATTR_MEMBERS)
+    # we start with one to fill any gaps from a user removing existing groups
+    group_id = 1
+    while group_id in zha_gateway.application_controller.groups:
+        group_id += 1
 
     # guard against group already existing
     if zigpy_group is None:
@@ -906,6 +909,11 @@ def async_load_api(hass):
     async def remove(service):
         """Remove a node from the network."""
         ieee = service.data.get(ATTR_IEEE_ADDRESS)
+        zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+        zha_device = zha_gateway.get_device(ieee)
+        if zha_device.is_coordinator:
+            _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
+            return
         _LOGGER.info("Removing node %s", ieee)
         await application_controller.remove(ieee)
 

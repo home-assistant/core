@@ -5,14 +5,14 @@ async_timeout==3.0.1
 attrs==19.3.0
 bcrypt==3.1.7
 certifi>=2019.11.28
-importlib-metadata==1.3.0
+importlib-metadata==1.4.0
 jinja2>=2.10.3
 PyJWT==1.7.1
 cryptography==2.8
 pip>=8.0.3
 python-slugify==4.0.0
 pytz>=2019.03
-pyyaml==5.2
+pyyaml==5.3
 requests==2.22.0
 ruamel.yaml==0.15.100
 voluptuous==0.11.7
@@ -190,7 +190,7 @@ aionotion==1.1.0
 aiopvapi==1.6.14
 
 # homeassistant.components.webostv
-aiopylgtv==0.2.7
+aiopylgtv==0.3.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
@@ -474,7 +474,7 @@ eliqonline==1.2.2
 elkm1-lib==0.7.15
 
 # homeassistant.components.emulated_roku
-emulated_roku==0.2.0
+emulated_roku==0.2.1
 
 # homeassistant.components.enocean
 enocean==0.50
@@ -667,7 +667,7 @@ hikvision==0.4
 hkavr==0.0.5
 
 # homeassistant.components.hlk_sw16
-hlk-sw16==0.0.7
+hlk-sw16==0.0.8
 
 # homeassistant.components.pi_hole
 hole==0.5.0
@@ -718,7 +718,7 @@ ibmiotf==0.3.4
 iglo==1.2.7
 
 # homeassistant.components.ihc
-ihcsdk==2.4.0
+ihcsdk==2.5.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.4.0
@@ -1164,7 +1164,7 @@ pycfdns==0.0.1
 pychannels==1.0.0
 
 # homeassistant.components.cast
-pychromecast==4.0.1
+pychromecast==4.1.1
 
 # homeassistant.components.cmus
 pycmus==0.1.1
@@ -1182,7 +1182,7 @@ pycsspeechtts==1.0.3
 # pycups==1.9.73
 
 # homeassistant.components.daikin
-pydaikin==1.6.1
+pydaikin==1.6.2
 
 # homeassistant.components.danfoss_air
 pydanfossair==0.1.0
@@ -1294,10 +1294,10 @@ pyialarm==0.3
 pyicloud==0.9.1
 
 # homeassistant.components.intesishome
-pyintesishome==1.5
+pyintesishome==1.6
 
 # homeassistant.components.ipma
-pyipma==1.2.1
+pyipma==2.0.2
 
 # homeassistant.components.iqvia
 pyiqvia==0.2.1
@@ -1426,9 +1426,6 @@ pyotgw==0.5b1
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
 pyotp==2.3.0
-
-# homeassistant.components.owlet
-pyowlet==1.0.3
 
 # homeassistant.components.openweathermap
 pyowm==2.10.0
@@ -1690,7 +1687,7 @@ pyversasense==0.0.6
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.1
+pyvizio==0.1.4
 
 # homeassistant.components.velux
 pyvlx==0.2.12
@@ -1807,7 +1804,10 @@ sentry-sdk==0.13.5
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
-shodan==1.21.2
+shodan==1.21.3
+
+# homeassistant.components.sighthound
+simplehound==0.3
 
 # homeassistant.components.simplepush
 simplepush==1.1.4
@@ -1868,6 +1868,9 @@ somecomfort==0.5.2
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
 
+# homeassistant.components.marytts
+speak2mary==1.4.0
+
 # homeassistant.components.speedtestdotnet
 speedtest-cli==2.1.2
 
@@ -1878,11 +1881,11 @@ spiderpy==1.3.1
 spotcrime==1.0.4
 
 # homeassistant.components.spotify
-spotipy-homeassistant==2.4.4.dev1
+spotipy==2.7.1
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.3.12
+sqlalchemy==1.3.13
 
 # homeassistant.components.starline
 starline==0.1.3
@@ -2097,7 +2100,7 @@ yeelight==0.5.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2020.01.15
+youtube_dl==2020.01.24
 
 # homeassistant.components.zengge
 zengge==0.2

@@ -26,6 +26,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CONF_VOLUME_STEP,
+    DEFAULT_TIMEOUT,
     DEFAULT_VOLUME_STEP,
     DEVICE_ID,
     DOMAIN,
@@ -46,7 +47,7 @@ async def async_setup_entry(
     hass: HomeAssistantType,
     config_entry: ConfigEntry,
     async_add_entities: Callable[[List[Entity], bool], None],
-) -> bool:
+) -> None:
     """Set up a Vizio media player entry."""
     host = config_entry.data[CONF_HOST]
     token = config_entry.data.get(CONF_ACCESS_TOKEN)
@@ -66,27 +67,30 @@ async def async_setup_entry(
         DEVICE_ID,
         host,
         name,
-        token,
-        VIZIO_DEVICE_CLASSES[device_class],
+        auth_token=token,
+        device_type=VIZIO_DEVICE_CLASSES[device_class],
         session=async_get_clientsession(hass, False),
+        timeout=DEFAULT_TIMEOUT,
     )
 
     if not await device.can_connect():
         fail_auth_msg = ""
         if token:
-            fail_auth_msg = "and auth token '{token}' are correct."
+            fail_auth_msg = f"and auth token '{token}' are correct."
         else:
             fail_auth_msg = "is correct."
-        _LOGGER.error(
-            "Failed to connect to Vizio device, please check if host '{host}'"
-            "is valid and available. Also check if device class '{device_class}' %s",
+        _LOGGER.warning(
+            "Failed to connect to Vizio device, please check if host '%s' "
+            "is valid and available. Also check if device class '%s' %s",
+            host,
+            device_class,
             fail_auth_msg,
         )
         raise PlatformNotReady
 
     entity = VizioDevice(config_entry, device, name, volume_step, device_class)
 
-    async_add_entities([entity], True)
+    async_add_entities([entity], update_before_add=True)
 
 
 class VizioDevice(MediaPlayerDevice):
@@ -120,7 +124,7 @@ class VizioDevice(MediaPlayerDevice):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
-        is_on = await self._device.get_power_state(False)
+        is_on = await self._device.get_power_state(log_api_exception=False)
 
         if is_on is None:
             self._available = False
@@ -137,15 +141,15 @@ class VizioDevice(MediaPlayerDevice):
 
         self._state = STATE_ON
 
-        volume = await self._device.get_current_volume(False)
+        volume = await self._device.get_current_volume(log_api_exception=False)
         if volume is not None:
             self._volume_level = float(volume) / self._max_volume
 
-        input_ = await self._device.get_current_input(False)
+        input_ = await self._device.get_current_input(log_api_exception=False)
         if input_ is not None:
             self._current_input = input_.meta_name
 
-        inputs = await self._device.get_inputs(False)
+        inputs = await self._device.get_inputs(log_api_exception=False)
         if inputs is not None:
             self._available_inputs = [input_.name for input_ in inputs]
 
@@ -273,7 +277,7 @@ class VizioDevice(MediaPlayerDevice):
 
     async def async_volume_up(self) -> None:
         """Increasing volume of the device."""
-        await self._device.vol_up(self._volume_step)
+        await self._device.vol_up(num=self._volume_step)
 
         if self._volume_level is not None:
             self._volume_level = min(
@@ -282,7 +286,7 @@ class VizioDevice(MediaPlayerDevice):
 
     async def async_volume_down(self) -> None:
         """Decreasing volume of the device."""
-        await self._device.vol_down(self._volume_step)
+        await self._device.vol_down(num=self._volume_step)
 
         if self._volume_level is not None:
             self._volume_level = max(
@@ -294,9 +298,10 @@ class VizioDevice(MediaPlayerDevice):
         if self._volume_level is not None:
             if volume > self._volume_level:
                 num = int(self._max_volume * (volume - self._volume_level))
-                await self._device.vol_up(num)
+                await self._device.vol_up(num=num)
                 self._volume_level = volume
+
             elif volume < self._volume_level:
                 num = int(self._max_volume * (self._volume_level - volume))
-                await self._device.vol_down(num)
+                await self._device.vol_down(num=num)
                 self._volume_level = volume

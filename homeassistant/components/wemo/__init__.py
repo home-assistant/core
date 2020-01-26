@@ -149,7 +149,7 @@ async def async_setup_entry(hass, entry):
             )
 
         elif component in hass.data[DOMAIN]["pending"]:
-            hass.data[DOMAIN]["pending"].append(device)
+            hass.data[DOMAIN]["pending"][component].append(device)
 
         else:
             async_dispatcher_send(

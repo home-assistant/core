@@ -10,11 +10,9 @@ from homeassistant.util import dt as dt_util
 EPSILON_DELTA = 0.0000000001
 
 
-def radar_map_url(dim: int = 512) -> str:
+def radar_map_url(dim: int = 512, country_code: str = "NL") -> str:
     """Build map url, defaulting to 512 wide (as in component)."""
-    return ("https://api.buienradar.nl/image/1.0/RadarMapNL?w={dim}&h={dim}").format(
-        dim=dim
-    )
+    return f"https://api.buienradar.nl/image/1.0/RadarMap{country_code}?w={dim}&h={dim}"
 
 
 async def test_fetching_url_and_caching(aioclient_mock, hass, hass_client):
@@ -101,6 +99,29 @@ async def test_dimension(aioclient_mock, hass, hass_client):
         hass,
         "camera",
         {"camera": {"name": "config_test", "platform": "buienradar", "dimension": 700}},
+    )
+
+    client = await hass_client()
+
+    await client.get("/api/camera_proxy/camera.config_test")
+
+    assert aioclient_mock.call_count == 1
+
+
+async def test_belgium_country(aioclient_mock, hass, hass_client):
+    """Test that it actually adheres to another country like Belgium."""
+    aioclient_mock.get(radar_map_url(country_code="BE"), text="hello world")
+
+    await async_setup_component(
+        hass,
+        "camera",
+        {
+            "camera": {
+                "name": "config_test",
+                "platform": "buienradar",
+                "country_code": "BE",
+            }
+        },
     )
 
     client = await hass_client()
