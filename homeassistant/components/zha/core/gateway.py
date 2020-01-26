@@ -59,6 +59,11 @@ from .const import (
     ZHA_GW_MSG_DEVICE_INFO,
     ZHA_GW_MSG_DEVICE_JOINED,
     ZHA_GW_MSG_DEVICE_REMOVED,
+    ZHA_GW_MSG_GROUP_ADDED,
+    ZHA_GW_MSG_GROUP_INFO,
+    ZHA_GW_MSG_GROUP_MEMBER_ADDED,
+    ZHA_GW_MSG_GROUP_MEMBER_REMOVED,
+    ZHA_GW_MSG_GROUP_REMOVED,
     ZHA_GW_MSG_LOG_ENTRY,
     ZHA_GW_MSG_LOG_OUTPUT,
     ZHA_GW_MSG_RAW_INIT,
@@ -129,6 +134,7 @@ class ZHAGateway:
         self.application_controller = radio_details[CONTROLLER](radio, database)
         apply_application_controller_patch(self)
         self.application_controller.add_listener(self)
+        self.application_controller.groups.add_listener(self)
         await self.application_controller.startup(auto_form=True)
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
             self.application_controller.ieee
@@ -207,6 +213,46 @@ class ZHAGateway:
     def device_left(self, device: zigpy_dev.Device):
         """Handle device leaving the network."""
         self.async_update_device(device, False)
+
+    def group_member_removed(self, zigpy_group, endpoint):
+        """Handle zigpy group member removed event."""
+        # need to handle endpoint correctly on groups
+        zha_group = self._async_get_or_create_group(zigpy_group)
+        zha_group.info("group_member_removed - endpoint: %s", endpoint)
+        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
+
+    def group_member_added(self, zigpy_group, endpoint):
+        """Handle zigpy group member added event."""
+        # need to handle endpoint correctly on groups
+        zha_group = self._async_get_or_create_group(zigpy_group)
+        zha_group.info("group_member_added - endpoint: %s", endpoint)
+        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
+
+    def group_added(self, zigpy_group):
+        """Handle zigpy group added event."""
+        zha_group = self._async_get_or_create_group(zigpy_group)
+        zha_group.info("group_added")
+        # need to dispatch for entity creation here
+        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_ADDED)
+
+    def group_removed(self, zigpy_group):
+        """Handle zigpy group added event."""
+        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
+        zha_group = self._groups.pop(zigpy_group.group_id, None)
+        zha_group.info("group_removed")
+
+    def _send_group_gateway_message(self, zigpy_group, gateway_message_type):
+        """Send the gareway event for a zigpy group event."""
+        zha_group = self._groups.get(zigpy_group.group_id, None)
+        if zha_group is not None:
+            async_dispatcher_send(
+                self._hass,
+                ZHA_GW_MSG,
+                {
+                    ATTR_TYPE: gateway_message_type,
+                    ZHA_GW_MSG_GROUP_INFO: zha_group.async_get_group_info(),
+                },
+            )
 
     async def _async_remove_device(self, device, entity_refs):
         if entity_refs is not None:
