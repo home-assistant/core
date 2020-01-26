@@ -49,6 +49,7 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
         version=1,
         domain=HMIPC_DOMAIN,
         title=HAPID,
+        unique_id=HAPID,
         data=entry_data,
         source="import",
         connection_class=config_entries.CONN_CLASS_CLOUD_PUSH,
