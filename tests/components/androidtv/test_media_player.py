@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PLATFORM,
+    SERVICE_VOLUME_SET,
     STATE_IDLE,
     STATE_OFF,
     STATE_PLAYING,
@@ -820,3 +821,25 @@ async def test_upload(hass):
             blocking=True,
         )
         patch_push.assert_called_with(local_path, device_path)
+
+
+async def test_androidtv_volume_set(hass):
+    """Test setting the volume for an Android TV device."""
+    patch_key, entity_id = _setup(CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patchers.PATCH_ADB_DEVICE_TCP, patchers.patch_connect(True)[
+        patch_key
+    ], patchers.patch_shell("")[patch_key]:
+        assert await async_setup_component(hass, DOMAIN, CONFIG_ANDROIDTV_ADB_SERVER)
+
+    with patch(
+        "androidtv.basetv.BaseTV.set_volume_level", return_value=0.5
+    ) as patch_set_volume_level:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_VOLUME_SET,
+            {ATTR_ENTITY_ID: entity_id, "volume_level": 0.5},
+            blocking=True,
+        )
+
+        patch_set_volume_level.assert_called_with(0.5)

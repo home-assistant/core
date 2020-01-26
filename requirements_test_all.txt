@@ -87,7 +87,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv==0.0.38
+androidtv==0.0.39
 
 # homeassistant.components.apns
 apns2==0.3.0
