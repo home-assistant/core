@@ -1,6 +1,6 @@
 """Test HomematicIP Cloud setup process."""
 
-from asynctest import patch
+from asynctest import CoroutineMock, patch
 
 from homeassistant.components import homematicip_cloud as hmipc
 from homeassistant.setup import async_setup_component
@@ -97,7 +97,7 @@ async def test_unload_entry(hass):
         instance.home.modelType = "mock-type"
         instance.home.name = "mock-name"
         instance.home.currentAPVersion = "mock-ap-version"
-        instance.async_reset.return_value = mock_coro(True)
+        instance.async_reset.return_value = CoroutineMock(True)
 
         assert await async_setup_component(hass, hmipc.DOMAIN, {}) is True
 
@@ -105,7 +105,9 @@ async def test_unload_entry(hass):
 
     config_entries = hass.config_entries.async_entries(hmipc.DOMAIN)
     assert len(config_entries) == 1
-    assert await hmipc.async_unload_entry(hass, config_entries[0])
+
+    await hass.config_entries.async_unload(config_entries[0].entry_id)
+
     assert len(mock_hap.return_value.async_reset.mock_calls) == 1
     # entry is unloaded
     assert hass.data[hmipc.DOMAIN] == {}
