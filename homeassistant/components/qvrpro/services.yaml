@@ -1,0 +1,13 @@
+start_record:
+  description: Start QVR Pro recording on specified channel.
+  fields:
+    guid:
+      description: GUID of the channel to start recording.
+      example: '245EBE933C0A597EBE865C0A245E0002'
+
+stop_record:
+  description: Stop QVR Pro recording on specified channel.
+  fields:
+    guid:
+      description: GUID of the channel to stop recording.
+      example: '245EBE933C0A597EBE865C0A245E0002'

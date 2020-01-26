@@ -1,5 +1,5 @@
 """
-Support for viewing camera streams from QVR Pro
+Support for viewing camera streams from QVR Pro.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.qvrpro
@@ -15,18 +15,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if discovery_info is None:
         return
 
-    client = hass.data[DOMAIN]['client']
+    client = hass.data[DOMAIN]["client"]
 
     entities = []
 
-    for channel in hass.data[DOMAIN]['channels']:
+    for channel in hass.data[DOMAIN]["channels"]:
         entities.append(QVRProCamera(channel, client))
 
     add_entities(entities)
 
 
 class QVRProCamera(Camera):
-    """Representation of a QVR Pro camera"""
+    """Representation of a QVR Pro camera."""
 
     def __init__(self, channel, client):
         """Init QVR Pro camera."""
@@ -53,17 +53,13 @@ class QVRProCamera(Camera):
 
     @property
     def state_attributes(self):
+        """Get the state attributes."""
         attrs = super().state_attributes
 
-        attrs['qvr_guid'] = self._channel.guid
+        attrs["qvr_guid"] = self._channel.guid
 
         return attrs
 
     def camera_image(self):
         """Get image bytes from camera."""
         return self._client.get_snapshot(self._channel.guid)
-
-    @property
-    def brand(self):
-        """Get the camera brand."""
-        return self._channel.brand
