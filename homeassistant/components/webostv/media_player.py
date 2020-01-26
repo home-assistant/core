@@ -5,7 +5,6 @@ from functools import wraps
 import logging
 
 from aiopylgtv import PyLGTVCmdException, PyLGTVPairException
-from .const import LIVE_TV_APP_ID, ATTR_SOUND_OUTPUT
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant import util
@@ -37,6 +36,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.script import Script
 
 from . import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
+from .const import LIVE_TV_APP_ID, ATTR_SOUND_OUTPUT
 
 _LOGGER = logging.getLogger(__name__)
 
