@@ -369,7 +369,7 @@ homeassistant/components/upnp/* @robbiet480
 homeassistant/components/uptimerobot/* @ludeeus
 homeassistant/components/usgs_earthquakes_feed/* @exxamalte
 homeassistant/components/utility_meter/* @dgomes
-homeassistant/components/velbus/* @cereal2nd
+homeassistant/components/velbus/* @Cereal2nd
 homeassistant/components/velux/* @Julius2342
 homeassistant/components/versasense/* @flamm3blemuff1n
 homeassistant/components/version/* @fabaff

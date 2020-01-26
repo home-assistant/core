@@ -87,7 +87,7 @@ airly==0.0.2
 ambiclimate==0.2.1
 
 # homeassistant.components.androidtv
-androidtv==0.0.38
+androidtv==0.0.39
 
 # homeassistant.components.apns
 apns2==0.3.0
@@ -540,7 +540,7 @@ python-miio==0.4.8
 python-nest==4.1.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.35
+python-velbus==2.0.36
 
 # homeassistant.components.awair
 python_awair==0.0.4
