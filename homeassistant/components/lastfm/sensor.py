@@ -68,7 +68,7 @@ class LastfmSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return the unique ID of the sensor"""
+        """Return the unique ID of the sensor."""
         return self._unique_id
 
     @property
@@ -123,5 +123,5 @@ class LastfmSensor(Entity):
         return ICON
 
     def __generate_entity_id(user):
-        """Generate the entity_id for this sensor"""
+        """Generate the entity_id for this sensor."""
         return user
