@@ -16,6 +16,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from .media_player import ATTR_SOUND_OUTPUT
 
 DOMAIN = "webostv"
 
@@ -31,7 +32,6 @@ SERVICE_COMMAND = "command"
 ATTR_COMMAND = "command"
 
 SERVICE_SELECT_SOUND_OUTPUT = "select_sound_output"
-ATTR_SOUND_OUTPUT = "sound_output"
 
 CUSTOMIZE_SCHEMA = vol.Schema(
     {vol.Optional(CONF_SOURCES, default=[]): vol.All(cv.ensure_list, [cv.string])}
