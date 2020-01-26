@@ -5,7 +5,7 @@ from functools import wraps
 import logging
 
 from aiopylgtv import PyLGTVCmdException, PyLGTVPairException
-from const import LIVE_TV_APP_ID, ATTR_SOUND_OUTPUT
+from .const import LIVE_TV_APP_ID, ATTR_SOUND_OUTPUT
 from websockets.exceptions import ConnectionClosed
 
 from homeassistant import util
