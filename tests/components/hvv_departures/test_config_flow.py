@@ -1,6 +1,6 @@
 """Test the HVV Departures config flow."""
 from asynctest import patch
-from pygti.exceptions import InvalidAuth
+from pygti.exceptions import CannotConnect, InvalidAuth
 
 from homeassistant.components.hvv_departures import config_flow
 
@@ -148,7 +148,7 @@ async def test_user_flow(hass):
 
 
 async def test_user_flow_invalid_auth(hass):
-    """Test that config flow works."""
+    """Test that config flow handles invalid auth."""
     flow = config_flow.ConfigFlow()
     flow.hass = hass
 
@@ -174,3 +174,28 @@ async def test_user_flow_invalid_auth(hass):
 
         assert result_user["type"] == "form"
         assert result_user["errors"] == {"base": "invalid_auth"}
+
+
+async def test_user_flow_cannot_connect(hass):
+    """Test that config flow handles connection errors."""
+    flow = config_flow.ConfigFlow()
+    flow.hass = hass
+
+    with patch(
+        "homeassistant.components.hvv_departures.config_flow.GTIHub.authenticate",
+        side_effect=CannotConnect(),
+    ):
+
+        # step: user
+        result_user = await flow.async_step_user(
+            user_input={
+                "host": "api-test.geofox.de",
+                "username": "test-username",
+                "password": "test-password",
+            }
+        )
+
+        print(result_user)
+
+        assert result_user["type"] == "form"
+        assert result_user["errors"] == {"base": "cannot_connect"}
