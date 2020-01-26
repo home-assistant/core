@@ -21,10 +21,7 @@ from homeassistant.helpers.device_registry import (
     async_get_registry as get_dev_reg,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_device,
-    async_get_registry as get_ent_reg,
-)
+from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
 
 from .const import (
     ATTR_IEEE,
@@ -70,6 +67,7 @@ from .const import (
 )
 from .device import DeviceStatus, ZHADevice
 from .discovery import async_dispatch_discovery_info, async_process_endpoint
+from .group import ZHAGroup
 from .helpers import async_get_device_info
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
@@ -91,6 +89,8 @@ class ZHAGateway:
         self._hass = hass
         self._config = config
         self._devices = {}
+        self._groups = {}
+        self._coordinator_zha_device = None
         self._device_registry = collections.defaultdict(list)
         self.zha_storage = None
         self.ha_device_registry = None
@@ -148,38 +148,21 @@ class ZHAGateway:
             )
         await asyncio.gather(*init_tasks)
 
-        coordinator = next(
+        self._coordinator_zha_device = next(
             device for device in self._devices.values() if device.nwk == 0x0000
         )
 
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
+            zha_group = self._async_get_or_create_group(group)
             discovery_info = {
                 "component": "light",
-                "group_id": group_id,
-                "zha_device": coordinator,
-                "unique_id": f"{coordinator.ieee}_{group_id}",
+                "group_id": zha_group.group_id,
+                "zha_device": self._coordinator_zha_device,
+                "unique_id": zha_group.unique_id,
                 "channels": [],
+                "entity_ids": zha_group.member_entity_ids,
             }
-            discovery_info["member_devices"] = [
-                str(member_ieee[0])
-                for member_ieee in group.members.keys()
-                if member_ieee[0] in self.devices
-            ]
-
-            discovery_info["member_device_ids"] = [
-                self.ha_device_registry.async_get_device(
-                    {(DOMAIN, member_ieee)}, set()
-                ).id
-                for member_ieee in discovery_info["member_devices"]
-            ]
-
-            discovery_info["entity_ids"] = []
-
-            for device_id in discovery_info["member_device_ids"]:
-                entities = async_entries_for_device(self.ha_entity_registry, device_id)
-                for entity in entities:
-                    discovery_info["entity_ids"].append(entity.entity_id)
 
             self._hass.data[DATA_ZHA]["light"][
                 discovery_info["unique_id"]
@@ -288,6 +271,11 @@ class ZHAGateway:
         return self._devices
 
     @property
+    def groups(self):
+        """Return groups."""
+        return self._groups
+
+    @property
     def device_registry(self):
         """Return entities by ieee."""
         return self._device_registry
@@ -340,7 +328,7 @@ class ZHAGateway:
         if zha_device is None:
             zha_device = ZHADevice(self._hass, zigpy_device, self)
             self._devices[zigpy_device.ieee] = zha_device
-            self.ha_device_registry.async_get_or_create(
+            device_registry_device = self.ha_device_registry.async_get_or_create(
                 config_entry_id=self._config_entry.entry_id,
                 connections={(CONNECTION_ZIGBEE, str(zha_device.ieee))},
                 identifiers={(DOMAIN, str(zha_device.ieee))},
@@ -348,9 +336,21 @@ class ZHAGateway:
                 manufacturer=zha_device.manufacturer,
                 model=zha_device.model,
             )
+            zha_device.set_device_id(device_registry_device.id)
         entry = self.zha_storage.async_get_or_create(zha_device)
         zha_device.async_update_last_seen(entry.last_seen)
         return zha_device
+
+    @callback
+    def _async_get_or_create_group(self, zigpy_group):
+        """Get or create a ZHA group."""
+        zha_group = self._groups.get(zigpy_group.group_id)
+        if zha_group is None:
+            zha_group = ZHAGroup(
+                self._hass, self._coordinator_zha_device, self, zigpy_group
+            )
+            self._groups[zigpy_group.group_id] = zha_group
+        return zha_group
 
     @callback
     def async_device_became_available(
