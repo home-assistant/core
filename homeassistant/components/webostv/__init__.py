@@ -3,7 +3,6 @@ import asyncio
 import logging
 
 from aiopylgtv import PyLGTVCmdException, PyLGTVPairException, WebOsClient
-from .const import ATTR_SOUND_OUTPUT
 import voluptuous as vol
 from websockets.exceptions import ConnectionClosed
 
@@ -17,6 +16,8 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+from .const import ATTR_SOUND_OUTPUT
 
 DOMAIN = "webostv"
 
