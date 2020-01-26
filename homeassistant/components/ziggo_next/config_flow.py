@@ -56,8 +56,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
         fields = OrderedDict()
-        fields[vol.Required(CONF_USERNAME, default="r.offereins@gmail.com")] = str
-        fields[vol.Required(CONF_PASSWORD, default="JePrtXL*cJp3B29")] = str
+        fields[vol.Required(CONF_USERNAME)] = str
+        fields[vol.Required(CONF_PASSWORD)] = str
         fields[vol.Optional(CONF_COUNTRY_CODE, default="nl")] = str
 
         return self.async_show_form(
