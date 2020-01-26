@@ -6,7 +6,8 @@ from ziggonext import ONLINE_RUNNING, ONLINE_STANDBY, ZiggoNext
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_APP,
+    MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -87,11 +88,16 @@ class ZiggoNextMediaPlayer(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Return the media type."""
-        return MEDIA_TYPE_TVSHOW
+        if self.box_info.sourceType == "app":
+            return MEDIA_TYPE_APP
+        return MEDIA_TYPE_CHANNEL
 
     @property
     def supported_features(self):
         """Return the supported features."""
+        if self.box_info.sourceType == "app":
+            return SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+
         return (
             SUPPORT_PLAY
             | SUPPORT_PAUSE
@@ -120,7 +126,10 @@ class ZiggoNextMediaPlayer(MediaPlayerDevice):
     def media_image_url(self):
         """Return the media image URL."""
         if self.box_info.image is not None:
-            return self.box_info.image + "?" + str(random.randrange(1000000))
+            join_param = "?"
+            if join_param in self.box_info.image:
+                join_param = "&"
+            return self.box_info.image + join_param + str(random.randrange(1000000))
         return None
 
     @property
@@ -162,3 +171,13 @@ class ZiggoNextMediaPlayer(MediaPlayerDevice):
     def unique_id(self):
         """Return the unique id."""
         return self.box_id
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return {
+            "play_mode": self.box_info.sourceType,
+            "channel": self.box_info.channelTitle,
+            "title": self.box_info.title,
+            "image": self.box_info.image,
+        }
