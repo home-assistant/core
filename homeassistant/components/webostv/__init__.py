@@ -17,7 +17,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .media_player import ATTR_SOUND_OUTPUT
+from const import ATTR_SOUND_OUTPUT
 
 DOMAIN = "webostv"
 
