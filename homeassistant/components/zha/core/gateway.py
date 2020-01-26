@@ -250,7 +250,7 @@ class ZHAGateway:
                 ZHA_GW_MSG,
                 {
                     ATTR_TYPE: gateway_message_type,
-                    ZHA_GW_MSG_GROUP_INFO: zha_group.async_get_group_info(),
+                    ZHA_GW_MSG_GROUP_INFO: zha_group.async_get_info(),
                 },
             )
 
@@ -294,6 +294,13 @@ class ZHAGateway:
     def get_group(self, group_id):
         """Return Group for given group id."""
         return self.application_controller.groups[group_id]
+
+    def async_get_group_by_name(self, group_name):
+        """Get ZHA group by name."""
+        for group in self.groups.values():
+            if group.name == group_name:
+                return group
+        return None
 
     def get_entity_reference(self, entity_id):
         """Return entity reference for given entity_id if found."""
