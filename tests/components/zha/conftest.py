@@ -13,7 +13,7 @@ from homeassistant.components.zha.core.gateway import ZHAGateway
 from homeassistant.components.zha.core.store import async_get_registry
 from homeassistant.helpers.device_registry import async_get_registry as get_dev_reg
 
-from .common import async_setup_entry
+from .common import FakeDevice, FakeEndpoint, async_setup_entry
 
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
@@ -87,3 +87,35 @@ def channel():
         return ch
 
     return channel
+
+
+@pytest.fixture
+def zigpy_device_mock():
+    """Make a fake device using the specified cluster classes."""
+
+    def _mock_dev(
+        endpoints,
+        ieee="00:0d:6f:00:0a:90:69:e7",
+        manufacturer="FakeManufacturer",
+        model="FakeModel",
+    ):
+        """Make a fake device using the specified cluster classes."""
+        device = FakeDevice(ieee, manufacturer, model)
+        for epid, ep in endpoints.items():
+            endpoint = FakeEndpoint(manufacturer, model, epid)
+            endpoint.device = device
+            device.endpoints[epid] = endpoint
+            endpoint.device_type = ep["device_type"]
+            profile_id = ep.get("profile_id")
+            if profile_id:
+                endpoint.profile_id = profile_id
+
+            for cluster_id in ep.get("in_clusters", []):
+                endpoint.add_input_cluster(cluster_id)
+
+            for cluster_id in ep.get("out_clusters", []):
+                endpoint.add_output_cluster(cluster_id)
+
+        return device
+
+    return _mock_dev
