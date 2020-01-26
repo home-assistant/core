@@ -1,16 +1,15 @@
 """This platform provides support for sensor data from RainMachine."""
 import logging
 
-from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import (
+from . import RainMachineEntity
+from .const import (
     DATA_CLIENT,
+    DATA_PROVISION_SETTINGS,
+    DATA_RESTRICTIONS_UNIVERSAL,
     DOMAIN as RAINMACHINE_DOMAIN,
-    PROVISION_SETTINGS,
-    RESTRICTIONS_UNIVERSAL,
     SENSOR_UPDATE_TOPIC,
-    RainMachineEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +27,7 @@ SENSORS = {
         "clicks/m^3",
         None,
         False,
-        PROVISION_SETTINGS,
+        DATA_PROVISION_SETTINGS,
     ),
     TYPE_FLOW_SENSOR_CONSUMED_LITERS: (
         "Flow Sensor Consumed Liters",
@@ -36,7 +35,7 @@ SENSORS = {
         "liter",
         None,
         False,
-        PROVISION_SETTINGS,
+        DATA_PROVISION_SETTINGS,
     ),
     TYPE_FLOW_SENSOR_START_INDEX: (
         "Flow Sensor Start Index",
@@ -44,7 +43,7 @@ SENSORS = {
         "index",
         None,
         False,
-        PROVISION_SETTINGS,
+        DATA_PROVISION_SETTINGS,
     ),
     TYPE_FLOW_SENSOR_WATERING_CLICKS: (
         "Flow Sensor Clicks",
@@ -52,7 +51,7 @@ SENSORS = {
         "clicks",
         None,
         False,
-        PROVISION_SETTINGS,
+        DATA_PROVISION_SETTINGS,
     ),
     TYPE_FREEZE_TEMP: (
         "Freeze Protect Temperature",
@@ -60,7 +59,7 @@ SENSORS = {
         "°C",
         "temperature",
         True,
-        RESTRICTIONS_UNIVERSAL,
+        DATA_RESTRICTIONS_UNIVERSAL,
     ),
 }
 
@@ -125,11 +124,6 @@ class RainMachineSensor(RainMachineEntity):
         return self._icon
 
     @property
-    def should_poll(self):
-        """Disable polling."""
-        return False
-
-    @property
     def state(self) -> str:
         """Return the name of the entity."""
         return self._state
@@ -148,50 +142,44 @@ class RainMachineSensor(RainMachineEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-
-        @callback
-        def update():
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
         self._dispatcher_handlers.append(
-            async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, update)
+            async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC, self._update_state)
         )
-        await self.rainmachine.async_register_api_interest(self._api_category)
+        await self.rainmachine.async_register_sensor_api_interest(self._api_category)
         await self.async_update()
 
     async def async_update(self):
         """Update the sensor's state."""
         if self._sensor_type == TYPE_FLOW_SENSOR_CLICK_M3:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
+            self._state = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
                 "flowSensorClicksPerCubicMeter"
             )
         elif self._sensor_type == TYPE_FLOW_SENSOR_CONSUMED_LITERS:
-            clicks = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
+            clicks = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
                 "flowSensorWateringClicks"
             )
-            clicks_per_m3 = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
-                "flowSensorClicksPerCubicMeter"
-            )
+            clicks_per_m3 = self.rainmachine.data[DATA_PROVISION_SETTINGS][
+                "system"
+            ].get("flowSensorClicksPerCubicMeter")
 
             if clicks and clicks_per_m3:
                 self._state = (clicks * 1000) / clicks_per_m3
             else:
                 self._state = None
         elif self._sensor_type == TYPE_FLOW_SENSOR_START_INDEX:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
+            self._state = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
                 "flowSensorStartIndex"
             )
         elif self._sensor_type == TYPE_FLOW_SENSOR_WATERING_CLICKS:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
+            self._state = self.rainmachine.data[DATA_PROVISION_SETTINGS]["system"].get(
                 "flowSensorWateringClicks"
             )
         elif self._sensor_type == TYPE_FREEZE_TEMP:
-            self._state = self.rainmachine.data[RESTRICTIONS_UNIVERSAL][
+            self._state = self.rainmachine.data[DATA_RESTRICTIONS_UNIVERSAL][
                 "freezeProtectTemp"
             ]
 
     async def async_will_remove_from_hass(self):
         """Disconnect dispatcher listeners and deregister API interest."""
         super().async_will_remove_from_hass()
-        self.rainmachine.async_deregister_api_interest(self._api_category)
+        self.rainmachine.async_deregister_sensor_api_interest(self._api_category)
