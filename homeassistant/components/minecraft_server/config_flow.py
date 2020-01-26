@@ -47,9 +47,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_scan_interval"
         # Validate host and port via ping request to server.
         else:
-            server = MinecraftServer(
-                self.hass, unique_id, user_input, skip_periodic_update=True
-            )
+            server = MinecraftServer(self.hass, unique_id, user_input)
             await server.async_check_connection()
             if not server.online:
                 errors["base"] = "cannot_connect"

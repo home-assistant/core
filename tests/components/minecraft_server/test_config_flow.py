@@ -152,19 +152,25 @@ async def test_connection_succeeded(hass):
         return_value=mock_coro(None),
     ):
         with patch(
-            "homeassistant.components.minecraft_server.MinecraftServer.online",
-            new_callable=PropertyMock(return_value=True),
+            "homeassistant.components.minecraft_server.MinecraftServer.async_update",
+            return_value=mock_coro(None),
         ):
-            result = await hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
-            )
+            with patch(
+                "homeassistant.components.minecraft_server.MinecraftServer.online",
+                new_callable=PropertyMock(return_value=True),
+            ):
+                result = await hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+                )
 
-            assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-            assert (
-                result["title"]
-                == f"{USER_INPUT[CONF_HOST].lower()}:{USER_INPUT[CONF_PORT]}"
-            )
-            assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
-            assert result["data"][CONF_HOST] == USER_INPUT[CONF_HOST]
-            assert result["data"][CONF_PORT] == USER_INPUT[CONF_PORT]
-            assert result["data"][CONF_SCAN_INTERVAL] == USER_INPUT[CONF_SCAN_INTERVAL]
+                assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+                assert (
+                    result["title"]
+                    == f"{USER_INPUT[CONF_HOST].lower()}:{USER_INPUT[CONF_PORT]}"
+                )
+                assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
+                assert result["data"][CONF_HOST] == USER_INPUT[CONF_HOST]
+                assert result["data"][CONF_PORT] == USER_INPUT[CONF_PORT]
+                assert (
+                    result["data"][CONF_SCAN_INTERVAL] == USER_INPUT[CONF_SCAN_INTERVAL]
+                )

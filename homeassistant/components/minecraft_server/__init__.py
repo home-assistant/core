@@ -18,7 +18,8 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, MANUFACTURER, SIGNAL_NAME_PREFIX
 
@@ -74,7 +75,7 @@ class MinecraftServer:
     _RETRIES_PING = 3
     _RETRIES_STATUS = 3
 
-    def __init__(self, hass, unique_id, config_data, skip_periodic_update=False):
+    def __init__(self, hass, unique_id, config_data):
         """Initialize server instance."""
         self._hass = hass
         self._unique_id = unique_id
@@ -83,15 +84,16 @@ class MinecraftServer:
         self._name = config_data[CONF_NAME]
         self._host = config_data[CONF_HOST]
         self._port = config_data[CONF_PORT]
-        self._update_interval = config_data[CONF_SCAN_INTERVAL]
+        self._scan_interval = config_data[CONF_SCAN_INTERVAL]
         self._server_online = False
+        self._stop_periodic_update = None
 
         _LOGGER.debug(
-            "Initializing '%s' (host='%s', port=%s, update_interval=%s)...",
+            "Initializing '%s' (host='%s', port=%s, scan_interval=%s)...",
             self._name,
             self._host,
             self._port,
-            self._update_interval,
+            self._scan_interval,
         )
 
         # 3rd party library instance
@@ -108,14 +110,6 @@ class MinecraftServer:
 
         # Dispatcher signal name
         self._signal_name = SIGNAL_NAME_PREFIX + self._unique_id
-
-        # Periodically update status.
-        if skip_periodic_update:
-            _LOGGER.debug("Got request to skip setup of periodic update.")
-        else:
-            self._stop_track_time_interval = async_track_time_interval(
-                self._hass, self.async_update, timedelta(seconds=self._update_interval),
-            )
 
     @property
     def name(self):
@@ -184,8 +178,8 @@ class MinecraftServer:
 
     def stop_periodic_update(self):
         """Stop periodic execution of update method."""
-        if self._stop_track_time_interval is not None:
-            self._stop_track_time_interval()
+        if self._stop_periodic_update is not None:
+            self._stop_periodic_update()
         else:
             _LOGGER.debug(
                 "Listener was not started, stopping of periodic update skipped."
@@ -233,6 +227,13 @@ class MinecraftServer:
 
         # Notify sensors about new data.
         async_dispatcher_send(self._hass, self._signal_name)
+
+        # Periodically update status.
+        self._stop_periodic_update = async_track_point_in_utc_time(
+            self._hass,
+            self.async_update,
+            utcnow() + timedelta(seconds=self._scan_interval),
+        )
 
     async def _async_status_request(self):
         """Request server status and update properties."""
