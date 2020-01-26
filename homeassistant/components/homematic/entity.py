@@ -129,7 +129,7 @@ class HMDevice(Entity):
                     "%s ignoring event '%s' on wrong channel (%s)",
                     self._name,
                     attribute,
-                    device
+                    device,
                 )
 
         # Availability has changed
