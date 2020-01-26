@@ -517,16 +517,8 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": [
-            "binary_sensor.heiman_co_v16_77665544_ias_zone",
-            "sensor.heiman_co_v16_77665544_power",
-        ],
+        "entities": ["binary_sensor.heiman_co_v16_77665544_ias_zone"],
         "entity_map": {
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.heiman_co_v16_77665544_power",
-            },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 "channels": ["ias_zone"],
                 "entity_class": "IASZone",
@@ -549,16 +541,8 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": [
-            "binary_sensor.heiman_warningdevice_77665544_ias_zone",
-            "sensor.heiman_warningdevice_77665544_power",
-        ],
+        "entities": ["binary_sensor.heiman_warningdevice_77665544_ias_zone"],
         "entity_map": {
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.heiman_warningdevice_77665544_power",
-            },
             ("binary_sensor", "00:11:22:33:44:55:66:77-1-1280"): {
                 "channels": ["ias_zone"],
                 "entity_class": "IASZone",
@@ -1412,7 +1396,6 @@ DEVICES = [
             "sensor.lumi_lumi_plug_maus01_77665544_analog_input",
             "sensor.lumi_lumi_plug_maus01_77665544_analog_input_2",
             "sensor.lumi_lumi_plug_maus01_77665544_electrical_measurement",
-            "sensor.lumi_lumi_plug_maus01_77665544_power",
             "switch.lumi_lumi_plug_maus01_77665544_on_off",
         ],
         "entity_map": {
@@ -1420,11 +1403,6 @@ DEVICES = [
                 "channels": ["on_off"],
                 "entity_class": "Switch",
                 "entity_id": "switch.lumi_lumi_plug_maus01_77665544_on_off",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.lumi_lumi_plug_maus01_77665544_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-2820"): {
                 "channels": ["electrical_measurement"],
@@ -1471,18 +1449,12 @@ DEVICES = [
             "light.lumi_lumi_relay_c2acn01_77665544_on_off_2",
             "sensor.lumi_lumi_relay_c2acn01_77665544_analog_input",
             "sensor.lumi_lumi_relay_c2acn01_77665544_electrical_measurement",
-            "sensor.lumi_lumi_relay_c2acn01_77665544_power",
         ],
         "entity_map": {
             ("light", "00:11:22:33:44:55:66:77-1"): {
                 "channels": ["on_off"],
                 "entity_class": "Light",
                 "entity_id": "light.lumi_lumi_relay_c2acn01_77665544_on_off",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.lumi_lumi_relay_c2acn01_77665544_power",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-12"): {
                 "channels": ["analog_input"],
@@ -1670,14 +1642,8 @@ DEVICES = [
                 "profile_id": -1,
             },
         },
-        "entities": ["sensor.lumi_lumi_remote_b286opcn01_77665544_power"],
-        "entity_map": {
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.lumi_lumi_remote_b286opcn01_77665544_power",
-            }
-        },
+        "entities": [],
+        "entity_map": {},
         "event_channels": ["1:0x0006", "1:0x0008", "1:0x0300"],
         "manufacturer": "LUMI",
         "model": "lumi.remote.b286opcn01",
@@ -1729,14 +1695,8 @@ DEVICES = [
                 "profile_id": -1,
             },
         },
-        "entities": ["sensor.lumi_lumi_remote_b486opcn01_77665544_power"],
-        "entity_map": {
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.lumi_lumi_remote_b486opcn01_77665544_power",
-            }
-        },
+        "entities": [],
+        "entity_map": {},
         "event_channels": ["1:0x0006", "1:0x0008", "1:0x0300", "2:0x0006"],
         "manufacturer": "LUMI",
         "model": "lumi.remote.b486opcn01",
@@ -1753,14 +1713,8 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": ["sensor.lumi_lumi_remote_b686opcn01_77665544_power"],
-        "entity_map": {
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.lumi_lumi_remote_b686opcn01_77665544_power",
-            }
-        },
+        "entities": [],
+        "entity_map": {},
         "event_channels": ["1:0x0006", "1:0x0008", "1:0x0300"],
         "manufacturer": "LUMI",
         "model": "lumi.remote.b686opcn01",
@@ -1812,14 +1766,8 @@ DEVICES = [
                 "profile_id": None,
             },
         },
-        "entities": ["sensor.lumi_lumi_remote_b686opcn01_77665544_power"],
-        "entity_map": {
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.lumi_lumi_remote_b686opcn01_77665544_power",
-            }
-        },
+        "entities": [],
+        "entity_map": {},
         "event_channels": ["1:0x0006", "1:0x0008", "1:0x0300", "2:0x0006"],
         "manufacturer": "LUMI",
         "model": "lumi.remote.b686opcn01",
@@ -1908,16 +1856,8 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": [
-            "sensor.lumi_lumi_sen_ill_mgl01_77665544_illuminance",
-            "sensor.lumi_lumi_sen_ill_mgl01_77665544_power",
-        ],
+        "entities": ["sensor.lumi_lumi_sen_ill_mgl01_77665544_illuminance"],
         "entity_map": {
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.lumi_lumi_sen_ill_mgl01_77665544_power",
-            },
             ("sensor", "00:11:22:33:44:55:66:77-1-1024"): {
                 "channels": ["illuminance"],
                 "entity_class": "Illuminance",
@@ -2953,15 +2893,9 @@ DEVICES = [
         },
         "entities": [
             "sensor.securifi_ltd_unk_model_77665544_electrical_measurement",
-            "sensor.securifi_ltd_unk_model_77665544_power",
             "switch.securifi_ltd_unk_model_77665544_on_off",
         ],
         "entity_map": {
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.securifi_ltd_unk_model_77665544_power",
-            },
             ("switch", "00:11:22:33:44:55:66:77-1-6"): {
                 "channels": ["on_off"],
                 "entity_class": "Switch",
@@ -3037,8 +2971,6 @@ DEVICES = [
         "entities": [
             "light.sercomm_corp_sz_esw01_77665544_on_off",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement",
-            "sensor.sercomm_corp_sz_esw01_77665544_power",
-            "sensor.sercomm_corp_sz_esw01_77665544_power_2",
             "sensor.sercomm_corp_sz_esw01_77665544_smartenergy_metering",
         ],
         "entity_map": {
@@ -3046,11 +2978,6 @@ DEVICES = [
                 "channels": ["on_off"],
                 "entity_class": "Light",
                 "entity_id": "light.sercomm_corp_sz_esw01_77665544_on_off",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-1-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.sercomm_corp_sz_esw01_77665544_power_2",
             },
             ("sensor", "00:11:22:33:44:55:66:77-1-1794"): {
                 "channels": ["smartenergy_metering"],
@@ -3061,11 +2988,6 @@ DEVICES = [
                 "channels": ["electrical_measurement"],
                 "entity_class": "ElectricalMeasurement",
                 "entity_id": "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-2-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.sercomm_corp_sz_esw01_77665544_power",
             },
         },
         "event_channels": ["2:0x0006"],
@@ -3169,7 +3091,6 @@ DEVICES = [
         },
         "entities": [
             "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement",
-            "sensor.sinope_technologies_th1123zb_77665544_power",
             "sensor.sinope_technologies_th1123zb_77665544_temperature",
         ],
         "entity_map": {
@@ -3182,11 +3103,6 @@ DEVICES = [
                 "channels": ["electrical_measurement"],
                 "entity_class": "ElectricalMeasurement",
                 "entity_id": "sensor.sinope_technologies_th1123zb_77665544_electrical_measurement",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-196-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.sinope_technologies_th1123zb_77665544_power",
             },
         },
         "event_channels": [],
@@ -3215,7 +3131,6 @@ DEVICES = [
         },
         "entities": [
             "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement",
-            "sensor.sinope_technologies_th1124zb_77665544_power",
             "sensor.sinope_technologies_th1124zb_77665544_temperature",
         ],
         "entity_map": {
@@ -3228,11 +3143,6 @@ DEVICES = [
                 "channels": ["electrical_measurement"],
                 "entity_class": "ElectricalMeasurement",
                 "entity_id": "sensor.sinope_technologies_th1124zb_77665544_electrical_measurement",
-            },
-            ("sensor", "00:11:22:33:44:55:66:77-196-1"): {
-                "channels": ["power"],
-                "entity_class": "Battery",
-                "entity_id": "sensor.sinope_technologies_th1124zb_77665544_power",
             },
         },
         "event_channels": [],

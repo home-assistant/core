@@ -23,6 +23,7 @@ async def test_devices(
         "00:11:22:33:44:55:66:77",
         device["manufacturer"],
         device["model"],
+        node_desc=device["node_descriptor"],
     )
 
     with mock.patch(
