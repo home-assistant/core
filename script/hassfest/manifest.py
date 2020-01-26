@@ -6,12 +6,28 @@ from voluptuous.humanize import humanize_error
 
 from .model import Integration
 
+DOCUMENTATION_URL_PREFIX = "https://www.home-assistant.io/integrations/"
+DOCUMENTATION_URL_EXCEPTIONS = ["https://www.home-assistant.io/hassio"]
+
 SUPPORTED_QUALITY_SCALES = [
     "gold",
     "internal",
     "platinum",
     "silver",
 ]
+
+
+def documentation_url(value: str) -> str:
+    """Validate that a documentation url starts with the correct prefix."""
+    if (
+        not value.startswith(DOCUMENTATION_URL_PREFIX)
+        and value not in DOCUMENTATION_URL_EXCEPTIONS
+    ):
+        raise vol.Invalid(
+            "Documentation url didn't begin with %s".format(DOCUMENTATION_URL_PREFIX)
+        )
+    return value
+
 
 MANIFEST_SCHEMA = vol.Schema(
     {
@@ -23,9 +39,9 @@ MANIFEST_SCHEMA = vol.Schema(
             vol.All([vol.All(vol.Schema({}, extra=vol.ALLOW_EXTRA), vol.Length(min=1))])
         ),
         vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
-        vol.Required(
-            "documentation"
-        ): vol.Url(),  # pylint: disable=no-value-for-parameter
+        vol.Required("documentation"): vol.All(
+            vol.Url(), documentation_url
+        ),  # pylint: disable=no-value-for-parameter
         vol.Optional("quality_scale"): vol.In(SUPPORTED_QUALITY_SCALES),
         vol.Required("requirements"): [str],
         vol.Required("dependencies"): [str],
