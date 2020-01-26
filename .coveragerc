@@ -553,6 +553,7 @@ omit =
     homeassistant/components/qnap/sensor.py
     homeassistant/components/qrcode/image_processing.py
     homeassistant/components/quantum_gateway/device_tracker.py
+    homeassistant/components/qvrpro/*
     homeassistant/components/qwikswitch/*
     homeassistant/components/rachio/*
     homeassistant/components/radarr/sensor.py
