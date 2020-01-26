@@ -58,7 +58,7 @@ class LastfmSensor(Entity):
         self._unique_id = hashlib.sha256(str(user).encode("utf-8")).hexdigest()
         self._user = lastfm_api.get_user(user)
         self._name = user
-        self._entity_id = self.__generate_entity_id(user)
+        self._entity_id = user
         self._lastfm = lastfm_api
         self._state = "Not Scrobbling"
         self._playcount = None
@@ -121,7 +121,3 @@ class LastfmSensor(Entity):
     def icon(self):
         """Return the icon to use in the frontend."""
         return ICON
-
-    def __generate_entity_id(user):
-        """Generate the entity_id for this sensor."""
-        return user
