@@ -9,6 +9,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    CONF_SCAN_INTERVAL,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -19,7 +20,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_UPDATE_INTERVAL, DOMAIN, MANUFACTURER, SIGNAL_NAME_PREFIX
+from .const import DOMAIN, MANUFACTURER, SIGNAL_NAME_PREFIX
 
 PLATFORMS = ["sensor"]
 
@@ -70,30 +71,6 @@ class MinecraftServer:
     """Representation of a Minecraft server."""
 
     # Private constants
-    _COLOR_CODES = [
-        "§0",
-        "§1",
-        "§2",
-        "§3",
-        "§4",
-        "§5",
-        "§6",
-        "§7",
-        "§8",
-        "§9",
-        "§a",
-        "§b",
-        "§c",
-        "§d",
-        "§e",
-        "§f",
-        "§k",
-        "§l",
-        "§m",
-        "§n",
-        "§o",
-        "§r",
-    ]
     _RETRIES_PING = 3
     _RETRIES_STATUS = 3
 
@@ -106,7 +83,7 @@ class MinecraftServer:
         self._name = config_data[CONF_NAME]
         self._host = config_data[CONF_HOST]
         self._port = config_data[CONF_PORT]
-        self._update_interval = config_data[CONF_UPDATE_INTERVAL]
+        self._update_interval = config_data[CONF_SCAN_INTERVAL]
         self._server_online = False
 
         _LOGGER.debug(
@@ -268,55 +245,29 @@ class MinecraftServer:
             raise IOError
         else:
             self._description = status_response.description["text"]
-
-            # Remove color codes.
-            for color_code in self._COLOR_CODES:
-                self._description = self._description.replace(color_code, "")
-
-            # Remove newlines.
-            self._description = self._description.replace("\n", " ")
-
-            # Limit description length to 255.
-            if len(self._description) > 255:
-                self._description = self._description[:255]
-                _LOGGER.debug("Description length > 255 (truncated).")
-
             self._version = status_response.version.name
             self._protocol_version = status_response.version.protocol
             self._players_online = status_response.players.online
             self._players_max = status_response.players.max
             self._latency = status_response.latency
-
-            if status_response.players.sample is None:
-                self._players_list = "[]"
-            else:
-                self._players_list = "["
-
+            self._players_list = []
+            if status_response.players.sample is not None:
                 for player in status_response.players.sample:
-                    self._players_list += player.name + ", "
-
-                # Remove last seperator ", " and add end bracket.
-                self._players_list = self._players_list[:-2] + "]"
-
-                # Limit players list length to 255.
-                if len(self._players_list) > 255:
-                    self._players_list = self._players_list[:-4] + "...]"
-                    _LOGGER.debug("Players list length > 255 (truncated).")
+                    self._players_list.append(player.name)
 
 
 class MinecraftServerEntity(Entity):
     """Representation of a Minecraft Server base entity."""
 
-    def __init__(self, hass, server, name, unit, icon):
+    def __init__(self, hass, server, type_name, unit, icon):
         """Initialize base entity."""
         self._server = server
         self._hass = hass
         self._state = None
-        self._name = server.name + " " + name
-        self._sensor_name = name
+        self._name = f"{server.name} {type_name}"
         self._unit = unit
         self._icon = icon
-        self._unique_id = f"{self._server.unique_id}-{self._sensor_name}"
+        self._unique_id = f"{self._server.unique_id}-{type_name}"
         self._device_info = {
             "identifiers": {(DOMAIN, self._server.unique_id)},
             "name": self._server.name,

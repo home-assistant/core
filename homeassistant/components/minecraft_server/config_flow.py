@@ -3,15 +3,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 
 from . import MinecraftServer
 from .const import (  # pylint: disable=unused-import
-    CONF_UPDATE_INTERVAL,
     DEFAULT_HOST,
     DEFAULT_NAME,
     DEFAULT_PORT,
-    DEFAULT_UPDATE_INTERVAL_SECONDS,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 
@@ -31,7 +30,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         # User inputs.
         host = user_input[CONF_HOST]
         port = user_input[CONF_PORT]
-        update_interval = user_input[CONF_UPDATE_INTERVAL]
+        scan_interval = user_input[CONF_SCAN_INTERVAL]
 
         # Abort in case the host was already configured before.
         unique_id = f"{host.lower()}-{port}"
@@ -43,9 +42,9 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         # Validate port configuration (limit to user and dynamic port range).
         if (port < 1024) or (port > 65535):
             errors["base"] = "invalid_port"
-        # Validate update interval configuration (min: 5s, max: 24h).
-        elif (update_interval < 5) or (update_interval > 86400):
-            errors["base"] = "invalid_update_interval"
+        # Validate scan interval configuration (min: 5s, max: 24h).
+        elif (scan_interval < 5) or (scan_interval > 86400):
+            errors["base"] = "invalid_scan_interval"
         # Validate host and port via ping request to server.
         else:
             server = MinecraftServer(
@@ -64,9 +63,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         # Configuration data are available and no error was detected, create configuration entry.
         return self.async_create_entry(title=f"{host.lower()}:{port}", data=user_input)
 
-    async def _show_config_form(
-        self, user_input=None, errors=None,
-    ):
+    async def _show_config_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
         if user_input is None:
             user_input = {}
@@ -85,9 +82,9 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
                     ): int,
                     vol.Required(
-                        CONF_UPDATE_INTERVAL,
+                        CONF_SCAN_INTERVAL,
                         default=user_input.get(
-                            CONF_UPDATE_INTERVAL, DEFAULT_UPDATE_INTERVAL_SECONDS
+                            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                         ),
                     ): int,
                 }

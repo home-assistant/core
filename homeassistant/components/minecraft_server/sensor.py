@@ -1,5 +1,7 @@
 """The Minecraft Server sensor platform."""
 
+import logging
+
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from . import MinecraftServerEntity
@@ -14,6 +16,8 @@ from .const import (
     NAME_STATUS,
     NAME_VERSION,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -54,6 +58,31 @@ class MinecraftServerStatusSensor(MinecraftServerEntity):
 class MinecraftServerDescriptionSensor(MinecraftServerEntity):
     """Representation of a Minecraft Server description sensor."""
 
+    _COLOR_CODES = [
+        "§0",
+        "§1",
+        "§2",
+        "§3",
+        "§4",
+        "§5",
+        "§6",
+        "§7",
+        "§8",
+        "§9",
+        "§a",
+        "§b",
+        "§c",
+        "§d",
+        "§e",
+        "§f",
+        "§k",
+        "§l",
+        "§m",
+        "§n",
+        "§o",
+        "§r",
+    ]
+
     def __init__(self, hass, server):
         """Initialize description sensor."""
         super().__init__(
@@ -62,7 +91,21 @@ class MinecraftServerDescriptionSensor(MinecraftServerEntity):
 
     async def async_update(self):
         """Update description."""
-        self._state = self._server.description
+        description = self._server.description
+
+        # Remove color codes.
+        for color_code in self._COLOR_CODES:
+            description = description.replace(color_code, "")
+
+        # Remove newlines.
+        description = description.replace("\n", " ")
+
+        # Limit description length to 255.
+        if len(description) > 255:
+            description = description[:255]
+            _LOGGER.debug("Description length > 255 (truncated).")
+
+        self._state = description
 
 
 class MinecraftServerVersionSensor(MinecraftServerEntity):
@@ -142,4 +185,17 @@ class MinecraftServerPlayersListSensor(MinecraftServerEntity):
 
     async def async_update(self):
         """Update players list."""
-        self._state = self._server.players_list
+        players_list = self._server.players_list
+
+        if not players_list:
+            players_string = "[]"
+        else:
+            separator = ", "
+            players_string = f"[{separator.join(players_list)}]"
+
+            # Limit players list length to 255.
+            if len(players_string) > 255:
+                players_string = f"{players_string[:-4]}...]"
+                _LOGGER.debug("Players list length > 255 (truncated).")
+
+        self._state = players_string

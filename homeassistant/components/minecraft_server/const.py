@@ -1,15 +1,13 @@
 """Constants for the Minecraft Server integration."""
 
-CONF_UPDATE_INTERVAL = "update_interval"
-
 DEFAULT_HOST = ""
 DEFAULT_NAME = "Minecraft Server"
 DEFAULT_PORT = 25565
-DEFAULT_UPDATE_INTERVAL_SECONDS = 60
+DEFAULT_SCAN_INTERVAL = 60
 
 DOMAIN = "minecraft_server"
 
-SIGNAL_NAME_PREFIX = DOMAIN + "_" + "signal" + "_"
+SIGNAL_NAME_PREFIX = f"signal_{DOMAIN}_"
 
 KEY_SERVERS = "servers"
 
