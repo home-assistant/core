@@ -40,6 +40,7 @@ class HMDevice(Entity):
         self._hmdevice = None
         self._connected = False
         self._available = False
+        self._channel_map = {}
 
         # Set parameter to uppercase
         if self._state:
@@ -115,10 +116,13 @@ class HMDevice(Entity):
 
         # Is data needed for this instance?
         if attribute in self._data:
-            # Did data change?
-            if self._data[attribute] != value:
-                self._data[attribute] = value
-                has_changed = True
+            if attribute in self._channel_map and device == self._channel_map[attribute]:
+                # Did data change?
+                if self._data[attribute] != value:
+                    self._data[attribute] = value
+                    has_changed = True
+            else:
+                _LOGGER.debug("%s ignoring event '%s' on wrong channel (%s)", self._name, attribute, device)
 
         # Availability has changed
         if self.available != (not self._hmdevice.UNREACH):
@@ -150,6 +154,8 @@ class HMDevice(Entity):
                         channel = channels[0]
                     else:
                         channel = self._channel
+                    # Remember the channel for this attribute to ignore invalid events later
+                    self._channel_map[node] = self._address + ":" + str(channel)
 
                     # Prepare for subscription
                     try:
