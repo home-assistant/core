@@ -116,13 +116,21 @@ class HMDevice(Entity):
 
         # Is data needed for this instance?
         if attribute in self._data:
-            if attribute in self._channel_map and device == self._channel_map[attribute]:
+            if (
+                attribute in self._channel_map
+                and device == self._channel_map[attribute]
+            ):
                 # Did data change?
                 if self._data[attribute] != value:
                     self._data[attribute] = value
                     has_changed = True
             else:
-                _LOGGER.debug("%s ignoring event '%s' on wrong channel (%s)", self._name, attribute, device)
+                _LOGGER.debug(
+                    "%s ignoring event '%s' on wrong channel (%s)",
+                    self._name,
+                    attribute,
+                    device
+                )
 
         # Availability has changed
         if self.available != (not self._hmdevice.UNREACH):
