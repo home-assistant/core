@@ -3,6 +3,7 @@ import asyncio
 import logging
 
 from homeassistant.core import callback
+from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from .helpers import LogMixin
 
@@ -17,6 +18,7 @@ class ZHAGroup(LogMixin):
         self.hass = hass
         self._zigpy_group = zigpy_group
         self._zha_gateway = zha_gateway
+        self._entity_domain = None
 
     @property
     def name(self):
@@ -32,6 +34,14 @@ class ZHAGroup(LogMixin):
     def endpoint(self):
         """Return the endpoint for this group."""
         return self._zigpy_group.endpoint
+
+    def entity_domain(self):
+        """Return the domain that will be used for the entity representing this group."""
+        return self._entity_domain
+
+    def set_entity_domain(self, domain):
+        """Set the domain that will be used for the entity representing this group."""
+        self._entity_domain = domain
 
     @property
     def members(self):
@@ -71,6 +81,18 @@ class ZHAGroup(LogMixin):
             await self._zha_gateway.devices[
                 member_ieee_addresses[0]
             ].async_remove_from_group(self.group_id)
+
+    @property
+    def member_entity_ids(self):
+        """Return the ZHA entitiy ids for all entities for the members of this group."""
+        all_entity_ids = []
+        for device in self.members:
+            entities = async_entries_for_device(
+                self._zha_gateway.ha_entity_registry, device.device_id
+            )
+            for entity in entities:
+                all_entity_ids.append(entity.entity_id)
+        return all_entity_ids
 
     @callback
     def async_get_info(self):

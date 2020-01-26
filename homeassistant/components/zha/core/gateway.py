@@ -18,10 +18,7 @@ from homeassistant.helpers.device_registry import (
     async_get_registry as get_dev_reg,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_device,
-    async_get_registry as get_ent_reg,
-)
+from homeassistant.helpers.entity_registry import async_get_registry as get_ent_reg
 
 from . import discovery, typing as zha_typing
 from .const import (
@@ -96,6 +93,7 @@ class ZHAGateway:
         self._config = config
         self._devices = {}
         self._groups = {}
+        self._coordinator_zha_device = None
         self._device_registry = collections.defaultdict(list)
         self.zha_storage = None
         self.ha_device_registry = None
@@ -194,38 +192,21 @@ class ZHAGateway:
             ]
         )
 
-        coordinator = next(
+        self._coordinator_zha_device = next(
             device for device in self._devices.values() if device.nwk == 0x0000
         )
 
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
+            zha_group = self._async_get_or_create_group(group)
             discovery_info = {
                 "component": "light",
-                "group_id": group_id,
-                "zha_device": coordinator,
-                "unique_id": f"{coordinator.ieee}_{group_id}",
+                "group_id": zha_group.group_id,
+                "zha_device": self._coordinator_zha_device,
+                "unique_id": zha_group.unique_id,
                 "channels": [],
+                "entity_ids": zha_group.member_entity_ids,
             }
-            discovery_info["member_devices"] = [
-                str(member_ieee[0])
-                for member_ieee in group.members.keys()
-                if member_ieee[0] in self.devices
-            ]
-
-            discovery_info["member_device_ids"] = [
-                self.ha_device_registry.async_get_device(
-                    {(DOMAIN, member_ieee)}, set()
-                ).id
-                for member_ieee in discovery_info["member_devices"]
-            ]
-
-            discovery_info["entity_ids"] = []
-
-            for device_id in discovery_info["member_device_ids"]:
-                entities = async_entries_for_device(self.ha_entity_registry, device_id)
-                for entity in entities:
-                    discovery_info["entity_ids"].append(entity.entity_id)
 
             self._hass.data[DATA_ZHA]["light"][
                 discovery_info["unique_id"]
