@@ -219,7 +219,9 @@ class ExoPlayerDevice(MediaPlayerDevice):
                     )
         else:
             self.hass.services.call(
-                "ais_ai_service", "publish_command_to_frame", {"key": key, "val": val},
+                "ais_ai_service",
+                "publish_command_to_frame",
+                {"key": key, "val": val, "ip": self._device_ip},
             )
 
     @asyncio.coroutine
@@ -505,11 +507,12 @@ class ExoPlayerDevice(MediaPlayerDevice):
 
             self._publish_command_to_frame("playAudioFullInfo", j_media_info)
 
+            self._playing = True
+            self._status = 3
+
             # go to media player context on localhost
             if self._device_ip == "localhost":
                 # refresh state
-                self._playing = True
-                self._status = 3
                 old_state = self.hass.states.get("media_player.wbudowany_glosnik")
                 self.hass.states.set(
                     "media_player.wbudowany_glosnik",
@@ -553,11 +556,11 @@ class ExoPlayerDevice(MediaPlayerDevice):
             except Exception as e:
                 _LOGGER.debug("problem to publish setAudioInfo: " + str(e))
 
+            self._playing = True
+            self._status = 3
             # go to media player context on localhost
             if self._device_ip == "localhost":
                 # refresh state
-                self._playing = True
-                self._status = 3
                 old_state = self.hass.states.get("media_player.wbudowany_glosnik")
                 self.hass.states.set(
                     "media_player.wbudowany_glosnik",

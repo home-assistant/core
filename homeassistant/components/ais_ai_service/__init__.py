@@ -2214,13 +2214,11 @@ async def async_process_json_from_frame(hass, json_req):
                 {
                     "device_name": model + " " + manufacturer,
                     CONF_IP_ADDRESS: ip,
-                    "unique_id": ais_gate_client_id,
+                    "ais_gate_client_id": ais_gate_client_id,
                 },
             )
         )
     elif topic == "ais/player_status":
-        _LOGGER.info("payload: " + str(payload))
-        _LOGGER.info("payload: " + str(type(payload)))
         # try to get current volume
         try:
             ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = (
@@ -2237,10 +2235,6 @@ async def async_process_json_from_frame(hass, json_req):
                 if "unique_id" in entity.attributes:
                     if ais_gate_client_id == entity.attributes["unique_id"]:
                         json_string = json.dumps(payload)
-                        _LOGGER.error("exo_info: ----------------------")
-                        _LOGGER.error("json_string: " + json_string)
-                        _LOGGER.error(type(json_string))
-                        _LOGGER.error("exo_info: ----------------------")
                         hass.async_run_job(
                             hass.services.async_call(
                                 "media_player",
@@ -2257,6 +2251,7 @@ async def async_process_json_from_frame(hass, json_req):
             hass.services.async_call("conversation", "process", {"text": payload})
         )
         res = {"ais": "ok", "say_it": "przyjołem kommendę - bez odbioru!"}
+        _LOGGER.info("res: " + str(res))
     return json_response(res)
 
 

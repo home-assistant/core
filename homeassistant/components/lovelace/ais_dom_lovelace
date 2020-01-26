@@ -169,39 +169,6 @@
                         {
                             "cards": [
                                 {
-                                    "entities": [
-                                        {
-                                            "entity": "input_number.media_player_speed"
-                                        },
-                                        {
-                                            "entity": "input_boolean.ais_audio_mono"
-                                        }
-                                    ],
-                                    "show_header_toggle": false,
-                                    "title": "Odtwarzacze",
-                                    "type": "entities"
-                                },
-                                {
-                                    "card": {
-                                        "show_header_toggle": false,
-                                        "type": "entities"
-                                    },
-                                    "filter": {
-                                        "include": [
-                                            {
-                                                "domain": "media_player"
-                                            }
-                                        ]
-                                    },
-                                    "type": "ais-auto-entities"
-                                }
-                            ],
-                            "show_header_toggle": false,
-                            "type": "vertical-stack"
-                        },
-                        {
-                            "cards": [
-                                {
                                     "cards": [
                                         {
                                             "entity": "sensor.ais_drives",
@@ -628,6 +595,38 @@
                                                 }
                                             ],
                                             "type": "horizontal-stack"
+                                        },
+                                        {
+                                            "cards": [
+                                                {
+                                                    "entities": [
+                                                        {
+                                                            "entity": "input_boolean.ais_audio_mono"
+                                                        }
+                                                    ],
+                                                    "show_header_toggle": false,
+                                                    "title": "Equalizer",
+                                                    "type": "entities"
+
+                                                },
+                                                {
+                                                    "card": {
+                                                        "show_header_toggle": false,
+                                                        "title": "Odtwarzacze",
+                                                        "type": "entities"
+                                                    },
+                                                    "filter": {
+                                                        "include": [
+                                                            {
+                                                                "domain": "media_player"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "type": "ais-auto-entities"
+                                                }
+                                            ],
+                                            "show_header_toggle": false,
+                                            "type": "vertical-stack"
                                         }
                                     ],
                                     "type": "vertical-stack"

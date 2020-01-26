@@ -580,19 +580,33 @@ def _scan_ais_player(hass, call):
     url = call.data["url"]
     import homeassistant.components.ais_device_search_mqtt.sensor as dsm
     from requests_futures.sessions import FuturesSession
-    from urllib.parse import urlparse
+
+    session = FuturesSession()
 
     def bg_cb(resp, *args, **kwargs):
-        _LOGGER.info("bg_cb: " + bg_cb)
         try:
             # parse the json storing the result on the response object
             json_ws_resp = resp.json()
             model = json_ws_resp["Model"]
             manufacturer = json_ws_resp["Manufacturer"]
             ip = json_ws_resp["IPAddressIPv4"]
-            unique_id = json_ws_resp["ais_gate_client_id"]
+            ais_gate_client_id = None
+            if "ais_gate_client_id" in json_ws_resp:
+                ais_gate_client_id = json_ws_resp.get("ais_gate_client_id")
+            if ais_gate_client_id is None and "gate_id" in json_ws_resp:
+                ais_gate_client_id = json_ws_resp.get("gate_id")
+            elif ais_gate_client_id is None and "MacWlan0" in json_ws_resp:
+                ais_gate_client_id = json_ws_resp.get("MacWlan0")
+            elif ais_gate_client_id is None and "MacEth0" in json_ws_resp:
+                ais_gate_client_id = json_ws_resp.get("MacEth0")
+            if ais_gate_client_id is None:
+                _LOGGER.info("NO ais_gate_client_id ")
+                return
+            if ais_gate_client_id == ais_global.G_AIS_SECURE_ANDROID_ID_DOM:
+                _LOGGER.info("discovered local gate ")
+                return
             dsm.DOM_DEVICES.append(
-                "- " + model + " " + manufacturer + ", http://" + ip + ":8180"
+                "- " + model + " " + manufacturer + ", http://" + ip + ":8122"
             )
             # add the device to the speakers lists
             hass.async_add_job(
@@ -602,17 +616,19 @@ def _scan_ais_player(hass, call):
                     {
                         "device_name": model + " " + manufacturer,
                         CONF_IP_ADDRESS: ip,
-                        "unique_id": unique_id,
+                        "ais_gate_client_id": ais_gate_client_id,
                     },
                 )
             )
-        except Exception:
-            pass
+        except Exception as e:
+            _LOGGER.error("Exception " + str(e))
 
-    session = FuturesSession()
-    session.get(url, hooks={"response": bg_cb})
+    try:
+        future = session.get(url, hooks={"response": bg_cb}, timeout=3, verify=False)
+    except Exception as e:
+        pass
     hass.async_add_job(
-        hass.services.async_call("ais_shell_command", "scan_network_for_devices")
+        hass.services.async_call("ais_shell_command", "scan_network_for_ais_players")
     )
 
 
@@ -621,7 +637,7 @@ def _scan_network_for_ais_players(hass, call):
     import homeassistant.components.ais_device_search_mqtt.sensor as dsm
 
     global GLOBAL_X
-    GLOBAL_MY_IP = ais_global.get_my_global_ip()
+    my_ip = ais_global.get_my_global_ip()
     info = ""
     if GLOBAL_X == 0:
         GLOBAL_X += 1
@@ -630,9 +646,10 @@ def _scan_network_for_ais_players(hass, call):
         dsm.NET_DEVICES = []
         dsm.DOM_DEVICES = []
         # info
-        yield from hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": "Wykrywam, to potrwa chwilę..."}
-        )
+        if ais_global.G_AIS_START_IS_DONE:
+            yield from hass.services.async_call(
+                "ais_ai_service", "say_it", {"text": "Wykrywam, to potrwa chwilę..."}
+            )
         yield from hass.services.async_call(
             "ais_shell_command", "scan_network_for_ais_players"
         )
@@ -641,17 +658,17 @@ def _scan_network_for_ais_players(hass, call):
         GLOBAL_X += 1
         # search android devices
         rest_url = "http://{}.{}:8122"
-        url = rest_url.format(GLOBAL_MY_IP.rsplit(".", 1)[0], str(GLOBAL_X))
-        _LOGGER.info("URL: " + url)
+        url = rest_url.format(my_ip.rsplit(".", 1)[0], str(GLOBAL_X))
 
         yield from hass.services.async_call(
             "ais_shell_command", "scan_ais_player", {"url": url}
         )
     else:
         GLOBAL_X = 0
-        yield from hass.services.async_call(
-            "ais_ai_service", "say_it", {"text": dsm.get_text_to_say()}
-        )
+        if ais_global.G_AIS_START_IS_DONE:
+            yield from hass.services.async_call(
+                "ais_ai_service", "say_it", {"text": dsm.get_text_to_say()}
+            )
 
 
 @asyncio.coroutine
@@ -659,7 +676,7 @@ def _scan_network_for_devices(hass, call):
     import homeassistant.components.ais_device_search_mqtt.sensor as dsm
 
     global GLOBAL_X
-    GLOBAL_MY_IP = ais_global.get_my_global_ip()
+    my_ip = ais_global.get_my_global_ip()
     info = ""
     if GLOBAL_X == 0:
         GLOBAL_X += 1
@@ -670,7 +687,7 @@ def _scan_network_for_devices(hass, call):
         hass.states.async_set(
             "sensor.network_devices_info_value",
             "",
-            {"text": "wykrywam, to może potrwać kilka minut..."},
+            {"text": "wykrywam, to może potrwać minutę..."},
         )
 
         # send the message to all robots in network
@@ -693,15 +710,15 @@ def _scan_network_for_devices(hass, call):
     elif 0 < GLOBAL_X < 256:
         GLOBAL_X += 1
         rest_url = "http://{}.{}/cm?cmnd=status"
-        url = rest_url.format(GLOBAL_MY_IP.rsplit(".", 1)[0], str(GLOBAL_X))
-        info = "Sprawdzam " + GLOBAL_MY_IP.rsplit(".", 1)[0]
+        url = rest_url.format(my_ip.rsplit(".", 1)[0], str(GLOBAL_X))
+        info = "Sprawdzam " + my_ip.rsplit(".", 1)[0]
         info += "." + str(GLOBAL_X) + "\n"
         info += dsm.get_text()
         hass.states.async_set("sensor.network_devices_info_value", "", {"text": info})
 
         # search android devices
         rest_url_a = "http://{}.{}:8122"
-        url_a = rest_url_a.format(GLOBAL_MY_IP.rsplit(".", 1)[0], str(GLOBAL_X))
+        url_a = rest_url_a.format(my_ip.rsplit(".", 1)[0], str(GLOBAL_X))
 
         yield from hass.services.async_call(
             "ais_shell_command", "scan_device", {"url": url, "url_a": url_a}

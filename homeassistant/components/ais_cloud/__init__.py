@@ -1231,11 +1231,9 @@ class AisColudData:
                         "media_player",
                         "ais_exo_player",
                         {
-                            CONF_NAME: call.data.get("device_name")
-                            + "_"
-                            + call.data.get("unique_id"),
+                            CONF_NAME: call.data.get("device_name") + "_" + unique_id,
                             CONF_IP_ADDRESS: call.data.get(CONF_IP_ADDRESS),
-                            "unique_id": call.data.get("unique_id"),
+                            "unique_id": unique_id,
                         },
                         hass.config,
                     )

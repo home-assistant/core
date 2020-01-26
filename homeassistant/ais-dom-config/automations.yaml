@@ -69,6 +69,8 @@
      data:
        payload: 1
        topic: dom/cmnd/SetOption19
+   - delay: '1'
+   - service: ais_shell_command.scan_network_for_ais_players
    - delay: '5'
    - service: mqtt.publish
      data:
