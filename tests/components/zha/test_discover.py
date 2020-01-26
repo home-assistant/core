@@ -1,6 +1,7 @@
 """Test zha device discovery."""
 
 import asyncio
+import re
 from unittest import mock
 
 import pytest
@@ -8,13 +9,21 @@ import pytest
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.discovery as disc
 import homeassistant.components.zha.core.gateway as core_zha_gw
+import homeassistant.helpers.entity_registry
 
 from .zha_devices_list import DEVICES
+
+NO_TAIL_ID = re.compile("_\\d$")
 
 
 @pytest.mark.parametrize("device", DEVICES)
 async def test_devices(
-    device, zha_gateway: core_zha_gw.ZHAGateway, hass, config_entry, zigpy_device_mock
+    device,
+    zha_gateway: core_zha_gw.ZHAGateway,
+    hass,
+    config_entry,
+    zigpy_device_mock,
+    monkeypatch,
 ):
     """Test device discovery."""
 
@@ -24,6 +33,12 @@ async def test_devices(
         device["manufacturer"],
         device["model"],
         node_desc=device["node_descriptor"],
+    )
+
+    _dispatch = mock.MagicMock(wraps=disc.async_dispatch_discovery_info)
+    monkeypatch.setattr(core_zha_gw, "async_dispatch_discovery_info", _dispatch)
+    entity_registry = await homeassistant.helpers.entity_registry.async_get_registry(
+        hass
     )
 
     with mock.patch(
@@ -53,3 +68,18 @@ async def test_devices(
 
         assert zha_entities == set(device["entities"])
         assert event_channels == set(device["event_channels"])
+
+        entity_map = device["entity_map"]
+        for calls in _dispatch.call_args_list:
+            di = calls[0][2]
+            unique_id = di["unique_id"]
+            _chans = di["channels"]
+            _cmp = di["component"]
+            key = (_cmp, unique_id)
+            entity_id = entity_registry.async_get_entity_id(_cmp, "zha", unique_id)
+
+            assert key in entity_map
+            assert entity_id is not None
+            no_tail_id = NO_TAIL_ID.sub("", entity_map[key]["entity_id"])
+            assert entity_id.startswith(no_tail_id)
+            assert set([ch.name for ch in _chans]) == set(entity_map[key]["channels"])
