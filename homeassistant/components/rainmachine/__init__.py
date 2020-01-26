@@ -394,7 +394,6 @@ class RainMachine:
                 _LOGGER.error(
                     "There was an error while updating %s: %s", api_category, result
                 )
-                continue
 
         async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
         async_dispatcher_send(self.hass, ZONE_UPDATE_TOPIC)

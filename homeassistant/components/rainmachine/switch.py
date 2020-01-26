@@ -113,20 +113,20 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class RainMachineSwitch(RainMachineEntity, SwitchDevice):
     """A class to represent a generic RainMachine switch."""
 
-    def __init__(self, rainmachine, obj):
+    def __init__(self, rainmachine, switch_data):
         """Initialize a generic RainMachine switch."""
         super().__init__(rainmachine)
 
         self._is_on = False
-        self._name = obj["name"]
-        self._obj = obj
-        self._rainmachine_entity_id = obj["uid"]
+        self._name = switch_data["name"]
+        self._switch_data = switch_data
+        self._rainmachine_entity_id = switch_data["uid"]
         self._switch_type = None
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._obj["active"]
+        return self._switch_data["active"]
 
     @property
     def icon(self) -> str:
@@ -147,13 +147,13 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
             self._rainmachine_entity_id,
         )
 
-    async def _async_run_turn_off_coro(self, api_coro) -> None:
-        """Turn the program off."""
+    async def _async_run_switch_coroutine(self, api_coro) -> None:
+        """Run a coroutine to toggle the switch."""
         try:
             resp = await api_coro
         except RequestError as err:
             _LOGGER.error(
-                'Unable to turn off %s "%s": %s',
+                'Error while toggling %s "%s": %s',
                 self._switch_type,
                 self.unique_id,
                 err,
@@ -162,28 +162,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
 
         if resp["statusCode"] != 0:
             _LOGGER.error(
-                'Unable to turn off %s "%s": %s',
-                self._switch_type,
-                self.unique_id,
-                resp["message"],
-            )
-            return
-
-        self.hass.async_create_task(self.rainmachine.async_update_programs_and_zones())
-
-    async def _async_run_turn_on_coro(self, api_coro) -> None:
-        """Turn the program on."""
-        try:
-            resp = await api_coro
-        except RequestError as err:
-            _LOGGER.error(
-                'Unable to turn on %s "%s": %s', self._switch_type, self.unique_id, err,
-            )
-            return
-
-        if resp["statusCode"] != 0:
-            _LOGGER.error(
-                'Unable to turn on %s "%s": %s',
+                'Error while toggling %s "%s": %s',
                 self._switch_type,
                 self.unique_id,
                 resp["message"],
@@ -196,15 +175,15 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
 class RainMachineProgram(RainMachineSwitch):
     """A RainMachine program."""
 
-    def __init__(self, rainmachine, obj):
+    def __init__(self, rainmachine, switch_data):
         """Initialize a generic RainMachine switch."""
-        super().__init__(rainmachine, obj)
+        super().__init__(rainmachine, switch_data)
         self._switch_type = SWITCH_TYPE_PROGRAM
 
     @property
     def zones(self) -> list:
         """Return a list of active zones associated with this program."""
-        return [z for z in self._obj["wateringTimes"] if z["active"]]
+        return [z for z in self._switch_data["wateringTimes"] if z["active"]]
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -216,29 +195,31 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the program off."""
-        await self._async_run_turn_off_coro(
+        await self._async_run_switch_coroutine(
             self.rainmachine.client.programs.stop(self._rainmachine_entity_id)
         )
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the program on."""
-        await self._async_run_turn_off_coro(
+        await self._async_run_switch_coroutine(
             self.rainmachine.client.programs.start(self._rainmachine_entity_id)
         )
 
     async def async_update(self) -> None:
         """Update info for the program."""
-        [self._obj] = [
+        [self._switch_data] = [
             p
             for p in self.rainmachine.data[DATA_PROGRAMS]
             if p["uid"] == self._rainmachine_entity_id
         ]
 
-        self._is_on = bool(self._obj["status"])
+        self._is_on = bool(self._switch_data["status"])
 
         try:
             next_run = datetime.strptime(
-                "{0} {1}".format(self._obj["nextRun"], self._obj["startTime"]),
+                "{0} {1}".format(
+                    self._switch_data["nextRun"], self._switch_data["startTime"]
+                ),
                 "%Y-%m-%d %H:%M",
             ).isoformat()
         except ValueError:
@@ -246,10 +227,10 @@ class RainMachineProgram(RainMachineSwitch):
 
         self._attrs.update(
             {
-                ATTR_ID: self._obj["uid"],
+                ATTR_ID: self._switch_data["uid"],
                 ATTR_NEXT_RUN: next_run,
-                ATTR_SOAK: self._obj.get("soak"),
-                ATTR_STATUS: PROGRAM_STATUS_MAP[self._obj["status"]],
+                ATTR_SOAK: self._switch_data.get("soak"),
+                ATTR_STATUS: PROGRAM_STATUS_MAP[self._switch_data["status"]],
                 ATTR_ZONES: ", ".join(z["name"] for z in self.zones),
             }
         )
@@ -258,9 +239,9 @@ class RainMachineProgram(RainMachineSwitch):
 class RainMachineZone(RainMachineSwitch):
     """A RainMachine zone."""
 
-    def __init__(self, rainmachine, obj):
+    def __init__(self, rainmachine, switch_data):
         """Initialize a RainMachine zone."""
-        super().__init__(rainmachine, obj)
+        super().__init__(rainmachine, switch_data)
         self._switch_type = SWITCH_TYPE_ZONE
 
     async def async_added_to_hass(self):
@@ -276,13 +257,13 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
-        await self._async_run_turn_off_coro(
+        await self._async_run_switch_coroutine(
             self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
         )
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
-        await self._async_run_turn_off_coro(
+        await self._async_run_switch_coroutine(
             self.rainmachine.client.zones.start(
                 self._rainmachine_entity_id, self.rainmachine.default_zone_runtime
             )
@@ -290,7 +271,7 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_update(self) -> None:
         """Update info for the zone."""
-        [self._obj] = [
+        [self._switch_data] = [
             z
             for z in self.rainmachine.data[DATA_ZONES]
             if z["uid"] == self._rainmachine_entity_id
@@ -301,21 +282,21 @@ class RainMachineZone(RainMachineSwitch):
             if z["uid"] == self._rainmachine_entity_id
         ]
 
-        self._is_on = bool(self._obj["state"])
+        self._is_on = bool(self._switch_data["state"])
 
         self._attrs.update(
             {
-                ATTR_ID: self._obj["uid"],
+                ATTR_ID: self._switch_data["uid"],
                 ATTR_AREA: details.get("waterSense").get("area"),
-                ATTR_CURRENT_CYCLE: self._obj.get("cycle"),
+                ATTR_CURRENT_CYCLE: self._switch_data.get("cycle"),
                 ATTR_FIELD_CAPACITY: details.get("waterSense").get("fieldCapacity"),
-                ATTR_NO_CYCLES: self._obj.get("noOfCycles"),
+                ATTR_NO_CYCLES: self._switch_data.get("noOfCycles"),
                 ATTR_PRECIP_RATE: details.get("waterSense").get("precipitationRate"),
-                ATTR_RESTRICTIONS: self._obj.get("restriction"),
+                ATTR_RESTRICTIONS: self._switch_data.get("restriction"),
                 ATTR_SLOPE: SLOPE_TYPE_MAP.get(details.get("slope")),
                 ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(details.get("sun")),
                 ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(details.get("group_id")),
                 ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(details.get("sun")),
-                ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(self._obj.get("type")),
+                ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(self._switch_data.get("type")),
             }
         )
