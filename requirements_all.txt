@@ -190,7 +190,7 @@ aionotion==1.1.0
 aiopvapi==1.6.14
 
 # homeassistant.components.webostv
-aiopylgtv==0.3.0
+aiopylgtv==0.3.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
@@ -718,7 +718,7 @@ ibmiotf==0.3.4
 iglo==1.2.7
 
 # homeassistant.components.ihc
-ihcsdk==2.4.0
+ihcsdk==2.5.0
 
 # homeassistant.components.incomfort
 incomfort-client==0.4.0
@@ -1426,9 +1426,6 @@ pyotgw==0.5b1
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.otp
 pyotp==2.3.0
-
-# homeassistant.components.owlet
-pyowlet==1.0.3
 
 # homeassistant.components.openweathermap
 pyowm==2.10.0

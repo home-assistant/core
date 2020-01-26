@@ -191,7 +191,10 @@ SET_RUNTIME_VALUE_BOOL_SCHEMA = vol.Schema(
 )
 
 SET_RUNTIME_VALUE_INT_SCHEMA = vol.Schema(
-    {vol.Required(ATTR_IHC_ID): cv.positive_int, vol.Required(ATTR_VALUE): int}
+    {
+        vol.Required(ATTR_IHC_ID): cv.positive_int,
+        vol.Required(ATTR_VALUE): vol.Coerce(int),
+    }
 )
 
 SET_RUNTIME_VALUE_FLOAT_SCHEMA = vol.Schema(

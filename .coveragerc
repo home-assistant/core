@@ -319,6 +319,7 @@ omit =
     homeassistant/components/iaqualink/sensor.py
     homeassistant/components/iaqualink/switch.py
     homeassistant/components/icloud/__init__.py
+    homeassistant/components/icloud/account.py
     homeassistant/components/icloud/device_tracker.py
     homeassistant/components/icloud/sensor.py
     homeassistant/components/izone/climate.py
@@ -510,7 +511,6 @@ omit =
     homeassistant/components/orvibo/switch.py
     homeassistant/components/osramlightify/light.py
     homeassistant/components/otp/sensor.py
-    homeassistant/components/owlet/*
     homeassistant/components/panasonic_bluray/media_player.py
     homeassistant/components/panasonic_viera/media_player.py
     homeassistant/components/pandora/media_player.py
