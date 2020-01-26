@@ -101,11 +101,10 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
 class VelbusEntity(Entity):
     """Representation of a Velbus entity."""
 
-    def __init__(self, module, channel, counter=False):
+    def __init__(self, module, channel):
         """Initialize a Velbus entity."""
         self._module = module
         self._channel = channel
-        self._is_counter = counter
 
     @property
     def unique_id(self):
@@ -115,10 +114,7 @@ class VelbusEntity(Entity):
             serial = self._module.get_module_address()
         else:
             serial = self._module.serial
-        if self._is_counter:
-            return f"{serial}-{self._channel}-counter"
-        else:
-            return f"{serial}-{self._channel}"
+        return f"{serial}-{self._channel}"
 
     @property
     def name(self):

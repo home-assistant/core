@@ -25,6 +25,24 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class VelbusSensor(VelbusEntity):
     """Representation of a sensor."""
 
+    def __init__(self, module, channel, counter=False):
+        """Initialize a sensor Velbus entity."""
+        VelbusEntity.__init__(self, module, channel)
+        self._is_counter = counter
+
+    @property
+    def unique_id(self):
+        """Get unique ID."""
+        serial = 0
+        if self._module.serial == 0:
+            serial = self._module.get_module_address()
+        else:
+            serial = self._module.serial
+        if self._is_counter:
+            return f"{serial}-{self._channel}-counter"
+        else:
+            return f"{serial}-{self._channel}"
+
     @property
     def device_class(self):
         """Return the device class of the sensor."""
