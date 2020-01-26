@@ -6,7 +6,7 @@ from pygti.exceptions import CannotConnect, InvalidAuth
 from pygti.gti import GTI, Auth
 import voluptuous as vol
 
-from homeassistant import config_entries, core
+from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
@@ -44,22 +44,10 @@ class GTIHub:
 
         self.gti = GTI(Auth(session, self.username, self.password, self.host))
 
-    async def authenticate(self) -> bool:
+    async def authenticate(self):
         """Test if we can authenticate with the host."""
 
         return await self.gti.init()
-
-
-async def validate_input(hass: core.HomeAssistant, hub: GTIHub):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from SCHEMA_STEP_USER with values provided by the user.
-    """
-
-    if not await hub.authenticate():
-        raise InvalidAuth
-
-    return {"title": "HVV Departure Sensor 1"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):

@@ -1,5 +1,6 @@
 """Test the HVV Departures config flow."""
 from asynctest import patch
+from pygti.exceptions import InvalidAuth
 
 from homeassistant.components.hvv_departures import config_flow
 
@@ -144,3 +145,32 @@ async def test_user_flow(hass):
                 "lastUpdate": {"date": "26.01.2020", "time": "22:49"},
             },
         }
+
+
+async def test_user_flow_invalid_auth(hass):
+    """Test that config flow works."""
+    flow = config_flow.ConfigFlow()
+    flow.hass = hass
+
+    with patch(
+        "homeassistant.components.hvv_departures.config_flow.GTIHub.authenticate",
+        side_effect=InvalidAuth(
+            "ERROR_TEXT",
+            "Bei der Verarbeitung der Anfrage ist ein technisches Problem aufgetreten.",
+            "Authentication failed!",
+        ),
+    ):
+
+        # step: user
+        result_user = await flow.async_step_user(
+            user_input={
+                "host": "api-test.geofox.de",
+                "username": "test-username",
+                "password": "test-password",
+            }
+        )
+
+        print(result_user)
+
+        assert result_user["type"] == "form"
+        assert result_user["errors"] == {"base": "invalid_auth"}
