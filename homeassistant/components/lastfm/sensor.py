@@ -67,6 +67,11 @@ class LastfmSensor(Entity):
         self._cover = None
 
     @property
+    def unique_id(self):
+        """Return the unique ID of the sensor"""
+        return self._unique_id
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
