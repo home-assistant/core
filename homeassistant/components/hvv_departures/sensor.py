@@ -57,6 +57,7 @@ class HVVDepartureSensor(Entity):
         self.config = self.entry.data
         self.station_name = self.config["station"]["name"]
         self.attr = {}
+        self._available = False
         self._state = None
         self._name = f"Departures at {self.station_name}"
 
@@ -92,7 +93,12 @@ class HVVDepartureSensor(Entity):
             data = await self.gti.departureList(payload)
 
             if data["returnCode"] == "OK" and len(data["departures"]) > 0:
+
+                if not self._available:
+                    _LOGGER.debug("Network reachable again")
+
                 departure = data["departures"][0]
+                self._available = True
                 self._state = (
                     departure_time
                     + timedelta(minutes=departure["timeOffset"])
@@ -123,11 +129,17 @@ class HVVDepartureSensor(Entity):
                     )
                 self.attr[ATTR_NEXT] = departures
             else:
+                self._available = False
                 self._state = None
                 self.attr = {}
 
         except Exception as error:
-            _LOGGER.error("Error occurred while fetching data: %r", error)
+
+            # only log this error once
+            if self._available:
+                _LOGGER.error("Error occurred while fetching data: %r", error)
+
+            self._available = False
             self._state = None
             self.attr = {}
 
@@ -169,6 +181,11 @@ class HVVDepartureSensor(Entity):
     def icon(self):
         """Return the icon of the sensor."""
         return ICON
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
 
     @property
     def device_class(self):
