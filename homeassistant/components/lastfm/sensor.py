@@ -11,6 +11,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ class LastfmSensor(Entity):
         self._unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
         self._user = lastfm_api.get_user(user)
         self._name = user
-        self._entity_id = user
+        self._entity_id = slugify(user)
         self._lastfm = lastfm_api
         self._state = "Not Scrobbling"
         self._playcount = None
