@@ -1,6 +1,6 @@
 """Test HomematicIP Cloud setup process."""
 
-from unittest.mock import patch
+from asynctest import patch
 
 from homeassistant.components import homematicip_cloud as hmipc
 from homeassistant.setup import async_setup_component
@@ -10,102 +10,85 @@ from tests.common import Mock, MockConfigEntry, mock_coro
 
 async def test_config_with_accesspoint_passed_to_config_entry(hass):
     """Test that config for a accesspoint are loaded via config entry."""
-    with patch.object(hass, "config_entries") as mock_config_entries:
-        assert (
-            await async_setup_component(
-                hass,
-                hmipc.DOMAIN,
-                {
-                    hmipc.DOMAIN: {
-                        hmipc.CONF_ACCESSPOINT: "ABC123",
-                        hmipc.CONF_AUTHTOKEN: "123",
-                        hmipc.CONF_NAME: "name",
-                    }
-                },
-            )
-            is True
-        )
 
-    # Flow started for the access point
-    assert len(mock_config_entries.flow.mock_calls) >= 2
-
-
-async def test_setup_entry_successful(hass):
-    """Test setup entry is successful."""
-    entry = MockConfigEntry(
-        domain=hmipc.DOMAIN,
-        unique_id="ABC123",
-        data={
-            hmipc.HMIPC_HAPID: "ABC123",
-            hmipc.HMIPC_AUTHTOKEN: "123",
-            hmipc.HMIPC_NAME: "hmip",
-        },
-    )
-    entry.add_to_hass(hass)
-    with patch.object(hmipc, "HomematicipHAP") as mock_hap:
-        instance = mock_hap.return_value
-        instance.async_setup.return_value = mock_coro(True)
-        instance.home.id = "1"
-        instance.home.modelType = "mock-type"
-        instance.home.name = "mock-name"
-        instance.home.currentAPVersion = "mock-ap-version"
-
-        assert (
-            await async_setup_component(
-                hass,
-                hmipc.DOMAIN,
-                {
-                    hmipc.DOMAIN: {
-                        hmipc.CONF_ACCESSPOINT: "ABC123",
-                        hmipc.CONF_AUTHTOKEN: "123",
-                        hmipc.CONF_NAME: "hmip",
-                    }
-                },
-            )
-            is True
-        )
-
-    assert len(mock_hap.mock_calls) >= 2
-
-
-async def test_setup_defined_accesspoint(hass):
-    """Test we initiate config entry for the accesspoint."""
-    with patch.object(hass, "config_entries") as mock_config_entries:
-        mock_config_entries.flow.async_init.return_value = mock_coro()
-        assert (
-            await async_setup_component(
-                hass,
-                hmipc.DOMAIN,
-                {
-                    hmipc.DOMAIN: {
-                        hmipc.CONF_ACCESSPOINT: "ABC123",
-                        hmipc.CONF_AUTHTOKEN: "123",
-                        hmipc.CONF_NAME: "hmip",
-                    }
-                },
-            )
-            is True
-        )
-
-    assert len(mock_config_entries.flow.mock_calls) == 1
-    assert mock_config_entries.flow.mock_calls[0][2]["data"] == {
-        hmipc.HMIPC_HAPID: "ABC123",
-        hmipc.HMIPC_AUTHTOKEN: "123",
-        hmipc.HMIPC_NAME: "hmip",
+    entry_config = {
+        hmipc.CONF_ACCESSPOINT: "ABC123",
+        hmipc.CONF_AUTHTOKEN: "123",
+        hmipc.CONF_NAME: "name",
     }
+    # no config_entry exists
+    assert len(hass.config_entries.async_entries(hmipc.DOMAIN)) == 0
+    # no acccesspoint exists
+    assert not hass.data.get(hmipc.DOMAIN)
+
+    assert (
+        await async_setup_component(hass, hmipc.DOMAIN, {hmipc.DOMAIN: entry_config})
+        is True
+    )
+
+    # config_entry created for access point
+    config_entries = hass.config_entries.async_entries(hmipc.DOMAIN)
+    assert len(config_entries) == 1
+    assert config_entries[0].data == {
+        "authtoken": "123",
+        "hapid": "ABC123",
+        "name": "name",
+    }
+    # defined access_point created for config_entry
+    assert isinstance(hass.data[hmipc.DOMAIN]["ABC123"], hmipc.HomematicipHAP)
+
+
+async def test_config_already_registered_not_passed_to_config_entry(hass):
+    """Test that an already registered accesspoint does not get imported."""
+
+    mock_config = {
+        hmipc.HMIPC_AUTHTOKEN: "123",
+        hmipc.HMIPC_HAPID: "ABC123",
+        hmipc.HMIPC_NAME: "name",
+    }
+    MockConfigEntry(domain=hmipc.DOMAIN, data=mock_config).add_to_hass(hass)
+
+    # one config_entry exists
+    config_entries = hass.config_entries.async_entries(hmipc.DOMAIN)
+    assert len(config_entries) == 1
+    assert config_entries[0].data == {
+        "authtoken": "123",
+        "hapid": "ABC123",
+        "name": "name",
+    }
+    # config_enty has no unique_id
+    assert not config_entries[0].unique_id
+
+    entry_config = {
+        hmipc.CONF_ACCESSPOINT: "ABC123",
+        hmipc.CONF_AUTHTOKEN: "123",
+        hmipc.CONF_NAME: "name",
+    }
+    assert (
+        await async_setup_component(hass, hmipc.DOMAIN, {hmipc.DOMAIN: entry_config})
+        is True
+    )
+
+    # no new config_entry created / still one config_entry
+    config_entries = hass.config_entries.async_entries(hmipc.DOMAIN)
+    assert len(config_entries) == 1
+    assert config_entries[0].data == {
+        "authtoken": "123",
+        "hapid": "ABC123",
+        "name": "name",
+    }
+    # config_enty updated with unique_id
+    assert config_entries[0].unique_id == "ABC123"
 
 
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
-    entry = MockConfigEntry(
-        domain=hmipc.DOMAIN,
-        data={
-            hmipc.HMIPC_HAPID: "ABC123",
-            hmipc.HMIPC_AUTHTOKEN: "123",
-            hmipc.HMIPC_NAME: "hmip",
-        },
-    )
-    entry.add_to_hass(hass)
+    mock_config = {
+        hmipc.HMIPC_AUTHTOKEN: "123",
+        hmipc.HMIPC_HAPID: "ABC123",
+        hmipc.HMIPC_NAME: "name",
+    }
+    MockConfigEntry(domain=hmipc.DOMAIN, data=mock_config).add_to_hass(hass)
 
     with patch.object(hmipc, "HomematicipHAP") as mock_hap:
         instance = mock_hap.return_value
@@ -114,14 +97,17 @@ async def test_unload_entry(hass):
         instance.home.modelType = "mock-type"
         instance.home.name = "mock-name"
         instance.home.currentAPVersion = "mock-ap-version"
+        instance.async_reset.return_value = mock_coro(True)
 
         assert await async_setup_component(hass, hmipc.DOMAIN, {}) is True
 
-    assert len(mock_hap.return_value.mock_calls) >= 1
+    assert mock_hap.return_value.mock_calls[0][0] == "async_setup"
 
-    mock_hap.return_value.async_reset.return_value = mock_coro(True)
-    assert await hmipc.async_unload_entry(hass, entry)
+    config_entries = hass.config_entries.async_entries(hmipc.DOMAIN)
+    assert len(config_entries) == 1
+    assert await hmipc.async_unload_entry(hass, config_entries[0])
     assert len(mock_hap.return_value.async_reset.mock_calls) == 1
+    # entry is unloaded
     assert hass.data[hmipc.DOMAIN] == {}
 
 
