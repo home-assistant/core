@@ -41,7 +41,6 @@ class UniFiClient(Entity):
         """Update the clients state."""
         if self.is_wired and self.client.mac in self.controller.wireless_clients:
             self.is_wired = False
-        print(f"Updating client {self.entity_id} {self.client.mac}")
         LOGGER.debug("Updating client %s %s", self.entity_id, self.client.mac)
         self.async_schedule_update_ha_state()
 

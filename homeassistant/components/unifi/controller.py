@@ -339,7 +339,7 @@ class UniFiController:
 
 
 async def get_controller(
-    hass, host, username, password, port, site, verify_ssl, async_callback
+    hass, host, username, password, port, site, verify_ssl, async_callback=None
 ):
     """Create a controller object and verify authentication."""
     sslcontext = None

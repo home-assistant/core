@@ -136,11 +136,12 @@ async def test_tracked_devices(hass):
 
     client_1_copy = copy(CLIENT_1)
     client_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
+    event = {"meta": {"message": "sta:sync"}, "data": [client_1_copy]}
+    controller.api.message_handler(event)
     device_1_copy = copy(DEVICE_1)
     device_1_copy["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    controller.mock_client_responses.append([client_1_copy])
-    controller.mock_device_responses.append([device_1_copy])
-    await controller.async_update()
+    event = {"meta": {"message": "device:sync"}, "data": [device_1_copy]}
+    controller.api.message_handler(event)
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -151,9 +152,8 @@ async def test_tracked_devices(hass):
 
     device_1_copy = copy(DEVICE_1)
     device_1_copy["disabled"] = True
-    controller.mock_client_responses.append({})
-    controller.mock_device_responses.append([device_1_copy])
-    await controller.async_update()
+    event = {"meta": {"message": "device:sync"}, "data": [device_1_copy]}
+    controller.api.message_handler(event)
     await hass.async_block_till_done()
 
     device_1 = hass.states.get("device_tracker.device_1")
@@ -194,9 +194,8 @@ async def test_wireless_client_go_wired_issue(hass):
 
     client_1_client["is_wired"] = True
     client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    controller.mock_client_responses.append([client_1_client])
-    controller.mock_device_responses.append({})
-    await controller.async_update()
+    event = {"meta": {"message": "sta:sync"}, "data": [client_1_client]}
+    controller.api.message_handler(event)
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")
@@ -207,9 +206,8 @@ async def test_wireless_client_go_wired_issue(hass):
         "utcnow",
         return_value=(dt_util.utcnow() + timedelta(minutes=5)),
     ):
-        controller.mock_client_responses.append([client_1_client])
-        controller.mock_device_responses.append({})
-        await controller.async_update()
+        event = {"meta": {"message": "sta:sync"}, "data": [client_1_client]}
+        controller.api.message_handler(event)
         await hass.async_block_till_done()
 
         client_1 = hass.states.get("device_tracker.client_1")
@@ -217,9 +215,8 @@ async def test_wireless_client_go_wired_issue(hass):
 
     client_1_client["is_wired"] = False
     client_1_client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
-    controller.mock_client_responses.append([client_1_client])
-    controller.mock_device_responses.append({})
-    await controller.async_update()
+    event = {"meta": {"message": "sta:sync"}, "data": [client_1_client]}
+    controller.api.message_handler(event)
     await hass.async_block_till_done()
 
     client_1 = hass.states.get("device_tracker.client_1")

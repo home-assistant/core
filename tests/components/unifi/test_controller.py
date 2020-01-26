@@ -111,9 +111,12 @@ async def setup_unifi_integration(
             return mock_client_all_responses.popleft()
         return {}
 
+    # "aiounifi.Controller.start_websocket", return_value=True
     with patch("aiounifi.Controller.login", return_value=True), patch(
         "aiounifi.Controller.sites", return_value=sites
-    ), patch("aiounifi.Controller.request", new=mock_request):
+    ), patch("aiounifi.Controller.request", new=mock_request), patch.object(
+        aiounifi.websocket.WSClient, "start", return_value=True
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -231,49 +234,6 @@ async def test_reset_after_successful_setup(hass):
 
     assert result is True
     assert len(controller.listeners) == 0
-
-
-async def test_failed_update_failed_login(hass):
-    """Running update can handle a failed login."""
-    controller = await setup_unifi_integration(hass)
-
-    with patch.object(
-        controller.api.clients, "update", side_effect=aiounifi.LoginRequired
-    ), patch.object(controller.api, "login", side_effect=aiounifi.AiounifiException):
-        await controller.async_update()
-    await hass.async_block_till_done()
-
-    assert controller.available is False
-
-
-async def test_failed_update_successful_login(hass):
-    """Running update can login when requested."""
-    controller = await setup_unifi_integration(hass)
-
-    with patch.object(
-        controller.api.clients, "update", side_effect=aiounifi.LoginRequired
-    ), patch.object(controller.api, "login", return_value=Mock(True)):
-        await controller.async_update()
-    await hass.async_block_till_done()
-
-    assert controller.available is True
-
-
-async def test_failed_update(hass):
-    """Running update can login when requested."""
-    controller = await setup_unifi_integration(hass)
-
-    with patch.object(
-        controller.api.clients, "update", side_effect=aiounifi.AiounifiException
-    ):
-        await controller.async_update()
-    await hass.async_block_till_done()
-
-    assert controller.available is False
-
-    await controller.async_update()
-    await hass.async_block_till_done()
-    assert controller.available is True
 
 
 async def test_get_controller(hass):
