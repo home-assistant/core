@@ -39,8 +39,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -55,13 +54,13 @@ async def async_setup_entry(
     device_class = config_entry.data[CONF_DEVICE_CLASS]
 
     # If config entry options not set up, set them up, otherwise assign values managed in options
+    volume_step = config_entry.options.get(
+        CONF_VOLUME_STEP, config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP),
+    )
     if not config_entry.options:
-        volume_step = config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
         hass.config_entries.async_update_entry(
             config_entry, options={CONF_VOLUME_STEP: volume_step}
         )
-    else:
-        volume_step = config_entry.options[CONF_VOLUME_STEP]
 
     device = VizioAsync(
         DEVICE_ID,
