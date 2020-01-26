@@ -98,9 +98,10 @@ def zigpy_device_mock():
         ieee="00:0d:6f:00:0a:90:69:e7",
         manufacturer="FakeManufacturer",
         model="FakeModel",
+        node_desc=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
     ):
         """Make a fake device using the specified cluster classes."""
-        device = FakeDevice(ieee, manufacturer, model)
+        device = FakeDevice(ieee, manufacturer, model, node_desc)
         for epid, ep in endpoints.items():
             endpoint = FakeEndpoint(manufacturer, model, epid)
             endpoint.device = device
