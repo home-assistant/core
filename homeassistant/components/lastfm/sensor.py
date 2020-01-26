@@ -55,7 +55,7 @@ class LastfmSensor(Entity):
 
     def __init__(self, user, lastfm_api):
         """Initialize the sensor."""
-        self._unique_id = hashlib.sha256(str(user).encode("utf-8")).hexdigest()
+        self._unique_id = hashlib.sha256(user.encode("utf-8")).hexdigest()
         self._user = lastfm_api.get_user(user)
         self._name = user
         self._entity_id = user
