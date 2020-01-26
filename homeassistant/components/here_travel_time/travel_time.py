@@ -6,7 +6,7 @@ from typing import Callable, Dict, Optional, Union
 import herepy
 import voluptuous as vol
 
-from homeassistant.components.travel_time import PLATFORM_SCHEMA, TravelTimeEntity
+from homeassistant.components.travel_time import TRAVEL_TIME_SCHEMA, TravelTimeEntity
 from homeassistant.components.travel_time.const import (
     CONF_DESTINATION_ENTITY_ID,
     CONF_DESTINATION_LATITUDE,
@@ -14,6 +14,7 @@ from homeassistant.components.travel_time.const import (
     CONF_ORIGIN_ENTITY_ID,
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
+    CONF_TRAVEL_MODE,
     CONF_ROUTE_MODE,
     CONF_TRAFFIC_MODE,
     ICON_BICYCLE,

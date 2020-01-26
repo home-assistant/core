@@ -15,7 +15,7 @@ CONF_ORIGIN_LATITUDE = "origin_latitude"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
 CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
 CONF_TRAFFIC_MODE = "traffic_mode"
-CONF_ROUTE_MODE = "route_mode"
+CONF_TRAVEL_MODE = "travel_mode"
 
 ICON_BICYCLE = "mdi:bike"
 ICON_CAR = "mdi:car"
@@ -30,8 +30,6 @@ ATTR_ORIGIN = "origin"
 ATTR_DESTINATION = "destination"
 ATTR_TRAVEL_MODE = "travel_mode"
 ATTR_TRAFFIC_MODE = CONF_TRAFFIC_MODE
-
-ATTR_ROUTE_MODE = CONF_ROUTE_MODE
 
 ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
 ATTR_ORIGIN_NAME = "origin_name"

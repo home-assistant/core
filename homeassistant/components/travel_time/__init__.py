@@ -35,8 +35,36 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
+TRAVEL_TIME_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Inclusive(CONF_DESTINATION_LATITUDE, "destination_coordinates"): vol.Any(cv.latitude, cv.template),
+        vol.Inclusive(CONF_DESTINATION_LONGITUDE, "destination_coordinates"): vol.Any(cv.longitude, cv.template),
+        vol.Inclusive(CONF_ORIGIN_LATITUDE, "origin_coordinates"): vol.Any(cv.latitude, cv.template),
+        vol.Inclusive(CONF_ORIGIN_LONGITUDE, "origin_coordinates"): vol.Any(cv.longitude, cv.template),
+        vol.Exclusive(
+                CONF_DESTINATION_LATITUDE, "destination"
+            ): vol.Any(cv.latitude, cv.template),
+        vol.Exclusive(
+                CONF_DESTINATION_NAME, "destination"
+            ): vol.Any(cv.string, cv.template),
+        vol.Exclusive(
+                CONF_ORIGIN_LATITUDE, "origin"
+            ): vol.Any(cv.latitude, cv.template),
+        vol.Exclusive(
+                CONF_ORIGIN_NAME, "origin"
+            ): vol.Any(cv.string, cv.template),
+    }, extra=vol.ALLOW_EXTRA
+)
 
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(
+        CONF_DESTINATION_LATITUDE, CONF_DESTINATION_NAME
+    ),
+    cv.has_at_least_one_key(
+        CONF_ORIGIN_LATITUDE, CONF_ORIGIN_NAME
+    ),
+    TRAVEL_TIME_SCHEMA
+)
 
 async def async_setup(hass, config):
     """Track states and offer events for sensors."""
@@ -122,11 +150,6 @@ class TravelTimeEntity(Entity):
         return None
 
     @property
-    def route_mode(self) -> str:
-        """Get the route_mode e.g fastest of the travel_time entity."""
-        return None
-
-    @property
     def state(self) -> Optional[str]:
         """Return the state of the travel_time entity."""
         return self.duration
@@ -174,9 +197,6 @@ class TravelTimeEntity(Entity):
 
         if self.route is not None:
             res[ATTR_ROUTE] = self.route
-
-        if self.route_mode is not None:
-            res[ATTR_ROUTE_MODE] = self.route_mode
 
         if self.traffic_mode is not None:
             res[ATTR_TRAFFIC_MODE] = self.traffic_mode
