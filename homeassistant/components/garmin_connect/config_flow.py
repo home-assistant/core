@@ -39,12 +39,11 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return await self._show_setup_form(user_input)
 
+        garmin_client = Garmin(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+
         errors = {}
         try:
-            unique_id = Garmin(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-            ).get_full_name()
-
+            garmin_client.login()
         except GarminConnectConnectionError:
             errors["base"] = "cannot_connect"
             return await self._show_setup_form(errors)
@@ -58,6 +57,8 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
             return await self._show_setup_form(errors)
+
+        unique_id = garmin_client.get_full_name()
 
         entries = self._async_current_entries()
         for entry in entries:
