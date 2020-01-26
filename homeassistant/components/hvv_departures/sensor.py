@@ -2,6 +2,8 @@
 from datetime import datetime, timedelta
 import logging
 
+from aiohttp import ClientConnectorError
+from pygti.exceptions import InvalidAuth
 from pygti.gti import GTI, Auth
 
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
@@ -60,6 +62,7 @@ class HVVDepartureSensor(Entity):
         self._available = False
         self._state = None
         self._name = f"Departures at {self.station_name}"
+        self._last_error = None
 
         self.gti = GTI(
             Auth(
@@ -94,8 +97,10 @@ class HVVDepartureSensor(Entity):
 
             if data["returnCode"] == "OK" and len(data["departures"]) > 0:
 
-                if not self._available:
-                    _LOGGER.debug("Network reachable again")
+                if self._last_error == ClientConnectorError:
+                    _LOGGER.debug("Network available again")
+
+                self._last_error = None
 
                 departure = data["departures"][0]
                 self._available = True
@@ -130,18 +135,25 @@ class HVVDepartureSensor(Entity):
                 self.attr[ATTR_NEXT] = departures
             else:
                 self._available = False
-                self._state = None
-                self.attr = {}
 
-        except Exception as error:
-
-            # only log this error once
-            if self._available:
-                _LOGGER.error("Error occurred while fetching data: %r", error)
+        except InvalidAuth as error:
+            if self._last_error != InvalidAuth:
+                _LOGGER.error("Authentification failed: %r", error)
+                self._last_error = InvalidAuth
+            self._available = False
+        except ClientConnectorError as error:
+            if self._last_error != ClientConnectorError:
+                _LOGGER.warn("Network unavailable: %r", error)
+                self._last_error = ClientConnectorError
 
             self._available = False
-            self._state = None
-            self.attr = {}
+        except Exception as error:
+
+            if self._last_error != error:
+                _LOGGER.error("Error occurred while fetching data: %r", error)
+                self._last_error = error
+
+            self._available = False
 
     @property
     def unique_id(self):
