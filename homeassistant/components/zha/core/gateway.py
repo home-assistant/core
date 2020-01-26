@@ -292,6 +292,46 @@ class ZHAGateway:
                 },
             )
 
+    def group_member_removed(self, zigpy_group, endpoint):
+        """Handle zigpy group member removed event."""
+        # need to handle endpoint correctly on groups
+        zha_group = self._async_get_or_create_group(zigpy_group)
+        zha_group.info("group_member_removed - endpoint: %s", endpoint)
+        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
+
+    def group_member_added(self, zigpy_group, endpoint):
+        """Handle zigpy group member added event."""
+        # need to handle endpoint correctly on groups
+        zha_group = self._async_get_or_create_group(zigpy_group)
+        zha_group.info("group_member_added - endpoint: %s", endpoint)
+        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
+
+    def group_added(self, zigpy_group):
+        """Handle zigpy group added event."""
+        zha_group = self._async_get_or_create_group(zigpy_group)
+        zha_group.info("group_added")
+        # need to dispatch for entity creation here
+        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_ADDED)
+
+    def group_removed(self, zigpy_group):
+        """Handle zigpy group added event."""
+        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
+        zha_group = self._groups.pop(zigpy_group.group_id, None)
+        zha_group.info("group_removed")
+
+    def _send_group_gateway_message(self, zigpy_group, gateway_message_type):
+        """Send the gareway event for a zigpy group event."""
+        zha_group = self._groups.get(zigpy_group.group_id, None)
+        if zha_group is not None:
+            async_dispatcher_send(
+                self._hass,
+                ZHA_GW_MSG,
+                {
+                    ATTR_TYPE: gateway_message_type,
+                    ZHA_GW_MSG_GROUP_INFO: zha_group.async_get_group_info(),
+                },
+            )
+
     async def _async_remove_device(self, device, entity_refs):
         if entity_refs is not None:
             remove_tasks = []
