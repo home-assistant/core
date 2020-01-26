@@ -43,9 +43,9 @@ SENSORS = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_IP_ADDRESS): cv.string,
         vol.Required(CONF_CLOUD_ID): cv.string,
         vol.Required(CONF_INSTALL_CODE): cv.string,
+        vol.Optional(CONF_IP_ADDRESS, default=""): cv.string,
     }
 )
 
@@ -61,9 +61,12 @@ def hwtest(cloud_id, install_code, ip_address=None):
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create the Eagle-200 sensor."""
-    ip_address = config[CONF_IP_ADDRESS]
     cloud_id = config[CONF_CLOUD_ID]
     install_code = config[CONF_INSTALL_CODE]
+    if config[CONF_IP_ADDRESS] == "":
+        ip_address = None
+    else:
+        ip_address = config[CONF_IP_ADDRESS]
 
     try:
         eagle_reader = hwtest(cloud_id, install_code, ip_address)

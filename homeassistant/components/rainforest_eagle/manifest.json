@@ -4,8 +4,9 @@
   "documentation": "https://www.home-assistant.io/integrations/rainforest_eagle",
   "requirements": [
     "eagle200_reader==0.2.1",
-    "uEagle"
+    "uEagle==0.0.1"
   ],
   "dependencies": [],
-  "codeowners": ["@gtdiehl"]
+  "codeowners": ["@gtdiehl",
+                 "@jcalbert"]
 }
