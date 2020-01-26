@@ -2,10 +2,11 @@
 import logging
 
 from pygti.auth import GTI_DEFAULT_HOST
+from pygti.exceptions import CannotConnect, InvalidAuth
 from pygti.gti import GTI, Auth
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
@@ -46,8 +47,7 @@ class GTIHub:
     async def authenticate(self) -> bool:
         """Test if we can authenticate with the host."""
 
-        return_code = await self.gti.init()
-        return return_code.get("returnCode") == "OK"
+        return await self.gti.init()
 
 
 async def validate_input(hass: core.HomeAssistant, hub: GTIHub):
@@ -87,8 +87,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     session,
                 )
 
-                if not await self.hub.authenticate():
-                    raise InvalidAuth
+                response = await self.hub.authenticate()
+
+                _LOGGER.debug("init gti: %r", response)
 
                 self.data = user_input
 
@@ -252,11 +253,3 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 }
             ),
         )
-
-
-class CannotConnect(exceptions.HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(exceptions.HomeAssistantError):
-    """Error to indicate there is invalid auth."""

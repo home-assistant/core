@@ -1,90 +1,146 @@
-"""Test the HVV config flow."""
+"""Test the HVV Departures config flow."""
 from asynctest import patch
 
-from homeassistant import config_entries, setup
-from homeassistant.components.hvv.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.hvv.const import DOMAIN
+from homeassistant.components.hvv_departures import config_flow
 
 
-async def test_form(hass):
-    """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
+async def test_user_flow(hass):
+    """Test that config flow works."""
+    flow = config_flow.ConfigFlow()
+    flow.hass = hass
 
     with patch(
-        "homeassistant.components.hvv.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.hvv_departures.config_flow.GTIHub.authenticate",
         return_value=True,
     ), patch(
-        "homeassistant.components.hvv.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.hvv.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
-    assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
-    }
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.hvv.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
+        "pygti.gti.GTI.checkName",
+        return_value={
+            "returnCode": "OK",
+            "results": [
+                {
+                    "name": "Wartenau",
+                    "city": "Hamburg",
+                    "combinedName": "Wartenau",
+                    "id": "Master:10901",
+                    "type": "STATION",
+                    "coordinate": {"x": 10.035515, "y": 53.56478},
+                    "serviceTypes": ["bus", "u"],
+                    "hasStationInformation": True,
+                }
+            ],
+        },
+    ), patch(
+        "pygti.gti.GTI.stationInformation",
+        return_value={
+            "returnCode": "OK",
+            "partialStations": [
+                {
+                    "stationOutline": "http://www.geofox.de/images/mobi/stationDescriptions/U_Wartenau.ZM3.jpg",
+                    "elevators": [
+                        {
+                            "label": "A",
+                            "cabinWidth": 124,
+                            "cabinLength": 147,
+                            "doorWidth": 110,
+                            "description": "Zugang Landwehr <-> Schalterhalle",
+                            "elevatorType": "Durchlader",
+                            "buttonType": "BRAILLE",
+                            "state": "READY",
+                        },
+                        {
+                            "lines": ["U1"],
+                            "label": "B",
+                            "cabinWidth": 123,
+                            "cabinLength": 145,
+                            "doorWidth": 90,
+                            "description": "Schalterhalle <-> U1",
+                            "elevatorType": "Durchlader",
+                            "buttonType": "COMBI",
+                            "state": "READY",
+                        },
+                    ],
+                }
+            ],
+            "lastUpdate": {"date": "26.01.2020", "time": "22:49"},
+        },
+    ), patch(
+        "homeassistant.components.hvv_departures.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.hvv_departures.async_setup_entry", return_value=True,
     ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
+
+        # step: user
+
+        result_user = await flow.async_step_user(
+            user_input={
+                "host": "api-test.geofox.de",
                 "username": "test-username",
                 "password": "test-password",
-            },
+            }
         )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
+        assert result_user["step_id"] == "station"
 
-
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.hvv.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+        # step: station
+        result_station = await flow.async_step_station(
+            user_input={"station": "Wartenau"}
         )
 
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+        assert result_station["step_id"] == "station_select"
+
+        # step: station_select
+        result_station_select = await flow.async_step_station_select(
+            user_input={"station": "Wartenau (STATION)"}
+        )
+
+        print(result_station_select)
+
+        assert result_station_select["type"] == "create_entry"
+        assert result_station_select["title"] == "Wartenau"
+        assert result_station_select["data"] == {
+            "host": "api-test.geofox.de",
+            "username": "test-username",
+            "password": "test-password",
+            "station": {
+                "name": "Wartenau",
+                "city": "Hamburg",
+                "combinedName": "Wartenau",
+                "id": "Master:10901",
+                "type": "STATION",
+                "coordinate": {"x": 10.035515, "y": 53.56478},
+                "serviceTypes": ["bus", "u"],
+                "hasStationInformation": True,
+            },
+            "stationInformation": {
+                "returnCode": "OK",
+                "partialStations": [
+                    {
+                        "stationOutline": "http://www.geofox.de/images/mobi/stationDescriptions/U_Wartenau.ZM3.jpg",
+                        "elevators": [
+                            {
+                                "label": "A",
+                                "cabinWidth": 124,
+                                "cabinLength": 147,
+                                "doorWidth": 110,
+                                "description": "Zugang Landwehr <-> Schalterhalle",
+                                "elevatorType": "Durchlader",
+                                "buttonType": "BRAILLE",
+                                "state": "READY",
+                            },
+                            {
+                                "lines": ["U1"],
+                                "label": "B",
+                                "cabinWidth": 123,
+                                "cabinLength": 145,
+                                "doorWidth": 90,
+                                "description": "Schalterhalle <-> U1",
+                                "elevatorType": "Durchlader",
+                                "buttonType": "COMBI",
+                                "state": "READY",
+                            },
+                        ],
+                    }
+                ],
+                "lastUpdate": {"date": "26.01.2020", "time": "22:49"},
+            },
+        }
