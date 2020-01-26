@@ -10,7 +10,7 @@ from homeassistant.components.cover import (
     CoverDevice,
 )
 
-from . import InsteonEntity
+from .insteon_entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 

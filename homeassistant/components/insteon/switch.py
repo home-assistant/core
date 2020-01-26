@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.switch import SwitchDevice
 
-from . import InsteonEntity
+from .insteon_entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
