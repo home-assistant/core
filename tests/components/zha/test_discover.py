@@ -5,7 +5,6 @@ from unittest import mock
 
 import pytest
 
-from homeassistant.components.zha.core.channels import EventRelayChannel
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.discovery as disc
 import homeassistant.components.zha.core.gateway as core_zha_gw
@@ -28,7 +27,7 @@ async def test_devices(device, zha_gateway: core_zha_gw.ZHAGateway, hass, config
     with mock.patch(
         "homeassistant.components.zha.core.discovery._async_create_cluster_channel",
         wraps=disc._async_create_cluster_channel,
-    ) as cr_ch:
+    ):
         await zha_gateway.async_device_restored(zigpy_device)
         await hass.async_block_till_done()
         tasks = [
@@ -45,10 +44,9 @@ async def test_devices(device, zha_gateway: core_zha_gw.ZHAGateway, hass, config
             ent for ent in entity_ids if ent.split(".")[0] in zha_const.COMPONENTS
         }
 
-        event_channels = {
-            arg[0].cluster_id
-            for arg, kwarg in cr_ch.call_args_list
-            if kwarg.get("channel_class") == EventRelayChannel
+        zha_dev = zha_gateway.get_device(zigpy_device.ieee)
+        event_channels = {  # pylint: disable=protected-access
+            ch.id for ch in zha_dev._relay_channels.values()
         }
 
         assert zha_entities == set(device["entities"])
