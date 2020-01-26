@@ -1,7 +1,7 @@
 """Sensor for Last.fm account status."""
+import hashlib
 import logging
 import re
-import hashlib
 
 import pylast as lastfm
 from pylast import WSError
