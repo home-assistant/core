@@ -37,10 +37,11 @@ from homeassistant.helpers.script import Script
 
 from . import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
 
+
+from const import LIVE_TV_APP_ID, ATTR_SOUND_OUTPUT
+
+
 _LOGGER = logging.getLogger(__name__)
-
-
-LIVETV_APP_ID = "com.webos.app.livetv"
 
 
 SUPPORT_WEBOSTV = (
@@ -58,10 +59,6 @@ SUPPORT_WEBOSTV = (
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-
-LIVE_TV_APP_ID = "com.webos.app.livetv"
-
-ATTR_SOUND_OUTPUT = "sound_output"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -412,7 +409,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     async def async_media_next_track(self):
         """Send next track command."""
         current_input = self._client.get_input()
-        if current_input == LIVETV_APP_ID:
+        if current_input == LIVE_TV_APP_ID:
             await self._client.channel_up()
         else:
             await self._client.fast_forward()
@@ -421,7 +418,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     async def async_media_previous_track(self):
         """Send the previous track command."""
         current_input = self._client.get_input()
-        if current_input == LIVETV_APP_ID:
+        if current_input == LIVE_TV_APP_ID:
             await self._client.channel_down()
         else:
             await self._client.rewind()
