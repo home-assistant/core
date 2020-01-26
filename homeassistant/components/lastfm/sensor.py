@@ -1,7 +1,7 @@
 """Sensor for Last.fm account status."""
 import logging
 import re
-import uuid
+import hashlib
 
 import pylast as lastfm
 from pylast import WSError
@@ -55,7 +55,7 @@ class LastfmSensor(Entity):
 
     def __init__(self, user, lastfm_api):
         """Initialize the sensor."""
-        self._unique_id = uuid.uuid4()
+        self._unique_id = hashlib.sha256(str(user).encode("utf-8")).hexdigest()
         self._user = lastfm_api.get_user(user)
         self._name = user
         self._entity_id = self.__generate_entity_id(user)
