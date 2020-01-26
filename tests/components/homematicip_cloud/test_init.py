@@ -103,6 +103,7 @@ async def test_unload_entry(hass):
 
     assert mock_hap.return_value.mock_calls[0][0] == "async_setup"
 
+    assert hass.data[hmipc.DOMAIN]["ABC123"]
     config_entries = hass.config_entries.async_entries(hmipc.DOMAIN)
     assert len(config_entries) == 1
 
