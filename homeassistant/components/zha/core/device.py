@@ -104,7 +104,17 @@ class ZHADevice(LogMixin):
         self._available_check = async_track_time_interval(
             self.hass, self._check_available, _UPDATE_ALIVE_INTERVAL
         )
+        self._ha_device_id = None
         self.status = DeviceStatus.CREATED
+
+    @property
+    def device_id(self):
+        """Return the HA device registry device id."""
+        return self._ha_device_id
+
+    def set_device_id(self, device_id):
+        """Set the HA device registry device id."""
+        self._ha_device_id = device_id
 
     @property
     def name(self):
