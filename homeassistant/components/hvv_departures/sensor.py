@@ -28,6 +28,8 @@ ATTR_ID = "id"
 ATTR_DELAY = "delay"
 ATTR_NEXT = "next"
 
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 
