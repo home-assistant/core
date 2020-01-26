@@ -68,6 +68,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
+    def __init__(self):
+        """Initialize component."""
+        self.hub = None
+        self.data = None
+        self.stations = {}
+
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         errors = {}
@@ -106,16 +112,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
 
-            cn = await self.hub.gti.checkName(
+            check_name = await self.hub.gti.checkName(
                 {"theName": {"name": user_input["station"]}, "maxList": 20}
             )
 
-            code = cn.get("returnCode")
+            code = check_name.get("returnCode")
             if code == "ERROR_CN_TOO_MANY":
                 errors["base"] = "cn_too_many"
             elif code == "OK":
 
-                results = cn.get("results")
+                results = check_name.get("results")
 
                 self.stations = {
                     "{} ({})".format(x.get("name"), x.get("type")): x for x in results
@@ -178,6 +184,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
         self.filters = []
+        self.hub = None
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""

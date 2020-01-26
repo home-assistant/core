@@ -150,16 +150,13 @@ class HVVDepartureSensor(Entity):
             self._available = False
         except ClientConnectorError as error:
             if self._last_error != ClientConnectorError:
-                _LOGGER.warn("Network unavailable: %r", error)
+                _LOGGER.warning("Network unavailable: %r", error)
                 self._last_error = ClientConnectorError
-
             self._available = False
-        except Exception as error:
-
+        except Exception as error:  # pylint: disable=broad-except
             if self._last_error != error:
                 _LOGGER.error("Error occurred while fetching data: %r", error)
                 self._last_error = error
-
             self._available = False
 
     @property
