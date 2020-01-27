@@ -316,7 +316,6 @@ class SimpliSafe:
         """Update a system."""
         try:
             await system.update()
-            latest_event = await system.get_latest_event()
         except InvalidCredentialsError:
             # SimpliSafe's cloud is a little shaky. At times, a 500 or 502 will
             # seemingly harm simplisafe-python's existing access token _and_ refresh
@@ -338,7 +337,9 @@ class SimpliSafe:
 
             _LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
             self._emergency_refresh_token_used = True
-            await self._api.refresh_access_token(self._config_entry.data[CONF_TOKEN])
+            return await self._api.refresh_access_token(
+                self._config_entry.data[CONF_TOKEN]
+            )
         except SimplipyError as err:
             _LOGGER.error(
                 'SimpliSafe error while updating "%s": %s', system.address, err
@@ -348,7 +349,7 @@ class SimpliSafe:
             _LOGGER.error('Unknown error while updating "%s": %s', system.address, err)
             return
 
-        self.last_event_data[system.system_id] = latest_event
+        self.last_event_data[system.system_id] = await system.get_latest_event()
 
         # If we've reached this point using an emergency refresh token, we're in the
         # clear and we can discard it:
