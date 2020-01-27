@@ -196,13 +196,13 @@ class RainMachineProgram(RainMachineSwitch):
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the program off."""
         await self._async_run_switch_coroutine(
-            self.rainmachine.client.programs.stop(self._rainmachine_entity_id)
+            self.rainmachine.controller.programs.stop(self._rainmachine_entity_id)
         )
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the program on."""
         await self._async_run_switch_coroutine(
-            self.rainmachine.client.programs.start(self._rainmachine_entity_id)
+            self.rainmachine.controller.programs.start(self._rainmachine_entity_id)
         )
 
     async def async_update(self) -> None:
@@ -258,13 +258,13 @@ class RainMachineZone(RainMachineSwitch):
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
         await self._async_run_switch_coroutine(
-            self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
+            self.rainmachine.controller.zones.stop(self._rainmachine_entity_id)
         )
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
         await self._async_run_switch_coroutine(
-            self.rainmachine.client.zones.start(
+            self.rainmachine.controller.zones.start(
                 self._rainmachine_entity_id, self.rainmachine.default_zone_runtime
             )
         )
