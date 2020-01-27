@@ -236,7 +236,9 @@ async def async_devices_reachable(hass, data: RequestData, payload):
         "devices": [
             entity.reachable_device_serialize()
             for entity in async_get_entities(hass, data.config)
-            if entity.entity_id in google_ids and entity.should_expose()
+            if entity.entity_id in google_ids
+            and entity.should_expose()
+            and not entity.might_2fa()
         ]
     }
 

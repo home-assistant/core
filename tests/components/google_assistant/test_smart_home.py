@@ -864,8 +864,11 @@ async def test_reachable_devices(hass):
     # Not passed in as google_id
     hass.states.async_set("light.not_mentioned", "on")
 
+    # Has 2FA
+    hass.states.async_set("lock.has_2fa", "on")
+
     config = MockConfig(
-        should_expose=lambda state: state.entity_id != "light.not_expose"
+        should_expose=lambda state: state.entity_id != "light.not_expose",
     )
 
     user_agent_id = "mock-user-id"
@@ -904,6 +907,15 @@ async def test_reachable_devices(hass):
                 },
                 {
                     "id": "light.not_expose",
+                    "customData": {
+                        "httpPort": 8123,
+                        "httpSSL": False,
+                        "proxyDeviceId": proxy_device_id,
+                        "webhookId": "dde3b9800a905e886cc4d38e226a6e7e3f2a6993d2b9b9f63d13e42ee7de3219",
+                    },
+                },
+                {
+                    "id": "lock.has_2fa",
                     "customData": {
                         "httpPort": 8123,
                         "httpSSL": False,
