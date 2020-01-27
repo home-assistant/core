@@ -1,8 +1,24 @@
 """Configure py.test."""
 from asynctest import patch
 import pytest
+from pyvizio.const import DEVICE_CLASS_SPEAKER
+from pyvizio.vizio import MAX_VOLUME
 
-from .const import UNIQUE_ID
+from .const import CURRENT_INPUT, INPUT_LIST, UNIQUE_ID
+
+
+class MockInput:
+    """Mock Vizio device input."""
+
+    def __init__(self, name):
+        """Initialize mock Vizio device input."""
+        self.meta_name = name
+        self.name = name
+
+
+def get_mock_inputs(input_list):
+    """Return list of MockInput."""
+    return [MockInput(input) for input in input_list]
 
 
 @pytest.fixture(name="skip_notifications", autouse=True)
@@ -60,5 +76,27 @@ def vizio_cant_connect_fixture():
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
         return_value=False,
+    ):
+        yield
+
+
+@pytest.fixture(name="vizio_update")
+def vizio_update_fixture():
+    """Mock valid updates to vizio device."""
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_current_volume",
+        return_value=int(MAX_VOLUME[DEVICE_CLASS_SPEAKER] / 2),
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
+        return_value=MockInput(CURRENT_INPUT),
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_inputs",
+        return_value=get_mock_inputs(INPUT_LIST),
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
+        return_value=True,
     ):
         yield

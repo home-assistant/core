@@ -29,29 +29,18 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVA
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
+from .conftest import MockInput, get_mock_inputs
 from .const import (
     CURRENT_INPUT,
     ENTITY_ID,
     INPUT_LIST,
     MOCK_SPEAKER_CONFIG,
+    MOCK_SPEAKER_CONFIG_ENTRY,
+    MOCK_TV_CONFIG_ENTRY,
     MOCK_USER_VALID_TV_CONFIG,
     NAME,
     UNIQUE_ID,
 )
-
-
-class MockInput:
-    """Mock Vizio device input."""
-
-    def __init__(self, name):
-        """Initialize mock Vizio device input."""
-        self.meta_name = name
-        self.name = name
-
-
-def get_mock_inputs(input_list):
-    """Return list of MockInput."""
-    return [MockInput(input) for input in input_list]
 
 
 async def _test_init(
@@ -181,9 +170,9 @@ async def test_setup_failure_speaker(
         "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
         return_value=False,
     ):
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: MOCK_SPEAKER_CONFIG})
+        await hass.config_entries.async_add(MOCK_SPEAKER_CONFIG_ENTRY)
         await hass.async_block_till_done()
-        assert len(hass.states.async_entity_ids(DOMAIN)) == 0
+        assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
 
 
 async def test_setup_failure_tv(
@@ -194,11 +183,9 @@ async def test_setup_failure_tv(
         "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
         return_value=False,
     ):
-        assert await async_setup_component(
-            hass, DOMAIN, {DOMAIN: MOCK_USER_VALID_TV_CONFIG}
-        )
+        await hass.config_entries.async_add(MOCK_TV_CONFIG_ENTRY)
         await hass.async_block_till_done()
-        assert len(hass.states.async_entity_ids(DOMAIN)) == 0
+        assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
 
 
 async def test_services(hass: HomeAssistantType) -> None:
