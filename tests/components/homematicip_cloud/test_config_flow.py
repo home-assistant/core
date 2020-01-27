@@ -1,25 +1,30 @@
 """Tests for HomematicIP Cloud config flow."""
 from asynctest import patch
 
-from homeassistant.components.homematicip_cloud import const
+from homeassistant.components.homematicip_cloud.const import (
+    DOMAIN as HMIPC_DOMAIN,
+    HMIPC_AUTHTOKEN,
+    HMIPC_HAPID,
+    HMIPC_NAME,
+    HMIPC_PIN,
+)
 
 from tests.common import MockConfigEntry
+
+DEFAULT_CONFIG = {HMIPC_HAPID: "ABC123", HMIPC_PIN: "123", HMIPC_NAME: "hmip"}
+
+IMPORT_CONFIG = {HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"}
 
 
 async def test_flow_works(hass):
     """Test config flow."""
-    config = {
-        const.HMIPC_HAPID: "ABC123",
-        const.HMIPC_PIN: "123",
-        const.HMIPC_NAME: "hmip",
-    }
 
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}, data=config
+            HMIPC_DOMAIN, context={"source": "user"}, data=DEFAULT_CONFIG
         )
 
     assert result["type"] == "form"
@@ -57,18 +62,12 @@ async def test_flow_works(hass):
 
 async def test_flow_init_connection_error(hass):
     """Test config flow with accesspoint connection error."""
-    config = {
-        const.HMIPC_HAPID: "ABC123",
-        const.HMIPC_PIN: "123",
-        const.HMIPC_NAME: "hmip",
-    }
-
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_setup",
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}, data=config
+            HMIPC_DOMAIN, context={"source": "user"}, data=DEFAULT_CONFIG
         )
 
     assert result["type"] == "form"
@@ -77,12 +76,6 @@ async def test_flow_init_connection_error(hass):
 
 async def test_flow_link_connection_error(hass):
     """Test config flow client registration connection error."""
-    config = {
-        const.HMIPC_HAPID: "ABC123",
-        const.HMIPC_PIN: "123",
-        const.HMIPC_NAME: "hmip",
-    }
-
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
         return_value=True,
@@ -94,7 +87,7 @@ async def test_flow_link_connection_error(hass):
         return_value=False,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}, data=config
+            HMIPC_DOMAIN, context={"source": "user"}, data=DEFAULT_CONFIG
         )
 
     assert result["type"] == "abort"
@@ -103,12 +96,6 @@ async def test_flow_link_connection_error(hass):
 
 async def test_flow_link_press_button(hass):
     """Test config flow ask for pressing the blue button."""
-    config = {
-        const.HMIPC_HAPID: "ABC123",
-        const.HMIPC_PIN: "123",
-        const.HMIPC_NAME: "hmip",
-    }
-
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
         return_value=False,
@@ -117,7 +104,7 @@ async def test_flow_link_press_button(hass):
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}, data=config
+            HMIPC_DOMAIN, context={"source": "user"}, data=DEFAULT_CONFIG
         )
 
     assert result["type"] == "form"
@@ -129,7 +116,7 @@ async def test_init_flow_show_form(hass):
     """Test config flow shows up with a form."""
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": "user"}
+        HMIPC_DOMAIN, context={"source": "user"}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "init"
@@ -137,19 +124,13 @@ async def test_init_flow_show_form(hass):
 
 async def test_init_already_configured(hass):
     """Test accesspoint is already configured."""
-    MockConfigEntry(domain=const.DOMAIN, unique_id="ABC123").add_to_hass(hass)
-    config = {
-        const.HMIPC_HAPID: "ABC123",
-        const.HMIPC_PIN: "123",
-        const.HMIPC_NAME: "hmip",
-    }
-
+    MockConfigEntry(domain=HMIPC_DOMAIN, unique_id="ABC123").add_to_hass(hass)
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "user"}, data=config
+            HMIPC_DOMAIN, context={"source": "user"}, data=DEFAULT_CONFIG
         )
 
     assert result["type"] == "abort"
@@ -158,12 +139,6 @@ async def test_init_already_configured(hass):
 
 async def test_import_config(hass):
     """Test importing a host with an existing config file."""
-    config = {
-        const.HMIPC_HAPID: "ABC123",
-        const.HMIPC_AUTHTOKEN: "123",
-        const.HMIPC_NAME: "hmip",
-    }
-
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
         return_value=True,
@@ -175,7 +150,7 @@ async def test_import_config(hass):
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "import"}, data=config
+            HMIPC_DOMAIN, context={"source": "import"}, data=IMPORT_CONFIG
         )
 
     assert result["type"] == "create_entry"
@@ -186,13 +161,7 @@ async def test_import_config(hass):
 
 async def test_import_existing_config(hass):
     """Test abort of an existing accesspoint from config."""
-    MockConfigEntry(domain=const.DOMAIN, unique_id="ABC123").add_to_hass(hass)
-    config = {
-        const.HMIPC_HAPID: "ABC123",
-        const.HMIPC_AUTHTOKEN: "123",
-        const.HMIPC_NAME: "hmip",
-    }
-
+    MockConfigEntry(domain=HMIPC_DOMAIN, unique_id="ABC123").add_to_hass(hass)
     with patch(
         "homeassistant.components.homematicip_cloud.hap.HomematicipAuth.async_checkbutton",
         return_value=True,
@@ -204,7 +173,7 @@ async def test_import_existing_config(hass):
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": "import"}, data=config
+            HMIPC_DOMAIN, context={"source": "import"}, data=IMPORT_CONFIG
         )
 
     assert result["type"] == "abort"
