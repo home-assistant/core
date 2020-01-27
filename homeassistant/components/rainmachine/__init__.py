@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from regenmaschine import login
+from regenmaschine import Client
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
 
@@ -133,24 +133,29 @@ async def async_setup_entry(hass, config_entry):
     _verify_domain_control = verify_domain_control(hass, DOMAIN)
 
     websession = aiohttp_client.async_get_clientsession(hass)
+    client = Client(websession)
 
     try:
-        client = await login(
+        await client.load_local(
             config_entry.data[CONF_IP_ADDRESS],
             config_entry.data[CONF_PASSWORD],
-            websession,
             port=config_entry.data[CONF_PORT],
             ssl=config_entry.data[CONF_SSL],
-        )
-        rainmachine = RainMachine(
-            hass,
-            client,
-            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
-            config_entry.data[CONF_SCAN_INTERVAL],
         )
     except RainMachineError as err:
         _LOGGER.error("An error occurred: %s", err)
         raise ConfigEntryNotReady
+    else:
+        # regenmaschine can load multiple controllers at once, but we only grab the one
+        # we loaded above:
+        controller = next(iter(client.controllers.values()))
+
+        rainmachine = RainMachine(
+            hass,
+            controller,
+            config_entry.data.get(CONF_ZONE_RUN_TIME, DEFAULT_ZONE_RUN),
+            config_entry.data[CONF_SCAN_INTERVAL],
+        )
 
     # Update the data object, which at this point (prior to any sensors registering
     # "interest" in the API), will focus on grabbing the latest program and zone data:
@@ -165,43 +170,43 @@ async def async_setup_entry(hass, config_entry):
     @_verify_domain_control
     async def disable_program(call):
         """Disable a program."""
-        await rainmachine.client.programs.disable(call.data[CONF_PROGRAM_ID])
+        await rainmachine.controller.programs.disable(call.data[CONF_PROGRAM_ID])
         await rainmachine.async_update_programs_and_zones()
 
     @_verify_domain_control
     async def disable_zone(call):
         """Disable a zone."""
-        await rainmachine.client.zones.disable(call.data[CONF_ZONE_ID])
+        await rainmachine.controller.zones.disable(call.data[CONF_ZONE_ID])
         await rainmachine.async_update_programs_and_zones()
 
     @_verify_domain_control
     async def enable_program(call):
         """Enable a program."""
-        await rainmachine.client.programs.enable(call.data[CONF_PROGRAM_ID])
+        await rainmachine.controller.programs.enable(call.data[CONF_PROGRAM_ID])
         await rainmachine.async_update_programs_and_zones()
 
     @_verify_domain_control
     async def enable_zone(call):
         """Enable a zone."""
-        await rainmachine.client.zones.enable(call.data[CONF_ZONE_ID])
+        await rainmachine.controller.zones.enable(call.data[CONF_ZONE_ID])
         await rainmachine.async_update_programs_and_zones()
 
     @_verify_domain_control
     async def pause_watering(call):
         """Pause watering for a set number of seconds."""
-        await rainmachine.client.watering.pause_all(call.data[CONF_SECONDS])
+        await rainmachine.controller.watering.pause_all(call.data[CONF_SECONDS])
         await rainmachine.async_update_programs_and_zones()
 
     @_verify_domain_control
     async def start_program(call):
         """Start a particular program."""
-        await rainmachine.client.programs.start(call.data[CONF_PROGRAM_ID])
+        await rainmachine.controller.programs.start(call.data[CONF_PROGRAM_ID])
         await rainmachine.async_update_programs_and_zones()
 
     @_verify_domain_control
     async def start_zone(call):
         """Start a particular zone for a certain amount of time."""
-        await rainmachine.client.zones.start(
+        await rainmachine.controller.zones.start(
             call.data[CONF_ZONE_ID], call.data[CONF_ZONE_RUN_TIME]
         )
         await rainmachine.async_update_programs_and_zones()
@@ -209,25 +214,25 @@ async def async_setup_entry(hass, config_entry):
     @_verify_domain_control
     async def stop_all(call):
         """Stop all watering."""
-        await rainmachine.client.watering.stop_all()
+        await rainmachine.controller.watering.stop_all()
         await rainmachine.async_update_programs_and_zones()
 
     @_verify_domain_control
     async def stop_program(call):
         """Stop a program."""
-        await rainmachine.client.programs.stop(call.data[CONF_PROGRAM_ID])
+        await rainmachine.controller.programs.stop(call.data[CONF_PROGRAM_ID])
         await rainmachine.async_update_programs_and_zones()
 
     @_verify_domain_control
     async def stop_zone(call):
         """Stop a zone."""
-        await rainmachine.client.zones.stop(call.data[CONF_ZONE_ID])
+        await rainmachine.controller.zones.stop(call.data[CONF_ZONE_ID])
         await rainmachine.async_update_programs_and_zones()
 
     @_verify_domain_control
     async def unpause_watering(call):
         """Unpause watering."""
-        await rainmachine.client.watering.unpause_all()
+        await rainmachine.controller.watering.unpause_all()
         await rainmachine.async_update_programs_and_zones()
 
     for service, method, schema in [
@@ -268,14 +273,14 @@ async def async_unload_entry(hass, config_entry):
 class RainMachine:
     """Define a generic RainMachine object."""
 
-    def __init__(self, hass, client, default_zone_runtime, scan_interval):
+    def __init__(self, hass, controller, default_zone_runtime, scan_interval):
         """Initialize."""
         self._async_cancel_time_interval_listener = None
         self._scan_interval_seconds = scan_interval
-        self.client = client
+        self.controller = controller
         self.data = {}
         self.default_zone_runtime = default_zone_runtime
-        self.device_mac = self.client.mac
+        self.device_mac = controller.mac
         self.hass = hass
 
         self._api_category_count = {
@@ -309,20 +314,20 @@ class RainMachine:
     async def async_fetch_from_api(self, api_category):
         """Execute the appropriate coroutine to fetch particular data from the API."""
         if api_category == DATA_PROGRAMS:
-            data = await self.client.programs.all(include_inactive=True)
+            data = await self.controller.programs.all(include_inactive=True)
         elif api_category == DATA_PROVISION_SETTINGS:
-            data = await self.client.provisioning.settings()
+            data = await self.controller.provisioning.settings()
         elif api_category == DATA_RESTRICTIONS_CURRENT:
-            data = await self.client.restrictions.current()
+            data = await self.controller.restrictions.current()
         elif api_category == DATA_RESTRICTIONS_UNIVERSAL:
-            data = await self.client.restrictions.universal()
+            data = await self.controller.restrictions.universal()
         elif api_category == DATA_ZONES:
-            data = await self.client.zones.all(include_inactive=True)
+            data = await self.controller.zones.all(include_inactive=True)
         elif api_category == DATA_ZONES_DETAILS:
             # This API call needs to be separate from the DATA_ZONES one above because,
             # maddeningly, the DATA_ZONES_DETAILS API call doesn't include the current
             # state of the zone:
-            data = await self.client.zones.all(details=True, include_inactive=True)
+            data = await self.controller.zones.all(details=True, include_inactive=True)
 
         self.data[api_category] = data
 
@@ -419,14 +424,14 @@ class RainMachineEntity(Entity):
     def device_info(self):
         """Return device registry information for this entity."""
         return {
-            "identifiers": {(DOMAIN, self.rainmachine.client.mac)},
-            "name": self.rainmachine.client.name,
+            "identifiers": {(DOMAIN, self.rainmachine.controller.mac)},
+            "name": self.rainmachine.controller.name,
             "manufacturer": "RainMachine",
             "model": "Version {0} (API: {1})".format(
-                self.rainmachine.client.hardware_version,
-                self.rainmachine.client.api_version,
+                self.rainmachine.controller.hardware_version,
+                self.rainmachine.controller.api_version,
             ),
-            "sw_version": self.rainmachine.client.software_version,
+            "sw_version": self.rainmachine.controller.software_version,
         }
 
     @property
