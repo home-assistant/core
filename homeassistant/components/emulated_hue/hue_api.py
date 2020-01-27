@@ -351,8 +351,9 @@ class HueOneLightChangeView(HomeAssistantView):
 
         if HUE_API_STATE_BRI in request_json:
             if entity.domain == light.DOMAIN:
-                parsed[STATE_ON] = parsed[STATE_BRIGHTNESS] > 0
-                if not entity_features & SUPPORT_BRIGHTNESS:
+                if entity_features & SUPPORT_BRIGHTNESS:
+                    parsed[STATE_ON] = parsed[STATE_BRIGHTNESS] > 0
+                else:
                     parsed[STATE_BRIGHTNESS] = None
 
             elif entity.domain == scene.DOMAIN:
