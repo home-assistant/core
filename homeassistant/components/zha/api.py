@@ -297,26 +297,9 @@ async def websocket_add_group(hass, connection, msg):
     """Add a new ZHA group."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     group_name = msg[GROUP_NAME]
-    zigpy_group = zha_gateway.async_get_group_by_name(group_name)
-    ret_group = None
     members = msg.get(ATTR_MEMBERS)
-    # we start with one to fill any gaps from a user removing existing groups
-    group_id = 1
-    while group_id in zha_gateway.application_controller.groups:
-        group_id += 1
-
-    # guard against group already existing
-    if zigpy_group is None:
-        zigpy_group = zha_gateway.application_controller.groups.add_group(
-            group_id, group_name
-        )
-        if members is not None:
-            tasks = []
-            for ieee in members:
-                tasks.append(zha_gateway.devices[ieee].async_add_to_group(group_id))
-            await asyncio.gather(*tasks)
-    ret_group = zha_gateway.groups.get(group_id).async_get_info()
-    connection.send_result(msg[ID], ret_group)
+    group = await zha_gateway.async_create_zigpy_group(group_name, members)
+    connection.send_result(msg[ID], group.async_get_info())
 
 
 @websocket_api.require_admin
@@ -330,19 +313,16 @@ async def websocket_add_group(hass, connection, msg):
 async def websocket_remove_groups(hass, connection, msg):
     """Remove the specified ZHA groups."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    groups = zha_gateway.application_controller.groups
     group_ids = msg[GROUP_IDS]
 
     if len(group_ids) > 1:
         tasks = []
         for group_id in group_ids:
-            tasks.append(remove_group(groups[group_id], zha_gateway))
+            tasks.append(zha_gateway.async_remove_zigpy_group(group_id))
         await asyncio.gather(*tasks)
     else:
-        await remove_group(groups[group_ids[0]], zha_gateway)
-    ret_groups = groups = [
-        group.async_get_info() for group in zha_gateway.groups.values()
-    ]
+        await zha_gateway.async_remove_zigpy_group(group_ids[0])
+    ret_groups = [group.async_get_info() for group in zha_gateway.groups.values()]
     connection.send_result(msg[ID], ret_groups)
 
 
@@ -404,26 +384,6 @@ async def websocket_remove_group_members(hass, connection, msg):
         return
     ret_group = zha_group.async_get_info()
     connection.send_result(msg[ID], ret_group)
-
-
-async def remove_group(group, zha_gateway):
-    """Remove ZHA Group."""
-    if group.members:
-        tasks = []
-        for member_ieee in group.members.keys():
-            if member_ieee[0] in zha_gateway.devices:
-                tasks.append(
-                    zha_gateway.devices[member_ieee[0]].async_remove_from_group(
-                        group.group_id
-                    )
-                )
-        if tasks:
-            await asyncio.gather(*tasks)
-        else:
-            # we have members but none are tracked by ZHA for whatever reason
-            zha_gateway.application_controller.groups.pop(group.group_id)
-    else:
-        zha_gateway.application_controller.groups.pop(group.group_id)
 
 
 @websocket_api.require_admin
