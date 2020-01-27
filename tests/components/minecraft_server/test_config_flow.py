@@ -15,6 +15,7 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
+from homeassistant.helpers.typing import HomeAssistantType
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -61,7 +62,7 @@ USER_INPUT_PORT_LARGE = {
 }
 
 
-async def test_show_config_form(hass):
+async def test_show_config_form(hass: HomeAssistantType) -> None:
     """Test if initial configuration form is shown."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=None
@@ -71,7 +72,7 @@ async def test_show_config_form(hass):
     assert result["step_id"] == "user"
 
 
-async def test_same_host(hass):
+async def test_same_host(hass: HomeAssistantType) -> None:
     """Test abort in case of same host name."""
     unique_id = f"{USER_INPUT[CONF_HOST].lower()}-{USER_INPUT[CONF_PORT]}"
     mock_config_entry = MockConfigEntry(
@@ -87,7 +88,7 @@ async def test_same_host(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_scan_interval_too_small(hass):
+async def test_scan_interval_too_small(hass: HomeAssistantType) -> None:
     """Test error in case of a too small scan interval."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_INTERVAL_SMALL
@@ -97,7 +98,7 @@ async def test_scan_interval_too_small(hass):
     assert result["errors"] == {"base": "invalid_scan_interval"}
 
 
-async def test_scan_interval_too_large(hass):
+async def test_scan_interval_too_large(hass: HomeAssistantType) -> None:
     """Test error in case of a too large scan interval."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_INTERVAL_LARGE
@@ -107,7 +108,7 @@ async def test_scan_interval_too_large(hass):
     assert result["errors"] == {"base": "invalid_scan_interval"}
 
 
-async def test_port_too_small(hass):
+async def test_port_too_small(hass: HomeAssistantType) -> None:
     """Test error in case of a too small port."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_SMALL
@@ -117,7 +118,7 @@ async def test_port_too_small(hass):
     assert result["errors"] == {"base": "invalid_port"}
 
 
-async def test_port_too_large(hass):
+async def test_port_too_large(hass: HomeAssistantType) -> None:
     """Test error in case of a too large port."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT_PORT_LARGE
@@ -127,7 +128,7 @@ async def test_port_too_large(hass):
     assert result["errors"] == {"base": "invalid_port"}
 
 
-async def test_connection_failed(hass):
+async def test_connection_failed(hass: HomeAssistantType) -> None:
     """Test error in case of a failed connection."""
     with patch(
         "homeassistant.components.minecraft_server.MinecraftServer.async_check_connection",
@@ -145,7 +146,7 @@ async def test_connection_failed(hass):
             assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_connection_succeeded(hass):
+async def test_connection_succeeded(hass: HomeAssistantType) -> None:
     """Test config entry in case of a successful connection."""
     with patch(
         "homeassistant.components.minecraft_server.MinecraftServer.async_check_connection",

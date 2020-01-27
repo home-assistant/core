@@ -2,9 +2,11 @@
 
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.helpers.typing import HomeAssistantType
 
-from . import MinecraftServerEntity
+from . import MinecraftServer, MinecraftServerEntity
 from .const import (
     DOMAIN,
     NAME_DESCRIPTION,
@@ -20,7 +22,9 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
+) -> None:
     """Set up the Minecraft Server sensor platform."""
     server = hass.data[DOMAIN][config_entry.unique_id]
 
@@ -43,11 +47,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MinecraftServerStatusSensor(MinecraftServerEntity):
     """Representation of a Minecraft Server status sensor."""
 
-    def __init__(self, hass, server):
+    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
         """Initialize status sensor."""
         super().__init__(hass, server, NAME_STATUS, unit=None, icon="mdi:lan")
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update status."""
         if self._server.online:
             self._state = STATE_ON
@@ -83,13 +87,13 @@ class MinecraftServerDescriptionSensor(MinecraftServerEntity):
         "§r",
     ]
 
-    def __init__(self, hass, server):
+    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
         """Initialize description sensor."""
         super().__init__(
             hass, server, NAME_DESCRIPTION, unit=None, icon="mdi:card-text"
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update description."""
         description = self._server.description
 
@@ -111,11 +115,11 @@ class MinecraftServerDescriptionSensor(MinecraftServerEntity):
 class MinecraftServerVersionSensor(MinecraftServerEntity):
     """Representation of a Minecraft Server version sensor."""
 
-    def __init__(self, hass, server):
+    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
         """Initialize version sensor."""
         super().__init__(hass, server, NAME_VERSION, unit=None, icon="mdi:numeric")
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update version."""
         self._state = self._server.version
 
@@ -123,13 +127,13 @@ class MinecraftServerVersionSensor(MinecraftServerEntity):
 class MinecraftServerProtocolVersionSensor(MinecraftServerEntity):
     """Representation of a Minecraft Server protocol version sensor."""
 
-    def __init__(self, hass, server):
+    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
         """Initialize protocol version sensor."""
         super().__init__(
             hass, server, NAME_PROTOCOL_VERSION, unit=None, icon="mdi:numeric"
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update protocol version."""
         self._state = self._server.protocol_version
 
@@ -137,11 +141,11 @@ class MinecraftServerProtocolVersionSensor(MinecraftServerEntity):
 class MinecraftServerLatencyTimeSensor(MinecraftServerEntity):
     """Representation of a Minecraft Server latency time sensor."""
 
-    def __init__(self, hass, server):
+    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
         """Initialize latency time sensor."""
         super().__init__(hass, server, NAME_LATENCY_TIME, unit="ms", icon="mdi:signal")
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update latency time."""
         self._state = self._server.latency_time
 
@@ -149,13 +153,13 @@ class MinecraftServerLatencyTimeSensor(MinecraftServerEntity):
 class MinecraftServerPlayersOnlineSensor(MinecraftServerEntity):
     """Representation of a Minecraft Server online players sensor."""
 
-    def __init__(self, hass, server):
+    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
         """Initialize online players sensor."""
         super().__init__(
             hass, server, NAME_PLAYERS_ONLINE, unit=None, icon="mdi:account-multiple"
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update online players."""
         self._state = self._server.players_online
 
@@ -163,13 +167,13 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerEntity):
 class MinecraftServerPlayersMaxSensor(MinecraftServerEntity):
     """Representation of a Minecraft Server maximum number of players sensor."""
 
-    def __init__(self, hass, server):
+    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
         """Initialize maximum number of players sensor."""
         super().__init__(
             hass, server, NAME_PLAYERS_MAX, unit=None, icon="mdi:account-multiple"
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update maximum number of players."""
         self._state = self._server.players_max
 
@@ -177,13 +181,13 @@ class MinecraftServerPlayersMaxSensor(MinecraftServerEntity):
 class MinecraftServerPlayersListSensor(MinecraftServerEntity):
     """Representation of a Minecraft Server players list sensor."""
 
-    def __init__(self, hass, server):
+    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
         """Initialize players list sensor."""
         super().__init__(
             hass, server, NAME_PLAYERS_LIST, unit=None, icon="mdi:account-multiple"
         )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update players list."""
         players_list = self._server.players_list
 

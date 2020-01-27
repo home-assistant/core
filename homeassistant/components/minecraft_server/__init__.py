@@ -1,10 +1,12 @@
 """The Minecraft Server integration."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
+from typing import Any, Dict, List
 
 from mcstatus.server import MinecraftServer as MCStatus
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -13,12 +15,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, MANUFACTURER, SIGNAL_NAME_PREFIX
@@ -28,12 +32,12 @@ PLATFORMS = ["sensor"]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Set up the Minecraft Server component."""
     return True
 
 
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -52,7 +56,9 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, config_entry):
+async def async_unload_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> bool:
     """Unload Minecraft Server config entry."""
     unique_id = config_entry.unique_id
     server = hass.data[DOMAIN][unique_id]
@@ -75,7 +81,9 @@ class MinecraftServer:
     _RETRIES_PING = 3
     _RETRIES_STATUS = 3
 
-    def __init__(self, hass, unique_id, config_data):
+    def __init__(
+        self, hass: HomeAssistantType, unique_id: str, config_data: ConfigType
+    ) -> None:
         """Initialize server instance."""
         self._hass = hass
         self._unique_id = unique_id
@@ -112,71 +120,71 @@ class MinecraftServer:
         self._signal_name = SIGNAL_NAME_PREFIX + self._unique_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return server name."""
         return self._name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return server unique ID."""
         return self._unique_id
 
     @property
-    def host(self):
+    def host(self) -> str:
         """Return server host."""
         return self._host
 
     @property
-    def port(self):
+    def port(self) -> int:
         """Return server port."""
         return self._port
 
     @property
-    def signal_name(self):
+    def signal_name(self) -> str:
         """Return dispatcher signal name."""
         return self._signal_name
 
     @property
-    def description(self):
+    def description(self) -> str:
         """Return server description."""
         return self._description
 
     @property
-    def version(self):
+    def version(self) -> str:
         """Return server version."""
         return self._version
 
     @property
-    def protocol_version(self):
+    def protocol_version(self) -> int:
         """Return server protocol version."""
         return self._protocol_version
 
     @property
-    def latency_time(self):
+    def latency_time(self) -> int:
         """Return server latency time."""
         return self._latency
 
     @property
-    def players_online(self):
+    def players_online(self) -> int:
         """Return online players on server."""
         return self._players_online
 
     @property
-    def players_max(self):
+    def players_max(self) -> int:
         """Return maximum number of players on server."""
         return self._players_max
 
     @property
-    def players_list(self):
+    def players_list(self) -> List[str]:
         """Return players list on server."""
         return self._players_list
 
     @property
-    def online(self):
+    def online(self) -> bool:
         """Return server connection status."""
         return self._server_online
 
-    def stop_periodic_update(self):
+    def stop_periodic_update(self) -> None:
         """Stop periodic execution of update method."""
         if self._stop_periodic_update is not None:
             self._stop_periodic_update()
@@ -185,7 +193,7 @@ class MinecraftServer:
                 "Listener was not started, stopping of periodic update skipped."
             )
 
-    async def async_check_connection(self):
+    async def async_check_connection(self) -> None:
         """Check server connection using a 'ping' request and store result."""
         try:
             await self._hass.async_add_executor_job(
@@ -196,7 +204,7 @@ class MinecraftServer:
             _LOGGER.debug("Error occured while trying to ping the server (%s).", error)
             self._server_online = False
 
-    async def async_update(self, now=None):
+    async def async_update(self, now: datetime = None) -> None:
         """Get server data from 3rd party library and update properties."""
         # Check connection status.
         server_online_old = self.online
@@ -235,7 +243,7 @@ class MinecraftServer:
             utcnow() + timedelta(seconds=self._scan_interval),
         )
 
-    async def _async_status_request(self):
+    async def _async_status_request(self) -> None:
         """Request server status and update properties."""
         try:
             status_response = await self._hass.async_add_executor_job(
@@ -260,7 +268,14 @@ class MinecraftServer:
 class MinecraftServerEntity(Entity):
     """Representation of a Minecraft Server base entity."""
 
-    def __init__(self, hass, server, type_name, unit, icon):
+    def __init__(
+        self,
+        hass: HomeAssistantType,
+        server: MinecraftServer,
+        type_name: str,
+        unit: str,
+        icon: str,
+    ) -> None:
         """Initialize base entity."""
         self._server = server
         self._hass = hass
@@ -279,54 +294,55 @@ class MinecraftServerEntity(Entity):
         self._disconnect_dispatcher = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return sensor name."""
         return self._name
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID."""
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, Any]:
         """Return device information."""
         return self._device_info
 
     @property
-    def state(self):
+    def state(self) -> Any:
         """Return sensor state."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return sensor measurement unit."""
         return self._unit
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Return sensor icon."""
         return self._icon
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Disable polling."""
         return False
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Fetch sensor data from the server."""
         raise NotImplementedError()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Connect dispatcher to signal from server."""
         self._disconnect_dispatcher = async_dispatcher_connect(
-            self._hass, self._server.signal_name, self._async_update_callback
+            self._hass, self._server.signal_name, self._update_callback
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher before removal."""
         self._disconnect_dispatcher()
 
-    async def _async_update_callback(self):
+    @callback
+    def _update_callback(self) -> None:
         """Triggers update of properties after receiving signal from server."""
         self.async_schedule_update_ha_state(force_refresh=True)
