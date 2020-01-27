@@ -116,7 +116,7 @@ async def test_sync_message(hass):
 
     assert len(events) == 1
     assert events[0].event_type == EVENT_SYNC_RECEIVED
-    assert events[0].data == {"request_id": REQ_ID}
+    assert events[0].data == {"request_id": REQ_ID, "source": "cloud"}
 
 
 # pylint: disable=redefined-outer-name
@@ -183,7 +183,7 @@ async def test_sync_in_area(hass, registries):
 
     assert len(events) == 1
     assert events[0].event_type == EVENT_SYNC_RECEIVED
-    assert events[0].data == {"request_id": REQ_ID}
+    assert events[0].data == {"request_id": REQ_ID, "source": "cloud"}
 
 
 async def test_query_message(hass):
@@ -250,11 +250,23 @@ async def test_query_message(hass):
 
     assert len(events) == 3
     assert events[0].event_type == EVENT_QUERY_RECEIVED
-    assert events[0].data == {"request_id": REQ_ID, "entity_id": "light.demo_light"}
+    assert events[0].data == {
+        "request_id": REQ_ID,
+        "entity_id": "light.demo_light",
+        "source": "cloud",
+    }
     assert events[1].event_type == EVENT_QUERY_RECEIVED
-    assert events[1].data == {"request_id": REQ_ID, "entity_id": "light.another_light"}
+    assert events[1].data == {
+        "request_id": REQ_ID,
+        "entity_id": "light.another_light",
+        "source": "cloud",
+    }
     assert events[2].event_type == EVENT_QUERY_RECEIVED
-    assert events[2].data == {"request_id": REQ_ID, "entity_id": "light.non_existing"}
+    assert events[2].data == {
+        "request_id": REQ_ID,
+        "entity_id": "light.non_existing",
+        "source": "cloud",
+    }
 
 
 async def test_execute(hass):
@@ -345,6 +357,7 @@ async def test_execute(hass):
             "command": "action.devices.commands.OnOff",
             "params": {"on": True},
         },
+        "source": "cloud",
     }
     assert events[1].event_type == EVENT_COMMAND_RECEIVED
     assert events[1].data == {
@@ -354,6 +367,7 @@ async def test_execute(hass):
             "command": "action.devices.commands.BrightnessAbsolute",
             "params": {"brightness": 20},
         },
+        "source": "cloud",
     }
     assert events[2].event_type == EVENT_COMMAND_RECEIVED
     assert events[2].data == {
@@ -363,6 +377,7 @@ async def test_execute(hass):
             "command": "action.devices.commands.OnOff",
             "params": {"on": True},
         },
+        "source": "cloud",
     }
     assert events[3].event_type == EVENT_COMMAND_RECEIVED
     assert events[3].data == {
@@ -372,6 +387,7 @@ async def test_execute(hass):
             "command": "action.devices.commands.BrightnessAbsolute",
             "params": {"brightness": 20},
         },
+        "source": "cloud",
     }
 
     assert len(service_events) == 2
@@ -453,6 +469,7 @@ async def test_raising_error_trait(hass):
             "command": "action.devices.commands.ThermostatTemperatureSetpoint",
             "params": {"thermostatTemperatureSetpoint": 10},
         },
+        "source": "cloud",
     }
 
 
@@ -521,7 +538,7 @@ async def test_unavailable_state_does_sync(hass):
 
     assert len(events) == 1
     assert events[0].event_type == EVENT_SYNC_RECEIVED
-    assert events[0].data == {"request_id": REQ_ID}
+    assert events[0].data == {"request_id": REQ_ID, "source": "cloud"}
 
 
 @pytest.mark.parametrize(

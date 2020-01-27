@@ -77,7 +77,9 @@ async def async_devices_sync(hass, data, payload):
     https://developers.google.com/assistant/smarthome/develop/process-intents#SYNC
     """
     hass.bus.async_fire(
-        EVENT_SYNC_RECEIVED, {"request_id": data.request_id}, context=data.context
+        EVENT_SYNC_RECEIVED,
+        {"request_id": data.request_id, "source": data.source},
+        context=data.context,
     )
 
     agent_user_id = data.config.get_agent_user_id(data.context)
@@ -110,7 +112,11 @@ async def async_devices_query(hass, data, payload):
 
         hass.bus.async_fire(
             EVENT_QUERY_RECEIVED,
-            {"request_id": data.request_id, ATTR_ENTITY_ID: devid},
+            {
+                "request_id": data.request_id,
+                ATTR_ENTITY_ID: devid,
+                "source": data.source,
+            },
             context=data.context,
         )
 
@@ -144,6 +150,7 @@ async def handle_devices_execute(hass, data, payload):
                     "request_id": data.request_id,
                     ATTR_ENTITY_ID: entity_id,
                     "execution": execution,
+                    "source": data.source,
                 },
                 context=data.context,
             )
