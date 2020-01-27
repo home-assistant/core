@@ -56,10 +56,10 @@ def hwtest(cloud_id, install_code, ip_address):
     response = reader.post_cmd("device_list")
     if "Error" in response and "Unknown command" in response["Error"]["Text"]:
         return reader  # Probably a Legacy model
-    elif "DeviceList" in response:
+    if "DeviceList" in response:
         return EagleReader(ip_address, cloud_id, install_code)  # Probably Eagle-200
-    else:
-        _LOGGER.error("Couldn't determine device model.")
+
+    _LOGGER.error("Couldn't determine device model.")
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -158,14 +158,14 @@ class LeagleReader(LegacyReader):
 
     def update(self):
         """Fetch and return the four sensor values in a dict."""
-        d = {}
+        out = {}
 
         resp = self.get_instantaneous_demand()["InstantaneousDemand"]
-        d["instantanous_demand"] = resp["Demand"]
+        out["instantanous_demand"] = resp["Demand"]
 
         resp = self.get_current_summation()["CurrentSummation"]
-        d["summation_delivered"] = resp["SummationDelivered"]
-        d["summation_received"] = resp["SummationReceived"]
-        d["summation_total"] = d["summation_delivered"] - d["summation_received"]
+        out["summation_delivered"] = resp["SummationDelivered"]
+        out["summation_received"] = resp["SummationReceived"]
+        out["summation_total"] = out["summation_delivered"] - out["summation_received"]
 
-        return d
+        return out
