@@ -4,7 +4,7 @@ import pytest
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import _LOGGER, MOCK_SPEAKER_CONFIG_ENTRY
+from .const import MOCK_SPEAKER_CONFIG_ENTRY
 
 
 async def test_unload(
@@ -13,10 +13,8 @@ async def test_unload(
     vizio_update: pytest.fixture,
 ) -> None:
     """Test loading component and unloading entry."""
-    _LOGGER.error(MOCK_SPEAKER_CONFIG_ENTRY.state)
     await hass.config_entries.async_add(MOCK_SPEAKER_CONFIG_ENTRY)
     await hass.async_block_till_done()
-    _LOGGER.error(hass.states.async_entity_ids())
     assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
 
     assert await hass.config_entries.async_unload(MOCK_SPEAKER_CONFIG_ENTRY.entry_id)
