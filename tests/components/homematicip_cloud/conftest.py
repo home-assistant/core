@@ -17,6 +17,7 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_PIN,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
+from homeassistant.config_entries import ENTRY_STATE_LOADED
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeTemplate
@@ -98,6 +99,8 @@ async def get_mock_hap(
     mock_home.on_create(hap.async_create_entity)
 
     hass.data[HMIPC_DOMAIN] = {HAPID: hap}
+    hmip_config_entry.state = ENTRY_STATE_LOADED
+    hmip_config_entry.add_to_hass(hass)
 
     await hass.async_block_till_done()
 

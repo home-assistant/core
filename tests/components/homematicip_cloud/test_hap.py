@@ -17,12 +17,10 @@ from homeassistant.components.homematicip_cloud.hap import (
     HomematicipAuth,
     HomematicipHAP,
 )
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
+from homeassistant.config_entries import ENTRY_STATE_NOT_LOADED
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .helper import HAPID, HAPPIN
-
-from tests.common import MockConfigEntry
 
 
 async def test_auth_setup(hass):
@@ -111,13 +109,6 @@ async def test_hap_setup_connection_error():
 
 async def test_hap_reset_unloads_entry_if_setup(hass, default_mock_hap, hmip_config):
     """Test calling reset while the entry has been setup."""
-    MockConfigEntry(
-        domain=HMIPC_DOMAIN,
-        unique_id=HAPID,
-        data=hmip_config[HMIPC_DOMAIN][0],
-        state=ENTRY_STATE_LOADED,
-    ).add_to_hass(hass)
-
     assert hass.data[HMIPC_DOMAIN][HAPID] == default_mock_hap
     config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
     assert len(config_entries) == 1
