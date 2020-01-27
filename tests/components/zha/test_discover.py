@@ -71,15 +71,15 @@ async def test_devices(
 
         entity_map = device["entity_map"]
         for calls in _dispatch.call_args_list:
-            di = calls[0][2]
-            unique_id = di["unique_id"]
-            _chans = di["channels"]
-            _cmp = di["component"]
-            key = (_cmp, unique_id)
-            entity_id = entity_registry.async_get_entity_id(_cmp, "zha", unique_id)
+            discovery_info = calls[0][2]
+            unique_id = discovery_info["unique_id"]
+            channels = discovery_info["channels"]
+            component = discovery_info["component"]
+            key = (component, unique_id)
+            entity_id = entity_registry.async_get_entity_id(component, "zha", unique_id)
 
             assert key in entity_map
             assert entity_id is not None
             no_tail_id = NO_TAIL_ID.sub("", entity_map[key]["entity_id"])
             assert entity_id.startswith(no_tail_id)
-            assert set([ch.name for ch in _chans]) == set(entity_map[key]["channels"])
+            assert set([ch.name for ch in channels]) == set(entity_map[key]["channels"])
