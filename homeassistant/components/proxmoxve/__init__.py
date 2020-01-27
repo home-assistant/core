@@ -98,7 +98,7 @@ def setup(hass, config):
             continue
         except SSLError:
             _LOGGER.error(
-                "Unable to verify proxmox server SSL. Try using \"verify_ssl: false\""
+                'Unable to verify proxmox server SSL. Try using "verify_ssl: false"'
             )
             continue
 
