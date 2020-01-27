@@ -1,6 +1,6 @@
 """Test HomematicIP Cloud accesspoint."""
 
-from asynctest import CoroutineMock, Mock, patch
+from asynctest import Mock, patch
 from homematicip.aio.auth import AsyncAuth
 from homematicip.base.base_connection import HmipConnectionError
 import pytest
@@ -17,9 +17,12 @@ from homeassistant.components.homematicip_cloud.hap import (
     HomematicipAuth,
     HomematicipHAP,
 )
+from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .helper import HAPID, HAPPIN
+
+from tests.common import MockConfigEntry
 
 
 async def test_auth_setup(hass):
@@ -106,25 +109,23 @@ async def test_hap_setup_connection_error():
     assert not hass.config_entries.flow.async_init.mock_calls
 
 
-async def test_hap_reset_unloads_entry_if_setup():
+async def test_hap_reset_unloads_entry_if_setup(hass, default_mock_hap, hmip_config):
     """Test calling reset while the entry has been setup."""
-    hass = Mock()
-    entry = Mock()
-    home = Mock()
-    home.disable_events = CoroutineMock()
-    entry.data = {HMIPC_HAPID: "ABC123", HMIPC_AUTHTOKEN: "123", HMIPC_NAME: "hmip"}
-    hap = HomematicipHAP(hass, entry)
-    with patch.object(hap, "get_hap", return_value=home):
-        assert await hap.async_setup()
+    MockConfigEntry(
+        domain=HMIPC_DOMAIN,
+        unique_id=HAPID,
+        data=hmip_config[HMIPC_DOMAIN][0],
+        state=ENTRY_STATE_LOADED,
+    ).add_to_hass(hass)
 
-    assert hap.home is home
-    assert not hass.services.async_register.mock_calls
-    assert len(hass.config_entries.async_forward_entry_setup.mock_calls) == 8
-
-    hass.config_entries.async_forward_entry_unload = CoroutineMock(return_value=True)
-    await hap.async_reset()
-
-    assert len(hass.config_entries.async_forward_entry_unload.mock_calls) == 8
+    assert hass.data[HMIPC_DOMAIN][HAPID] == default_mock_hap
+    config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
+    assert len(config_entries) == 1
+    # hap_reset is called during unload
+    await hass.config_entries.async_unload(config_entries[0].entry_id)
+    # entry is unloaded
+    assert config_entries[0].state == ENTRY_STATE_NOT_LOADED
+    assert hass.data[HMIPC_DOMAIN] == {}
 
 
 async def test_hap_create(hass, hmip_config_entry, simple_mock_home):
