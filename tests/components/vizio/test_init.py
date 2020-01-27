@@ -1,7 +1,7 @@
 """Tests for Vizio init."""
 import pytest
 
-from homeassistant.components.media_player.const import DOMAIN
+from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import _LOGGER, MOCK_SPEAKER_CONFIG_ENTRY
@@ -17,8 +17,8 @@ async def test_unload(
     await hass.config_entries.async_add(MOCK_SPEAKER_CONFIG_ENTRY)
     await hass.async_block_till_done()
     _LOGGER.error(hass.states.async_entity_ids())
-    assert len(hass.states.async_entity_ids(DOMAIN)) == 1
+    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
 
     assert await hass.config_entries.async_unload(MOCK_SPEAKER_CONFIG_ENTRY.entry_id)
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids(DOMAIN)) == 0
+    assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
