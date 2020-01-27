@@ -21,12 +21,13 @@ async def async_setup(hass, config):
     """Configure Gammu state machine."""
     conf = config[DOMAIN]
     device = conf.get(CONF_DEVICE)
+    gateway = gammu.StateMachine()  # pylint: disable=no-member
     try:
-        gateway = gammu.StateMachine()  # pylint: disable=no-member
         gateway.SetConfig(0, dict(Device=device, Connection="at"))
         gateway.Init()
-        hass.data[DOMAIN] = gateway
-        return True
     except gammu.GSMError as exc:  # pylint: disable=no-member
         _LOGGER.error("Failed to initialize, error %s", exc)
         return False
+    else:
+        hass.data[DOMAIN] = gateway
+        return True
