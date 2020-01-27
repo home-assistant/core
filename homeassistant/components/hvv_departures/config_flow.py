@@ -3,7 +3,6 @@ import logging
 
 from pygti.auth import GTI_DEFAULT_HOST
 from pygti.exceptions import CannotConnect, InvalidAuth
-from pygti.gti import GTI, Auth
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -11,6 +10,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN  # pylint:disable=unused-import
+from .hub import GTIHub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,23 +31,6 @@ SCHEMA_STEP_OPTIONS = vol.Schema(
         vol.Optional("realtime", default=True): bool,
     }
 )
-
-
-class GTIHub:
-    """GTI Hub."""
-
-    def __init__(self, host, username, password, session):
-        """Initialize."""
-        self.host = host
-        self.username = username
-        self.password = password
-
-        self.gti = GTI(Auth(session, self.username, self.password, self.host))
-
-    async def authenticate(self):
-        """Test if we can authenticate with the host."""
-
-        return await self.gti.init()
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -88,9 +71,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
 
         return self.async_show_form(
             step_id="user", data_schema=SCHEMA_STEP_USER, errors=errors
@@ -105,29 +85,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {"theName": {"name": user_input["station"]}, "maxList": 20}
             )
 
-            code = check_name.get("returnCode")
-            if code == "ERROR_CN_TOO_MANY":
-                errors["base"] = "cn_too_many"
-            elif code == "OK":
+            results = check_name.get("results")
 
-                results = check_name.get("results")
+            self.stations = dict(
+                [("{} ({})".format(x.get("name"), x.get("type")), x) for x in results]
+            )
 
-                self.stations = {
-                    "{} ({})".format(x.get("name"), x.get("type")): x for x in results
-                }
+            schema = vol.Schema(
+                {vol.Required("station"): vol.In(list(self.stations.keys()))}
+            )
 
-                schema = vol.Schema(
-                    {vol.Required("station"): vol.In(list(self.stations.keys()))}
-                )
-
-                return self.async_show_form(
-                    step_id="station_select", data_schema=schema, errors=errors
-                )
-            else:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-
-            pass
+            return self.async_show_form(
+                step_id="station_select", data_schema=schema, errors=errors
+            )
 
         return self.async_show_form(
             step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
@@ -172,12 +142,49 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize HVV Departures options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
-        self.filters = []
+        self.filters = {}
         self.hub = None
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
-        if user_input is not None:
+        errors = {}
+        if self.filters == {}:
+
+            try:
+                session = aiohttp_client.async_get_clientsession(self.hass)
+                self.hub = GTIHub(
+                    self.config_entry.data["host"],
+                    self.config_entry.data["username"],
+                    self.config_entry.data["password"],
+                    session,
+                )
+
+                response = await self.hub.authenticate()
+                _LOGGER.debug("init gti: %r", response)
+
+                departure_list = await self.hub.gti.departureList(
+                    {
+                        "station": self.config_entry.data["station"],
+                        "time": {"date": "heute", "time": "jetzt"},
+                        "maxList": 5,
+                        "maxTimeOffset": 200,
+                        "useRealtime": True,
+                        "returnFilters": True,
+                    }
+                )
+
+                self.filters = dict(
+                    [
+                        ("{}, {}".format(x["serviceName"], x["label"]), x)
+                        for x in departure_list.get("filter")
+                    ]
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+
+        if user_input is not None and errors == {}:
 
             options = {
                 "filter": [self.filters[user_input["filter"]]],
@@ -186,35 +193,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             }
 
             return self.async_create_entry(title="", data=options)
-
-        session = aiohttp_client.async_get_clientsession(self.hass)
-        self.hub = GTIHub(
-            self.config_entry.data["host"],
-            self.config_entry.data["username"],
-            self.config_entry.data["password"],
-            session,
-        )
-
-        if not await self.hub.authenticate():
-            raise InvalidAuth
-
-        departure_list = await self.hub.gti.departureList(
-            {
-                "station": self.config_entry.data["station"],
-                "time": {"date": "heute", "time": "jetzt"},
-                "maxList": 5,
-                "maxTimeOffset": 200,
-                "useRealtime": True,
-                "returnFilters": True,
-            }
-        )
-
-        self.filters = dict(
-            [
-                ("{}, {}".format(x["serviceName"], x["label"]), x)
-                for x in departure_list.get("filter")
-            ]
-        )
 
         if "filter" in self.config_entry.options:
             old_filter = "{}, {}".format(
@@ -240,4 +218,5 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     ): bool,
                 }
             ),
+            errors=errors,
         )

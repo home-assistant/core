@@ -170,8 +170,6 @@ async def test_user_flow_invalid_auth(hass):
             }
         )
 
-        print(result_user)
-
         assert result_user["type"] == "form"
         assert result_user["errors"] == {"base": "invalid_auth"}
 
@@ -195,7 +193,29 @@ async def test_user_flow_cannot_connect(hass):
             }
         )
 
-        print(result_user)
-
         assert result_user["type"] == "form"
         assert result_user["errors"] == {"base": "cannot_connect"}
+
+
+async def test_user_flow_station(hass):
+    """Test that config flow handles empty data on step station."""
+    flow = config_flow.ConfigFlow()
+    flow.hass = hass
+
+    # step: station
+    result_station = await flow.async_step_station(user_input=None)
+
+    assert result_station["type"] == "form"
+    assert result_station["step_id"] == "station"
+
+
+async def test_user_flow_station_select(hass):
+    """Test that config flow handles empty data on step station_select."""
+    flow = config_flow.ConfigFlow()
+    flow.hass = hass
+
+    # step: station_select
+    result_station_select = await flow.async_step_station_select(user_input=None)
+
+    assert result_station_select["type"] == "form"
+    assert result_station_select["step_id"] == "station_select"
