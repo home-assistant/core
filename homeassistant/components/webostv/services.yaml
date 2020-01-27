@@ -24,3 +24,12 @@ command:
         https://github.com/TheRealLink/pylgtv/blob/master/pylgtv/endpoints.py
       example: 'media.controls/rewind'
 
+select_sound_output:
+  description: 'Send the TV the command to change sound output.'
+  fields:
+    entity_id:
+      description: Name(s) of the webostv entities to change sound output on.
+      example: 'media_player.living_room_tv'
+    sound_output:
+      description: Name of the sound output to switch to.
+      example: 'external_speaker'
