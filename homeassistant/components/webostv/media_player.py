@@ -36,11 +36,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.script import Script
 
 from . import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
+from .const import ATTR_SOUND_OUTPUT, LIVE_TV_APP_ID
 
 _LOGGER = logging.getLogger(__name__)
-
-
-LIVETV_APP_ID = "com.webos.app.livetv"
 
 
 SUPPORT_WEBOSTV = (
@@ -58,8 +56,6 @@ SUPPORT_WEBOSTV = (
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-
-LIVE_TV_APP_ID = "com.webos.app.livetv"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -289,6 +285,14 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
             return SUPPORT_WEBOSTV | SUPPORT_TURN_ON
         return SUPPORT_WEBOSTV
 
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        attributes = {}
+        if self._client.sound_output is not None and self.state != STATE_OFF:
+            attributes[ATTR_SOUND_OUTPUT] = self._client.sound_output
+        return attributes
+
     @cmd
     async def async_turn_off(self):
         """Turn off media player."""
@@ -319,6 +323,11 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     async def async_mute_volume(self, mute):
         """Send mute command."""
         await self._client.set_mute(mute)
+
+    @cmd
+    async def async_select_sound_output(self, sound_output):
+        """Select the sound output."""
+        await self._client.change_sound_output(sound_output)
 
     @cmd
     async def async_media_play_pause(self):
@@ -396,7 +405,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     async def async_media_next_track(self):
         """Send next track command."""
         current_input = self._client.get_input()
-        if current_input == LIVETV_APP_ID:
+        if current_input == LIVE_TV_APP_ID:
             await self._client.channel_up()
         else:
             await self._client.fast_forward()
@@ -405,7 +414,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     async def async_media_previous_track(self):
         """Send the previous track command."""
         current_input = self._client.get_input()
-        if current_input == LIVETV_APP_ID:
+        if current_input == LIVE_TV_APP_ID:
             await self._client.channel_down()
         else:
             await self._client.rewind()
