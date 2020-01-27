@@ -908,10 +908,10 @@ def async_load_api(hass):
 
     async def remove(service):
         """Remove a node from the network."""
-        ieee = service.data.get(ATTR_IEEE_ADDRESS)
+        ieee = service.data[ATTR_IEEE_ADDRESS]
         zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
         zha_device = zha_gateway.get_device(ieee)
-        if zha_device.is_coordinator:
+        if zha_device is not None and zha_device.is_coordinator:
             _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
             return
         _LOGGER.info("Removing node %s", ieee)
