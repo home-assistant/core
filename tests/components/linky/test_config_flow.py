@@ -127,7 +127,7 @@ async def test_abort_if_already_setup(hass: HomeAssistantType, login, fetch_data
     assert result["reason"] == "already_configured"
 
 
-async def test_abort_on_login_failed(hass: HomeAssistantType, login):
+async def test_login_failed(hass: HomeAssistantType, login):
     """Test when we have errors during login."""
     login.return_value.login.side_effect = PyLinkyAccessException()
     result = await hass.config_entries.flow.async_init(
@@ -150,7 +150,7 @@ async def test_abort_on_login_failed(hass: HomeAssistantType, login):
     hass.config_entries.flow.async_abort(result["flow_id"])
 
 
-async def test_abort_on_fetch_failed(hass: HomeAssistantType, login):
+async def test_fetch_failed(hass: HomeAssistantType, login):
     """Test when we have errors during fetch."""
     login.return_value.fetch_data.side_effect = PyLinkyAccessException()
     result = await hass.config_entries.flow.async_init(
