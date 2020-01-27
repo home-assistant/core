@@ -1,0 +1,13 @@
+{
+    "config": {
+        "create_entry": {
+            "default": "Vellykket autentisering med Spotify."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Velg autentiseringsmetode"
+            }
+        },
+        "title": "Spotify"
+    }
+}

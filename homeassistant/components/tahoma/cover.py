@@ -28,8 +28,11 @@ ATTR_LOCK_ORIG = "lock_originator"
 HORIZONTAL_AWNING = "io:HorizontalAwningIOComponent"
 
 TAHOMA_DEVICE_CLASSES = {
-    "io:ExteriorVenetianBlindIOComponent": DEVICE_CLASS_BLIND,
     HORIZONTAL_AWNING: DEVICE_CLASS_AWNING,
+    "io:AwningValanceIOComponent": DEVICE_CLASS_AWNING,
+    "io:DiscreteGarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
+    "io:ExteriorVenetianBlindIOComponent": DEVICE_CLASS_BLIND,
+    "io:GarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
     "io:RollerShutterGenericIOComponent": DEVICE_CLASS_SHUTTER,
     "io:RollerShutterUnoIOComponent": DEVICE_CLASS_SHUTTER,
     "io:RollerShutterVeluxIOComponent": DEVICE_CLASS_SHUTTER,
@@ -37,8 +40,6 @@ TAHOMA_DEVICE_CLASSES = {
     "io:VerticalExteriorAwningIOComponent": DEVICE_CLASS_AWNING,
     "io:VerticalInteriorBlindVeluxIOComponent": DEVICE_CLASS_BLIND,
     "io:WindowOpenerVeluxIOComponent": DEVICE_CLASS_WINDOW,
-    "io:GarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
-    "io:DiscreteGarageOpenerIOComponent": DEVICE_CLASS_GARAGE,
     "rts:BlindRTSComponent": DEVICE_CLASS_BLIND,
     "rts:CurtainRTSComponent": DEVICE_CLASS_CURTAIN,
     "rts:DualCurtainRTSComponent": DEVICE_CLASS_CURTAIN,
@@ -228,22 +229,22 @@ class TahomaCover(TahomaDevice, CoverDevice):
             == "io:RollerShutterWithLowSpeedManagementIOComponent"
         ):
             self.apply_action("setPosition", "secured")
-        elif self.tahoma_device.type in (
-            "rts:BlindRTSComponent",
+        elif self.tahoma_device.type in {
             "io:ExteriorVenetianBlindIOComponent",
-            "rts:VenetianBlindRTSComponent",
+            "rts:BlindRTSComponent",
             "rts:DualCurtainRTSComponent",
             "rts:ExteriorVenetianBlindRTSComponent",
-            "rts:BlindRTSComponent",
-        ):
+            "rts:VenetianBlindRTSComponent",
+        }:
             self.apply_action("my")
-        elif self.tahoma_device.type in (
+        elif self.tahoma_device.type in {
             HORIZONTAL_AWNING,
+            "io:AwningValanceIOComponent",
             "io:RollerShutterGenericIOComponent",
             "io:VerticalExteriorAwningIOComponent",
             "io:VerticalInteriorBlindVeluxIOComponent",
             "io:WindowOpenerVeluxIOComponent",
-        ):
+        }:
             self.apply_action("stop")
         else:
             self.apply_action("stopIdentify")

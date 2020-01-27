@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Dict
 
-from pyvizio import VizioAsync
+from pyvizio import VizioAsync, async_guess_device_type
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -13,6 +13,8 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
     CONF_NAME,
+    CONF_PORT,
+    CONF_TYPE,
 )
 from homeassistant.core import callback
 
@@ -28,8 +30,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _config_flow_schema(input_dict: Dict[str, Any]) -> vol.Schema:
+def _get_config_flow_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
     """Return schema defaults based on user input/config dict. Retain info already provided for future form views by setting them as defaults in schema."""
+    if input_dict is None:
+        input_dict = {}
+
     return vol.Schema(
         {
             vol.Required(
@@ -48,6 +53,32 @@ def _config_flow_schema(input_dict: Dict[str, Any]) -> vol.Schema:
     )
 
 
+class VizioOptionsConfigFlow(config_entries.OptionsFlow):
+    """Handle Transmission client options."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize vizio options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """Manage the vizio options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        options = {
+            vol.Optional(
+                CONF_VOLUME_STEP,
+                default=self.config_entry.options.get(
+                    CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
+                ),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10))
+        }
+
+        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+
+
 class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Vizio config flow."""
 
@@ -56,14 +87,14 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> VizioOptionsConfigFlow:
         """Get the options flow for this handler."""
         return VizioOptionsConfigFlow(config_entry)
 
     def __init__(self) -> None:
         """Initialize config flow."""
-        self.import_schema = None
-        self.user_schema = None
+        self._user_schema = None
+        self._must_show_form = None
 
     async def async_step_user(
         self, user_input: Dict[str, Any] = None
@@ -73,7 +104,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
-            self.user_schema = _config_flow_schema(user_input)
+            self._user_schema = _get_config_flow_schema(user_input)
 
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -101,25 +132,32 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "tv_needs_token"
 
             if not errors:
-                unique_id = await VizioAsync.get_unique_id(
-                    user_input[CONF_HOST],
-                    user_input.get(CONF_ACCESS_TOKEN),
-                    user_input[CONF_DEVICE_CLASS],
-                )
-
-                # Abort flow if existing component with same unique ID matches new config entry
-                if await self.async_set_unique_id(
-                    unique_id=unique_id, raise_on_progress=True
-                ):
-                    return self.async_abort(
-                        reason="already_setup_with_diff_host_and_name"
+                # Skip validating config and creating entry if form must be shown
+                if self._must_show_form:
+                    self._must_show_form = False
+                else:
+                    # Abort flow if existing entry with same unique ID matches new config entry.
+                    # Since name and host check have already passed, if an entry already exists,
+                    # It is likely a reconfigured device.
+                    unique_id = await VizioAsync.get_unique_id(
+                        user_input[CONF_HOST],
+                        user_input.get(CONF_ACCESS_TOKEN),
+                        user_input[CONF_DEVICE_CLASS],
                     )
 
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
-                )
+                    if await self.async_set_unique_id(
+                        unique_id=unique_id, raise_on_progress=True
+                    ):
+                        return self.async_abort(
+                            reason="already_setup_with_diff_host_and_name"
+                        )
 
-        schema = self.user_schema or self.import_schema or _config_flow_schema({})
+                    return self.async_create_entry(
+                        title=user_input[CONF_NAME], data=user_input
+                    )
+
+        # Use user_input params as default values for schema if user_input is non-empty, otherwise use default schema
+        schema = self._user_schema or _get_config_flow_schema()
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
@@ -148,33 +186,32 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_abort(reason="already_setup")
 
-        # Store import values in case setup fails so user can see error
-        self.import_schema = _config_flow_schema(import_config)
-
         return await self.async_step_user(user_input=import_config)
 
-
-class VizioOptionsConfigFlow(config_entries.OptionsFlow):
-    """Handle Transmission client options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize vizio options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: Dict[str, Any] = None
+    async def async_step_zeroconf(
+        self, discovery_info: Dict[str, Any] = None
     ) -> Dict[str, Any]:
-        """Manage the vizio options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+        """Handle zeroconf discovery."""
 
-        options = {
-            vol.Optional(
-                CONF_VOLUME_STEP,
-                default=self.config_entry.options.get(
-                    CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP
-                ),
-            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=10))
-        }
+        discovery_info[
+            CONF_HOST
+        ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        # Check if new config entry matches any existing config entries and abort if so
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.data[CONF_HOST] == discovery_info[CONF_HOST]:
+                return self.async_abort(reason="already_setup")
+
+        # Set default name to discovered device name by stripping zeroconf service
+        # (`type`) from `name`
+        num_chars_to_strip = len(discovery_info[CONF_TYPE]) + 1
+        discovery_info[CONF_NAME] = discovery_info[CONF_NAME][:-num_chars_to_strip]
+
+        discovery_info[CONF_DEVICE_CLASS] = await async_guess_device_type(
+            discovery_info[CONF_HOST]
+        )
+
+        # Form must be shown after discovery so user can confirm/update configuration before ConfigEntry creation.
+        self._must_show_form = True
+
+        return await self.async_step_user(user_input=discovery_info)

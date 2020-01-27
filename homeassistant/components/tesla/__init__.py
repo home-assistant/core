@@ -118,6 +118,7 @@ async def async_setup_entry(hass, config_entry):
         controller = TeslaAPI(
             websession,
             refresh_token=config[CONF_TOKEN],
+            access_token=config[CONF_ACCESS_TOKEN],
             update_interval=config_entry.options.get(CONF_SCAN_INTERVAL, 300),
         )
         (refresh_token, access_token) = await controller.connect()

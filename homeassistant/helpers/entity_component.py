@@ -3,6 +3,8 @@ import asyncio
 from datetime import timedelta
 from itertools import chain
 import logging
+from types import ModuleType
+from typing import Dict, Optional, cast
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
@@ -13,6 +15,7 @@ from homeassistant.helpers import (
     config_per_platform,
     config_validation as cv,
     discovery,
+    entity,
     service,
 )
 from homeassistant.loader import async_get_integration, bind_hass
@@ -38,15 +41,15 @@ async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
         )
         return
 
-    entity = entity_comp.get_entity(entity_id)
+    entity_obj = entity_comp.get_entity(entity_id)
 
-    if entity is None:
+    if entity_obj is None:
         logging.getLogger(__name__).warning(
             "Forced update failed. Entity %s not found.", entity_id
         )
         return
 
-    await entity.async_update_ha_state(True)
+    await entity_obj.async_update_ha_state(True)
 
 
 class EntityComponent:
@@ -59,7 +62,13 @@ class EntityComponent:
      - Listen for discovery events for platforms related to the domain.
     """
 
-    def __init__(self, logger, domain, hass, scan_interval=DEFAULT_SCAN_INTERVAL):
+    def __init__(
+        self,
+        logger: logging.Logger,
+        domain: str,
+        hass: HomeAssistant,
+        scan_interval: timedelta = DEFAULT_SCAN_INTERVAL,
+    ):
         """Initialize an entity component."""
         self.logger = logger
         self.hass = hass
@@ -68,7 +77,9 @@ class EntityComponent:
 
         self.config = None
 
-        self._platforms = {domain: self._async_init_entity_platform(domain, None)}
+        self._platforms: Dict[str, EntityPlatform] = {
+            domain: self._async_init_entity_platform(domain, None)
+        }
         self.async_add_entities = self._platforms[domain].async_add_entities
         self.add_entities = self._platforms[domain].add_entities
 
@@ -81,12 +92,12 @@ class EntityComponent:
             platform.entities.values() for platform in self._platforms.values()
         )
 
-    def get_entity(self, entity_id):
+    def get_entity(self, entity_id: str) -> Optional[entity.Entity]:
         """Get an entity."""
         for platform in self._platforms.values():
-            entity = platform.entities.get(entity_id)
-            if entity is not None:
-                return entity
+            entity_obj = cast(Optional[entity.Entity], platform.entities.get(entity_id))
+            if entity_obj is not None:
+                return entity_obj
         return None
 
     def setup(self, config):
@@ -237,7 +248,7 @@ class EntityComponent:
             if entity_id in platform.entities:
                 await platform.async_remove_entity(entity_id)
 
-    async def async_prepare_reload(self, *, skip_reset=False):
+    async def async_prepare_reload(self, *, skip_reset: bool = False) -> Optional[dict]:
         """Prepare reloading this entity component.
 
         This method must be run in the event loop.
@@ -250,25 +261,30 @@ class EntityComponent:
 
         integration = await async_get_integration(self.hass, self.domain)
 
-        conf = await conf_util.async_process_component_config(
+        processed_conf = await conf_util.async_process_component_config(
             self.hass, conf, integration
         )
 
-        if conf is None:
+        if processed_conf is None:
             return None
 
         if not skip_reset:
             await self._async_reset()
-        return conf
+
+        return processed_conf
 
     def _async_init_entity_platform(
-        self, platform_type, platform, scan_interval=None, entity_namespace=None
-    ):
+        self,
+        platform_type: str,
+        platform: Optional[ModuleType],
+        scan_interval: Optional[timedelta] = None,
+        entity_namespace: Optional[str] = None,
+    ) -> EntityPlatform:
         """Initialize an entity platform."""
         if scan_interval is None:
             scan_interval = self.scan_interval
 
-        return EntityPlatform(
+        return EntityPlatform(  # type: ignore
             hass=self.hass,
             logger=self.logger,
             domain=self.domain,

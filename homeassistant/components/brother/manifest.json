@@ -5,5 +5,6 @@
   "dependencies": [],
   "codeowners": ["@bieniu"],
   "requirements": ["brother==0.1.4"],
+  "zeroconf": ["_printer._tcp.local."],
   "config_flow": true
 }

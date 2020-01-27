@@ -45,10 +45,7 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": [
-            "binary_sensor.centralite_3130_77665544_on_off",
-            "sensor.centralite_3130_77665544_power",
-        ],
+        "entities": ["sensor.centralite_3130_77665544_power"],
         "event_channels": [6, 8],
         "manufacturer": "CentraLite",
         "model": "3130",
@@ -553,7 +550,6 @@ DEVICES = [
         },
         "entities": [
             "sensor.jasco_products_45856_77665544_smartenergy_metering",
-            "switch.jasco_products_45856_77665544_on_off",
             "light.jasco_products_45856_77665544_on_off",
         ],
         "event_channels": [6],
@@ -1001,10 +997,7 @@ DEVICES = [
                 "profile_id": -1,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_remote_b486opcn01_77665544_power",
-            "switch.lumi_lumi_remote_b486opcn01_77665544_on_off",
-        ],
+        "entities": ["sensor.lumi_lumi_remote_b486opcn01_77665544_power"],
         "event_channels": [6, 8, 768, 6],
         "manufacturer": "LUMI",
         "model": "lumi.remote.b486opcn01",
@@ -1054,10 +1047,7 @@ DEVICES = [
                 "profile_id": None,
             },
         },
-        "entities": [
-            "sensor.lumi_lumi_remote_b686opcn01_77665544_power",
-            "switch.lumi_lumi_remote_b686opcn01_77665544_on_off",
-        ],
+        "entities": ["sensor.lumi_lumi_remote_b686opcn01_77665544_power"],
         "event_channels": [6, 8, 768, 6],
         "manufacturer": "LUMI",
         "model": "lumi.remote.b686opcn01",
@@ -1372,10 +1362,7 @@ DEVICES = [
                 "profile_id": 260,
             }
         },
-        "entities": [
-            "binary_sensor.osram_lightify_dimming_switch_77665544_on_off",
-            "sensor.osram_lightify_dimming_switch_77665544_power",
-        ],
+        "entities": ["sensor.osram_lightify_dimming_switch_77665544_power"],
         "event_channels": [6, 8],
         "manufacturer": "OSRAM",
         "model": "LIGHTIFY Dimming Switch",
@@ -1593,7 +1580,6 @@ DEVICES = [
             }
         },
         "entities": [
-            "binary_sensor.securifi_ltd_unk_model_77665544_on_off",
             "sensor.securifi_ltd_unk_model_77665544_electrical_measurement",
             "sensor.securifi_ltd_unk_model_77665544_power",
             "switch.securifi_ltd_unk_model_77665544_on_off",
@@ -1643,7 +1629,6 @@ DEVICES = [
             "sensor.sercomm_corp_sz_esw01_77665544_power",
             "sensor.sercomm_corp_sz_esw01_77665544_power_2",
             "sensor.sercomm_corp_sz_esw01_77665544_electrical_measurement",
-            "switch.sercomm_corp_sz_esw01_77665544_on_off",
             "light.sercomm_corp_sz_esw01_77665544_on_off",
         ],
         "event_channels": [6],

@@ -45,7 +45,7 @@ SENSORS = {
     SENSOR_TEMPERATURE: ["Temperature", "mdi:thermometer", TEMP_CELSIUS],
     SENSOR_HUMIDITY: ["Humidity", "mdi:water-percent", "%"],
     SENSOR_PRESSURE: ["Pressure", "mdi:arrow-down-bold", "Pa"],
-    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:mdi-download", "Pa"],
+    SENSOR_PRESSURE_AT_SEALEVEL: ["Pressure at sealevel", "mdi:download", "Pa"],
     SENSOR_PM10: ["PM10", "mdi:thought-bubble", VOLUME_MICROGRAMS_PER_CUBIC_METER],
     SENSOR_PM2_5: [
         "PM2.5",

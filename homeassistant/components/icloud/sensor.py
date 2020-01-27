@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import IcloudDevice
+from .account import IcloudDevice
 from .const import DOMAIN, SERVICE_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
