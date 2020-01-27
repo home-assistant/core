@@ -171,7 +171,7 @@ async def _test_service(
     ha_service_name: str,
     additional_service_data: dict = None,
 ):
-    """Test a media player entity service."""
+    """Test a generic Vizio media player entity service."""
     service_data = {ATTR_ENTITY_ID: ENTITY_ID}
     if additional_service_data:
         service_data.update(additional_service_data)
@@ -188,7 +188,7 @@ async def _test_service(
 async def test_services(
     hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
 ) -> None:
-    """Test media player entity services."""
+    """Test all Vizio media player entity services."""
     await _test_init(hass, DEVICE_CLASS_TV, True)
 
     await _test_service(hass, "pow_on", SERVICE_TURN_ON)
