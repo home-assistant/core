@@ -26,7 +26,7 @@ async def test_auth_setup(hass):
     """Test auth setup for client registration."""
     config = {HMIPC_HAPID: "ABC123", HMIPC_PIN: "123", HMIPC_NAME: "hmip"}
     hmip_auth = HomematicipAuth(hass, config)
-    with patch.object(hmip_auth, "get_auth", return_value=None):
+    with patch.object(hmip_auth, "get_auth"):
         assert await hmip_auth.async_setup()
 
 
@@ -49,7 +49,7 @@ async def test_auth_auth_check_and_register(hass):
     ), patch.object(
         hmip_auth.auth, "requestAuthToken", return_value="ABC"
     ), patch.object(
-        hmip_auth.auth, "confirmAuthToken", return_value=None
+        hmip_auth.auth, "confirmAuthToken"
     ):
         assert await hmip_auth.async_checkbutton()
         assert await hmip_auth.async_register() == "ABC"
@@ -135,7 +135,7 @@ async def test_hap_create(hass, hmip_config_entry, simple_mock_home):
     with patch(
         "homeassistant.components.homematicip_cloud.hap.AsyncHome",
         return_value=simple_mock_home,
-    ), patch.object(hap, "async_connect", return_value=None):
+    ), patch.object(hap, "async_connect"):
         assert await hap.async_setup()
 
 
