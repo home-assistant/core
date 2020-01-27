@@ -82,6 +82,7 @@ async def test_sync_message(hass):
         config,
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
+        const.SOURCE_CLOUD,
     )
 
     assert result == {
@@ -148,6 +149,7 @@ async def test_sync_in_area(hass, registries):
         config,
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
+        const.SOURCE_CLOUD,
     )
 
     assert result == {
@@ -220,6 +222,7 @@ async def test_query_message(hass):
                 }
             ],
         },
+        const.SOURCE_CLOUD,
     )
 
     assert result == {
@@ -300,6 +303,7 @@ async def test_execute(hass):
                 }
             ],
         },
+        const.SOURCE_CLOUD,
     )
 
     assert result == {
@@ -424,6 +428,7 @@ async def test_raising_error_trait(hass):
                 }
             ],
         },
+        const.SOURCE_CLOUD,
     )
 
     assert result == {
@@ -483,6 +488,7 @@ async def test_unavailable_state_does_sync(hass):
         BASIC_CONFIG,
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
+        const.SOURCE_CLOUD,
     )
 
     assert result == {
@@ -545,6 +551,7 @@ async def test_device_class_switch(hass, device_class, google_type):
         BASIC_CONFIG,
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
+        const.SOURCE_CLOUD,
     )
 
     assert result == {
@@ -589,6 +596,7 @@ async def test_device_class_binary_sensor(hass, device_class, google_type):
         BASIC_CONFIG,
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
+        const.SOURCE_CLOUD,
     )
 
     assert result == {
@@ -629,6 +637,7 @@ async def test_device_class_cover(hass, device_class, google_type):
         BASIC_CONFIG,
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
+        const.SOURCE_CLOUD,
     )
 
     assert result == {
@@ -669,6 +678,7 @@ async def test_device_media_player(hass, device_class, google_type):
         BASIC_CONFIG,
         "test-agent",
         {"requestId": REQ_ID, "inputs": [{"intent": "action.devices.SYNC"}]},
+        const.SOURCE_CLOUD,
     )
 
     assert result == {
@@ -702,6 +712,7 @@ async def test_query_disconnect(hass):
             config,
             "test-agent",
             {"inputs": [{"intent": "action.devices.DISCONNECT"}], "requestId": REQ_ID},
+            const.SOURCE_CLOUD,
         )
     assert result is None
     assert len(mock_disconnect.mock_calls) == 1
@@ -751,6 +762,7 @@ async def test_trait_execute_adding_query_data(hass):
                     }
                 ],
             },
+            const.SOURCE_CLOUD,
         )
 
     assert result == {
@@ -817,6 +829,7 @@ async def test_identify(hass):
                 }
             ],
         },
+        const.SOURCE_CLOUD,
     )
 
     assert result == {
@@ -901,6 +914,7 @@ async def test_reachable_devices(hass):
                 {"id": proxy_device_id, "customData": {}},
             ],
         },
+        const.SOURCE_CLOUD,
     )
 
     assert result == {

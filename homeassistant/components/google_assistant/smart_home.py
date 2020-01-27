@@ -21,9 +21,11 @@ HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_handle_message(hass, config, user_id, message):
+async def async_handle_message(hass, config, user_id, message, source):
     """Handle incoming API messages."""
-    data = RequestData(config, user_id, message["requestId"], message.get("devices"))
+    data = RequestData(
+        config, user_id, source, message["requestId"], message.get("devices")
+    )
 
     response = await _process(hass, data, message)
 
