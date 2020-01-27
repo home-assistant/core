@@ -24,7 +24,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
 )
-from homeassistant.components.vizio.const import DOMAIN
+from homeassistant.components.vizio.const import CONF_VOLUME_STEP, DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -36,6 +36,7 @@ from .const import (
     MOCK_USER_VALID_TV_CONFIG,
     NAME,
     UNIQUE_ID,
+    VOLUME_STEP,
 )
 
 from tests.common import MockConfigEntry
@@ -329,3 +330,28 @@ async def test_services(
             blocking=True,
         )
         assert service_call.call_count == 1
+
+
+async def test_options_update(
+    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+) -> None:
+    """Test for when config entry update event fires."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
+    )
+    await _test_init(
+        hass,
+        config_entry,
+        VIZIO_DEVICE_CLASS_SPEAKER,
+        DEVICE_CLASS_SPEAKER,
+        True,
+        STATE_ON,
+    )
+
+    updated_options = {CONF_VOLUME_STEP: VOLUME_STEP}
+    new_options = config_entry.options.copy()
+    new_options.update(updated_options)
+    hass.config_entries.async_update_entry(
+        entry=config_entry, options=new_options,
+    )
+    assert config_entry.options == updated_options
