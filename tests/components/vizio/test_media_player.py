@@ -1,5 +1,6 @@
 """Tests for Vizio config flow."""
 from asynctest import patch
+import pytest
 from pyvizio.const import (
     DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,
@@ -172,7 +173,9 @@ async def test_vizio_init_tv_unavailable(hass: HomeAssistantType) -> None:
     )
 
 
-async def test_setup_failure(hass: HomeAssistantType) -> None:
+async def test_setup_failure(
+    hass: HomeAssistantType, vizio_connect: pytest.fixture
+) -> None:
     """Test media player entity setup failure."""
     with patch(
         "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
