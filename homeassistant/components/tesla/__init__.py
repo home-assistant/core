@@ -26,7 +26,14 @@ from .config_flow import (
     configured_instances,
     validate_input,
 )
-from .const import DATA_LISTENER, DOMAIN, ICONS, TESLA_COMPONENTS
+from .const import (
+    DATA_LISTENER,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    ICONS,
+    MIN_SCAN_INTERVAL,
+    TESLA_COMPONENTS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,9 +43,9 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=300): vol.All(
-                    cv.positive_int, vol.Clamp(min=300)
-                ),
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL)),
             }
         )
     },
@@ -63,7 +70,7 @@ async def async_setup(hass, base_config):
 
     def _update_entry(email, data=None, options=None):
         data = data or {}
-        options = options or {CONF_SCAN_INTERVAL: 300}
+        options = options or {CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL}
         for entry in hass.config_entries.async_entries(DOMAIN):
             if email != entry.title:
                 continue
@@ -119,7 +126,9 @@ async def async_setup_entry(hass, config_entry):
             websession,
             refresh_token=config[CONF_TOKEN],
             access_token=config[CONF_ACCESS_TOKEN],
-            update_interval=config_entry.options.get(CONF_SCAN_INTERVAL, 300),
+            update_interval=config_entry.options.get(
+                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+            ),
         )
         (refresh_token, access_token) = await controller.connect()
     except TeslaException as ex:
