@@ -9,6 +9,7 @@ from homeassistant.components.ps4.const import (
     DEFAULT_ALIAS,
     DEFAULT_NAME,
     DEFAULT_REGION,
+    DOMAIN,
 )
 from homeassistant.const import (
     CONF_CODE,
@@ -20,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.util import location
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_coro
 
 MOCK_TITLE = "PlayStation 4"
 MOCK_CODE = 12345678
@@ -300,21 +301,36 @@ async def test_additional_device(hass):
 
 
 async def test_0_pin(hass):
-    """Test Pin leading with 0."""
-    flow = ps4.PlayStation4FlowHandler()
-    flow.hass = hass
-    flow.location = MOCK_LOCATION
-    flow.creds = MOCK_CREDS
+    """Test Pin with leading '0' is passed correctly."""
+    with patch("pyps4_2ndscreen.Helper.get_creds", return_value=MOCK_CREDS):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "creds"}, data={},
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "mode"
+
+    with patch(
+        "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
+    ), patch(
+        "homeassistant.components.ps4.config_flow.location.async_detect_location_info",
+        return_value=mock_coro(MOCK_LOCATION),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_AUTO
+        )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "link"
 
     mock_config = MOCK_CONFIG
     mock_config[CONF_CODE] = MOCK_CODE_LEAD_0
-
     with patch(
         "pyps4_2ndscreen.Helper.link", return_value=(True, True)
     ) as mock_call, patch(
         "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
     ):
-        await flow.async_step_link(mock_config)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], mock_config
+        )
     mock_call.assert_called_once_with(
         MOCK_HOST, MOCK_CREDS, MOCK_CODE_LEAD_0_STR, DEFAULT_ALIAS
     )
