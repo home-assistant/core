@@ -19,10 +19,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize Meteo-France config flow."""
-
-    async def _show_setup_form(self, user_input=None, errors=None):
+    def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
         if user_input is None:
@@ -41,7 +38,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is None:
-            return await self._show_setup_form(user_input, None)
+            return self._show_setup_form(user_input, None)
 
         city = user_input[CONF_CITY]
         monitored_conditions = user_input.get(
@@ -59,7 +56,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "Unexpected error when creating the meteofrance proxy: %s", exp
             )
             errors["base"] = "unknown"
-            return await self._show_setup_form(user_input, errors)
+            return self._show_setup_form(user_input, errors)
 
         return self.async_create_entry(
             title=city,
