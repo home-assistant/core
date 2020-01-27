@@ -55,6 +55,7 @@ from .const import (
     CLUSTER_COMMANDS_SERVER,
     CLUSTER_TYPE_IN,
     CLUSTER_TYPE_OUT,
+    DOMAIN,
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
@@ -415,6 +416,27 @@ class ZHADevice(LogMixin):
     def async_update_last_seen(self, last_seen):
         """Set last seen on the zigpy device."""
         self._zigpy_device.last_seen = last_seen
+
+    @callback
+    def async_get_info(self):
+        """Get ZHA device information."""
+        device_info = {}
+        device_info.update(self.device_info)
+        device_info["entities"] = [
+            {
+                "entity_id": entity_ref.reference_id,
+                ATTR_NAME: entity_ref.device_info[ATTR_NAME],
+            }
+            for entity_ref in self.gateway.device_registry[self.ieee]
+        ]
+        reg_device = self.gateway.ha_device_registry.async_get_device(
+            {(DOMAIN, str(self.ieee))}, set()
+        )
+        if reg_device is not None:
+            device_info["user_given_name"] = reg_device.name_by_user
+            device_info["device_reg_id"] = reg_device.id
+            device_info["area_id"] = reg_device.area_id
+        return device_info
 
     @callback
     def async_get_clusters(self):

@@ -10,7 +10,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import async_entries_for_device
 
-from .helpers import LogMixin, async_get_device_info
+from .helpers import LogMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,12 +104,7 @@ class ZHAGroup(LogMixin):
         group_info["group_id"] = self.group_id
         group_info["name"] = self.name
         group_info["members"] = [
-            async_get_device_info(
-                self.hass,
-                zha_device,
-                ha_device_registry=self._zha_gateway.ha_device_registry,
-            )
-            for zha_device in self.members
+            zha_device.async_get_info() for zha_device in self.members
         ]
         return group_info
 

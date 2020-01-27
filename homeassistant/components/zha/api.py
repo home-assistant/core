@@ -12,7 +12,6 @@ import zigpy.zdo.types as zdo_types
 from homeassistant.components import websocket_api
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core.const import (
@@ -53,11 +52,7 @@ from .core.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
 )
-from .core.helpers import (
-    async_get_device_info,
-    async_is_bindable_target,
-    get_matched_clusters,
-)
+from .core.helpers import async_is_bindable_target, get_matched_clusters
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -212,13 +207,9 @@ async def websocket_permit_devices(hass, connection, msg):
 async def websocket_get_devices(hass, connection, msg):
     """Get ZHA devices."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    ha_device_registry = await async_get_registry(hass)
 
-    devices = []
-    for device in zha_gateway.devices.values():
-        devices.append(
-            async_get_device_info(hass, device, ha_device_registry=ha_device_registry)
-        )
+    devices = [device.async_get_info() for device in zha_gateway.devices.values()]
+
     connection.send_result(msg[ID], devices)
 
 
@@ -228,16 +219,13 @@ async def websocket_get_devices(hass, connection, msg):
 async def websocket_get_groupable_devices(hass, connection, msg):
     """Get ZHA devices that can be grouped."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    ha_device_registry = await async_get_registry(hass)
 
-    devices = []
-    for device in zha_gateway.devices.values():
-        if device.is_groupable or device.is_coordinator:
-            devices.append(
-                async_get_device_info(
-                    hass, device, ha_device_registry=ha_device_registry
-                )
-            )
+    devices = [
+        device.async_get_info()
+        for device in zha_gateway.devices.values()
+        if device.is_groupable or device.is_coordinator
+    ]
+
     connection.send_result(msg[ID], devices)
 
 
@@ -259,13 +247,10 @@ async def websocket_get_groups(hass, connection, msg):
 async def websocket_get_device(hass, connection, msg):
     """Get ZHA devices."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    ha_device_registry = await async_get_registry(hass)
     ieee = msg[ATTR_IEEE]
     device = None
     if ieee in zha_gateway.devices:
-        device = async_get_device_info(
-            hass, zha_gateway.devices[ieee], ha_device_registry=ha_device_registry
-        )
+        device = zha_gateway.devices[ieee].async_get_info()
     if not device:
         connection.send_message(
             websocket_api.error_message(
@@ -660,9 +645,9 @@ async def websocket_get_bindable_devices(hass, connection, msg):
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     source_ieee = msg[ATTR_IEEE]
     source_device = zha_gateway.get_device(source_ieee)
-    ha_device_registry = await async_get_registry(hass)
+
     devices = [
-        async_get_device_info(hass, device, ha_device_registry=ha_device_registry)
+        device.async_get_info()
         for device in zha_gateway.devices.values()
         if async_is_bindable_target(source_device, device)
     ]

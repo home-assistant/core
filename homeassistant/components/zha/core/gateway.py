@@ -73,7 +73,6 @@ from .const import (
 from .device import DeviceStatus, ZHADevice
 from .discovery import async_dispatch_discovery_info, async_process_endpoint
 from .group import ZHAGroup
-from .helpers import async_get_device_info
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
 from .store import async_get_registry
@@ -271,7 +270,7 @@ class ZHAGateway:
         zha_device = self._devices.pop(device.ieee, None)
         entity_refs = self._device_registry.pop(device.ieee, None)
         if zha_device is not None:
-            device_info = async_get_device_info(self._hass, zha_device)
+            device_info = zha_device.async_get_info()
             zha_device.async_unsub_dispatcher()
             async_dispatcher_send(
                 self._hass, "{}_{}".format(SIGNAL_REMOVE, str(zha_device.ieee))
@@ -452,9 +451,8 @@ class ZHAGateway:
             )
             await self._async_device_joined(device, zha_device)
 
-        device_info = async_get_device_info(
-            self._hass, zha_device, self.ha_device_registry
-        )
+        device_info = zha_device.async_get_info()
+
         async_dispatcher_send(
             self._hass,
             ZHA_GW_MSG,
