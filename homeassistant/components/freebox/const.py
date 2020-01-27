@@ -17,6 +17,8 @@ API_VERSION = "v6"
 
 PLATFORMS = ["device_tracker", "sensor", "switch"]
 
+DEFAULT_DEVICE_NAME = "Unknown device"
+
 # to store the cookie
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1

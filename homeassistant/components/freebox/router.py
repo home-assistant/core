@@ -19,6 +19,7 @@ from .const import (
     API_VERSION,
     APP_DESC,
     CONN_SENSORS,
+    DEFAULT_DEVICE_NAME,
     DOMAIN,
     SENSOR_DEVICE_CLASS,
     SENSOR_ICON,
@@ -109,7 +110,7 @@ class FreeboxRouter:
         )
 
         for fbx_device in fbx_devices:
-            device_name = fbx_device["primary_name"]
+            device_name = fbx_device["primary_name"].strip() or DEFAULT_DEVICE_NAME
             device_mac = fbx_device["l2ident"]["id"]
 
             if self._devices.get(device_mac) is not None:
@@ -243,7 +244,7 @@ class FreeboxDevice:
 
     def __init__(self, device: Dict[str, any]):
         """Initialize a Freebox device."""
-        self._name = device["primary_name"]
+        self._name = device["primary_name"].strip() or DEFAULT_DEVICE_NAME
         self._mac = device["l2ident"]["id"]
         self._manufacturer = device["vendor_name"]
         self._icon = icon_for_freebox_device(device)
