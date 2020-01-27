@@ -36,7 +36,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.script import Script
 
 from . import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
-from .const import LIVE_TV_APP_ID, ATTR_SOUND_OUTPUT
+from .const import ATTR_SOUND_OUTPUT, LIVE_TV_APP_ID
 
 _LOGGER = logging.getLogger(__name__)
 
