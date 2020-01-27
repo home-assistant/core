@@ -689,7 +689,7 @@ uvcclient==0.11.0
 vigilancemeteo==3.0.0
 
 # homeassistant.components.vilfo
-vilfo-api-client==0.3
+vilfo-api-client==0.3.1
 
 # homeassistant.components.verisure
 vsure==1.5.4

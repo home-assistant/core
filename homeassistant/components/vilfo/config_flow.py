@@ -3,7 +3,11 @@ import ipaddress
 import logging
 import re
 
-import vilfo
+from vilfo import Client as VilfoClient
+from vilfo.exceptions import (
+    AuthenticationException as VilfoAuthenticationException,
+    VilfoException,
+)
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
@@ -39,27 +43,22 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     # Validate the host before doing anything else.
     if not host_valid(data[CONF_HOST]):
-        raise CannotConnect
-
-    # Check that no config exists for this host already.
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.data[CONF_HOST] == data[CONF_HOST]:
-            raise AlreadyConfigured
+        raise InvalidHost
 
     config = {}
 
     # Attempt to connect and call the ping endpoint.
     # This doesn't validate authentication.
-    controller = vilfo.Client(host=data[CONF_HOST], token=data[CONF_ACCESS_TOKEN])
+    controller = VilfoClient(host=data[CONF_HOST], token=data[CONF_ACCESS_TOKEN])
     try:
         controller.ping()
-    except vilfo.exceptions.VilfoException:
+    except VilfoException:
         raise CannotConnect
 
     # Perform a call that requires authentication.
     try:
         controller.get_board_information()
-    except vilfo.exceptions.AuthenticationException:
+    except VilfoAuthenticationException:
         raise InvalidAuth
 
     # Return some info we want to store in the config entry.
@@ -91,16 +90,14 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=info["title"], data=user_input)
-            except AlreadyConfigured:
-                return self.async_abort(reason="already_configured")
             except InvalidHost:
                 errors[CONF_HOST] = "wrong_host"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+            except Exception as err:  # pylint: disable=broad-except
+                _LOGGER.error("Unexpected exception: %s", err)
                 errors["base"] = "unknown"
 
         return self.async_show_form(

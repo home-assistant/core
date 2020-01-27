@@ -3,12 +3,14 @@ import asyncio
 from datetime import timedelta
 import logging
 
-import vilfo
+from vilfo import Client as VilfoClient
+from vilfo.exceptions import VilfoException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN
@@ -20,9 +22,9 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the Vilfo Router component."""
-    hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
     return True
 
 
@@ -40,9 +42,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = vilfo_router
 
-    for component in PLATFORMS:
+    for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
+            hass.config_entries.async_forward_entry_setup(entry, platform)
         )
 
     return True
@@ -53,8 +55,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
             ]
         )
     )
@@ -69,13 +71,13 @@ class VilfoRouterData:
 
     def __init__(self, host, access_token):
         """Initialize."""
-        self._vilfo = vilfo.Client(host, access_token)
+        self._vilfo = VilfoClient(host, access_token)
         self.host = host
         self.available = False
-        self.firmware = None
+        self.firmware_version = None
         self.mac_address = self._vilfo.mac
         self.data = {}
-        self.unavailable_logged = False
+        self._unavailable_logged = False
 
     @property
     def unique_id(self):
@@ -89,7 +91,7 @@ class VilfoRouterData:
         """Update data using calls to VilfoClient library."""
         try:
             board_information = self._vilfo.get_board_information()
-            self.firmware = board_information["version"]
+            self.firmware_version = board_information["version"]
             boot_time = dt_util.parse_datetime(board_information["bootTime"])
             uptime = dt_util.now() - boot_time
             uptime_seconds = round(uptime.total_seconds(), 0)
@@ -100,15 +102,15 @@ class VilfoRouterData:
             self.data["load"] = self._vilfo.get_load()
 
             self.available = True
-        except vilfo.exceptions.VilfoException as error:
-            if not self.unavailable_logged:
+        except VilfoException as error:
+            if not self._unavailable_logged:
                 _LOGGER.error(
                     "Could not fetch data from %s, error: %s", self.host, error
                 )
-                self.unavailable_logged = True
+                self._unavailable_logged = True
             self.available = False
             return
 
-        if self.available and self.unavailable_logged:
+        if self.available and self._unavailable_logged:
             _LOGGER.info("Vilfo Router %s is available again", self.host)
-            self.unavailable_logged = False
+            self._unavailable_logged = False
