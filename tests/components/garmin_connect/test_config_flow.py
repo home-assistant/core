@@ -41,9 +41,7 @@ async def test_show_form(hass):
 async def test_step_user(hass, mock_garmin_connect):
     """Test registering an integration and finishing flow works."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": "user"},
-        data={"username": "my@email.address", "password": "mypassw0rd"},
+        DOMAIN, context={"source": "user"}, data=MOCK_CONF
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == MOCK_CONF

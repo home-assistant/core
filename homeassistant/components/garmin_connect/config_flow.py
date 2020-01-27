@@ -12,12 +12,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
-from .const import DOMAIN
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Garmin Connect."""
 
@@ -37,7 +36,7 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
         if user_input is None:
-            return await self._show_setup_form(user_input)
+            return await self._show_setup_form()
 
         garmin_client = Garmin(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
 

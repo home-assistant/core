@@ -111,7 +111,7 @@ class GarminConnectSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this sensor."""
-        return f"{DOMAIN}_{self._unique_id}_{self._type}"
+        return f"{self._unique_id}_{self._type}"
 
     @property
     def unit_of_measurement(self):
@@ -134,19 +134,10 @@ class GarminConnectSensor(Entity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information."""
         return {
-            "identifiers": {(DOMAIN, self._unique_id)},
+            # "identifiers": {DOMAIN},
             "name": "Garmin Connect",
             "manufacturer": "Garmin Connect",
-            "model": "Activity Tracker",
         }
-
-    async def async_added_to_hass(self):
-        """Register state update callback."""
-        pass
-
-    async def async_will_remove_from_hass(self):
-        """Prepare for unload."""
-        pass
 
     @property
     def entity_registry_enabled_default(self) -> bool:

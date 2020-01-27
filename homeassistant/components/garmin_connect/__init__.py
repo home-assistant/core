@@ -13,7 +13,7 @@ from garminconnect import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.util import Throttle
 
 from .const import DOMAIN
@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         return False
     except (GarminConnectConnectionError) as err:
         _LOGGER.error("Error occured during Garmin Connect login: %s", err)
-        raise PlatformNotReady
+        raise ConfigEntryNotReady
     except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Unknown error occured during Garmin Connect login")
         return False
@@ -99,10 +99,10 @@ class GarminConnectData:
             GarminConnectTooManyRequestsError,
         ) as err:
             _LOGGER.error("Error occured during Garmin Connect get stats: %s", err)
-            return False
+            return
         except (GarminConnectConnectionError) as err:
             _LOGGER.error("Error occured during Garmin Connect get stats: %s", err)
-            raise PlatformNotReady
+            return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.error("Unknown error occured during Garmin Connect get stats")
-            return False
+            return
