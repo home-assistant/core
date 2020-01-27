@@ -26,7 +26,7 @@ COMMAND_SINGLE = "single"
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "zha", "warning_device_warn")
 
 
