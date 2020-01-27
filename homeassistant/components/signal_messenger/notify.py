@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SENDER_NR = "number"
 CONF_RECP_NR = "recipients"
 CONF_SIGNAL_CLI_REST_API = "url"
+ATTR_FILENAME = "attachment"
 ATTR_FILENAMES = "attachments"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -58,9 +59,15 @@ class SignalNotificationService(BaseNotificationService):
 
         data = kwargs.get(ATTR_DATA)
 
-        filenames = None
-        if data is not None and ATTR_FILENAMES in data:
-            filenames = data[ATTR_FILENAMES]
+        filenames = []
+        if data is not None:
+            if ATTR_FILENAMES in data:
+                filenames.append(data[ATTR_FILENAMES])
+            if ATTR_FILENAME in data:
+                filenames.append(data[ATTR_FILENAME])
+
+        if len(filenames) == 0:
+            filenames = None
 
         try:
             self._signal_cli_rest_api.send_message(message, self._recp_nrs, filenames)
