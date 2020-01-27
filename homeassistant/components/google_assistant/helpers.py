@@ -362,6 +362,9 @@ class GoogleEntity:
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
+        if not self.config.should_2fa(state):
+            return False
+
         return any(
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
         )
