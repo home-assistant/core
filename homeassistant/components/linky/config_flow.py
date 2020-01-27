@@ -25,7 +25,7 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def _show_setup_form(self, user_input=None, errors=None):
+    def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
 
         if user_input is None:
@@ -51,7 +51,7 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is None:
-            return await self._show_setup_form(user_input, None)
+            return self._show_setup_form(user_input, None)
 
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
@@ -69,19 +69,19 @@ class LinkyFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except PyLinkyAccessException as exp:
             _LOGGER.error(exp)
             errors["base"] = "access"
-            return await self._show_setup_form(user_input, errors)
+            return self._show_setup_form(user_input, errors)
         except PyLinkyEnedisException as exp:
             _LOGGER.error(exp)
             errors["base"] = "enedis"
-            return await self._show_setup_form(user_input, errors)
+            return self._show_setup_form(user_input, errors)
         except PyLinkyWrongLoginException as exp:
             _LOGGER.error(exp)
             errors["base"] = "wrong_login"
-            return await self._show_setup_form(user_input, errors)
+            return self._show_setup_form(user_input, errors)
         except PyLinkyException as exp:
             _LOGGER.error(exp)
             errors["base"] = "unknown"
-            return await self._show_setup_form(user_input, errors)
+            return self._show_setup_form(user_input, errors)
         finally:
             client.close_session()
 
