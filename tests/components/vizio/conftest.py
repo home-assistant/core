@@ -5,6 +5,15 @@ import pytest
 from .const import UNIQUE_ID
 
 
+@pytest.fixture(name="skip_notifications", autouse=True)
+def skip_notifications_fixture():
+    """Skip notification calls."""
+    with patch("homeassistant.components.persistent_notification.async_create"), patch(
+        "homeassistant.components.persistent_notification.async_dismiss"
+    ):
+        yield
+
+
 @pytest.fixture(name="vizio_connect")
 def vizio_connect_fixture():
     """Mock valid vizio device and entry setup."""
