@@ -526,6 +526,38 @@ class ZHAGateway:
         # will cause async_init to fire so don't explicitly call it
         zha_device.update_available(True)
 
+    async def async_create_zigpy_group(self, name, members):
+        """Create a new Zigpy Zigbee group."""
+        # we start with one to fill any gaps from a user removing existing groups
+        group_id = 1
+        while group_id in self.groups:
+            group_id += 1
+
+        # guard against group already existing
+        if self.async_get_group_by_name(name) is None:
+            self.application_controller.groups.add_group(group_id, name)
+            if members is not None:
+                tasks = []
+                for ieee in members:
+                    tasks.append(self.devices[ieee].async_add_to_group(group_id))
+                await asyncio.gather(*tasks)
+        return self.groups.get(group_id)
+
+    async def async_remove_zigpy_group(self, group_id):
+        """Remove a Zigbee group from Zigpy."""
+        group = self.groups.get(group_id)
+        if group and group.members:
+            tasks = []
+            for member in group.members:
+                tasks.append(member.async_remove_from_group(group_id))
+            if tasks:
+                await asyncio.gather(*tasks)
+            else:
+                # we have members but none are tracked by ZHA for whatever reason
+                self.application_controller.groups.pop(group_id)
+        else:
+            self.application_controller.groups.pop(group_id)
+
     async def shutdown(self):
         """Stop ZHA Controller Application."""
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
