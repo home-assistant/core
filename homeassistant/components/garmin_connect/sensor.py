@@ -134,7 +134,7 @@ class GarminConnectSensor(Entity):
     def device_info(self) -> Dict[str, Any]:
         """Return device information."""
         return {
-            # "identifiers": {DOMAIN},
+            "identifiers": {DOMAIN},
             "name": "Garmin Connect",
             "manufacturer": "Garmin Connect",
         }
