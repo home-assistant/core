@@ -24,9 +24,7 @@ from homeassistant.components.media_player import (
     SERVICE_VOLUME_UP,
 )
 from homeassistant.components.vizio.const import DOMAIN
-from homeassistant.components.vizio.media_player import async_setup_entry
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.setup import async_setup_component
 
@@ -35,8 +33,6 @@ from .const import (
     ENTITY_ID,
     INPUT_LIST,
     MOCK_SPEAKER_CONFIG,
-    MOCK_SPEAKER_CONFIG_ENTRY,
-    MOCK_TV_CONFIG_ENTRY,
     MOCK_USER_VALID_TV_CONFIG,
     NAME,
     UNIQUE_ID,
@@ -86,7 +82,7 @@ async def _test_vizio_init(
         "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
         return_value=vizio_power_state,
     ):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
         await hass.async_block_till_done()
 
         attr = hass.states.get(ENTITY_ID).attributes
@@ -182,15 +178,15 @@ async def test_setup_failure(hass: HomeAssistantType) -> None:
         "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
         return_value=False,
     ):
-        try:
-            await async_setup_entry(hass, MOCK_SPEAKER_CONFIG_ENTRY, None)
-        except Exception as e:
-            assert isinstance(e, PlatformNotReady)
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: MOCK_SPEAKER_CONFIG})
+        await hass.async_block_till_done()
+        assert len(hass.states.async_entity_ids(DOMAIN)) == 0
 
-        try:
-            await async_setup_entry(hass, MOCK_TV_CONFIG_ENTRY, None)
-        except Exception as e:
-            assert isinstance(e, PlatformNotReady)
+        assert await async_setup_component(
+            hass, DOMAIN, {DOMAIN: MOCK_USER_VALID_TV_CONFIG}
+        )
+        await hass.async_block_till_done()
+        assert len(hass.states.async_entity_ids(DOMAIN)) == 0
 
 
 async def test_services(hass: HomeAssistantType) -> None:
@@ -204,86 +200,117 @@ async def test_services(hass: HomeAssistantType) -> None:
         STATE_ON,
     )
 
-    with patch("homeassistant.components.vizio.media_player.VizioAsync.pow_on"):
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.pow_on"
+    ) as service_call:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_TURN_ON,
             service_data={ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+        assert service_call.call_count == 1
 
-    with patch("homeassistant.components.vizio.media_player.VizioAsync.pow_off"):
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.pow_off"
+    ) as service_call:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_TURN_OFF,
             service_data={ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+        assert service_call.call_count == 1
 
-    with patch("homeassistant.components.vizio.media_player.VizioAsync.mute_on"):
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.mute_on"
+    ) as service_call:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_MUTE,
             service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: True},
             blocking=True,
         )
+        assert service_call.call_count == 1
 
-    with patch("homeassistant.components.vizio.media_player.VizioAsync.mute_off"):
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.mute_off"
+    ) as service_call:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_MUTE,
             service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_MUTED: False},
             blocking=True,
         )
+        assert service_call.call_count == 1
 
-    with patch("homeassistant.components.vizio.media_player.VizioAsync.input_switch"):
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.input_switch"
+    ) as service_call:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
             service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_INPUT_SOURCE: "USB"},
             blocking=True,
         )
+        assert service_call.call_count == 1
 
-    with patch("homeassistant.components.vizio.media_player.VizioAsync.vol_up"):
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.vol_up"
+    ) as service_call:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_UP,
             service_data={ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+        assert service_call.call_count == 1
+
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_SET,
             service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 1},
             blocking=True,
         )
+        assert service_call.call_count == 2
 
-    with patch("homeassistant.components.vizio.media_player.VizioAsync.vol_down"):
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.vol_down"
+    ) as service_call:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_DOWN,
             service_data={ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+        assert service_call.call_count == 1
+
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_VOLUME_SET,
             service_data={ATTR_ENTITY_ID: ENTITY_ID, ATTR_MEDIA_VOLUME_LEVEL: 0},
             blocking=True,
         )
+        assert service_call.call_count == 2
 
-    with patch("homeassistant.components.vizio.media_player.VizioAsync.ch_up"):
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.ch_up"
+    ) as service_call:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_MEDIA_NEXT_TRACK,
             service_data={ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+        assert service_call.call_count == 1
 
-    with patch("homeassistant.components.vizio.media_player.VizioAsync.ch_down"):
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.ch_down"
+    ) as service_call:
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_MEDIA_PREVIOUS_TRACK,
             service_data={ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
         )
+        assert service_call.call_count == 1

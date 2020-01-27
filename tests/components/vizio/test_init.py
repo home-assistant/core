@@ -19,4 +19,4 @@ async def test_unload(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     for entry in entries:
-        assert await entry.async_unload(hass)
+        assert await hass.config_entries.async_unload(entry.entry_id)

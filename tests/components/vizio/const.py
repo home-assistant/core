@@ -82,4 +82,4 @@ MOCK_TV_CONFIG_ENTRY = MockConfigEntry(
 CURRENT_INPUT = "HDMI"
 INPUT_LIST = ["HDMI", "USB", "Bluetooth", "AUX"]
 
-ENTITY_ID = f"{MP_DOMAIN.lower()}.{NAME.lower()}"
+ENTITY_ID = f"{MP_DOMAIN}.{NAME.lower()}"

@@ -76,9 +76,9 @@ async def async_setup_entry(
     if not await device.can_connect():
         fail_auth_msg = ""
         if token:
-            fail_auth_msg = f"and auth token '{token}' are correct."
+            fail_auth_msg = f"and auth token '{token}' are correct"
         else:
-            fail_auth_msg = "is correct."
+            fail_auth_msg = "is correct"
         _LOGGER.warning(
             "Failed to connect to Vizio device, please check if host '%s' "
             "is valid and available. Also check if device class '%s' %s",
@@ -130,7 +130,7 @@ class VizioDevice(MediaPlayerDevice):
             if self._available:
                 _LOGGER.warning(
                     "Can't connect to device '%s - %s'. Entity will be unavailable "
-                    "until connection is restored.",
+                    "until connection is restored",
                     self._name,
                     self._config_entry.data[CONF_HOST],
                 )
@@ -139,7 +139,7 @@ class VizioDevice(MediaPlayerDevice):
 
         if not self._available:
             _LOGGER.info(
-                "Connection to device '%s - %s' restored!",
+                "Connection to device '%s - %s' restored",
                 self._name,
                 self._config_entry.data[CONF_HOST],
             )
@@ -255,11 +255,6 @@ class VizioDevice(MediaPlayerDevice):
             "name": self.name,
             "manufacturer": "VIZIO",
         }
-
-    @property
-    def entity_registry_enabled_default(self):
-        """Return whether entity should be enabled or disabled when first added."""
-        return True
 
     @property
     def device_class(self):

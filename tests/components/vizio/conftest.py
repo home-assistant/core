@@ -5,7 +5,7 @@ import pytest
 from .const import UNIQUE_ID
 
 
-@pytest.fixture(name="vizio_connect", autouse=False)
+@pytest.fixture(name="vizio_connect")
 def vizio_connect_fixture():
     """Mock valid vizio device and entry setup."""
     with patch(
@@ -18,14 +18,14 @@ def vizio_connect_fixture():
         yield
 
 
-@pytest.fixture(name="vizio_bypass_setup", autouse=False)
+@pytest.fixture(name="vizio_bypass_setup")
 def vizio_bypass_setup_fixture():
     """Mock component setup."""
     with patch("homeassistant.components.vizio.async_setup_entry", return_value=True):
         yield
 
 
-@pytest.fixture(name="vizio_bypass_update", autouse=False)
+@pytest.fixture(name="vizio_bypass_update")
 def vizio_bypass_update_fixture():
     """Mock component update."""
     with patch(
@@ -35,7 +35,7 @@ def vizio_bypass_update_fixture():
         yield
 
 
-@pytest.fixture(name="vizio_guess_device_type", autouse=False)
+@pytest.fixture(name="vizio_guess_device_type")
 def vizio_guess_device_type_fixture():
     """Mock vizio async_guess_device_type function."""
     with patch(
@@ -45,7 +45,7 @@ def vizio_guess_device_type_fixture():
         yield
 
 
-@pytest.fixture(name="vizio_cant_connect", autouse=False)
+@pytest.fixture(name="vizio_cant_connect")
 def vizio_cant_connect_fixture():
     """Mock vizio device cant connect."""
     with patch(
