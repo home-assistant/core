@@ -5,9 +5,11 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
+    ATTR_COLOR_TEMP,
     ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
     Light,
 )
@@ -60,6 +62,8 @@ class HMLight(HMDevice, Light):
             features |= SUPPORT_COLOR
         if "PROGRAM" in self._hmdevice.WRITENODE:
             features |= SUPPORT_EFFECT
+        if hasattr(self._hmdevice, 'get_color_temp'):
+            features |= SUPPORT_COLOR_TEMP
         return features
 
     @property
@@ -69,6 +73,15 @@ class HMLight(HMDevice, Light):
             return None
         hue, sat = self._hmdevice.get_hs_color(self._channel)
         return hue * 360.0, sat * 100.0
+
+    @property
+    def color_temp(self):
+        """Return the color temp in mireds [int]."""
+        if not self.supported_features & SUPPORT_COLOR_TEMP:
+            return None
+        hm_color_temp = self._hmdevice.get_color_temp(self._channel)
+        return self.max_mireds - \
+               (self.max_mireds - self.min_mireds) * hm_color_temp
 
     @property
     def effect_list(self):
@@ -92,7 +105,9 @@ class HMLight(HMDevice, Light):
         if ATTR_BRIGHTNESS in kwargs and self._state == "LEVEL":
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             self._hmdevice.set_level(percent_bright, self._channel)
-        elif ATTR_HS_COLOR not in kwargs and ATTR_EFFECT not in kwargs:
+        elif (ATTR_HS_COLOR not in kwargs
+         and ATTR_COLOR_TEMP not in kwargs
+         and ATTR_EFFECT not in kwargs):
             self._hmdevice.on(self._channel)
 
         if ATTR_HS_COLOR in kwargs:
@@ -101,6 +116,10 @@ class HMLight(HMDevice, Light):
                 saturation=kwargs[ATTR_HS_COLOR][1] / 100.0,
                 channel=self._channel,
             )
+        if ATTR_COLOR_TEMP in kwargs:
+            hm_temp = (self.max_mireds - kwargs[ATTR_COLOR_TEMP]) \
+                      / (self.max_mireds - self.min_mireds)
+            self._hmdevice.set_color_temp(hm_temp)
         if ATTR_EFFECT in kwargs:
             self._hmdevice.set_effect(kwargs[ATTR_EFFECT])
 
@@ -116,5 +135,7 @@ class HMLight(HMDevice, Light):
 
         if self.supported_features & SUPPORT_COLOR:
             self._data.update({"COLOR": None})
+        if self.supported_features & SUPPORT_COLOR:
+            self._data.update({"LEVEL": None})
         if self.supported_features & SUPPORT_EFFECT:
             self._data.update({"PROGRAM": None})
