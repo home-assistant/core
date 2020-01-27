@@ -59,15 +59,15 @@ class SignalNotificationService(BaseNotificationService):
 
         data = kwargs.get(ATTR_DATA)
 
-        filenames = []
+        filenames = None
         if data is not None:
             if ATTR_FILENAMES in data:
-                filenames.append(data[ATTR_FILENAMES])
+                filenames = data[ATTR_FILENAMES]
             if ATTR_FILENAME in data:
-                filenames.append(data[ATTR_FILENAME])
-
-        if len(filenames) == 0:
-            filenames = None
+                if filenames is None:
+                    filenames = [data[ATTR_FILENAME]]
+                else:
+                    filenames.append(data[ATTR_FILENAME])
 
         try:
             self._signal_cli_rest_api.send_message(message, self._recp_nrs, filenames)
