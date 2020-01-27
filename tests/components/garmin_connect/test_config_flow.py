@@ -12,8 +12,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components.garmin_connect.const import DOMAIN
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME
 
-from tests.common import MockConfigEntry
-
 MOCK_CONF = {
     CONF_ID: "First Lastname",
     CONF_USERNAME: "my@email.address",
@@ -91,8 +89,9 @@ async def test_unknown_error(hass, mock_garmin_connect):
 
 async def test_abort_if_already_setup(hass, mock_garmin_connect):
     """Test abort if already setup."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONF)
-    entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}, data=MOCK_CONF
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}, data=MOCK_CONF
