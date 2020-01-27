@@ -14,6 +14,7 @@ UNITS_OF_MEASUREMENT = {
     sensor.DEVICE_CLASS_BATTERY: "%",  # % of battery that is left
     sensor.DEVICE_CLASS_HUMIDITY: "%",  # % of humidity in the air
     sensor.DEVICE_CLASS_ILLUMINANCE: "lm",  # current light level (lx/lm)
+    sensor.DEVICE_CLASS_LINK_QUALITY: "lqi",  # link quality (lqi)
     sensor.DEVICE_CLASS_SIGNAL_STRENGTH: "dB",  # signal strength (dB/dBm)
     sensor.DEVICE_CLASS_TEMPERATURE: "C",  # temperature (C/F)
     sensor.DEVICE_CLASS_TIMESTAMP: "hh:mm:ss",  # timestamp (ISO8601)
