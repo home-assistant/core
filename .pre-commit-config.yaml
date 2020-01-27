@@ -19,7 +19,7 @@ repos:
     hooks:
     -   id: codespell
         args:
-          - --ignore-words-list=hass,datas,files\',hist,iff,lightsensor,ser,unit,wan
+          - --ignore-words-list=hass,datas,hist,iff,lightsensor,ser,unit,wan
           - --skip=./.*,*.json
           - --quiet-level=2
 -   repo: https://gitlab.com/pycqa/flake8
