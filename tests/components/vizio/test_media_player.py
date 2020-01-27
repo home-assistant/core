@@ -89,6 +89,41 @@ async def _test_init(
             )
 
 
+async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
+    """Test generic Vizio entity setup failure."""
+    with patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
+        return_value=False,
+    ):
+        await hass.config_entries.async_add(
+            MockConfigEntry(
+                domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
+            )
+        )
+        await hass.async_block_till_done()
+        assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
+
+
+async def _test_service(
+    hass: HomeAssistantType,
+    vizio_func_name: str,
+    ha_service_name: str,
+    additional_service_data: dict = None,
+):
+    """Test a generic Vizio media player entity service."""
+    service_data = {ATTR_ENTITY_ID: ENTITY_ID}
+    if additional_service_data:
+        service_data.update(additional_service_data)
+
+    with patch(
+        f"homeassistant.components.vizio.media_player.VizioAsync.{vizio_func_name}"
+    ) as service_call:
+        await hass.services.async_call(
+            MP_DOMAIN, ha_service_name, service_data=service_data, blocking=True,
+        )
+        assert service_call.call_count == 1
+
+
 async def test_speaker_on(
     hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
 ) -> None:
@@ -135,54 +170,14 @@ async def test_setup_failure_speaker(
     hass: HomeAssistantType, vizio_connect: pytest.fixture
 ) -> None:
     """Test speaker entity setup failure."""
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
-        return_value=False,
-    ):
-        await hass.config_entries.async_add(
-            MockConfigEntry(
-                domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
-            )
-        )
-        await hass.async_block_till_done()
-        assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
+    await _test_setup_failure(hass, MOCK_SPEAKER_CONFIG)
 
 
 async def test_setup_failure_tv(
     hass: HomeAssistantType, vizio_connect: pytest.fixture
 ) -> None:
     """Test TV entity setup failure."""
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
-        return_value=False,
-    ):
-        await hass.config_entries.async_add(
-            MockConfigEntry(
-                domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
-            )
-        )
-        await hass.async_block_till_done()
-        assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
-
-
-async def _test_service(
-    hass: HomeAssistantType,
-    vizio_func_name: str,
-    ha_service_name: str,
-    additional_service_data: dict = None,
-):
-    """Test a generic Vizio media player entity service."""
-    service_data = {ATTR_ENTITY_ID: ENTITY_ID}
-    if additional_service_data:
-        service_data.update(additional_service_data)
-
-    with patch(
-        f"homeassistant.components.vizio.media_player.VizioAsync.{vizio_func_name}"
-    ) as service_call:
-        await hass.services.async_call(
-            MP_DOMAIN, ha_service_name, service_data=service_data, blocking=True,
-        )
-        assert service_call.call_count == 1
+    await _test_setup_failure(hass, MOCK_USER_VALID_TV_CONFIG)
 
 
 async def test_services(
