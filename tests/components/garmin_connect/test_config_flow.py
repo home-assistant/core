@@ -98,4 +98,4 @@ async def test_abort_if_already_setup(hass, mock_garmin_connect):
         DOMAIN, context={"source": "user"}, data=MOCK_CONF
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_setup"
+    assert result["reason"] == "already_configured"

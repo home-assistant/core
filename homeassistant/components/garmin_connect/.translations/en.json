@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_setup": "This account is already configured."
+      "already_configured": "This account is already configured."
     },
     "error": {
       "cannot_connect": "Failed to connect, please try again.",

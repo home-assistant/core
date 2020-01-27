@@ -59,10 +59,8 @@ class GarminConnectConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         unique_id = garmin_client.get_full_name()
 
-        entries = self._async_current_entries()
-        for entry in entries:
-            if entry.data[CONF_ID] == unique_id:
-                return self.async_abort(reason="already_setup")
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
             title=unique_id,
