@@ -30,6 +30,10 @@ SSDP = {
         {
             "manufacturer": "Royal Philips Electronics",
             "modelName": "Philips hue bridge 2015"
+        },
+        {
+            "manufacturer": "Signify",
+            "modelName": "Philips hue bridge 2015"
         }
     ],
     "samsungtv": [
