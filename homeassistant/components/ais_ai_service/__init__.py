@@ -2247,11 +2247,22 @@ async def async_process_json_from_frame(hass, json_req):
                             )
                         )
     elif topic == "ais/speech_command":
+
         hass.async_run_job(
             hass.services.async_call("conversation", "process", {"text": payload})
         )
         res = {"ais": "ok", "say_it": "przyjołem kommendę - bez odbioru!"}
-        _LOGGER.info("res: " + str(res))
+
+    elif topic == "ais/media_player":
+        hass.async_run_job(
+            hass.services.async_call(
+                "media_player",
+                payload,
+                {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
+            )
+        )
+
+    _LOGGER.info("res: " + str(res))
     return json_response(res)
 
 
@@ -2937,7 +2948,7 @@ def _publish_command_to_frame(hass, key, val, ip):
         try:
             requests.post(url + "/command", json={key: val, "ip": ip}, timeout=2)
         except Exception as e:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "_publish_command_to_frame requests.post problem key: "
                 + str(key)
                 + " val: "
@@ -3247,9 +3258,6 @@ def _process_command_from_frame(hass, service):
                 "ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL: "
                 + str(ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
             )
-        _LOGGER.error("player_status: ----------------------")
-        _LOGGER.error("player_status: " + str(service.data["payload"]))
-        _LOGGER.error("player_status: ----------------------")
         if "ais_gate_client_id" in service.data:
             json_string = json.dumps(service.data["payload"])
         else:
@@ -3372,6 +3380,25 @@ def _post_message(message, hass):
         )
     except Exception as e:
         _LOGGER.debug("problem to send the text to speech via http: " + str(e))
+    # do the same for speakers in the group
+    for s in ais_global.G_SPEAKERS_GROUP_LIST:
+        if s != "media_player.wbudowany_glosnik":
+            attr = hass.states.get(s).attributes
+            if "device_ip" in attr and attr["device_ip"] != "localhost":
+                try:
+                    requests.post(
+                        ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(
+                            attr["device_ip"]
+                        )
+                        + "/text_to_speech",
+                        json=j_data,
+                        timeout=1,
+                    )
+                except Exception as e:
+                    _LOGGER.debug(
+                        "problem to send the text to speech via http to "
+                        + attr["device_ip"]
+                    )
 
 
 def _beep_it(hass, tone):

@@ -209,14 +209,34 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 "publish_command_to_frame",
                 {"key": key, "val": val, "ip": "localhost"},
             )
+            # set command to group
             for s in ais_global.G_SPEAKERS_GROUP_LIST:
-                attr = self.hass.states.get(s).attributes
-                if "device_ip" in attr and attr["device_ip"] != "localhost":
-                    self.hass.services.call(
-                        "ais_ai_service",
-                        "publish_command_to_frame",
-                        {"key": key, "val": val, "ip": attr["device_ip"]},
-                    )
+                if s != "media_player.wbudowany_glosnik":
+                    attr = self.hass.states.get(s).attributes
+                    if "device_ip" in attr and attr["device_ip"] != "localhost":
+                        self.hass.services.call(
+                            "ais_ai_service",
+                            "publish_command_to_frame",
+                            {"key": key, "val": val, "ip": attr["device_ip"]},
+                        )
+            # set setAudioInfo to all ais speakers
+            if key in ("setAudioInfo", "playAudioFullInfo"):
+                for entity in self.hass.states.async_all():
+                    if entity.entity_id.startswith("media_player."):
+                        if (
+                            "device_ip" in entity.attributes
+                            and entity.attributes["device_ip"] != "localhost"
+                        ):
+                            if entity.entity_id not in ais_global.G_SPEAKERS_GROUP_LIST:
+                                self.hass.services.call(
+                                    "ais_ai_service",
+                                    "publish_command_to_frame",
+                                    {
+                                        "key": "setAudioInfoNoPlay",
+                                        "val": val,
+                                        "ip": entity.attributes["device_ip"],
+                                    },
+                                )
         else:
             self.hass.services.call(
                 "ais_ai_service",

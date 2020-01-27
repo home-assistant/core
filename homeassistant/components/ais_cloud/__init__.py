@@ -178,36 +178,39 @@ def async_setup(hass, config):
     def device_discovered(service):
         """ Called when a device has been discovered. """
         _LOGGER.info("Discovered a new device type: " + str(service.as_dict()))
-        try:
-            d = service.as_dict().get("data")
-            s = d.get("service")
-            p = d.get("platform")
-            if s == "load_platform.sensor" and p == "mqtt":
-                i = d.get("discovered")
-                uid = i.get("unique_id")
-                if uid is not None:
-                    # search entity_id for this unique_id - add sensor to group
-                    if hass.services.has_service("group", "set"):
-                        hass.async_add_job(
-                            hass.services.async_call(
-                                "group",
-                                "set",
-                                {
-                                    "object_id": "all_ais_sensors",
-                                    "add_entities": ["sensor." + uid],
-                                },
+        if ais_global.G_AIS_START_IS_DONE:
+            try:
+                d = service.as_dict().get("data")
+                s = d.get("service")
+                p = d.get("platform")
+                if s == "load_platform.sensor" and p == "mqtt":
+                    i = d.get("discovered")
+                    uid = i.get("unique_id")
+                    if uid is not None:
+                        # search entity_id for this unique_id - add sensor to group
+                        if hass.services.has_service("group", "set"):
+                            hass.async_add_job(
+                                hass.services.async_call(
+                                    "group",
+                                    "set",
+                                    {
+                                        "object_id": "all_ais_sensors",
+                                        "add_entities": ["sensor." + uid],
+                                    },
+                                )
                             )
-                        )
-            elif s == "load_platform.media_player":
-                hass.async_add_job(hass.services.async_call("ais_cloud", "get_players"))
+                elif s == "load_platform.media_player":
+                    hass.async_add_job(
+                        hass.services.async_call("ais_cloud", "get_players")
+                    )
 
-            _LOGGER.info("Discovered device prepare remote menu!")
-            # prepare menu
-            hass.async_add_job(
-                hass.services.async_call("ais_ai_service", "prepare_remote_menu")
-            )
-        except Exception as e:
-            _LOGGER.error("device_discovered: " + str(e))
+                _LOGGER.info("Discovered device prepare remote menu!")
+                # prepare menu
+                hass.async_add_job(
+                    hass.services.async_call("ais_ai_service", "prepare_remote_menu")
+                )
+            except Exception as e:
+                _LOGGER.error("device_discovered: " + str(e))
 
     hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED, device_discovered)
 
@@ -1577,9 +1580,7 @@ class AisColudData:
             json_ws_resp["restore_error"] = restore_error
         if restore_info is not None:
             json_ws_resp["restore_info"] = restore_info
-        self.hass.states.async_set(
-            "sensor.aisbackupinfo", step, json_ws_resp,
-        )
+        self.hass.states.async_set("sensor.aisbackupinfo", step, json_ws_resp)
         info_text = ""
         if backup_error is not None:
             info_text = info_text + backup_error
@@ -1721,11 +1722,11 @@ class AisColudData:
         self.get_backup_info(call, 1, None, None, None, "Podmieniam konfigurację ")
         try:
             ret = subprocess.check_output(
-                "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS", shell=True,
+                "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS", shell=True
             )
-            ret = subprocess.check_output("rm " + home_dir + "backup.zip", shell=True,)
+            ret = subprocess.check_output("rm " + home_dir + "backup.zip", shell=True)
             ret = subprocess.check_output(
-                "rm -rf " + home_dir + "AIS_BACKUP", shell=True,
+                "rm -rf " + home_dir + "AIS_BACKUP", shell=True
             )
 
         except Exception as e:

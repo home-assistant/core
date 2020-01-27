@@ -595,38 +595,6 @@
                                                 }
                                             ],
                                             "type": "horizontal-stack"
-                                        },
-                                        {
-                                            "cards": [
-                                                {
-                                                    "entities": [
-                                                        {
-                                                            "entity": "input_boolean.ais_audio_mono"
-                                                        }
-                                                    ],
-                                                    "show_header_toggle": false,
-                                                    "title": "Equalizer",
-                                                    "type": "entities"
-
-                                                },
-                                                {
-                                                    "card": {
-                                                        "show_header_toggle": false,
-                                                        "title": "Odtwarzacze",
-                                                        "type": "entities"
-                                                    },
-                                                    "filter": {
-                                                        "include": [
-                                                            {
-                                                                "domain": "media_player"
-                                                            }
-                                                        ]
-                                                    },
-                                                    "type": "ais-auto-entities"
-                                                }
-                                            ],
-                                            "show_header_toggle": false,
-                                            "type": "vertical-stack"
                                         }
                                     ],
                                     "type": "vertical-stack"
@@ -738,7 +706,39 @@
                                                     }
                                                 ],
                                                 "type": "conditional"
-                                            }
+                                            },
+                                            {
+                                            "cards": [
+                                                {
+                                                    "entities": [
+                                                        {
+                                                            "entity": "input_boolean.ais_audio_mono"
+                                                        }
+                                                    ],
+                                                    "show_header_toggle": false,
+                                                    "title": "Equalizer",
+                                                    "type": "entities"
+
+                                                },
+                                                {
+                                                    "card": {
+                                                        "show_header_toggle": false,
+                                                        "title": "Odtwarzacze",
+                                                        "type": "entities"
+                                                    },
+                                                    "filter": {
+                                                        "include": [
+                                                            {
+                                                                "domain": "media_player"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "type": "ais-auto-entities"
+                                                }
+                                            ],
+                                            "show_header_toggle": false,
+                                            "type": "vertical-stack"
+                                        }
                                         ],
                                         "type": "vertical-stack"
                                     },
