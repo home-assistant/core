@@ -190,6 +190,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self._id
+
+    @property
     def should_poll(self):
         """No polling needed for automation entities."""
         return False

@@ -262,6 +262,11 @@ class HomeAssistantScene(Scene):
         return self.scene_config.name
 
     @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self._id
+
+    @property
     def device_state_attributes(self):
         """Return the scene state attributes."""
         attributes = {ATTR_ENTITY_ID: list(self.scene_config.states)}

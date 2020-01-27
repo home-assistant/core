@@ -1,6 +1,7 @@
 """Test Automation config panel."""
 import json
-from unittest.mock import patch
+
+from asynctest import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
@@ -29,7 +30,7 @@ async def test_update_scene(hass, hass_client):
 
     with patch("homeassistant.components.config._read", mock_read), patch(
         "homeassistant.components.config._write", mock_write
-    ):
+    ), patch("homeassistant.config.async_hass_config_yaml", return_value={}):
         resp = await client.post(
             "/api/config/scene/config/light_off",
             data=json.dumps(
@@ -86,7 +87,7 @@ async def test_bad_formatted_scene(hass, hass_client):
 
     with patch("homeassistant.components.config._read", mock_read), patch(
         "homeassistant.components.config._write", mock_write
-    ):
+    ), patch("homeassistant.config.async_hass_config_yaml", return_value={}):
         resp = await client.post(
             "/api/config/scene/config/light_off",
             data=json.dumps(
@@ -114,8 +115,23 @@ async def test_bad_formatted_scene(hass, hass_client):
 
 async def test_delete_scene(hass, hass_client):
     """Test deleting a scene."""
+    ent_reg = await hass.helpers.entity_registry.async_get_registry()
+
+    assert await async_setup_component(
+        hass,
+        "scene",
+        {
+            "scene": [
+                {"id": "light_on", "name": "Light on", "entities": {}},
+                {"id": "light_off", "name": "Light off", "entities": {}},
+            ]
+        },
+    )
+
+    assert len(ent_reg.entities) == 2
+
     with patch.object(config, "SECTIONS", ["scene"]):
-        await async_setup_component(hass, "config", {})
+        assert await async_setup_component(hass, "config", {})
 
     client = await hass_client()
 
@@ -133,8 +149,9 @@ async def test_delete_scene(hass, hass_client):
 
     with patch("homeassistant.components.config._read", mock_read), patch(
         "homeassistant.components.config._write", mock_write
-    ):
+    ), patch("homeassistant.config.async_hass_config_yaml", return_value={}):
         resp = await client.delete("/api/config/scene/config/light_on")
+        await hass.async_block_till_done()
 
     assert resp.status == 200
     result = await resp.json()
@@ -142,3 +159,5 @@ async def test_delete_scene(hass, hass_client):
 
     assert len(written) == 1
     assert written[0][0]["id"] == "light_off"
+
+    assert len(ent_reg.entities) == 1
