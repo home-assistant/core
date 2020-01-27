@@ -348,8 +348,9 @@ async def test_options_update(
         STATE_ON,
     )
 
-    updated_options = {CONF_VOLUME_STEP: VOLUME_STEP}
+    assert config_entry.options
     new_options = config_entry.options.copy()
+    updated_options = {CONF_VOLUME_STEP: VOLUME_STEP}
     new_options.update(updated_options)
     hass.config_entries.async_update_entry(
         entry=config_entry, options=new_options,
