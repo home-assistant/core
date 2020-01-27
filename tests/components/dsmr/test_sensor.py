@@ -45,6 +45,7 @@ def mock_connection_factory(monkeypatch):
     return connection_factory, transport, protocol
 
 
+@pytest.mark.skip(reason="Dependency missing on PyPi")
 async def test_default_setup(hass, mock_connection_factory):
     """Test the default setup."""
     (connection_factory, transport, protocol) = mock_connection_factory
@@ -91,6 +92,7 @@ async def test_default_setup(hass, mock_connection_factory):
     assert power_tariff.attributes.get("unit_of_measurement") == ""
 
 
+@pytest.mark.skip(reason="Dependency missing on PyPi")
 async def test_derivative():
     """Test calculation of derivative value."""
     from dsmr_parser.objects import MBusObject
@@ -131,6 +133,7 @@ async def test_derivative():
     assert entity.unit_of_measurement == "m3/h"
 
 
+@pytest.mark.skip(reason="Dependency missing on PyPi")
 async def test_tcp(hass, mock_connection_factory):
     """If proper config provided TCP connection should be made."""
     (connection_factory, transport, protocol) = mock_connection_factory
@@ -144,6 +147,7 @@ async def test_tcp(hass, mock_connection_factory):
     assert connection_factory.call_args_list[0][0][1] == "1234"
 
 
+@pytest.mark.skip(reason="Dependency missing on PyPi")
 async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factory):
     """Connection should be retried on error during setup."""
     (connection_factory, transport, protocol) = mock_connection_factory
@@ -166,6 +170,7 @@ async def test_connection_errors_retry(hass, monkeypatch, mock_connection_factor
     assert first_fail_connection_factory.call_count == 2, "connecting not retried"
 
 
+@pytest.mark.skip(reason="Dependency missing on PyPi")
 async def test_reconnect(hass, monkeypatch, mock_connection_factory):
     """If transport disconnects, the connection should be retried."""
     (connection_factory, transport, protocol) = mock_connection_factory
