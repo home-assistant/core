@@ -5,7 +5,11 @@ from pyps4_2ndscreen.errors import CredentialTimeout
 
 from homeassistant import data_entry_flow
 from homeassistant.components import ps4
-from homeassistant.components.ps4.const import DEFAULT_NAME, DEFAULT_REGION
+from homeassistant.components.ps4.const import (
+    DEFAULT_ALIAS,
+    DEFAULT_NAME,
+    DEFAULT_REGION,
+)
 from homeassistant.const import (
     CONF_CODE,
     CONF_HOST,
@@ -19,7 +23,9 @@ from homeassistant.util import location
 from tests.common import MockConfigEntry
 
 MOCK_TITLE = "PlayStation 4"
-MOCK_CODE = "12345678"
+MOCK_CODE = 12345678
+MOCK_CODE_LEAD_0 = 1234567
+MOCK_CODE_LEAD_0_STR = "01234567"
 MOCK_CREDS = "000aa000"
 MOCK_HOST = "192.0.0.0"
 MOCK_HOST_ADDITIONAL = "192.0.0.1"
@@ -291,6 +297,27 @@ async def test_additional_device(hass):
 
     # Check that there are 2 entries
     assert len(manager.async_entries()) == 2
+
+
+async def test_0_pin(hass):
+    """Test Pin leading with 0."""
+    flow = ps4.PlayStation4FlowHandler()
+    flow.hass = hass
+    flow.location = MOCK_LOCATION
+    flow.creds = MOCK_CREDS
+
+    mock_config = MOCK_CONFIG
+    mock_config[CONF_CODE] = MOCK_CODE_LEAD_0
+
+    with patch(
+        "pyps4_2ndscreen.Helper.link", return_value=(True, True)
+    ) as mock_call, patch(
+        "pyps4_2ndscreen.Helper.has_devices", return_value=[{"host-ip": MOCK_HOST}]
+    ):
+        await flow.async_step_link(mock_config)
+    mock_call.assert_called_once_with(
+        MOCK_HOST, MOCK_CREDS, MOCK_CODE_LEAD_0_STR, DEFAULT_ALIAS
+    )
 
 
 async def test_no_devices_found_abort(hass):
