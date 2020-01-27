@@ -19,7 +19,7 @@ repos:
     hooks:
     -   id: codespell
         args:
-          - --ignore-words-list=hass,datas,hist,iff,lightsensor,ser,unit,wan
+          - --ignore-words-list=hass,datas,dof,hist,iff,lightsensor,mut,pres,referer,ser,serie,ue,uint,wan,withing
           - --skip=./.*,*.json
           - --quiet-level=2
         exclude_types: [json]
