@@ -46,6 +46,10 @@ stages:
           pre-commit install-hooks --config .pre-commit-config-all.yaml
     - script: |
         . venv/bin/activate
+        pre-commit run codespell --all-files
+      displayName: 'Run codespell'
+    - script: |
+        . venv/bin/activate
         pre-commit run flake8 --all-files
       displayName: 'Run flake8'
     - script: |
