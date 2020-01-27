@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Error de connexi\u00f3",
+            "invalid_auth": "Invalid Auth",
+            "unknown": "Unknown Error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Carson"
+            }
+        },
+        "title": "Carson"
+    }
+}

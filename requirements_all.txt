@@ -363,6 +363,9 @@ buienradar==1.0.1
 # homeassistant.components.caldav
 caldav==0.6.1
 
+# homeassistant.components.carson
+carson_living==0.0.3
+
 # homeassistant.components.cisco_mobility_express
 ciscomobilityexpress==0.3.3
 

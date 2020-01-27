@@ -1,0 +1,16 @@
+{
+  "domain": "carson",
+  "name": "Carson",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/carson",
+  "requirements": [
+    "carson_living==0.0.3"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": [
+    "@rado0x54"
+  ]
+}
