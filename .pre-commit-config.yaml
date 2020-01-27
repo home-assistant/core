@@ -22,6 +22,7 @@ repos:
           - --ignore-words-list=hass,datas,hist,iff,lightsensor,ser,unit,wan
           - --skip=./.*,*.json
           - --quiet-level=2
+        exclude_types: [json]
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 3.7.9
     hooks:
