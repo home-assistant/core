@@ -28,7 +28,7 @@ from .const import (
     MOCK_INVALID_TV_CONFIG,
     MOCK_SPEAKER_CONFIG,
     MOCK_USER_VALID_TV_CONFIG,
-    MOCK_ZEROCONF_ENTRY,
+    MOCK_ZEROCONF_SERVICE_INFO,
     NAME,
     NAME2,
     UNIQUE_ID,
@@ -307,7 +307,7 @@ async def test_zeroconf_flow(
     vizio_guess_device_type: pytest.fixture,
 ) -> None:
     """Test zeroconf config flow."""
-    discovery_info = MOCK_ZEROCONF_ENTRY.copy()
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )
@@ -343,7 +343,7 @@ async def test_zeroconf_flow_already_configured(
     entry.add_to_hass(hass)
 
     # Try rediscovering same device
-    discovery_info = MOCK_ZEROCONF_ENTRY.copy()
+    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
     )

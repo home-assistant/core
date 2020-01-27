@@ -27,25 +27,23 @@ from homeassistant.components.media_player import (
 from homeassistant.components.vizio.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.setup import async_setup_component
 
-from .conftest import MockInput, get_mock_inputs
 from .const import (
     CURRENT_INPUT,
     ENTITY_ID,
     INPUT_LIST,
     MOCK_SPEAKER_CONFIG,
-    MOCK_SPEAKER_CONFIG_ENTRY,
-    MOCK_TV_CONFIG_ENTRY,
     MOCK_USER_VALID_TV_CONFIG,
     NAME,
     UNIQUE_ID,
 )
 
+from tests.common import MockConfigEntry
+
 
 async def _test_init(
     hass: HomeAssistantType,
-    config: dict,
+    config_entry: MockConfigEntry,
     vizio_device_class: str,
     ha_device_class: str,
     vizio_power_state: bool,
@@ -54,25 +52,13 @@ async def _test_init(
     """Test initialization of Vizio Device entity with device class `speaker`."""
 
     with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_unique_id",
-        return_value=UNIQUE_ID,
-    ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_current_volume",
         return_value=int(MAX_VOLUME[vizio_device_class] / 2),
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
-        return_value=MockInput(CURRENT_INPUT),
-    ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_inputs",
-        return_value=get_mock_inputs(INPUT_LIST),
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
         return_value=vizio_power_state,
     ):
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        await hass.config_entries.async_add(config_entry)
         await hass.async_block_till_done()
 
         attr = hass.states.get(ENTITY_ID).attributes
@@ -90,11 +76,13 @@ async def _test_init(
             )
 
 
-async def test_speaker_on(hass: HomeAssistantType) -> None:
+async def test_speaker_on(
+    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+) -> None:
     """Test for Vizio Speaker entity when on."""
     await _test_init(
         hass,
-        MOCK_SPEAKER_CONFIG,
+        MockConfigEntry(domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID),
         VIZIO_DEVICE_CLASS_SPEAKER,
         DEVICE_CLASS_SPEAKER,
         True,
@@ -102,11 +90,13 @@ async def test_speaker_on(hass: HomeAssistantType) -> None:
     )
 
 
-async def test_speaker_off(hass: HomeAssistantType) -> None:
+async def test_speaker_off(
+    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+) -> None:
     """Test for Vizio Speaker entity when off."""
     await _test_init(
         hass,
-        MOCK_SPEAKER_CONFIG,
+        MockConfigEntry(domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID),
         VIZIO_DEVICE_CLASS_SPEAKER,
         DEVICE_CLASS_SPEAKER,
         False,
@@ -114,11 +104,13 @@ async def test_speaker_off(hass: HomeAssistantType) -> None:
     )
 
 
-async def test_speaker_unavailable(hass: HomeAssistantType) -> None:
+async def test_speaker_unavailable(
+    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+) -> None:
     """Test for Vizio Speaker entity when unavailable."""
     await _test_init(
         hass,
-        MOCK_SPEAKER_CONFIG,
+        MockConfigEntry(domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID),
         VIZIO_DEVICE_CLASS_SPEAKER,
         DEVICE_CLASS_SPEAKER,
         None,
@@ -126,11 +118,15 @@ async def test_speaker_unavailable(hass: HomeAssistantType) -> None:
     )
 
 
-async def test_init_tv_on(hass: HomeAssistantType) -> None:
+async def test_init_tv_on(
+    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+) -> None:
     """Test for Vizio TV entity when on."""
     await _test_init(
         hass,
-        MOCK_USER_VALID_TV_CONFIG,
+        MockConfigEntry(
+            domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
+        ),
         VIZIO_DEVICE_CLASS_TV,
         DEVICE_CLASS_TV,
         True,
@@ -138,11 +134,15 @@ async def test_init_tv_on(hass: HomeAssistantType) -> None:
     )
 
 
-async def test_init_tv_off(hass: HomeAssistantType) -> None:
+async def test_init_tv_off(
+    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+) -> None:
     """Test for Vizio TV entity when off."""
     await _test_init(
         hass,
-        MOCK_USER_VALID_TV_CONFIG,
+        MockConfigEntry(
+            domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
+        ),
         VIZIO_DEVICE_CLASS_TV,
         DEVICE_CLASS_TV,
         False,
@@ -150,11 +150,15 @@ async def test_init_tv_off(hass: HomeAssistantType) -> None:
     )
 
 
-async def test_init_tv_unavailable(hass: HomeAssistantType) -> None:
+async def test_init_tv_unavailable(
+    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+) -> None:
     """Test for Vizio TV entity when unavailable."""
     await _test_init(
         hass,
-        MOCK_USER_VALID_TV_CONFIG,
+        MockConfigEntry(
+            domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
+        ),
         VIZIO_DEVICE_CLASS_TV,
         DEVICE_CLASS_TV,
         None,
@@ -170,7 +174,11 @@ async def test_setup_failure_speaker(
         "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
         return_value=False,
     ):
-        await hass.config_entries.async_add(MOCK_SPEAKER_CONFIG_ENTRY)
+        await hass.config_entries.async_add(
+            MockConfigEntry(
+                domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
+            )
+        )
         await hass.async_block_till_done()
         assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
 
@@ -183,16 +191,24 @@ async def test_setup_failure_tv(
         "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
         return_value=False,
     ):
-        await hass.config_entries.async_add(MOCK_TV_CONFIG_ENTRY)
+        await hass.config_entries.async_add(
+            MockConfigEntry(
+                domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
+            )
+        )
         await hass.async_block_till_done()
         assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
 
 
-async def test_services(hass: HomeAssistantType) -> None:
+async def test_services(
+    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+) -> None:
     """Test media player entity services."""
     await _test_init(
         hass,
-        MOCK_USER_VALID_TV_CONFIG,
+        MockConfigEntry(
+            domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
+        ),
         VIZIO_DEVICE_CLASS_TV,
         DEVICE_CLASS_TV,
         True,
