@@ -97,7 +97,9 @@ def setup(hass, config):
             )
             continue
         except SSLError:
-            _LOGGER.error("Unable to verify proxmox server SSL. Try using \"verify_ssl: false\"")
+            _LOGGER.error(
+                "Unable to verify proxmox server SSL. Try using \"verify_ssl: false\""
+			)
             continue
 
         hass.data[PROXMOX_CLIENTS][f"{host}:{port}"] = proxmox_client
