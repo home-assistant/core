@@ -29,7 +29,7 @@ async def test_load_and_unload(
     vizio_connect: pytest.fixture,
     vizio_update: pytest.fixture,
 ) -> None:
-    """Test loading component and unloading entry."""
+    """Test loading and unloading entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
     )
