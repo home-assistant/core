@@ -48,6 +48,8 @@ class CarsonLock(LockDevice):
 
     def lock(self, **kwargs):
         """Lock the device."""
+        raise NotImplementedError("Carson door can only be opened.")
 
     def unlock(self, **kwargs):
         """Unlock the device."""
+        raise NotImplementedError("Carson door can only be opened.")
