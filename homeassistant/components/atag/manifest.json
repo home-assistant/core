@@ -2,12 +2,8 @@
   "domain": "atag",
   "name": "Atag",
   "config_flow": true,
-  "documentation": "https://pypi.org/project/pyatag",
-  "requirements": [
-    "pyatag==0.2.13"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/atag/",
+  "requirements": ["pyatag==0.2.13"],
   "dependencies": [],
-  "codeowners": [
-    "@MatsNL"
-  ]
+  "codeowners": ["@MatsNL"]
 }
