@@ -4,7 +4,6 @@ import pytest
 import voluptuous_serialize
 
 from homeassistant.components.konnected import config_flow
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_SSDP
 
 from tests.common import MockConfigEntry
 
@@ -153,49 +152,6 @@ async def test_import_no_host_user_finish(hass, mock_panel):
         result["flow_id"], user_input={}
     )
     assert result["type"] == "create_entry"
-
-
-async def test_import_no_host_ssdp_finish(hass, mock_panel):
-    """Test importing a panel with no host info."""
-    mock_panel.get_status.return_value = {
-        "mac": "11:22:33:44:55:66",
-        "name": "Konnected Pro",
-    }
-
-    import_result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={"id": "112233445566"},
-    )
-    assert import_result["type"] == "form"
-    assert import_result["step_id"] == "user"
-
-    # second flow started by ssdp should replace the first
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
-        context={"source": SOURCE_SSDP},
-        data={
-            "ssdp_location": "http://1.2.3.4:1234/Device.xml",
-            "manufacturer": config_flow.KONN_MANUFACTURER,
-            "modelName": config_flow.KONN_MODEL_PRO,
-        },
-    )
-    assert result["type"] == "form"
-    assert result["step_id"] == "confirm"
-    assert result["description_placeholders"] == {
-        "model": "Konnected Alarm Panel Pro",
-        "host": "1.2.3.4",
-        "port": 1234,
-    }
-
-    # confirm import host info is in entry flow
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
-    assert result["type"] == "create_entry"
-
-    # confirm original flow was aborted
-    assert len(hass.config_entries.flow.async_progress()) == 0
 
 
 async def test_ssdp_already_configured(hass, mock_panel):

@@ -85,41 +85,33 @@ async def async_setup(hass: HomeAssistant, config: dict):
     if CONF_DEVICES not in cfg:
         return True
 
-    devices = cfg[CONF_DEVICES]
-    if devices:
-        for device in devices:
-            # Attempt to importing the cfg. Use
-            # hass.async_add_job to avoid a deadlock.
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": config_entries.SOURCE_IMPORT},
-                    data=device,
-                )
+    for device in cfg.get(CONF_DEVICES, []):
+        # Attempt to importing the cfg. Use
+        # hass.async_add_job to avoid a deadlock.
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data=device,
             )
+        )
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up panel from a config entry."""
+    client = AlarmPanel(hass, entry)
+    # create a data store in hass.data[DOMAIN][CONF_DEVICES]
+    await client.async_save_data()
+
     try:
-        device_data = hass.data[DOMAIN][CONF_DEVICES].get(entry.data["id"])
-        if device_data:
-            client = device_data["panel"]
-        else:
-            client = AlarmPanel(hass, entry)
-            await client.async_save_data()
-
         await client.async_connect()
-        for component in PLATFORMS:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, component)
-            )
-
     except CannotConnect:
         # this will trigger a retry in the future
         raise config_entries.ConfigEntryNotReady
 
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
     entry.add_update_listener(async_entry_updated)
     return True
 
@@ -168,11 +160,9 @@ class KonnectedView(HomeAssistantView):
         data = hass.data[DOMAIN]
 
         auth = request.headers.get(AUTHORIZATION, None)
-        tokens = (
-            [hass.data[DOMAIN][CONF_ACCESS_TOKEN]]
-            if hass.data[DOMAIN].get(CONF_ACCESS_TOKEN)
-            else []
-        )
+        tokens = []
+        if hass.data[DOMAIN].get(CONF_ACCESS_TOKEN):
+            tokens.extend([hass.data[DOMAIN][CONF_ACCESS_TOKEN]])
         tokens.extend(
             [
                 entry.data[CONF_ACCESS_TOKEN]
@@ -272,9 +262,10 @@ class KonnectedView(HomeAssistantView):
             resp[CONF_PIN] = ZONE_TO_PIN[zone_num]
 
         # Make sure entity is setup
-        if zone.get(ATTR_ENTITY_ID):
+        zone_entity_id = zone.get(ATTR_ENTITY_ID)
+        if zone_entity_id:
             resp["state"] = self.binary_value(
-                hass.states.get(zone.get(ATTR_ENTITY_ID)).state, zone[CONF_ACTIVATION],
+                hass.states.get(zone_entity_id).state, zone[CONF_ACTIVATION],
             )
             return self.json(resp)
 

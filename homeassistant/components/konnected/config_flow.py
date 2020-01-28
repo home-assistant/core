@@ -145,8 +145,8 @@ DEVICE_SCHEMA_YAML = vol.Schema(
         ),
         vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA_YAML]),
         vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA_YAML]),
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT): cv.port,
+        vol.Inclusive(CONF_HOST, "host_info"): cv.string,
+        vol.Inclusive(CONF_PORT, "host_info"): cv.port,
         vol.Optional(CONF_BLINK, default=True): cv.boolean,
         vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
     }
@@ -268,13 +268,13 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             status = await get_status(self.hass, host, port)
             self.data[CONF_ID] = status["mac"].replace(":", "")
+        except (CannotConnect, KeyError):
+            raise CannotConnect
+        else:
             self.data[CONF_MODEL] = status.get("name", KONN_MODEL)
             self.data[CONF_ACCESS_TOKEN] = "".join(
                 random.choices(f"{string.ascii_uppercase}{string.digits}", k=20)
             )
-
-        except (CannotConnect, KeyError):
-            raise CannotConnect
 
     async def async_step_import(self, device_config):
         """Import a configuration.yaml config.
@@ -337,14 +337,16 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="not_konn_panel")
 
+        # If MAC is missing it is a bug in the device fw but we'll guard
+        # against it since the field is so vital
+        except KeyError:
+            _LOGGER.error("Malformed Konnected SSDP info")
+        else:
             # extract host/port from ssdp_location
             netloc = urlparse(discovery_info["ssdp_location"]).netloc.split(":")
             return await self.async_step_user(
                 user_input={CONF_HOST: netloc[0], CONF_PORT: int(netloc[1])}
             )
-
-        except KeyError:
-            _LOGGER.error("Malformed Konnected SSDP info")
 
         return self.async_abort(reason="unknown")
 
@@ -361,18 +363,18 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 random.choices(f"{string.ascii_uppercase}{string.digits}", k=20)
             )
 
+            # brief delay to allow processing of recent status req
+            await asyncio.sleep(0.1)
             try:
-                # brief delay to allow processing of recent status req
-                await asyncio.sleep(0.1)
                 status = await get_status(
                     self.hass, self.data[CONF_HOST], self.data[CONF_PORT]
                 )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            else:
                 self.data[CONF_ID] = status["mac"].replace(":", "")
                 self.data[CONF_MODEL] = status.get("name", KONN_MODEL)
                 return await self.async_step_confirm()
-
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
@@ -400,25 +402,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 entry.data[CONF_HOST] != self.data[CONF_HOST]
                 or entry.data[CONF_PORT] != self.data[CONF_PORT]
             ):
-                entry.data.update(self.data)
-                self.hass.config_entries.async_update_entry(
-                    entry, data=copy.deepcopy(entry.data)
-                )
-
-            # look for a partially imported instance of this device and hijack it
-            for flow in self._async_in_progress():
-                if (
-                    flow["context"].get("unique_id") == self.unique_id
-                    and flow["flow_id"] != self.flow_id
-                ):
-                    # pylint: disable=protected-access # No proper mechanism to get the flow instance
-                    self.hass.config_entries.flow._progress[
-                        flow["flow_id"]
-                    ].data.update(self.data)
-                    self.data = self.hass.config_entries.flow._progress[
-                        flow["flow_id"]
-                    ].data
-                    self.hass.config_entries.flow.async_abort(flow["flow_id"])
+                entry_data = copy.deepcopy(entry.data)
+                entry_data.update(self.data)
+                self.hass.config_entries.async_update_entry(entry, data=entry_data)
 
             self._abort_if_unique_id_configured()
             return self.async_show_form(
@@ -454,7 +440,6 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
         # as config proceeds we'll build up new options and then replace what's in the config entry
         self.new_opt = {CONF_IO: {}}
-        self.status = {}
         self.active_cfg = None
         self.io_cfg = {}
 
@@ -483,7 +468,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             # strip out disabled io and save for options cfg
             for key, value in user_input.items():
                 if value != CONF_IO_DIS:
-                    self.new_opt[CONF_IO].update({key: value})
+                    self.new_opt[CONF_IO][key] = value
             return await self.async_step_options_io_ext()
 
         if self.model == KONN_MODEL:
