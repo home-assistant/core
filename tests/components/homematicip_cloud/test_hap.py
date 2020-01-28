@@ -70,7 +70,7 @@ async def test_auth_auth_check_and_register_with_exception(hass):
         assert await hmip_auth.async_register() is False
 
 
-async def test_hap_setup_works(aioclient_mock):
+async def test_hap_setup_works():
     """Test a successful setup of a accesspoint."""
     hass = Mock()
     entry = Mock()
@@ -107,7 +107,7 @@ async def test_hap_setup_connection_error():
     assert not hass.config_entries.flow.async_init.mock_calls
 
 
-async def test_hap_reset_unloads_entry_if_setup(hass, default_mock_hap, hmip_config):
+async def test_hap_reset_unloads_entry_if_setup(hass, default_mock_hap):
     """Test calling reset while the entry has been setup."""
     assert hass.data[HMIPC_DOMAIN][HAPID] == default_mock_hap
     config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
