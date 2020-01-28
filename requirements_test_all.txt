@@ -432,7 +432,7 @@ pyeverlights==0.1.0
 pyfido==2.1.1
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.4.0
+pyfritzhome==0.4.2
 
 # homeassistant.components.ifttt
 pyfttt==0.3
