@@ -2774,10 +2774,10 @@ async def test_cover_tilt_position_range(hass):
         "cover#test_tilt_range",
         "cover.set_cover_tilt_position",
         hass,
-        payload={"rangeValue": "50"},
+        payload={"rangeValue": 50},
         instance="cover.tilt",
     )
-    assert call.data["position"] == 50
+    assert call.data["tilt_position"] == 50
 
     call, msg = await assert_request_calls_service(
         "Alexa.RangeController",
@@ -2785,7 +2785,7 @@ async def test_cover_tilt_position_range(hass):
         "cover#test_tilt_range",
         "cover.close_cover_tilt",
         hass,
-        payload={"rangeValue": "0"},
+        payload={"rangeValue": 0},
         instance="cover.tilt",
     )
     properties = msg["context"]["properties"][0]
@@ -2799,7 +2799,7 @@ async def test_cover_tilt_position_range(hass):
         "cover#test_tilt_range",
         "cover.open_cover_tilt",
         hass,
-        payload={"rangeValue": "100"},
+        payload={"rangeValue": 100},
         instance="cover.tilt",
     )
     properties = msg["context"]["properties"][0]
@@ -2813,7 +2813,7 @@ async def test_cover_tilt_position_range(hass):
         "cover#test_tilt_range",
         "cover.open_cover_tilt",
         hass,
-        payload={"rangeValueDelta": "99"},
+        payload={"rangeValueDelta": 99},
         instance="cover.tilt",
     )
     properties = msg["context"]["properties"][0]
@@ -2827,7 +2827,7 @@ async def test_cover_tilt_position_range(hass):
         "cover#test_tilt_range",
         "cover.close_cover_tilt",
         hass,
-        payload={"rangeValueDelta": "-99"},
+        payload={"rangeValueDelta": -99},
         instance="cover.tilt",
     )
     properties = msg["context"]["properties"][0]
