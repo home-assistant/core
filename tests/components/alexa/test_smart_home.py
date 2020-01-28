@@ -771,11 +771,15 @@ async def test_fan_range(hass):
 
     await assert_range_changes(
         hass,
-        [("low", -1), ("high", 1), ("medium", 0), ("warp_speed", 99)],
+        [
+            ("low", -1, False),
+            ("high", 1, False),
+            ("medium", 0, False),
+            ("warp_speed", 99, False),
+        ],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "fan#test_5",
-        False,
         "fan.set_speed",
         "speed",
         instance="fan.speed",
@@ -809,11 +813,10 @@ async def test_fan_range_off(hass):
 
     await assert_range_changes(
         hass,
-        [("off", -3), ("off", -99)],
+        [("off", -3, False), ("off", -99, False)],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "fan#test_6",
-        False,
         "fan.turn_off",
         "speed",
         instance="fan.speed",
@@ -1583,11 +1586,10 @@ async def test_cover_position_range(hass):
 
     await assert_range_changes(
         hass,
-        [(25, -5), (35, 5)],
+        [(25, -5, False), (35, 5, False)],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "cover#test_range",
-        False,
         "cover.set_cover_position",
         "position",
         instance="cover.position",
@@ -1614,21 +1616,13 @@ async def assert_percentage_changes(
 
 
 async def assert_range_changes(
-    hass,
-    adjustments,
-    namespace,
-    name,
-    endpoint,
-    delta_default,
-    service,
-    changed_parameter,
-    instance,
+    hass, adjustments, namespace, name, endpoint, service, changed_parameter, instance
 ):
     """Assert an API request making range changes works.
 
     AdjustRangeValue are examples of such requests.
     """
-    for result_range, adjustment in adjustments:
+    for result_range, adjustment, delta_default in adjustments:
         payload = {
             "rangeValueDelta": adjustment,
             "rangeValueDeltaDefault": delta_default,
@@ -2837,11 +2831,10 @@ async def test_cover_tilt_position_range(hass):
 
     await assert_range_changes(
         hass,
-        [(25, -5), (35, 5)],
+        [(25, -5, False), (35, 5, False)],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "cover#test_tilt_range",
-        False,
         "cover.set_cover_tilt_position",
         "tilt_position",
         instance="cover.tilt",
@@ -2999,11 +2992,10 @@ async def test_input_number(hass):
 
     await assert_range_changes(
         hass,
-        [(25, -5), (35, 5), (-20, -100), (35, 100)],
+        [(25, -5, False), (35, 5, False), (-20, -100, False), (35, 100, False)],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "input_number#test_slider",
-        False,
         "input_number.set_value",
         "value",
         instance="input_number.value",
@@ -3085,11 +3077,16 @@ async def test_input_number_float(hass):
 
     await assert_range_changes(
         hass,
-        [(0.4, -0.1), (0.6, 0.1), (0, -100), (1, 100), (0.51, 0.01)],
+        [
+            (0.4, -0.1, False),
+            (0.6, 0.1, False),
+            (0, -100, False),
+            (1, 100, False),
+            (0.51, 0.01, False),
+        ],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "input_number#test_slider_float",
-        False,
         "input_number.set_value",
         "value",
         instance="input_number.value",
@@ -3404,11 +3401,15 @@ async def test_vacuum_fan_speed(hass):
 
     await assert_range_changes(
         hass,
-        [("low", -1), ("high", 1), ("medium", 0), ("super_sucker", 99)],
+        [
+            ("low", -1, False),
+            ("high", 1, False),
+            ("medium", 0, False),
+            ("super_sucker", 99, False),
+        ],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "vacuum#test_2",
-        False,
         "vacuum.set_fan_speed",
         "fan_speed",
         instance="vacuum.fan_speed",
