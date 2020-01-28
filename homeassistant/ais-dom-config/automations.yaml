@@ -77,6 +77,7 @@
        payload: 0
        topic: dom/cmnd/state
    - delay: '1'
+   - service: ais_ai_service.prepare_remote_menu
    - service: ais_ai_service.welcome_home
    - service: camera.snapshot
      data:

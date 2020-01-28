@@ -140,7 +140,6 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _change_host_name(hass, call):
     if "hostname" not in call.data:
-        _LOGGER.error("No host name provided")
         return
     new_host_name = call.data["hostname"]
     file = "/data/data/pl.sviete.dom/.ais/ais-hostname"
@@ -192,7 +191,6 @@ def _hdmi_control_disable(hass, call):
 @asyncio.coroutine
 def _change_wm_overscan(hass, call):
     if "value" not in call.data:
-        _LOGGER.error("No value for overscan provided")
         return
     new_value = call.data["value"]
     cl = 0
@@ -320,7 +318,6 @@ def _change_wm_overscan(hass, call):
     else:
         _LOGGER.error("Value for overscan provided {}".format(new_value))
         return
-    _LOGGER.info("comm: " + comm)
     os.system(comm)
 
 
@@ -350,7 +347,6 @@ def _ssh_remote_access(hass, call):
 @asyncio.coroutine
 def _key_event(hass, call):
     if "key_code" not in call.data:
-        _LOGGER.error("No key_code")
         return
     key_code = call.data["key_code"]
     import subprocess
@@ -363,7 +359,6 @@ def _key_event(hass, call):
 @asyncio.coroutine
 def _led(hass, call):
     if "brightness" not in call.data:
-        _LOGGER.error("No brightness provided")
         return
     brightness = call.data["brightness"]
 
@@ -392,7 +387,6 @@ def _set_ais_secure_android_id_dom(hass, call):
             )
             android_id = android_id.decode("utf-8").replace("\n", "")
         except Exception as e:
-            _LOGGER.info("Can't get secure gate id for the device! " + str(e))
             from uuid import getnode as get_mac
 
             android_id = get_mac()
@@ -406,9 +400,6 @@ def _set_ais_secure_android_id_dom(hass, call):
             "friendly_name": "Unikalny identyfikator bramki",
             "icon": "mdi:account-card-details",
         },
-    )
-    _LOGGER.info(
-        "sensor.ais_secure_android_id_dom -> " + ais_global.G_AIS_SECURE_ANDROID_ID_DOM
     )
 
 
@@ -429,21 +420,14 @@ def _execute_command(hass, call):
     icon = None
 
     if "command" not in call.data:
-        _LOGGER.error("No command")
         return
     else:
         command = call.data["command"]
-    if "entity_id" not in call.data:
-        _LOGGER.debug("No entity_id to return the output")
-    else:
+    if "entity_id" in call.data:
         ret_entity = call.data["entity_id"]
-    if "friendly_name" not in call.data:
-        _LOGGER.debug("No friendly_name to set in returning output")
-    else:
+    if "friendly_name" in call.data:
         friendly_name = call.data["friendly_name"]
-    if "icon" not in call.data:
-        _LOGGER.debug("No icon to set in returning output")
-    else:
+    if "icon" in call.data:
         icon = call.data["icon"]
 
     import subprocess
@@ -452,7 +436,6 @@ def _execute_command(hass, call):
         command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     output, err = process.communicate()
-    _LOGGER.error("err: " + str(err))
     if ret_entity is not None:
         hass.states.async_set(
             ret_entity, output, {"friendly_name": friendly_name, "icon": icon}
@@ -462,7 +445,6 @@ def _execute_command(hass, call):
 @asyncio.coroutine
 def _execute_script(hass, call):
     if "script" not in call.data:
-        _LOGGER.error("No script")
         return
     script = call.data["script"]
 
@@ -476,7 +458,6 @@ def _execute_script(hass, call):
 
     process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)
     process.wait()
-    _LOGGER.info("_execute_script, return: " + str(process.returncode))
 
 
 @asyncio.coroutine
@@ -600,10 +581,8 @@ def _scan_ais_player(hass, call):
             elif ais_gate_client_id is None and "MacEth0" in json_ws_resp:
                 ais_gate_client_id = json_ws_resp.get("MacEth0")
             if ais_gate_client_id is None:
-                _LOGGER.info("NO ais_gate_client_id ")
                 return
             if ais_gate_client_id == ais_global.G_AIS_SECURE_ANDROID_ID_DOM:
-                _LOGGER.info("discovered local gate ")
                 return
             dsm.DOM_DEVICES.append(
                 "- " + model + " " + manufacturer + ", http://" + ip + ":8122"
@@ -620,12 +599,12 @@ def _scan_ais_player(hass, call):
                     },
                 )
             )
-        except Exception as e:
-            _LOGGER.error("Exception " + str(e))
+        except Exception as e2:
+            _LOGGER.error("Exception " + str(e2))
 
     try:
-        future = session.get(url, hooks={"response": bg_cb}, timeout=3, verify=False)
-    except Exception as e:
+        future = session.get(url, hooks={"response": bg_cb}, timeout=2, verify=False)
+    except Exception:
         pass
     hass.async_add_job(
         hass.services.async_call("ais_shell_command", "scan_network_for_ais_players")

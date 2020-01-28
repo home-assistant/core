@@ -1756,7 +1756,6 @@ def set_focus_on_prev_entity(hass, long_press):
         if CURR_ENTITIE.startswith("media_player."):
             if long_press:
                 # seek back on remote
-                _LOGGER.info("seek back in the player - info from remote")
                 hass.services.call(
                     "media_player",
                     "media_seek",
@@ -1834,7 +1833,6 @@ def set_focus_on_next_entity(hass, long_press):
         if CURR_ENTITIE.startswith("media_player."):
             if long_press:
                 # seek next on remote
-                _LOGGER.info("seek next in the player - info from remote")
                 hass.services.call(
                     "media_player",
                     "media_seek",
@@ -2225,7 +2223,7 @@ async def async_process_json_from_frame(hass, json_req):
                 payload.get("currentVolume", 0) / 100
             )
         except Exception:
-            _LOGGER.warning(
+            _LOGGER.info(
                 "ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL: "
                 + str(ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
             )
@@ -2261,8 +2259,6 @@ async def async_process_json_from_frame(hass, json_req):
                 {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
             )
         )
-
-    _LOGGER.info("res: " + str(res))
     return json_response(res)
 
 
@@ -2369,7 +2365,6 @@ async def async_setup(hass, config):
     @asyncio.coroutine
     def check_local_ip(service):
         """Set the local ip in app."""
-        _LOGGER.info("check_local_ip")
         ip = ais_global.get_my_global_ip()
         hass.states.async_set(
             "sensor.internal_ip_address",
@@ -2379,7 +2374,6 @@ async def async_setup(hass, config):
 
     @asyncio.coroutine
     def switch_ui(service):
-        _LOGGER.info("switch_ui")
         mode = service.data["mode"]
         if mode in ("YouTube", "Spotify"):
             hass.states.async_set("sensor.ais_player_mode", "music_player")
@@ -2567,10 +2561,8 @@ async def async_setup(hass, config):
                 qm_et = int(qm_et) + 86400
             # if we are more close to night - apply day mode
             if (int(qm_st) > int(qm_et)) and quiet_mode == "on":
-                _LOGGER.info("-> apply_night_mode")
                 apply_night_mode()
             else:
-                _LOGGER.info("-> apply_day_mode")
                 apply_day_mode()
         if timer and quiet_mode == "on":
             # call from timer
@@ -2948,15 +2940,7 @@ def _publish_command_to_frame(hass, key, val, ip):
         try:
             requests.post(url + "/command", json={key: val, "ip": ip}, timeout=2)
         except Exception as e:
-            _LOGGER.debug(
-                "_publish_command_to_frame requests.post problem key: "
-                + str(key)
-                + " val: "
-                + str(val)
-                + " ip "
-                + str(ip)
-                + str(e)
-            )
+            pass
 
 
 def _wifi_rssi_to_info(rssi):
@@ -3014,7 +2998,6 @@ def _publish_wifi_status(hass, service):
 
 def _process_command_from_frame(hass, service):
     # process from frame
-    _LOGGER.debug("_process_command_from_frame: " + str(service.data))
     if "web_hook_json" in service.data:
         import ast
 
@@ -3040,7 +3023,6 @@ def _process_command_from_frame(hass, service):
         _LOGGER.info("speech_status: " + str(service.data["payload"]))
         return
     elif service.data["topic"] == "ais/add_bookmark":
-        _LOGGER.info("add_bookmark: " + str(service.data["payload"]))
         try:
             bookmark = json.loads(service.data["payload"])
             hass.async_run_job(
@@ -3254,7 +3236,7 @@ def _process_command_from_frame(hass, service):
                 message.get("currentVolume", 0) / 100
             )
         except Exception:
-            _LOGGER.warning(
+            _LOGGER.info(
                 "ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL: "
                 + str(ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
             )
@@ -3379,7 +3361,7 @@ def _post_message(message, hass):
             timeout=1,
         )
     except Exception as e:
-        _LOGGER.debug("problem to send the text to speech via http: " + str(e))
+        pass
     # do the same for speakers in the group
     for s in ais_global.G_SPEAKERS_GROUP_LIST:
         if s != "media_player.wbudowany_glosnik":
@@ -3395,10 +3377,7 @@ def _post_message(message, hass):
                         timeout=1,
                     )
                 except Exception as e:
-                    _LOGGER.debug(
-                        "problem to send the text to speech via http to "
-                        + attr["device_ip"]
-                    )
+                    pass
 
 
 def _beep_it(hass, tone):
@@ -3582,7 +3561,6 @@ def get_context_suffix(hass):
 @asyncio.coroutine
 def _process(hass, text):
     """Process a line of text."""
-    _LOGGER.info("Process text: " + text)
     global CURR_VIRTUAL_KEYBOARD_VALUE
     # clear text
     text = text.replace("&", "and")
@@ -3690,7 +3668,6 @@ def _process(hass, text):
                     # in case of youtube we need to ask cloud first
                     m = "Nie rozumiem " + text
                     ws_resp = aisCloudWS.ask(text, m)
-                    _LOGGER.debug("ws_resp: " + ws_resp.text)
                     m = ws_resp.text.split("---")[0]
                     if m != "Nie rozumiem " + text:
                         s = True
@@ -3744,7 +3721,6 @@ def _process(hass, text):
                             # in case of youtube we need to ask cloud first
                             m = "Nie rozumiem " + text
                             ws_resp = aisCloudWS.ask(text, m)
-                            _LOGGER.debug("ws_resp: " + ws_resp.text)
                             m = ws_resp.text.split("---")[0]
                             if not m.startswith("Nie rozumiem "):
                                 s = True
@@ -3781,13 +3757,12 @@ def _process(hass, text):
             # asking without the suffix
             if text != "":
                 ws_resp = aisCloudWS.ask(text, m)
-                _LOGGER.debug("ws_resp: " + ws_resp.text)
                 m = ws_resp.text.split("---")[0]
             else:
                 m = "Co proszę? Nic nie słyszę!"
 
     except Exception as e:
-        _LOGGER.warning("_process: " + str(e))
+        _LOGGER.info("_process: " + str(e))
         m = "Przepraszam, ale mam problem ze zrozumieniem: " + text
     # return response to the ais dom
     if m.startswith("DO_NOT_SAY"):
@@ -4154,7 +4129,6 @@ class ChangeContextIntent(intent.IntentHandler):
         if len(GROUP_ENTITIES) == 0:
             get_groups(hass)
         text = intent_obj.text_input.lower()
-        _LOGGER.debug("text: " + text)
         for idx, menu in enumerate(GROUP_ENTITIES, start=0):
             context_key_words = menu["context_key_words"]
             if context_key_words is not None:

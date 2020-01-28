@@ -44,7 +44,6 @@ def get_player_data(player_name):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Initialize the radio station list."""
-    _LOGGER.info("Initialize the radio station list.")
     data = hass.data[DOMAIN] = AisColudData(hass)
     yield from data.get_types_async()
     #
@@ -62,91 +61,69 @@ def async_setup(hass, config):
     hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
 
     def get_radio_types(call):
-        _LOGGER.info("get_radio_types")
         data.get_radio_types(call)
 
     def get_radio_names(call):
-        _LOGGER.info("get_radio_names")
         data.get_radio_names(call)
 
     def get_players(call):
-        _LOGGER.info("get_players")
         data.get_players(call, hass)
 
     def play_audio(call):
-        _LOGGER.info("play_audio")
         data.process_play_audio(call)
 
     def delete_audio(call):
-        _LOGGER.info("delete_audio")
         data.process_delete_audio(call)
 
     def get_podcast_types(call):
-        _LOGGER.info("get_podcast_types")
         data.get_podcast_types(call)
 
     def get_podcast_names(call):
-        _LOGGER.info("get_podcast_names")
         data.get_podcast_names(call)
 
     def get_podcast_tracks(call):
-        _LOGGER.info("get_podcast_tracks")
         data.get_podcast_tracks(call)
 
     def get_rss_news_category(call):
-        _LOGGER.info("get_rss_news_category")
         data.get_rss_news_category(call)
 
     def get_rss_news_channels(call):
-        _LOGGER.info("get_rss_news_channels")
         data.get_rss_news_channels(call)
 
     def get_rss_news_items(call):
-        _LOGGER.info("get_rss_news_items")
         data.get_rss_news_items(call)
 
     def select_rss_news_item(call):
-        _LOGGER.info("select_rss_news_item")
         data.select_rss_news_item(call)
 
     def get_backup_info(call):
-        _LOGGER.info("get_backup_info")
         data.get_backup_info(call)
 
     def set_backup_step(call):
-        _LOGGER.info("set_backup_step")
         data.set_backup_step(call)
 
     def restore_backup(call):
-        _LOGGER.info("restore_backup")
         data.restore_backup(call)
 
     def do_backup(call):
-        _LOGGER.info("do_backup")
         data.do_backup(call)
 
     def select_rss_help_item(call):
-        _LOGGER.info("select_rss_help_item")
         data.select_rss_help_item(call)
 
     def play_prev(call):
-        _LOGGER.info("play_prev")
         data.play_prev(call)
 
     def play_next(call):
-        _LOGGER.info("play_next")
         data.play_next(call)
 
     def change_audio_service(call):
-        _LOGGER.info("change_audio_service")
         data.change_audio_service(call)
 
     def send_audio_to_speaker(call):
-        _LOGGER.info("send_audio_to_speaker")
         data.send_audio_to_speaker(call)
 
     def enable_gate_pairing_by_pin(call):
-        _LOGGER.info("enable_gate_pairing_by_pin")
         data.enable_gate_pairing_by_pin(call)
 
     # register services
@@ -177,8 +154,8 @@ def async_setup(hass, config):
 
     def device_discovered(service):
         """ Called when a device has been discovered. """
-        _LOGGER.info("Discovered a new device type: " + str(service.as_dict()))
         if ais_global.G_AIS_START_IS_DONE:
+            _LOGGER.info("Discovered a new device type: " + str(service.as_dict()))
             try:
                 d = service.as_dict().get("data")
                 s = d.get("service")
@@ -377,7 +354,7 @@ class AisCloudWS:
             ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
             return ws_resp
         except:
-            _LOGGER.error("Can't connect to AIS Cloud!!! " + rest_url)
+            _LOGGER.error("Can't connect to AIS WS!!! " + rest_url)
             ais_global.G_OFFLINE_MODE = True
 
     def audio_name(self, nature, a_type):
@@ -595,7 +572,6 @@ class AisColudData:
     def get_radio_names(self, call):
         """Load stations of the for the selected type."""
         if "radio_type" not in call.data:
-            _LOGGER.error("No radio_type")
             return []
 
         if call.data["radio_type"] == ais_global.G_FAVORITE_OPTION:
@@ -653,7 +629,6 @@ class AisColudData:
     def get_podcast_names(self, call):
         """Load podcasts names for the selected type."""
         if "podcast_type" not in call.data:
-            _LOGGER.error("No podcast_type")
             return []
         if call.data["podcast_type"] == ais_global.G_FAVORITE_OPTION:
             # get podcasts from favorites
@@ -707,7 +682,6 @@ class AisColudData:
         ):
             selected_by_remote = True
         if "podcast_name" not in call.data:
-            _LOGGER.error("No podcast_name")
             return
         if call.data["podcast_name"] == ais_global.G_FAVORITE_OPTION:
             # get podcasts from favorites
@@ -846,7 +820,6 @@ class AisColudData:
                 )
 
     def process_delete_audio(self, call):
-        _LOGGER.info("process_delete_audio")
         media_source = call.data["media_source"]
         if media_source == ais_global.G_AN_FAVORITE:
             self.hass.services.call(
@@ -896,7 +869,6 @@ class AisColudData:
             self.hass.states.async_set("sensor.spotifylist", state, new_attr)
 
     def process_play_audio(self, call):
-        _LOGGER.info("process_play_audio")
         media_source = call.data["media_source"]
         if "id" in call.data:
             if media_source == ais_global.G_AN_SPOTIFY_SEARCH:
@@ -1186,7 +1158,6 @@ class AisColudData:
     # send audio from AIS to play on selected speaker
     def send_audio_to_speaker(self, call):
         if "media_player" not in call.data:
-            _LOGGER.error("No media_player")
             return
         media_player = call.data["media_player"]
         state = self.hass.states.get(ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID)
@@ -1227,7 +1198,6 @@ class AisColudData:
                 if m_player.state == STATE_UNAVAILABLE:
                     do_disco = True
             if do_disco:
-                _LOGGER.info("Adding new ais dom player " + entity_id)
                 hass.async_run_job(
                     async_load_platform(
                         hass,
@@ -1243,7 +1213,6 @@ class AisColudData:
                 )
             else:
                 # update player info
-                _LOGGER.info("Update player info " + entity_id)
                 self.hass.services.call(
                     "ais_exo_player",
                     "update_attributes",
@@ -1296,7 +1265,6 @@ class AisColudData:
     def get_rss_news_channels(self, call):
         """Load news channels of the for the selected category."""
         if "rss_news_category" not in call.data:
-            _LOGGER.error("No rss_news_category")
             return []
         if call.data["rss_news_category"] == ais_global.G_EMPTY_OPTION:
             # reset status for item below
@@ -1340,7 +1308,6 @@ class AisColudData:
         import io
 
         if "rss_news_channel" not in call.data:
-            _LOGGER.error("No rss_news_channel")
             return
         if call.data["rss_news_channel"] == ais_global.G_EMPTY_OPTION:
             # reset status for item below
@@ -1453,7 +1420,6 @@ class AisColudData:
                         ais_ai.set_curr_entity(self.hass, "sensor.rssnewslist")
 
             except Exception as e:
-                _LOGGER.error("Error: " + str(e))
                 self.hass.services.call(
                     "ais_ai_service",
                     "say_it",
@@ -1463,7 +1429,6 @@ class AisColudData:
     def select_rss_news_item(self, call):
         """Get text for the selected item."""
         if "id" not in call.data:
-            _LOGGER.error("No rss news id")
             return
         news_text = ""
         # find the url and read the text
@@ -1506,7 +1471,6 @@ class AisColudData:
         """Get text for the selected item."""
         rss_help_text = ""
         if "rss_help_topic" not in call.data:
-            _LOGGER.error("No rss_help_topic")
             return
         if call.data["rss_help_topic"] == ais_global.G_EMPTY_OPTION:
             # reset status for item below
