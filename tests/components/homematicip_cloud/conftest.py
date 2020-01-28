@@ -17,7 +17,9 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_PIN,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.setup import async_setup_component
 
 from .helper import AUTH_TOKEN, HAPID, HAPPIN, HomeTemplate
 
@@ -56,7 +58,7 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
         title=HAPID,
         unique_id=HAPID,
         data=entry_data,
-        source="import",
+        source=SOURCE_IMPORT,
         connection_class=config_entries.CONN_CLASS_CLOUD_PUSH,
         system_options={"disable_new_entities": False},
     )
@@ -84,23 +86,25 @@ async def get_mock_hap(
     hmip_config_entry: config_entries.ConfigEntry,
 ) -> HomematicipHAP:
     """Create a mocked homematic access point."""
-    hass.config.components.add(HMIPC_DOMAIN)
-    hap = HomematicipHAP(hass, hmip_config_entry)
     home_name = hmip_config_entry.data["name"]
     mock_home = (
         HomeTemplate(connection=mock_connection, home_name=home_name)
         .init_home()
         .get_async_home_mock()
     )
-    with patch.object(hap, "get_hap", return_value=mock_home):
-        assert await hap.async_setup()
-    mock_home.on_update(hap.async_update)
-    mock_home.on_create(hap.async_create_entity)
 
-    hass.data[HMIPC_DOMAIN] = {HAPID: hap}
+    hmip_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.get_hap",
+        return_value=mock_home,
+    ):
+        assert await async_setup_component(hass, HMIPC_DOMAIN, {}) is True
 
     await hass.async_block_till_done()
 
+    hap = hass.data[HMIPC_DOMAIN][HAPID]
+    mock_home.on_update(hap.async_update)
+    mock_home.on_create(hap.async_create_entity)
     return hap
 
 
