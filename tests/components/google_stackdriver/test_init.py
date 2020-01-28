@@ -2,7 +2,7 @@
 from asynctest import Mock, patch
 from google.cloud.logging import Client
 
-from homeassistant.components.google_stackdriver.const import DOMAIN
+from homeassistant.components.google_stackdriver import DOMAIN
 from homeassistant.setup import async_setup_component
 
 

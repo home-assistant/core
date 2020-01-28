@@ -8,8 +8,6 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
 
 LOGSEVERITY = {
@@ -25,6 +23,7 @@ LOGSEVERITY = {
 
 _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
 
+DOMAIN = "google_stackdriver"
 
 CONF_KEY_FILE = "key_file"
 CONF_LEVEL = "level"

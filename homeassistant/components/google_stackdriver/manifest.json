@@ -6,9 +6,6 @@
   "requirements": [
     "google-cloud-logging==1.14.0"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": [],
   "codeowners": [
     "@frog32"
