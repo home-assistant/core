@@ -1137,7 +1137,7 @@ async def async_api_set_range(hass, config, directive, context):
             service = cover.SERVICE_OPEN_COVER_TILT
         else:
             service = cover.SERVICE_SET_COVER_TILT_POSITION
-            data[cover.ATTR_POSITION] = range_value
+            data[cover.ATTR_TILT_POSITION] = range_value
 
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
