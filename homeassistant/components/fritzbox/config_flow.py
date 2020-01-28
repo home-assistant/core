@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_FRIENDLY_NAME
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
+# pylint:disable=unused-import
 from .const import DOMAIN
 
 DATA_SCHEMA_USER = vol.Schema(
@@ -39,8 +40,6 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-
-    # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
 
     def __init__(self):
         """Initialize flow."""
