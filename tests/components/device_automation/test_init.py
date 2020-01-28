@@ -610,7 +610,7 @@ async def test_automation_with_bad_condition(hass, caplog):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 

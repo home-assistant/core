@@ -785,7 +785,7 @@ class MediaPlayerDevice(Entity):
     @property
     def capability_attributes(self):
         """Return capabilitiy attributes."""
-        supported_features = self.supported_features
+        supported_features = self.supported_features or 0
         data = {}
 
         if supported_features & SUPPORT_SELECT_SOURCE:

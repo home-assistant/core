@@ -1,5 +1,4 @@
 """Allow to set up simple automation rules via the config file."""
-import asyncio
 from functools import partial
 import importlib
 import logging
@@ -24,7 +23,6 @@ from homeassistant.core import Context, CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, extract_domain_configs, script
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -93,28 +91,22 @@ _TRIGGER_SCHEMA = vol.All(
 
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
-PLATFORM_SCHEMA = vol.Schema(
-    {
-        # str on purpose
-        CONF_ID: str,
-        CONF_ALIAS: cv.string,
-        vol.Optional(CONF_DESCRIPTION): cv.string,
-        vol.Optional(CONF_INITIAL_STATE): cv.boolean,
-        vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
-        vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
-        vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
-        vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.107"),
+    vol.Schema(
+        {
+            # str on purpose
+            CONF_ID: str,
+            CONF_ALIAS: cv.string,
+            vol.Optional(CONF_DESCRIPTION): cv.string,
+            vol.Optional(CONF_INITIAL_STATE): cv.boolean,
+            vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
+            vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
+            vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
+            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
+        }
+    ),
 )
-
-TRIGGER_SERVICE_SCHEMA = make_entity_service_schema(
-    {
-        vol.Optional(ATTR_VARIABLES, default={}): dict,
-        vol.Optional(CONF_SKIP_CONDITION, default=True): bool,
-    }
-)
-
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 @bind_hass
@@ -133,42 +125,25 @@ async def async_setup(hass, config):
 
     await _async_process_config(hass, config, component)
 
-    async def trigger_service_handler(service_call):
+    async def trigger_service_handler(entity, service_call):
         """Handle automation triggers."""
-        tasks = []
-        for entity in await component.async_extract_from_service(service_call):
-            tasks.append(
-                entity.async_trigger(
-                    service_call.data[ATTR_VARIABLES],
-                    skip_condition=service_call.data[CONF_SKIP_CONDITION],
-                    context=service_call.context,
-                )
-            )
+        await entity.async_trigger(
+            service_call.data[ATTR_VARIABLES],
+            skip_condition=service_call.data[CONF_SKIP_CONDITION],
+            context=service_call.context,
+        )
 
-        if tasks:
-            await asyncio.wait(tasks)
-
-    async def turn_onoff_service_handler(service_call):
-        """Handle automation turn on/off service calls."""
-        tasks = []
-        method = f"async_{service_call.service}"
-        for entity in await component.async_extract_from_service(service_call):
-            tasks.append(getattr(entity, method)())
-
-        if tasks:
-            await asyncio.wait(tasks)
-
-    async def toggle_service_handler(service_call):
-        """Handle automation toggle service calls."""
-        tasks = []
-        for entity in await component.async_extract_from_service(service_call):
-            if entity.is_on:
-                tasks.append(entity.async_turn_off())
-            else:
-                tasks.append(entity.async_turn_on())
-
-        if tasks:
-            await asyncio.wait(tasks)
+    component.async_register_entity_service(
+        SERVICE_TRIGGER,
+        {
+            vol.Optional(ATTR_VARIABLES, default={}): dict,
+            vol.Optional(CONF_SKIP_CONDITION, default=True): bool,
+        },
+        trigger_service_handler,
+    )
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
 
     async def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
@@ -177,32 +152,9 @@ async def async_setup(hass, config):
             return
         await _async_process_config(hass, conf, component)
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_TRIGGER, trigger_service_handler, schema=TRIGGER_SERVICE_SCHEMA
-    )
-
     async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_RELOAD,
-        reload_service_handler,
-        schema=RELOAD_SERVICE_SCHEMA,
+        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({}),
     )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_TOGGLE,
-        toggle_service_handler,
-        schema=make_entity_service_schema({}),
-    )
-
-    for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
-        hass.services.async_register(
-            DOMAIN,
-            service,
-            turn_onoff_service_handler,
-            schema=make_entity_service_schema({}),
-        )
 
     return True
 
@@ -236,6 +188,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     def name(self):
         """Name of the automation."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self._id
 
     @property
     def should_poll(self):

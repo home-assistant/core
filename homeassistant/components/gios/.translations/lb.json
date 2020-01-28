@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "GIO\u015a Integratioun fir d\u00ebs Miess Statioun ass scho konfigur\u00e9iert."
+        },
         "error": {
             "cannot_connect": "Konnt sech net mam GIO\u015a Server verbannen.",
             "invalid_sensors_data": "Ong\u00eblteg Sensor Donn\u00e9e\u00eb fir d\u00ebs Miess Statioun",

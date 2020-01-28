@@ -22,7 +22,7 @@
                 "title": "Elige el puente de Hue"
             },
             "link": {
-                "description": "Presione el bot\u00f3n en el puente para registrar Philips Hue con Home Assistant. \n\n ! [Ubicaci\u00f3n del bot\u00f3n en el puente] (/static/images/config_philips_hue.jpg)",
+                "description": "Presione el bot\u00f3n en el puente para registrar Philips Hue con Home Assistant. \n\n![Ubicaci\u00f3n del bot\u00f3n en el puente](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
             }
         },

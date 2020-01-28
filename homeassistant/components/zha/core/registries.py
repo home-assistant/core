@@ -21,6 +21,7 @@ import zigpy_zigate.api
 import zigpy_zigate.zigbee.application
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
@@ -43,8 +44,11 @@ REMOTE_DEVICE_TYPES = {
         zigpy.profiles.zha.DeviceType.COLOR_DIMMER_SWITCH,
         zigpy.profiles.zha.DeviceType.COLOR_SCENE_CONTROLLER,
         zigpy.profiles.zha.DeviceType.DIMMER_SWITCH,
+        zigpy.profiles.zha.DeviceType.LEVEL_CONTROL_SWITCH,
         zigpy.profiles.zha.DeviceType.NON_COLOR_CONTROLLER,
         zigpy.profiles.zha.DeviceType.NON_COLOR_SCENE_CONTROLLER,
+        zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+        zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT_SWITCH,
         zigpy.profiles.zha.DeviceType.REMOTE_CONTROL,
         zigpy.profiles.zha.DeviceType.SCENE_SELECTOR,
     ],
@@ -63,6 +67,7 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     SMARTTHINGS_ACCELERATION_CLUSTER: BINARY_SENSOR,
     SMARTTHINGS_HUMIDITY_CLUSTER: SENSOR,
     zcl.clusters.closures.DoorLock: LOCK,
+    zcl.clusters.closures.WindowCovering: COVER,
     zcl.clusters.general.AnalogInput.cluster_id: SENSOR,
     zcl.clusters.general.MultistateInput.cluster_id: SENSOR,
     zcl.clusters.general.OnOff: SWITCH,
@@ -102,7 +107,6 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: LIGHT,
         zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST: SWITCH,
         zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT_SWITCH: SWITCH,
         zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
     },

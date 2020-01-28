@@ -48,7 +48,6 @@ class TestComponentLogbook(unittest.TestCase):
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)  # Force an in memory DB
         assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)
-        self.hass.start()
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -90,7 +89,7 @@ class TestComponentLogbook(unittest.TestCase):
                 dt_util.utcnow() + timedelta(hours=1),
             )
         )
-        assert len(events) == 2
+        assert len(events) == 1
 
         assert 1 == len(calls)
         last_call = calls[-1]

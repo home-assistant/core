@@ -259,10 +259,20 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
         """
         return self.async_create_entry(title=self.flow_impl.name, data=data)
 
+    async def async_step_discovery(self, user_input: dict = None) -> dict:
+        """Handle a flow initialized by discovery."""
+        await self.async_set_unique_id(self.DOMAIN)
+
+        assert self.hass is not None
+        if self.hass.config_entries.async_entries(self.DOMAIN):
+            return self.async_abort(reason="already_configured")
+
+        return await self.async_step_pick_implementation()
+
     async_step_user = async_step_pick_implementation
-    async_step_ssdp = async_step_pick_implementation
-    async_step_zeroconf = async_step_pick_implementation
-    async_step_homekit = async_step_pick_implementation
+    async_step_ssdp = async_step_discovery
+    async_step_zeroconf = async_step_discovery
+    async_step_homekit = async_step_discovery
 
     @classmethod
     def async_register_implementation(

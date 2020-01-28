@@ -67,7 +67,11 @@ class PushoverNotificationService(BaseNotificationService):
                         # Replace the attachment identifier with file object.
                         data[ATTR_ATTACHMENT] = response.content
                     else:
-                        _LOGGER.error("Image not found")
+                        _LOGGER.error(
+                            "Failed to download image %s, response code: %d",
+                            data[ATTR_ATTACHMENT],
+                            response.status_code,
+                        )
                         # Remove attachment key to send without attachment.
                         del data[ATTR_ATTACHMENT]
                 except requests.exceptions.RequestException as ex_val:

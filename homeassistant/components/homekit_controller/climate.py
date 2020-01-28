@@ -45,11 +45,6 @@ CURRENT_MODE_HOMEKIT_TO_HASS = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Legacy set up platform."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Homekit climate."""
     hkid = config_entry.data["AccessoryPairingID"]
