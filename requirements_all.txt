@@ -105,7 +105,7 @@ WazeRouteCalculator==0.12
 YesssSMS==0.4.1
 
 # homeassistant.components.abode
-abodepy==0.16.7
+abodepy==0.17.0
 
 # homeassistant.components.mcp23017
 adafruit-blinka==1.2.1
