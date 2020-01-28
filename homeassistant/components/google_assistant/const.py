@@ -143,3 +143,6 @@ CHALLENGE_PIN_NEEDED = "pinNeeded"
 CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
 
 STORE_AGENT_USER_IDS = "agent_user_ids"
+
+SOURCE_CLOUD = "cloud"
+SOURCE_LOCAL = "local"
