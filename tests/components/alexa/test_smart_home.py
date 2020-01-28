@@ -1586,7 +1586,7 @@ async def test_cover_position_range(hass):
 
     await assert_range_changes(
         hass,
-        [(25, -5, False), (35, 5, False)],
+        [(25, -5, False), (35, 5, False), (50, 1, True), (10, -1, True)],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "cover#test_range",
@@ -2831,7 +2831,7 @@ async def test_cover_tilt_position_range(hass):
 
     await assert_range_changes(
         hass,
-        [(25, -5, False), (35, 5, False)],
+        [(25, -5, False), (35, 5, False), (50, 1, True), (10, -1, True)],
         "Alexa.RangeController",
         "AdjustRangeValue",
         "cover#test_tilt_range",
