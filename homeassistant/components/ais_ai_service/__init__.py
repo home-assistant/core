@@ -23,7 +23,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS,
-    CONF_MAC,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_TURN_OFF,
@@ -2245,11 +2244,15 @@ async def async_process_json_from_frame(hass, json_req):
                             )
                         )
     elif topic == "ais/speech_command":
-
-        hass.async_run_job(
-            hass.services.async_call("conversation", "process", {"text": payload})
-        )
-        res = {"ais": "ok", "say_it": "przyjołem kommendę - bez odbioru!"}
+        # hass.async_run_job(
+        #     hass.services.async_call("conversation", "process", {"text": payload})
+        # )
+        try:
+            intent_resp = await _process(hass, payload, ais_gate_client_id)
+            resp_text = intent_resp.speech["plain"]["speech"]
+            res = {"ais": "ok", "say_it": resp_text}
+        except Exception as e:
+            _LOGGER.error("intent_resp " + str(e))
 
     elif topic == "ais/media_player":
         hass.async_run_job(
@@ -3306,7 +3309,7 @@ def _process_command_from_frame(hass, service):
     return
 
 
-def _post_message(message, hass):
+def _post_message(message, hass, exclude_say_it=None):
     """Post the message to TTS service."""
     message = message.replace("°C", "stopni Celsjusza")
     message = message.replace("(Pobrane z Google)", "")
@@ -3366,7 +3369,10 @@ def _post_message(message, hass):
     for s in ais_global.G_SPEAKERS_GROUP_LIST:
         if s != "media_player.wbudowany_glosnik":
             attr = hass.states.get(s).attributes
-            if "device_ip" in attr and attr["device_ip"] != "localhost":
+            if "unique_id" in attr and attr["unique_id"] not in (
+                str(exclude_say_it),
+                "1111111111111111111",
+            ):
                 try:
                     requests.post(
                         ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(
@@ -3376,7 +3382,7 @@ def _post_message(message, hass):
                         json=j_data,
                         timeout=1,
                     )
-                except Exception as e:
+                except Exception:
                     pass
 
 
@@ -3388,9 +3394,9 @@ def _beep_it(hass, tone):
     )
 
 
-def _say_it(hass, message, img=None):
+def _say_it(hass, message, img=None, exclude_say_it=None):
     # sent the tts message to the panel via http api
-    _post_message(message, hass)
+    _post_message(message, hass, exclude_say_it)
 
     if len(message) > 1999:
         tts_text = message[0:1999] + "..."
@@ -3559,7 +3565,7 @@ def get_context_suffix(hass):
 
 
 @asyncio.coroutine
-def _process(hass, text):
+def _process(hass, text, exclude_say_it=None):
     """Process a line of text."""
     global CURR_VIRTUAL_KEYBOARD_VALUE
     # clear text
@@ -3768,7 +3774,7 @@ def _process(hass, text):
     if m.startswith("DO_NOT_SAY"):
         m = m.replace("DO_NOT_SAY", "")
     else:
-        _say_it(hass, m)
+        _say_it(hass, m, exclude_say_it=exclude_say_it)
     # return response to the hass conversation
     intent_resp = intent.IntentResponse()
     # intent_resp.async_set_card("Beer ordered", "You chose a XXX")
