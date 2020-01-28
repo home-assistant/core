@@ -8,7 +8,6 @@ import asyncio
 import logging
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity_registry import async_entries_for_device
 
 from .helpers import LogMixin
 
@@ -18,14 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 class ZHAGroup(LogMixin):
     """ZHA Zigbee group object."""
 
-    def __init__(self, hass, coordinator, zha_gateway, zigpy_group):
+    def __init__(self, hass, zha_gateway, zigpy_group):
         """Initialize the group."""
         self.hass = hass
-        self.unique_id = f"{coordinator.ieee}_{zigpy_group.group_id}"
-        self._cordinator_zha_device = coordinator
         self._zigpy_group = zigpy_group
         self._zha_gateway = zha_gateway
-        self._entity_domain = None
 
     @property
     def name(self):
@@ -38,13 +34,9 @@ class ZHAGroup(LogMixin):
         return self._zigpy_group.group_id
 
     @property
-    def entity_domain(self):
-        """Return the domain that will be used for the entity representing this group."""
-        return self._entity_domain
-
-    def set_entity_domain(self, domain):
-        """Set the domain that will be used for the entity representing this group."""
-        self._entity_domain = domain
+    def endpoint(self):
+        """Return the endpoint for this group."""
+        return self._zigpy_group.endpoint
 
     @property
     def members(self):
@@ -54,18 +46,6 @@ class ZHAGroup(LogMixin):
             for member_ieee in self._zigpy_group.members.keys()
             if member_ieee[0] in self._zha_gateway.devices
         ]
-
-    @property
-    def member_entity_ids(self):
-        """Return the ZHA entitiy ids for all entities for the members of this group."""
-        all_entity_ids = []
-        for device in self.members:
-            entities = async_entries_for_device(
-                self._zha_gateway.ha_entity_registry, device.device_id
-            )
-            for entity in entities:
-                all_entity_ids.append(entity.entity_id)
-        return all_entity_ids
 
     async def async_add_members(self, member_ieee_addresses):
         """Add members to this group."""

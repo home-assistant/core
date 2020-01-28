@@ -94,7 +94,6 @@ class ZHAGateway:
         self._config = config
         self._devices = {}
         self._groups = {}
-        self._coordinator_zha_device = None
         self._device_registry = collections.defaultdict(list)
         self.zha_storage = None
         self.ha_device_registry = None
@@ -153,25 +152,9 @@ class ZHAGateway:
             )
         await asyncio.gather(*init_tasks)
 
-        self._coordinator_zha_device = next(
-            device for device in self._devices.values() if device.nwk == 0x0000
-        )
-
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
-            zha_group = self._async_get_or_create_group(group)
-            discovery_info = {
-                "component": "light",
-                "group_id": zha_group.group_id,
-                "zha_device": self._coordinator_zha_device,
-                "unique_id": zha_group.unique_id,
-                "channels": [],
-                "entity_ids": zha_group.member_entity_ids,
-            }
-
-            self._hass.data[DATA_ZHA]["light"][
-                discovery_info["unique_id"]
-            ] = discovery_info
+            self._async_get_or_create_group(group)
 
     def device_joined(self, device):
         """Handle device joined.
@@ -290,7 +273,7 @@ class ZHAGateway:
 
     def get_group(self, group_id):
         """Return Group for given group id."""
-        return self.application_controller.groups[group_id]
+        return self.groups.get(group_id)
 
     def async_get_group_by_name(self, group_name):
         """Get ZHA group by name."""
@@ -396,9 +379,7 @@ class ZHAGateway:
         """Get or create a ZHA group."""
         zha_group = self._groups.get(zigpy_group.group_id)
         if zha_group is None:
-            zha_group = ZHAGroup(
-                self._hass, self._coordinator_zha_device, self, zigpy_group
-            )
+            zha_group = ZHAGroup(self._hass, self, zigpy_group)
             self._groups[zigpy_group.group_id] = zha_group
         return zha_group
 
