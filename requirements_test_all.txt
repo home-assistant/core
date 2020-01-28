@@ -162,7 +162,7 @@ directpy==0.5
 distro==1.4.0
 
 # homeassistant.components.dsmr
-dsmr_parser==0.12
+dsmr_parser==0.18
 
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
