@@ -1043,7 +1043,7 @@ prometheus_client==0.7.1
 protobuf==3.6.1
 
 # homeassistant.components.proxmoxve
-proxmoxer==1.0.3
+proxmoxer==1.0.4
 
 # homeassistant.components.systemmonitor
 psutil==5.6.7
