@@ -55,3 +55,7 @@ class TeslaBinarySensor(TeslaDevice, BinarySensorDevice):
         _LOGGER.debug("Updating sensor: %s", self._name)
         await super().async_update()
         self._state = self.tesla_device.get_value()
+        try:
+            self._attributes = self.tesla_device.attrs
+        except AttributeError:
+            self._attributes = {}
