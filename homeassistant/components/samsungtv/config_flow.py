@@ -168,6 +168,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.hass.config_entries.async_update_entry(config_entry)
             return self.async_abort(reason="already_configured")
 
+        self.context["title_placeholders"] = {"model": self._model}
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
