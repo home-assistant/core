@@ -217,7 +217,7 @@ class SAJsensor(Entity):
 
     @property
     def per_total_basis(self) -> bool:
-        """Return if the sensors value is cummulative or not."""
+        """Return if the sensors value is cumulative or not."""
         return self._sensor.per_total_basis
 
     @property

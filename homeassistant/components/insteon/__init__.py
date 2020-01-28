@@ -350,7 +350,7 @@ async def async_setup(hass, config):
     def print_aldb(service):
         """Print the All-Link Database for a device."""
         # For now this sends logs to the log file.
-        # Furture direction is to create an INSTEON control panel.
+        # Future direction is to create an INSTEON control panel.
         entity_id = service.data[CONF_ENTITY_ID]
         signal = f"{entity_id}_{SIGNAL_PRINT_ALDB}"
         dispatcher_send(hass, signal)
@@ -358,7 +358,7 @@ async def async_setup(hass, config):
     def print_im_aldb(service):
         """Print the All-Link Database for a device."""
         # For now this sends logs to the log file.
-        # Furture direction is to create an INSTEON control panel.
+        # Future direction is to create an INSTEON control panel.
         print_aldb_to_log(insteon_modem.aldb)
 
     def x10_all_units_off(service):

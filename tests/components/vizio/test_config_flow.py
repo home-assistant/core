@@ -120,7 +120,7 @@ def vizio_guess_device_type_fixture():
 
 @pytest.fixture(name="vizio_cant_connect")
 def vizio_cant_connect_fixture():
-    """Mock vizio device cant connect."""
+    """Mock vizio device can't connect."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
         return_value=False,
@@ -417,7 +417,7 @@ async def test_zeroconf_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    # Apply discovery updates to entry to mimick when user hits submit without changing
+    # Apply discovery updates to entry to mimic when user hits submit without changing
     # defaults which were set from discovery parameters
     user_input = result["data_schema"](discovery_info)
 

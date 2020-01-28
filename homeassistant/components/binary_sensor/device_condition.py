@@ -1,4 +1,4 @@
-"""Implemenet device conditions for binary sensor."""
+"""Implement device conditions for binary sensor."""
 from typing import Dict, List
 
 import voluptuous as vol
