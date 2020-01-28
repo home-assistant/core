@@ -14,15 +14,9 @@ import asynctest
 import pytest
 
 from homeassistant.bootstrap import async_setup_component
+from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
 
 from tests.common import assert_setup_component
-
-# Imports disabled due to missing PyCRC on PyPi
-# Also disabled pylint/flake8 where this is used below
-# from homeassistant.components.dsmr.sensor import DerivativeDSMREntity
-
-
-pytest.skip("Dependency missing on PyPi", allow_module_level=True)
 
 
 @pytest.fixture
@@ -103,9 +97,7 @@ async def test_derivative():
 
     config = {"platform": "dsmr"}
 
-    # Disabled to satisfy pylint & flake8 caused by disabled import
-    # pylint: disable=undefined-variable
-    entity = DerivativeDSMREntity("test", "1.0.0", config)  # noqa: F821
+    entity = DerivativeDSMREntity("test", "1.0.0", config)
     await entity.async_update()
 
     assert entity.state is None, "initial state not unknown"
