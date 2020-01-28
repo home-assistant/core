@@ -43,7 +43,7 @@ from tests.common import MockConfigEntry
 
 
 async def _test_init(
-    hass: HomeAssistantType, ha_device_class: str, vizio_power_state: bool,
+    hass: HomeAssistantType, ha_device_class: str, vizio_power_state: bool
 ) -> None:
     """Test initialization of generic Vizio Device entity."""
     if vizio_power_state:
