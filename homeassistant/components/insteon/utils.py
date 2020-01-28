@@ -105,7 +105,8 @@ def register_new_device_callback(hass, config, insteon_modem):
     insteon_modem.devices.add_device_callback(async_new_insteon_device)
 
 
-def register_services(hass, config, insteon_modem):
+@callback
+def async_register_services(hass, config, insteon_modem):
     """Register services used by insteon component."""
 
     def add_all_link(service):
@@ -125,7 +126,7 @@ def register_services(hass, config, insteon_modem):
         entity_id = service.data[CONF_ENTITY_ID]
         reload = service.data[SRV_LOAD_DB_RELOAD]
         if entity_id.lower() == ENTITY_MATCH_ALL:
-            for entity_id in hass.data[DOMAIN].get(INSTEON_ENTITIES):
+            for entity_id in hass.data[DOMAIN][INSTEON_ENTITIES]:
                 _send_load_aldb_signal(entity_id, reload)
         else:
             _send_load_aldb_signal(entity_id, reload)
@@ -174,26 +175,32 @@ def register_services(hass, config, insteon_modem):
         group = service.data.get(SRV_ALL_LINK_GROUP)
         insteon_modem.trigger_group_off(group)
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SRV_ADD_ALL_LINK, add_all_link, schema=ADD_ALL_LINK_SCHEMA
     )
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SRV_DEL_ALL_LINK, del_all_link, schema=DEL_ALL_LINK_SCHEMA
     )
-    hass.services.register(DOMAIN, SRV_LOAD_ALDB, load_aldb, schema=LOAD_ALDB_SCHEMA)
-    hass.services.register(DOMAIN, SRV_PRINT_ALDB, print_aldb, schema=PRINT_ALDB_SCHEMA)
-    hass.services.register(DOMAIN, SRV_PRINT_IM_ALDB, print_im_aldb, schema=None)
-    hass.services.register(
+    hass.services.async_register(
+        DOMAIN, SRV_LOAD_ALDB, load_aldb, schema=LOAD_ALDB_SCHEMA
+    )
+    hass.services.async_register(
+        DOMAIN, SRV_PRINT_ALDB, print_aldb, schema=PRINT_ALDB_SCHEMA
+    )
+    hass.services.async_register(DOMAIN, SRV_PRINT_IM_ALDB, print_im_aldb, schema=None)
+    hass.services.async_register(
         DOMAIN, SRV_X10_ALL_UNITS_OFF, x10_all_units_off, schema=X10_HOUSECODE_SCHEMA,
     )
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SRV_X10_ALL_LIGHTS_OFF, x10_all_lights_off, schema=X10_HOUSECODE_SCHEMA,
     )
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SRV_X10_ALL_LIGHTS_ON, x10_all_lights_on, schema=X10_HOUSECODE_SCHEMA,
     )
-    hass.services.register(DOMAIN, SRV_SCENE_ON, scene_on, schema=TRIGGER_SCENE_SCHEMA)
-    hass.services.register(
+    hass.services.async_register(
+        DOMAIN, SRV_SCENE_ON, scene_on, schema=TRIGGER_SCENE_SCHEMA
+    )
+    hass.services.async_register(
         DOMAIN, SRV_SCENE_OFF, scene_off, schema=TRIGGER_SCENE_SCHEMA
     )
     _LOGGER.debug("Insteon Services registered")

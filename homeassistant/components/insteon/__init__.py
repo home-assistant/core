@@ -31,7 +31,7 @@ from .const import (
     INSTEON_ENTITIES,
 )
 from .schemas import CONFIG_SCHEMA  # noqa F440
-from .utils import register_new_device_callback, register_services
+from .utils import async_register_services, register_new_device_callback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,10 +74,10 @@ async def async_setup(hass, config):
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]["modem"] = insteon_modem
-    hass.data[DOMAIN][INSTEON_ENTITIES] = {}
+    hass.data[DOMAIN][INSTEON_ENTITIES] = set()
 
     register_new_device_callback(hass, config, insteon_modem)
-    hass.async_add_job(register_services, hass, config, insteon_modem)
+    async_register_services(hass, config, insteon_modem)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
 
     for device_override in overrides:

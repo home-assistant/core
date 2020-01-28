@@ -47,9 +47,7 @@ class InsteonEntity(Entity):
         if self._insteon_device_state.group == 0x01:
             uid = self._insteon_device.id
         else:
-            uid = "{:s}_{:d}".format(
-                self._insteon_device.id, self._insteon_device_state.group
-            )
+            uid = f"{self._insteon_device.id}_{self._insteon_device_state.group}"
         return uid
 
     @property
@@ -64,15 +62,13 @@ class InsteonEntity(Entity):
         extension = self._get_label()
         if extension:
             extension = f" {extension}"
-        name = "{:s} {:s}{:s}".format(
-            description, self._insteon_device.address.human, extension
-        )
+        name = f"{description} {self._insteon_device.address.human}{extension}"
         return name
 
     @property
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
-        attributes = {"INSTEON Address": self.address, "INSTEON Group": self.group}
+        attributes = {"insteon_address": self.address, "insteon_group": self.group}
         return attributes
 
     @callback
@@ -95,7 +91,7 @@ class InsteonEntity(Entity):
             self._insteon_device_state.name,
         )
         self._insteon_device_state.register_updates(self.async_entity_update)
-        self.hass.data[DOMAIN][INSTEON_ENTITIES][self.entity_id] = self
+        self.hass.data[DOMAIN][INSTEON_ENTITIES].add(self.entity_id)
         load_signal = f"{self.entity_id}_{SIGNAL_LOAD_ALDB}"
         async_dispatcher_connect(self.hass, load_signal, self._load_aldb)
         print_signal = f"{self.entity_id}_{SIGNAL_PRINT_ALDB}"
