@@ -22,6 +22,7 @@ class MockConfig(helpers.AbstractConfig):
         *,
         secure_devices_pin=None,
         should_expose=None,
+        should_2fa=None,
         entity_config=None,
         hass=None,
         local_sdk_webhook_id=None,
