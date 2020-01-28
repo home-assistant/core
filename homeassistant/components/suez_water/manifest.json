@@ -1,6 +1,6 @@
 {
   "domain": "suez_water",
-  "name": "Suez Water Consumption Sensor",
+  "name": "Suez Water",
   "documentation": "https://www.home-assistant.io/integrations/suez_water",
   "dependencies": [],
   "codeowners": ["@ooii"],

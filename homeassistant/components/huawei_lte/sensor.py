@@ -6,12 +6,11 @@ from typing import Optional
 
 import attr
 
-from homeassistant.const import CONF_URL, STATE_UNKNOWN
 from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DOMAIN as SENSOR_DOMAIN,
 )
-from homeassistant.helpers import entity_registry
+from homeassistant.const import CONF_URL, STATE_UNKNOWN
 
 from . import HuaweiLteBaseEntity
 from .const import (
@@ -22,7 +21,6 @@ from .const import (
     UNIT_BYTES,
     UNIT_SECONDS,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,23 +167,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             sensors.append(
                 HuaweiLteSensor(router, key, item, SENSOR_META.get((key, item), {}))
             )
-
-    # Pre-0.97 unique id migration. Old ones used the device serial number
-    # (see comments in HuaweiLteData._setup_lte for more info), as well as
-    # had a bug that joined the path str with periods, not the path components,
-    # resulting e.g. *_device_signal.sinr to end up as
-    # *_d.e.v.i.c.e._.s.i.g.n.a.l...s.i.n.r
-    entreg = await entity_registry.async_get_registry(hass)
-    for entid, ent in entreg.entities.items():
-        if ent.platform != DOMAIN:
-            continue
-        for sensor in sensors:
-            oldsuf = ".".join(f"{sensor.key}.{sensor.item}")
-            if ent.unique_id.endswith(f"_{oldsuf}"):
-                entreg.async_update_entity(entid, new_unique_id=sensor.unique_id)
-                _LOGGER.debug(
-                    "Updated entity %s unique id to %s", entid, sensor.unique_id
-                )
 
     async_add_entities(sensors, True)
 

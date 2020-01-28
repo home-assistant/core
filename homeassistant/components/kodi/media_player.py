@@ -7,15 +7,14 @@ import socket
 import urllib
 
 import aiohttp
-import jsonrpc_base
 import jsonrpc_async
+import jsonrpc_base
 import jsonrpc_websocket
-
 import voluptuous as vol
 
 from homeassistant.components.kodi import SERVICE_CALL_METHOD
 from homeassistant.components.kodi.const import DOMAIN
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -52,12 +51,11 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import script
+from homeassistant.helpers import config_validation as cv, script
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.template import Template
-from homeassistant.util.yaml import dump
 import homeassistant.util.dt as dt_util
+from homeassistant.util.yaml import dump
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -783,6 +781,10 @@ class KodiDevice(MediaPlayerDevice):
             return self.server.Player.Open({"item": {"channelid": int(media_id)}})
         if media_type == "PLAYLIST":
             return self.server.Player.Open({"item": {"playlistid": int(media_id)}})
+        if media_type == "DIRECTORY":
+            return self.server.Player.Open({"item": {"directory": str(media_id)}})
+        if media_type == "PLUGIN":
+            return self.server.Player.Open({"item": {"file": str(media_id)}})
 
         return self.server.Player.Open({"item": {"file": str(media_id)}})
 
@@ -813,7 +815,7 @@ class KodiDevice(MediaPlayerDevice):
         except jsonrpc_base.jsonrpc.TransportError:
             result = None
             _LOGGER.warning(
-                "TransportError trying to run API method " "%s.%s(%s)",
+                "TransportError trying to run API method %s.%s(%s)",
                 self.entity_id,
                 method,
                 kwargs,
@@ -965,7 +967,7 @@ class KodiDevice(MediaPlayerDevice):
     @staticmethod
     def _find(key_word, words):
         key_word = key_word.split(" ")
-        patt = [re.compile("(^| )" + k + "( |$)", re.IGNORECASE) for k in key_word]
+        patt = [re.compile(f"(^| ){k}( |$)", re.IGNORECASE) for k in key_word]
 
         out = [[i, 0] for i in range(len(words))]
         for i in range(len(words)):

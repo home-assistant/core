@@ -1,10 +1,10 @@
 """Test Z-Wave locks."""
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.zwave import const, lock
 
-from tests.mock.zwave import MockNode, MockValue, MockEntityValues, value_changed
+from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
 
 def test_get_device_detects_lock(mock_openzwave):

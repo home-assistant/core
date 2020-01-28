@@ -1,6 +1,5 @@
 """The tests for the Yahoo weather component."""
 import json
-
 import unittest
 from unittest.mock import patch
 
@@ -11,10 +10,10 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
 )
-from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.setup import setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import get_test_home_assistant, load_fixture, MockDependency
+from tests.common import MockDependency, get_test_home_assistant, load_fixture
 
 
 def _yql_queryMock(yql):  # pylint: disable=invalid-name

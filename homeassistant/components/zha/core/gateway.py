@@ -20,7 +20,6 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..api import async_get_device_info
 from .const import (
     ATTR_IEEE,
     ATTR_MANUFACTURER,
@@ -65,6 +64,7 @@ from .const import (
 )
 from .device import DeviceStatus, ZHADevice
 from .discovery import async_dispatch_discovery_info, async_process_endpoint
+from .helpers import async_get_device_info
 from .patches import apply_application_controller_patch
 from .registries import RADIO_TYPES
 from .store import async_get_registry
@@ -135,8 +135,6 @@ class ZHAGateway:
                 await coro
 
         for device in self.application_controller.devices.values():
-            if device.nwk == 0x0000:
-                continue
             init_tasks.append(
                 init_with_semaphore(self.async_device_restored(device), semaphore)
             )
@@ -160,9 +158,6 @@ class ZHAGateway:
 
     def raw_device_initialized(self, device):
         """Handle a device initialization without quirks loaded."""
-        if device.nwk == 0x0000:
-            return
-
         manuf = device.manufacturer
         async_dispatcher_send(
             self._hass,
@@ -221,6 +216,10 @@ class ZHAGateway:
     def get_device(self, ieee):
         """Return ZHADevice for given ieee."""
         return self._devices.get(ieee)
+
+    def get_group(self, group_id):
+        """Return Group for given group id."""
+        return self.application_controller.groups[group_id]
 
     def get_entity_reference(self, entity_id):
         """Return entity reference for given entity_id if found."""
@@ -332,9 +331,6 @@ class ZHAGateway:
 
     async def async_device_initialized(self, device):
         """Handle device joined and basic information discovered (async)."""
-        if device.nwk == 0x0000:
-            return
-
         zha_device = self._async_get_or_create_device(device)
 
         _LOGGER.debug(

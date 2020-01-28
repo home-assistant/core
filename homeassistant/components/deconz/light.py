@@ -22,6 +22,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 from .const import (
+    CONF_GROUP_ID_BASE,
     COVER_TYPES,
     DOMAIN as DECONZ_DOMAIN,
     NEW_GROUP,
@@ -29,7 +30,7 @@ from .const import (
     SWITCH_TYPES,
 )
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry, DeconzEntityHandler
+from .gateway import DeconzEntityHandler, get_gateway_from_config_entry
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -152,6 +153,8 @@ class DeconzLight(DeconzDevice, Light):
 
         if ATTR_TRANSITION in kwargs:
             data["transitiontime"] = int(kwargs[ATTR_TRANSITION] * 10)
+        elif "IKEA" in (self._device.manufacturer or ""):
+            data["transitiontime"] = 0
 
         if ATTR_FLASH in kwargs:
             if kwargs[ATTR_FLASH] == FLASH_SHORT:
@@ -203,7 +206,11 @@ class DeconzGroup(DeconzLight):
         """Set up group and create an unique id."""
         super().__init__(device, gateway)
 
-        self._unique_id = f"{self.gateway.api.config.bridgeid}-{self._device.deconz_id}"
+        group_id_base = self.gateway.config_entry.unique_id
+        if CONF_GROUP_ID_BASE in self.gateway.config_entry.data:
+            group_id_base = self.gateway.config_entry.data[CONF_GROUP_ID_BASE]
+
+        self._unique_id = f"{group_id_base}-{self._device.deconz_id}"
 
     @property
     def unique_id(self):

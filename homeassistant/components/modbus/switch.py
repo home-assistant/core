@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -236,7 +236,7 @@ class ModbusRegisterSwitch(ModbusCoilSwitch):
             self._is_on = False
         else:
             _LOGGER.error(
-                "Unexpected response from hub %s, slave %s " "register %s, got 0x%2x",
+                "Unexpected response from hub %s, slave %s register %s, got 0x%2x",
                 self._hub.name,
                 self._slave,
                 self._verify_register,

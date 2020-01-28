@@ -3,7 +3,10 @@ import logging
 
 from homekit.model.characteristics import CharacteristicsTypes
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_SMOKE,
+    BinarySensorDevice,
+)
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -57,12 +60,37 @@ class HomeKitContactSensor(HomeKitEntity, BinarySensorDevice):
         return self._state == 1
 
 
-ENTITY_TYPES = {"motion": HomeKitMotionSensor, "contact": HomeKitContactSensor}
+class HomeKitSmokeSensor(HomeKitEntity, BinarySensorDevice):
+    """Representation of a Homekit smoke sensor."""
+
+    def __init__(self, *args):
+        """Initialise the entity."""
+        super().__init__(*args)
+        self._state = None
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_SMOKE
+
+    def get_characteristic_types(self):
+        """Define the homekit characteristics the entity is tracking."""
+        return [CharacteristicsTypes.SMOKE_DETECTED]
+
+    def _update_smoke_detected(self, value):
+        self._state = value
+
+    @property
+    def is_on(self):
+        """Return true if smoke is currently detected."""
+        return self._state == 1
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Legacy set up platform."""
-    pass
+ENTITY_TYPES = {
+    "motion": HomeKitMotionSensor,
+    "contact": HomeKitContactSensor,
+    "smoke": HomeKitSmokeSensor,
+}
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

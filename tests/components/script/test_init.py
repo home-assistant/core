@@ -1,7 +1,7 @@
 """The tests for the Script component."""
 # pylint: disable=protected-access
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -10,20 +10,19 @@ from homeassistant.components.script import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
+    EVENT_SCRIPT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    EVENT_SCRIPT_STARTED,
 )
 from homeassistant.core import Context, callback, split_entity_id
+from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import bind_hass
-from homeassistant.setup import setup_component, async_setup_component
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.setup import async_setup_component, setup_component
 
 from tests.common import get_test_home_assistant
-
 
 ENTITY_ID = "script.test"
 
@@ -136,10 +135,6 @@ class TestScriptComponent(unittest.TestCase):
         assert not script.is_on(self.hass, ENTITY_ID)
         assert 0 == len(events)
 
-        state = self.hass.states.get("group.all_scripts")
-        assert state is not None
-        assert state.attributes.get("entity_id") == (ENTITY_ID,)
-
     def test_toggle_service(self):
         """Test the toggling of a service."""
         event = "test_event"
@@ -234,9 +229,8 @@ class TestScriptComponent(unittest.TestCase):
                 "script": {"test2": {"sequence": [{"delay": {"seconds": 5}}]}}
             },
         ):
-            with patch("homeassistant.config.find_config_file", return_value=""):
-                reload(self.hass)
-                self.hass.block_till_done()
+            reload(self.hass)
+            self.hass.block_till_done()
 
         assert self.hass.states.get(ENTITY_ID) is None
         assert not self.hass.services.has_service(script.DOMAIN, "test")
@@ -267,7 +261,6 @@ async def test_service_descriptions(hass):
     assert not descriptions[DOMAIN]["test"]["fields"]
 
     # Test 2: has "fields" but no "description"
-    await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
     with patch(
         "homeassistant.config.load_yaml_config_file",
         return_value={
@@ -284,8 +277,7 @@ async def test_service_descriptions(hass):
             }
         },
     ):
-        with patch("homeassistant.config.find_config_file", return_value=""):
-            await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
 
     descriptions = await async_get_all_descriptions(hass)
 

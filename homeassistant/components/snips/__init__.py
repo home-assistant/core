@@ -1,13 +1,13 @@
 """Support for Snips on-device ASR and NLU."""
+from datetime import timedelta
 import json
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import mqtt
+from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, intent
 
 DOMAIN = "snips"
 CONF_INTENTS = "intents"
@@ -135,7 +135,6 @@ async def async_setup(hass, config):
             intent_type = request["intent"]["intentName"].split("__")[-1]
         else:
             intent_type = request["intent"]["intentName"].split(":")[-1]
-        snips_response = None
         slots = {}
         for slot in request.get("slots", []):
             slots[slot["slotName"]] = {"value": resolve_slot_values(slot)}
@@ -148,25 +147,21 @@ async def async_setup(hass, config):
             intent_response = await intent.async_handle(
                 hass, DOMAIN, intent_type, slots, request["input"]
             )
+            notification = {"sessionId": request.get("sessionId", "default")}
+
             if "plain" in intent_response.speech:
-                snips_response = intent_response.speech["plain"]["speech"]
+                notification["text"] = intent_response.speech["plain"]["speech"]
+
+            _LOGGER.debug("send_response %s", json.dumps(notification))
+            mqtt.async_publish(
+                hass, "hermes/dialogueManager/endSession", json.dumps(notification)
+            )
         except intent.UnknownIntent:
             _LOGGER.warning(
                 "Received unknown intent %s", request["intent"]["intentName"]
             )
         except intent.IntentError:
             _LOGGER.exception("Error while handling intent: %s.", intent_type)
-
-        if snips_response:
-            notification = {
-                "sessionId": request.get("sessionId", "default"),
-                "text": snips_response,
-            }
-
-            _LOGGER.debug("send_response %s", json.dumps(notification))
-            mqtt.async_publish(
-                hass, "hermes/dialogueManager/endSession", json.dumps(notification)
-            )
 
     await hass.components.mqtt.async_subscribe(INTENT_TOPIC, message_received)
 

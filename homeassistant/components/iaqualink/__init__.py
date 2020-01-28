@@ -4,8 +4,7 @@ from functools import wraps
 import logging
 from typing import Any, Dict
 
-import voluptuous as vol
-
+import aiohttp.client_exceptions
 from iaqualink import (
     AqualinkBinarySensor,
     AqualinkClient,
@@ -16,6 +15,7 @@ from iaqualink import (
     AqualinkThermostat,
     AqualinkToggle,
 )
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -26,18 +26,18 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .const import DOMAIN, UPDATE_INTERVAL
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,8 +90,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
     try:
         await aqualink.login()
     except AqualinkLoginException as login_exception:
-        _LOGGER.error("Exception raised while attempting to login: %s", login_exception)
+        _LOGGER.error("Failed to login: %s", login_exception)
         return False
+    except (
+        asyncio.TimeoutError,
+        aiohttp.client_exceptions.ClientConnectorError,
+    ) as aio_exception:
+        _LOGGER.warning("Exception raised while attempting to login: %s", aio_exception)
+        raise ConfigEntryNotReady
 
     systems = await aqualink.get_systems()
     systems = list(systems.values())
@@ -133,7 +139,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> None
 
     async def _async_systems_update(now):
         """Refresh internal state for all systems."""
+        prev = systems[0].last_run_success
+
         await systems[0].update()
+        success = systems[0].last_run_success
+
+        if not success and prev:
+            _LOGGER.warning("Failed to refresh iAqualink state")
+        elif success and not prev:
+            _LOGGER.warning("Reconnected to iAqualink")
+
         async_dispatcher_send(hass, DOMAIN)
 
     async_track_time_interval(hass, _async_systems_update, UPDATE_INTERVAL)

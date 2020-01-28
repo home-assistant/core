@@ -10,9 +10,12 @@ from enum import Enum
 import logging
 import time
 
+from zigpy import types
 import zigpy.exceptions
-import zigpy.quirks
 from zigpy.profiles import zha, zll
+import zigpy.quirks
+from zigpy.zcl.clusters.general import Groups
+import zigpy.zdo.types as zdo_types
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
@@ -29,6 +32,7 @@ from .const import (
     ATTR_CLUSTER_ID,
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
+    ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_IEEE,
     ATTR_LAST_SEEN,
@@ -54,6 +58,7 @@ from .const import (
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
+    UNKNOWN,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
 )
@@ -158,6 +163,14 @@ class ZHADevice(LogMixin):
         return self._zigpy_device.node_desc.is_mains_powered
 
     @property
+    def device_type(self):
+        """Return the logical device type for the device."""
+        node_descriptor = self._zigpy_device.node_desc
+        return (
+            node_descriptor.logical_type.name if node_descriptor.is_valid else UNKNOWN
+        )
+
+    @property
     def power_source(self):
         """Return the power source for the device."""
         return (
@@ -178,6 +191,17 @@ class ZHADevice(LogMixin):
     def is_end_device(self):
         """Return true if this device is an end device."""
         return self._zigpy_device.node_desc.is_end_device
+
+    @property
+    def is_groupable(self):
+        """Return true if this device has a group cluster."""
+        if not self.available:
+            return False
+        clusters = self.async_get_clusters()
+        for cluster_map in clusters.values():
+            for clusters in cluster_map.values():
+                if Groups.cluster_id in clusters:
+                    return True
 
     @property
     def gateway(self):
@@ -267,6 +291,7 @@ class ZHADevice(LogMixin):
             ATTR_RSSI: self.rssi,
             ATTR_LAST_SEEN: update_time,
             ATTR_AVAILABLE: self.available,
+            ATTR_DEVICE_TYPE: self.device_type,
         }
 
     def add_cluster_channel(self, cluster_channel):
@@ -479,7 +504,7 @@ class ZHADevice(LogMixin):
         cluster_id,
         command,
         command_type,
-        args,
+        *args,
         cluster_type=CLUSTER_TYPE_IN,
         manufacturer=None,
     ):
@@ -487,7 +512,6 @@ class ZHADevice(LogMixin):
         cluster = self.async_get_cluster(endpoint_id, cluster_id, cluster_type)
         if cluster is None:
             return None
-        response = None
         if command_type == CLUSTER_COMMAND_SERVER:
             response = await cluster.command(
                 command, *args, manufacturer=manufacturer, expect_reply=True
@@ -507,8 +531,80 @@ class ZHADevice(LogMixin):
         )
         return response
 
+    async def async_add_to_group(self, group_id):
+        """Add this device to the provided zigbee group."""
+        await self._zigpy_device.add_to_group(group_id)
+
+    async def async_remove_from_group(self, group_id):
+        """Remove this device from the provided zigbee group."""
+        await self._zigpy_device.remove_from_group(group_id)
+
+    async def async_bind_to_group(self, group_id, cluster_bindings):
+        """Directly bind this device to a group for the given clusters."""
+        await self._async_group_binding_operation(
+            group_id, zdo_types.ZDOCmd.Bind_req, cluster_bindings
+        )
+
+    async def async_unbind_from_group(self, group_id, cluster_bindings):
+        """Unbind this device from a group for the given clusters."""
+        await self._async_group_binding_operation(
+            group_id, zdo_types.ZDOCmd.Unbind_req, cluster_bindings
+        )
+
+    async def _async_group_binding_operation(
+        self, group_id, operation, cluster_bindings
+    ):
+        """Create or remove a direct zigbee binding between a device and a group."""
+
+        zdo = self._zigpy_device.zdo
+        op_msg = "0x%04x: %s %s, ep: %s, cluster: %s to group: 0x%04x"
+        destination_address = zdo_types.MultiAddress()
+        destination_address.addrmode = types.uint8_t(1)
+        destination_address.nwk = types.uint16_t(group_id)
+
+        tasks = []
+
+        for cluster_binding in cluster_bindings:
+            if cluster_binding.endpoint_id == 0:
+                continue
+            if (
+                cluster_binding.id
+                in self._zigpy_device.endpoints[
+                    cluster_binding.endpoint_id
+                ].out_clusters
+            ):
+                op_params = (
+                    self.nwk,
+                    operation.name,
+                    str(self.ieee),
+                    cluster_binding.endpoint_id,
+                    cluster_binding.id,
+                    group_id,
+                )
+                zdo.debug("processing " + op_msg, *op_params)
+                tasks.append(
+                    (
+                        zdo.request(
+                            operation,
+                            self.ieee,
+                            cluster_binding.endpoint_id,
+                            cluster_binding.id,
+                            destination_address,
+                        ),
+                        op_msg,
+                        op_params,
+                    )
+                )
+        res = await asyncio.gather(*(t[0] for t in tasks), return_exceptions=True)
+        for outcome, log_msg in zip(res, tasks):
+            if isinstance(outcome, Exception):
+                fmt = log_msg[1] + " failed: %s"
+            else:
+                fmt = log_msg[1] + " completed: %s"
+            zdo.debug(fmt, *(log_msg[2] + (outcome,)))
+
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = "[%s](%s): " + msg
+        msg = f"[%s](%s): {msg}"
         args = (self.nwk, self.model) + args
         _LOGGER.log(level, msg, *args)

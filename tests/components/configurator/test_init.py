@@ -3,7 +3,7 @@
 import unittest
 
 import homeassistant.components.configurator as configurator
-from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, EVENT_TIME_CHANGED
 
 from tests.common import get_test_home_assistant
 

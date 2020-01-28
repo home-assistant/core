@@ -1,20 +1,66 @@
 """The tests for the Input number component."""
 # pylint: disable=protected-access
-import asyncio
+from unittest.mock import patch
 
-from homeassistant.core import CoreState, State, Context
+import pytest
+
 from homeassistant.components.input_number import (
     ATTR_VALUE,
     DOMAIN,
     SERVICE_DECREMENT,
     SERVICE_INCREMENT,
+    SERVICE_RELOAD,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_EDITABLE,
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_NAME,
+)
+from homeassistant.core import Context, CoreState, State
+from homeassistant.exceptions import Unauthorized
+from homeassistant.helpers import entity_registry
 from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
+
+
+@pytest.fixture
+def storage_setup(hass, hass_storage):
+    """Storage setup."""
+
+    async def _storage(items=None, config=None):
+        if items is None:
+            hass_storage[DOMAIN] = {
+                "key": DOMAIN,
+                "version": 1,
+                "data": {
+                    "items": [
+                        {
+                            "id": "from_storage",
+                            "initial": 10,
+                            "name": "from storage",
+                            "max": 100,
+                            "min": 0,
+                            "step": 1,
+                            "mode": "slider",
+                        }
+                    ]
+                },
+            }
+        else:
+            hass_storage[DOMAIN] = {
+                "key": DOMAIN,
+                "version": 1,
+                "data": {"items": items},
+            }
+        if config is None:
+            config = {DOMAIN: {}}
+        return await async_setup_component(hass, DOMAIN, config)
+
+    return _storage
 
 
 @bind_hass
@@ -166,8 +212,7 @@ async def test_mode(hass):
     assert "slider" == state.attributes["mode"]
 
 
-@asyncio.coroutine
-def test_restore_state(hass):
+async def test_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("input_number.b1", "70"), State("input_number.b2", "200"))
@@ -175,7 +220,7 @@ def test_restore_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         DOMAIN,
         {DOMAIN: {"b1": {"min": 0, "max": 100}, "b2": {"min": 10, "max": 100}}},
@@ -190,8 +235,7 @@ def test_restore_state(hass):
     assert float(state.state) == 10
 
 
-@asyncio.coroutine
-def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("input_number.b1", "70"), State("input_number.b2", "200"))
@@ -199,7 +243,7 @@ def test_initial_state_overrules_restore_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         DOMAIN,
         {
@@ -219,14 +263,11 @@ def test_initial_state_overrules_restore_state(hass):
     assert float(state.state) == 60
 
 
-@asyncio.coroutine
-def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass):
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"b1": {"min": 0, "max": 100}}}
-    )
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"b1": {"min": 0, "max": 100}}})
 
     state = hass.states.get("input_number.b1")
     assert state
@@ -254,3 +295,270 @@ async def test_input_number_context(hass, hass_admin_user):
     assert state2 is not None
     assert state.state != state2.state
     assert state2.context.user_id == hass_admin_user.id
+
+
+async def test_reload(hass, hass_admin_user, hass_read_only_user):
+    """Test reload service."""
+    count_start = len(hass.states.async_entity_ids())
+    ent_reg = await entity_registry.async_get_registry(hass)
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {"initial": 50, "min": 0, "max": 51},
+                "test_3": {"initial": 10, "min": 0, "max": 15},
+            }
+        },
+    )
+
+    assert count_start + 2 == len(hass.states.async_entity_ids())
+
+    state_1 = hass.states.get("input_number.test_1")
+    state_2 = hass.states.get("input_number.test_2")
+    state_3 = hass.states.get("input_number.test_3")
+
+    assert state_1 is not None
+    assert state_2 is None
+    assert state_3 is not None
+    assert 50 == float(state_1.state)
+    assert 10 == float(state_3.state)
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is not None
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            DOMAIN: {
+                "test_1": {"initial": 40, "min": 0, "max": 51},
+                "test_2": {"initial": 20, "min": 10, "max": 30},
+            }
+        },
+    ):
+        with pytest.raises(Unauthorized):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_RELOAD,
+                blocking=True,
+                context=Context(user_id=hass_read_only_user.id),
+            )
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert count_start + 2 == len(hass.states.async_entity_ids())
+
+    state_1 = hass.states.get("input_number.test_1")
+    state_2 = hass.states.get("input_number.test_2")
+    state_3 = hass.states.get("input_number.test_3")
+
+    assert state_1 is not None
+    assert state_2 is not None
+    assert state_3 is None
+    assert 50 == float(state_1.state)
+    assert 20 == float(state_2.state)
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_1") is not None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_2") is not None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, "test_3") is None
+
+
+async def test_load_from_storage(hass, storage_setup):
+    """Test set up from storage."""
+    assert await storage_setup()
+    state = hass.states.get(f"{DOMAIN}.from_storage")
+    assert float(state.state) == 10
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(ATTR_EDITABLE)
+
+
+async def test_editable_state_attribute(hass, storage_setup):
+    """Test editable attribute."""
+    assert await storage_setup(
+        config={
+            DOMAIN: {
+                "from_yaml": {
+                    "min": 1,
+                    "max": 10,
+                    "initial": 5,
+                    "step": 1,
+                    "mode": "slider",
+                }
+            }
+        }
+    )
+
+    state = hass.states.get(f"{DOMAIN}.from_storage")
+    assert float(state.state) == 10
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "from storage"
+    assert state.attributes.get(ATTR_EDITABLE)
+
+    state = hass.states.get(f"{DOMAIN}.from_yaml")
+    assert float(state.state) == 5
+    assert not state.attributes.get(ATTR_EDITABLE)
+
+
+async def test_ws_list(hass, hass_ws_client, storage_setup):
+    """Test listing via WS."""
+    assert await storage_setup(
+        config={
+            DOMAIN: {
+                "from_yaml": {
+                    "min": 1,
+                    "max": 10,
+                    "initial": 5,
+                    "step": 1,
+                    "mode": "slider",
+                }
+            }
+        }
+    )
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json({"id": 6, "type": f"{DOMAIN}/list"})
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    storage_ent = "from_storage"
+    yaml_ent = "from_yaml"
+    result = {item["id"]: item for item in resp["result"]}
+
+    assert len(result) == 1
+    assert storage_ent in result
+    assert yaml_ent not in result
+    assert result[storage_ent][ATTR_NAME] == "from storage"
+
+
+async def test_ws_delete(hass, hass_ws_client, storage_setup):
+    """Test WS delete cleans up entity registry."""
+    assert await storage_setup()
+
+    input_id = "from_storage"
+    input_entity_id = f"{DOMAIN}.{input_id}"
+    ent_reg = await entity_registry.async_get_registry(hass)
+
+    state = hass.states.get(input_entity_id)
+    assert state is not None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {"id": 6, "type": f"{DOMAIN}/delete", f"{DOMAIN}_id": f"{input_id}"}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    state = hass.states.get(input_entity_id)
+    assert state is None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+
+
+async def test_update_min_max(hass, hass_ws_client, storage_setup):
+    """Test updating min/max updates the state."""
+
+    items = [
+        {
+            "id": "from_storage",
+            "name": "from storage",
+            "max": 100,
+            "min": 0,
+            "step": 1,
+            "mode": "slider",
+        }
+    ]
+    assert await storage_setup(items)
+
+    input_id = "from_storage"
+    input_entity_id = f"{DOMAIN}.{input_id}"
+    ent_reg = await entity_registry.async_get_registry(hass)
+
+    state = hass.states.get(input_entity_id)
+    assert state is not None
+    assert state.state
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is not None
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {"id": 6, "type": f"{DOMAIN}/update", f"{DOMAIN}_id": f"{input_id}", "min": 9}
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 9
+
+    await client.send_json(
+        {
+            "id": 7,
+            "type": f"{DOMAIN}/update",
+            f"{DOMAIN}_id": f"{input_id}",
+            "max": 5,
+            "min": 0,
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 5
+
+
+async def test_ws_create(hass, hass_ws_client, storage_setup):
+    """Test create WS."""
+    assert await storage_setup(items=[])
+
+    input_id = "new_input"
+    input_entity_id = f"{DOMAIN}.{input_id}"
+    ent_reg = await entity_registry.async_get_registry(hass)
+
+    state = hass.states.get(input_entity_id)
+    assert state is None
+    assert ent_reg.async_get_entity_id(DOMAIN, DOMAIN, input_id) is None
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            "id": 6,
+            "type": f"{DOMAIN}/create",
+            "name": "New Input",
+            "max": 20,
+            "min": 0,
+            "initial": 10,
+            "step": 1,
+            "mode": "slider",
+        }
+    )
+    resp = await client.receive_json()
+    assert resp["success"]
+
+    state = hass.states.get(input_entity_id)
+    assert float(state.state) == 10
+
+
+async def test_setup_no_config(hass, hass_admin_user):
+    """Test component setup with no config."""
+    count_start = len(hass.states.async_entity_ids())
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file", autospec=True, return_value={}
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            blocking=True,
+            context=Context(user_id=hass_admin_user.id),
+        )
+        await hass.async_block_till_done()
+
+    assert count_start == len(hass.states.async_entity_ids())

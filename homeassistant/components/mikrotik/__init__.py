@@ -2,34 +2,36 @@
 import logging
 import ssl
 
+from librouteros import connect
+from librouteros.exceptions import LibRouterosError
+from librouteros.login import plain as login_plain, token as login_token
 import voluptuous as vol
-import librouteros
-from librouteros.login import login_plain, login_token
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.const import (
     CONF_HOST,
+    CONF_METHOD,
     CONF_PASSWORD,
-    CONF_USERNAME,
     CONF_PORT,
     CONF_SSL,
-    CONF_METHOD,
+    CONF_USERNAME,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
+
 from .const import (
-    NAME,
+    CONF_ARP_PING,
+    CONF_ENCODING,
+    CONF_LOGIN_METHOD,
+    CONF_TRACK_DEVICES,
+    DEFAULT_ENCODING,
     DOMAIN,
     HOSTS,
+    IDENTITY,
+    MIKROTIK_SERVICES,
     MTK_LOGIN_PLAIN,
     MTK_LOGIN_TOKEN,
-    DEFAULT_ENCODING,
-    IDENTITY,
-    CONF_TRACK_DEVICES,
-    CONF_ENCODING,
-    CONF_ARP_PING,
-    CONF_LOGIN_METHOD,
-    MIKROTIK_SERVICES,
+    NAME,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,11 +83,9 @@ def setup(hass, config):
                 port = MTK_DEFAULT_API_PORT
 
         if login == MTK_LOGIN_PLAIN:
-            login_method = (login_plain,)
-        elif login == MTK_LOGIN_TOKEN:
-            login_method = (login_token,)
+            login_method = login_plain
         else:
-            login_method = (login_plain, login_token)
+            login_method = login_token
 
         try:
             api = MikrotikClient(
@@ -93,11 +93,7 @@ def setup(hass, config):
             )
             api.connect_to_device()
             hass.data[DOMAIN][HOSTS][host] = {"config": device, "api": api}
-        except (
-            librouteros.exceptions.TrapError,
-            librouteros.exceptions.MultiTrapError,
-            librouteros.exceptions.ConnectionError,
-        ) as api_error:
+        except LibRouterosError as api_error:
             _LOGGER.error("Mikrotik %s error %s", host, api_error)
             continue
 
@@ -147,15 +143,9 @@ class MikrotikClient:
             kwargs["ssl_wrapper"] = self._ssl_wrapper
 
         try:
-            self._client = librouteros.connect(
-                self._host, self._user, self._password, **kwargs
-            )
+            self._client = connect(self._host, self._user, self._password, **kwargs)
             self._connected = True
-        except (
-            librouteros.exceptions.TrapError,
-            librouteros.exceptions.MultiTrapError,
-            librouteros.exceptions.ConnectionError,
-        ) as api_error:
+        except LibRouterosError as api_error:
             _LOGGER.error("Mikrotik %s: %s", self._host, api_error)
             self._client = None
             return False
@@ -166,7 +156,7 @@ class MikrotikClient:
 
     def get_hostname(self):
         """Return device host name."""
-        data = self.command(MIKROTIK_SERVICES[IDENTITY])
+        data = list(self.command(MIKROTIK_SERVICES[IDENTITY]))
         return data[0][NAME] if data else None
 
     def connected(self):
@@ -183,14 +173,7 @@ class MikrotikClient:
                 response = self._client(cmd=cmd, **params)
             else:
                 response = self._client(cmd=cmd)
-        except (librouteros.exceptions.ConnectionError,) as api_error:
-            _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
-            self.connect_to_device()
-            return None
-        except (
-            librouteros.exceptions.TrapError,
-            librouteros.exceptions.MultiTrapError,
-        ) as api_error:
+        except LibRouterosError as api_error:
             _LOGGER.error(
                 "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
                 self._host,

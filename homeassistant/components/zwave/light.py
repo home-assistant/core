@@ -1,26 +1,27 @@
 """Support for Z-Wave lights."""
 import logging
-
 from threading import Timer
-from homeassistant.core import callback
+
 from homeassistant.components.light import (
-    ATTR_WHITE_VALUE,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    ATTR_WHITE_VALUE,
+    DOMAIN,
     SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
-    DOMAIN,
     Light,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
-from . import CONF_REFRESH_VALUE, CONF_REFRESH_DELAY, const, ZWaveDeviceEntity
+
+from . import CONF_REFRESH_DELAY, CONF_REFRESH_VALUE, ZWaveDeviceEntity, const
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,11 +59,6 @@ TEMP_COLOR_MIN = 154
 TEMP_MID_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 2 + TEMP_COLOR_MIN
 TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
 TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave lights."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

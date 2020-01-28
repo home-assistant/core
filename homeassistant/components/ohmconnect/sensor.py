@@ -66,9 +66,7 @@ class OhmconnectSensor(Entity):
     def update(self):
         """Get the latest data from OhmConnect."""
         try:
-            url = ("https://login.ohmconnect.com" "/verify-ohm-hour/{}").format(
-                self._ohmid
-            )
+            url = "https://login.ohmconnect.com/verify-ohm-hour/{}".format(self._ohmid)
             response = requests.get(url, timeout=10)
             root = ET.fromstring(response.text)
 

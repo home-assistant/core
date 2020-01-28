@@ -5,26 +5,24 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.config_validation import (  # noqa
-    ENTITY_SERVICE_SCHEMA,
-    PLATFORM_SCHEMA,
-    PLATFORM_SCHEMA_BASE,
-)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
+    SERVICE_LOCK,
+    SERVICE_OPEN,
+    SERVICE_UNLOCK,
     STATE_LOCKED,
     STATE_UNLOCKED,
-    SERVICE_LOCK,
-    SERVICE_UNLOCK,
-    SERVICE_OPEN,
 )
-from homeassistant.components import group
-
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import (  # noqa: F401
+    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA_BASE,
+    make_entity_service_schema,
+)
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -33,14 +31,11 @@ ATTR_CHANGED_BY = "changed_by"
 DOMAIN = "lock"
 SCAN_INTERVAL = timedelta(seconds=30)
 
-ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format("all_locks")
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-GROUP_NAME_ALL_LOCKS = "all locks"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-LOCK_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend({vol.Optional(ATTR_CODE): cv.string})
+LOCK_SERVICE_SCHEMA = make_entity_service_schema({vol.Optional(ATTR_CODE): cv.string})
 
 # Bitfield of features supported by the lock entity
 SUPPORT_OPEN = 1
@@ -51,16 +46,15 @@ PROP_TO_ATTR = {"changed_by": ATTR_CHANGED_BY, "code_format": ATTR_CODE_FORMAT}
 
 
 @bind_hass
-def is_locked(hass, entity_id=None):
+def is_locked(hass, entity_id):
     """Return if the lock is locked based on the statemachine."""
-    entity_id = entity_id or ENTITY_ID_ALL_LOCKS
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
 async def async_setup(hass, config):
     """Track states and offer events for locks."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_LOCKS
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)

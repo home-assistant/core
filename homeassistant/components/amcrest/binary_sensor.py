@@ -5,11 +5,11 @@ import logging
 from amcrest import AmcrestError
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice,
     DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_MOTION,
+    BinarySensorDevice,
 )
-from homeassistant.const import CONF_NAME, CONF_BINARY_SENSORS
+from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (

@@ -15,12 +15,11 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
 )
-from homeassistant.helpers.config_validation import (  # noqa
+from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
 from homeassistant.helpers.entity_component import EntityComponent
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

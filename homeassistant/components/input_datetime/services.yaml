@@ -9,3 +9,6 @@ set_datetime:
       example: '"time": "05:30:00"'}
     datetime: {description: The target date & time the entity should be set to. Do not use with date or time.,
       example: '"datetime": "2019-04-22 05:30:00"'}
+
+reload:
+  description: Reload the input_datetime configuration.

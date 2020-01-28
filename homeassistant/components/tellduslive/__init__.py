@@ -1,16 +1,18 @@
 """Support for Telldus Live."""
 import asyncio
-import logging
 from functools import partial
+import logging
 
+from tellduslive import DIM, TURNON, UP, Session
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
 from homeassistant.const import CONF_SCAN_INTERVAL
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from . import config_flow  # noqa  pylint_disable=unused-import
+
+from . import config_flow  # noqa: F401
 from .const import (
     CONF_HOST,
     DOMAIN,
@@ -51,7 +53,6 @@ INTERVAL_TRACKER = f"{DOMAIN}_INTERVAL"
 
 async def async_setup_entry(hass, entry):
     """Create a tellduslive session."""
-    from tellduslive import Session
 
     conf = entry.data[KEY_SESSION]
 
@@ -159,7 +160,6 @@ class TelldusLiveClient:
         """Find out what type of HA component to create."""
         if device.is_sensor:
             return "sensor"
-        from tellduslive import DIM, UP, TURNON
 
         if device.methods & DIM:
             return "light"

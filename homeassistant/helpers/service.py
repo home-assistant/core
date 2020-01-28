@@ -7,7 +7,7 @@ from typing import Callable
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ATTR_AREA_ID
+from homeassistant.const import ATTR_AREA_ID, ATTR_ENTITY_ID, ENTITY_MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -16,12 +16,11 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.helpers import template, typing
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -110,12 +109,30 @@ def extract_entity_ids(hass, service_call, expand_group=True):
 
 
 @bind_hass
+async def async_extract_entities(hass, entities, service_call, expand_group=True):
+    """Extract a list of entity objects from a service call.
+
+    Will convert group entity ids to the entity ids it represents.
+    """
+    data_ent_id = service_call.data.get(ATTR_ENTITY_ID)
+
+    if data_ent_id == ENTITY_MATCH_ALL:
+        return [entity for entity in entities if entity.available]
+
+    entity_ids = await async_extract_entity_ids(hass, service_call, expand_group)
+
+    return [
+        entity
+        for entity in entities
+        if entity.available and entity.entity_id in entity_ids
+    ]
+
+
+@bind_hass
 async def async_extract_entity_ids(hass, service_call, expand_group=True):
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
-
-    Async friendly.
     """
     entity_ids = service_call.data.get(ATTR_ENTITY_ID)
     area_ids = service_call.data.get(ATTR_AREA_ID)
@@ -241,13 +258,11 @@ def async_set_service_schema(hass, domain, service, schema):
         "fields": schema.get("fields") or {},
     }
 
-    hass.data[SERVICE_DESCRIPTION_CACHE]["{}.{}".format(domain, service)] = description
+    hass.data[SERVICE_DESCRIPTION_CACHE][f"{domain}.{service}"] = description
 
 
 @bind_hass
-async def entity_service_call(
-    hass, platforms, func, call, service_name="", required_features=None
-):
+async def entity_service_call(hass, platforms, func, call, required_features=None):
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -260,19 +275,7 @@ async def entity_service_call(
     else:
         entity_perms = None
 
-    # Are we trying to target all entities
-    if ATTR_ENTITY_ID in call.data:
-        target_all_entities = call.data[ATTR_ENTITY_ID] == ENTITY_MATCH_ALL
-    else:
-        # Remove the service_name parameter along with this warning
-        _LOGGER.warning(
-            "Not passing an entity ID to a service to target all "
-            "entities is deprecated. Update your call to %s to be "
-            "instead: entity_id: %s",
-            service_name,
-            ENTITY_MATCH_ALL,
-        )
-        target_all_entities = True
+    target_all_entities = call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL
 
     if not target_all_entities:
         # A set of entities we're trying to target.

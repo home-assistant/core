@@ -6,9 +6,6 @@ import logging
 import sys
 from typing import Callable, Container, Optional, Union, cast
 
-from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
-from homeassistant.core import HomeAssistant, State
 from homeassistant.components import zone as zone_cmp
 from homeassistant.components.device_automation import (
     async_get_device_automation_platform,
@@ -34,11 +31,14 @@ from homeassistant.const import (
     SUN_EVENT_SUNSET,
     WEEKDAYS,
 )
-from homeassistant.exceptions import TemplateError, HomeAssistantError
+from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
+import homeassistant.util.dt as dt_util
 
 FROM_CONFIG_FORMAT = "{}_from_config"
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
@@ -192,7 +192,7 @@ def async_numeric_state(
         fvalue = float(value)
     except ValueError:
         _LOGGER.warning(
-            "Value cannot be processed as a number: %s " "(Offending entity: %s)",
+            "Value cannot be processed as a number: %s (Offending entity: %s)",
             entity,
             value,
         )
@@ -473,7 +473,7 @@ def zone(
     if latitude is None or longitude is None:
         return False
 
-    return zone_cmp.zone.in_zone(
+    return zone_cmp.in_zone(
         zone_ent, latitude, longitude, entity.attributes.get(ATTR_GPS_ACCURACY, 0)
     )
 

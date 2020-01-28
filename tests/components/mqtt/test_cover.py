@@ -16,11 +16,11 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
     STATE_OPEN,
     STATE_UNAVAILABLE,
-    SERVICE_TOGGLE,
-    SERVICE_TOGGLE_COVER_TILT,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component

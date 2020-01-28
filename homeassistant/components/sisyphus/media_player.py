@@ -2,6 +2,7 @@
 import logging
 
 import aiohttp
+from sisyphus_control import Track
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -43,7 +44,6 @@ SUPPORTED_FEATURES = (
 )
 
 
-# pylint: disable=unused-argument
 async def async_setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a media player entity for a Sisyphus table."""
     host = discovery_info[CONF_HOST]
@@ -141,7 +141,6 @@ class SisyphusPlayer(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Return the URL for a thumbnail image of the current track."""
-        from sisyphus_control import Track
 
         if self._table.active_track:
             return self._table.active_track.get_thumbnail_url(Track.ThumbnailSize.LARGE)

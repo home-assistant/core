@@ -2,17 +2,22 @@
 
 import logging
 
+# pylint: disable=import-error
+from decora_wifi import DecoraWiFiSession
+from decora_wifi.models.person import Person
+from decora_wifi.models.residence import Residence
+from decora_wifi.models.residential_account import ResidentialAccount
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
-    Light,
     PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
     SUPPORT_TRANSITION,
+    Light,
 )
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,11 +33,6 @@ NOTIFICATION_TITLE = "myLeviton Decora Setup"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Decora WiFi platform."""
-    # pylint: disable=import-error, no-name-in-module
-    from decora_wifi import DecoraWiFiSession
-    from decora_wifi.models.person import Person
-    from decora_wifi.models.residential_account import ResidentialAccount
-    from decora_wifi.models.residence import Residence
 
     email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)

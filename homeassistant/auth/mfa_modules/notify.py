@@ -3,9 +3,9 @@
 Sending HOTP through notify service
 """
 import asyncio
-import logging
 from collections import OrderedDict
-from typing import Any, Dict, Optional, List
+import logging
+from typing import Any, Dict, List, Optional
 
 import attr
 import voluptuous as vol
@@ -16,9 +16,9 @@ from homeassistant.exceptions import ServiceNotFound
 from homeassistant.helpers import config_validation as cv
 
 from . import (
-    MultiFactorAuthModule,
-    MULTI_FACTOR_AUTH_MODULES,
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
+    MULTI_FACTOR_AUTH_MODULES,
+    MultiFactorAuthModule,
     SetupFlow,
 )
 

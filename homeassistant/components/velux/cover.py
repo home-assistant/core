@@ -1,4 +1,7 @@
 """Support for Velux covers."""
+from pyvlx import OpeningDevice, Position
+from pyvlx.opening_device import Awning, Blind, GarageDoor, RollerShutter, Window
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     SUPPORT_CLOSE,
@@ -16,7 +19,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up cover(s) for Velux platform."""
     entities = []
     for node in hass.data[DATA_VELUX].pyvlx.nodes:
-        from pyvlx import OpeningDevice
 
         if isinstance(node, OpeningDevice):
             entities.append(VeluxCover(node))
@@ -67,8 +69,6 @@ class VeluxCover(CoverDevice):
     @property
     def device_class(self):
         """Define this cover as either window/blind/awning/shutter."""
-        from pyvlx.opening_device import Blind, RollerShutter, Window, Awning
-
         if isinstance(self.node, Window):
             return "window"
         if isinstance(self.node, Blind):
@@ -77,6 +77,8 @@ class VeluxCover(CoverDevice):
             return "shutter"
         if isinstance(self.node, Awning):
             return "awning"
+        if isinstance(self.node, GarageDoor):
+            return "garage"
         return "window"
 
     @property
@@ -96,7 +98,6 @@ class VeluxCover(CoverDevice):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             position_percent = 100 - kwargs[ATTR_POSITION]
-            from pyvlx import Position
 
             await self.node.set_position(
                 Position(position_percent=position_percent), wait_for_completion=False

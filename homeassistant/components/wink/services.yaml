@@ -152,3 +152,66 @@ set_nimbus_dial_state:
     labels:
       description: The values shown on the dial labels ["Dial 1", "test"] the first value is what is shown by default the second value is shown when the nimbus is pressed
       example: ["example", "test"]
+
+set_lock_vacation_mode:
+  description: Set vacation mode for all or specified locks. Disables all user codes.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    enabled:
+      description: enable or disable. true or false.
+      example: true
+
+set_lock_alarm_mode:
+  description: Set alarm mode for all or specified locks.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    mode:
+      description: One of tamper, activity, or forced_entry.
+      example: tamper
+
+set_lock_alarm_sensitivity:
+  description: Set alarm sensitivity for all or specified locks.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    sensitivity:
+      description: One of low, medium_low, medium, medium_high, high.
+      example: medium
+
+set_lock_alarm_state:
+  description: Set alarm state.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    enabled:
+      description: enable or disable. true or false.
+      example: true
+
+set_lock_beeper_state:
+  description: Set beeper state.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    enabled:
+      description: enable or disable. true or false.
+      example: true
+
+add_new_lock_key_code:
+  description: Add a new user key code.
+  fields:
+    entity_id:
+      description: Name of lock to unlock.
+      example: 'lock.front_door'
+    name:
+      description: name of the new key code.
+      example: Bob
+    code:
+      description: new key code, length must match length of other codes. Default length is 4.
+      example: 1234

@@ -2,15 +2,20 @@
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
     STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
     STATE_ALARM_DISARMING,
     STATE_ALARM_TRIGGERED,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
 )
 
 from . import DOMAIN as TOTALCONNECT_DOMAIN
@@ -54,6 +59,11 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
     def state(self):
         """Return the state of the device."""
         return self._state
+
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
     def device_state_attributes(self):
@@ -109,7 +119,7 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
             attr["triggered_source"] = "Carbon Monoxide"
         else:
             logging.info(
-                "Total Connect Client returned unknown " "status code: %s", status
+                "Total Connect Client returned unknown status code: %s", status
             )
             state = None
 

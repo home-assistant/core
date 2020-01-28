@@ -2,11 +2,12 @@
 from datetime import timedelta
 import logging
 
+from pylgnetcast import LgNetCastClient, LgNetCastError
 from requests import RequestException
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK,
@@ -57,7 +58,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG TV platform."""
-    from pylgnetcast import LgNetCastClient
 
     host = config.get(CONF_HOST)
     access_token = config.get(CONF_ACCESS_TOKEN)
@@ -87,7 +87,6 @@ class LgTVDevice(MediaPlayerDevice):
 
     def send_command(self, command):
         """Send remote control commands to the TV."""
-        from pylgnetcast import LgNetCastError
 
         try:
             with self._client as client:
@@ -98,7 +97,6 @@ class LgTVDevice(MediaPlayerDevice):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data from the LG TV."""
-        from pylgnetcast import LgNetCastError
 
         try:
             with self._client as client:

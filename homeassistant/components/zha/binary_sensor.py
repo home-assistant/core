@@ -1,4 +1,5 @@
 """Binary sensors on Zigbee Home Automation networks."""
+import functools
 import logging
 
 from homeassistant.components.binary_sensor import (
@@ -18,20 +19,16 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .core.const import (
-    CHANNEL_ATTRIBUTE,
+    CHANNEL_ACCELEROMETER,
+    CHANNEL_OCCUPANCY,
     CHANNEL_ON_OFF,
     CHANNEL_ZONE,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
-    SENSOR_ACCELERATION,
-    SENSOR_OCCUPANCY,
-    SENSOR_OPENING,
-    SENSOR_TYPE,
     SIGNAL_ATTR_UPDATED,
-    UNKNOWN,
     ZHA_DISCOVERY_NEW,
-    ZONE,
 )
+from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,25 +43,7 @@ CLASS_MAPPING = {
     0x002D: DEVICE_CLASS_VIBRATION,
 }
 
-
-async def get_ias_device_class(channel):
-    """Get the HA device class from the channel."""
-    zone_type = await channel.get_attribute_value("zone_type")
-    return CLASS_MAPPING.get(zone_type)
-
-
-DEVICE_CLASS_REGISTRY = {
-    UNKNOWN: None,
-    SENSOR_OPENING: DEVICE_CLASS_OPENING,
-    ZONE: get_ias_device_class,
-    SENSOR_OCCUPANCY: DEVICE_CLASS_OCCUPANCY,
-    SENSOR_ACCELERATION: DEVICE_CLASS_MOVING,
-}
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation binary sensors."""
-    pass
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -94,52 +73,39 @@ async def _async_setup_entities(
     """Set up the ZHA binary sensors."""
     entities = []
     for discovery_info in discovery_infos:
-        entities.append(BinarySensor(**discovery_info))
+        zha_dev = discovery_info["zha_device"]
+        channels = discovery_info["channels"]
 
-    async_add_entities(entities, update_before_add=True)
+        entity = ZHA_ENTITIES.get_entity(DOMAIN, zha_dev, channels, BinarySensor)
+        if entity:
+            entities.append(entity(**discovery_info))
+
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
 
 class BinarySensor(ZhaEntity, BinarySensorDevice):
     """ZHA BinarySensor."""
 
-    _domain = DOMAIN
-    _device_class = None
+    DEVICE_CLASS = None
 
-    def __init__(self, **kwargs):
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA binary sensor."""
-        super().__init__(**kwargs)
-        self._device_state_attributes = {}
-        self._zone_channel = self.cluster_channels.get(CHANNEL_ZONE)
-        self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
-        self._attr_channel = self.cluster_channels.get(CHANNEL_ATTRIBUTE)
-        self._zha_sensor_type = kwargs[SENSOR_TYPE]
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._channel = channels[0]
+        self._device_class = self.DEVICE_CLASS
 
-    async def _determine_device_class(self):
-        """Determine the device class for this binary sensor."""
-        device_class_supplier = DEVICE_CLASS_REGISTRY.get(self._zha_sensor_type)
-        if callable(device_class_supplier):
-            channel = self.cluster_channels.get(self._zha_sensor_type)
-            if channel is None:
-                return None
-            return await device_class_supplier(channel)
-        return device_class_supplier
+    async def get_device_class(self):
+        """Get the HA device class from the channel."""
+        pass
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
-        self._device_class = await self._determine_device_class()
         await super().async_added_to_hass()
-        if self._on_off_channel:
-            await self.async_accept_signal(
-                self._on_off_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
-            )
-        if self._zone_channel:
-            await self.async_accept_signal(
-                self._zone_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
-            )
-        if self._attr_channel:
-            await self.async_accept_signal(
-                self._attr_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
-            )
+        await self.get_device_class()
+        await self.async_accept_signal(
+            self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+        )
 
     @callback
     def async_restore_last_state(self, last_state):
@@ -149,7 +115,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
 
     @property
     def is_on(self) -> bool:
-        """Return if the switch is on based on the statemachine."""
+        """Return True if the switch is on based on the state machine."""
         if self._state is None:
             return False
         return self._state
@@ -167,13 +133,43 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
     async def async_update(self):
         """Attempt to retrieve on off state from the binary sensor."""
         await super().async_update()
-        if self._on_off_channel:
-            self._state = await self._on_off_channel.get_attribute_value("on_off")
-        if self._zone_channel:
-            value = await self._zone_channel.get_attribute_value("zone_status")
-            if value is not None:
-                self._state = value & 3
-        if self._attr_channel:
-            self._state = await self._attr_channel.get_attribute_value(
-                self._attr_channel.value_attribute
-            )
+        attribute = getattr(self._channel, "value_attribute", "on_off")
+        self._state = await self._channel.get_attribute_value(attribute)
+
+
+@STRICT_MATCH(channel_names=CHANNEL_ACCELEROMETER)
+class Accelerometer(BinarySensor):
+    """ZHA BinarySensor."""
+
+    DEVICE_CLASS = DEVICE_CLASS_MOVING
+
+
+@STRICT_MATCH(channel_names=CHANNEL_OCCUPANCY)
+class Occupancy(BinarySensor):
+    """ZHA BinarySensor."""
+
+    DEVICE_CLASS = DEVICE_CLASS_OCCUPANCY
+
+
+@STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
+class Opening(BinarySensor):
+    """ZHA BinarySensor."""
+
+    DEVICE_CLASS = DEVICE_CLASS_OPENING
+
+
+@STRICT_MATCH(channel_names=CHANNEL_ZONE)
+class IASZone(BinarySensor):
+    """ZHA IAS BinarySensor."""
+
+    async def get_device_class(self) -> None:
+        """Get the HA device class from the channel."""
+        zone_type = await self._channel.get_attribute_value("zone_type")
+        self._device_class = CLASS_MAPPING.get(zone_type)
+
+    async def async_update(self):
+        """Attempt to retrieve on off state from the binary sensor."""
+        await super().async_update()
+        value = await self._channel.get_attribute_value("zone_status")
+        if value is not None:
+            self._state = value & 3

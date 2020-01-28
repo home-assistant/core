@@ -20,8 +20,8 @@ from .common import (
     async_enable_traffic,
     async_init_zigpy_device,
     async_test_device_join,
+    find_entity_id,
     make_attribute,
-    make_entity_id,
     make_zcl_header,
 )
 
@@ -41,8 +41,9 @@ async def test_fan(hass, config_entry, zha_gateway):
     await hass.async_block_till_done()
 
     cluster = zigpy_device.endpoints.get(1).fan
-    entity_id = make_entity_id(DOMAIN, zigpy_device, cluster)
     zha_device = zha_gateway.get_device(zigpy_device.ieee)
+    entity_id = await find_entity_id(DOMAIN, zha_device, hass)
+    assert entity_id is not None
 
     # test that the fan was created and that it is unavailable
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
@@ -97,7 +98,7 @@ async def test_fan(hass, config_entry, zha_gateway):
         assert cluster.write_attributes.call_args == call({"fan_mode": 3})
 
     # test adding new fan to the network and HA
-    await async_test_device_join(hass, zha_gateway, hvac.Fan.cluster_id, DOMAIN)
+    await async_test_device_join(hass, zha_gateway, hvac.Fan.cluster_id, entity_id)
 
 
 async def async_turn_on(hass, entity_id, speed=None):

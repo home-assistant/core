@@ -4,7 +4,7 @@ import telnetlib
 
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
@@ -169,6 +169,8 @@ class PioneerDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
+        if self._pwstate == "PWR2":
+            return STATE_OFF
         if self._pwstate == "PWR1":
             return STATE_OFF
         if self._pwstate == "PWR0":

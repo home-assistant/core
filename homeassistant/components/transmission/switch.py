@@ -11,11 +11,6 @@ from .const import DOMAIN, SWITCH_TYPES
 _LOGGING = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import config from configuration.yaml."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Transmission switch."""
 
@@ -40,6 +35,7 @@ class TransmissionSwitch(ToggleEntity):
         self._tm_client = tm_client
         self._state = STATE_OFF
         self._data = None
+        self.unsub_update = None
 
     @property
     def name(self):
@@ -93,15 +89,21 @@ class TransmissionSwitch(ToggleEntity):
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
-        async_dispatcher_connect(
+        self.unsub_update = async_dispatcher_connect(
             self.hass,
-            self._tm_client.api.signal_options_update,
+            self._tm_client.api.signal_update,
             self._schedule_immediate_update,
         )
 
     @callback
     def _schedule_immediate_update(self):
         self.async_schedule_update_ha_state(True)
+
+    async def will_remove_from_hass(self):
+        """Unsubscribe from update dispatcher."""
+        if self.unsub_update:
+            self.unsub_update()
+            self.unsub_update = None
 
     def update(self):
         """Get the latest data from Transmission and updates the state."""

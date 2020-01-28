@@ -1,14 +1,14 @@
 """Support for monitoring an SABnzbd NZB client."""
-import logging
 from datetime import timedelta
+import logging
 
+from pysabnzbd import SabnzbdApi, SabnzbdApiException
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.discovery import SERVICE_SABNZBD
 from homeassistant.const import (
-    CONF_HOST,
     CONF_API_KEY,
+    CONF_HOST,
     CONF_NAME,
     CONF_PATH,
     CONF_PORT,
@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.json import load_json, save_json
@@ -86,7 +87,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_check_sabnzbd(sab_api):
     """Check if we can reach SABnzbd."""
-    from pysabnzbd import SabnzbdApiException
 
     try:
         await sab_api.check_available()
@@ -100,7 +100,6 @@ async def async_configure_sabnzbd(
     hass, config, use_ssl, name=DEFAULT_NAME, api_key=None
 ):
     """Try to configure Sabnzbd and request api key if configuration fails."""
-    from pysabnzbd import SabnzbdApi
 
     host = config[CONF_HOST]
     port = config[CONF_PORT]
@@ -174,7 +173,6 @@ def async_setup_sabnzbd(hass, sab_api, config, name):
 
     async def async_update_sabnzbd(now):
         """Refresh SABnzbd queue data."""
-        from pysabnzbd import SabnzbdApiException
 
         try:
             await sab_api.refresh_data()
@@ -188,7 +186,6 @@ def async_setup_sabnzbd(hass, sab_api, config, name):
 @callback
 def async_request_configuration(hass, config, host, web_root):
     """Request configuration steps from the user."""
-    from pysabnzbd import SabnzbdApi
 
     configurator = hass.components.configurator
     # We got an error if this method is called while we are configuring
@@ -239,7 +236,6 @@ class SabnzbdApiData:
 
     async def async_pause_queue(self):
         """Pause Sabnzbd queue."""
-        from pysabnzbd import SabnzbdApiException
 
         try:
             return await self.sab_api.pause_queue()
@@ -249,7 +245,6 @@ class SabnzbdApiData:
 
     async def async_resume_queue(self):
         """Resume Sabnzbd queue."""
-        from pysabnzbd import SabnzbdApiException
 
         try:
             return await self.sab_api.resume_queue()
@@ -259,7 +254,6 @@ class SabnzbdApiData:
 
     async def async_set_queue_speed(self, limit):
         """Set speed limit for the Sabnzbd queue."""
-        from pysabnzbd import SabnzbdApiException
 
         try:
             return await self.sab_api.set_speed_limit(limit)

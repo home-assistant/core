@@ -55,10 +55,17 @@
             "left": "Links",
             "open": "Open",
             "right": "Rechts",
+            "side_1": "Zijde 1",
+            "side_2": "Zijde 2",
+            "side_3": "Zijde 3",
+            "side_4": "Zijde 4",
+            "side_5": "Zijde 5",
+            "side_6": "Zijde 6",
             "turn_off": "Uitschakelen",
             "turn_on": "Inschakelen"
         },
         "trigger_type": {
+            "remote_awakened": "Apparaat is gewekt",
             "remote_button_double_press": "\"{subtype}\" knop dubbel geklikt",
             "remote_button_long_press": "\" {subtype} \" knop continu ingedrukt",
             "remote_button_long_release": "\"{subtype}\" knop losgelaten na lang indrukken van de knop",
@@ -69,7 +76,16 @@
             "remote_button_short_press": "\" {subtype} \" knop ingedrukt",
             "remote_button_short_release": "\"{subtype}\" knop losgelaten",
             "remote_button_triple_press": "\" {subtype} \" knop driemaal geklikt",
-            "remote_gyro_activated": "Apparaat geschud"
+            "remote_double_tap": "Apparaat \"{subtype}\" dubbel getikt",
+            "remote_falling": "Apparaat in vrije val",
+            "remote_gyro_activated": "Apparaat geschud",
+            "remote_moved": "Apparaat verplaatst met \"{subtype}\" omhoog",
+            "remote_rotate_from_side_1": "Apparaat gedraaid van \"zijde 1\" naar \"{subtype}\"\".",
+            "remote_rotate_from_side_2": "Apparaat gedraaid van \"zijde 2\" naar \"{subtype}\"\".",
+            "remote_rotate_from_side_3": "Apparaat gedraaid van \"zijde 3\" naar \" {subtype} \"",
+            "remote_rotate_from_side_4": "Apparaat gedraaid van \"zijde 4\" naar \" {subtype} \"",
+            "remote_rotate_from_side_5": "Apparaat gedraaid van \"zijde 5\" naar \" {subtype} \"",
+            "remote_rotate_from_side_6": "Apparaat gedraaid van \"zijde 6\" naar \" {subtype} \""
         }
     },
     "options": {
