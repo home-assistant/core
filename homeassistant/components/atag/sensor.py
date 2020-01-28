@@ -1,7 +1,16 @@
 """Initialization of ATAG One sensor platform."""
-from homeassistant.const import CONF_SENSORS
-
 from . import DOMAIN, AtagEntity
+
+DEFAULT_SENSORS = [
+    "outside_temp",
+    "outside_temp_avg",
+    "weather_status",
+    "operation_mode",
+    "ch_water_pressure",
+    "dhw_water_temp",
+    "burning_hours",
+    "flame_level",
+]
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -11,13 +20,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Initialize sensor platform from config entry."""
-    sensors = config_entry.data.get(CONF_SENSORS)
-    if not sensors:
-        return
     atag = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
-
-    for sensor in map(str.lower, sensors):
+    for sensor in DEFAULT_SENSORS:
         entities.append(AtagOneSensor(atag, sensor))
     async_add_entities(entities)
 

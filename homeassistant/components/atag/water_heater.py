@@ -1,6 +1,4 @@
 """ATAG water heater component."""
-import logging
-
 from homeassistant.components.water_heater import (
     ATTR_TEMPERATURE,
     STATE_ECO,
@@ -11,11 +9,8 @@ from homeassistant.const import STATE_OFF, TEMP_CELSIUS
 
 from . import DOMAIN, AtagEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 # (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE )
 SUPPORT_FLAGS_HEATER = 0
-
 OPERATION_LIST = [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 
 

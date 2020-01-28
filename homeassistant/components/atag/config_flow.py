@@ -1,31 +1,18 @@
 """Config flow for the Atag component."""
-import logging
-
-from pyatag.errors import AtagException
-from pyatag.gateway import AtagDataStore
+from aiohttp import ClientSession
+from pyatag import DEFAULT_PORT, AtagDataStore, AtagException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_EMAIL,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_SENSORS,
-)
+from homeassistant.const import CONF_DEVICE, CONF_EMAIL, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_SENSORS, DOMAIN
+from . import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = {
     vol.Required(CONF_HOST): str,
     vol.Optional(CONF_EMAIL): str,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(int, vol.Range(min=0)),
-    vol.Required(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-        int, vol.Range(min=15)
-    ),
 }
 
 
@@ -54,19 +41,17 @@ class AtagConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._show_form()
 
         try:
-            atag = AtagDataStore(**user_input)
-            await atag.async_check_pair_status()
-            await atag.async_close()
+            async with ClientSession() as session:
+                atag = AtagDataStore(session, **user_input)
+                await atag.async_check_pair_status()
 
         except AtagException:
-            return self._show_form({"base": "connection_error"})
+            return await self._show_form({"base": "connection_error"})
 
         if atag.device in configured_hosts(self.hass):
-            return self._show_form({"base": "identifier_exists"})
+            return await self._show_form({"base": "identifier_exists"})
 
         user_input.update({CONF_DEVICE: atag.device})
-        if not user_input.get(CONF_SENSORS):
-            user_input.update({CONF_SENSORS: DEFAULT_SENSORS})
         return self.async_create_entry(title=atag.device, data=user_input)
 
     @callback

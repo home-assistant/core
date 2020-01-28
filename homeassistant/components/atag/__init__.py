@@ -2,78 +2,31 @@
 from datetime import timedelta
 
 from pyatag import SENSOR_TYPES, AtagDataStore, AtagException
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_EMAIL,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    CONF_SENSORS,
+    DEVICE_CLASS_PRESSURE,
+    DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, asyncio, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    dispatcher,
-)
+from homeassistant.helpers import dispatcher
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import config_flow
-from .const import (
-    DATA_LISTENER,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SENSORS,
-    DOMAIN,
-    PROJECT_URL,
-    SIGNAL_UPDATE_ATAG,
-    UNIT_TO_CLASS,
-)
-
+DOMAIN = "atag"
+DATA_LISTENER = "atag_listener"
+SIGNAL_UPDATE_ATAG = "atag_update"
 PLATFORMS = ["sensor", "climate", "water_heater"]
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_HOST): cv.string,
-                vol.Optional(CONF_EMAIL): cv.string,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Required(
-                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-                ): cv.positive_int,
-                vol.Required(CONF_SENSORS, default=DEFAULT_SENSORS): vol.All(
-                    cv.ensure_list, [vol.In(DEFAULT_SENSORS)]
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+PROJECT_URL = "https://www.atag-one.com"
+UNIT_TO_CLASS = {"°C": DEVICE_CLASS_TEMPERATURE, "Bar": DEVICE_CLASS_PRESSURE}
 
 
 async def async_setup(hass: HomeAssistant, config):
     """Set up the Atag component."""
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    if any(conf.get(CONF_HOST) in host for host in config_flow.configured_hosts(hass)):
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-        )
-    )
-
     return True
 
 
@@ -89,16 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     except AtagException:
         raise ConfigEntryNotReady
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = atag
-
-    device_registry = await dr.async_get_registry(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, atag.device, atag.config.host)},
-        manufacturer=PROJECT_URL,
-        name="Atag",
-        model="Atag One",
-        sw_version=atag.apiversion,
-    )
 
     for platform in PLATFORMS:
         hass.async_create_task(
@@ -117,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_session)
 
     hass.data.setdefault(DATA_LISTENER, {})[entry.entry_id] = async_track_time_interval(
-        hass, refresh, timedelta(seconds=entry.data[CONF_SCAN_INTERVAL])
+        hass, refresh, DEFAULT_SCAN_INTERVAL
     )
 
     return True
@@ -137,7 +80,6 @@ async def async_unload_entry(hass, entry):
     )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-    # await hass.data[DOMAIN][config_entry.entry_id].async_close()
     return unload_ok
 
 
