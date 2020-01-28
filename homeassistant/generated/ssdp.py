@@ -11,6 +11,11 @@ SSDP = {
             "manufacturer": "Royal Philips Electronics"
         }
     ],
+    "fritzbox": [
+        {
+            "st": "urn:schemas-upnp-org:device:fritzbox:1"
+        }
+    ],
     "heos": [
         {
             "st": "urn:schemas-denon-com:device:ACT-Denon:1"

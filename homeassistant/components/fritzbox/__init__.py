@@ -1,32 +1,11 @@
 """Support for AVM Fritz!Box smarthome devices."""
-import logging
-
-from pyfritzhome import Fritzhome, LoginError
+from pyfritzhome import Fritzhome
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_DEVICES,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.helpers import discovery
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
-
-SUPPORTED_DOMAINS = ["binary_sensor", "climate", "switch", "sensor"]
-
-DOMAIN = "fritzbox"
-
-ATTR_STATE_BATTERY_LOW = "battery_low"
-ATTR_STATE_DEVICE_LOCKED = "device_locked"
-ATTR_STATE_HOLIDAY_MODE = "holiday_mode"
-ATTR_STATE_LOCKED = "locked"
-ATTR_STATE_SUMMER_MODE = "summer_mode"
-ATTR_STATE_WINDOW_OPEN = "window_open"
-
+from .const import DOMAIN, SUPPORTED_DOMAINS
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -51,40 +30,35 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
-    """Set up the fritzbox component."""
+async def async_setup(hass, config):
+    """Set up the AVM Fritz!Box integration."""
+    if DOMAIN in config:
+        for entry_config in config[DOMAIN][CONF_DEVICES]:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": "import"}, data=entry_config
+                )
+            )
 
-    fritz_list = []
+    return True
 
-    configured_devices = config[DOMAIN].get(CONF_DEVICES)
-    for device in configured_devices:
-        host = device.get(CONF_HOST)
-        username = device.get(CONF_USERNAME)
-        password = device.get(CONF_PASSWORD)
-        fritzbox = Fritzhome(host=host, user=username, password=password)
-        try:
-            fritzbox.login()
-            _LOGGER.info("Connected to device %s", device)
-        except LoginError:
-            _LOGGER.warning("Login to Fritz!Box %s as %s failed", host, username)
-            continue
 
-        fritz_list.append(fritzbox)
+async def async_setup_entry(hass, entry):
+    """Set up the AVM Fritz!Box platforms."""
+    fritz = Fritzhome(
+        host=entry.data[CONF_HOST],
+        user=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
+    )
+    fritz.login()
 
-    if not fritz_list:
-        _LOGGER.info("No fritzboxes configured")
-        return False
-
-    hass.data[DOMAIN] = fritz_list
-
-    def logout_fritzboxes(event):
-        """Close all connections to the fritzboxes."""
-        for fritz in fritz_list:
-            fritz.logout()
-
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, logout_fritzboxes)
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = []
+    hass.data[DOMAIN].append(fritz)
 
     for domain in SUPPORTED_DOMAINS:
-        discovery.load_platform(hass, domain, DOMAIN, {}, config)
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, domain)
+        )
 
     return True

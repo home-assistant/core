@@ -1,14 +1,15 @@
 """Support for AVM Fritz!Box smarthome switch devices."""
-import logging
-
 import requests
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import ATTR_TEMPERATURE, ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS
 
-from . import ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_LOCKED, DOMAIN as FRITZBOX_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    ATTR_STATE_DEVICE_LOCKED,
+    ATTR_STATE_LOCKED,
+    DOMAIN as FRITZBOX_DOMAIN,
+    LOGGER,
+)
 
 ATTR_TOTAL_CONSUMPTION = "total_consumption"
 ATTR_TOTAL_CONSUMPTION_UNIT = "total_consumption_unit"
@@ -17,8 +18,15 @@ ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR
 ATTR_TEMPERATURE_UNIT = "temperature_unit"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass, config, add_entities, discovery_info=None
+):  # pragma: no cover
     """Set up the Fritzbox smarthome switch platform."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Fritzbox smarthome switch from config_entry."""
     devices = []
     fritz_list = hass.data[FRITZBOX_DOMAIN]
 
@@ -28,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if device.has_switch:
                 devices.append(FritzboxSwitch(device, fritz))
 
-    add_entities(devices)
+    async_add_entities(devices)
 
 
 class FritzboxSwitch(SwitchDevice):
@@ -38,6 +46,22 @@ class FritzboxSwitch(SwitchDevice):
         """Initialize the switch."""
         self._device = device
         self._fritz = fritz
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(FRITZBOX_DOMAIN, self.unique_id)},
+            "manufacturer": self._device.manufacturer,
+            "model": self._device.productname,
+            "sw_version": self._device.fw_version,
+        }
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the device."""
+        return self._device.ain
 
     @property
     def available(self):
@@ -67,7 +91,7 @@ class FritzboxSwitch(SwitchDevice):
         try:
             self._device.update()
         except requests.exceptions.HTTPError as ex:
-            _LOGGER.warning("Fritzhome connection error: %s", ex)
+            LOGGER.warning("Fritzhome connection error: %s", ex)
             self._fritz.login()
 
     @property

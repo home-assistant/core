@@ -1,0 +1,31 @@
+{
+  "config": {
+    "title": "AVM FRITZ!Box",
+    "flow_title": "AVM FRITZ!Box: {name}",
+    "step": {
+      "user": {
+        "title": "AVM FRITZ!Box",
+        "description": "Enter your AVM FRITZ!Box information.",
+        "data": {
+            "host": "Host or IP address",
+            "username": "Username",
+            "password": "Password"
+        }
+      },
+      "confirm": {
+        "title": "AVM FRITZ!Box",
+        "description": "Do you want to set up {model}? Manual configurations for this device will be overwritten.",
+        "data": {
+            "username": "Username",
+            "password": "Password"
+        }
+      }
+    },
+    "abort": {
+      "already_in_progress": "AVM FRITZ!Box configuration is already in progress.",
+      "already_configured": "This AVM FRITZ!Box is already configured.",
+      "auth_missing": "Home Assistant is not authenticated to connect to this AVM FRITZ!Box.",
+      "not_found": "No supported AVM FRITZ!Box found on the network."
+    }
+  }
+}
