@@ -306,6 +306,30 @@ async def test_call_with_required_features(hass, mock_entities):
     assert test_service_mock.call_count == 1
 
 
+async def test_call_with_sync_func(hass, mock_entities):
+    """Test invoking sync service calls."""
+    test_service_mock = Mock()
+    await service.entity_service_call(
+        hass,
+        [Mock(entities=mock_entities)],
+        test_service_mock,
+        ha.ServiceCall("test_domain", "test_service", {"entity_id": "light.kitchen"}),
+    )
+    assert test_service_mock.call_count == 1
+
+
+async def test_call_with_sync_attr(hass, mock_entities):
+    """Test invoking sync service calls."""
+    mock_entities["light.kitchen"].sync_method = Mock()
+    await service.entity_service_call(
+        hass,
+        [Mock(entities=mock_entities)],
+        "sync_method",
+        ha.ServiceCall("test_domain", "test_service", {"entity_id": "light.kitchen"}),
+    )
+    assert mock_entities["light.kitchen"].sync_method.call_count == 1
+
+
 async def test_call_context_user_not_exist(hass):
     """Check we don't allow deleted users to do things."""
     with pytest.raises(exceptions.UnknownUser) as err:
