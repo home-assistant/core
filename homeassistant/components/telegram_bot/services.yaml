@@ -55,6 +55,9 @@ send_photo:
     verify_ssl:
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
       example: false
+    timeout:
+      description: Timeout for send photo. Will help with timeout errors (poor internet connection, etc)
+      example: '1000'
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -86,6 +89,9 @@ send_sticker:
     verify_ssl:
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
       example: false
+    timeout:
+      description: Timeout for send sticker. Will help with timeout errors (poor internet connection, etc)
+      example: '1000'
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -120,6 +126,9 @@ send_video:
     verify_ssl:
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
       example: false
+    timeout:
+      description: Timeout for send video. Will help with timeout errors (poor internet connection, etc)
+      example: '1000'
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -154,6 +163,9 @@ send_document:
     verify_ssl:
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
       example: false
+    timeout:
+      description: Timeout for send document. Will help with timeout errors (poor internet connection, etc)
+      example: '1000'
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
