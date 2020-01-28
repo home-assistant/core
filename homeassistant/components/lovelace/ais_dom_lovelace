@@ -706,8 +706,19 @@
                                                     }
                                                 ],
                                                 "type": "conditional"
-                                            },
-                                            {
+                                            }
+                                        ],
+                                        "type": "vertical-stack"
+                                    },
+                                    "conditions": [
+                                        {
+                                            "entity": "sensor.ais_player_mode",
+                                            "state": "music_player"
+                                        }
+                                    ],
+                                    "type": "conditional"
+                                },
+                                {
                                             "cards": [
                                                 {
                                                     "entities": [
@@ -738,18 +749,7 @@
                                             ],
                                             "show_header_toggle": false,
                                             "type": "vertical-stack"
-                                        }
-                                        ],
-                                        "type": "vertical-stack"
-                                    },
-                                    "conditions": [
-                                        {
-                                            "entity": "sensor.ais_player_mode",
-                                            "state": "music_player"
-                                        }
-                                    ],
-                                    "type": "conditional"
-                                },
+                                        },
                                 {
                                     "card": {
                                         "cards": [
