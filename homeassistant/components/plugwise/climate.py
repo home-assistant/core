@@ -150,8 +150,6 @@ class ThermostatDevice(ClimateDevice):
             attributes["outdoor_temperature"] = self._outdoor_temperature
         if self._schema_names:
             attributes["available_schemas"] = self._schema_names
-        else:
-            attributes["available_schemas"] = "None"
         if self._selected_schema:
             attributes["selected_schema"] = self._selected_schema
         if self._boiler_temperature:
