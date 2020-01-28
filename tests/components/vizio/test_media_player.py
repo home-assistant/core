@@ -132,8 +132,8 @@ async def _test_service(
             arg_vals = [arg_vals]
 
         if len(args) == len(arg_vals):
-            # For each argument and argument value pair, make sure pair match what was
-            # passed to function
+            # For each argument and argument value pair, assert that pair matches what
+            # was passed to function
             for arg in args:
                 assert (
                     service_call.call_args[args.index(arg) + 1][arg]
