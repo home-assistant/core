@@ -124,13 +124,6 @@ class HMDevice(Entity):
                 if self._data[attribute] != value:
                     self._data[attribute] = value
                     has_changed = True
-            else:
-                _LOGGER.debug(
-                    "%s ignoring event '%s' on wrong channel (%s)",
-                    self._name,
-                    attribute,
-                    device,
-                )
 
         # Availability has changed
         if self.available != (not self._hmdevice.UNREACH):
