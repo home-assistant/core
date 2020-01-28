@@ -33,6 +33,7 @@ COMMENT_REQUIREMENTS = (
     "PySwitchbot",
     "pySwitchmate",
     "python-eq3bt",
+    "python-gammu",
     "python-lirc",
     "pyuserinput",
     "raspihats",
