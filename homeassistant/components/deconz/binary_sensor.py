@@ -6,7 +6,7 @@ from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
+from .const import ATTR_DARK, ATTR_DAYLIGHT, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
 from .gateway import DeconzEntityHandler, get_gateway_from_config_entry
 
@@ -89,8 +89,13 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
         if self._device.secondary_temperature is not None:
             attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
-        if self._device.type in Presence.ZHATYPE and self._device.dark is not None:
-            attr[ATTR_DARK] = self._device.dark
+        if self._device.type in Presence.ZHATYPE:
+
+            if self._device.dark is not None:
+                attr[ATTR_DARK] = self._device.dark
+
+            if self._device.daylight is not None:
+                attr[ATTR_DAYLIGHT] = self._device.daylight
 
         elif self._device.type in Vibration.ZHATYPE:
             attr[ATTR_ORIENTATION] = self._device.orientation
