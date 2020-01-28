@@ -39,7 +39,6 @@ NEW_DEVICE = {
 }
 
 ATTR_DARK = "dark"
-ATTR_DAYLIGHT = "daylight"
 ATTR_OFFSET = "offset"
 ATTR_ON = "on"
 ATTR_VALVE = "valve"
