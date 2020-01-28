@@ -96,9 +96,7 @@ async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
         return_value=False,
     ):
         await hass.config_entries.async_add(
-            MockConfigEntry(
-                domain=DOMAIN, data=MOCK_SPEAKER_CONFIG, unique_id=UNIQUE_ID
-            )
+            MockConfigEntry(domain=DOMAIN, data=config, unique_id=UNIQUE_ID)
         )
         await hass.async_block_till_done()
         assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
