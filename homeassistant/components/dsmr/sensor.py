@@ -4,6 +4,7 @@ from datetime import timedelta
 from functools import partial
 import logging
 
+# pylint: disable=import-error
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 import serial
