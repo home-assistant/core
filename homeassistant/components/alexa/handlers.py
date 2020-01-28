@@ -1237,7 +1237,9 @@ async def async_api_adjust_range(hass, config, directive, context):
         service = SERVICE_SET_COVER_TILT_POSITION
         current = entity.attributes.get(cover.ATTR_TILT_POSITION)
         if not current:
-            msg = "Unable to determine {} current position".format(entity.entity_id)
+            msg = "Unable to determine {} current tilt position".format(
+                entity.entity_id
+            )
             raise AlexaInvalidValueError(msg)
         tilt_position = response_value = min(100, max(0, range_delta + current))
         if tilt_position == 100:
