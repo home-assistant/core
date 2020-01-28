@@ -1,4 +1,6 @@
 """Tests for Vizio config flow."""
+from typing import List, Union
+
 from asynctest import patch
 import pytest
 from pyvizio.const import (
@@ -29,6 +31,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVA
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
+    _LOGGER,
     CURRENT_INPUT,
     ENTITY_ID,
     INPUT_LIST,
@@ -107,7 +110,9 @@ async def _test_service(
     vizio_func_name: str,
     ha_service_name: str,
     additional_service_data: dict = None,
-):
+    args: Union[str, List[str]] = [],
+    arg_vals: Union[Union[str, int], List[Union[str, int]]] = [],
+) -> None:
     """Test a generic Vizio media player entity service."""
     service_data = {ATTR_ENTITY_ID: ENTITY_ID}
     if additional_service_data:
@@ -119,7 +124,29 @@ async def _test_service(
         await hass.services.async_call(
             MP_DOMAIN, ha_service_name, service_data=service_data, blocking=True,
         )
-        assert service_call.call_count == 1
+        assert service_call.called
+
+        if not isinstance(args, list):
+            args = [args]
+        if not isinstance(arg_vals, list):
+            arg_vals = [arg_vals]
+
+        if len(args) == len(arg_vals):
+            # For each argument and argument value pair, make sure pair match what was
+            # passed to function
+            for arg in args:
+                assert (
+                    service_call.call_args[args.index(arg) + 1][arg]
+                    == arg_vals[args.index(arg)]
+                )
+        else:
+            _LOGGER.error(
+                "Number of arguments (%s) and argument values (%s) must match in "
+                "function call",
+                args,
+                arg_vals,
+            )
+            assert False
 
 
 async def test_speaker_on(
@@ -221,3 +248,6 @@ async def test_options_update(
         entry=config_entry, options=new_options,
     )
     assert config_entry.options == updated_options
+    await _test_service(
+        hass, "vol_up", SERVICE_VOLUME_UP, args="num", arg_vals=VOLUME_STEP
+    )
