@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
@@ -327,6 +327,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
         _LOGGER.info("No matching access point found for access point id %s", hapid)
         return None
+
+    async def async_reset_hap_connections():
+        """Reset all hmip hap connections."""
+        for hap in hass.data[DOMAIN].values():
+            await hap.async_reset()
+            _LOGGER.info("Shut down access point id %s", hap.config_entry.unique_id)
+
+    # Register on HA stop event to gracefully shutdown HomematicIP Cloud connections
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_reset_hap_connections())
 
     return True
 
