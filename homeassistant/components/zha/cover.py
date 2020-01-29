@@ -113,6 +113,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
         """
         return self._current_position
 
+    @callback
     def async_set_position(self, pos):
         """Handle position update from channel."""
         _LOGGER.debug("setting position: %s", pos)
@@ -123,6 +124,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
             self._state = STATE_OPEN
         self.async_schedule_update_ha_state()
 
+    @callback
     def async_set_state(self, state):
         """Handle state update from channel."""
         _LOGGER.debug("state=%s", state)

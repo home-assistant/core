@@ -273,6 +273,7 @@ class ZHAGateway:
         """Return Group for given group id."""
         return self.groups.get(group_id)
 
+    @callback
     def async_get_group_by_name(self, group_name):
         """Get ZHA group by name."""
         for group in self.groups.values():

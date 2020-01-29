@@ -5,6 +5,7 @@ from homekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -22,6 +23,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
+    @callback
     def async_add_service(aid, service):
         if service["stype"] != "lock-mechanism":
             return False

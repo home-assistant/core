@@ -170,6 +170,7 @@ class Light(ZhaEntity, light.Light):
         """Flag supported features."""
         return self._supported_features
 
+    @callback
     def async_set_state(self, state):
         """Set the state."""
         self._state = bool(state)
