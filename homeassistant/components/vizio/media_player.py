@@ -1,4 +1,5 @@
 """Vizio SmartCast Device support."""
+from datetime import timedelta
 import logging
 from typing import Callable, List
 
@@ -40,7 +41,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = MIN_TIME_BETWEEN_SCANS
+SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
 
 
