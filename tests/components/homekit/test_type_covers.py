@@ -123,6 +123,26 @@ async def test_garage_door_open_close(hass, hk_driver, cls, events):
     assert len(events) == 4
     assert events[-1].data[ATTR_VALUE] is None
 
+    hass.states.async_set(entity_id, STATE_OPENING)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 2
+    assert acc.char_target_state.value == 0
+
+    hass.states.async_set(entity_id, STATE_OPEN)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 0
+    assert acc.char_target_state.value == 0
+
+    hass.states.async_set(entity_id, STATE_CLOSING)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 3
+    assert acc.char_target_state.value == 1
+
+    hass.states.async_set(entity_id, STATE_CLOSED)
+    await hass.async_block_till_done()
+    assert acc.char_current_state.value == 1
+    assert acc.char_target_state.value == 1
+
 
 async def test_window_set_cover_position(hass, hk_driver, cls, events):
     """Test if accessory and HA are updated accordingly."""

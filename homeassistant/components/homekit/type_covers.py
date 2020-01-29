@@ -45,6 +45,13 @@ class GarageDoorOpener(HomeAccessory):
     and support no more than open, close, and stop.
     """
 
+    HASS_TO_HK_STATE = {
+        STATE_OPEN: 0,
+        STATE_CLOSED: 1,
+        STATE_OPENING: 2,
+        STATE_CLOSING: 3,
+    }
+
     def __init__(self, *args):
         """Initialize a GarageDoorOpener accessory object."""
         super().__init__(*args, category=CATEGORY_GARAGE_DOOR_OPENER)
@@ -76,12 +83,24 @@ class GarageDoorOpener(HomeAccessory):
     def update_state(self, new_state):
         """Update cover state after state changed."""
         hass_state = new_state.state
-        if hass_state in (STATE_OPEN, STATE_CLOSED):
-            current_state = 0 if hass_state == STATE_OPEN else 1
-            self.char_current_state.set_value(current_state)
+        if hass_state in (STATE_OPEN, STATE_OPENING, STATE_CLOSED, STATE_CLOSING):
+            self.char_current_state.set_value(self.HASS_TO_HK_STATE[hass_state])
             if not self._flag_state:
-                self.char_target_state.set_value(current_state)
+                self.char_target_state.set_value(
+                    self.target_state_for_hass_state(hass_state)
+                )
             self._flag_state = False
+
+    def target_state_for_hass_state(self, hass_state):
+        """Return the target state for the current state.
+
+        If the current state is opening, the target state should be open in order for Homekit to detect the opening state. The same goes for the cloosing state.
+        """
+        if hass_state == STATE_OPENING:
+            return self.HASS_TO_HK_STATE[STATE_OPEN]
+        if hass_state == STATE_CLOSING:
+            return self.HASS_TO_HK_STATE[STATE_CLOSED]
+        return self.HASS_TO_HK_STATE[hass_state]
 
 
 @TYPES.register("WindowCovering")
