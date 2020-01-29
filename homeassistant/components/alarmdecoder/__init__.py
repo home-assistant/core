@@ -118,12 +118,12 @@ def setup(hass, config):
     conf = config.get(DOMAIN)
 
     restart = False
-    device = conf.get(CONF_DEVICE)
-    display = conf.get(CONF_PANEL_DISPLAY)
-    zones = conf.get(CONF_ZONES)
+    device = conf[CONF_DEVICE]
+    display = conf[CONF_PANEL_DISPLAY]
     auto_bypass = conf[CONF_AUTO_BYPASS]
+    zones = conf.get(CONF_ZONES)
 
-    device_type = device.get(CONF_DEVICE_TYPE)
+    device_type = device[CONF_DEVICE_TYPE]
     host = DEFAULT_DEVICE_HOST
     port = DEFAULT_DEVICE_PORT
     path = DEFAULT_DEVICE_PATH
