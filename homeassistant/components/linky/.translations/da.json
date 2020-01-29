@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Kontoen er allerede konfigureret",
             "username_exists": "Kontoen er allerede konfigureret"
         },
         "error": {
