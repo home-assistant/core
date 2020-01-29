@@ -26,6 +26,7 @@ repos:
     rev: 3.7.9
     hooks:
     -   id: flake8_complexity
+        alias: flake8_complexity
         args:
           - --exit-zero
           - --max-complexity=40
