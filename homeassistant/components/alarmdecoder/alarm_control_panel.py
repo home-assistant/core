@@ -39,13 +39,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     auto_bypass = discovery_info[CONF_AUTO_BYPASS]
-    device = AlarmDecoderAlarmPanel(auto_bypass)
-    add_entities([device])
+    entity = AlarmDecoderAlarmPanel(auto_bypass)
+    add_entities([entity])
 
     def alarm_toggle_chime_handler(service):
         """Register toggle chime handler."""
         code = service.data.get(ATTR_CODE)
-        device.alarm_toggle_chime(code)
+        entity.alarm_toggle_chime(code)
 
     hass.services.register(
         DOMAIN,
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def alarm_keypress_handler(service):
         """Register keypress handler."""
         keypress = service.data[ATTR_KEYPRESS]
-        device.alarm_keypress(keypress)
+        entity.alarm_keypress(keypress)
 
     hass.services.register(
         DOMAIN,

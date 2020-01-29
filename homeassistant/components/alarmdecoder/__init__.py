@@ -121,7 +121,7 @@ def setup(hass, config):
     device = conf.get(CONF_DEVICE)
     display = conf.get(CONF_PANEL_DISPLAY)
     zones = conf.get(CONF_ZONES)
-    auto_bypass = conf.get(CONF_AUTO_BYPASS)
+    auto_bypass = conf[CONF_AUTO_BYPASS]
 
     device_type = device.get(CONF_DEVICE_TYPE)
     host = DEFAULT_DEVICE_HOST
