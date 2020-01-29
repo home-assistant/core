@@ -183,3 +183,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm", description_placeholders={"model": self._model}
         )
+
+    async def async_step_reauth(self, user_input=None):
+        """Handle configuration by re-auth."""
+        return await self.async_step_confirm(user_input)
