@@ -149,9 +149,7 @@ class HMDevice(Entity):
                     self._channel_map.add(f"{node}:{channel!s}")
 
         # Set callbacks
-        self._hmdevice.setEventCallback(
-            callback=self._hm_event_callback, bequeath=True
-        )
+        self._hmdevice.setEventCallback(callback=self._hm_event_callback, bequeath=True)
 
     def _load_data_from_hm(self):
         """Load first value from pyhomematic."""
