@@ -2,13 +2,11 @@
   "domain": "melcloud",
   "name": "MELCloud",
   "config_flow": true,
-  "documentation": "",
+  "documentation": "https://www.home-assistant.io/integrations/melcloud",
   "requirements": ["pymelcloud==1.0.1"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": [
-    "@vilppuvuorinen"
-  ]
+  "codeowners": ["@vilppuvuorinen"]
 }
