@@ -376,7 +376,7 @@ async def _handle_service_platform_call(
 
         if asyncio.iscoroutine(result):
             _LOGGER.error(
-                "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler.",
+                "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to component author.",
                 func,
                 entity.entity_id,
             )
