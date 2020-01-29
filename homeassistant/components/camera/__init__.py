@@ -364,19 +364,12 @@ class Camera(Entity):
         """Return bytes of camera image."""
         raise NotImplementedError()
 
-    @callback
-    def async_camera_image(self):
-        """Return bytes of camera image.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.camera_image)
+    async def async_camera_image(self):
+        """Return bytes of camera image."""
+        return await self.hass.async_add_job(self.camera_image)
 
     async def handle_async_still_stream(self, request, interval):
-        """Generate an HTTP MJPEG stream from camera images.
-
-        This method must be run in the event loop.
-        """
+        """Generate an HTTP MJPEG stream from camera images."""
         return await async_get_still_stream(
             request, self.async_camera_image, self.content_type, interval
         )
@@ -386,7 +379,6 @@ class Camera(Entity):
 
         This method can be overridden by camera plaforms to proxy
         a direct stream from the camera.
-        This method must be run in the event loop.
         """
         return await self.handle_async_still_stream(request, self.frame_interval)
 

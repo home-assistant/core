@@ -214,6 +214,7 @@ class Script:
         """Stop running script."""
         run_callback_threadsafe(self.hass.loop, self.async_stop).result()
 
+    @callback
     def async_stop(self) -> None:
         """Stop running script."""
         if self._cur == -1:
