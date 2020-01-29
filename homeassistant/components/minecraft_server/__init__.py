@@ -27,7 +27,7 @@ from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, MANUFACTURER, SIGNAL_NAME_PREFIX
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["binary_sensor", "sensor"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -273,15 +273,13 @@ class MinecraftServerEntity(Entity):
         hass: HomeAssistantType,
         server: MinecraftServer,
         type_name: str,
-        unit: str,
         icon: str,
+        device_class: str,
     ) -> None:
         """Initialize base entity."""
         self._server = server
         self._hass = hass
-        self._state = None
         self._name = f"{server.name} {type_name}"
-        self._unit = unit
         self._icon = icon
         self._unique_id = f"{self._server.unique_id}-{type_name}"
         self._device_info = {
@@ -291,11 +289,12 @@ class MinecraftServerEntity(Entity):
             "model": f"Minecraft Server ({self._server.version})",
             "sw_version": self._server.protocol_version,
         }
+        self._device_class = device_class
         self._disconnect_dispatcher = None
 
     @property
     def name(self) -> str:
-        """Return sensor name."""
+        """Return name."""
         return self._name
 
     @property
@@ -309,18 +308,13 @@ class MinecraftServerEntity(Entity):
         return self._device_info
 
     @property
-    def state(self) -> Any:
-        """Return sensor state."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return sensor measurement unit."""
-        return self._unit
+    def device_class(self) -> str:
+        """Return device class."""
+        return self._device_class
 
     @property
     def icon(self) -> str:
-        """Return sensor icon."""
+        """Return icon."""
         return self._icon
 
     @property
@@ -329,7 +323,7 @@ class MinecraftServerEntity(Entity):
         return False
 
     async def async_update(self) -> None:
-        """Fetch sensor data from the server."""
+        """Fetch data from the server."""
         raise NotImplementedError()
 
     async def async_added_to_hass(self) -> None:
