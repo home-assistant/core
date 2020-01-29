@@ -392,6 +392,7 @@ class ADBDevice(MediaPlayerDevice):
             self.exceptions = (
                 AttributeError,
                 BrokenPipeError,
+                ConnectionResetError,
                 TypeError,
                 ValueError,
                 InvalidChecksumError,
