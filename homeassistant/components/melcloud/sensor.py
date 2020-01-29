@@ -1,7 +1,7 @@
 """Support for MelCloud device sensors."""
 import logging
 
-from pymelcloud import Device
+from pymelcloud import AtaDevice
 
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
@@ -17,11 +17,11 @@ ATTR_VALUE_FN = "value_fn"
 
 SENSORS = [
     {
-        ATTR_MEASUREMENT: "Inside Temperature",
+        ATTR_MEASUREMENT: "Room Temperature",
         ATTR_ICON: "mdi:thermometer",
         ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(x.device.temp_unit, TEMP_CELSIUS),
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
-        ATTR_VALUE_FN: lambda x: x.device.temperature,
+        ATTR_VALUE_FN: lambda x: x.device.room_temperature,
     },
     {
         ATTR_MEASUREMENT: "Energy",
@@ -43,6 +43,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
             MelCloudSensor(mel_device, definition, hass.config.units)
             for definition in SENSORS
             for mel_device in mel_devices
+            if isinstance(mel_device.device, AtaDevice)
         ],
         True,
     )
@@ -51,7 +52,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class MelCloudSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, device: Device, definition, units: UnitSystem, name=None):
+    def __init__(self, device: AtaDevice, definition, units: UnitSystem, name=None):
         """Initialize the sensor."""
         self._api = device
         if name is None:

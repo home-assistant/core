@@ -1,7 +1,7 @@
 """Config flow for the MELCloud platform."""
 import asyncio
 import logging
-from typing import Callable
+from typing import Optional
 
 from aiohttp import ClientError, ClientResponseError
 from async_timeout import timeout
@@ -35,27 +35,35 @@ class FlowHandler(config_entries.ConfigFlow):
                 )
 
         return self.async_create_entry(
-            title=email, data={CONF_EMAIL: email, CONF_TOKEN: token}
-        )
-
-    async def _init_client(self, email: str, password: str) -> pymelcloud.Client:
-        return await pymelcloud.login(
-            email, password, self.hass.helpers.aiohttp_client.async_get_clientsession(),
-        )
-
-    async def _init_client_with_token(self, token: str) -> pymelcloud.Client:
-        return pymelcloud.Client(
-            token, self.hass.helpers.aiohttp_client.async_get_clientsession(),
+            title=email, data={CONF_EMAIL: email, CONF_TOKEN: token},
         )
 
     async def _create_client(
-        self, email: str, client_creator: Callable[[], pymelcloud.Client],
+        self,
+        email: str,
+        *,
+        password: Optional[str] = None,
+        token: Optional[str] = None,
     ):
         """Create client."""
+        if password is None and token is None:
+            raise ValueError(
+                "Invalid internal state. Called without either password or token",
+            )
+
         try:
-            client = await client_creator()
             with timeout(10):
-                await client.update_confs()
+                acquired_token = token
+                if acquired_token is None:
+                    acquired_token = await pymelcloud.login(
+                        email,
+                        password,
+                        self.hass.helpers.aiohttp_client.async_get_clientsession(),
+                    )
+                await pymelcloud.get_devices(
+                    acquired_token,
+                    self.hass.helpers.aiohttp_client.async_get_clientsession(),
+                )
         except asyncio.TimeoutError:
             return self.async_abort(reason="cannot_connect")
         except ClientResponseError as err:
@@ -69,7 +77,7 @@ class FlowHandler(config_entries.ConfigFlow):
             _LOGGER.exception("Unexpected error creating device")
             return self.async_abort(reason="unknown")
 
-        return await self._create_entry(email, client.token)
+        return await self._create_entry(email, acquired_token)
 
     async def async_step_user(self, user_input=None):
         """User initiated config flow."""
@@ -81,9 +89,7 @@ class FlowHandler(config_entries.ConfigFlow):
                 ),
             )
         email = user_input[CONF_EMAIL]
-        return await self._create_client(
-            email, lambda: self._init_client(email, user_input[CONF_PASSWORD])
-        )
+        return await self._create_client(email, password=user_input[CONF_PASSWORD],)
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
@@ -91,6 +97,4 @@ class FlowHandler(config_entries.ConfigFlow):
         token = user_input.get(CONF_TOKEN)
         if not token:
             return await self.async_step_user()
-        return await self._create_client(
-            email, lambda: self._init_client_with_token(token)
-        )
+        return await self._create_client(email, token=token,)

@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 from typing import List, Optional
 
-from pymelcloud import Device
+from pymelcloud import AtaDevice
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -32,14 +32,19 @@ async def async_setup_entry(
     """Set up MelCloud device climate based on config_entry."""
     mel_devices = hass.data[DOMAIN].get(entry.entry_id)
     async_add_entities(
-        [MelCloudClimate(mel_device) for mel_device in mel_devices], True
+        [
+            AtaDeviceClimate(mel_device)
+            for mel_device in mel_devices
+            if isinstance(mel_device.device, AtaDevice)
+        ],
+        True,
     )
 
 
-class MelCloudClimate(ClimateDevice):
-    """MELCloud device."""
+class AtaDeviceClimate(ClimateDevice):
+    """Air-to-Air climate device."""
 
-    def __init__(self, device: Device, name=None):
+    def __init__(self, device: AtaDevice, name=None):
         """Initialize the climate."""
         self._api = device
         if name is None:
@@ -118,13 +123,13 @@ class MelCloudClimate(ClimateDevice):
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
         return [HVAC_MODE_OFF] + list(
-            map(HVAC_MODE_LOOKUP.get, self._api.device.operation_modes())
+            map(HVAC_MODE_LOOKUP.get, self._api.device.operation_modes)
         )
 
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        return self._api.device.temperature
+        return self._api.device.room_temperature
 
     @property
     def target_temperature(self) -> Optional[float]:
@@ -157,7 +162,7 @@ class MelCloudClimate(ClimateDevice):
     @property
     def fan_modes(self) -> Optional[List[str]]:
         """Return the list of available fan modes."""
-        speeds = self._api.device.fan_speeds()
+        speeds = self._api.device.fan_speeds
         if speeds is None:
             return None
         return list(map(lambda x: x.replace("-", " "), speeds))

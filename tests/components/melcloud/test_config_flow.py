@@ -1,48 +1,30 @@
 """Test the MELCloud config flow."""
 import asyncio
-from unittest.mock import PropertyMock
 
 from aiohttp import ClientError, ClientResponseError
 from asynctest import patch as async_patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.melcloud import config_flow
 from homeassistant.components.melcloud.const import DOMAIN
 
 from tests.common import mock_coro
 
 
-def init_config_flow(hass):
-    """Init flow."""
-    flow = config_flow.FlowHandler()
-    flow.hass = hass
-    return flow
-
-
 @pytest.fixture
-def mock_client():
-    """Mock Client in pymelcloud."""
-    with async_patch("pymelcloud.Client") as mock:
-        type(mock.return_value).token = PropertyMock(return_value="test-token")
-        mock.return_value.update_confs.return_value = mock_coro()
-        mock.return_value.get_devices.return_value = mock_coro([])
-
+def mock_login():
+    """Mock pymelcloud login."""
+    with async_patch("pymelcloud.login") as mock:
+        mock.return_value = mock_coro("test-token")
         yield mock
 
 
 @pytest.fixture
-def mock_login():
-    """Mock login in pymelcloud."""
-    with async_patch("pymelcloud.Client") as mock, async_patch(
-        "pymelcloud.login"
-    ) as login_mock:
-        type(mock.return_value).token = PropertyMock(return_value="test-token")
-        mock.return_value.update_confs.return_value = mock_coro()
-        mock.return_value.get_devices.return_value = mock_coro([])
-
-        login_mock.return_value = mock_coro(mock())
-        yield login_mock
+def mock_get_devices():
+    """Mock pymelcloud get_devices."""
+    with async_patch("pymelcloud.get_devices") as mock:
+        mock.return_value = mock_coro([])
+        yield mock
 
 
 @pytest.fixture
@@ -53,7 +35,7 @@ def mock_request_info():
         yield mock_ri
 
 
-async def test_form(hass, mock_login):
+async def test_form(hass, mock_login, mock_get_devices):
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -91,7 +73,7 @@ async def test_form(hass, mock_login):
         (Exception(), "unknown"),
     ],
 )
-async def test_form_errors(hass, mock_login, error, reason):
+async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
     """Test we handle cannot connect error."""
     mock_login.return_value = mock_coro(exception=error)
 
@@ -120,7 +102,7 @@ async def test_form_errors(hass, mock_login, error, reason):
     [(401, "invalid_auth"), (403, "invalid_auth"), (500, "cannot_connect")],
 )
 async def test_form_response_errors(
-    hass, mock_login, mock_request_info, error, message
+    hass, mock_login, mock_get_devices, mock_request_info, error, message
 ):
     """Test we handle response errors."""
     mock_login.return_value = mock_coro(
@@ -146,7 +128,7 @@ async def test_form_response_errors(
     assert result2["reason"] == message
 
 
-async def test_failed_import_form(hass, mock_login):
+async def test_failed_import_form(hass, mock_login, mock_get_devices):
     """Test we get the form if imported without token."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={},
@@ -155,7 +137,7 @@ async def test_failed_import_form(hass, mock_login):
     assert result["errors"] is None
 
 
-async def test_import_with_token(hass, mock_login, mock_client):
+async def test_import_with_token(hass, mock_login, mock_get_devices):
     """Test successful import."""
     with async_patch(
         "homeassistant.components.melcloud.async_setup", return_value=mock_coro(True)
@@ -180,7 +162,7 @@ async def test_import_with_token(hass, mock_login, mock_client):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_token_refresh(hass, mock_login):
+async def test_token_refresh(hass, mock_login, mock_get_devices):
     """Re-configuration with existing email should refresh token."""
     await hass.config_entries.async_add(
         config_entries.ConfigEntry(
