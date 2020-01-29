@@ -780,6 +780,7 @@ async def async_binding_operation(zha_gateway, source_ieee, target_ieee, operati
         zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
 
+@callback
 def async_load_api(hass):
     """Set up the web socket API."""
     zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
@@ -1058,6 +1059,7 @@ def async_load_api(hass):
     websocket_api.async_register_command(hass, websocket_unbind_devices)
 
 
+@callback
 def async_unload_api(hass):
     """Unload the ZHA API."""
     hass.services.async_remove(DOMAIN, SERVICE_PERMIT)
