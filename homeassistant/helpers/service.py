@@ -370,9 +370,17 @@ async def _handle_service_platform_call(
         entity.async_set_context(context)
 
         if isinstance(func, str):
-            await hass.async_add_job(partial(getattr(entity, func), **data))
+            result = await hass.async_add_job(partial(getattr(entity, func), **data))
         else:
-            await hass.async_add_job(func, entity, data)
+            result = await hass.async_add_job(func, entity, data)
+
+        if asyncio.iscoroutine(result):
+            _LOGGER.error(
+                "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler.",
+                func,
+                entity.entity_id,
+            )
+            await result
 
         if entity.should_poll:
             tasks.append(entity.async_update_ha_state(True))
