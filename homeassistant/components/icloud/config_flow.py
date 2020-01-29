@@ -98,7 +98,7 @@ class IcloudFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors[CONF_USERNAME] = "login"
             return await self._show_setup_form(user_input, errors)
 
-        if self.api.requires_2fa:
+        if self.api.requires_2sa:
             return await self.async_step_trusted_device()
 
         return self.async_create_entry(
