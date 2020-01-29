@@ -132,7 +132,7 @@ ABBREVIATIONS = {
     "spds": "speeds",
     "src_type": "source_type",
     "stat_clsd": "state_closed",
-    "stat_closing": "stat_closing",
+    "stat_closing": "state_closing",
     "stat_off": "state_off",
     "stat_on": "state_on",
     "stat_open": "state_open",
