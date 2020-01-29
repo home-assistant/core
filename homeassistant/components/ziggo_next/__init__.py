@@ -8,12 +8,13 @@ from ziggonext import ZiggoNext
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_COUNTRY_CODE, DOMAIN, ZIGGO_API
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS = ["media_player", "sensor"]
+PLATFORMS = ["media_player"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -28,8 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         entry.data[CONF_PASSWORD],
         entry.data[CONF_COUNTRY_CODE],
     )
-    api.initialize(_LOGGER, False)
-    hass.data[ZIGGO_API] = api
+    try:
+        api.initialize(_LOGGER, False)
+        hass.data[ZIGGO_API] = api
+    except Exception as exception:
+        raise ConfigEntryNotReady from exception
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -49,7 +53,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
             ]
         )
     )
-    # if unload_ok:
-    #     hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok

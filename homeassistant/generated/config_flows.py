@@ -100,6 +100,5 @@ FLOWS = [
     "wwlln",
     "zha",
     "ziggo_next",
-    "zone",
     "zwave"
 ]

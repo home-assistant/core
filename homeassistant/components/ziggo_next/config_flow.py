@@ -3,7 +3,7 @@ from collections import OrderedDict
 import logging
 
 import voluptuous as vol
-from ziggonext import ZiggoNext
+from ziggonext import ZiggoNext, ZiggoNextAuthenticationError, ZiggoNextConnectionError
 
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -19,17 +19,12 @@ async def validate_input(hass: core.HomeAssistant, data):
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     api = ZiggoNext(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_COUNTRY_CODE])
-    api.initialize(_LOGGER)
-    # try:
-    await hass.async_add_executor_job(api.get_session)
-    # except Exception as ex:
-    #     raise CannotConnect(ex)
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
+    try:
+        api.initialize(_LOGGER)
+    except ZiggoNextConnectionError as ex:
+        raise CannotConnect(ex)
+    except ZiggoNextAuthenticationError as ex:
+        raise InvalidAuth(ex)
     # Return info that you want to store in the config entry.
     return {"title": data[CONF_USERNAME]}
 
@@ -55,10 +50,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+
+        countries = ["nl", "ch"]
         fields = OrderedDict()
         fields[vol.Required(CONF_USERNAME)] = str
         fields[vol.Required(CONF_PASSWORD)] = str
-        fields[vol.Optional(CONF_COUNTRY_CODE, default="nl")] = str
+        fields[vol.Optional(CONF_COUNTRY_CODE, default="nl")] = vol.In(list(countries))
 
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema(fields), errors=errors
