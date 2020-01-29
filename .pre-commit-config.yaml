@@ -25,7 +25,7 @@ repos:
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 3.7.9
     hooks:
-    -   id: flake8_complexity
+    -   id: flake8
         alias: flake8_complexity
         args:
           - --exit-zero
