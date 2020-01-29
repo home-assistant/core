@@ -2524,12 +2524,16 @@ async def test_cover(hass):
     device = (
         "cover.test",
         "off",
-        {"friendly_name": "Test cover", "supported_features": 3, "position": 30},
+        {
+            "friendly_name": "Test cover",
+            "supported_features": 3,
+            "device_class": "garage",
+        },
     )
     appliance = await discovery_test(device, hass)
 
     assert appliance["endpointId"] == "cover#test"
-    assert appliance["displayCategories"][0] == "OTHER"
+    assert appliance["displayCategories"][0] == "GARAGE_DOOR"
     assert appliance["friendlyName"] == "Test cover"
 
     assert_endpoint_capabilities(
