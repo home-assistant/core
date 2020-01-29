@@ -16,8 +16,8 @@ from .const import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
 _LOGGER = logging.getLogger(__name__)
 
 TOPIC_MATCHER = re.compile(
-    r"(?P<component>\w+)/(?:(?P<node_id>[a-zA-Z0-9_-]+)/)"
-    r"?(?P<object_id>[a-zA-Z0-9_-]+)/config"
+    r"(?P<component>\w+)/(?:(?P<node_id>[a-zA-Z0-9\._-]+)/)"
+    r"?(?P<object_id>[a-zA-Z0-9\._-]+)/config"
 )
 
 SUPPORTED_COMPONENTS = [
