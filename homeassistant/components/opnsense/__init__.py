@@ -2,6 +2,7 @@
 import logging
 
 from pyopnsense import diagnostics
+from pyopnsense.exceptions import APIException
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -50,7 +51,7 @@ def setup(hass, config):
     )
     try:
         interfaces_client.get_arp()
-    except Exception:  # pylint: disable=broad-except
+    except APIException:
         _LOGGER.exception("Failure while connecting to OPNsense API endpoint.")
         return False
 
