@@ -50,6 +50,10 @@ stages:
       displayName: 'Run flake8'
     - script: |
         . venv/bin/activate
+        pre-commit run flake8_complexity --all-files
+      displayName: 'Run flake8_complexity'
+    - script: |
+        . venv/bin/activate
         pre-commit run bandit --all-files
       displayName: 'Run bandit'
     - script: |
