@@ -53,6 +53,7 @@ async def zha_gateway_fixture(hass, config_entry):
     groups.listener_event = mock.MagicMock()
     groups.add_group(FIXTURE_GRP_ID, FIXTURE_GRP_NAME, suppress_event=True)
     gateway.application_controller.groups = groups
+    gateway._initialize_groups()
     return gateway
 
 

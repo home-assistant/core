@@ -152,9 +152,7 @@ class ZHAGateway:
             )
         await asyncio.gather(*init_tasks)
 
-        for group_id in self.application_controller.groups:
-            group = self.application_controller.groups[group_id]
-            self._async_get_or_create_group(group)
+        self._initialize_groups()
 
     def device_joined(self, device):
         """Handle device joined.
@@ -353,6 +351,12 @@ class ZHAGateway:
         for logger_name in DEBUG_RELAY_LOGGERS:
             logging.getLogger(logger_name).removeHandler(self._log_relay_handler)
         self.debug_enabled = False
+
+    def _initialize_groups(self):
+        """Initialize ZHA groups."""
+        for group_id in self.application_controller.groups:
+            group = self.application_controller.groups[group_id]
+            self._async_get_or_create_group(group)
 
     @callback
     def _async_get_or_create_device(self, zigpy_device):
