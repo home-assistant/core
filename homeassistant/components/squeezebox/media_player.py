@@ -283,7 +283,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     async def async_query(self, *parameters):
         """Send a command to the LMS."""
-        await self._lms.async_query(*parameters, player=self._id)
+        return await self._lms.async_query(*parameters, player=self._id)
 
     async def async_update(self):
         """Retrieve the current state of the player."""
