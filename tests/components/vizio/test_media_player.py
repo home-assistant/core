@@ -126,7 +126,7 @@ async def _test_service(
         )
         assert service_call.called
 
-        if len(args) + len(kwargs) > 0:
+        if args or kwargs:
             assert service_call.call_args == call(*args, **kwargs)
 
 
