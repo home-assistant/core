@@ -131,6 +131,62 @@ async def test_search(hass):
         },
     )
 
+    await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "wled": {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": wled_segment_1_entity.entity_id},
+                        },
+                    ]
+                },
+                "hue": {
+                    "sequence": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": hue_segment_1_entity.entity_id},
+                        },
+                    ]
+                },
+            }
+        },
+    )
+
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": [
+                {
+                    "alias": "wled_entity",
+                    "trigger": {"platform": "state", "entity_id": "sensor.trigger_1"},
+                    "action": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": wled_segment_1_entity.entity_id},
+                        },
+                    ],
+                },
+                {
+                    "alias": "wled_device",
+                    "trigger": {"platform": "state", "entity_id": "sensor.trigger_1"},
+                    "action": [
+                        {
+                            "domain": "light",
+                            "device_id": wled_device.id,
+                            "entity_id": wled_segment_1_entity.entity_id,
+                            "type": "turn_on",
+                        },
+                    ],
+                },
+            ]
+        },
+    )
+
     # Explore the graph from every node and make sure we find the same results
     expected = {
         "config_entry": {wled_config_entry.entry_id},
@@ -139,6 +195,8 @@ async def test_search(hass):
         "entity": {wled_segment_1_entity.entity_id, wled_segment_2_entity.entity_id},
         "scene": {"scene.scene_wled_seg_1", "scene.scene_wled_hue"},
         "group": {"group.wled", "group.wled_hue"},
+        "script": {"script.wled"},
+        "automation": {"automation.wled_entity", "automation.wled_device"},
     }
 
     for search_type, search_id in (
@@ -149,6 +207,9 @@ async def test_search(hass):
         ("entity", wled_segment_2_entity.entity_id),
         ("scene", "scene.scene_wled_seg_1"),
         ("group", "group.wled"),
+        ("script", "script.wled"),
+        ("automation", "automation.wled_entity"),
+        ("automation", "automation.wled_device"),
     ):
         searcher = search.Searcher(hass, device_reg, entity_reg)
         results = searcher.async_search(search_type, search_id)
@@ -176,6 +237,8 @@ async def test_search(hass):
             "scene.scene_wled_hue",
         },
         "group": {"group.wled", "group.hue", "group.wled_hue"},
+        "script": {"script.wled", "script.hue"},
+        "automation": {"automation.wled_entity", "automation.wled_device"},
     }
     for search_type, search_id in (
         ("scene", "scene.scene_wled_hue"),
