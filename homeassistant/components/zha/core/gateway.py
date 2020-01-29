@@ -12,6 +12,8 @@ import logging
 import os
 import traceback
 
+import zigpy.device as zigpy_dev
+
 from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import (
@@ -176,9 +178,9 @@ class ZHAGateway:
         """Handle device joined and basic information discovered."""
         self._hass.async_create_task(self.async_device_initialized(device))
 
-    def device_left(self, device):
+    def device_left(self, device: zigpy_dev.Device):
         """Handle device leaving the network."""
-        pass
+        self.async_update_device(device, False)
 
     async def _async_remove_device(self, device, entity_refs):
         if entity_refs is not None:
@@ -315,13 +317,13 @@ class ZHAGateway:
         self.async_update_device(sender)
 
     @callback
-    def async_update_device(self, sender):
+    def async_update_device(self, sender: zigpy_dev.Device, available: bool = True):
         """Update device that has just become available."""
         if sender.ieee in self.devices:
             device = self.devices[sender.ieee]
             # avoid a race condition during new joins
             if device.status is DeviceStatus.INITIALIZED:
-                device.update_available(True)
+                device.update_available(available)
 
     async def async_update_device_storage(self):
         """Update the devices in the store."""
