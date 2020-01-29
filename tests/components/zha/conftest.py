@@ -50,9 +50,10 @@ async def zha_gateway_fixture(hass, config_entry):
     gateway.ha_device_registry = dev_reg
     gateway.application_controller = mock.MagicMock(spec_set=ControllerApplication)
     groups = zigpy.group.Groups(gateway.application_controller)
-    groups.listener_event = mock.MagicMock()
+    groups.add_listener(gateway)
     groups.add_group(FIXTURE_GRP_ID, FIXTURE_GRP_NAME, suppress_event=True)
-    gateway.application_controller.groups = groups
+    gateway.application_controller.configure_mock(groups=groups)
+    gateway._initialize_groups()
     return gateway
 
 
