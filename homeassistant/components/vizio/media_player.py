@@ -5,7 +5,7 @@ from typing import Callable, List
 from pyvizio import VizioAsync
 
 from homeassistant import util
-from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -23,6 +23,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.util import slugify
 
 from .const import (
     CONF_VOLUME_STEP,
@@ -76,12 +77,12 @@ async def async_setup_entry(
     if not await device.can_connect():
         fail_auth_msg = ""
         if token:
-            fail_auth_msg = f"and auth token '{token}' are correct"
+            fail_auth_msg = f"and auth token are correct"
         else:
             fail_auth_msg = "is correct"
         _LOGGER.warning(
-            "Failed to connect to Vizio device, please check if host '%s' "
-            "is valid and available. Also check if device class '%s' %s",
+            "Unable to connect to device, check if host '%s' is valid "
+            "and available. Also check if device class '%s' %s",
             host,
             device_class,
             fail_auth_msg,
@@ -129,19 +130,18 @@ class VizioDevice(MediaPlayerDevice):
         if is_on is None:
             if self._available:
                 _LOGGER.warning(
-                    "Can't connect to device '%s - %s'. Entity will be unavailable "
-                    "until connection is restored",
-                    self._name,
+                    "Lost connection to %s (%s)",
                     self._config_entry.data[CONF_HOST],
+                    f"{MP_DOMAIN}.{slugify(self._name)}",
                 )
                 self._available = False
             return
 
         if not self._available:
             _LOGGER.info(
-                "Connection to device '%s - %s' restored",
-                self._name,
+                "Restored connection to %s (%s)",
                 self._config_entry.data[CONF_HOST],
+                f"{MP_DOMAIN}.{slugify(self._name)}",
             )
             self._available = True
 

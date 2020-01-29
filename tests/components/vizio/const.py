@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_TYPE,
 )
+from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,4 +74,4 @@ MOCK_ZEROCONF_SERVICE_INFO = {
 CURRENT_INPUT = "HDMI"
 INPUT_LIST = ["HDMI", "USB", "Bluetooth", "AUX"]
 
-ENTITY_ID = f"{MP_DOMAIN}.{NAME.lower()}"
+ENTITY_ID = f"{MP_DOMAIN}.{slugify(NAME)}"
