@@ -3,6 +3,7 @@ import asyncio
 from datetime import timedelta
 
 from samsungctl import Remote as SamsungRemote, exceptions as samsung_exceptions
+from samsungctl.exceptions import AccessDenied
 import voluptuous as vol
 from websocket import WebSocketException
 
@@ -124,7 +125,14 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
-            self._remote = SamsungRemote(self._config.copy())
+            try:
+                self._remote = SamsungRemote(self._config.copy())
+            except AccessDenied:
+                self.hass.async_create_task(
+                    self.hass.config_entries.flow.async_init(
+                        DOMAIN, context={"source": "reauth"}, data=self._config_entry
+                    )
+                )
 
         return self._remote
 
