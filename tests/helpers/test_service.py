@@ -372,7 +372,7 @@ async def test_call_context_target_all(hass, mock_service_platform_call, mock_en
         )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == [mock_entities["light.kitchen"]]
 
 
@@ -403,7 +403,7 @@ async def test_call_context_target_specific(
         )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == [mock_entities["light.kitchen"]]
 
 
@@ -446,7 +446,7 @@ async def test_call_no_context_target_all(
     )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == list(mock_entities.values())
 
 
@@ -466,7 +466,7 @@ async def test_call_no_context_target_specific(
     )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == [mock_entities["light.kitchen"]]
 
 
@@ -482,7 +482,7 @@ async def test_call_with_match_all(
     )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == [
         mock_entities["light.kitchen"],
         mock_entities["light.living_room"],
@@ -504,7 +504,7 @@ async def test_call_with_omit_entity_id(
     )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == []
 
 
