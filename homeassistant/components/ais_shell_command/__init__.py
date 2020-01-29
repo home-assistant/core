@@ -644,10 +644,7 @@ def _scan_network_for_ais_players(hass, call):
         )
     else:
         GLOBAL_X = 0
-        if ais_global.G_AIS_START_IS_DONE:
-            yield from hass.services.async_call(
-                "ais_ai_service", "say_it", {"text": dsm.get_text_to_say()}
-            )
+        # the search is done
 
 
 @asyncio.coroutine

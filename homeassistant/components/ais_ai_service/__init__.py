@@ -2243,10 +2243,11 @@ async def async_process_json_from_frame(hass, json_req):
                                 },
                             )
                         )
+    elif topic == "ais/player_status_ask":
+        hass.async_add_job(
+            hass.services.async_call("ais_exo_player", "player_status_ask")
+        )
     elif topic == "ais/speech_command":
-        # hass.async_run_job(
-        #     hass.services.async_call("conversation", "process", {"text": payload})
-        # )
         try:
             intent_resp = await _process(hass, payload, ais_gate_client_id)
             resp_text = intent_resp.speech["plain"]["speech"]
