@@ -214,7 +214,7 @@ class MqttCover(
         """Initialize the cover."""
         self._unique_id = config.get(CONF_UNIQUE_ID)
         self._position = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._sub_state = None
 
         self._optimistic = None
@@ -389,12 +389,10 @@ class MqttCover(
     @property
     def is_closed(self):
         """Return true if the cover is closed or None if the status is unknown."""
-        return None if self._state == STATE_UNKNOWN else self._state == STATE_CLOSED
+        if self._state is None:
+            return None
 
-    @property
-    def is_open(self):
-        """Return true if the cover is open."""
-        return self._state == STATE_OPEN
+        return self._state == STATE_CLOSED
 
     @property
     def is_opening(self):
@@ -556,7 +554,7 @@ class MqttCover(
                     position = set_position_template.async_render(**kwargs)
                 except TemplateError as ex:
                     _LOGGER.error(ex)
-                    self._state = STATE_UNKNOWN
+                    self._state = None
             elif (
                 self._config[CONF_POSITION_OPEN] != 100
                 and self._config[CONF_POSITION_CLOSED] != 0
