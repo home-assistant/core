@@ -2520,7 +2520,7 @@ async def test_mode_unsupported_domain(hass):
 
 
 async def test_cover(hass):
-    """Test cover discovery."""
+    """Test cover discovery and powerController """
     device = (
         "cover.test",
         "off",
