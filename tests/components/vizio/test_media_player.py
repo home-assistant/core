@@ -98,9 +98,9 @@ async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
         "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
         return_value=False,
     ):
-        await hass.config_entries.async_add(
-            MockConfigEntry(domain=DOMAIN, data=config, unique_id=UNIQUE_ID)
-        )
+        config_entry = MockConfigEntry(domain=DOMAIN, data=config, unique_id=UNIQUE_ID)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
 

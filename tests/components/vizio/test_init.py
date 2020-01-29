@@ -33,7 +33,8 @@ async def test_load_and_unload(
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_USER_VALID_TV_CONFIG, unique_id=UNIQUE_ID
     )
-    await hass.config_entries.async_add(config_entry)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 1
 
