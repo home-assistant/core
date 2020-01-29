@@ -136,6 +136,7 @@ class ZhaFan(ZhaEntity, FanEntity):
         """Return state attributes."""
         return self.state_attributes
 
+    @callback
     def async_set_state(self, state):
         """Handle state update from channel."""
         self._state = VALUE_TO_SPEED.get(state, self._state)

@@ -125,6 +125,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         """Return device class from component DEVICE_CLASSES."""
         return self._device_class
 
+    @callback
     def async_set_state(self, state):
         """Set the state."""
         self._state = bool(state)

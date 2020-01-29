@@ -122,6 +122,7 @@ class AbstractConfig(ABC):
         ]
         await gather(*jobs)
 
+    @callback
     def async_enable_report_state(self):
         """Enable proactive mode."""
         # Circular dep
@@ -131,6 +132,7 @@ class AbstractConfig(ABC):
         if self._unsub_report_state is None:
             self._unsub_report_state = async_enable_report_state(self.hass, self)
 
+    @callback
     def async_disable_report_state(self):
         """Disable report state."""
         if self._unsub_report_state is not None:
