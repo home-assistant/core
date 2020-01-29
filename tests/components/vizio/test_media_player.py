@@ -1,5 +1,5 @@
 """Tests for Vizio config flow."""
-from typing import List, Union
+from unittest.mock import call
 
 from asynctest import patch
 import pytest
@@ -31,7 +31,6 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVA
 from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
-    _LOGGER,
     CURRENT_INPUT,
     ENTITY_ID,
     INPUT_LIST,
@@ -74,7 +73,8 @@ async def _test_init(
         "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
         return_value=vizio_power_state,
     ):
-        await hass.config_entries.async_add(config_entry)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         attr = hass.states.get(ENTITY_ID).attributes
@@ -110,8 +110,8 @@ async def _test_service(
     vizio_func_name: str,
     ha_service_name: str,
     additional_service_data: dict = None,
-    args: Union[str, List[str]] = [],
-    arg_vals: Union[Union[str, int], List[Union[str, int]]] = [],
+    *args,
+    **kwargs,
 ) -> None:
     """Test a generic Vizio media player entity service."""
     service_data = {ATTR_ENTITY_ID: ENTITY_ID}
@@ -126,27 +126,8 @@ async def _test_service(
         )
         assert service_call.called
 
-        if not isinstance(args, list):
-            args = [args]
-        if not isinstance(arg_vals, list):
-            arg_vals = [arg_vals]
-
-        if len(args) == len(arg_vals):
-            # For each argument and argument value pair, assert that pair matches what
-            # was passed to function
-            for arg in args:
-                assert (
-                    service_call.call_args[args.index(arg) + 1][arg]
-                    == arg_vals[args.index(arg)]
-                )
-        else:
-            _LOGGER.error(
-                "Number of arguments (%s) and argument values (%s) must match in "
-                "function call",
-                args,
-                arg_vals,
-            )
-            assert False
+        if len(args) + len(kwargs) > 0:
+            assert service_call.call_args == call(*args, **kwargs)
 
 
 async def test_speaker_on(
@@ -220,7 +201,7 @@ async def test_services(
         hass, "mute_off", SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: False}
     )
     await _test_service(
-        hass, "input_switch", SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "USB"}
+        hass, "input_switch", SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "USB"}, "USB"
     )
     await _test_service(hass, "vol_up", SERVICE_VOLUME_UP)
     await _test_service(hass, "vol_down", SERVICE_VOLUME_DOWN)
@@ -248,6 +229,4 @@ async def test_options_update(
         entry=config_entry, options=new_options,
     )
     assert config_entry.options == updated_options
-    await _test_service(
-        hass, "vol_up", SERVICE_VOLUME_UP, args="num", arg_vals=VOLUME_STEP
-    )
+    await _test_service(hass, "vol_up", SERVICE_VOLUME_UP, num=VOLUME_STEP)
