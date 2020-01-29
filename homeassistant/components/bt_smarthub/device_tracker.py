@@ -1,7 +1,7 @@
 """Support for BT Smart Hub (Sometimes referred to as BT Home Hub 6)."""
 import logging
 
-import btsmarthub_devicelist
+from btsmarthub_devicelist import BTSmartHub
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -15,9 +15,13 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEFAULT_IP = "192.168.1.254"
+CONF_SMARTHUB_MODEL = "smarthub_model"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string}
+    {
+        vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
+        vol.Optional(CONF_SMARTHUB_MODEL, default=None): vol.In([None, 1, 2]),
+    }
 )
 
 
@@ -35,8 +39,12 @@ class BTSmartHubScanner(DeviceScanner):
         """Initialise the scanner."""
         _LOGGER.debug("Initialising BT Smart Hub")
         self.host = config[CONF_HOST]
+        self.smarthub_model = config[CONF_SMARTHUB_MODEL]
         self.last_results = {}
         self.success_init = False
+        self.smarthub = BTSmartHub(
+            router_ip=self.host, smarthub_model=self.smarthub_model
+        )
 
         # Test the router is accessible
         data = self.get_bt_smarthub_data()
@@ -77,9 +85,8 @@ class BTSmartHubScanner(DeviceScanner):
         """Retrieve data from BT Smart Hub and return parsed result."""
 
         # Request data from bt smarthub into a list of dicts.
-        data = btsmarthub_devicelist.get_devicelist(
-            router_ip=self.host, only_active_devices=True
-        )
+        data = self.smarthub.get_devicelist(only_active_devices=True)
+
         # Renaming keys from parsed result.
         devices = {}
         for device in data:
