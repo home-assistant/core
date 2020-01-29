@@ -40,7 +40,7 @@ class HMDevice(Entity):
         self._hmdevice = None
         self._connected = False
         self._available = False
-        self._channel_map = {}
+        self._channel_map = set()
 
         # Set parameter to uppercase
         if self._state:
@@ -114,7 +114,7 @@ class HMDevice(Entity):
         has_changed = False
 
         # Is data needed for this instance?
-        if device == self._channel_map.get(attribute):
+        if f"{attribute}:{device.partition(':')[2]}" in self._channel_map:
             self._data[attribute] = value
             has_changed = True
 
@@ -146,7 +146,7 @@ class HMDevice(Entity):
                     else:
                         channel = self._channel
                     # Remember the channel for this attribute to ignore invalid events later
-                    self._channel_map[node] = f"{self._address}:{channel!s}"
+                    self._channel_map.add(f"{node}:{channel!s}")
 
         # Set callbacks
         self._hmdevice.setEventCallback(
