@@ -153,15 +153,14 @@ class ShoppingData:
         self.items = [itm for itm in self.items if not itm["complete"]]
         self.hass.async_add_job(self.save)
 
-    @asyncio.coroutine
-    def async_load(self):
+    async def async_load(self):
         """Load items."""
 
         def load():
             """Load the items synchronously."""
             return load_json(self.hass.config.path(PERSISTENCE), default=[])
 
-        self.items = yield from self.hass.async_add_job(load)
+        self.items = await self.hass.async_add_executor_job(load)
 
     def save(self):
         """Save the items."""

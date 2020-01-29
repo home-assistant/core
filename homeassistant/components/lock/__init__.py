@@ -104,34 +104,25 @@ class LockDevice(Entity):
         """Lock the lock."""
         raise NotImplementedError()
 
-    def async_lock(self, **kwargs):
-        """Lock the lock.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(ft.partial(self.lock, **kwargs))
+    async def async_lock(self, **kwargs):
+        """Lock the lock."""
+        await self.hass.async_add_job(ft.partial(self.lock, **kwargs))
 
     def unlock(self, **kwargs):
         """Unlock the lock."""
         raise NotImplementedError()
 
-    def async_unlock(self, **kwargs):
-        """Unlock the lock.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(ft.partial(self.unlock, **kwargs))
+    async def async_unlock(self, **kwargs):
+        """Unlock the lock."""
+        await self.hass.async_add_job(ft.partial(self.unlock, **kwargs))
 
     def open(self, **kwargs):
         """Open the door latch."""
         raise NotImplementedError()
 
-    def async_open(self, **kwargs):
-        """Open the door latch.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(ft.partial(self.open, **kwargs))
+    async def async_open(self, **kwargs):
+        """Open the door latch."""
+        await self.hass.async_add_job(ft.partial(self.open, **kwargs))
 
     @property
     def state_attributes(self):

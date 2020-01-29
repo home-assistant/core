@@ -225,6 +225,7 @@ class SAJsensor(Entity):
         """Return the date when the sensor was last updated."""
         return self._sensor.date
 
+    @callback
     def async_update_values(self, unknown_state=False):
         """Update this sensor."""
         update = False
