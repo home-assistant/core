@@ -126,17 +126,18 @@ class MinecraftServerDescriptionSensor(MinecraftServerSensorEntity):
         """Update description."""
         description = self._server.description
 
-        # Remove color codes.
-        for color_code in self._COLOR_CODES:
-            description = description.replace(color_code, "")
+        if description is not None:
+            # Remove color codes.
+            for color_code in self._COLOR_CODES:
+                description = description.replace(color_code, "")
 
-        # Remove newlines.
-        description = description.replace("\n", " ")
+            # Remove newlines.
+            description = description.replace("\n", " ")
 
-        # Limit description length to 255.
-        if len(description) > 255:
-            description = description[:255]
-            _LOGGER.debug("Description length > 255 (truncated).")
+            # Limit description length to 255.
+            if len(description) > 255:
+                description = description[:255]
+                _LOGGER.debug("Description length > 255 (truncated).")
 
         self._state = description
 
@@ -247,16 +248,18 @@ class MinecraftServerPlayersListSensor(MinecraftServerSensorEntity):
     async def async_update(self) -> None:
         """Update players list."""
         players_list = self._server.players_list
+        players_string = None
 
-        if not players_list:
-            players_string = "[]"
-        else:
-            separator = ", "
-            players_string = f"[{separator.join(players_list)}]"
+        if players_list is not None:
+            if not players_list:
+                players_string = "[]"
+            else:
+                separator = ", "
+                players_string = f"[{separator.join(players_list)}]"
 
-            # Limit players list length to 255.
-            if len(players_string) > 255:
-                players_string = f"{players_string[:-4]}...]"
-                _LOGGER.debug("Players list length > 255 (truncated).")
+                # Limit players list length to 255.
+                if len(players_string) > 255:
+                    players_string = f"{players_string[:-4]}...]"
+                    _LOGGER.debug("Players list length > 255 (truncated).")
 
         self._state = players_string

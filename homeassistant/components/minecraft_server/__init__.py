@@ -7,14 +7,7 @@ from typing import Any, Dict, List
 from mcstatus.server import MinecraftServer as MCStatus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -108,13 +101,13 @@ class MinecraftServer:
         self._mcstatus = MCStatus(self._host, self._port)
 
         # Data provided by 3rd party library
-        self._description = STATE_UNKNOWN
-        self._version = STATE_UNKNOWN
-        self._protocol_version = STATE_UNKNOWN
-        self._latency = STATE_UNKNOWN
-        self._players_online = STATE_UNKNOWN
-        self._players_max = STATE_UNKNOWN
-        self._players_list = STATE_UNAVAILABLE
+        self._description = None
+        self._version = None
+        self._protocol_version = None
+        self._latency = None
+        self._players_online = None
+        self._players_max = None
+        self._players_list = None
 
         # Dispatcher signal name
         self._signal_name = SIGNAL_NAME_PREFIX + self._unique_id
@@ -228,10 +221,10 @@ class MinecraftServer:
         else:
             # Set all properties except description and version information to
             # unknown until server connection is established again.
-            self._players_online = STATE_UNKNOWN
-            self._players_max = STATE_UNKNOWN
-            self._players_list = STATE_UNKNOWN
-            self._latency = STATE_UNKNOWN
+            self._players_online = None
+            self._players_max = None
+            self._players_list = None
+            self._latency = None
 
         # Notify sensors about new data.
         async_dispatcher_send(self._hass, self._signal_name)
