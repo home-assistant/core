@@ -29,11 +29,14 @@ async def test_setup_defined_hosts_known_auth(hass):
                 hue.DOMAIN,
                 {
                     hue.DOMAIN: {
-                        hue.CONF_BRIDGES: {
-                            hue.CONF_HOST: "0.0.0.0",
-                            hue.CONF_ALLOW_HUE_GROUPS: False,
-                            hue.CONF_ALLOW_UNREACHABLE: True,
-                        }
+                        hue.CONF_BRIDGES: [
+                            {
+                                hue.CONF_HOST: "0.0.0.0",
+                                hue.CONF_ALLOW_HUE_GROUPS: False,
+                                hue.CONF_ALLOW_UNREACHABLE: True,
+                            },
+                            {hue.CONF_HOST: "1.1.1.1", "filename": "bla"},
+                        ]
                     }
                 },
             )
@@ -41,7 +44,7 @@ async def test_setup_defined_hosts_known_auth(hass):
         )
 
     # Flow started for discovered bridge
-    assert len(hass.config_entries.flow.async_progress()) == 0
+    assert len(hass.config_entries.flow.async_progress()) == 1
 
     # Config stored for domain.
     assert hass.data[hue.DATA_CONFIGS] == {
@@ -49,7 +52,13 @@ async def test_setup_defined_hosts_known_auth(hass):
             hue.CONF_HOST: "0.0.0.0",
             hue.CONF_ALLOW_HUE_GROUPS: False,
             hue.CONF_ALLOW_UNREACHABLE: True,
-        }
+        },
+        "1.1.1.1": {
+            hue.CONF_HOST: "1.1.1.1",
+            hue.CONF_ALLOW_HUE_GROUPS: True,
+            hue.CONF_ALLOW_UNREACHABLE: False,
+            "filename": "bla",
+        },
     }
 
 

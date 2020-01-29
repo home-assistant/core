@@ -77,8 +77,6 @@ class TestImageProcessing:
     )
     def test_get_image_from_camera(self, mock_camera):
         """Grab an image from camera entity."""
-        self.hass.start()
-
         common.scan(self.hass, entity_id="image_processing.test")
         self.hass.block_till_done()
 

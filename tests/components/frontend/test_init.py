@@ -1,7 +1,7 @@
 """The tests for Home Assistant frontend."""
 import re
-from unittest.mock import patch
 
+from asynctest import patch
 import pytest
 
 from homeassistant.components.frontend import (
@@ -173,7 +173,7 @@ async def test_themes_reload_themes(hass, hass_ws_client):
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.frontend.load_yaml_config_file",
+        "homeassistant.components.frontend.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
         await hass.services.async_call(

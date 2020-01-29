@@ -54,11 +54,13 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
     """Representation of a deCONZ binary sensor."""
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self, force_update=False, ignore_update=False):
         """Update the sensor's state."""
-        changed = set(self._device.changed_keys)
+        if ignore_update:
+            return
+
         keys = {"on", "reachable", "state"}
-        if force_update or any(key in changed for key in keys):
+        if force_update or self._device.changed_keys.intersection(keys):
             self.async_schedule_update_ha_state()
 
     @property
@@ -87,8 +89,10 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
         if self._device.secondary_temperature is not None:
             attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
-        if self._device.type in Presence.ZHATYPE and self._device.dark is not None:
-            attr[ATTR_DARK] = self._device.dark
+        if self._device.type in Presence.ZHATYPE:
+
+            if self._device.dark is not None:
+                attr[ATTR_DARK] = self._device.dark
 
         elif self._device.type in Vibration.ZHATYPE:
             attr[ATTR_ORIENTATION] = self._device.orientation

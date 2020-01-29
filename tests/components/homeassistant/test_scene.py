@@ -18,7 +18,7 @@ async def test_reload_config_service(hass):
         "homeassistant.config.load_yaml_config_file",
         autospec=True,
         return_value={"scene": {"name": "Hallo", "entities": {"light.kitchen": "on"}}},
-    ), patch("homeassistant.config.find_config_file", return_value=""):
+    ):
         await hass.services.async_call("scene", "reload", blocking=True)
         await hass.async_block_till_done()
 
@@ -28,7 +28,7 @@ async def test_reload_config_service(hass):
         "homeassistant.config.load_yaml_config_file",
         autospec=True,
         return_value={"scene": {"name": "Bye", "entities": {"light.kitchen": "on"}}},
-    ), patch("homeassistant.config.find_config_file", return_value=""):
+    ):
         await hass.services.async_call("scene", "reload", blocking=True)
         await hass.async_block_till_done()
 
@@ -229,7 +229,7 @@ async def test_scenes_with_entity(hass):
         },
     )
 
-    assert ha_scene.scenes_with_entity(hass, "light.kitchen") == [
+    assert sorted(ha_scene.scenes_with_entity(hass, "light.kitchen")) == [
         "scene.scene_1",
         "scene.scene_3",
     ]

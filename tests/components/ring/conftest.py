@@ -1,21 +1,14 @@
 """Configuration for Ring tests."""
-from asynctest import patch
+import re
+
 import pytest
 import requests_mock
 
 from tests.common import load_fixture
 
 
-@pytest.fixture(name="ring_mock")
-def ring_save_mock():
-    """Fixture to mock a ring."""
-    with patch("ring_doorbell._exists_cache", return_value=False):
-        with patch("ring_doorbell._save_cache", return_value=True) as save_mock:
-            yield save_mock
-
-
 @pytest.fixture(name="requests_mock")
-def requests_mock_fixture(ring_mock):
+def requests_mock_fixture():
     """Fixture to provide a requests mocker."""
     with requests_mock.mock() as mock:
         # Note all devices have an id of 987652, but a different device_id.
@@ -42,17 +35,19 @@ def requests_mock_fixture(ring_mock):
         )
         # Mocks the response for getting the history of a device
         mock.get(
-            "https://api.ring.com/clients_api/doorbots/987652/history",
+            re.compile(
+                r"https:\/\/api\.ring\.com\/clients_api\/doorbots\/\d+\/history"
+            ),
             text=load_fixture("ring_doorbots.json"),
         )
         # Mocks the response for getting the health of a device
         mock.get(
-            "https://api.ring.com/clients_api/doorbots/987652/health",
+            re.compile(r"https:\/\/api\.ring\.com\/clients_api\/doorbots\/\d+\/health"),
             text=load_fixture("ring_doorboot_health_attrs.json"),
         )
         # Mocks the response for getting a chimes health
         mock.get(
-            "https://api.ring.com/clients_api/chimes/999999/health",
+            re.compile(r"https:\/\/api\.ring\.com\/clients_api\/chimes\/\d+\/health"),
             text=load_fixture("ring_chime_health_attrs.json"),
         )
 

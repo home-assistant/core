@@ -201,7 +201,7 @@ async def async_setup(hass, config):
             require_admin=True,
         )
 
-    await hassio.update_hass_api(config.get("http", {}), refresh_token.token)
+    await hassio.update_hass_api(config.get("http", {}), refresh_token)
 
     async def push_config(_):
         """Push core config to Hass.io."""
@@ -290,7 +290,7 @@ async def async_setup(hass, config):
     async_setup_discovery_view(hass, hassio)
 
     # Init auth Hass.io feature
-    async_setup_auth_view(hass)
+    async_setup_auth_view(hass, user)
 
     # Init ingress Hass.io feature
     async_setup_ingress_view(hass, host)

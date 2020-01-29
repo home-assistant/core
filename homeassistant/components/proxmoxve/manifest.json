@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/proxmoxve",
   "dependencies": [],
   "codeowners": ["@k4ds3"],
-  "requirements": ["proxmoxer==1.0.3"]
+  "requirements": ["proxmoxer==1.0.4"]
 }

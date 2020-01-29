@@ -146,7 +146,7 @@ class WaterHeaterDevice(Entity):
     @property
     def capability_attributes(self):
         """Return capabilitiy attributes."""
-        supported_features = self.supported_features
+        supported_features = self.supported_features or 0
 
         data = {
             ATTR_MIN_TEMP: show_temp(

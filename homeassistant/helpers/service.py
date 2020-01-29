@@ -109,12 +109,30 @@ def extract_entity_ids(hass, service_call, expand_group=True):
 
 
 @bind_hass
+async def async_extract_entities(hass, entities, service_call, expand_group=True):
+    """Extract a list of entity objects from a service call.
+
+    Will convert group entity ids to the entity ids it represents.
+    """
+    data_ent_id = service_call.data.get(ATTR_ENTITY_ID)
+
+    if data_ent_id == ENTITY_MATCH_ALL:
+        return [entity for entity in entities if entity.available]
+
+    entity_ids = await async_extract_entity_ids(hass, service_call, expand_group)
+
+    return [
+        entity
+        for entity in entities
+        if entity.available and entity.entity_id in entity_ids
+    ]
+
+
+@bind_hass
 async def async_extract_entity_ids(hass, service_call, expand_group=True):
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
-
-    Async friendly.
     """
     entity_ids = service_call.data.get(ATTR_ENTITY_ID)
     area_ids = service_call.data.get(ATTR_AREA_ID)
@@ -244,9 +262,7 @@ def async_set_service_schema(hass, domain, service, schema):
 
 
 @bind_hass
-async def entity_service_call(
-    hass, platforms, func, call, service_name="", required_features=None
-):
+async def entity_service_call(hass, platforms, func, call, required_features=None):
     """Handle an entity service call.
 
     Calls all platforms simultaneously.

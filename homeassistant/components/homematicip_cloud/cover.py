@@ -17,7 +17,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,18 +27,11 @@ HMIP_SLATS_OPEN = 0
 HMIP_SLATS_CLOSED = 1
 
 
-async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
-) -> None:
-    """Set up the HomematicIP Cloud cover devices."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
     entities = []
     for device in hap.home.devices:
         if isinstance(device, AsyncFullFlushBlind):
@@ -58,7 +51,9 @@ class HomematicipCoverShutter(HomematicipGenericDevice, CoverDevice):
     @property
     def current_cover_position(self) -> int:
         """Return current position of cover."""
-        return int((1 - self._device.shutterLevel) * 100)
+        if self._device.shutterLevel is not None:
+            return int((1 - self._device.shutterLevel) * 100)
+        return None
 
     async def async_set_cover_position(self, **kwargs) -> None:
         """Move the cover to a specific position."""
@@ -93,7 +88,9 @@ class HomematicipCoverSlats(HomematicipCoverShutter, CoverDevice):
     @property
     def current_cover_tilt_position(self) -> int:
         """Return current tilt position of cover."""
-        return int((1 - self._device.slatsLevel) * 100)
+        if self._device.slatsLevel is not None:
+            return int((1 - self._device.slatsLevel) * 100)
+        return None
 
     async def async_set_cover_tilt_position(self, **kwargs) -> None:
         """Move the cover to a specific tilt position."""

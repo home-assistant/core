@@ -97,11 +97,13 @@ class DeconzSensor(DeconzDevice):
     """Representation of a deCONZ sensor."""
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self, force_update=False, ignore_update=False):
         """Update the sensor's state."""
-        changed = set(self._device.changed_keys)
+        if ignore_update:
+            return
+
         keys = {"on", "reachable", "state"}
-        if force_update or any(key in changed for key in keys):
+        if force_update or self._device.changed_keys.intersection(keys):
             self.async_schedule_update_ha_state()
 
     @property
@@ -141,8 +143,13 @@ class DeconzSensor(DeconzDevice):
         elif self._device.type in Daylight.ZHATYPE:
             attr[ATTR_DAYLIGHT] = self._device.daylight
 
-        elif self._device.type in LightLevel.ZHATYPE and self._device.dark is not None:
-            attr[ATTR_DARK] = self._device.dark
+        elif self._device.type in LightLevel.ZHATYPE:
+
+            if self._device.dark is not None:
+                attr[ATTR_DARK] = self._device.dark
+
+            if self._device.daylight is not None:
+                attr[ATTR_DAYLIGHT] = self._device.daylight
 
         elif self._device.type in Power.ZHATYPE:
             attr[ATTR_CURRENT] = self._device.current
@@ -155,11 +162,13 @@ class DeconzBattery(DeconzDevice):
     """Battery class for when a device is only represented as an event."""
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self, force_update=False, ignore_update=False):
         """Update the battery's state, if needed."""
-        changed = set(self._device.changed_keys)
+        if ignore_update:
+            return
+
         keys = {"battery", "reachable"}
-        if force_update or any(key in changed for key in keys):
+        if force_update or self._device.changed_keys.intersection(keys):
             self.async_schedule_update_ha_state()
 
     @property
@@ -217,7 +226,7 @@ class DeconzSensorStateTracker:
         self.sensor = None
 
     @callback
-    def async_update_callback(self):
+    def async_update_callback(self, ignore_update=False):
         """Sensor state updated."""
         if "battery" in self.sensor.changed_keys:
             async_dispatcher_send(

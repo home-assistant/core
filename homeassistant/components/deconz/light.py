@@ -22,6 +22,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 from .const import (
+    CONF_GROUP_ID_BASE,
     COVER_TYPES,
     DOMAIN as DECONZ_DOMAIN,
     NEW_GROUP,
@@ -205,7 +206,11 @@ class DeconzGroup(DeconzLight):
         """Set up group and create an unique id."""
         super().__init__(device, gateway)
 
-        self._unique_id = f"{self.gateway.api.config.bridgeid}-{self._device.deconz_id}"
+        group_id_base = self.gateway.config_entry.unique_id
+        if CONF_GROUP_ID_BASE in self.gateway.config_entry.data:
+            group_id_base = self.gateway.config_entry.data[CONF_GROUP_ID_BASE]
+
+        self._unique_id = f"{group_id_base}-{self._device.deconz_id}"
 
     @property
     def unique_id(self):

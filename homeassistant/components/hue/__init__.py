@@ -36,6 +36,7 @@ BRIDGE_CONFIG_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_ALLOW_HUE_GROUPS, default=DEFAULT_ALLOW_HUE_GROUPS
         ): cv.boolean,
+        vol.Optional("filename"): str,
     }
 )
 
@@ -44,7 +45,13 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_BRIDGES): vol.All(
-                    cv.ensure_list, [BRIDGE_CONFIG_SCHEMA]
+                    cv.ensure_list,
+                    [
+                        vol.All(
+                            cv.deprecated("filename", invalidation_version="0.106.0"),
+                            BRIDGE_CONFIG_SCHEMA,
+                        ),
+                    ],
                 )
             }
         )
@@ -69,7 +76,7 @@ async def async_setup(hass, config):
     bridges = conf[CONF_BRIDGES]
 
     configured_hosts = set(
-        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
     )
 
     for bridge_conf in bridges:

@@ -7,6 +7,7 @@ from typing import Optional
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import callback, split_entity_id, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.util.async_ import run_callback_threadsafe
 
 from .entity_registry import DISABLED_INTEGRATION
@@ -83,6 +84,16 @@ class EntityPlatform:
         platform = self.platform
         hass = self.hass
 
+        if not hasattr(platform, "async_setup_platform") and not hasattr(
+            platform, "setup_platform"
+        ):
+            self.logger.error(
+                "The %s platform for the %s integration does not support platform setup. Please remove it from your config.",
+                self.platform_name,
+                self.domain,
+            )
+            return
+
         @callback
         def async_create_setup_task():
             """Get task to set up platform."""
@@ -136,7 +147,8 @@ class EntityPlatform:
         warn_task = hass.loop.call_later(
             SLOW_SETUP_WARNING,
             logger.warning,
-            "Setup of platform %s is taking over %s seconds.",
+            "Setup of %s platform %s is taking over %s seconds.",
+            self.domain,
             self.platform_name,
             SLOW_SETUP_WARNING,
         )
@@ -183,7 +195,11 @@ class EntityPlatform:
             )
             return False
         except Exception:  # pylint: disable=broad-except
-            logger.exception("Error while setting up platform %s", self.platform_name)
+            logger.exception(
+                "Error while setting up %s platform for %s",
+                self.platform_name,
+                self.domain,
+            )
             return False
         finally:
             warn_task.cancel()
@@ -344,6 +360,7 @@ class EntityPlatform:
                 capabilities=entity.capability_attributes,
                 supported_features=entity.supported_features,
                 device_class=entity.device_class,
+                unit_of_measurement=entity.unit_of_measurement,
             )
 
             entity.registry_entry = entry
@@ -436,6 +453,33 @@ class EntityPlatform:
         ):
             self._async_unsub_polling()
             self._async_unsub_polling = None
+
+    async def async_extract_from_service(self, service_call, expand_group=True):
+        """Extract all known and available entities from a service call.
+
+        Will return an empty list if entities specified but unknown.
+
+        This method must be run in the event loop.
+        """
+        return await service.async_extract_entities(
+            self.hass, self.entities.values(), service_call, expand_group
+        )
+
+    @callback
+    def async_register_entity_service(self, name, schema, func, required_features=None):
+        """Register an entity service."""
+        if isinstance(schema, dict):
+            schema = cv.make_entity_service_schema(schema)
+
+        async def handle_service(call):
+            """Handle the service."""
+            await service.entity_service_call(
+                self.hass, [self], func, call, required_features
+            )
+
+        self.hass.services.async_register(
+            self.platform_name, name, handle_service, schema
+        )
 
     async def _update_entity_states(self, now: datetime) -> None:
         """Update the states of all the polling entities.

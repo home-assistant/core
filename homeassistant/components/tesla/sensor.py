@@ -15,11 +15,6 @@ from . import DOMAIN as TESLA_DOMAIN, TeslaDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Tesla sensor platform."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Tesla binary_sensors by config_entry."""
     controller = hass.data[TESLA_DOMAIN][config_entry.entry_id]["controller"]
@@ -42,6 +37,7 @@ class TeslaSensor(TeslaDevice, Entity):
         self.units = None
         self.last_changed_time = None
         self.type = sensor_type
+        self._device_class = tesla_device.device_class
         super().__init__(tesla_device, controller, config_entry)
 
         if self.type:
@@ -63,6 +59,11 @@ class TeslaSensor(TeslaDevice, Entity):
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
         return self.units
+
+    @property
+    def device_class(self):
+        """Return the device_class of the device."""
+        return self._device_class
 
     async def async_update(self):
         """Update the state from the sensor."""

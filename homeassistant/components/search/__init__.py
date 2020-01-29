@@ -58,7 +58,7 @@ class Searcher:
     """
 
     # These types won't be further explored. Config entries + Output types.
-    DONT_RESOLVE = {"scene", "automation", "script", "group", "config_entry"}
+    DONT_RESOLVE = {"scene", "automation", "script", "group", "config_entry", "area"}
 
     def __init__(
         self,
