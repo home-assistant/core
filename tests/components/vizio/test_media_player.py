@@ -1,5 +1,4 @@
 """Tests for Vizio config flow."""
-from datetime import timedelta
 from unittest.mock import call
 
 from asynctest import patch
@@ -29,12 +28,9 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.vizio.const import CONF_VOLUME_STEP, DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import dt as dt_util
 
 from .const import (
-    _LOGGER,
     CURRENT_INPUT,
     ENTITY_ID,
     INPUT_LIST,
@@ -45,7 +41,7 @@ from .const import (
     VOLUME_STEP,
 )
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 async def _test_init(
@@ -234,20 +230,3 @@ async def test_options_update(
     )
     assert config_entry.options == updated_options
     await _test_service(hass, "vol_up", SERVICE_VOLUME_UP, num=VOLUME_STEP)
-
-
-async def test_update_unavailable_to_available(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
-) -> None:
-    """Test that device will successfully become available after period of unavailability."""
-    await _test_init(hass, DEVICE_CLASS_SPEAKER, None)
-    with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
-        return_value=True,
-    ):
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
-        await hass.async_block_till_done()
-        await async_update_entity(hass, ENTITY_ID)
-        await hass.async_block_till_done()
-        _LOGGER.error(hass.states.get(ENTITY_ID).state)
-        assert False
