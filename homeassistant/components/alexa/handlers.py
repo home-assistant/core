@@ -1195,6 +1195,7 @@ async def async_api_adjust_range(hass, config, directive, context):
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
     range_delta = directive.payload["rangeValueDelta"]
+    range_delta_default = bool(directive.payload["rangeValueDeltaDefault"])
     response_value = 0
 
     # Fan Speed
@@ -1220,9 +1221,12 @@ async def async_api_adjust_range(hass, config, directive, context):
 
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        range_delta = int(range_delta)
+        range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
         current = entity.attributes.get(cover.ATTR_POSITION)
+        if not current:
+            msg = "Unable to determine {} current position".format(entity.entity_id)
+            raise AlexaInvalidValueError(msg)
         position = response_value = min(100, max(0, range_delta + current))
         if position == 100:
             service = cover.SERVICE_OPEN_COVER
@@ -1233,9 +1237,14 @@ async def async_api_adjust_range(hass, config, directive, context):
 
     # Cover Tilt
     elif instance == f"{cover.DOMAIN}.tilt":
-        range_delta = int(range_delta)
+        range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_TILT_POSITION
         current = entity.attributes.get(cover.ATTR_TILT_POSITION)
+        if not current:
+            msg = "Unable to determine {} current tilt position".format(
+                entity.entity_id
+            )
+            raise AlexaInvalidValueError(msg)
         tilt_position = response_value = min(100, max(0, range_delta + current))
         if tilt_position == 100:
             service = cover.SERVICE_OPEN_COVER_TILT
