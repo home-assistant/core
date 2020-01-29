@@ -144,14 +144,7 @@ async def mel_api_setup(hass, token) -> Optional[List[MelCloudDevice]]:
                 conf_update_interval=timedelta(minutes=5),
                 device_set_debounce=timedelta(seconds=1),
             )
-    except asyncio.TimeoutError:
-        _LOGGER.debug("Connection timed out")
-        raise ConfigEntryNotReady
-    except ClientConnectionError:
-        _LOGGER.debug("ClientConnectionError")
-        raise ConfigEntryNotReady
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unexpected error when initializing client")
-        return None
+    except (asyncio.TimeoutError, ClientConnectionError) as ex:
+        raise ConfigEntryNotReady() from ex
 
     return [MelCloudDevice(device) for device in devices]

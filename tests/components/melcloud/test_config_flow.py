@@ -67,11 +67,7 @@ async def test_form(hass, mock_login, mock_get_devices):
 
 @pytest.mark.parametrize(
     "error,reason",
-    [
-        (ClientError(), "cannot_connect"),
-        (asyncio.TimeoutError(), "cannot_connect"),
-        (Exception(), "unknown"),
-    ],
+    [(ClientError(), "cannot_connect"), (asyncio.TimeoutError(), "cannot_connect")],
 )
 async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
     """Test we handle cannot connect error."""

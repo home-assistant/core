@@ -64,18 +64,12 @@ class FlowHandler(config_entries.ConfigFlow):
                     acquired_token,
                     self.hass.helpers.aiohttp_client.async_get_clientsession(),
                 )
-        except asyncio.TimeoutError:
-            return self.async_abort(reason="cannot_connect")
         except ClientResponseError as err:
             if err.status == 401 or err.status == 403:
                 return self.async_abort(reason="invalid_auth")
             return self.async_abort(reason="cannot_connect")
-        except ClientError:
-            _LOGGER.exception("ClientError")
+        except (asyncio.TimeoutError, ClientError):
             return self.async_abort(reason="cannot_connect")
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected error creating device")
-            return self.async_abort(reason="unknown")
 
         return await self._create_entry(email, acquired_token)
 
