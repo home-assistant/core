@@ -156,7 +156,7 @@ class HMDevice(Entity):
                     else:
                         channel = self._channel
                     # Remember the channel for this attribute to ignore invalid events later
-                    self._channel_map[node] = self._address + ":" + str(channel)
+                    self._channel_map[node] = f"{self._address}:{channel!s}"
 
                     # Prepare for subscription
                     try:
