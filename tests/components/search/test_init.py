@@ -189,6 +189,23 @@ async def test_search(hass):
             results == expected_combined
         ), f"Results for {search_type}/{search_id} do not match up"
 
+    for search_type, search_id in (
+        ("entity", "automation.non_existing"),
+        ("entity", "scene.non_existing"),
+        ("entity", "group.non_existing"),
+        ("entity", "script.non_existing"),
+        ("entity", "light.non_existing"),
+        ("area", "non_existing"),
+        ("config_entry", "non_existing"),
+        ("device", "non_existing"),
+        ("group", "group.non_existing"),
+        ("scene", "scene.non_existing"),
+        ("script", "script.non_existing"),
+        ("automation", "automation.non_existing"),
+    ):
+        searcher = search.Searcher(hass, device_reg, entity_reg)
+        assert searcher.async_search(search_type, search_id) == {}
+
 
 async def test_ws_api(hass, hass_ws_client):
     """Test WS API."""

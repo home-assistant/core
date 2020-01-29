@@ -59,6 +59,8 @@ class Searcher:
 
     # These types won't be further explored. Config entries + Output types.
     DONT_RESOLVE = {"scene", "automation", "script", "group", "config_entry", "area"}
+    # These types exist as an entity and so need cleanup in results
+    EXIST_AS_ENTITY = {"script", "scene", "automation", "group"}
 
     def __init__(
         self,
@@ -85,13 +87,18 @@ class Searcher:
 
         # Clean up entity_id items, from the general "entity" type result,
         # that are also found in the specific entity domain type.
-        self.results["entity"] -= self.results["script"]
-        self.results["entity"] -= self.results["scene"]
-        self.results["entity"] -= self.results["automation"]
-        self.results["entity"] -= self.results["group"]
+        for result_type in self.EXIST_AS_ENTITY:
+            self.results["entity"] -= self.results[result_type]
 
         # Remove entry into graph from search results.
-        self.results[item_type].remove(item_id)
+        to_remove_item_type = item_type
+        if item_type == "entity":
+            domain = split_entity_id(item_id)[0]
+
+            if domain in self.EXIST_AS_ENTITY:
+                to_remove_item_type = domain
+
+        self.results[to_remove_item_type].remove(item_id)
 
         # Filter out empty sets.
         return {key: val for key, val in self.results.items() if val}
