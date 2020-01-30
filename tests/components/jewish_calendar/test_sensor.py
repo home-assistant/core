@@ -581,8 +581,8 @@ DAFYOMI_TEST_IDS = [
     "randomly_picked_date",
     "end_of_cycle13",
     "start_of_cycle14",
-    "last_day_of_omer",
-    "shavuot_no_omer",
+    "cycle14_end_of_berachos",
+    "cycle14_start_of_shabbos",
 ]
 
 
