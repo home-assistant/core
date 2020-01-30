@@ -45,8 +45,6 @@ from .const import (
     DEVICE_CLASS_CO2,
     DEVICE_CLASS_PM25,
     DOMAIN,
-    EVENT_HOMEKIT_STARTED,
-    EVENT_HOMEKIT_STOPPED,
     HOMEKIT_FILE,
     SERVICE_HOMEKIT_RESET_ACCESSORY,
     SERVICE_HOMEKIT_START,
@@ -392,7 +390,6 @@ class HomeKit:
 
         _LOGGER.debug("Driver start")
         self.hass.add_job(self.driver.start)
-        self.hass.bus.async_fire(EVENT_HOMEKIT_STARTED)
         log_entry(self.hass, "HomeKit", "started", DOMAIN)
         self.status = STATUS_RUNNING
 
@@ -404,5 +401,4 @@ class HomeKit:
 
         _LOGGER.debug("Driver stop")
         self.hass.add_job(self.driver.stop)
-        self.hass.bus.async_fire(EVENT_HOMEKIT_STOPPED)
         log_entry(self.hass, "HomeKit", "stopped", DOMAIN)
