@@ -176,30 +176,13 @@ async def async_setup_entry(hass, config_entry):
 
     _async_save_refresh_token(hass, config_entry, api.refresh_token)
 
-    systems = await api.get_systems()
-    simplisafe = SimpliSafe(hass, api, systems, config_entry)
-    await simplisafe.async_update()
+    simplisafe = SimpliSafe(hass, api, config_entry)
+    await simplisafe.async_init()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
     for component in ("alarm_control_panel", "lock"):
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(config_entry, component)
-        )
-
-    async def refresh(event_time):
-        """Refresh data from the SimpliSafe account."""
-        await simplisafe.async_update()
-        _LOGGER.debug("Updated data for all SimpliSafe systems")
-        async_dispatcher_send(hass, TOPIC_UPDATE)
-
-    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = async_track_time_interval(
-        hass, refresh, DEFAULT_SCAN_INTERVAL
-    )
-
-    # Register the base station for each system:
-    for system in systems.values():
-        hass.async_create_task(
-            async_register_base_station(hass, system, config_entry.entry_id)
         )
 
     @callback
@@ -209,7 +192,7 @@ async def async_setup_entry(hass, config_entry):
         async def decorator(call):
             """Decorate."""
             system_id = int(call.data[ATTR_SYSTEM_ID])
-            if system_id not in systems:
+            if system_id not in simplisafe.systems:
                 _LOGGER.error("Unknown system ID in service call: %s", system_id)
                 return
             await coro(call)
@@ -222,7 +205,7 @@ async def async_setup_entry(hass, config_entry):
 
         async def decorator(call):
             """Decorate."""
-            system = systems[int(call.data[ATTR_SYSTEM_ID])]
+            system = simplisafe.systems[int(call.data[ATTR_SYSTEM_ID])]
             if system.version != 3:
                 _LOGGER.error("Service only available on V3 systems")
                 return
@@ -234,7 +217,7 @@ async def async_setup_entry(hass, config_entry):
     @_verify_domain_control
     async def remove_pin(call):
         """Remove a PIN."""
-        system = systems[call.data[ATTR_SYSTEM_ID]]
+        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
         try:
             await system.remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
         except SimplipyError as err:
@@ -245,7 +228,7 @@ async def async_setup_entry(hass, config_entry):
     @_verify_domain_control
     async def set_pin(call):
         """Set a PIN."""
-        system = systems[call.data[ATTR_SYSTEM_ID]]
+        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
         try:
             await system.set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
         except SimplipyError as err:
@@ -257,7 +240,7 @@ async def async_setup_entry(hass, config_entry):
     @_verify_domain_control
     async def set_system_properties(call):
         """Set one or more system parameters."""
-        system = systems[call.data[ATTR_SYSTEM_ID]]
+        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
         try:
             await system.set_properties(
                 {
@@ -303,14 +286,35 @@ async def async_unload_entry(hass, entry):
 class SimpliSafe:
     """Define a SimpliSafe API object."""
 
-    def __init__(self, hass, api, systems, config_entry):
+    def __init__(self, hass, api, config_entry):
         """Initialize."""
         self._api = api
         self._config_entry = config_entry
         self._emergency_refresh_token_used = False
         self._hass = hass
         self.last_event_data = {}
-        self.systems = systems
+
+    async def async_init(self):
+        """Initialize the data class."""
+        self.systems = await self._api.get_systems()
+
+        # Register the base station for each system:
+        for system in self.systems.values():
+            self._hass.async_create_task(
+                async_register_base_station(
+                    self._hass, system, self._config_entry.entry_id
+                )
+            )
+
+        async def refresh(event_time):
+            """Refresh data from the SimpliSafe account."""
+            await self.async_update()
+
+        self._hass.data[DOMAIN][DATA_LISTENER][
+            self._config_entry.entry_id
+        ] = async_track_time_interval(self._hass, refresh, DEFAULT_SCAN_INTERVAL)
+
+        await self.async_update()
 
     async def _update_system(self, system):
         """Update a system."""
@@ -366,6 +370,9 @@ class SimpliSafe:
             _async_save_refresh_token(
                 self._hass, self._config_entry, self._api.refresh_token
             )
+
+        _LOGGER.debug("Updated data for all SimpliSafe systems")
+        async_dispatcher_send(self._hass, TOPIC_UPDATE)
 
 
 class SimpliSafeEntity(Entity):
