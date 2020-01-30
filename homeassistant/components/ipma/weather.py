@@ -267,9 +267,7 @@ class IPMAWeather(WeatherEntity):
                 for data_in in forecast_filtered
             ]
         else:
-            forecast_filtered = list(
-                filter(lambda x: x.forecasted_hours == 24, self._forecast)
-            )
+            forecast_filtered = [f for f in self._forecast if f.forecasted_hours == 24]
             fcdata_out = [
                 {
                     ATTR_FORECAST_TIME: data_in.forecast_date,
