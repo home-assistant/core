@@ -160,12 +160,12 @@ class AirMonitorB1(AirQualityEntity):
 
     @property
     def temperature(self):
-        """Return the total volatile organic compounds."""
+        """Return the current temperature."""
         return self._temperature
 
     @property
     def humidity(self):
-        """Return the total volatile organic compounds."""
+        """Return the curretn humidity."""
         return self._humidity
 
     @property
