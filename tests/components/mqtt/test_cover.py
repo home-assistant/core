@@ -110,6 +110,52 @@ async def test_opening_and_closing_state_via_custom_state_payload(hass, mqtt_moc
     assert state.state == STATE_CLOSED
 
 
+async def test_open_closed_state_from_position_optimistic(hass, mqtt_mock):
+    """Test the state after setting the position using optimistic mode."""
+    assert await async_setup_component(
+        hass,
+        cover.DOMAIN,
+        {
+            cover.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "position_topic": "position-topic",
+                "set_position_topic": "set-position-topic",
+                "qos": 0,
+                "payload_open": "OPEN",
+                "payload_close": "CLOSE",
+                "payload_stop": "STOP",
+                "optimistic": True,
+            }
+        },
+    )
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_UNKNOWN
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: 0},
+        blocking=True,
+    )
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_CLOSED
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+    await hass.services.async_call(
+        cover.DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.test", ATTR_POSITION: 100},
+        blocking=True,
+    )
+
+    state = hass.states.get("cover.test")
+    assert state.state == STATE_OPEN
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
 async def test_position_via_position_topic(hass, mqtt_mock):
     """Test the controlling state via topic."""
     assert await async_setup_component(
