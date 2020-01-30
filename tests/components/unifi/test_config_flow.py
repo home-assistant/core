@@ -18,12 +18,20 @@ from tests.common import MockConfigEntry
 
 async def test_flow_works(hass, aioclient_mock):
     """Test config flow."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
-    )
+    with patch.object(unifi.config_flow, "async_discover_unifi", return_value="1"):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
+    assert result["data_schema"]({CONF_USERNAME: "", CONF_PASSWORD: ""}) == {
+        CONF_HOST: "unifi",
+        CONF_USERNAME: "",
+        CONF_PASSWORD: "",
+        CONF_PORT: 8443,
+        CONF_VERIFY_SSL: False,
+    }
 
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
@@ -67,9 +75,10 @@ async def test_flow_works(hass, aioclient_mock):
 
 async def test_flow_works_multiple_sites(hass, aioclient_mock):
     """Test config flow works when finding multiple sites."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
-    )
+    with patch.object(unifi.config_flow, "async_discover_unifi", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -116,9 +125,10 @@ async def test_flow_fails_site_already_configured(hass, aioclient_mock):
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
-    )
+    with patch.object(unifi.config_flow, "async_discover_unifi", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -154,9 +164,10 @@ async def test_flow_fails_site_already_configured(hass, aioclient_mock):
 
 async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
     """Test config flow."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
-    )
+    with patch.object(unifi.config_flow, "async_discover_unifi", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -179,9 +190,10 @@ async def test_flow_fails_user_credentials_faulty(hass, aioclient_mock):
 
 async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
     """Test config flow."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
-    )
+    with patch.object(unifi.config_flow, "async_discover_unifi", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -204,9 +216,10 @@ async def test_flow_fails_controller_unavailable(hass, aioclient_mock):
 
 async def test_flow_fails_unknown_problem(hass, aioclient_mock):
     """Test config flow."""
-    result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
-    )
+    with patch.object(unifi.config_flow, "async_discover_unifi", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            config_flow.DOMAIN, context={"source": "user"}
+        )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
