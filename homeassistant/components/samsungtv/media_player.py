@@ -89,7 +89,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         # Generate a configuration for the Samsung library
         self._config = {
             "name": "HomeAssistant",
-            "description": self._name,
+            "description": "HomeAssistant",
             "id": "ha.component.samsung",
             "method": config_entry.data[CONF_METHOD],
             "port": config_entry.data.get(CONF_PORT),

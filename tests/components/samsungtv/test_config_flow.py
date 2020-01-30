@@ -42,7 +42,7 @@ AUTODETECT_WEBSOCKET = {
     "method": "websocket",
     "port": None,
     "host": "fake_host",
-    "timeout": 1,
+    "timeout": 31,
 }
 AUTODETECT_LEGACY = {
     "name": "HomeAssistant",
@@ -51,7 +51,7 @@ AUTODETECT_LEGACY = {
     "method": "legacy",
     "port": None,
     "host": "fake_host",
-    "timeout": 1,
+    "timeout": 31,
 }
 
 

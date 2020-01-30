@@ -94,7 +94,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "host": self._host,
                 "method": method,
                 "port": self._port,
-                "timeout": 1,
+                "timeout": 31,
             }
             try:
                 LOGGER.debug("Try config: %s", config)
@@ -108,8 +108,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except UnhandledResponse:
                 LOGGER.debug("Working but unsupported config: %s", config)
                 return RESULT_NOT_SUPPORTED
-            except (OSError):
-                LOGGER.debug("Failing config: %s", config)
+            except OSError as e:
+                LOGGER.debug("Failing config: %s, %s", config, e)
 
         LOGGER.debug("No working config found")
         return RESULT_NOT_FOUND

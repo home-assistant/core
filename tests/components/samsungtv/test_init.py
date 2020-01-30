@@ -32,7 +32,7 @@ MOCK_CONFIG = {
 }
 REMOTE_CALL = {
     "name": "HomeAssistant",
-    "description": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_NAME],
+    "description": "HomeAssistant",
     "id": "ha.component.samsung",
     "method": "websocket",
     "port": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_PORT],
