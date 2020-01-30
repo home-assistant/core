@@ -38,6 +38,7 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME):
 RESULT_AUTH_MISSING = "auth_missing"
 RESULT_SUCCESS = "success"
 RESULT_NOT_FOUND = "not_found"
+RESULT_NOT_SUCCESSFUL = "not_successful"
 RESULT_NOT_SUPPORTED = "not_supported"
 
 
@@ -94,6 +95,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "host": self._host,
                 "method": method,
                 "port": self._port,
+                # We need this high timeout because waiting for auth popup is just an open socket
                 "timeout": 31,
             }
             try:
@@ -109,7 +111,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.debug("Working but unsupported config: %s", config)
                 return RESULT_NOT_SUPPORTED
             except OSError as e:
-                LOGGER.debug("Failing config: %s, %s", config, e)
+                LOGGER.debug("Failing config: %s, error: %s", config, e)
+                return RESULT_NOT_SUCCESSFUL
 
         LOGGER.debug("No working config found")
         return RESULT_NOT_FOUND
