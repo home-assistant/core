@@ -2,8 +2,13 @@
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_HS_COLOR, ENTITY_ID_FORMAT, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR, Light)
+    ATTR_BRIGHTNESS,
+    ATTR_HS_COLOR,
+    ENTITY_ID_FORMAT,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    Light,
+)
 import homeassistant.util.color as color_util
 
 from . import VERA_CONTROLLER, VERA_DEVICES, VeraDevice
@@ -14,8 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vera lights."""
     add_entities(
-        [VeraLight(device, hass.data[VERA_CONTROLLER]) for
-         device in hass.data[VERA_DEVICES]['light']], True)
+        [
+            VeraLight(device, hass.data[VERA_CONTROLLER])
+            for device in hass.data[VERA_DEVICES]["light"]
+        ],
+        True,
+    )
 
 
 class VeraLight(VeraDevice, Light):

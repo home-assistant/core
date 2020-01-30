@@ -1,7 +1,7 @@
 {
   "domain": "prowl",
   "name": "Prowl",
-  "documentation": "https://www.home-assistant.io/components/prowl",
+  "documentation": "https://www.home-assistant.io/integrations/prowl",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

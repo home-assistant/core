@@ -1,13 +1,10 @@
 {
   "domain": "camera",
   "name": "Camera",
-  "documentation": "https://www.home-assistant.io/components/camera",
+  "documentation": "https://www.home-assistant.io/integrations/camera",
   "requirements": [],
-  "dependencies": [
-    "http"
-  ],
-  "after_dependencies": [
-    "stream"
-  ],
-  "codeowners": []
+  "dependencies": ["http"],
+  "after_dependencies": ["media_player"],
+  "codeowners": [],
+  "quality_scale": "internal"
 }

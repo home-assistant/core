@@ -1,13 +1,8 @@
 {
   "domain": "liveboxplaytv",
-  "name": "Liveboxplaytv",
-  "documentation": "https://www.home-assistant.io/components/liveboxplaytv",
-  "requirements": [
-    "liveboxplaytv==2.0.2",
-    "pyteleloisirs==3.5"
-  ],
+  "name": "Orange Livebox Play TV",
+  "documentation": "https://www.home-assistant.io/integrations/liveboxplaytv",
+  "requirements": ["liveboxplaytv==2.0.3", "pyteleloisirs==3.6"],
   "dependencies": [],
-  "codeowners": [
-    "@pschmitt"
-  ]
+  "codeowners": ["@pschmitt"]
 }

@@ -14,11 +14,11 @@
                 "data": {
                     "password": "Passwuert"
                 },
-                "description": "Gitt d'Passwuert vun \u00e4rer Konfiguratioun an.",
+                "description": "Gitt d'Passwuert vun \u00e4rer Konfiguratioun an fir {name}.",
                 "title": "Passwuert aginn"
             },
             "discovery_confirm": {
-                "description": "W\u00ebllt dir den ESPHome Provider `{name}` am 'Home Assistant dob\u00e4isetzen?",
+                "description": "W\u00ebllt dir den ESPHome Provider `{name}` am Home Assistant dob\u00e4isetzen?",
                 "title": "Entdeckten ESPHome Provider"
             },
             "user": {

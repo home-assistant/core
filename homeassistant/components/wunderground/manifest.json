@@ -1,7 +1,7 @@
 {
   "domain": "wunderground",
-  "name": "Wunderground",
-  "documentation": "https://www.home-assistant.io/components/wunderground",
+  "name": "Weather Underground (WUnderground)",
+  "documentation": "https://www.home-assistant.io/integrations/wunderground",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

@@ -1,29 +1,26 @@
 """Support for Abode Security System covers."""
 import logging
 
+import abodepy.helpers.constants as CONST
+
 from homeassistant.components.cover import CoverDevice
 
-from . import DOMAIN as ABODE_DOMAIN, AbodeDevice
+from . import AbodeDevice
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode cover devices."""
-    import abodepy.helpers.constants as CONST
+    data = hass.data[DOMAIN]
 
-    data = hass.data[ABODE_DOMAIN]
+    entities = []
 
-    devices = []
     for device in data.abode.get_devices(generic_type=CONST.TYPE_COVER):
-        if data.is_excluded(device):
-            continue
+        entities.append(AbodeCover(data, device))
 
-        devices.append(AbodeCover(data, device))
-
-    data.devices.extend(devices)
-
-    add_entities(devices)
+    async_add_entities(entities)
 
 
 class AbodeCover(AbodeDevice, CoverDevice):

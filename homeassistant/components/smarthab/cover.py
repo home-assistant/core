@@ -2,17 +2,23 @@
 Support for SmartHab device integration.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/smarthab/
+https://home-assistant.io/integrations/smarthab/
 """
-import logging
 from datetime import timedelta
+import logging
+
+import pysmarthab
 from requests.exceptions import Timeout
 
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
-    ATTR_POSITION
+    ATTR_POSITION,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    SUPPORT_SET_POSITION,
+    CoverDevice,
 )
-from . import DOMAIN, DATA_HUB
+
+from . import DATA_HUB, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,15 +27,17 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SmartHab roller shutters platform."""
-    import pysmarthab
 
     hub = hass.data[DOMAIN][DATA_HUB]
     devices = hub.get_device_list()
 
     _LOGGER.debug("Found a total of %s devices", str(len(devices)))
 
-    entities = (SmartHabCover(cover)
-                for cover in devices if isinstance(cover, pysmarthab.Shutter))
+    entities = (
+        SmartHabCover(cover)
+        for cover in devices
+        if isinstance(cover, pysmarthab.Shutter)
+    )
 
     add_entities(entities, True)
 
@@ -77,7 +85,7 @@ class SmartHabCover(CoverDevice):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'window'
+        return "window"
 
     def open_cover(self, **kwargs):
         """Open the cover."""
@@ -96,5 +104,6 @@ class SmartHabCover(CoverDevice):
         try:
             self._cover.update()
         except Timeout:
-            _LOGGER.error("Reached timeout while updating cover %s from API",
-                          self.entity_id)
+            _LOGGER.error(
+                "Reached timeout while updating cover %s from API", self.entity_id
+            )

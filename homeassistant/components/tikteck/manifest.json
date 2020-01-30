@@ -1,10 +1,8 @@
 {
   "domain": "tikteck",
   "name": "Tikteck",
-  "documentation": "https://www.home-assistant.io/components/tikteck",
-  "requirements": [
-    "tikteck==0.4"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/tikteck",
+  "requirements": ["tikteck==0.4"],
   "dependencies": [],
   "codeowners": []
 }

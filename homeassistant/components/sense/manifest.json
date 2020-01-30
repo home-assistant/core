@@ -1,10 +1,8 @@
 {
   "domain": "sense",
   "name": "Sense",
-  "documentation": "https://www.home-assistant.io/components/sense",
-  "requirements": [
-    "sense_energy==0.7.0"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/sense",
+  "requirements": ["sense_energy==0.7.0"],
   "dependencies": [],
   "codeowners": ["@kbickar"]
 }

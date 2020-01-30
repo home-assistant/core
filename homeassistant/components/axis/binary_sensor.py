@@ -5,7 +5,7 @@ from datetime import timedelta
 from axis.event_stream import CLASS_INPUT, CLASS_OUTPUT
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import CONF_MAC, CONF_TRIGGER_TIME
+from homeassistant.const import CONF_TRIGGER_TIME
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -17,8 +17,7 @@ from .const import DOMAIN as AXIS_DOMAIN
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up a Axis binary sensor."""
-    serial_number = config_entry.data[CONF_MAC]
-    device = hass.data[AXIS_DOMAIN][serial_number]
+    device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
     @callback
     def async_add_sensor(event_id):
@@ -28,8 +27,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if event.CLASS != CLASS_OUTPUT:
             async_add_entities([AxisBinarySensor(event, device)], True)
 
-    device.listeners.append(async_dispatcher_connect(
-        hass, device.event_new_sensor, async_add_sensor))
+    device.listeners.append(
+        async_dispatcher_connect(hass, device.event_new_sensor, async_add_sensor)
+    )
 
 
 class AxisBinarySensor(AxisEventBase, BinarySensorDevice):
@@ -63,8 +63,8 @@ class AxisBinarySensor(AxisEventBase, BinarySensorDevice):
             self.remove_timer = None
 
         self.remove_timer = async_track_point_in_utc_time(
-            self.hass, _delay_update,
-            utcnow() + timedelta(seconds=delay))
+            self.hass, _delay_update, utcnow() + timedelta(seconds=delay)
+        )
 
     @property
     def is_on(self):
@@ -74,10 +74,13 @@ class AxisBinarySensor(AxisEventBase, BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the event."""
-        if self.event.CLASS == CLASS_INPUT and self.event.id and \
-                self.device.api.vapix.ports[self.event.id].name:
-            return '{} {}'.format(
-                self.device.name,
-                self.device.api.vapix.ports[self.event.id].name)
+        if (
+            self.event.CLASS == CLASS_INPUT
+            and self.event.id
+            and self.device.api.vapix.ports[self.event.id].name
+        ):
+            return "{} {}".format(
+                self.device.name, self.device.api.vapix.ports[self.event.id].name
+            )
 
         return super().name

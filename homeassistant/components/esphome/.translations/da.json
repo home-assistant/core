@@ -8,6 +8,7 @@
             "invalid_password": "Ugyldig adgangskode!",
             "resolve_error": "Kan ikke finde adressen p\u00e5 ESP. Hvis denne fejl forts\u00e6tter skal du angive en statisk IP-adresse: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
+        "flow_title": "ESPHome: {name}",
         "step": {
             "authenticate": {
                 "data": {
@@ -17,8 +18,8 @@
                 "title": "Indtast adgangskode"
             },
             "discovery_confirm": {
-                "description": "Vil du tilf\u00f8je ESPHome node `{name}` til Home Assistant?",
-                "title": "Fandt ESPHome node"
+                "description": "Vil du tilf\u00f8je ESPHome-knudepunkt `{name}` til Home Assistant?",
+                "title": "Fandt ESPHome-knudepunkt"
             },
             "user": {
                 "data": {

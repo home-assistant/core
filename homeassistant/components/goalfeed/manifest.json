@@ -1,10 +1,8 @@
 {
   "domain": "goalfeed",
   "name": "Goalfeed",
-  "documentation": "https://www.home-assistant.io/components/goalfeed",
-  "requirements": [
-    "pysher==1.0.1"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/goalfeed",
+  "requirements": ["pysher==1.0.1"],
   "dependencies": [],
   "codeowners": []
 }

@@ -2,12 +2,8 @@
   "domain": "life360",
   "name": "Life360",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/life360",
+  "documentation": "https://www.home-assistant.io/integrations/life360",
   "dependencies": [],
-  "codeowners": [
-    "@pnbruckner"
-  ],
-  "requirements": [
-    "life360==4.0.1"
-  ]
+  "codeowners": ["@pnbruckner"],
+  "requirements": ["life360==4.1.1"]
 }

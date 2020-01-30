@@ -1,13 +1,9 @@
 {
   "domain": "ambient_station",
-  "name": "Ambient station",
+  "name": "Ambient Weather Station",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/ambient_station",
-  "requirements": [
-    "aioambient==0.3.1"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/ambient_station",
+  "requirements": ["aioambient==1.0.2"],
   "dependencies": [],
-  "codeowners": [
-    "@bachya"
-  ]
+  "codeowners": ["@bachya"]
 }

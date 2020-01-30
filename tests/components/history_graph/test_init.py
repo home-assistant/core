@@ -3,7 +3,8 @@
 import unittest
 
 from homeassistant.setup import setup_component
-from tests.common import init_recorder_component, get_test_home_assistant
+
+from tests.common import get_test_home_assistant, init_recorder_component
 
 
 class TestGraph(unittest.TestCase):
@@ -20,24 +21,14 @@ class TestGraph(unittest.TestCase):
     def test_setup_component(self):
         """Test setup component."""
         self.init_recorder()
-        config = {
-            'history': {
-            },
-            'history_graph': {
-                'name_1': {
-                    'entities': 'test.test',
-                }
-            }
-        }
+        config = {"history": {}, "history_graph": {"name_1": {"entities": "test.test"}}}
 
-        assert setup_component(self.hass, 'history_graph', config)
-        assert dict(
-            self.hass.states.get('history_graph.name_1').attributes
-        ) == {
-            'entity_id': ['test.test'],
-            'friendly_name': 'name_1',
-            'hours_to_show': 24,
-            'refresh': 0
+        assert setup_component(self.hass, "history_graph", config)
+        assert dict(self.hass.states.get("history_graph.name_1").attributes) == {
+            "entity_id": ["test.test"],
+            "friendly_name": "name_1",
+            "hours_to_show": 24,
+            "refresh": 0,
         }
 
     def init_recorder(self):

@@ -1,10 +1,8 @@
 {
   "domain": "push",
   "name": "Push",
-  "documentation": "https://www.home-assistant.io/components/push",
+  "documentation": "https://www.home-assistant.io/integrations/push",
   "requirements": [],
   "dependencies": ["webhook"],
-  "codeowners": [
-    "@dgomes"
-  ]
+  "codeowners": ["@dgomes"]
 }

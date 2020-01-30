@@ -8,8 +8,9 @@ from homeassistant.const import CONF_NAME
 from .const import DEFAULT_NAME
 
 # Regex for address validation
-PATTERN_ADDRESS = re.compile('^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)'
-                             '\\.(?P<type>m|g)?(?P<id>\\d+)$')
+PATTERN_ADDRESS = re.compile(
+    "^((?P<conn_id>\\w+)\\.)?s?(?P<seg_id>\\d+)\\.(?P<type>m|g)?(?P<id>\\d+)$"
+)
 
 
 def get_connection(connections, connection_id=None):
@@ -21,7 +22,7 @@ def get_connection(connections, connection_id=None):
             if connection.connection_id == connection_id:
                 break
         else:
-            raise ValueError('Unknown connection_id.')
+            raise ValueError("Unknown connection_id.")
     return connection
 
 
@@ -37,7 +38,7 @@ def has_unique_connection_names(connections):
             if suffix == 0:
                 connection[CONF_NAME] = DEFAULT_NAME
             else:
-                connection[CONF_NAME] = '{}{:d}'.format(DEFAULT_NAME, suffix)
+                connection[CONF_NAME] = f"{DEFAULT_NAME}{suffix:d}"
 
     schema = vol.Schema(vol.Unique())
     schema([connection.get(CONF_NAME) for connection in connections])
@@ -58,13 +59,11 @@ def is_address(value):
     """
     matcher = PATTERN_ADDRESS.match(value)
     if matcher:
-        is_group = (matcher.group('type') == 'g')
-        addr = (int(matcher.group('seg_id')),
-                int(matcher.group('id')),
-                is_group)
-        conn_id = matcher.group('conn_id')
+        is_group = matcher.group("type") == "g"
+        addr = (int(matcher.group("seg_id")), int(matcher.group("id")), is_group)
+        conn_id = matcher.group("conn_id")
         return addr, conn_id
-    raise vol.error.Invalid('Not a valid address string.')
+    raise vol.error.Invalid("Not a valid address string.")
 
 
 def is_relays_states_string(states_string):
@@ -72,19 +71,19 @@ def is_relays_states_string(states_string):
     if len(states_string) == 8:
         states = []
         for state_string in states_string:
-            if state_string == '1':
-                state = 'ON'
-            elif state_string == '0':
-                state = 'OFF'
-            elif state_string == 'T':
-                state = 'TOGGLE'
-            elif state_string == '-':
-                state = 'NOCHANGE'
+            if state_string == "1":
+                state = "ON"
+            elif state_string == "0":
+                state = "OFF"
+            elif state_string == "T":
+                state = "TOGGLE"
+            elif state_string == "-":
+                state = "NOCHANGE"
             else:
-                raise vol.error.Invalid('Not a valid relay state string.')
+                raise vol.error.Invalid("Not a valid relay state string.")
             states.append(state)
         return states
-    raise vol.error.Invalid('Wrong length of relay state string.')
+    raise vol.error.Invalid("Wrong length of relay state string.")
 
 
 def is_key_lock_states_string(states_string):
@@ -92,16 +91,16 @@ def is_key_lock_states_string(states_string):
     if len(states_string) == 8:
         states = []
         for state_string in states_string:
-            if state_string == '1':
-                state = 'ON'
-            elif state_string == '0':
-                state = 'OFF'
-            elif state_string == 'T':
-                state = 'TOGGLE'
-            elif state_string == '-':
-                state = 'NOCHANGE'
+            if state_string == "1":
+                state = "ON"
+            elif state_string == "0":
+                state = "OFF"
+            elif state_string == "T":
+                state = "TOGGLE"
+            elif state_string == "-":
+                state = "NOCHANGE"
             else:
-                raise vol.error.Invalid('Not a valid key lock state string.')
+                raise vol.error.Invalid("Not a valid key lock state string.")
             states.append(state)
         return states
-    raise vol.error.Invalid('Wrong length of key lock state string.')
+    raise vol.error.Invalid("Wrong length of key lock state string.")

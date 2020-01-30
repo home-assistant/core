@@ -1,39 +1,44 @@
 """Support for Xiaomi Mi WiFi Repeater 2."""
 import logging
 
+from miio import DeviceException, WifiRepeater  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
+    DOMAIN,
+    PLATFORM_SCHEMA,
+    DeviceScanner,
+)
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
+    }
+)
 
 
 def get_scanner(hass, config):
     """Return a Xiaomi MiIO device scanner."""
-    from miio import WifiRepeater, DeviceException
-
     scanner = None
-    host = config[DOMAIN].get(CONF_HOST)
-    token = config[DOMAIN].get(CONF_TOKEN)
+    host = config[DOMAIN][CONF_HOST]
+    token = config[DOMAIN][CONF_TOKEN]
 
-    _LOGGER.info(
-        "Initializing with host %s (token %s...)", host, token[:5])
+    _LOGGER.info("Initializing with host %s (token %s...)", host, token[:5])
 
     try:
         device = WifiRepeater(host, token)
         device_info = device.info()
-        _LOGGER.info("%s %s %s detected",
-                     device_info.model,
-                     device_info.firmware_version,
-                     device_info.hardware_version)
+        _LOGGER.info(
+            "%s %s %s detected",
+            device_info.model,
+            device_info.firmware_version,
+            device_info.hardware_version,
+        )
         scanner = XiaomiMiioDeviceScanner(device)
     except DeviceException as ex:
         _LOGGER.error("Device unavailable or token incorrect: %s", ex)
@@ -50,16 +55,13 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
 
     async def async_scan_devices(self):
         """Scan for devices and return a list containing found device IDs."""
-        from miio import DeviceException
-
         devices = []
         try:
-            station_info = \
-                await self.hass.async_add_executor_job(self.device.status)
+            station_info = await self.hass.async_add_executor_job(self.device.status)
             _LOGGER.debug("Got new station info: %s", station_info)
 
             for device in station_info.associated_stations:
-                devices.append(device['mac'])
+                devices.append(device["mac"])
 
         except DeviceException as ex:
             _LOGGER.error("Unable to fetch the state: %s", ex)

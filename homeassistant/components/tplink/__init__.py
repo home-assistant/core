@@ -3,48 +3,52 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from .common import (
-    async_discover_devices,
-    get_static_devices,
     ATTR_CONFIG,
     CONF_DIMMER,
     CONF_DISCOVERY,
     CONF_LIGHT,
+    CONF_STRIP,
     CONF_SWITCH,
-    SmartDevices
+    SmartDevices,
+    async_discover_devices,
+    get_static_devices,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'tplink'
+DOMAIN = "tplink"
 
-TPLINK_HOST_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): cv.string
-})
+TPLINK_HOST_SCHEMA = vol.Schema({vol.Required(CONF_HOST): cv.string})
 
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_LIGHT, default=[]): vol.All(
-            cv.ensure_list,
-            [TPLINK_HOST_SCHEMA]
-        ),
-        vol.Optional(CONF_SWITCH, default=[]): vol.All(
-            cv.ensure_list,
-            [TPLINK_HOST_SCHEMA]
-        ),
-        vol.Optional(CONF_DIMMER, default=[]): vol.All(
-            cv.ensure_list,
-            [TPLINK_HOST_SCHEMA]
-        ),
-        vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
-    }),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_LIGHT, default=[]): vol.All(
+                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                ),
+                vol.Optional(CONF_SWITCH, default=[]): vol.All(
+                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                ),
+                vol.Optional(CONF_STRIP, default=[]): vol.All(
+                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                ),
+                vol.Optional(CONF_DIMMER, default=[]): vol.All(
+                    cv.ensure_list, [TPLINK_HOST_SCHEMA]
+                ),
+                vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass, config):
@@ -55,8 +59,11 @@ async def async_setup(hass, config):
     hass.data[DOMAIN][ATTR_CONFIG] = conf
 
     if conf is not None:
-        hass.async_create_task(hass.config_entries.flow.async_init(
-            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
+            )
+        )
 
     return True
 
@@ -72,9 +79,7 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
     # Add static devices
     static_devices = SmartDevices()
     if config_data is not None:
-        static_devices = get_static_devices(
-            config_data,
-        )
+        static_devices = get_static_devices(config_data)
 
         lights.extend(static_devices.lights)
         switches.extend(static_devices.switches)
@@ -89,18 +94,14 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigType):
     forward_setup = hass.config_entries.async_forward_entry_setup
     if lights:
         _LOGGER.debug(
-            "Got %s lights: %s",
-            len(lights),
-            ", ".join([d.host for d in lights])
+            "Got %s lights: %s", len(lights), ", ".join([d.host for d in lights])
         )
-        hass.async_create_task(forward_setup(config_entry, 'light'))
+        hass.async_create_task(forward_setup(config_entry, "light"))
     if switches:
         _LOGGER.debug(
-            "Got %s switches: %s",
-            len(switches),
-            ", ".join([d.host for d in switches])
+            "Got %s switches: %s", len(switches), ", ".join([d.host for d in switches])
         )
-        hass.async_create_task(forward_setup(config_entry, 'switch'))
+        hass.async_create_task(forward_setup(config_entry, "switch"))
 
     return True
 
@@ -110,9 +111,9 @@ async def async_unload_entry(hass, entry):
     forward_unload = hass.config_entries.async_forward_entry_unload
     remove_lights = remove_switches = False
     if hass.data[DOMAIN][CONF_LIGHT]:
-        remove_lights = await forward_unload(entry, 'light')
+        remove_lights = await forward_unload(entry, "light")
     if hass.data[DOMAIN][CONF_SWITCH]:
-        remove_switches = await forward_unload(entry, 'switch')
+        remove_switches = await forward_unload(entry, "switch")
 
     if remove_lights or remove_switches:
         hass.data[DOMAIN].clear()

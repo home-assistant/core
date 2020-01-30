@@ -1,12 +1,8 @@
 {
   "domain": "lifx_legacy",
-  "name": "Lifx legacy",
-  "documentation": "https://www.home-assistant.io/components/lifx_legacy",
-  "requirements": [
-    "liffylights==0.9.4"
-  ],
+  "name": "LIFX Legacy",
+  "documentation": "https://www.home-assistant.io/integrations/lifx_legacy",
+  "requirements": ["liffylights==0.9.4"],
   "dependencies": [],
-  "codeowners": [
-    "@amelchio"
-  ]
+  "codeowners": []
 }

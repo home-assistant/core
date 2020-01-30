@@ -1,33 +1,38 @@
 """Support for Gogogate2 garage Doors."""
 import logging
 
+from pygogogate2 import Gogogate2API as pygogogate2
 import voluptuous as vol
 
-from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE)
+from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverDevice
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
-    CONF_IP_ADDRESS, CONF_NAME)
+    CONF_IP_ADDRESS,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    STATE_CLOSED,
+)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'gogogate2'
+DEFAULT_NAME = "gogogate2"
 
-NOTIFICATION_ID = 'gogogate2_notification'
-NOTIFICATION_TITLE = 'Gogogate2 Cover Setup'
+NOTIFICATION_ID = "gogogate2_notification"
+NOTIFICATION_TITLE = "Gogogate2 Cover Setup"
 
-COVER_SCHEMA = vol.Schema({
-    vol.Required(CONF_IP_ADDRESS): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
+COVER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_IP_ADDRESS): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gogogate2 component."""
-    from pygogogate2 import Gogogate2API as pygogogate2
 
     ip_address = config.get(CONF_IP_ADDRESS)
     name = config.get(CONF_NAME)
@@ -39,20 +44,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         devices = mygogogate2.get_devices()
         if devices is False:
-            raise ValueError(
-                "Username or Password is incorrect or no devices found")
+            raise ValueError("Username or Password is incorrect or no devices found")
 
-        add_entities(MyGogogate2Device(
-            mygogogate2, door, name) for door in devices)
+        add_entities(MyGogogate2Device(mygogogate2, door, name) for door in devices)
 
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
-            'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
+            "Error: {}<br />"
+            "You will need to restart hass after fixing."
+            "".format(ex),
             title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
+            notification_id=NOTIFICATION_ID,
+        )
 
 
 class MyGogogate2Device(CoverDevice):
@@ -61,9 +65,9 @@ class MyGogogate2Device(CoverDevice):
     def __init__(self, mygogogate2, device, name):
         """Initialize with API object, device id."""
         self.mygogogate2 = mygogogate2
-        self.device_id = device['door']
-        self._name = name or device['name']
-        self._status = device['status']
+        self.device_id = device["door"]
+        self._name = name or device["name"]
+        self._status = device["status"]
         self._available = None
 
     @property
@@ -79,7 +83,7 @@ class MyGogogate2Device(CoverDevice):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'garage'
+        return "garage"
 
     @property
     def supported_features(self):

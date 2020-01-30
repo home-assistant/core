@@ -2,10 +2,8 @@
   "domain": "geofency",
   "name": "Geofency",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/geofency",
+  "documentation": "https://www.home-assistant.io/integrations/geofency",
   "requirements": [],
-  "dependencies": [
-    "webhook"
-  ],
+  "dependencies": ["webhook"],
   "codeowners": []
 }

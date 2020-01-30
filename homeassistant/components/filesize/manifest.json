@@ -1,7 +1,7 @@
 {
   "domain": "filesize",
-  "name": "Filesize",
-  "documentation": "https://www.home-assistant.io/components/filesize",
+  "name": "File Size",
+  "documentation": "https://www.home-assistant.io/integrations/filesize",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

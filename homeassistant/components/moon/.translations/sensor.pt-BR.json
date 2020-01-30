@@ -5,8 +5,8 @@
         "last_quarter": "Quarto minguante",
         "new_moon": "Lua Nova",
         "waning_crescent": "Minguante",
-        "waning_gibbous": "Minguante gibosa",
+        "waning_gibbous": "Minguante",
         "waxing_crescent": "Crescente",
-        "waxing_gibbous": "Crescente gibosa"
+        "waxing_gibbous": "Crescente"
     }
 }

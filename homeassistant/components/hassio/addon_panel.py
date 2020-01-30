@@ -7,7 +7,7 @@ from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import ATTR_PANELS, ATTR_TITLE, ATTR_ICON, ATTR_ADMIN, ATTR_ENABLE
+from .const import ATTR_ADMIN, ATTR_ENABLE, ATTR_ICON, ATTR_PANELS, ATTR_TITLE
 from .handler import HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,13 +81,11 @@ def _register_panel(hass, addon, data):
     """
     return hass.components.panel_custom.async_register_panel(
         frontend_url_path=addon,
-        webcomponent_name='hassio-main',
+        webcomponent_name="hassio-main",
         sidebar_title=data[ATTR_TITLE],
         sidebar_icon=data[ATTR_ICON],
-        js_url='/api/hassio/app/entrypoint.js',
+        js_url="/api/hassio/app/entrypoint.js",
         embed_iframe=True,
         require_admin=data[ATTR_ADMIN],
-        config={
-            "ingress": addon
-        }
+        config={"ingress": addon},
     )

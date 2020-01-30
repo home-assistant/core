@@ -14,7 +14,7 @@
             }
         },
         "error": {
-            "name_exists": "Name already exists"
+            "name_exists": "Location already exists"
         }
     }
 }

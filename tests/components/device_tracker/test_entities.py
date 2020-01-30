@@ -2,33 +2,32 @@
 import pytest
 
 from homeassistant.components.device_tracker.config_entry import (
-    BaseTrackerEntity, ScannerEntity
+    BaseTrackerEntity,
+    ScannerEntity,
 )
 from homeassistant.components.device_tracker.const import (
-    SOURCE_TYPE_ROUTER, ATTR_SOURCE_TYPE, DOMAIN
+    ATTR_SOURCE_TYPE,
+    DOMAIN,
+    SOURCE_TYPE_ROUTER,
 )
-from homeassistant.const import (
-    STATE_HOME,
-    STATE_NOT_HOME,
-    ATTR_BATTERY_LEVEL
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_HOME, STATE_NOT_HOME
+
 from tests.common import MockConfigEntry
 
 
 async def test_scanner_entity_device_tracker(hass):
     """Test ScannerEntity based device tracker."""
-    config_entry = MockConfigEntry(domain='test')
+    config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_forward_entry_setup(
-        config_entry, DOMAIN)
+    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
     await hass.async_block_till_done()
 
-    entity_id = 'device_tracker.unnamed_device'
+    entity_id = "device_tracker.unnamed_device"
     entity_state = hass.states.get(entity_id)
     assert entity_state.attributes == {
         ATTR_SOURCE_TYPE: SOURCE_TYPE_ROUTER,
-        ATTR_BATTERY_LEVEL: 100
+        ATTR_BATTERY_LEVEL: 100,
     }
     assert entity_state.state == STATE_NOT_HOME
 

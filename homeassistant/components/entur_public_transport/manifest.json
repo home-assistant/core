@@ -1,10 +1,8 @@
 {
   "domain": "entur_public_transport",
-  "name": "Entur public transport",
-  "documentation": "https://www.home-assistant.io/components/entur_public_transport",
-  "requirements": [
-    "enturclient==0.2.0"
-  ],
+  "name": "Entur",
+  "documentation": "https://www.home-assistant.io/integrations/entur_public_transport",
+  "requirements": ["enturclient==0.2.1"],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@hfurubotten"]
 }

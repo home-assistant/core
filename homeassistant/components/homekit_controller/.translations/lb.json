@@ -24,7 +24,7 @@
                 "data": {
                     "pairing_code": "Pairing Code"
                 },
-                "description": "Gitt \u00e4ren HomeKit pairing Code an fir d\u00ebsen Accessoire ze benotzen",
+                "description": "Gitt \u00e4ren HomeKit pairing Code (am Format XXX-XX-XXX) an fir d\u00ebsen Accessoire ze benotzen",
                 "title": "Mam HomeKit Accessoire verbannen"
             },
             "user": {

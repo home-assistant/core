@@ -1,7 +1,7 @@
 {
   "domain": "squeezebox",
-  "name": "Squeezebox",
-  "documentation": "https://www.home-assistant.io/components/squeezebox",
+  "name": "Logitech Squeezebox",
+  "documentation": "https://www.home-assistant.io/integrations/squeezebox",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

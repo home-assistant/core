@@ -7,7 +7,7 @@ from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
-MOCK_VERSION = '10.0'
+MOCK_VERSION = "10.0"
 
 
 class TestVersionSensor(unittest.TestCase):
@@ -23,28 +23,19 @@ class TestVersionSensor(unittest.TestCase):
 
     def test_version_sensor(self):
         """Test the Version sensor."""
-        config = {
-            'sensor': {
-                'platform': 'version',
-            }
-        }
+        config = {"sensor": {"platform": "version"}}
 
-        assert setup_component(self.hass, 'sensor', config)
+        assert setup_component(self.hass, "sensor", config)
 
     @asyncio.coroutine
     def test_version(self):
         """Test the Version sensor."""
-        config = {
-            'sensor': {
-                'platform': 'version',
-                'name': 'test',
-            }
-        }
+        config = {"sensor": {"platform": "version", "name": "test"}}
 
-        with patch('homeassistant.const.__version__', MOCK_VERSION):
-            assert setup_component(self.hass, 'sensor', config)
+        with patch("homeassistant.const.__version__", MOCK_VERSION):
+            assert setup_component(self.hass, "sensor", config)
             self.hass.block_till_done()
 
-        state = self.hass.states.get('sensor.test')
+        state = self.hass.states.get("sensor.test")
 
-        assert state.state == '10.0'
+        assert state.state == "10.0"

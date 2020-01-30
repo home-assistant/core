@@ -26,11 +26,11 @@ class BlinkBinarySensor(BinarySensorDevice):
         self.data = data
         self._type = sensor_type
         name, icon = BINARY_SENSORS[sensor_type]
-        self._name = "{} {} {}".format(BLINK_DATA, camera, name)
+        self._name = f"{BLINK_DATA} {camera} {name}"
         self._icon = icon
         self._camera = data.cameras[camera]
         self._state = None
-        self._unique_id = "{}-{}".format(self._camera.serial, self._type)
+        self._unique_id = f"{self._camera.serial}-{self._type}"
 
     @property
     def name(self):

@@ -1,12 +1,8 @@
 {
   "domain": "ohmconnect",
-  "name": "Ohmconnect",
-  "documentation": "https://www.home-assistant.io/components/ohmconnect",
-  "requirements": [
-    "defusedxml==0.6.0"
-  ],
+  "name": "OhmConnect",
+  "documentation": "https://www.home-assistant.io/integrations/ohmconnect",
+  "requirements": ["defusedxml==0.6.0"],
   "dependencies": [],
-  "codeowners": [
-    "@robbiet480"
-  ]
+  "codeowners": ["@robbiet480"]
 }

@@ -4,10 +4,18 @@ All containing methods are legacy helpers that should not be used by new
 components. Instead call the service directly.
 """
 from homeassistant.components.group import (
-    ATTR_ADD_ENTITIES, ATTR_CONTROL, ATTR_ENTITIES, ATTR_OBJECT_ID, ATTR_VIEW,
-    ATTR_VISIBLE, DOMAIN, SERVICE_REMOVE, SERVICE_SET, SERVICE_SET_VISIBILITY)
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_ICON, ATTR_NAME, SERVICE_RELOAD)
+    ATTR_ADD_ENTITIES,
+    ATTR_CONTROL,
+    ATTR_ENTITIES,
+    ATTR_OBJECT_ID,
+    ATTR_VIEW,
+    ATTR_VISIBLE,
+    DOMAIN,
+    SERVICE_REMOVE,
+    SERVICE_SET,
+    SERVICE_SET_VISIBILITY,
+)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, ATTR_NAME, SERVICE_RELOAD
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
@@ -26,21 +34,49 @@ def async_reload(hass):
 
 
 @bind_hass
-def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
-              icon=None, view=None, control=None, add=None):
+def set_group(
+    hass,
+    object_id,
+    name=None,
+    entity_ids=None,
+    visible=None,
+    icon=None,
+    view=None,
+    control=None,
+    add=None,
+):
     """Create/Update a group."""
     hass.add_job(
-        async_set_group, hass, object_id, name, entity_ids, visible, icon,
-        view, control, add)
+        async_set_group,
+        hass,
+        object_id,
+        name,
+        entity_ids,
+        visible,
+        icon,
+        view,
+        control,
+        add,
+    )
 
 
 @callback
 @bind_hass
-def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
-                    icon=None, view=None, control=None, add=None):
+def async_set_group(
+    hass,
+    object_id,
+    name=None,
+    entity_ids=None,
+    visible=None,
+    icon=None,
+    view=None,
+    control=None,
+    add=None,
+):
     """Create/Update a group."""
     data = {
-        key: value for key, value in [
+        key: value
+        for key, value in [
             (ATTR_OBJECT_ID, object_id),
             (ATTR_NAME, name),
             (ATTR_ENTITIES, entity_ids),
@@ -49,7 +85,8 @@ def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
             (ATTR_VIEW, view),
             (ATTR_CONTROL, control),
             (ATTR_ADD_ENTITIES, add),
-        ] if value is not None
+        ]
+        if value is not None
     }
 
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_SET, data))

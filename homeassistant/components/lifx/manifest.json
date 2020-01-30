@@ -1,19 +1,12 @@
 {
   "domain": "lifx",
-  "name": "Lifx",
+  "name": "LIFX",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/lifx",
-  "requirements": [
-    "aiolifx==0.6.7",
-    "aiolifx_effects==0.2.2"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/lifx",
+  "requirements": ["aiolifx==0.6.7", "aiolifx_effects==0.2.2"],
   "homekit": {
-    "models": [
-      "LIFX"
-    ]
+    "models": ["LIFX"]
   },
   "dependencies": [],
-  "codeowners": [
-    "@amelchio"
-  ]
+  "codeowners": []
 }

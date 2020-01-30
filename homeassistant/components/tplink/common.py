@@ -1,14 +1,16 @@
 """Common code for tplink."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 from typing import Any, Callable, List
 
 from pyHS100 import (
+    Discover,
     SmartBulb,
     SmartDevice,
+    SmartDeviceException,
     SmartPlug,
-    SmartDeviceException
+    SmartStrip,
 )
 
 from homeassistant.helpers.typing import HomeAssistantType
@@ -16,22 +18,21 @@ from homeassistant.helpers.typing import HomeAssistantType
 _LOGGER = logging.getLogger(__name__)
 
 
-ATTR_CONFIG = 'config'
-CONF_DIMMER = 'dimmer'
-CONF_DISCOVERY = 'discovery'
-CONF_LIGHT = 'light'
-CONF_SWITCH = 'switch'
+ATTR_CONFIG = "config"
+CONF_DIMMER = "dimmer"
+CONF_DISCOVERY = "discovery"
+CONF_LIGHT = "light"
+CONF_STRIP = "strip"
+CONF_SWITCH = "switch"
 
 
 class SmartDevices:
     """Hold different kinds of devices."""
 
     def __init__(
-            self,
-            lights: List[SmartDevice] = None,
-            switches: List[SmartDevice] = None
+        self, lights: List[SmartDevice] = None, switches: List[SmartDevice] = None
     ):
-        """Constructor."""
+        """Initialize device holder."""
         self._lights = lights or []
         self._switches = switches or []
 
@@ -56,25 +57,21 @@ class SmartDevices:
 
 async def async_get_discoverable_devices(hass):
     """Return if there are devices that can be discovered."""
-    from pyHS100 import Discover
 
     def discover():
         devs = Discover.discover()
         return devs
+
     return await hass.async_add_executor_job(discover)
 
 
 async def async_discover_devices(
-        hass: HomeAssistantType,
-        existing_devices: SmartDevices
+    hass: HomeAssistantType, existing_devices: SmartDevices
 ) -> SmartDevices:
     """Get devices through discovery."""
     _LOGGER.debug("Discovering devices")
     devices = await async_get_discoverable_devices(hass)
-    _LOGGER.info(
-        "Discovered %s TP-Link smart home device(s)",
-        len(devices)
-    )
+    _LOGGER.info("Discovered %s TP-Link smart home device(s)", len(devices))
 
     lights = []
     switches = []
@@ -85,15 +82,17 @@ async def async_discover_devices(
             if existing_devices.has_device_with_host(dev.host):
                 continue
 
-            if isinstance(dev, SmartPlug):
+            if isinstance(dev, SmartStrip):
+                for plug in dev.plugs.values():
+                    switches.append(plug)
+            elif isinstance(dev, SmartPlug):
                 try:
                     if dev.is_dimmable:  # Dimmers act as lights
                         lights.append(dev)
                     else:
                         switches.append(dev)
                 except SmartDeviceException as ex:
-                    _LOGGER.error("Unable to connect to device %s: %s",
-                                  dev.host, ex)
+                    _LOGGER.error("Unable to connect to device %s: %s", dev.host, ex)
 
             elif isinstance(dev, SmartBulb):
                 lights.append(dev)
@@ -111,30 +110,30 @@ def get_static_devices(config_data) -> SmartDevices:
     lights = []
     switches = []
 
-    for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_DIMMER]:
+    for type_ in [CONF_LIGHT, CONF_SWITCH, CONF_STRIP, CONF_DIMMER]:
         for entry in config_data[type_]:
-            host = entry['host']
+            host = entry["host"]
 
             if type_ == CONF_LIGHT:
                 lights.append(SmartBulb(host))
             elif type_ == CONF_SWITCH:
                 switches.append(SmartPlug(host))
+            elif type_ == CONF_STRIP:
+                for plug in SmartStrip(host).plugs.values():
+                    switches.append(plug)
             # Dimmers need to be defined as smart plugs to work correctly.
             elif type_ == CONF_DIMMER:
                 lights.append(SmartPlug(host))
 
-    return SmartDevices(
-        lights,
-        switches
-    )
+    return SmartDevices(lights, switches)
 
 
 async def async_add_entities_retry(
-        hass: HomeAssistantType,
-        async_add_entities: Callable[[List[Any], bool], None],
-        objects: List[Any],
-        callback: Callable[[Any, Callable], None],
-        interval: timedelta = timedelta(seconds=60)
+    hass: HomeAssistantType,
+    async_add_entities: Callable[[List[Any], bool], None],
+    objects: List[Any],
+    callback: Callable[[Any, Callable], None],
+    interval: timedelta = timedelta(seconds=60),
 ):
     """
     Add entities now and retry later if issues are encountered.
@@ -176,19 +175,12 @@ async def async_add_entities_retry(
         for add_object in list(add_objects):
             # Call the individual item callback.
             try:
-                _LOGGER.debug(
-                    "Attempting to add object of type %s",
-                    type(add_object)
-                )
+                _LOGGER.debug("Attempting to add object of type %s", type(add_object))
                 result = await hass.async_add_job(
-                    callback,
-                    add_object,
-                    async_add_entities
+                    callback, add_object, async_add_entities
                 )
             except SmartDeviceException as ex:
-                _LOGGER.debug(
-                    str(ex)
-                )
+                _LOGGER.debug(str(ex))
                 result = False
 
             if result is True or result is None:

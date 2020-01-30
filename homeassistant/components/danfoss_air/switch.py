@@ -15,25 +15,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     data = hass.data[DANFOSS_AIR_DOMAIN]
 
     switches = [
-        ["Danfoss Air Boost",
-         ReadCommand.boost,
-         UpdateCommand.boost_activate,
-         UpdateCommand.boost_deactivate],
-        ["Danfoss Air Bypass",
-         ReadCommand.bypass,
-         UpdateCommand.bypass_activate,
-         UpdateCommand.bypass_deactivate],
-        ["Danfoss Air Automatic Bypass",
-         ReadCommand.automatic_bypass,
-         UpdateCommand.bypass_activate,
-         UpdateCommand.bypass_deactivate],
+        [
+            "Danfoss Air Boost",
+            ReadCommand.boost,
+            UpdateCommand.boost_activate,
+            UpdateCommand.boost_deactivate,
+        ],
+        [
+            "Danfoss Air Bypass",
+            ReadCommand.bypass,
+            UpdateCommand.bypass_activate,
+            UpdateCommand.bypass_deactivate,
+        ],
+        [
+            "Danfoss Air Automatic Bypass",
+            ReadCommand.automatic_bypass,
+            UpdateCommand.bypass_activate,
+            UpdateCommand.bypass_deactivate,
+        ],
     ]
 
     dev = []
 
     for switch in switches:
-        dev.append(DanfossAir(
-            data, switch[0], switch[1], switch[2], switch[3]))
+        dev.append(DanfossAir(data, switch[0], switch[1], switch[2], switch[3]))
 
     add_entities(dev)
 

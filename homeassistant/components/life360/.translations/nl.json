@@ -10,6 +10,7 @@
         "error": {
             "invalid_credentials": "Ongeldige gebruikersgegevens",
             "invalid_username": "Ongeldige gebruikersnaam",
+            "unexpected": "Onverwachte fout bij communicatie met Life360-server",
             "user_already_configured": "Account is al geconfigureerd"
         },
         "step": {

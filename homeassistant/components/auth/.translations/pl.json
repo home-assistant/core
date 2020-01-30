@@ -13,7 +13,7 @@
                     "title": "Skonfiguruj has\u0142o jednorazowe dostarczone przez komponent powiadomie\u0144"
                 },
                 "setup": {
-                    "description": "Has\u0142o jednorazowe zosta\u0142o wys\u0142ane przez **notify.{notify_service}**. Wpisz je poni\u017cej:",
+                    "description": "Has\u0142o jednorazowe zosta\u0142o wys\u0142ane przez **notify.{notify_service}**. Wprowad\u017a je poni\u017cej:",
                     "title": "Sprawd\u017a konfiguracj\u0119"
                 }
             },

@@ -1,6 +1,8 @@
 """Support for Qwikswitch Sensors."""
 import logging
 
+from pyqwikswitch.qwikswitch import SENSORS
+
 from homeassistant.core import callback
 
 from . import DOMAIN as QWIKSWITCH, QSEntity
@@ -26,22 +28,27 @@ class QSSensor(QSEntity):
 
     def __init__(self, sensor):
         """Initialize the sensor."""
-        from pyqwikswitch.qwikswitch import SENSORS
 
-        super().__init__(sensor['id'], sensor['name'])
-        self.channel = sensor['channel']
-        sensor_type = sensor['type']
+        super().__init__(sensor["id"], sensor["name"])
+        self.channel = sensor["channel"]
+        sensor_type = sensor["type"]
 
         self._decode, self.unit = SENSORS[sensor_type]
         if isinstance(self.unit, type):
-            self.unit = "{}:{}".format(sensor_type, self.channel)
+            self.unit = f"{sensor_type}:{self.channel}"
 
     @callback
     def update_packet(self, packet):
         """Receive update packet from QSUSB."""
         val = self._decode(packet, channel=self.channel)
-        _LOGGER.debug("Update %s (%s:%s) decoded as %s: %s",
-                      self.entity_id, self.qsid, self.channel, val, packet)
+        _LOGGER.debug(
+            "Update %s (%s:%s) decoded as %s: %s",
+            self.entity_id,
+            self.qsid,
+            self.channel,
+            val,
+            packet,
+        )
         if val is not None:
             self._val = val
             self.async_schedule_update_ha_state()
@@ -54,7 +61,7 @@ class QSSensor(QSEntity):
     @property
     def unique_id(self):
         """Return a unique identifier for this sensor."""
-        return "qs{}:{}".format(self.qsid, self.channel)
+        return f"qs{self.qsid}:{self.channel}"
 
     @property
     def unit_of_measurement(self):

@@ -1,7 +1,7 @@
 {
   "domain": "currencylayer",
-  "name": "Currencylayer",
-  "documentation": "https://www.home-assistant.io/components/currencylayer",
+  "name": "currencylayer",
+  "documentation": "https://www.home-assistant.io/integrations/currencylayer",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

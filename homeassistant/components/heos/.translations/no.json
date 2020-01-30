@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Du kan kun konfigurere en enkelt Heos tilkobling, da den st\u00f8tter alle enhetene p\u00e5 nettverket."
+            "already_setup": "Du kan kun konfigurere en Heos tilkobling, da den st\u00f8tter alle enhetene p\u00e5 nettverket."
         },
         "error": {
             "connection_failure": "Kan ikke koble til den angitte verten."

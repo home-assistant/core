@@ -1,43 +1,46 @@
 """Support for myStrom Wifi bulbs."""
 import logging
 
+from pymystrom.bulb import MyStromBulb
+from pymystrom.exceptions import MyStromConnectionError
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    Light, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
-    SUPPORT_EFFECT, ATTR_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR,
-    ATTR_HS_COLOR)
+    ATTR_BRIGHTNESS,
+    ATTR_EFFECT,
+    ATTR_HS_COLOR,
+    PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
+    SUPPORT_EFFECT,
+    SUPPORT_FLASH,
+    Light,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'myStrom bulb'
+DEFAULT_NAME = "myStrom bulb"
 
-SUPPORT_MYSTROM = (
-    SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH |
-    SUPPORT_COLOR
+SUPPORT_MYSTROM = SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH | SUPPORT_COLOR
+
+EFFECT_RAINBOW = "rainbow"
+EFFECT_SUNRISE = "sunrise"
+
+MYSTROM_EFFECT_LIST = [EFFECT_RAINBOW, EFFECT_SUNRISE]
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_MAC): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
 )
-
-EFFECT_RAINBOW = 'rainbow'
-EFFECT_SUNRISE = 'sunrise'
-
-MYSTROM_EFFECT_LIST = [
-    EFFECT_RAINBOW,
-    EFFECT_SUNRISE,
-]
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_MAC): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the myStrom Light platform."""
-    from pymystrom.bulb import MyStromBulb
-    from pymystrom.exceptions import MyStromConnectionError
 
     host = config.get(CONF_HOST)
     mac = config.get(CONF_MAC)
@@ -45,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     bulb = MyStromBulb(host, mac)
     try:
-        if bulb.get_status()['type'] != 'rgblamp':
+        if bulb.get_status()["type"] != "rgblamp":
             _LOGGER.error("Device %s (%s) is not a myStrom bulb", host, mac)
             return
     except MyStromConnectionError:
@@ -100,11 +103,10 @@ class MyStromLight(Light):
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self._state['on'] if self._state is not None else None
+        return self._state["on"] if self._state is not None else None
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
-        from pymystrom.exceptions import MyStromConnectionError
 
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         effect = kwargs.get(ATTR_EFFECT)
@@ -133,7 +135,6 @@ class MyStromLight(Light):
 
     def turn_off(self, **kwargs):
         """Turn off the bulb."""
-        from pymystrom.exceptions import MyStromConnectionError
 
         try:
             self._bulb.set_off()
@@ -142,16 +143,15 @@ class MyStromLight(Light):
 
     def update(self):
         """Fetch new state data for this light."""
-        from pymystrom.exceptions import MyStromConnectionError
 
         try:
             self._state = self._bulb.get_status()
 
-            colors = self._bulb.get_color()['color']
+            colors = self._bulb.get_color()["color"]
             try:
-                color_h, color_s, color_v = colors.split(';')
+                color_h, color_s, color_v = colors.split(";")
             except ValueError:
-                color_s, color_v = colors.split(';')
+                color_s, color_v = colors.split(";")
                 color_h = 0
 
             self._color_h = int(color_h)

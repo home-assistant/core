@@ -1,7 +1,7 @@
 {
   "domain": "graphite",
   "name": "Graphite",
-  "documentation": "https://www.home-assistant.io/components/graphite",
+  "documentation": "https://www.home-assistant.io/integrations/graphite",
   "requirements": [],
   "dependencies": [],
   "codeowners": []

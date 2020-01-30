@@ -6,31 +6,27 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import (
-    DATA_UPDATED, DOMAIN as SPEEDTESTDOTNET_DOMAIN, SENSOR_TYPES)
+from .const import DATA_UPDATED, DOMAIN as SPEEDTESTDOTNET_DOMAIN, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BYTES_RECEIVED = 'bytes_received'
-ATTR_BYTES_SENT = 'bytes_sent'
-ATTR_SERVER_COUNTRY = 'server_country'
-ATTR_SERVER_HOST = 'server_host'
-ATTR_SERVER_ID = 'server_id'
-ATTR_SERVER_LATENCY = 'latency'
-ATTR_SERVER_NAME = 'server_name'
+ATTR_BYTES_RECEIVED = "bytes_received"
+ATTR_BYTES_SENT = "bytes_sent"
+ATTR_SERVER_COUNTRY = "server_country"
+ATTR_SERVER_HOST = "server_host"
+ATTR_SERVER_ID = "server_id"
+ATTR_SERVER_LATENCY = "latency"
+ATTR_SERVER_NAME = "server_name"
 
-ATTRIBUTION = 'Data retrieved from Speedtest.net by Ookla'
+ATTRIBUTION = "Data retrieved from Speedtest.net by Ookla"
 
-ICON = 'mdi:speedometer'
+ICON = "mdi:speedometer"
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info):
     """Set up the Speedtest.net sensor."""
     data = hass.data[SPEEDTESTDOTNET_DOMAIN]
-    async_add_entities(
-        [SpeedtestSensor(data, sensor) for sensor in discovery_info]
-    )
+    async_add_entities([SpeedtestSensor(data, sensor) for sensor in discovery_info])
 
 
 class SpeedtestSensor(RestoreEntity):
@@ -48,7 +44,7 @@ class SpeedtestSensor(RestoreEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format('Speedtest', self._name)
+        return "{} {}".format("Speedtest", self._name)
 
     @property
     def state(self):
@@ -73,18 +69,18 @@ class SpeedtestSensor(RestoreEntity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION
-        }
+        attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}
         if self._data is not None:
-            return attributes.update({
-                ATTR_BYTES_RECEIVED: self._data['bytes_received'],
-                ATTR_BYTES_SENT: self._data['bytes_sent'],
-                ATTR_SERVER_COUNTRY: self._data['server']['country'],
-                ATTR_SERVER_ID: self._data['server']['id'],
-                ATTR_SERVER_LATENCY: self._data['server']['latency'],
-                ATTR_SERVER_NAME: self._data['server']['name'],
-            })
+            return attributes.update(
+                {
+                    ATTR_BYTES_RECEIVED: self._data["bytes_received"],
+                    ATTR_BYTES_SENT: self._data["bytes_sent"],
+                    ATTR_SERVER_COUNTRY: self._data["server"]["country"],
+                    ATTR_SERVER_ID: self._data["server"]["id"],
+                    ATTR_SERVER_LATENCY: self._data["server"]["latency"],
+                    ATTR_SERVER_NAME: self._data["server"]["name"],
+                }
+            )
         return attributes
 
     async def async_added_to_hass(self):
@@ -105,12 +101,12 @@ class SpeedtestSensor(RestoreEntity):
         if self._data is None:
             return
 
-        if self.type == 'ping':
-            self._state = self._data['ping']
-        elif self.type == 'download':
-            self._state = round(self._data['download'] / 10**6, 2)
-        elif self.type == 'upload':
-            self._state = round(self._data['upload'] / 10**6, 2)
+        if self.type == "ping":
+            self._state = self._data["ping"]
+        elif self.type == "download":
+            self._state = round(self._data["download"] / 10 ** 6, 2)
+        elif self.type == "upload":
+            self._state = round(self._data["upload"] / 10 ** 6, 2)
 
     @callback
     def _schedule_immediate_update(self):

@@ -1,12 +1,8 @@
 {
   "domain": "gntp",
-  "name": "Gntp",
-  "documentation": "https://www.home-assistant.io/components/gntp",
-  "requirements": [
-    "gntp==1.0.3"
-  ],
+  "name": "Growl (GnGNTP)",
+  "documentation": "https://www.home-assistant.io/integrations/gntp",
+  "requirements": ["gntp==1.0.3"],
   "dependencies": [],
-  "codeowners": [
-    "@robbiet480"
-  ]
+  "codeowners": ["@robbiet480"]
 }

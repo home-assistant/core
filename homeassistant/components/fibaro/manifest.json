@@ -1,10 +1,8 @@
 {
   "domain": "fibaro",
   "name": "Fibaro",
-  "documentation": "https://www.home-assistant.io/components/fibaro",
-  "requirements": [
-    "fiblary3==0.1.7"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/fibaro",
+  "requirements": ["fiblary3==0.1.7"],
   "dependencies": [],
   "codeowners": []
 }

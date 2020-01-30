@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "not_internet_accessible": "Home Assistant deve essere accessibile da internet per ricevere messaggi IFTTT",
+            "not_internet_accessible": "La tua istanza di Home Assistant deve essere accessibile da Internet per ricevere messaggi IFTTT.",
             "one_instance_allowed": "\u00c8 necessaria una sola istanza."
         },
         "create_entry": {

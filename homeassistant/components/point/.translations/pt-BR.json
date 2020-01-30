@@ -16,7 +16,8 @@
         },
         "step": {
             "auth": {
-                "description": "Siga o link abaixo e <b>Aceite</b> o acesso \u00e0 sua conta Minut, depois volte e pressione <b>Enviar</b>. \n\n [Link]({authorization_url})"
+                "description": "Siga o link abaixo e <b>Aceite</b> o acesso \u00e0 sua conta Minut, depois volte e pressione <b>Enviar</b>. \n\n [Link]({authorization_url})",
+                "title": "Autenticar Ponto"
             },
             "user": {
                 "data": {

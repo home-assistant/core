@@ -1,12 +1,8 @@
 {
   "domain": "flunearyou",
-  "name": "Flunearyou",
-  "documentation": "https://www.home-assistant.io/components/flunearyou",
-  "requirements": [
-    "pyflunearyou==1.0.3"
-  ],
+  "name": "Flu Near You",
+  "documentation": "https://www.home-assistant.io/integrations/flunearyou",
+  "requirements": ["pyflunearyou==1.0.3"],
   "dependencies": [],
-  "codeowners": [
-    "@bachya"
-  ]
+  "codeowners": ["@bachya"]
 }

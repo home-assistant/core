@@ -1,0 +1,294 @@
+{
+    "response": {
+        "metaInfo": {
+            "timestamp": "2019-07-21T18:40:37Z",
+            "mapVersion": "8.30.98.154",
+            "moduleVersion": "7.2.201928-4478",
+            "interfaceVersion": "2.6.64",
+            "availableMapVersion": [
+                "8.30.98.154"
+            ]
+        },
+        "route": [
+            {
+                "waypoint": [
+                    {
+                        "linkId": "-1230414527",
+                        "mappedPosition": {
+                            "latitude": 41.9797859,
+                            "longitude": -87.8790879
+                        },
+                        "originalPosition": {
+                            "latitude": 41.9798,
+                            "longitude": -87.8801
+                        },
+                        "type": "stopOver",
+                        "spot": 0.5079365,
+                        "sideOfStreet": "right",
+                        "mappedRoadName": "Mannheim Rd",
+                        "label": "Mannheim Rd - US-12",
+                        "shapeIndex": 0,
+                        "source": "user"
+                    },
+                    {
+                        "linkId": "+924115108",
+                        "mappedPosition": {
+                            "latitude": 41.90413,
+                            "longitude": -87.9223502
+                        },
+                        "originalPosition": {
+                            "latitude": 41.9043,
+                            "longitude": -87.9216001
+                        },
+                        "type": "stopOver",
+                        "spot": 0.1925926,
+                        "sideOfStreet": "right",
+                        "mappedRoadName": "",
+                        "label": "",
+                        "shapeIndex": 191,
+                        "source": "user"
+                    }
+                ],
+                "mode": {
+                    "type": "fastest",
+                    "transportModes": [
+                        "publicTransport"
+                    ],
+                    "trafficMode": "disabled",
+                    "feature": []
+                },
+                "leg": [
+                    {
+                        "start": {
+                            "linkId": "-1230414527",
+                            "mappedPosition": {
+                                "latitude": 41.9797859,
+                                "longitude": -87.8790879
+                            },
+                            "originalPosition": {
+                                "latitude": 41.9798,
+                                "longitude": -87.8801
+                            },
+                            "type": "stopOver",
+                            "spot": 0.5079365,
+                            "sideOfStreet": "right",
+                            "mappedRoadName": "Mannheim Rd",
+                            "label": "Mannheim Rd - US-12",
+                            "shapeIndex": 0,
+                            "source": "user"
+                        },
+                        "end": {
+                            "linkId": "+924115108",
+                            "mappedPosition": {
+                                "latitude": 41.90413,
+                                "longitude": -87.9223502
+                            },
+                            "originalPosition": {
+                                "latitude": 41.9043,
+                                "longitude": -87.9216001
+                            },
+                            "type": "stopOver",
+                            "spot": 0.1925926,
+                            "sideOfStreet": "right",
+                            "mappedRoadName": "",
+                            "label": "",
+                            "shapeIndex": 191,
+                            "source": "user"
+                        },
+                        "length": 22325,
+                        "travelTime": 5350,
+                        "maneuver": [
+                            {
+                                "position": {
+                                    "latitude": 41.9797859,
+                                    "longitude": -87.8790879
+                                },
+                                "instruction": "Head <span class=\"heading\">south</span> on <span class=\"street\">Mannheim Rd</span>. <span class=\"distance-description\">Go for <span class=\"length\">848 m</span>.</span>",
+                                "travelTime": 848,
+                                "length": 848,
+                                "id": "M1",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9722581,
+                                    "longitude": -87.8776109
+                                },
+                                "instruction": "Take the street on the <span class=\"direction\">left</span>, <span class=\"next-street\">Mannheim Rd</span>. <span class=\"distance-description\">Go for <span class=\"length\">825 m</span>.</span>",
+                                "travelTime": 825,
+                                "length": 825,
+                                "id": "M2",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9650483,
+                                    "longitude": -87.8769565
+                                },
+                                "instruction": "Go to the stop <span class=\"station\">Mannheim/Lawrence</span> and take the <span class=\"transit\">bus</span> <span class=\"line\">332</span> toward <span class=\"destination\">Palmer/Schiller</span>. <span class=\"distance-description\">Follow for <span class=\"stops\">7 stops</span>.</span>",
+                                "travelTime": 475,
+                                "length": 4360,
+                                "id": "M3",
+                                "stopName": "Mannheim/Lawrence",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9541478,
+                                    "longitude": -87.9133594
+                                },
+                                "instruction": "Get off at <span class=\"station\">Irving Park/Taft</span>.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M4",
+                                "stopName": "Irving Park/Taft",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9541478,
+                                    "longitude": -87.9133594
+                                },
+                                "instruction": "Take the <span class=\"transit\">bus</span> <span class=\"line\">332</span> toward <span class=\"destination\">Cargo Rd./Delta Cargo</span>. <span class=\"distance-description\">Follow for <span class=\"stops\">1 stop</span>.</span>",
+                                "travelTime": 155,
+                                "length": 3505,
+                                "id": "M5",
+                                "stopName": "Irving Park/Taft",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9599199,
+                                    "longitude": -87.9162776
+                                },
+                                "instruction": "Get off at <span class=\"station\">Cargo Rd./S. Access Rd./Lufthansa</span>.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M6",
+                                "stopName": "Cargo Rd./S. Access Rd./Lufthansa",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9599199,
+                                    "longitude": -87.9162776
+                                },
+                                "instruction": "Take the <span class=\"transit\">bus</span> <span class=\"line\">332</span> toward <span class=\"destination\">Palmer/Schiller</span>. <span class=\"distance-description\">Follow for <span class=\"stops\">41 stops</span>.</span>",
+                                "travelTime": 1510,
+                                "length": 11261,
+                                "id": "M7",
+                                "stopName": "Cargo Rd./S. Access Rd./Lufthansa",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9041729,
+                                    "longitude": -87.9399669
+                                },
+                                "instruction": "Get off at <span class=\"station\">York/Third</span>.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M8",
+                                "stopName": "York/Third",
+                                "nextRoadName": "N York St",
+                                "_type": "PublicTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9041729,
+                                    "longitude": -87.9399669
+                                },
+                                "instruction": "Head <span class=\"heading\">east</span> on <span class=\"street\">N York St</span>. <span class=\"distance-description\">Go for <span class=\"length\">33 m</span>.</span>",
+                                "travelTime": 43,
+                                "length": 33,
+                                "id": "M9",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9039476,
+                                    "longitude": -87.9398811
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span> onto <span class=\"next-street\">E Third St</span>. <span class=\"distance-description\">Go for <span class=\"length\">1.4 km</span>.</span>",
+                                "travelTime": 1355,
+                                "length": 1354,
+                                "id": "M10",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9038832,
+                                    "longitude": -87.9236054
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span>. <span class=\"distance-description\">Go for <span class=\"length\">113 m</span>.</span>",
+                                "travelTime": 113,
+                                "length": 113,
+                                "id": "M11",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.9039047,
+                                    "longitude": -87.9222536
+                                },
+                                "instruction": "Turn <span class=\"direction\">left</span>. <span class=\"distance-description\">Go for <span class=\"length\">26 m</span>.</span>",
+                                "travelTime": 26,
+                                "length": 26,
+                                "id": "M12",
+                                "_type": "PrivateTransportManeuverType"
+                            },
+                            {
+                                "position": {
+                                    "latitude": 41.90413,
+                                    "longitude": -87.9223502
+                                },
+                                "instruction": "Arrive at your destination on the right.",
+                                "travelTime": 0,
+                                "length": 0,
+                                "id": "M13",
+                                "_type": "PrivateTransportManeuverType"
+                            }
+                        ]
+                    }
+                ],
+                "publicTransportLine": [
+                    {
+                        "lineName": "332",
+                        "companyName": "",
+                        "destination": "Palmer/Schiller",
+                        "type": "busPublic",
+                        "id": "L1"
+                    },
+                    {
+                        "lineName": "332",
+                        "companyName": "",
+                        "destination": "Cargo Rd./Delta Cargo",
+                        "type": "busPublic",
+                        "id": "L2"
+                    },
+                    {
+                        "lineName": "332",
+                        "companyName": "",
+                        "destination": "Palmer/Schiller",
+                        "type": "busPublic",
+                        "id": "L3"
+                    }
+                ],
+                "summary": {
+                    "distance": 22325,
+                    "baseTime": 5350,
+                    "flags": [
+                        "noThroughRoad",
+                        "builtUpArea",
+                        "park"
+                    ],
+                    "text": "The trip takes <span class=\"length\">22.3 km</span> and <span class=\"time\">1:29 h</span>.",
+                    "travelTime": 5350,
+                    "departure": "1970-01-01T00:00:00Z",
+                    "_type": "PublicTransportRouteSummaryType"
+                }
+            }
+        ],
+        "language": "en-us"
+    }
+}

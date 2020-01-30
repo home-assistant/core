@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Bridge er allerede konfigurert"
+            "already_configured": "Bridge er allerede konfigurert.",
+            "already_in_progress": "Brokonfigurasjon er allerede i gang."
         },
         "error": {
             "cannot_connect": "Kan ikke koble til gatewayen.",

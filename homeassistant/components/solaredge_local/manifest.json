@@ -1,8 +1,8 @@
 {
-    "domain": "solaredge_local",
-    "name": "Solar Edge Local",
-    "documentation": "",
-    "dependencies": [],
-    "codeowners": ["@drobtravels"],
-    "requirements": ["solaredge-local==0.1.4"]
-  }
+  "domain": "solaredge_local",
+  "name": "SolarEdge Local",
+  "documentation": "https://www.home-assistant.io/integrations/solaredge_local",
+  "requirements": ["solaredge-local==0.2.0"],
+  "dependencies": [],
+  "codeowners": ["@drobtravels", "@scheric"]
+}

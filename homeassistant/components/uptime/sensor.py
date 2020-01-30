@@ -11,19 +11,21 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Uptime'
+DEFAULT_NAME = "Uptime"
 
-ICON = 'mdi:clock'
+ICON = "mdi:clock"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT, default='days'):
-        vol.All(cv.string, vol.In(['minutes', 'hours', 'days']))
-})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+    {
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default="days"): vol.All(
+            cv.string, vol.In(["minutes", "hours", "days"])
+        ),
+    }
+)
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the uptime sensor platform."""
     name = config.get(CONF_NAME)
     units = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -66,9 +68,9 @@ class UptimeSensor(Entity):
         delta = dt_util.now() - self.initial
         div_factor = 3600
 
-        if self.unit_of_measurement == 'days':
+        if self.unit_of_measurement == "days":
             div_factor *= 24
-        elif self.unit_of_measurement == 'minutes':
+        elif self.unit_of_measurement == "minutes":
             div_factor /= 60
 
         delta = delta.total_seconds() / div_factor

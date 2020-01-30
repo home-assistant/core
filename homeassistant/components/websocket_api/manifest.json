@@ -1,12 +1,9 @@
 {
   "domain": "websocket_api",
-  "name": "Websocket api",
-  "documentation": "https://www.home-assistant.io/components/websocket_api",
+  "name": "Home Asssitant WebSocket API",
+  "documentation": "https://www.home-assistant.io/integrations/websocket_api",
   "requirements": [],
-  "dependencies": [
-    "http"
-  ],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "dependencies": ["http"],
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
 }

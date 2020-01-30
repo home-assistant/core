@@ -1,7 +1,6 @@
 {
     "config": {
         "abort": {
-            "all_configured": "TelldusLive ja est\u00e0 configurat",
             "already_setup": "TelldusLive ja est\u00e0 configurat",
             "authorize_url_fail": "S'ha produ\u00eft un error desconegut al generar l'URL d'autoritzaci\u00f3.",
             "authorize_url_timeout": "S'ha acabat el temps d'espera mentre \u00e9s generava l'URL d'autoritzaci\u00f3.",
@@ -19,6 +18,7 @@
                 "data": {
                     "host": "Amfitri\u00f3"
                 },
+                "description": "buit",
                 "title": "Selecci\u00f3 extrem"
             }
         },

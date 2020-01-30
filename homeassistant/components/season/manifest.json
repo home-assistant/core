@@ -1,10 +1,9 @@
 {
   "domain": "season",
   "name": "Season",
-  "documentation": "https://www.home-assistant.io/components/season",
-  "requirements": [
-    "ephem==3.7.6.0"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/season",
+  "requirements": ["ephem==3.7.7.0"],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

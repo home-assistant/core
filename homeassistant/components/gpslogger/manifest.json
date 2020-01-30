@@ -1,11 +1,9 @@
 {
   "domain": "gpslogger",
-  "name": "Gpslogger",
+  "name": "GPSLogger",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/gpslogger",
+  "documentation": "https://www.home-assistant.io/integrations/gpslogger",
   "requirements": [],
-  "dependencies": [
-    "webhook"
-  ],
+  "dependencies": ["webhook"],
   "codeowners": []
 }

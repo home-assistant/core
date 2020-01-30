@@ -1,10 +1,17 @@
 """Hue sensor entities."""
-from homeassistant.const import (
-    DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS)
-from homeassistant.helpers.entity import Entity
-from homeassistant.components.hue.sensor_base import (
-    GenericZLLSensor, async_setup_entry as shared_async_setup_entry)
+from aiohue.sensors import TYPE_ZLL_LIGHTLEVEL, TYPE_ZLL_TEMPERATURE
 
+from homeassistant.components.hue.sensor_base import (
+    GenericZLLSensor,
+    SensorManager,
+    async_setup_entry as shared_async_setup_entry,
+)
+from homeassistant.const import (
+    DEVICE_CLASS_ILLUMINANCE,
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+)
+from homeassistant.helpers.entity import Entity
 
 LIGHT_LEVEL_NAME_FORMAT = "{} light level"
 TEMPERATURE_NAME_FORMAT = "{} temperature"
@@ -12,8 +19,21 @@ TEMPERATURE_NAME_FORMAT = "{} temperature"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Defer sensor setup to the shared sensor module."""
-    await shared_async_setup_entry(
-        hass, config_entry, async_add_entities, binary=False)
+    SensorManager.sensor_config_map.update(
+        {
+            TYPE_ZLL_LIGHTLEVEL: {
+                "binary": False,
+                "name_format": LIGHT_LEVEL_NAME_FORMAT,
+                "class": HueLightLevel,
+            },
+            TYPE_ZLL_TEMPERATURE: {
+                "binary": False,
+                "name_format": TEMPERATURE_NAME_FORMAT,
+                "class": HueTemperature,
+            },
+        }
+    )
+    await shared_async_setup_entry(hass, config_entry, async_add_entities, binary=False)
 
 
 class GenericHueGaugeSensorEntity(GenericZLLSensor, Entity):
@@ -46,13 +66,15 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = super().device_state_attributes
-        attributes.update({
-            "lightlevel": self.sensor.lightlevel,
-            "daylight": self.sensor.daylight,
-            "dark": self.sensor.dark,
-            "threshold_dark": self.sensor.tholddark,
-            "threshold_offset": self.sensor.tholdoffset,
-        })
+        attributes.update(
+            {
+                "lightlevel": self.sensor.lightlevel,
+                "daylight": self.sensor.daylight,
+                "dark": self.sensor.dark,
+                "threshold_dark": self.sensor.tholddark,
+                "threshold_offset": self.sensor.tholdoffset,
+            }
+        )
         return attributes
 
 

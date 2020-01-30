@@ -1,13 +1,9 @@
 {
   "domain": "upnp",
-  "name": "Upnp",
+  "name": "UPnP",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/components/upnp",
-  "requirements": [
-    "async-upnp-client==0.14.10"
-  ],
+  "documentation": "https://www.home-assistant.io/integrations/upnp",
+  "requirements": ["async-upnp-client==0.14.12"],
   "dependencies": [],
-  "codeowners": [
-    "@robbiet480"
-  ]
+  "codeowners": ["@robbiet480"]
 }

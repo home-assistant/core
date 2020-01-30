@@ -1,2 +1,2 @@
 """Constants for the Aftership integration."""
-DOMAIN = 'aftership'
+DOMAIN = "aftership"

@@ -1,10 +1,8 @@
 {
   "domain": "iglo",
-  "name": "Iglo",
-  "documentation": "https://www.home-assistant.io/components/iglo",
-  "requirements": [
-    "iglo==1.2.7"
-  ],
+  "name": "iGlo",
+  "documentation": "https://www.home-assistant.io/integrations/iglo",
+  "requirements": ["iglo==1.2.7"],
   "dependencies": [],
   "codeowners": []
 }

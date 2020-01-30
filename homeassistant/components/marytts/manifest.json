@@ -1,8 +1,10 @@
 {
   "domain": "marytts",
-  "name": "Marytts",
-  "documentation": "https://www.home-assistant.io/components/marytts",
-  "requirements": [],
+  "name": "MaryTTS",
+  "documentation": "https://www.home-assistant.io/integrations/marytts",
+  "requirements": [
+    "speak2mary==1.4.0"
+  ],
   "dependencies": [],
   "codeowners": []
 }

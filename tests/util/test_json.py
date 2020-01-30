@@ -1,17 +1,15 @@
 """Test Home Assistant json utility functions."""
 from json import JSONEncoder
 import os
-import unittest
-from unittest.mock import Mock
 import sys
 from tempfile import mkdtemp
+import unittest
+from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.util.json import (
-    SerializationError, load_json, save_json)
 from homeassistant.exceptions import HomeAssistantError
-
+from homeassistant.util.json import SerializationError, load_json, save_json
 
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}
@@ -37,7 +35,7 @@ def teardown():
 
 
 def _path_for(leaf_name):
-    return os.path.join(TMP_DIR, leaf_name+".json")
+    return os.path.join(TMP_DIR, leaf_name + ".json")
 
 
 def test_save_and_load():
@@ -49,8 +47,9 @@ def test_save_and_load():
 
 
 # Skipped on Windows
-@unittest.skipIf(sys.platform.startswith('win'),
-                 "private permissions not supported on Windows")
+@unittest.skipIf(
+    sys.platform.startswith("win"), "private permissions not supported on Windows"
+)
 def test_save_and_load_private():
     """Test we can load private files and that they are protected."""
     fname = _path_for("test2")
@@ -88,6 +87,7 @@ def test_load_bad_data():
 
 def test_custom_encoder():
     """Test serializing with a custom encoder."""
+
     class MockJSONEncoder(JSONEncoder):
         """Mock JSON encoder."""
 

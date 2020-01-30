@@ -3,7 +3,9 @@
         "abort": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
             "bad_config_file": "Dati errati dal file di configurazione",
-            "not_axis_device": "Il dispositivo rilevato non \u00e8 un dispositivo Axis"
+            "link_local_address": "Gli indirizzi locali di collegamento non sono supportati",
+            "not_axis_device": "Il dispositivo rilevato non \u00e8 un dispositivo Axis",
+            "updated_configuration": "Configurazione del dispositivo aggiornata con nuovo indirizzo host"
         },
         "error": {
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
@@ -11,6 +13,7 @@
             "device_unavailable": "Il dispositivo non \u00e8 disponibile",
             "faulty_credentials": "Credenziali utente non valide"
         },
+        "flow_title": "Dispositivo Axis: {name} ({host})",
         "step": {
             "user": {
                 "data": {

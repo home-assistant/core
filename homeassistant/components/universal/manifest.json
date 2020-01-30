@@ -1,8 +1,9 @@
 {
   "domain": "universal",
-  "name": "Universal",
-  "documentation": "https://www.home-assistant.io/components/universal",
+  "name": "Universal Media Player",
+  "documentation": "https://www.home-assistant.io/integrations/universal",
   "requirements": [],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [],
+  "quality_scale": "internal"
 }

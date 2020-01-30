@@ -1,27 +1,33 @@
 """Support for Tellstick lights."""
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
 
 from . import (
-    ATTR_DISCOVER_CONFIG, ATTR_DISCOVER_DEVICES, DATA_TELLSTICK,
-    DEFAULT_SIGNAL_REPETITIONS, TellstickDevice)
+    ATTR_DISCOVER_CONFIG,
+    ATTR_DISCOVER_DEVICES,
+    DATA_TELLSTICK,
+    DEFAULT_SIGNAL_REPETITIONS,
+    TellstickDevice,
+)
 
 SUPPORT_TELLSTICK = SUPPORT_BRIGHTNESS
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tellstick lights."""
-    if (discovery_info is None or
-            discovery_info[ATTR_DISCOVER_DEVICES] is None):
+    if discovery_info is None or discovery_info[ATTR_DISCOVER_DEVICES] is None:
         return
 
     signal_repetitions = discovery_info.get(
-        ATTR_DISCOVER_CONFIG, DEFAULT_SIGNAL_REPETITIONS)
+        ATTR_DISCOVER_CONFIG, DEFAULT_SIGNAL_REPETITIONS
+    )
 
-    add_entities([TellstickLight(hass.data[DATA_TELLSTICK][tellcore_id],
-                                 signal_repetitions)
-                  for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES]],
-                 True)
+    add_entities(
+        [
+            TellstickLight(hass.data[DATA_TELLSTICK][tellcore_id], signal_repetitions)
+            for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES]
+        ],
+        True,
+    )
 
 
 class TellstickLight(TellstickDevice, Light):
@@ -62,7 +68,7 @@ class TellstickLight(TellstickDevice, Light):
 
             # _brightness is not defined when called from super
             try:
-                self._state = (self._brightness > 0)
+                self._state = self._brightness > 0
             except AttributeError:
                 self._state = True
         else:

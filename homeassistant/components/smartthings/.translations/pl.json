@@ -2,7 +2,7 @@
     "config": {
         "error": {
             "app_not_installed": "Upewnij si\u0119, \u017ce zainstalowa\u0142e\u015b i autoryzowa\u0142e\u015b Home Assistant SmartApp i spr\u00f3buj ponownie.",
-            "app_setup_error": "Nie mo\u017cna skonfigurowa\u0107 SmartApp. Prosz\u0119 spr\u00f3buj ponownie.",
+            "app_setup_error": "Nie mo\u017cna skonfigurowa\u0107 SmartApp. Spr\u00f3buj ponownie.",
             "base_url_not_https": "Parametr `base_url` dla komponentu `http` musi by\u0107 skonfigurowany i rozpoczyna\u0107 si\u0119 od `https://`.",
             "token_already_setup": "Token zosta\u0142 ju\u017c skonfigurowany.",
             "token_forbidden": "Token nie ma wymaganych zakres\u00f3w OAuth.",

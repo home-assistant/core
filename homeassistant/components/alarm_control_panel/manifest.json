@@ -1,10 +1,9 @@
 {
   "domain": "alarm_control_panel",
-  "name": "Alarm control panel",
-  "documentation": "https://www.home-assistant.io/components/alarm_control_panel",
+  "name": "Alarm Control Panel",
+  "documentation": "https://www.home-assistant.io/integrations/alarm_control_panel",
   "requirements": [],
   "dependencies": [],
-  "codeowners": [
-    "@colinodell"
-  ]
+  "codeowners": [],
+  "quality_scale": "internal"
 }

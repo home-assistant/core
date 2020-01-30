@@ -17,7 +17,7 @@ load_all_link_database:
   description: Load the All-Link Database for a device. WARNING - Loading a device All-LInk database is very time consuming and inconsistent. This may take a LONG time and may need to be repeated to obtain all records.
   fields:
     entity_id:
-      description: Name of the device to print
+      description: Name of the device to load. Use "all" to load the database of all devices.
       example: 'light.1a2b3c'
     reload:
       description: Reload all records. If true the current records are cleared from memory (does not effect the device) and the records are reloaded. If false the existing records are left in place and only missing records are added. Default is false.
@@ -48,3 +48,15 @@ x10_all_lights_off:
     housecode:
       description: X10 house code
       example: c
+scene_on:
+  description: Trigger an INSTEON scene to turn ON.
+  fields:
+    group:
+      description: INSTEON group or scene number
+      example: 26
+scene_off:
+  description: Trigger an INSTEON scene to turn OFF.
+  fields:
+    group:
+      description: INSTEON group or scene number
+      example: 26
