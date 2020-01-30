@@ -53,7 +53,6 @@ async def async_setup(hass, config):
     x10_all_lights_on_housecode = conf.get(CONF_X10_ALL_LIGHTS_ON)
     x10_all_lights_off_housecode = conf.get(CONF_X10_ALL_LIGHTS_OFF)
 
-
     if host:
         _LOGGER.info("Connecting to Insteon Hub on %s", host)
         conn = await insteonplm.Connection.create(
