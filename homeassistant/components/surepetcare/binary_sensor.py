@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_PRESENCE,
     BinarySensorDevice,
 )
-from homeassistant.const import CONF_ID, CONF_TYPE
+from homeassistant.const import ATTR_VOLTAGE, CONF_ID, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -36,6 +36,15 @@ async def async_setup_platform(
         sure_id = thing[CONF_ID]
         sure_type = thing[CONF_TYPE]
 
+        # connectivity
+        if sure_type in [
+            SureProductID.CAT_FLAP,
+            SureProductID.PET_FLAP,
+            SureProductID.FEEDER,
+        ]:
+            entities.append(DeviceConnectivity(sure_id, sure_type, spc))
+
+        # devices
         if sure_type in [SureProductID.CAT_FLAP, SureProductID.PET_FLAP]:
             entity = Flap(sure_id, spc)
         elif sure_type == SureProductID.PET:
@@ -69,9 +78,15 @@ class SurePetcareBinarySensor(BinarySensorDevice):
         self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
         self._state: Dict[str, Any] = {}
 
-        self._name = (
-            f"{self._sure_type.name.capitalize()} {self._spc_data['name'].capitalize()}"
-        )
+        _LOGGER.debug("%s -> self._spc_data: %s", self._id, self._spc_data)
+
+        # cover special case where a device has no name set
+        if "name" in self._spc_data:
+            name = self._spc_data["name"]
+        else:
+            name = f"Unnamed {self._sure_type.name.capitalize()}"
+
+        self._name = f"{self._sure_type.name.capitalize()} {name.capitalize()}"
 
         self._async_unsub_dispatcher_connect = None
 
@@ -152,12 +167,10 @@ class Flap(SurePetcareBinarySensor):
                 attributes = {
                     "online": bool(self._state["online"]),
                     "learn_mode": bool(self._state["learn_mode"]),
-                    "battery_voltage": f'{self._state["battery"] / 4:.2f}',
+                    ATTR_VOLTAGE: f'{self._state["battery"] / 4:.2f}',
                     "locking_mode": SureLockStateID(
                         self._state["locking"]["mode"]
                     ).name.capitalize(),
-                    "device_rssi": f'{self._state["signal"]["device_rssi"]:.2f}',
-                    "hub_rssi": f'{self._state["signal"]["hub_rssi"]:.2f}',
                 }
 
             except (KeyError, TypeError) as error:
@@ -217,6 +230,59 @@ class Pet(SurePetcareBinarySensor):
         self._spc_data = self._spc.states[self._sure_type].get(self._id)
         self._state = self._spc_data.get("position")
         _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
+
+
+class DeviceConnectivity(SurePetcareBinarySensor):
+    """Sure Petcare Pet."""
+
+    def __init__(
+        self: BinarySensorDevice,
+        _id: int,
+        sure_type: SureProductID,
+        spc: SurePetcareAPI,
+    ) -> None:
+        """Initialize a Sure Petcare Device."""
+        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, sure_type)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        return f"{self._name}_connectivity"
+
+    @property
+    def unique_id(self: BinarySensorDevice) -> str:
+        """Return an unique ID."""
+        return f"spc-{self._spc_data['household_id']}-{self._id}-connectivity"
+
+    @property
+    def available(self) -> bool:
+        return bool(self._state["online"])
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if entity is online."""
+        return self.available
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the state attributes of the device."""
+        attributes = None
+        if self._state:
+            try:
+                attributes = {
+                    "device_rssi": f'{self._state["signal"]["device_rssi"]:.2f}',
+                    "hub_rssi": f'{self._state["signal"]["hub_rssi"]:.2f}',
+                }
+
+            except (KeyError, TypeError) as error:
+                _LOGGER.error(
+                    "Error getting device state attributes from %s: %s\n\n%s",
+                    self._name,
+                    error,
+                    self._state,
+                )
+
+        return attributes
 
 
 class Hub(SurePetcareBinarySensor):

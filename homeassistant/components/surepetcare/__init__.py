@@ -107,6 +107,7 @@ async def async_setup(hass, config) -> bool:
         if (
             CONF_PARENT in device_data
             and device_data[CONF_PARENT][CONF_PRODUCT_ID] == SureProductID.HUB
+            and device_data[CONF_PARENT][CONF_ID] not in things
         ):
             things.append(
                 {
