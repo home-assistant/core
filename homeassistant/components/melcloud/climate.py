@@ -20,7 +20,7 @@ from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DOMAIN, HVAC_MODE_LOOKUP, HVAC_MODE_REVERSE_LOOKUP, TEMP_UNIT_LOOKUP
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = f"{DOMAIN}.{{}}"
 SCAN_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,8 +49,7 @@ class AtaDeviceClimate(ClimateDevice):
         self._api = device
         if name is None:
             name = device.name
-
-        self._name = "{} {}".format(name, "HVAC")
+        self._name = name
 
     @property
     def unique_id(self) -> Optional[str]:
