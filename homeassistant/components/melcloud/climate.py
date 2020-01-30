@@ -48,6 +48,7 @@ class AtaDeviceClimate(ClimateDevice):
     def __init__(self, device: MelCloudDevice, name=None):
         """Initialize the climate."""
         self._api = device
+        self._device = self._api.device
         if name is None:
             name = device.name
         self._name = name
@@ -55,7 +56,7 @@ class AtaDeviceClimate(ClimateDevice):
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return f"{self._api.device.serial}-{self._api.device.mac}-climate"
+        return f"{self._device.serial}-{self._device.mac}-climate"
 
     @property
     def name(self):
@@ -94,20 +95,20 @@ class AtaDeviceClimate(ClimateDevice):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement used by the platform."""
-        return TEMP_UNIT_LOOKUP.get(self._api.device.temp_unit, TEMP_CELSIUS)
+        return TEMP_UNIT_LOOKUP.get(self._device.temp_unit, TEMP_CELSIUS)
 
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        mode = self._api.device.operation_mode
-        if not self._api.device.power or mode is None:
+        mode = self._device.operation_mode
+        if not self._device.power or mode is None:
             return HVAC_MODE_OFF
         return HVAC_MODE_LOOKUP.get(mode)
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVAC_MODE_OFF:
-            await self._api.device.set({"power": False})
+            await self._device.set({"power": False})
             return
 
         operation_mode = HVAC_MODE_REVERSE_LOOKUP.get(hvac_mode, None)
@@ -117,59 +118,59 @@ class AtaDeviceClimate(ClimateDevice):
         props = {"operation_mode": operation_mode}
         if self.hvac_mode == HVAC_MODE_OFF:
             props["power"] = True
-        await self._api.device.set(props)
+        await self._device.set(props)
 
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
         return [HVAC_MODE_OFF] + list(
-            map(HVAC_MODE_LOOKUP.get, self._api.device.operation_modes)
+            map(HVAC_MODE_LOOKUP.get, self._device.operation_modes)
         )
 
     @property
     def current_temperature(self) -> Optional[float]:
         """Return the current temperature."""
-        return self._api.device.room_temperature
+        return self._device.room_temperature
 
     @property
     def target_temperature(self) -> Optional[float]:
         """Return the temperature we try to reach."""
-        return self._api.device.target_temperature
+        return self._device.target_temperature
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
-        await self._api.device.set(
+        await self._device.set(
             {"target_temperature": kwargs.get("temperature", self.target_temperature)}
         )
 
     @property
     def target_temperature_step(self) -> Optional[float]:
         """Return the supported step of target temperature."""
-        return self._api.device.target_temperature_step
+        return self._device.target_temperature_step
 
     @property
     def fan_mode(self) -> Optional[str]:
         """Return the fan setting."""
-        return self._api.device.fan_speed
+        return self._device.fan_speed
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await self._api.device.set({"fan_speed": fan_mode})
+        await self._device.set({"fan_speed": fan_mode})
 
     @property
     def fan_modes(self) -> Optional[List[str]]:
         """Return the list of available fan modes."""
-        return self._api.device.fan_speeds
+        return self._device.fan_speeds
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        if not self._api.device.power:
-            await self._api.device.set({"power": True})
+        if not self._device.power:
+            await self._device.set({"power": True})
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
-        if self._api.device.power:
-            await self._api.device.set({"power": False})
+        if self._device.power:
+            await self._device.set({"power": False})
 
     @property
     def supported_features(self) -> int:
@@ -179,7 +180,7 @@ class AtaDeviceClimate(ClimateDevice):
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        min_value = self._api.device.target_temperature_min
+        min_value = self._device.target_temperature_min
         if min_value is not None:
             return min_value
 
@@ -190,7 +191,7 @@ class AtaDeviceClimate(ClimateDevice):
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        max_value = self._api.device.target_temperature_max
+        max_value = self._device.target_temperature_max
         if max_value is not None:
             return max_value
 
