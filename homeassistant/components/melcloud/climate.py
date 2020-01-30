@@ -149,22 +149,16 @@ class AtaDeviceClimate(ClimateDevice):
     @property
     def fan_mode(self) -> Optional[str]:
         """Return the fan setting."""
-        speed = self._api.device.fan_speed
-        if speed is None:
-            return None
-        return speed.replace("-", " ")
+        return self._api.device.fan_speed
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await self._api.device.set({"fan_speed": fan_mode.replace(" ", "-")})
+        await self._api.device.set({"fan_speed": fan_mode})
 
     @property
     def fan_modes(self) -> Optional[List[str]]:
         """Return the list of available fan modes."""
-        speeds = self._api.device.fan_speeds
-        if speeds is None:
-            return None
-        return list(map(lambda x: x.replace("-", " "), speeds))
+        return self._api.device.fan_speeds
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""

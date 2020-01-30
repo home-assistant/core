@@ -485,7 +485,7 @@ pylitejet==0.1
 pymailgunner==1.4
 
 # homeassistant.components.melcloud
-pymelcloud==1.0.1
+pymelcloud==1.2.0
 
 # homeassistant.components.somfy
 pymfy==0.7.1
