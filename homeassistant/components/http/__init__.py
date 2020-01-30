@@ -166,7 +166,16 @@ async def async_setup(hass, config):
 
         # If we are set up successful, we store the HTTP settings for safe mode.
         store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
-        await store.async_save(conf)
+
+        if CONF_TRUSTED_PROXIES in conf:
+            conf_to_save = dict(conf)
+            conf_to_save[CONF_TRUSTED_PROXIES] = [
+                str(ip.network_address) for ip in conf_to_save[CONF_TRUSTED_PROXIES]
+            ]
+        else:
+            conf_to_save = conf
+
+        await store.async_save(conf_to_save)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
 
