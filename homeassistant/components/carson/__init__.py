@@ -29,12 +29,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# For your initial PR, limit it to 1 platform.
-PLATFORMS = ["lock"]
+PLATFORMS = ["lock", "camera"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Carson component."""
+    _LOGGER.debug("async def async_setup(hass: HomeAssistant, config: dict) called")
     if DOMAIN not in config:
         return True
 
@@ -53,6 +53,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up Carson from a config entry."""
+    _LOGGER.debug("async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) called")
 
     def token_updater(token):
         """Handle from sync context when token is updated."""
@@ -83,7 +84,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "api": carson,
         "user": carson.user,
         "doors": [door for b in carson.buildings for door in b.doors],
-        "cameras": [camera for b in carson.buildings for camera in b.cameras],
+        "cameras": [
+            camera for b in carson.buildings for camera in b.eagleeye_api.cameras
+        ]
+        # "cameras": [camera for b in carson.buildings for camera in b.cameras],
     }
 
     for component in PLATFORMS:
@@ -96,6 +100,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
+    _LOGGER.debug(
+        "async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) called"
+    )
     unload_ok = all(
         await asyncio.gather(
             *[

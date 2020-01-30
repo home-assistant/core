@@ -1,23 +1,22 @@
 """Support for the Carson doors."""
+import asyncio
 import logging
 
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
 
-from .const import DOMAIN
+from .const import DOMAIN, UNLOCKED_TIMESPAN_SEC
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the lights for the Ring devices."""
+    _LOGGER.debug(
+        "async def async_setup_entry(hass, config_entry, async_add_entities) called"
+    )
     doors = hass.data[DOMAIN][config_entry.entry_id]["doors"]
 
-    entities = []
-
-    for device in doors:
-        entities.append(CarsonLock(device))
-
-    async_add_entities(entities)
+    async_add_entities(CarsonLock(door) for door in doors)
 
 
 class CarsonLock(LockDevice):
@@ -26,11 +25,22 @@ class CarsonLock(LockDevice):
     def __init__(self, carson_door):
         """Initialize the light."""
         self._carson_door = carson_door
+        self._is_locked = True
+
+    @property
+    def should_poll(self):
+        """Do not poll. Update via notification."""
+        return False
 
     @property
     def unique_id(self):
         """Name of the device."""
         return self._carson_door.unique_entity_id
+
+    @property
+    def supported_features(self):
+        """Carson locks support open."""
+        return SUPPORT_OPEN
 
     @property
     def assumed_state(self):
@@ -42,14 +52,42 @@ class CarsonLock(LockDevice):
         """Name of the device."""
         return self._carson_door.name
 
+    @property
+    def is_locked(self):
+        """Return true if the lock is locked."""
+        return self._is_locked
+
     def open(self, **kwargs):
         """Open the door."""
         self._carson_door.open()
+        self._is_locked = False
+        self.schedule_update_ha_state()
+        self.hass.add_job(self.async_set_locked_after_delay(UNLOCKED_TIMESPAN_SEC))
 
     def lock(self, **kwargs):
         """Lock the device."""
-        raise NotImplementedError("Carson door can only be opened.")
+        raise NotImplementedError("Door can only be opened/unlocked.")
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        raise NotImplementedError("Carson door can only be opened.")
+        self.open()
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return {
+            "provider": self._carson_door.provider,
+            "is_active": self._carson_door.is_active,
+            "disabled": self._carson_door.disabled,
+            "is_unit_door": self._carson_door.is_unit_door,
+            "staff_only": self._carson_door.staff_only,
+            "default_in_building": self._carson_door.default_in_building,
+            "external_id": self._carson_door.external_id,
+            "available": self._carson_door.available,
+        }
+
+    async def async_set_locked_after_delay(self, delay):
+        """Delay x seconds and update state to LOCKED."""
+        await asyncio.sleep(delay)
+        self._is_locked = True
+        self.schedule_update_ha_state()
