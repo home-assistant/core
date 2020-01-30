@@ -89,7 +89,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         # Generate a configuration for the Samsung library
         self._config = {
             "name": "HomeAssistant",
-            "description": self._name,
+            "description": "HomeAssistant",
             "id": "ha.component.samsung",
             "method": config_entry.data[CONF_METHOD],
             "port": config_entry.data.get(CONF_PORT),
@@ -127,6 +127,8 @@ class SamsungTVDevice(MediaPlayerDevice):
             # We need to create a new instance to reconnect.
             try:
                 self._remote = SamsungRemote(self._config.copy())
+            # This is only happening when the auth was switched to DENY
+            # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except AccessDenied:
                 self.hass.async_create_task(
                     self.hass.config_entries.flow.async_init(
