@@ -72,7 +72,7 @@ def vizio_guess_device_type_fixture():
 
 @pytest.fixture(name="vizio_cant_connect")
 def vizio_cant_connect_fixture():
-    """Mock vizio device cant connect."""
+    """Mock vizio device can't connect."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
         return_value=False,
