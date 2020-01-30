@@ -81,6 +81,7 @@ class HomematicipHAP:
         self._tries = 0
         self._accesspoint_connected = True
         self.hmip_device_by_entity_id = {}
+        self.reset_connection_listener = None
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
