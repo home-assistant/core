@@ -37,7 +37,6 @@ DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME):
 
 RESULT_AUTH_MISSING = "auth_missing"
 RESULT_SUCCESS = "success"
-RESULT_NOT_FOUND = "not_found"
 RESULT_NOT_SUCCESSFUL = "not_successful"
 RESULT_NOT_SUPPORTED = "not_supported"
 
@@ -112,10 +111,9 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return RESULT_NOT_SUPPORTED
             except OSError as e:
                 LOGGER.debug("Failing config: %s, error: %s", config, e)
-                return RESULT_NOT_SUCCESSFUL
 
         LOGGER.debug("No working config found")
-        return RESULT_NOT_FOUND
+        return RESULT_NOT_SUCCESSFUL
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""

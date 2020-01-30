@@ -123,19 +123,19 @@ async def test_user_not_supported(hass):
         assert result["reason"] == "not_supported"
 
 
-async def test_user_not_found(hass):
-    """Test starting a flow by user but no device found."""
+async def test_user_not_successful(hass):
+    """Test starting a flow by user but no connection found."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
         side_effect=OSError("Boom"),
     ), patch("homeassistant.components.samsungtv.config_flow.socket"):
 
-        # device not found
+        # device not connectable
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_found"
+        assert result["reason"] == "not_successful"
 
 
 async def test_user_already_configured(hass, remote):
@@ -245,7 +245,7 @@ async def test_ssdp_not_supported(hass):
         assert result["reason"] == "not_supported"
 
 
-async def test_ssdp_not_found(hass):
+async def test_ssdp_not_successful(hass):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
@@ -264,7 +264,7 @@ async def test_ssdp_not_found(hass):
             result["flow_id"], user_input="whatever"
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_found"
+        assert result["reason"] == "not_successful"
 
 
 async def test_ssdp_already_in_progress(hass, remote):
@@ -380,7 +380,7 @@ async def test_autodetect_none(hass, remote):
             DOMAIN, context={"source": "user"}, data=MOCK_USER_DATA
         )
         assert result["type"] == "abort"
-        assert result["reason"] == "not_found"
+        assert result["reason"] == "not_successful"
         assert remote.call_count == 2
         assert remote.call_args_list == [
             call(AUTODETECT_WEBSOCKET),
