@@ -185,6 +185,7 @@ def mock_bridge(hass):
         allow_groups=False,
         api=Mock(),
         spec=hue.HueBridge,
+        reset_jobs=[],
     )
     bridge.mock_requests = []
     # We're using a deque so we can schedule multiple responses
@@ -363,8 +364,8 @@ async def test_new_group_discovered(hass, mock_bridge):
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.group_1"}, blocking=True
     )
-    # 2x group update, 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 5
+    # 2x group update, 1x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
     assert len(hass.states.async_all()) == 3
 
     new_group = hass.states.get("light.group_3")
@@ -443,8 +444,8 @@ async def test_group_removed(hass, mock_bridge):
         "light", "turn_on", {"entity_id": "light.group_1"}, blocking=True
     )
 
-    # 2x group update, 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 5
+    # 2x group update, 1x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
     assert len(hass.states.async_all()) == 1
 
     group = hass.states.get("light.group_1")
@@ -524,8 +525,8 @@ async def test_other_group_update(hass, mock_bridge):
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": "light.group_1"}, blocking=True
     )
-    # 2x group update, 2x light update, 1 turn on request
-    assert len(mock_bridge.mock_requests) == 5
+    # 2x group update, 1x light update, 1 turn on request
+    assert len(mock_bridge.mock_requests) == 4
     assert len(hass.states.async_all()) == 2
 
     group_2 = hass.states.get("light.group_2")
@@ -599,7 +600,6 @@ async def test_update_timeout(hass, mock_bridge):
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 0
     assert len(hass.states.async_all()) == 0
-    assert mock_bridge.available is False
 
 
 async def test_update_unauthorized(hass, mock_bridge):
@@ -701,7 +701,7 @@ def test_available():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(failed_last_update=False),
         bridge=Mock(allow_unreachable=False),
         is_group=False,
     )
@@ -715,7 +715,7 @@ def test_available():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(failed_last_update=False),
         bridge=Mock(allow_unreachable=True),
         is_group=False,
     )
@@ -729,7 +729,7 @@ def test_available():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(failed_last_update=False),
         bridge=Mock(allow_unreachable=False),
         is_group=True,
     )
@@ -746,7 +746,7 @@ def test_hs_color():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(failed_last_update=False),
         bridge=Mock(),
         is_group=False,
     )
@@ -760,7 +760,7 @@ def test_hs_color():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(failed_last_update=False),
         bridge=Mock(),
         is_group=False,
     )
@@ -774,7 +774,7 @@ def test_hs_color():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        request_bridge_update=None,
+        coordinator=Mock(failed_last_update=False),
         bridge=Mock(),
         is_group=False,
     )

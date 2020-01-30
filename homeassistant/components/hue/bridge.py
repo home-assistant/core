@@ -35,6 +35,8 @@ class HueBridge:
         self.authorized = False
         self.api = None
         self.parallel_updates_semaphore = None
+        # Jobs to be executed when API is reset.
+        self.reset_jobs = []
 
     @property
     def host(self):
@@ -118,6 +120,9 @@ class HueBridge:
 
         self.hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
 
+        while self.reset_jobs:
+            self.reset_jobs.pop()()
+
         # If setup was successful, we set api variable, forwarded entry and
         # register service
         results = await asyncio.gather(
@@ -131,6 +136,7 @@ class HueBridge:
                 self.config_entry, "sensor"
             ),
         )
+
         # None and True are OK
         return False not in results
 
