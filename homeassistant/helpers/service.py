@@ -1,6 +1,6 @@
 """Service calling related helpers."""
 import asyncio
-from functools import wraps
+from functools import partial, wraps
 import logging
 from typing import Callable
 
@@ -339,7 +339,7 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
 
     tasks = [
         _handle_service_platform_call(
-            func, data, entities, call.context, required_features
+            hass, func, data, entities, call.context, required_features
         )
         for platform, entities in zip(platforms, platforms_entities)
     ]
@@ -352,7 +352,7 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
 
 
 async def _handle_service_platform_call(
-    func, data, entities, context, required_features
+    hass, func, data, entities, context, required_features
 ):
     """Handle a function call."""
     tasks = []
@@ -370,9 +370,17 @@ async def _handle_service_platform_call(
         entity.async_set_context(context)
 
         if isinstance(func, str):
-            await getattr(entity, func)(**data)
+            result = await hass.async_add_job(partial(getattr(entity, func), **data))
         else:
-            await func(entity, data)
+            result = await hass.async_add_job(func, entity, data)
+
+        if asyncio.iscoroutine(result):
+            _LOGGER.error(
+                "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to component author.",
+                func,
+                entity.entity_id,
+            )
+            await result
 
         if entity.should_poll:
             tasks.append(entity.async_update_ha_state(True))
