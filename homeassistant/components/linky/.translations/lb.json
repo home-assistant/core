@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Kont ass scho konfigur\u00e9iert",
             "username_exists": "Kont ass scho konfigur\u00e9iert"
         },
         "error": {
