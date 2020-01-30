@@ -112,7 +112,7 @@ av==6.1.2
 axis==25
 
 # homeassistant.components.zha
-bellows-homeassistant==0.13.0
+bellows-homeassistant==0.13.1
 
 # homeassistant.components.bom
 bomradarloop==0.1.3
