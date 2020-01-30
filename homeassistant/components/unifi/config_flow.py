@@ -106,7 +106,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="unknown")
 
-        host = await async_discover_unifi(self.hass)
+        host = ""
+        if await async_discover_unifi(self.hass):
+            host = "unifi"
 
         return self.async_show_form(
             step_id="user",
@@ -246,4 +248,4 @@ async def async_discover_unifi(hass):
     try:
         return await hass.async_add_executor_job(socket.gethostbyname, "unifi")
     except socket.gaierror:
-        return ""
+        return None
