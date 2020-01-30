@@ -1,0 +1,8 @@
+{
+  "domain": "influxdb_cloud",
+  "name": "InfluxDB Cloud v2.0",
+  "documentation": "https://www.home-assistant.io/integrations/influxdbcloud",
+  "requirements": ["influxdb-client==1.3.0"],
+  "dependencies": [],
+  "codeowners": ["@potgieterdl"]
+}
