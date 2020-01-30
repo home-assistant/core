@@ -318,18 +318,24 @@ class SimpliSafe:
 
     async def _update_system(self, system):
         """Update a system."""
+        await system.update()
+        self.last_event_data[system.system_id] = await system.get_latest_event()
+
+    async def async_update(self):
+        """Get updated data from SimpliSafe."""
+        tasks = [self._update_system(system) for system in self.systems.values()]
+
+        def cancel_tasks():
+            """Cancel tasks and ensure their cancellation is processed."""
+            for task in tasks:
+                task.cancel()
+
         try:
-            await system.update()
+            await asyncio.gather(*tasks)
         except InvalidCredentialsError:
-            # SimpliSafe's cloud is a little shaky. At times, a 500 or 502 will
-            # seemingly harm simplisafe-python's existing access token _and_ refresh
-            # token, thus preventing the integration from recovering. However, the
-            # refresh token stored in the config entry escapes unscathed (again,
-            # apparently); so, if we detect that we're in such a situation, try a last-
-            # ditch effort by re-authenticating with the stored token:
+            cancel_tasks()
+
             if self._emergency_refresh_token_used:
-                # If we've already tried this, log the error, suggest a HASS restart,
-                # and stop the time tracker:
                 _LOGGER.error(
                     "SimpliSafe authentication disconnected. Please restart HASS."
                 )
@@ -345,31 +351,23 @@ class SimpliSafe:
                 self._config_entry.data[CONF_TOKEN]
             )
         except SimplipyError as err:
-            _LOGGER.error(
-                'SimpliSafe error while updating "%s": %s', system.address, err
-            )
+            cancel_tasks()
+            _LOGGER.error("SimpliSafe error while updating: %s", err)
             return
         except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error('Unknown error while updating "%s": %s', system.address, err)
+            cancel_tasks()
+            _LOGGER.error("Unknown error while updating: %s", err)
             return
-
-        self.last_event_data[system.system_id] = await system.get_latest_event()
-
-        # If we've reached this point using an emergency refresh token, we're in the
-        # clear and we can discard it:
-        if self._emergency_refresh_token_used:
-            self._emergency_refresh_token_used = False
-
-    async def async_update(self):
-        """Get updated data from SimpliSafe."""
-        tasks = [self._update_system(system) for system in self.systems.values()]
-
-        await asyncio.gather(*tasks)
 
         if self._api.refresh_token_dirty:
             _async_save_refresh_token(
                 self._hass, self._config_entry, self._api.refresh_token
             )
+
+        # If we've reached this point using an emergency refresh token, we're in the
+        # clear and we can discard it:
+        if self._emergency_refresh_token_used:
+            self._emergency_refresh_token_used = False
 
         _LOGGER.debug("Updated data for all SimpliSafe systems")
         async_dispatcher_send(self._hass, TOPIC_UPDATE)
