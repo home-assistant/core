@@ -23,6 +23,7 @@ def mock_command(self, cmd, params=None):
         return DHCP_DATA
     if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.WIRELESS]:
         return WIRELESS_DATA
+    return {}
 
 
 async def test_platform_manually_configured(hass):

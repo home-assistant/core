@@ -25,6 +25,7 @@ async def setup_mikrotik_entry(hass, **kwargs):
             return wireless_data
         if cmd == mikrotik.const.MIKROTIK_SERVICES[mikrotik.const.ARP]:
             return ARP_DATA
+        return {}
 
     config_entry = MockConfigEntry(
         domain=mikrotik.DOMAIN, data=MOCK_DATA, options=MOCK_OPTIONS
@@ -79,7 +80,7 @@ async def test_hub_setup_failed(hass):
     config_entry.add_to_hass(hass)
     # error when connection fails
     with patch(
-        "librouteros.connect", side_effect=librouteros.exceptions.ConnectionError
+        "librouteros.connect", side_effect=librouteros.exceptions.ConnectionClosed
     ):
 
         await hass.config_entries.async_setup(config_entry.entry_id)

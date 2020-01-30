@@ -4,19 +4,9 @@ from unittest.mock import Mock, patch
 from homeassistant.components import mikrotik
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_coro
+from . import MOCK_DATA
 
-MOCK_ENTRY = MockConfigEntry(
-    domain=mikrotik.DOMAIN,
-    data={
-        mikrotik.CONF_NAME: "Mikrotik",
-        mikrotik.CONF_HOST: "0.0.0.0",
-        mikrotik.CONF_USERNAME: "user",
-        mikrotik.CONF_PASSWORD: "pass",
-        mikrotik.CONF_PORT: 8278,
-        mikrotik.CONF_VERIFY_SSL: False,
-    },
-)
+from tests.common import MockConfigEntry, mock_coro
 
 
 async def test_setup_with_no_config(hass):
@@ -27,7 +17,7 @@ async def test_setup_with_no_config(hass):
 
 async def test_successful_config_entry(hass):
     """Test config entry successfull setup."""
-    entry = MOCK_ENTRY
+    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA,)
     entry.add_to_hass(hass)
     mock_registry = Mock()
 
@@ -61,7 +51,7 @@ async def test_successful_config_entry(hass):
 
 async def test_hub_fail_setup(hass):
     """Test that a failed setup will not store the hub."""
-    entry = MOCK_ENTRY
+    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA,)
     entry.add_to_hass(hass)
 
     with patch.object(mikrotik, "MikrotikHub") as mock_hub:
@@ -73,7 +63,7 @@ async def test_hub_fail_setup(hass):
 
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
-    entry = MOCK_ENTRY
+    entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA,)
     entry.add_to_hass(hass)
 
     with patch.object(mikrotik, "MikrotikHub") as mock_hub, patch(
