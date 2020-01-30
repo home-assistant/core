@@ -188,12 +188,18 @@ async def _async_setup_component(
 
     if result is False:
         log_error("Integration failed to initialize.")
+        # Cleanup
+        if domain in hass.data[DATA_SETUP]:
+            hass.data[DATA_SETUP].pop(domain)
         return False
     if result is not True:
         log_error(
             f"Integration {domain!r} did not return boolean if setup was "
             "successful. Disabling component."
         )
+        # Cleanup
+        if domain in hass.data[DATA_SETUP]:
+            hass.data[DATA_SETUP].pop(domain)
         return False
 
     if hass.config_entries:
