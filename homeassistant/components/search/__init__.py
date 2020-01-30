@@ -1,14 +1,16 @@
 """The Search integration."""
-from collections import defaultdict
+from collections import defaultdict, deque
+import logging
 
 import voluptuous as vol
 
-from homeassistant.components import group, websocket_api
+from homeassistant.components import automation, group, script, websocket_api
 from homeassistant.components.homeassistant import scene
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.helpers import device_registry, entity_registry
 
 DOMAIN = "search"
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -73,16 +75,17 @@ class Searcher:
         self._device_reg = device_reg
         self._entity_reg = entity_reg
         self.results = defaultdict(set)
-        self._to_resolve = set()
+        self._to_resolve = deque()
 
     @callback
     def async_search(self, item_type, item_id):
         """Find results."""
+        _LOGGER.debug("Searching for %s/%s", item_type, item_id)
         self.results[item_type].add(item_id)
-        self._to_resolve.add((item_type, item_id))
+        self._to_resolve.append((item_type, item_id))
 
         while self._to_resolve:
-            search_type, search_id = self._to_resolve.pop()
+            search_type, search_id = self._to_resolve.popleft()
             getattr(self, f"_resolve_{search_type}")(search_id)
 
         # Clean up entity_id items, from the general "entity" type result,
@@ -112,7 +115,7 @@ class Searcher:
         self.results[item_type].add(item_id)
 
         if item_type not in self.DONT_RESOLVE:
-            self._to_resolve.add((item_type, item_id))
+            self._to_resolve.append((item_type, item_id))
 
     @callback
     def _resolve_area(self, area_id) -> None:
@@ -140,7 +143,11 @@ class Searcher:
         ):
             self._add_or_resolve("entity", entity_entry.entity_id)
 
-        # Extra: Find automations that reference this device
+        for entity_id in script.scripts_with_device(self.hass, device_id):
+            self._add_or_resolve("entity", entity_id)
+
+        for entity_id in automation.automations_with_device(self.hass, device_id):
+            self._add_or_resolve("entity", entity_id)
 
     @callback
     def _resolve_entity(self, entity_id) -> None:
@@ -151,6 +158,12 @@ class Searcher:
             self._add_or_resolve("entity", entity)
 
         for entity in group.groups_with_entity(self.hass, entity_id):
+            self._add_or_resolve("entity", entity)
+
+        for entity in automation.automations_with_entity(self.hass, entity_id):
+            self._add_or_resolve("entity", entity)
+
+        for entity in script.scripts_with_entity(self.hass, entity_id):
             self._add_or_resolve("entity", entity)
 
         # Find devices
@@ -164,7 +177,7 @@ class Searcher:
 
         domain = split_entity_id(entity_id)[0]
 
-        if domain in ("scene", "automation", "script", "group"):
+        if domain in self.EXIST_AS_ENTITY:
             self._add_or_resolve(domain, entity_id)
 
     @callback
@@ -173,7 +186,13 @@ class Searcher:
 
         Will only be called if automation is an entry point.
         """
-        # Extra: Check with automation integration what entities/devices they reference
+        for entity in automation.entities_in_automation(
+            self.hass, automation_entity_id
+        ):
+            self._add_or_resolve("entity", entity)
+
+        for device in automation.devices_in_automation(self.hass, automation_entity_id):
+            self._add_or_resolve("device", device)
 
     @callback
     def _resolve_script(self, script_entity_id) -> None:
@@ -181,7 +200,11 @@ class Searcher:
 
         Will only be called if script is an entry point.
         """
-        # Extra: Check with script integration what entities/devices they reference
+        for entity in script.entities_in_script(self.hass, script_entity_id):
+            self._add_or_resolve("entity", entity)
+
+        for device in script.devices_in_script(self.hass, script_entity_id):
+            self._add_or_resolve("device", device)
 
     @callback
     def _resolve_group(self, group_entity_id) -> None:
