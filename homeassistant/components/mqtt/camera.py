@@ -1,6 +1,4 @@
 """Camera that loads a picture from an MQTT topic."""
-
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -130,8 +128,7 @@ class MqttCamera(MqttDiscoveryUpdate, MqttEntityDeviceInfo, Camera):
             self.hass, self._sub_state
         )
 
-    @asyncio.coroutine
-    def async_camera_image(self):
+    async def async_camera_image(self):
         """Return image response."""
         return self._last_image
 

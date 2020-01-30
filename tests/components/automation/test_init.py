@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.automation import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -922,3 +923,80 @@ async def test_automation_restore_last_triggered_with_initial_state(hass):
     assert state
     assert state.state == STATE_ON
     assert state.attributes["last_triggered"] == time
+
+
+async def test_extraction_functions(hass):
+    """Test extraction functions."""
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "alias": "test1",
+                    "trigger": {"platform": "state", "entity_id": "sensor.trigger_1"},
+                    "action": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.in_both"},
+                        },
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.in_first"},
+                        },
+                        {
+                            "domain": "light",
+                            "device_id": "device-in-both",
+                            "entity_id": "light.bla",
+                            "type": "turn_on",
+                        },
+                    ],
+                },
+                {
+                    "alias": "test2",
+                    "trigger": {"platform": "state", "entity_id": "sensor.trigger_2"},
+                    "action": [
+                        {
+                            "service": "test.script",
+                            "data": {"entity_id": "light.in_both"},
+                        },
+                        {
+                            "condition": "state",
+                            "entity_id": "sensor.condition",
+                            "state": "100",
+                        },
+                        {"scene": "scene.hello"},
+                        {
+                            "domain": "light",
+                            "device_id": "device-in-both",
+                            "entity_id": "light.bla",
+                            "type": "turn_on",
+                        },
+                        {
+                            "domain": "light",
+                            "device_id": "device-in-last",
+                            "entity_id": "light.bla",
+                            "type": "turn_on",
+                        },
+                    ],
+                },
+            ]
+        },
+    )
+
+    assert set(automation.automations_with_entity(hass, "light.in_both")) == {
+        "automation.test1",
+        "automation.test2",
+    }
+    assert set(automation.entities_in_automation(hass, "automation.test1")) == {
+        "light.in_both",
+        "light.in_first",
+    }
+    assert set(automation.automations_with_device(hass, "device-in-both")) == {
+        "automation.test1",
+        "automation.test2",
+    }
+    assert set(automation.devices_in_automation(hass, "automation.test2")) == {
+        "device-in-both",
+        "device-in-last",
+    }

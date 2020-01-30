@@ -12,6 +12,7 @@ from homekit.exceptions import (
 from homekit.model.characteristics import CharacteristicsTypes
 from homekit.model.services import ServicesTypes
 
+from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import DOMAIN, ENTITY_MAP, HOMEKIT_ACCESSORY_DISPATCH
@@ -116,6 +117,7 @@ class HKDevice:
             char for char in self.pollable_characteristics if char[0] != accessory_id
         ]
 
+    @callback
     def async_set_unavailable(self):
         """Mark state of all entities on this connection as unavailable."""
         self.available = False

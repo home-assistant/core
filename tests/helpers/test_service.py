@@ -306,6 +306,30 @@ async def test_call_with_required_features(hass, mock_entities):
     assert test_service_mock.call_count == 1
 
 
+async def test_call_with_sync_func(hass, mock_entities):
+    """Test invoking sync service calls."""
+    test_service_mock = Mock()
+    await service.entity_service_call(
+        hass,
+        [Mock(entities=mock_entities)],
+        test_service_mock,
+        ha.ServiceCall("test_domain", "test_service", {"entity_id": "light.kitchen"}),
+    )
+    assert test_service_mock.call_count == 1
+
+
+async def test_call_with_sync_attr(hass, mock_entities):
+    """Test invoking sync service calls."""
+    mock_entities["light.kitchen"].sync_method = Mock()
+    await service.entity_service_call(
+        hass,
+        [Mock(entities=mock_entities)],
+        "sync_method",
+        ha.ServiceCall("test_domain", "test_service", {"entity_id": "light.kitchen"}),
+    )
+    assert mock_entities["light.kitchen"].sync_method.call_count == 1
+
+
 async def test_call_context_user_not_exist(hass):
     """Check we don't allow deleted users to do things."""
     with pytest.raises(exceptions.UnknownUser) as err:
@@ -348,7 +372,7 @@ async def test_call_context_target_all(hass, mock_service_platform_call, mock_en
         )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == [mock_entities["light.kitchen"]]
 
 
@@ -379,7 +403,7 @@ async def test_call_context_target_specific(
         )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == [mock_entities["light.kitchen"]]
 
 
@@ -422,7 +446,7 @@ async def test_call_no_context_target_all(
     )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == list(mock_entities.values())
 
 
@@ -442,7 +466,7 @@ async def test_call_no_context_target_specific(
     )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == [mock_entities["light.kitchen"]]
 
 
@@ -458,7 +482,7 @@ async def test_call_with_match_all(
     )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == [
         mock_entities["light.kitchen"],
         mock_entities["light.living_room"],
@@ -480,7 +504,7 @@ async def test_call_with_omit_entity_id(
     )
 
     assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][2]
+    entities = mock_service_platform_call.mock_calls[0][1][3]
     assert entities == []
 
 

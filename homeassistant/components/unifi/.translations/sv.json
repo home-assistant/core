@@ -22,5 +22,15 @@
             }
         },
         "title": "UniFi Controller"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "one": "Tom",
+                    "other": "Tomma"
+                }
+            }
+        }
     }
 }

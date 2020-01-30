@@ -147,40 +147,20 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.bridge_id = await async_get_bridge_id(
                         session, **self.deconz_config
                     )
-
-                    for entry in self.hass.config_entries.async_entries(DOMAIN):
-                        if self.bridge_id == entry.unique_id:
-                            return self._update_entry(
-                                entry,
-                                host=self.deconz_config[CONF_HOST],
-                                port=self.deconz_config[CONF_PORT],
-                                api_key=self.deconz_config[CONF_API_KEY],
-                            )
-
                     await self.async_set_unique_id(self.bridge_id)
+
+                    self._abort_if_unique_id_configured(
+                        updates={
+                            CONF_HOST: self.deconz_config[CONF_HOST],
+                            CONF_PORT: self.deconz_config[CONF_PORT],
+                            CONF_API_KEY: self.deconz_config[CONF_API_KEY],
+                        }
+                    )
 
             except asyncio.TimeoutError:
                 return self.async_abort(reason="no_bridges")
 
         return self.async_create_entry(title=self.bridge_id, data=self.deconz_config)
-
-    def _update_entry(self, entry, host, port, api_key=None):
-        """Update existing entry."""
-        if (
-            entry.data[CONF_HOST] == host
-            and entry.data[CONF_PORT] == port
-            and (api_key is None or entry.data[CONF_API_KEY] == api_key)
-        ):
-            return self.async_abort(reason="already_configured")
-
-        entry.data[CONF_HOST] = host
-        entry.data[CONF_PORT] = port
-
-        if api_key is not None:
-            entry.data[CONF_API_KEY] = api_key
-
-        self.hass.config_entries.async_update_entry(entry)
-        return self.async_abort(reason="updated_instance")
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
@@ -193,13 +173,14 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.bridge_id = normalize_bridge_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
         parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
 
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if self.bridge_id == entry.unique_id:
-                if entry.source == "hassio":
-                    return self.async_abort(reason="already_configured")
-                return self._update_entry(entry, parsed_url.hostname, parsed_url.port)
+        entry = await self.async_set_unique_id(self.bridge_id)
+        if entry and entry.source == "hassio":
+            return self.async_abort(reason="already_configured")
 
-        await self.async_set_unique_id(self.bridge_id)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: parsed_url.hostname, CONF_PORT: parsed_url.port}
+        )
+
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"host": parsed_url.hostname}
 
@@ -216,17 +197,16 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         This flow is triggered by the discovery component.
         """
         self.bridge_id = normalize_bridge_id(user_input[CONF_SERIAL])
-
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if self.bridge_id == entry.unique_id:
-                return self._update_entry(
-                    entry,
-                    user_input[CONF_HOST],
-                    user_input[CONF_PORT],
-                    user_input[CONF_API_KEY],
-                )
-
         await self.async_set_unique_id(self.bridge_id)
+
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_API_KEY: user_input[CONF_API_KEY],
+            }
+        )
+
         self._hassio_discovery = user_input
 
         return await self.async_step_hassio_confirm()

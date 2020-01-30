@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Skapandet av en auktoriseringsadress \u00f6verskred tidsgr\u00e4nsen.",
+            "missing_configuration": "Withings-integrationen \u00e4r inte konfigurerad. V\u00e4nligen f\u00f6lj dokumentationen."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e4lj autentiseringsmetod"
+            }
+        }
+    }
+}

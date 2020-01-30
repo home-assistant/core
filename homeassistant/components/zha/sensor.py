@@ -149,6 +149,7 @@ class Sensor(ZhaEntity):
             return None
         return self._state
 
+    @callback
     def async_set_state(self, state):
         """Handle state update from channel."""
         if state is not None:
@@ -202,6 +203,7 @@ class Battery(Sensor):
             state_attrs["battery_quantity"] = battery_quantity
         return state_attrs
 
+    @callback
     def async_update_state_attribute(self, key, value):
         """Update a single device state attribute."""
         if key == "battery_voltage":

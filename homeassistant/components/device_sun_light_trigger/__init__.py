@@ -113,29 +113,27 @@ async def async_setup(hass, config):
             return None
         return next_setting - LIGHT_TRANSITION_TIME * len(light_ids)
 
-    def async_turn_on_before_sunset(light_id):
+    async def async_turn_on_before_sunset(light_id):
         """Turn on lights."""
         if not anyone_home() or light.is_on(light_id):
             return
-        hass.async_create_task(
-            hass.services.async_call(
-                DOMAIN_LIGHT,
-                SERVICE_TURN_ON,
-                {
-                    ATTR_ENTITY_ID: light_id,
-                    ATTR_TRANSITION: LIGHT_TRANSITION_TIME.seconds,
-                    ATTR_PROFILE: light_profile,
-                },
-            )
+        await hass.services.async_call(
+            DOMAIN_LIGHT,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: light_id,
+                ATTR_TRANSITION: LIGHT_TRANSITION_TIME.seconds,
+                ATTR_PROFILE: light_profile,
+            },
         )
 
+    @callback
     def async_turn_on_factory(light_id):
         """Generate turn on callbacks as factory."""
 
-        @callback
-        def async_turn_on_light(now):
+        async def async_turn_on_light(now):
             """Turn on specific light."""
-            async_turn_on_before_sunset(light_id)
+            await async_turn_on_before_sunset(light_id)
 
         return async_turn_on_light
 
