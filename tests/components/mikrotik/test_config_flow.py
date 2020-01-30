@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components import mikrotik
-from homeassistant.components.mikrotik import config_flow
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -79,13 +78,6 @@ def mock_api_connection_error():
         yield
 
 
-def init_config_flow(hass):
-    """Init a configuration flow."""
-    flow = config_flow.MikrotikFlowHandler()
-    flow.hass = hass
-    return flow
-
-
 async def test_import(hass, api):
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
@@ -104,13 +96,16 @@ async def test_import(hass, api):
 
 async def test_flow_works(hass, api):
     """Test config flow."""
-    flow = init_config_flow(hass)
 
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    result = await flow.async_step_user(DEMO_USER_INPUT)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_USER_INPUT
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "Home router"
@@ -124,14 +119,17 @@ async def test_flow_works(hass, api):
 async def test_options(hass):
     """Test updating options."""
     entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
-    flow = init_config_flow(hass)
-    options_flow = flow.async_get_options_flow(entry)
+    entry.add_to_hass(hass)
 
-    result = await options_flow.async_step_init()
+    flow = await hass.config_entries.options.async_create_flow(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+
+    result = await flow.async_step_init()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "device_tracker"
 
-    result = await options_flow.async_step_device_tracker(
+    result = await flow.async_step_device_tracker(
         {
             mikrotik.CONF_DETECTION_TIME: 30,
             mikrotik.CONF_ARP_PING: True,
@@ -151,10 +149,13 @@ async def test_host_already_configured(hass, auth_error):
 
     entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
     entry.add_to_hass(hass)
-    flow = init_config_flow(hass)
 
-    result = await flow.async_step_user(DEMO_USER_INPUT)
-
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_USER_INPUT
+    )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
 
@@ -164,10 +165,15 @@ async def test_name_exists(hass, api):
 
     entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
     entry.add_to_hass(hass)
-    flow = init_config_flow(hass)
     user_input = DEMO_USER_INPUT.copy()
     user_input[CONF_HOST] = "0.0.0.1"
-    result = await flow.async_step_user(user_input)
+
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=user_input
+    )
 
     assert result["type"] == "form"
     assert result["errors"] == {CONF_NAME: "name_exists"}
@@ -176,10 +182,12 @@ async def test_name_exists(hass, api):
 async def test_connection_error(hass, conn_error):
     """Test error when connection is unsuccesful."""
 
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user(DEMO_USER_INPUT)
-
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_USER_INPUT
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
@@ -187,9 +195,12 @@ async def test_connection_error(hass, conn_error):
 async def test_wrong_credentials(hass, auth_error):
     """Test error when credentials are wrong."""
 
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user(DEMO_USER_INPUT)
+    result = await hass.config_entries.flow.async_init(
+        mikrotik.DOMAIN, context={"source": "user"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=DEMO_USER_INPUT
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {
