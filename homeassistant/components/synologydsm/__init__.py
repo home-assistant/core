@@ -5,12 +5,12 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_DISKS,
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_API_VERSION,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
@@ -18,7 +18,14 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import CONF_VOLUMES, DEFAULT_NAME, DEFAULT_SSL, DOMAIN, MONITORED_CONDITIONS, DEFAULT_DSM_VERSION
+from .const import (
+    CONF_VOLUMES,
+    DEFAULT_DSM_VERSION,
+    DEFAULT_NAME,
+    DEFAULT_SSL,
+    DOMAIN,
+    MONITORED_CONDITIONS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

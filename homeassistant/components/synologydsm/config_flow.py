@@ -6,22 +6,22 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import (
+    CONF_API_VERSION,
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_API_VERSION,
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
 )
 
 from .const import (
+    DEFAULT_DSM_VERSION,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
     DEFAULT_SSL,
-    DEFAULT_DSM_VERSION,
     MONITORED_CONDITIONS,
 )
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -58,12 +58,11 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_SSL, default=user_input.get(CONF_SSL, DEFAULT_SSL)
                     ): bool,
                     vol.Required(
-                        CONF_API_VERSION, default=user_input.get(CONF_API_VERSION, DEFAULT_DSM_VERSION)
+                        CONF_API_VERSION,
+                        default=user_input.get(CONF_API_VERSION, DEFAULT_DSM_VERSION),
                     ): vol.All(
                         vol.Coerce(int),
-                        vol.In(
-                            [5, 6]  # DSM versions supported by the library
-                        ),
+                        vol.In([5, 6]),  # DSM versions supported by the library
                     ),
                     vol.Required(
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")
@@ -104,7 +103,15 @@ class SynologyDSMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(f"{host}:{port}")
         self._abort_if_unique_id_configured()
 
-        api = SynologyDSM(host, port, username, password, use_ssl, debugmode=True, dsm_version=api_version)
+        api = SynologyDSM(
+            host,
+            port,
+            username,
+            password,
+            use_ssl,
+            debugmode=True,
+            dsm_version=api_version,
+        )
         storage = await self.hass.async_add_executor_job(getattr, api, "storage")
         utilisation = await self.hass.async_add_executor_job(
             getattr, api, "utilisation"

@@ -26,6 +26,7 @@ from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import (
     CONF_VOLUMES,
+    DEFAULT_DSM_VERSION,
     MEMORY_SENSORS_KEYS,
     NETWORK_SENSORS_KEYS,
     SERVICE_UPDATE,
@@ -33,7 +34,6 @@ from .const import (
     STORAGE_VOL_MON_COND,
     TEMP_SENSORS_KEYS,
     UTILISATION_MON_COND,
-    DEFAULT_DSM_VERSION,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,13 +106,15 @@ class SynoApi:
         password: str,
         temp_unit: str,
         use_ssl: bool,
-        api_version: int
+        api_version: int,
     ):
         """Initialize the API wrapper class."""
         self._hass = hass
         self.temp_unit = temp_unit
 
-        self._api = SynologyDSM(host, port, username, password, use_ssl, dsm_version=api_version)
+        self._api = SynologyDSM(
+            host, port, username, password, use_ssl, dsm_version=api_version
+        )
 
         _LOGGER.error("SynoApi_utilisation")
         self.utilisation = self._api.utilisation
