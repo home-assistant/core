@@ -1043,6 +1043,7 @@ async def test_referenced_entities():
                     "entity_id": "sensor.condition",
                     "state": "100",
                 },
+                {"service": "test.script", "data": {"without": "entity_id"}},
                 {"scene": "scene.hello"},
                 {"event": "test_event"},
                 {"delay": "{{ delay_period }}"},
