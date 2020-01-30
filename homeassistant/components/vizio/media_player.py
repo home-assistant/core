@@ -6,7 +6,7 @@ from typing import Callable, List
 from pyvizio import VizioAsync
 
 from homeassistant import util
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerDevice
+from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -24,7 +24,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.util import slugify
 
 from .const import (
     CONF_VOLUME_STEP,
@@ -76,18 +75,7 @@ async def async_setup_entry(
     )
 
     if not await device.can_connect():
-        fail_auth_msg = ""
-        if token:
-            fail_auth_msg = f"and auth token are correct"
-        else:
-            fail_auth_msg = "is correct"
-        _LOGGER.warning(
-            "Unable to connect to device, check if host '%s' is valid "
-            "and available. Also check if device class '%s' %s",
-            host,
-            device_class,
-            fail_auth_msg,
-        )
+        _LOGGER.warning("Failed to connect to %s", host)
         raise PlatformNotReady
 
     entity = VizioDevice(config_entry, device, name, volume_step, device_class)
@@ -131,18 +119,14 @@ class VizioDevice(MediaPlayerDevice):
         if is_on is None:
             if self._available:
                 _LOGGER.warning(
-                    "Lost connection to %s (%s)",
-                    self._config_entry.data[CONF_HOST],
-                    f"{MP_DOMAIN}.{slugify(self._name)}",
+                    "Lost connection to %s", self._config_entry.data[CONF_HOST]
                 )
                 self._available = False
             return
 
         if not self._available:
             _LOGGER.info(
-                "Restored connection to %s (%s)",
-                self._config_entry.data[CONF_HOST],
-                f"{MP_DOMAIN}.{slugify(self._name)}",
+                "Restored connection to %s", self._config_entry.data[CONF_HOST]
             )
             self._available = True
 
@@ -171,7 +155,7 @@ class VizioDevice(MediaPlayerDevice):
     async def _async_send_update_options_signal(
         hass: HomeAssistantType, config_entry: ConfigEntry
     ) -> None:
-        """Send update event when when Vizio config entry is updated."""
+        """Send update event when Vizio config entry is updated."""
         # Move this method to component level if another entity ever gets added for a single config entry.
         # See here: https://github.com/home-assistant/home-assistant/pull/30653#discussion_r366426121
         async_dispatcher_send(hass, config_entry.entry_id, config_entry)
@@ -290,7 +274,7 @@ class VizioDevice(MediaPlayerDevice):
         await self._device.input_switch(source)
 
     async def async_volume_up(self) -> None:
-        """Increasing volume of the device."""
+        """Increase volume of the device."""
         await self._device.vol_up(num=self._volume_step)
 
         if self._volume_level is not None:
@@ -299,7 +283,7 @@ class VizioDevice(MediaPlayerDevice):
             )
 
     async def async_volume_down(self) -> None:
-        """Decreasing volume of the device."""
+        """Decrease volume of the device."""
         await self._device.vol_down(num=self._volume_step)
 
         if self._volume_level is not None:

@@ -247,6 +247,10 @@ async def _test_update_availability_switch(
     with patch("homeassistant.util.dt.utcnow", return_value=now):
         await _test_setup(hass, DEVICE_CLASS_SPEAKER, initial_power_state)
 
+    # Clear captured logs so that only availability state changes are captured for
+    # future assertion
+    caplog.clear()
+
     # Fast forward time to future twice to trigger update and assert vizio log message
     for i in range(1, 3):
         future = now + (future_interval * i)
@@ -263,17 +267,14 @@ async def _test_update_availability_switch(
             else:
                 assert hass.states.get(ENTITY_ID).state != STATE_UNAVAILABLE
 
-    # Ensure connection status messages from vizio.media_player appear at least once
-    # but only on availability changes (max of two times)
-    conn_msg_list = list(
-        filter(
-            lambda log: "connection" in log.msg
-            and log.name == "homeassistant.components.vizio.media_player",
-            caplog.records,
-        )
-    )
-    num_conn_msgs = len(conn_msg_list)
-    assert 0 < num_conn_msgs < 3
+    # Ensure connection status messages from vizio.media_player appear exactly once
+    # (on availability state change)
+    vizio_log_list = [
+        log
+        for log in caplog.records
+        if log.name == "homeassistant.components.vizio.media_player"
+    ]
+    assert len(vizio_log_list) == 1
 
 
 async def test_update_unavailable_to_available(
