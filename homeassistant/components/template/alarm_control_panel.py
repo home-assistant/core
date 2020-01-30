@@ -5,7 +5,6 @@ import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT,
-    FORMAT_NUMBER,
     PLATFORM_SCHEMA,
     AlarmControlPanel,
 )
@@ -49,7 +48,6 @@ CONF_ARM_HOME_ACTION = "arm_home"
 CONF_ARM_NIGHT_ACTION = "arm_night"
 CONF_DISARM_ACTION = "disarm"
 CONF_ALARM_CONTROL_PANELS = "panels"
-CONF_CODE_ARM_REQUIRED = "code_arm_required"
 
 ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
     {
@@ -58,7 +56,6 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
         vol.Optional(CONF_ARM_AWAY_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
         vol.Optional(CONF_NAME): cv.string,
     }
 )
@@ -83,7 +80,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         arm_away_action = device_config.get(CONF_ARM_AWAY_ACTION)
         arm_home_action = device_config.get(CONF_ARM_HOME_ACTION)
         arm_night_action = device_config.get(CONF_ARM_NIGHT_ACTION)
-        code_arm_required = device_config[CONF_CODE_ARM_REQUIRED]
 
         template_entity_ids = set()
 
@@ -107,7 +103,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 arm_away_action,
                 arm_home_action,
                 arm_night_action,
-                code_arm_required,
                 template_entity_ids,
             )
         )
@@ -128,7 +123,6 @@ class AlarmControlPanelTemplate(AlarmControlPanel):
         arm_away_action,
         arm_home_action,
         arm_night_action,
-        code_arm_required,
         template_entity_ids,
     ):
         """Initialize the panel."""
@@ -139,7 +133,7 @@ class AlarmControlPanelTemplate(AlarmControlPanel):
         self._name = name
         self._template = state_template
         self._disarm_script = None
-        self._code_arm_required = code_arm_required
+
         if disarm_action is not None:
             self._disarm_script = Script(hass, disarm_action)
         self._arm_away_script = None
@@ -191,12 +185,12 @@ class AlarmControlPanelTemplate(AlarmControlPanel):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        return FORMAT_NUMBER
+        return None
 
     @property
     def code_arm_required(self):
         """Whether the code is required for arm actions."""
-        return self._code_arm_required
+        return False
 
     async def async_added_to_hass(self):
         """Register callbacks."""
