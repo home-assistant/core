@@ -300,7 +300,7 @@ class ThermostatChannel(ZigbeeChannel):
 
             chunk, attrs = attrs[:4], attrs[4:]
 
-    @retryable_req(log=_LOGGER.debug, delays=(1, 1, 3, 6, 15, 30))
+    @retryable_req(delays=(1, 1, 3, 6, 15, 30))
     async def async_initialize(self, from_cache):
         """Initialize channel."""
         from zigpy import types as t
@@ -402,6 +402,7 @@ class ThermostatChannel(ZigbeeChannel):
 
     @staticmethod
     def check_result(res: list) -> bool:
+        """Normalize the result."""
         if not isinstance(res, list):
             return False
 

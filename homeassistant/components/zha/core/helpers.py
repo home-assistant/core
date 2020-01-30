@@ -13,6 +13,7 @@ import logging
 from random import uniform
 from typing import Any, Callable, Iterator, List, Optional
 
+import zigpy.exceptions
 import zigpy.types
 
 from homeassistant.core import State, callback
@@ -160,9 +161,7 @@ class LogMixin:
 
 
 def retryable_req(
-    log=lambda *args: None,
-    delays=(1, 5, 10, 15, 30, 60, 120, 180, 360, 600, 900, 1800),
-    raise_=False,
+    delays=(1, 5, 10, 15, 30, 60, 120, 180, 360, 600, 900, 1800), raise_=False
 ):
     """Make a method with ZCL requests retryable.
 
@@ -173,19 +172,18 @@ def retryable_req(
 
     def decorator(func):
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs):
-            from zigpy.exceptions import ZigbeeException
+        async def wrapper(channel, *args, **kwargs):
 
-            exceptions = (ZigbeeException, asyncio.TimeoutError)
+            exceptions = (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError)
             try_count, errors = 1, []
             for delay in itertools.chain(delays, [None]):
                 try:
-                    return await func(*args, **kwargs)
+                    return await func(channel, *args, **kwargs)
                 except exceptions as ex:
                     errors.append(ex)
                     if delay:
                         delay = uniform(delay * 0.75, delay * 1.25)
-                        log(
+                        channel.debug(
                             (
                                 "%s: retryable request #%d failed: %s. "
                                 "Retrying in %ss"
@@ -198,7 +196,9 @@ def retryable_req(
                         try_count += 1
                         await asyncio.sleep(delay)
                     else:
-                        log("%s: all attempts have failed: %s", func.__name__, errors)
+                        channel.warning(
+                            "%s: all attempts have failed: %s", func.__name__, errors
+                        )
                         if raise_:
                             raise
 
