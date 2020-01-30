@@ -3,7 +3,8 @@ from asynctest import patch
 
 from homeassistant import config_entries, setup
 from homeassistant.components.ziggo_next.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.ziggo_next.const import DOMAIN
+from homeassistant.components.ziggo_next.const import CONF_COUNTRY_CODE, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 
 async def test_form(hass):
@@ -16,8 +17,8 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.ziggo_next.config_flow.PlaceholderHub.authenticate",
-        return_value=True,
+        "homeassistant.components.ziggo_next.config_flow.validate_input",
+        return_value={"title": "test@username.nl"},
     ), patch(
         "homeassistant.components.ziggo_next.async_setup", return_value=True
     ) as mock_setup, patch(
@@ -26,18 +27,18 @@ async def test_form(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test@username.nl",
+                CONF_PASSWORD: "test-password",
+                CONF_COUNTRY_CODE: "nl",
             },
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == "test@username.nl"
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_USERNAME: "test@username.nl",
+        CONF_PASSWORD: "test-password",
+        CONF_COUNTRY_CODE: "nl",
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
@@ -51,15 +52,15 @@ async def test_form_invalid_auth(hass):
     )
 
     with patch(
-        "homeassistant.components.ziggo_next.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.ziggo_next.config_flow.validate_input",
         side_effect=InvalidAuth,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test@username.nl",
+                CONF_PASSWORD: "test-password",
+                CONF_COUNTRY_CODE: "nl",
             },
         )
 
@@ -74,15 +75,15 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.ziggo_next.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.ziggo_next.config_flow.validate_input",
         side_effect=CannotConnect,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_USERNAME: "test@username.nl",
+                CONF_PASSWORD: "test-password",
+                CONF_COUNTRY_CODE: "nl",
             },
         )
 
