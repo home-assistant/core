@@ -6,16 +6,17 @@ from typing import Any, Dict, Optional
 from surepy import SureLocationID, SureLockStateID, SureProductID
 
 from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_CONNECTIVITY,
     DEVICE_CLASS_LOCK,
     DEVICE_CLASS_PRESENCE,
     BinarySensorDevice,
 )
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_ID, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import SurePetcareAPI
-from .const import DATA_SURE_PETCARE, DEFAULT_DEVICE_CLASS, SPC, TOPIC_UPDATE
+from .const import DATA_SURE_PETCARE, SPC, TOPIC_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,16 +32,18 @@ async def async_setup_platform(
 
     spc = hass.data[DATA_SURE_PETCARE][SPC]
 
-    _LOGGER.debug("async_setup_platform() - spc.ids: %s", spc.ids)
-
     for thing in spc.ids:
         sure_id = thing[CONF_ID]
         sure_type = thing[CONF_TYPE]
 
         if sure_type in [SureProductID.CAT_FLAP, SureProductID.PET_FLAP]:
-            entity = Flap(sure_id, thing[CONF_NAME], spc)
+            entity = Flap(sure_id, spc)
         elif sure_type == SureProductID.PET:
-            entity = Pet(sure_id, thing[CONF_NAME], spc)
+            entity = Pet(sure_id, spc)
+        elif sure_type == SureProductID.HUB:
+            entity = Hub(sure_id, spc)
+        else:
+            continue
 
         entities.append(entity)
 
@@ -53,18 +56,22 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     def __init__(
         self: BinarySensorDevice,
         _id: int,
-        name: str,
         spc: SurePetcareAPI,
         device_class: str,
         sure_type: SureProductID,
     ):
         """Initialize a Sure Petcare binary sensor."""
         self._id = _id
-        self._name = name
-        self._spc = spc
-        self._device_class = device_class
         self._sure_type = sure_type
+        self._device_class = device_class
+
+        self._spc: SurePetcareAPI = spc
+        self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
         self._state: Dict[str, Any] = {}
+
+        self._name = (
+            f"{self._sure_type.name.capitalize()} {self._spc_data['name'].capitalize()}"
+        )
 
         self._async_unsub_dispatcher_connect = None
 
@@ -84,33 +91,20 @@ class SurePetcareBinarySensor(BinarySensorDevice):
         return self._name
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the state attributes of the device."""
-        if "since" in self._state:
-            self._state["since"] = str(
-                datetime.fromisoformat(self._state["since"]).replace(tzinfo=None)
-            )
-        if "where" in self._state:
-            self._state["where"] = SureLocationID(
-                self._state["where"]
-            ).name.capitalize()
-        _LOGGER.debug("device_state_attributes() - self._state: %s", self._state)
-        return self._state
-
-    @property
     def device_class(self) -> str:
         """Return the device class."""
-        return DEFAULT_DEVICE_CLASS if not self._device_class else self._device_class
+        return None if not self._device_class else self._device_class
 
     @property
     def unique_id(self: BinarySensorDevice) -> str:
         """Return an unique ID."""
-        return f"{self._spc.household_id}-{self._id}"
+        return f"spc-{self._spc_data['household_id']}-{self._id}"
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
-        self._state = self._spc.states[self._sure_type][self._id].get("data")
-        _LOGGER.debug("async_update(): - self._state: %s", self._state)
+        self._spc_data = self._spc.states[self._sure_type].get(self._id)
+        self._state = self._spc_data.get("status")
+        _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -133,17 +127,9 @@ class SurePetcareBinarySensor(BinarySensorDevice):
 class Flap(SurePetcareBinarySensor):
     """Sure Petcare Flap."""
 
-    def __init__(
-        self: BinarySensorDevice, _id: int, name: str, spc: SurePetcareAPI
-    ) -> None:
+    def __init__(self: BinarySensorDevice, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare Flap."""
-        super().__init__(
-            _id,
-            f"Flap {name.capitalize()}",
-            spc,
-            DEVICE_CLASS_LOCK,
-            SureProductID.PET_FLAP,
-        )
+        super().__init__(_id, spc, DEVICE_CLASS_LOCK, SureProductID.PET_FLAP)
 
     @property
     def is_on(self) -> Optional[bool]:
@@ -152,6 +138,10 @@ class Flap(SurePetcareBinarySensor):
             return bool(self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
         except (KeyError, TypeError):
             return None
+
+    @property
+    def available(self) -> bool:
+        return bool(self._state["online"])
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
@@ -185,17 +175,9 @@ class Flap(SurePetcareBinarySensor):
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
-    def __init__(
-        self: BinarySensorDevice, _id: int, name: str, spc: SurePetcareAPI
-    ) -> None:
+    def __init__(self: BinarySensorDevice, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare Pet."""
-        super().__init__(
-            _id,
-            f"Pet {name.capitalize()}",
-            spc,
-            DEVICE_CLASS_PRESENCE,
-            SureProductID.PET,
-        )
+        super().__init__(_id, spc, DEVICE_CLASS_PRESENCE, SureProductID.PET)
 
     @property
     def is_on(self) -> bool:
@@ -204,3 +186,72 @@ class Pet(SurePetcareBinarySensor):
             return bool(SureLocationID(self._state["where"]) == SureLocationID.INSIDE)
         except (KeyError, TypeError):
             return False
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the state attributes of the device."""
+        attributes = None
+        if self._state:
+            try:
+                attributes = {
+                    "since": str(
+                        datetime.fromisoformat(self._state["since"]).replace(
+                            tzinfo=None
+                        )
+                    ),
+                    "where": SureLocationID(self._state["where"]).name.capitalize(),
+                }
+
+            except (KeyError, TypeError) as error:
+                _LOGGER.error(
+                    "Error getting device state attributes from %s: %s\n\n%s",
+                    self._name,
+                    error,
+                    self._state,
+                )
+
+        return attributes
+
+    async def async_update(self) -> None:
+        """Get the latest data and update the state."""
+        self._spc_data = self._spc.states[self._sure_type].get(self._id)
+        self._state = self._spc_data.get("position")
+        _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
+
+
+class Hub(SurePetcareBinarySensor):
+    """Sure Petcare Pet."""
+
+    def __init__(self: BinarySensorDevice, _id: int, spc: SurePetcareAPI) -> None:
+        """Initialize a Sure Petcare Hub."""
+        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, SureProductID.HUB)
+
+    @property
+    def available(self) -> bool:
+        return bool(self._state["online"])
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if entity is online."""
+        return self.available
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the state attributes of the device."""
+        attributes = None
+        if self._state:
+            try:
+                attributes = {
+                    "led_mode": int(self._state["led_mode"]),
+                    "pairing_mode": bool(self._state["pairing_mode"]),
+                }
+
+            except (KeyError, TypeError) as error:
+                _LOGGER.error(
+                    "Error getting device state attributes from %s: %s\n\n%s",
+                    self._name,
+                    error,
+                    self._state,
+                )
+
+        return attributes
