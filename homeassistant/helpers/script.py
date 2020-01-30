@@ -201,6 +201,10 @@ class Script:
                     continue
 
                 entity_ids = data.get(ATTR_ENTITY_ID)
+
+                if entity_ids is None:
+                    continue
+
                 if isinstance(entity_ids, str):
                     entity_ids = [entity_ids]
 
