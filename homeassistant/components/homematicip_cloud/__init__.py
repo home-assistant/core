@@ -347,7 +347,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     if not await hap.async_setup():
         return False
-    
+
     async def async_reset_hap_connection():
         """Reset hmip hap connections."""
         await hap.async_reset()
