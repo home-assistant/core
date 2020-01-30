@@ -837,6 +837,7 @@ omit =
     homeassistant/components/zhong_hong/climate.py
     homeassistant/components/zigbee/*
     homeassistant/components/ziggo_mediabox_xl/media_player.py
+    homeassistant/components/ziggo_next/*
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
