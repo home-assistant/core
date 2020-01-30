@@ -84,12 +84,11 @@ async def async_migrate_entry(hass, config_entry):
     """Migrate old entry."""
     LOGGER.debug("Migrating from version %s", config_entry.version)
 
+    #  Flatten configuration but keep old data if user rollbacks HASS
     if config_entry.version == 1:
-        device = config_entry.data.pop(CONF_DEVICE)
-        config_entry.data = {**config_entry.data, **device}
+        config_entry.data = {**config_entry.data, **config_entry.data[CONF_DEVICE]}
 
         config_entry.version = 2
-        hass.config_entries.async_update_entry(config_entry)
 
     LOGGER.info("Migration to version %s successful", config_entry.version)
 

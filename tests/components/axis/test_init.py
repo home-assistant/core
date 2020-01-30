@@ -98,6 +98,12 @@ async def test_migrate_entry(hass):
     await axis.async_migrate_entry(hass, entry)
 
     assert entry.data == {
+        axis.CONF_DEVICE: {
+            axis.CONF_HOST: "1.2.3.4",
+            axis.CONF_USERNAME: "username",
+            axis.CONF_PASSWORD: "password",
+            axis.CONF_PORT: 80,
+        },
         axis.CONF_HOST: "1.2.3.4",
         axis.CONF_USERNAME: "username",
         axis.CONF_PASSWORD: "password",
@@ -107,4 +113,3 @@ async def test_migrate_entry(hass):
         axis.device.CONF_NAME: "name",
     }
     assert entry.version == 2
-    assert axis.CONF_DEVICE not in entry.data
