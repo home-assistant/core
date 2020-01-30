@@ -13,6 +13,7 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
+from homeassistant.components.melcloud import MelCloudDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
@@ -44,7 +45,7 @@ async def async_setup_entry(
 class AtaDeviceClimate(ClimateDevice):
     """Air-to-Air climate device."""
 
-    def __init__(self, device: AtaDevice, name=None):
+    def __init__(self, device: MelCloudDevice, name=None):
         """Initialize the climate."""
         self._api = device
         if name is None:
