@@ -349,9 +349,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         return False
 
     async def async_reset_hap_connection():
-        """Reset hmip hap connections."""
-        await hap.async_reset()
-        _LOGGER.debug("Shut down access point id %s", hap.config_entry.unique_id)
+        """Reset hmip hap connection."""
+        await async_unload_entry(hass, entry)
+        _LOGGER.debug("Reset connection to access point id %s", entry.unique_id)
 
     # Register on HA stop event to gracefully shutdown HomematicIP Cloud connection
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_reset_hap_connection())
