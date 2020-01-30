@@ -23,8 +23,7 @@
             "already_configured": "Device is already configured",
             "bad_config_file": "Bad data from config file",
             "link_local_address": "Link local addresses are not supported",
-            "not_axis_device": "Discovered device not an Axis device",
-            "updated_configuration": "Updated device configuration with new host address"
+            "not_axis_device": "Discovered device not an Axis device"
         }
     }
 }

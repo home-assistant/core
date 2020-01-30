@@ -679,7 +679,7 @@ hole==0.5.0
 holidays==0.9.12
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200129.0
+home-assistant-frontend==20200130.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -1675,7 +1675,7 @@ pytradfri[async]==6.4.0
 
 # homeassistant.components.trafikverket_train
 # homeassistant.components.trafikverket_weatherstation
-pytrafikverket==0.1.5.9
+pytrafikverket==0.1.6.1
 
 # homeassistant.components.ubee
 pyubee==0.8
