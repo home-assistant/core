@@ -122,6 +122,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         hass, username, password, icloud_dir, max_interval, gps_accuracy_threshold,
     )
     await hass.async_add_executor_job(account.setup)
+    if not account.devices:
+        return False
+
     hass.data[DOMAIN][username] = account
 
     for component in ICLOUD_COMPONENTS:
@@ -207,3 +210,5 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     hass.services.async_register(
         DOMAIN, SERVICE_ICLOUD_UPDATE, update_account, schema=SERVICE_SCHEMA
     )
+
+    return True

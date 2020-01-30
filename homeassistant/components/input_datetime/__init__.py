@@ -326,6 +326,7 @@ class InputDatetime(RestoreEntity):
         """Return unique id of the entity."""
         return self._config[CONF_ID]
 
+    @callback
     def async_set_datetime(self, date_val, time_val):
         """Set a new date / time."""
         if self.has_date and self.has_time and date_val and time_val:
