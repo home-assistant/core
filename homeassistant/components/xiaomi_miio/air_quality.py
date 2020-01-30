@@ -165,7 +165,7 @@ class AirMonitorB1(AirQualityEntity):
 
     @property
     def humidity(self):
-        """Return the curretn humidity."""
+        """Return the current humidity."""
         return self._humidity
 
     @property
