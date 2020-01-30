@@ -113,7 +113,7 @@ class WemoLight(Light):
         """Return the device info."""
         return {
             "name": self.wemo.name,
-            "identifiers": {(WEMO_DOMAIN, self.wemo.serialnumber)},
+            "identifiers": {(WEMO_DOMAIN, self.wemo.uniqueID)},
             "model": self.wemo.model_name,
             "manufacturer": "Belkin",
         }
