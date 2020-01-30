@@ -121,21 +121,20 @@ async def test_options(hass):
     entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=DEMO_CONFIG_ENTRY)
     entry.add_to_hass(hass)
 
-    flow = await hass.config_entries.options.async_create_flow(
-        entry.entry_id, context={"source": "test"}, data=None
-    )
+    result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    result = await flow.async_step_init()
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "device_tracker"
 
-    result = await flow.async_step_device_tracker(
-        {
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
             mikrotik.CONF_DETECTION_TIME: 30,
             mikrotik.CONF_ARP_PING: True,
             mikrotik.const.CONF_FORCE_DHCP: False,
-        }
+        },
     )
+
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         mikrotik.CONF_DETECTION_TIME: 30,
