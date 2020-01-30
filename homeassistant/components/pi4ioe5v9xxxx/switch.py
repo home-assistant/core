@@ -34,13 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the swiches devices."""
     pins = config.get(CONF_PINS)
     switches = []
 
-    pi4ioe5v9xxxx.setup(i2c_bus = config[CONF_I2CBUS], i2c_addr = config[CONF_I2CADDR], bits = config[CONF_BITS], read_mode = False, invert = False)
+    pi4ioe5v9xxxx.setup(i2c_bus=config[CONF_I2CBUS], i2c_addr=config[CONF_I2CADDR], bits=config[CONF_BITS], read_mode=False, invert=False)
     for pin, name in pins.items():
         switches.append(Pi4ioe5v9Switch(name, pin, config[CONF_INVERT_LOGIC]))
     add_entities(switches)
@@ -75,14 +74,14 @@ class Pi4ioe5v9Switch(ToggleEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        pi4ioe5v9xxxx.pin_to_memory(self._pin, not self._invert_logic )
+        pi4ioe5v9xxxx.pin_to_memory(self._pin, not self._invert_logic)
         pi4ioe5v9xxxx.memory_to_hw()
         self._state = True
         self.schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        pi4ioe5v9xxxx.pin_to_memory(self._pin, self._invert_logic )
+        pi4ioe5v9xxxx.pin_to_memory(self._pin, self._invert_logic)
         pi4ioe5v9xxxx.memory_to_hw()
         self._state = False
         self.schedule_update_ha_state()
