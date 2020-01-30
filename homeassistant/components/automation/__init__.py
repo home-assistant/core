@@ -2,7 +2,7 @@
 from functools import partial
 import importlib
 import logging
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, List
 
 import voluptuous as vol
 
@@ -19,7 +19,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant
+from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, extract_domain_configs, script
 import homeassistant.helpers.config_validation as cv
@@ -119,9 +119,75 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+@callback
+def automations_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
+    """Return all automations that reference the entity."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    results = []
+
+    for automation_entity in component.entities:
+        if entity_id in automation_entity.action_script.referenced_entities:
+            results.append(automation_entity.entity_id)
+
+    return results
+
+
+@callback
+def entities_in_automation(hass: HomeAssistant, entity_id: str) -> List[str]:
+    """Return all entities in a scene."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    automation_entity = component.get_entity(entity_id)
+
+    if automation_entity is None:
+        return []
+
+    return list(automation_entity.action_script.referenced_entities)
+
+
+@callback
+def automations_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
+    """Return all automations that reference the device."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    results = []
+
+    for automation_entity in component.entities:
+        if device_id in automation_entity.action_script.referenced_devices:
+            results.append(automation_entity.entity_id)
+
+    return results
+
+
+@callback
+def devices_in_automation(hass: HomeAssistant, entity_id: str) -> List[str]:
+    """Return all devices in a scene."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    automation_entity = component.get_entity(entity_id)
+
+    if automation_entity is None:
+        return []
+
+    return list(automation_entity.action_script.referenced_devices)
+
+
 async def async_setup(hass, config):
     """Set up the automation."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    hass.data[DOMAIN] = component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await _async_process_config(hass, config, component)
 
@@ -168,7 +234,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         name,
         async_attach_triggers,
         cond_func,
-        async_action,
+        action_script,
         hidden,
         initial_state,
     ):
@@ -178,7 +244,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._async_attach_triggers = async_attach_triggers
         self._async_detach_triggers = None
         self._cond_func = cond_func
-        self._async_action = async_action
+        self.action_script = action_script
         self._last_triggered = None
         self._hidden = hidden
         self._initial_state = initial_state
@@ -277,7 +343,16 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             {ATTR_NAME: self._name, ATTR_ENTITY_ID: self.entity_id},
             context=trigger_context,
         )
-        await self._async_action(self.entity_id, variables, trigger_context)
+
+        _LOGGER.info("Executing %s", self._name)
+
+        try:
+            await self.action_script.async_run(variables, trigger_context)
+        except Exception as err:  # pylint: disable=broad-except
+            self.action_script.async_log_exception(
+                _LOGGER, f"Error while executing automation {self.entity_id}", err
+            )
+
         self._last_triggered = utcnow()
         await self.async_update_ha_state()
 
@@ -358,7 +433,7 @@ async def _async_process_config(hass, config, component):
             hidden = config_block[CONF_HIDE_ENTITY]
             initial_state = config_block.get(CONF_INITIAL_STATE)
 
-            action = _async_get_action(hass, config_block.get(CONF_ACTION, {}), name)
+            action_script = script.Script(hass, config_block.get(CONF_ACTION, {}), name)
 
             if CONF_CONDITION in config_block:
                 cond_func = await _async_process_if(hass, config, config_block)
@@ -383,7 +458,7 @@ async def _async_process_config(hass, config, component):
                 name,
                 async_attach_triggers,
                 cond_func,
-                action,
+                action_script,
                 hidden,
                 initial_state,
             )
@@ -392,24 +467,6 @@ async def _async_process_config(hass, config, component):
 
     if entities:
         await component.async_add_entities(entities)
-
-
-def _async_get_action(hass, config, name):
-    """Return an action based on a configuration."""
-    script_obj = script.Script(hass, config, name)
-
-    async def action(entity_id, variables, context):
-        """Execute an action."""
-        _LOGGER.info("Executing %s", name)
-
-        try:
-            await script_obj.async_run(variables, context)
-        except Exception as err:  # pylint: disable=broad-except
-            script_obj.async_log_exception(
-                _LOGGER, f"Error while executing automation {entity_id}", err
-            )
-
-    return action
 
 
 async def _async_process_if(hass, config, p_config):
