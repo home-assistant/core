@@ -42,8 +42,8 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_LATITUDE): cv.latitude,
-                vol.Optional(CONF_LONGITUDE): cv.longitude,
+                vol.Inclusive(CONF_LATITUDE, "coordinates"): cv.latitude,
+                vol.Inclusive(CONF_LONGITUDE, "coordinates"): cv.longitude,
                 vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
