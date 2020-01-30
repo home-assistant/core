@@ -1,4 +1,5 @@
 """Vizio SmartCast Device support."""
+from datetime import timedelta
 import logging
 from typing import Callable, List
 
@@ -39,7 +40,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-
+SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 0
 
 
@@ -55,13 +56,13 @@ async def async_setup_entry(
     device_class = config_entry.data[CONF_DEVICE_CLASS]
 
     # If config entry options not set up, set them up, otherwise assign values managed in options
+    volume_step = config_entry.options.get(
+        CONF_VOLUME_STEP, config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP),
+    )
     if not config_entry.options:
-        volume_step = config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
         hass.config_entries.async_update_entry(
             config_entry, options={CONF_VOLUME_STEP: volume_step}
         )
-    else:
-        volume_step = config_entry.options[CONF_VOLUME_STEP]
 
     device = VizioAsync(
         DEVICE_ID,
@@ -74,18 +75,7 @@ async def async_setup_entry(
     )
 
     if not await device.can_connect():
-        fail_auth_msg = ""
-        if token:
-            fail_auth_msg = f"and auth token '{token}' are correct."
-        else:
-            fail_auth_msg = "is correct."
-        _LOGGER.warning(
-            "Failed to connect to Vizio device, please check if host '%s' "
-            "is valid and available. Also check if device class '%s' %s",
-            host,
-            device_class,
-            fail_auth_msg,
-        )
+        _LOGGER.warning("Failed to connect to %s", host)
         raise PlatformNotReady
 
     entity = VizioDevice(config_entry, device, name, volume_step, device_class)
@@ -127,10 +117,18 @@ class VizioDevice(MediaPlayerDevice):
         is_on = await self._device.get_power_state(log_api_exception=False)
 
         if is_on is None:
-            self._available = False
+            if self._available:
+                _LOGGER.warning(
+                    "Lost connection to %s", self._config_entry.data[CONF_HOST]
+                )
+                self._available = False
             return
 
-        self._available = True
+        if not self._available:
+            _LOGGER.info(
+                "Restored connection to %s", self._config_entry.data[CONF_HOST]
+            )
+            self._available = True
 
         if not is_on:
             self._state = STATE_OFF
@@ -157,7 +155,7 @@ class VizioDevice(MediaPlayerDevice):
     async def _async_send_update_options_signal(
         hass: HomeAssistantType, config_entry: ConfigEntry
     ) -> None:
-        """Send update event when when Vizio config entry is updated."""
+        """Send update event when Vizio config entry is updated."""
         # Move this method to component level if another entity ever gets added for a single config entry.
         # See here: https://github.com/home-assistant/home-assistant/pull/30653#discussion_r366426121
         async_dispatcher_send(hass, config_entry.entry_id, config_entry)
@@ -276,7 +274,7 @@ class VizioDevice(MediaPlayerDevice):
         await self._device.input_switch(source)
 
     async def async_volume_up(self) -> None:
-        """Increasing volume of the device."""
+        """Increase volume of the device."""
         await self._device.vol_up(num=self._volume_step)
 
         if self._volume_level is not None:
@@ -285,7 +283,7 @@ class VizioDevice(MediaPlayerDevice):
             )
 
     async def async_volume_down(self) -> None:
-        """Decreasing volume of the device."""
+        """Decrease volume of the device."""
         await self._device.vol_down(num=self._volume_step)
 
         if self._volume_level is not None:

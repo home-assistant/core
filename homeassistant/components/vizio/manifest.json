@@ -6,5 +6,6 @@
   "dependencies": [],
   "codeowners": ["@raman325"],
   "config_flow": true,
-  "zeroconf": ["_viziocast._tcp.local."]
+  "zeroconf": ["_viziocast._tcp.local."],
+  "quality_scale": "platinum"
 }
