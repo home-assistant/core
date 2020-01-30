@@ -1,7 +1,7 @@
 """The tests for the SleepIQ component."""
 import unittest
-from unittest.mock import MagicMock, patch
 
+from asynctest import MagicMock, patch
 import requests_mock
 
 from homeassistant import setup
@@ -25,6 +25,31 @@ def mock_responses(mock, single=False):
     mock.get(
         base_url + "bed/familyStatus?_k=0987",
         text=load_fixture("sleepiq-familystatus{}.json".format(suffix)),
+    )
+    mock.get(
+        base_url + "bed/-31/foundation/outlet?_k=0987&outletId=1",
+        text=load_fixture("sleepiq-light-1.json"),
+    )
+    mock.get(
+        base_url + "bed/-31/foundation/outlet?_k=0987&outletId=2",
+        text=load_fixture("sleepiq-light-2.json"),
+    )
+    mock.get(
+        base_url + "bed/-31/foundation/outlet?_k=0987&outletId=3",
+        text=load_fixture("sleepiq-light-3.json"),
+    )
+    mock.get(
+        base_url + "bed/-31/foundation/outlet?_k=0987&outletId=4",
+        text=load_fixture("sleepiq-light-4.json"),
+    )
+    # Test not logged in request
+    mock.get(
+        base_url + "bed/-31/foundation/outlet?outletId=1",
+        text=load_fixture("sleepiq-light-1.json"),
+    )
+    mock.put(
+        base_url + "bed/-31/foundation/outlet?_k=0987",
+        text="{ 'outletId': '1', 'setting': '1' }",
     )
 
 

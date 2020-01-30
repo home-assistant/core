@@ -23,6 +23,24 @@ LEFT = "left"
 RIGHT = "right"
 SIDES = [LEFT, RIGHT]
 
+LEFT_NIGHT_STAND = 1
+RIGHT_NIGHT_STAND = 2
+RIGHT_NIGHT_LIGHT = 3
+LEFT_NIGHT_LIGHT = 4
+
+BED_LIGHTS = {
+    LEFT_NIGHT_STAND: "Left Night Stand",
+    RIGHT_NIGHT_STAND: "Right Night Stand",
+    RIGHT_NIGHT_LIGHT: "Right Night Light",
+    LEFT_NIGHT_LIGHT: "Left Night Light",
+}
+
+SLEEPIQ_COMPONENTS = [
+    "binary_sensor",
+    "sensor",
+    "light",
+]
+
 _LOGGER = logging.getLogger(__name__)
 
 DATA = None
@@ -45,6 +63,9 @@ def setup(hass, config):
 
     Will automatically load sensor components to support
     devices discovered on the account.
+
+    Will automatically create light components for
+    nightstand and under bed lights.
     """
     global DATA
 
@@ -61,8 +82,8 @@ def setup(hass, config):
         _LOGGER.error(message)
         return False
 
-    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
-    discovery.load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+    for component in SLEEPIQ_COMPONENTS:
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 
@@ -74,8 +95,7 @@ class SleepIQData:
         """Initialize the data object."""
         self._client = client
         self.beds = {}
-
-        self.update()
+        self.lights = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -84,6 +104,17 @@ class SleepIQData:
         beds = self._client.beds_with_sleeper_status()
 
         self.beds = {bed.bed_id: bed for bed in beds}
+
+        for bed in self.beds:
+            self.lights = {light: self.get_light(bed, light) for light in BED_LIGHTS}
+
+    def set_light(self, bed_id, light, state):
+        """Set a light to a new state."""
+        self._client.set_light(bed_id, light, state)
+
+    def get_light(self, bed_id, light):
+        """Return current light state."""
+        return self._client.get_light(bed_id, light)
 
 
 class SleepIQSensor(Entity):
@@ -117,3 +148,41 @@ class SleepIQSensor(Entity):
 
         self.bed = self.sleepiq_data.beds[self._bed_id]
         self.side = getattr(self.bed, self._side)
+
+
+class SleepIQLight(Entity):
+    """Implementation of a SleepIQ Light."""
+
+    def __init__(self, sleepiq_data, bed_id, light):
+        """Initialize the light."""
+        self._bed_id = bed_id
+        self.sleepiq_data = sleepiq_data
+        self._light = light
+
+        self._state = False
+        self._name = "SleepNumber {} {}".format(
+            self.sleepiq_data.beds[self._bed_id].name, BED_LIGHTS[light]
+        )
+
+    @property
+    def name(self):
+        """Return the name of the light."""
+        return self._name
+
+    def turn_on(self):
+        """Turn on the light."""
+        self.sleepiq_data.set_light(self._bed_id, self._light, True)
+
+    def turn_off(self):
+        """Turn off the light."""
+        self.sleepiq_data.set_light(self._bed_id, self._light, False)
+
+    @property
+    def is_on(self):
+        """Ask for state of current light."""
+        status = self.sleepiq_data.get_light(self._bed_id, self._light)
+        return status.data["setting"]
+
+    def update(self):
+        """Get the latest light states from SleepIQ."""
+        self.sleepiq_data.update()
