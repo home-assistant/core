@@ -3,6 +3,7 @@ import socket
 
 import voluptuous as vol
 
+from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
@@ -54,7 +55,7 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up the Samsung TV platform."""
     hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "media_player")
+        hass.config_entries.async_forward_entry_setup(entry, MP_DOMAIN)
     )
 
     return True
