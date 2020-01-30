@@ -95,7 +95,7 @@ async def test_migrate_entry(hass):
     assert entry.data == legacy_config
     assert entry.version == 1
 
-    await axis.async_migrate_entry(hass, entry)
+    await entry.async_migrate(hass)
 
     assert entry.data == {
         axis.CONF_DEVICE: {
