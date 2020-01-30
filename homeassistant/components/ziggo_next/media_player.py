@@ -81,7 +81,7 @@ class ZiggoNextMediaPlayer(MediaPlayerDevice):
             if self.box_info is not None and self.box_info.paused:
                 return STATE_PAUSED
             return STATE_PLAYING
-        elif self.box_state == ONLINE_STANDBY:
+        if self.box_state == ONLINE_STANDBY:
             return STATE_OFF
         return STATE_UNAVAILABLE
 
