@@ -328,15 +328,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         _LOGGER.info("No matching access point found for access point id %s", hapid)
         return None
 
-    async def async_reset_hap_connections():
-        """Reset all hmip hap connections."""
-        for hap in hass.data[DOMAIN].values():
-            await hap.async_reset()
-            _LOGGER.info("Shut down access point id %s", hap.config_entry.unique_id)
-
-    # Register on HA stop event to gracefully shutdown HomematicIP Cloud connections
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_reset_hap_connections())
-
     return True
 
 
@@ -356,6 +347,14 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     if not await hap.async_setup():
         return False
+    
+    async def async_reset_hap_connection():
+        """Reset hmip hap connections."""
+        await hap.async_reset()
+        _LOGGER.debug("Shut down access point id %s", hap.config_entry.unique_id)
+
+    # Register on HA stop event to gracefully shutdown HomematicIP Cloud connection
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_reset_hap_connection())
 
     # Register hap as device in registry.
     device_registry = await dr.async_get_registry(hass)
