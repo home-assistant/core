@@ -74,7 +74,7 @@ def mock_api_authentication_error():
 def mock_api_connection_error():
     """Mock an api."""
     with patch(
-        "librouteros.connect", side_effect=librouteros.exceptions.ConnectionError
+        "librouteros.connect", side_effect=librouteros.exceptions.ConnectionClosed
     ):
         yield
 

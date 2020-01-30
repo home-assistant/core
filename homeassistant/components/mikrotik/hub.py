@@ -1,10 +1,11 @@
-"""The mikrotik router class."""
+"""The Mikrotik router class."""
 from datetime import timedelta
 import logging
+import socket
 import ssl
 
 import librouteros
-from librouteros.login import login_plain, login_token
+from librouteros.login import plain as login_plain, token as login_token
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -125,7 +126,7 @@ class MikrotikData:
     def get_info(self, param):
         """Return device model name."""
         cmd = IDENTITY if param == NAME else INFO
-        data = self.command(MIKROTIK_SERVICES[cmd])
+        data = list(self.command(MIKROTIK_SERVICES[cmd]))
         return data[0].get(param) if data else None
 
     def get_hub_details(self):
@@ -147,7 +148,7 @@ class MikrotikData:
 
     def get_list_from_interface(self, interface):
         """Get devices from interface."""
-        result = self.command(MIKROTIK_SERVICES[interface])
+        result = list(self.command(MIKROTIK_SERVICES[interface]))
         return self.load_mac(result) if result else {}
 
     def restore_device(self, mac):
@@ -181,7 +182,7 @@ class MikrotikData:
             # get new hub firmware version if updated
             self.firmware = self.get_info(ATTR_FIRMWARE)
 
-        except CannotConnect:
+        except (CannotConnect, socket.timeout, socket.error):
             self.available = False
             return
 
@@ -223,7 +224,7 @@ class MikrotikData:
             "address": ip_address,
         }
         cmd = "/ping"
-        data = self.command(cmd, params)
+        data = list(self.command(cmd, params))
         if data is not None:
             status = 0
             for result in data:
@@ -239,17 +240,19 @@ class MikrotikData:
     def command(self, cmd, params=None):
         """Retrieve data from Mikrotik API."""
         try:
+            _LOGGER.info("Running command %s", cmd)
             if params:
                 response = self.api(cmd=cmd, **params)
             else:
                 response = self.api(cmd=cmd)
-        except (librouteros.exceptions.ConnectionError,) as api_error:
+        except (
+            librouteros.exceptions.ConnectionClosed,
+            socket.error,
+            socket.timeout,
+        ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
             raise CannotConnect
-        except (
-            librouteros.exceptions.TrapError,
-            librouteros.exceptions.MultiTrapError,
-        ) as api_error:
+        except librouteros.exceptions.ProtocolError as api_error:
             _LOGGER.warning(
                 "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
                 self._host,
@@ -400,9 +403,9 @@ def get_api(hass, entry):
         _LOGGER.debug("Connected to %s successfully", entry[CONF_HOST])
         return api
     except (
-        librouteros.exceptions.TrapError,
-        librouteros.exceptions.MultiTrapError,
-        librouteros.exceptions.ConnectionError,
+        librouteros.exceptions.LibRouterosError,
+        socket.error,
+        socket.timeout,
     ) as api_error:
         _LOGGER.error("Mikrotik %s error: %s", entry[CONF_HOST], api_error)
         if "invalid user name or password" in str(api_error):
