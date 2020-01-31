@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_setup": "Aquesta entrada ja ha estat configurada."
+        },
         "error": {
             "host_exists": "L'amfitri\u00f3 ja est\u00e0 configurat.",
             "name_exists": "El nom ja est\u00e0 configurat."
@@ -21,6 +24,7 @@
         "step": {
             "init": {
                 "data": {
+                    "timeout": "Temps d'espera de les sol\u00b7licituds API (en segons)",
                     "volume_step": "Mida del pas de volum"
                 }
             }
