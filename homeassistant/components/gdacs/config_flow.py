@@ -15,6 +15,10 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_CATEGORIES, DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
 
+DATA_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int}
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -34,12 +38,8 @@ class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _show_form(self, errors=None):
         """Show the form to the user."""
-        data_schema = vol.Schema(
-            {vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): cv.positive_int}
-        )
-
         return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors or {}
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors or {}
         )
 
     async def async_step_import(self, import_config):
