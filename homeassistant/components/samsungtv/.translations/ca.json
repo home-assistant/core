@@ -1,5 +1,12 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "La Samsung TV ja configurada.",
+            "already_in_progress": "La configuraci\u00f3 de la Samsung TV ja est\u00e0 en curs.",
+            "auth_missing": "Home Assistant no est\u00e0 autenticat per connectar-se amb aquesta Samsung TV.",
+            "not_found": "No s'han trobat Samsung TV's compatibles a la xarxa.",
+            "not_supported": "Actualment aquest dispositiu Samsung TV no \u00e9s compatible."
+        },
         "step": {
             "confirm": {
                 "title": "Samsung TV"
