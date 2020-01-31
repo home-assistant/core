@@ -2,6 +2,8 @@
 from copy import copy
 from datetime import timedelta
 
+from aiounifi.controller import SIGNAL_CONNECTION_STATE
+from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 from asynctest import patch
 
 from homeassistant import config_entries
@@ -150,6 +152,29 @@ async def test_tracked_devices(hass):
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == "home"
 
+    # Controller unavailable
+    controller.async_unifi_signalling_callback(
+        SIGNAL_CONNECTION_STATE, STATE_DISCONNECTED
+    )
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == STATE_UNAVAILABLE
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1.state == STATE_UNAVAILABLE
+
+    # Controller available
+    controller.async_unifi_signalling_callback(SIGNAL_CONNECTION_STATE, STATE_RUNNING)
+    await hass.async_block_till_done()
+
+    client_1 = hass.states.get("device_tracker.client_1")
+    assert client_1.state == "home"
+
+    device_1 = hass.states.get("device_tracker.device_1")
+    assert device_1.state == "home"
+
+    # Disabled device is unavailable
     device_1_copy = copy(DEVICE_1)
     device_1_copy["disabled"] = True
     event = {"meta": {"message": "device:sync"}, "data": [device_1_copy]}
@@ -159,6 +184,7 @@ async def test_tracked_devices(hass):
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1.state == STATE_UNAVAILABLE
 
+    # Don't track wired clients nor devices
     controller.config_entry.add_update_listener(controller.async_options_updated)
     hass.config_entries.async_update_entry(
         controller.config_entry,
