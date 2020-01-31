@@ -114,7 +114,7 @@ class WemoLight(Light):
         return {
             "name": self.wemo.name,
             "identifiers": {(WEMO_DOMAIN, self.wemo.uniqueID)},
-            "model": self.wemo.model_name,
+            "model": self.wemo.device_type,
             "manufacturer": "Belkin",
         }
 
