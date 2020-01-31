@@ -8,6 +8,7 @@ import time
 
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import ASYNCHRONOUS
+from influxdb_client.rest import ApiException
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -59,8 +60,9 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Schema(
                 {
                     vol.Optional(CONF_URL): cv.string,
-                    vol.Optional(CONF_BUCKET): cv.string,
+                    vol.Optional(CONF_TOKEN): cv.string,
                     vol.Optional(CONF_ORG): cv.string,
+                    vol.Optional(CONF_BUCKET): cv.string,
                     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema(
                         {
                             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
@@ -77,7 +79,6 @@ CONFIG_SCHEMA = vol.Schema(
                             ),
                         }
                     ),
-                    vol.Optional(CONF_TOKEN): cv.string,
                     vol.Optional(CONF_RETRY_COUNT, default=0): cv.positive_int,
                     vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
                     vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
@@ -113,9 +114,9 @@ def setup(hass, config):
     conf = config[DOMAIN]
 
     kwargs = {
-        "url": "https://eu-central-1-1.aws.cloud2.influxdata.com",
-        "token": "rO-uAwM46XS0qHYhK8CWNsxT3pfUm68lqMeeHu4sLJwhDZ0stCAIf6TmNQEz7ut2gtsY0i7V-HvQX-QvEsblkg==",
-        "org": "c0768533615e73e7",
+        "url": "https://not_set_in_config",
+        "token": "",
+        "org": "",
         "timeout": TIMEOUT,
         "debug": False,
     }
@@ -152,7 +153,7 @@ def setup(hass, config):
     influx = InfluxDBClient(**kwargs)
     try:
         write_api = influx.write_api(write_options=ASYNCHRONOUS)
-    except Exception as exc:
+    except ApiException as exc:
         _LOGGER.warning(
             "Database host is not accessible due to '%s', please "
             "check your entries in the configuration file (host, "
@@ -340,7 +341,6 @@ class InfluxThread(threading.Thread):
         for retry in range(self.max_tries + 1):
             try:
                 self.write_api.write(self.bucket, json)
-                # json)
 
                 if self.write_errors:
                     _LOGGER.error("Resumed, lost %d events", self.write_errors)
@@ -348,7 +348,7 @@ class InfluxThread(threading.Thread):
 
                 _LOGGER.debug("Wrote %d events", len(json))
                 break
-            except (Exception) as err:
+            except (ApiException) as err:
                 if retry < self.max_tries:
                     time.sleep(RETRY_DELAY)
                 else:

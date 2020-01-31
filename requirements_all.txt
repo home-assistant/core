@@ -723,6 +723,9 @@ ihcsdk==2.5.0
 # homeassistant.components.incomfort
 incomfort-client==0.4.0
 
+# homeassistant.components.influxdb_cloud
+influxdb-client==1.3.0
+
 # homeassistant.components.influxdb
 influxdb==5.2.3
 
