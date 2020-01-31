@@ -9,6 +9,8 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
+from .debounce import Debouncer
+
 
 class UpdateFailed(Exception):
     """Raised when an update has failed."""
@@ -24,9 +26,7 @@ class DataUpdateCoordinator:
         name: str,
         update_method: Callable[[], Awaitable],
         update_interval: timedelta,
-        # How long to wait to actually do the refresh after requesting it.
-        # We wait some time so if we control multiple things, we batch requests.
-        request_refresh_delay: float,
+        request_refresh_debouncer: Debouncer,
     ):
         """Initialize global data updater."""
         self.hass = hass
@@ -34,7 +34,6 @@ class DataUpdateCoordinator:
         self.name = name
         self.update_method = update_method
         self.update_interval = update_interval
-        self.request_refresh_delay = request_refresh_delay
 
         self.data: Optional[Any] = None
 
@@ -42,6 +41,8 @@ class DataUpdateCoordinator:
         self._unsub_refresh: Optional[CALLBACK_TYPE] = None
         self._request_refresh_task: Optional[asyncio.TimerHandle] = None
         self.failed_last_update = False
+        self._debounced_refresh = request_refresh_debouncer
+        request_refresh_debouncer.function = self._async_do_refresh
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> None:
@@ -70,7 +71,6 @@ class DataUpdateCoordinator:
             self._unsub_refresh = None
 
         await self._async_do_refresh()
-        self._schedule_refresh()
 
     @callback
     def _schedule_refresh(self) -> None:
@@ -87,36 +87,22 @@ class DataUpdateCoordinator:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
         await self._async_do_refresh()
-        self._schedule_refresh()
 
-    @callback
-    def async_request_refresh(self) -> None:
+    async def async_request_refresh(self) -> None:
         """Request a refresh.
 
         Refresh will wait a bit to see if it can batch them.
         """
-        if self._request_refresh_task:
-            self._request_refresh_task.cancel()
-
-        if self.request_refresh_delay:
-            self._request_refresh_task = self.hass.loop.call_later(
-                self.request_refresh_delay,
-                lambda: self.hass.async_create_task(self._handle_request_refresh()),
-            )
-        else:
-            self.hass.async_create_task(self._handle_request_refresh())
-
-    async def _handle_request_refresh(self) -> None:
-        """Handle a request for refresh."""
-        if self._request_refresh_task:
-            self._request_refresh_task.cancel()
-            self._request_refresh_task = None
-
-        await self._async_do_refresh()
-        self._schedule_refresh()
+        await self._debounced_refresh.async_call()
 
     async def _async_do_refresh(self) -> None:
         """Time to update."""
+        if self._unsub_refresh:
+            self._unsub_refresh()
+            self._unsub_refresh = None
+
+        self._debounced_refresh.async_cancel()
+
         try:
             start = monotonic()
             self.data = await self.update_method()
@@ -143,6 +129,7 @@ class DataUpdateCoordinator:
                 self.name,
                 monotonic() - start,
             )
+            self._schedule_refresh()
 
         for update_callback in self._listeners:
             update_callback()

@@ -8,9 +8,10 @@ from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
 
 from homeassistant.core import callback
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN as HUE_DOMAIN
+from .const import DOMAIN as HUE_DOMAIN, REQUEST_REFRESH_DELAY
 from .helpers import remove_devices
 
 SENSOR_CONFIG_MAP = {}
@@ -44,7 +45,7 @@ class SensorManager:
             "sensor",
             self.async_update_data,
             self.SCAN_INTERVAL,
-            0.3,
+            Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
         )
 
     async def async_update_data(self):
@@ -202,6 +203,13 @@ class GenericHueSensor:
         self.bridge.sensor_manager.coordinator.async_remove_listener(
             self.async_write_ha_state  # pylint: disable=no-member
         )
+
+    async def async_update(self):
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.bridge.sensor_manager.coordinator.coordinator.async_request_refresh()
 
     @property
     def device_info(self):

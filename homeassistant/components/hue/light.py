@@ -29,10 +29,11 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import color
 
-from .const import DOMAIN as HUE_DOMAIN
+from .const import DOMAIN as HUE_DOMAIN, REQUEST_REFRESH_DELAY
 from .helpers import remove_devices
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -61,10 +62,6 @@ GAMUT_TYPE_UNAVAILABLE = "None"
 # 1.13 introduced "any_on" to group state objects
 GROUP_MIN_API_VERSION = (1, 13, 0)
 
-# How long to wait to actually do the refresh after requesting it.
-# We wait some time so if we control multiple lights, we batch requests.
-REQUEST_REFRESH_DELAY = 0.3
-
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up Hue lights.
@@ -85,7 +82,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "light",
         partial(async_safe_fetch, bridge, bridge.api.lights.update),
         SCAN_INTERVAL,
-        REQUEST_REFRESH_DELAY,
+        Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
     )
 
     # First do a refresh to see if we can reach the hub.
@@ -128,7 +125,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "group",
         partial(async_safe_fetch, bridge, bridge.api.groups.update),
         SCAN_INTERVAL,
-        REQUEST_REFRESH_DELAY,
+        Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
     )
 
     update_groups = partial(
@@ -379,7 +376,7 @@ class HueLight(Light):
         else:
             await self.bridge.async_request_call(self.light.set_state(**command))
 
-        self.coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
@@ -404,7 +401,14 @@ class HueLight(Light):
         else:
             await self.bridge.async_request_call(self.light.set_state(**command))
 
-        self.coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
+
+    async def async_update(self):
+        """Update the entity.
+
+        Only used by the generic entity update service.
+        """
+        await self.coordinator.async_request_refresh()
 
     @property
     def device_state_attributes(self):
