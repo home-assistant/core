@@ -9,9 +9,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM,
-    CONF_UNIT_SYSTEM_IMPERIAL,
-    CONF_UNIT_SYSTEM_METRIC,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
@@ -64,11 +61,6 @@ class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(identifier)
         self._abort_if_unique_id_configured()
-
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL
-        else:
-            user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_METRIC
 
         scan_interval = user_input.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
         user_input[CONF_SCAN_INTERVAL] = scan_interval.seconds

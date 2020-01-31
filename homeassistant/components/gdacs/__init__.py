@@ -12,7 +12,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_MILES,
 )
@@ -92,11 +91,10 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN].setdefault(FEED, {})
 
     radius = config_entry.data[CONF_RADIUS]
-    unit_system = config_entry.data[CONF_UNIT_SYSTEM]
-    if unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+    if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
         radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
     # Create feed entity manager for all platforms.
-    manager = GdacsFeedEntityManager(hass, config_entry, radius, unit_system)
+    manager = GdacsFeedEntityManager(hass, config_entry, radius)
     hass.data[DOMAIN][FEED][config_entry.entry_id] = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
@@ -119,7 +117,7 @@ async def async_unload_entry(hass, config_entry):
 class GdacsFeedEntityManager:
     """Feed Entity Manager for GDACS feed."""
 
-    def __init__(self, hass, config_entry, radius_in_km, unit_system):
+    def __init__(self, hass, config_entry, radius_in_km):
         """Initialize the Feed Entity Manager."""
         self._hass = hass
         self._config_entry = config_entry
@@ -141,7 +139,6 @@ class GdacsFeedEntityManager:
         )
         self._config_entry_id = config_entry.entry_id
         self._scan_interval = timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
-        self._unit_system = unit_system
         self._track_time_remove_callback = None
         self._status_info = None
         self.listeners = []
@@ -197,11 +194,7 @@ class GdacsFeedEntityManager:
     async def _generate_entity(self, external_id):
         """Generate new entity."""
         async_dispatcher_send(
-            self._hass,
-            self.async_event_new_entity(),
-            self,
-            external_id,
-            self._unit_system,
+            self._hass, self.async_event_new_entity(), self, external_id
         )
 
     async def _update_entity(self, external_id):

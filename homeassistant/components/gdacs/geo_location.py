@@ -52,9 +52,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
 
     @callback
-    def async_add_geolocation(feed_manager, external_id, unit_system):
+    def async_add_geolocation(feed_manager, external_id):
         """Add gelocation entity from feed."""
-        new_entity = GdacsEvent(feed_manager, external_id, unit_system)
+        new_entity = GdacsEvent(feed_manager, external_id)
         _LOGGER.debug("Adding geolocation %s", new_entity)
         async_add_entities([new_entity], True)
 
@@ -70,11 +70,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class GdacsEvent(GeolocationEvent):
     """This represents an external event with GDACS feed data."""
 
-    def __init__(self, feed_manager, external_id, unit_system):
+    def __init__(self, feed_manager, external_id):
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
         self._external_id = external_id
-        self._unit_system = unit_system
         self._title = None
         self._distance = None
         self._latitude = None
@@ -143,7 +142,7 @@ class GdacsEvent(GeolocationEvent):
             event_name = f"{feed_entry.country} ({feed_entry.event_id})"
         self._title = f"{feed_entry.event_type}: {event_name}"
         # Convert distance if not metric system.
-        if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             self._distance = IMPERIAL_SYSTEM.length(
                 feed_entry.distance_to_home, LENGTH_KILOMETERS
             )
@@ -203,7 +202,7 @@ class GdacsEvent(GeolocationEvent):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             return LENGTH_MILES
         return LENGTH_KILOMETERS
 

@@ -8,7 +8,6 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM,
 )
 
 
@@ -39,7 +38,6 @@ async def test_step_import(hass):
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
-        CONF_UNIT_SYSTEM: "metric",
         CONF_SCAN_INTERVAL: timedelta(minutes=4),
         CONF_CATEGORIES: ["Drought", "Earthquake"],
     }
@@ -53,7 +51,6 @@ async def test_step_import(hass):
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
-        CONF_UNIT_SYSTEM: "metric",
         CONF_SCAN_INTERVAL: 240.0,
         CONF_CATEGORIES: ["Drought", "Earthquake"],
     }
@@ -74,7 +71,6 @@ async def test_step_user(hass):
         CONF_LATITUDE: -41.2,
         CONF_LONGITUDE: 174.7,
         CONF_RADIUS: 25,
-        CONF_UNIT_SYSTEM: "metric",
         CONF_SCAN_INTERVAL: 300.0,
         CONF_CATEGORIES: [],
     }
