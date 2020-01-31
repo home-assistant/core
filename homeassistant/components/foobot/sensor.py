@@ -1,25 +1,25 @@
 """Support for the Foobot indoor air quality monitor."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import aiohttp
+from foobot_async import FoobotClient
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
-    ATTR_TIME,
     ATTR_TEMPERATURE,
+    ATTR_TIME,
     CONF_TOKEN,
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,8 +51,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the devices associated with the account."""
-    from foobot_async import FoobotClient
-
     token = config.get(CONF_TOKEN)
     username = config.get(CONF_USERNAME)
 

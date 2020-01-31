@@ -1,0 +1,15 @@
+{
+    "config": {
+        "flow_title": "Brother nyomtat\u00f3: {model} {serial_number}",
+        "step": {
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "A nyomtat\u00f3 t\u00edpusa"
+                },
+                "description": "Hozz\u00e1 akarja adni a {model} Brother nyomtat\u00f3t, amelynek sorsz\u00e1ma: {serial_number} `, a Home Assistant-hoz?",
+                "title": "Felfedezett Brother nyomtat\u00f3"
+            }
+        },
+        "title": "Brother nyomtat\u00f3"
+    }
+}

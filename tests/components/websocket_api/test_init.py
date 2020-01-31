@@ -1,6 +1,5 @@
 """Tests for the Home Assistant Websocket API."""
-import asyncio
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from aiohttp import WSMsgType
 import pytest
@@ -16,12 +15,11 @@ def mock_low_queue():
         yield
 
 
-@asyncio.coroutine
-def test_invalid_message_format(websocket_client):
+async def test_invalid_message_format(websocket_client):
     """Test sending invalid JSON."""
-    yield from websocket_client.send_json({"type": 5})
+    await websocket_client.send_json({"type": 5})
 
-    msg = yield from websocket_client.receive_json()
+    msg = await websocket_client.receive_json()
 
     assert msg["type"] == const.TYPE_RESULT
     error = msg["error"]
@@ -29,42 +27,38 @@ def test_invalid_message_format(websocket_client):
     assert error["message"].startswith("Message incorrectly formatted")
 
 
-@asyncio.coroutine
-def test_invalid_json(websocket_client):
+async def test_invalid_json(websocket_client):
     """Test sending invalid JSON."""
-    yield from websocket_client.send_str("this is not JSON")
+    await websocket_client.send_str("this is not JSON")
 
-    msg = yield from websocket_client.receive()
+    msg = await websocket_client.receive()
 
     assert msg.type == WSMsgType.close
 
 
-@asyncio.coroutine
-def test_quiting_hass(hass, websocket_client):
+async def test_quiting_hass(hass, websocket_client):
     """Test sending invalid JSON."""
     with patch.object(hass.loop, "stop"):
-        yield from hass.async_stop()
+        await hass.async_stop()
 
-    msg = yield from websocket_client.receive()
+    msg = await websocket_client.receive()
 
     assert msg.type == WSMsgType.CLOSE
 
 
-@asyncio.coroutine
-def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
+async def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
     """Test get_panels command."""
     for idx in range(10):
-        yield from websocket_client.send_json({"id": idx + 1, "type": "ping"})
-    msg = yield from websocket_client.receive()
+        await websocket_client.send_json({"id": idx + 1, "type": "ping"})
+    msg = await websocket_client.receive()
     assert msg.type == WSMsgType.close
 
 
-@asyncio.coroutine
-def test_unknown_command(websocket_client):
+async def test_unknown_command(websocket_client):
     """Test get_panels command."""
-    yield from websocket_client.send_json({"id": 5, "type": "unknown_command"})
+    await websocket_client.send_json({"id": 5, "type": "unknown_command"})
 
-    msg = yield from websocket_client.receive_json()
+    msg = await websocket_client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == const.ERR_UNKNOWN_COMMAND
 

@@ -22,7 +22,7 @@
                 "title": "Izberite Hue most"
             },
             "link": {
-                "description": "Pritisnite gumb na mostu, da registrirate Philips Hue s Home Assistantom. \n\n ! [Polo\u017eaj gumba na mostu] (/static/images/config_philips_hue.jpg)",
+                "description": "Pritisnite gumb na mostu, da registrirate Philips Hue s Home Assistantom. \n\n![Polo\u017eaj gumba na mostu](/static/images/config_philips_hue.jpg)",
                 "title": "Link Hub"
             }
         },

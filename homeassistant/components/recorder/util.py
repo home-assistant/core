@@ -28,7 +28,7 @@ def session_scope(*, hass=None, session=None):
         if session.transaction:
             need_rollback = True
             session.commit()
-    except Exception as err:  # pylint: disable=broad-except
+    except Exception as err:
         _LOGGER.error("Error executing query: %s", err)
         if need_rollback:
             session.rollback()

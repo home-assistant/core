@@ -4,7 +4,7 @@
             "set_hvac_mode": "zmie\u0144 tryb HVAC na {entity_name}",
             "set_preset_mode": "zmie\u0144 ustawienia dla {entity_name}"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_hvac_mode": "na {entity_name} jest ustawiony okre\u015blony tryb HVAC",
             "is_preset_mode": "na {entity_name} jest okre\u015blone ustawienie"
         },

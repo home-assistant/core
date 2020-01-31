@@ -15,11 +15,11 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
-    draw_box,
 )
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,8 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         # Display warning that PIL will be used if no OpenCV is found.
-        # pylint: disable=unused-import,unused-variable
-        import cv2  # noqa: F401
+        import cv2  # noqa: F401 pylint: disable=unused-import
     except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "

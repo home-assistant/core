@@ -1,28 +1,29 @@
 """Support for scripts."""
 import asyncio
 import logging
+from typing import List
 
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    SERVICE_TOGGLE,
-    SERVICE_RELOAD,
-    STATE_ON,
+    ATTR_NAME,
     CONF_ALIAS,
     EVENT_SCRIPT_STARTED,
-    ATTR_NAME,
+    SERVICE_RELOAD,
+    SERVICE_TOGGLE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_ON,
 )
-from homeassistant.loader import bind_hass
+from homeassistant.core import HomeAssistant, callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
-from homeassistant.helpers.service import async_set_service_schema
-
 from homeassistant.helpers.script import Script
+from homeassistant.helpers.service import async_set_service_schema
+from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,8 +39,6 @@ CONF_FIELDS = "fields"
 CONF_SEQUENCE = "sequence"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-GROUP_NAME_ALL_SCRIPTS = "all scripts"
 
 SCRIPT_ENTRY_SCHEMA = vol.Schema(
     {
@@ -60,7 +59,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)
-SCRIPT_TURN_ONOFF_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+SCRIPT_TURN_ONOFF_SCHEMA = make_entity_service_schema(
     {vol.Optional(ATTR_VARIABLES): dict}
 )
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
@@ -72,11 +71,75 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+@callback
+def scripts_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
+    """Return all scripts that reference the entity."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    results = []
+
+    for script_entity in component.entities:
+        if entity_id in script_entity.script.referenced_entities:
+            results.append(script_entity.entity_id)
+
+    return results
+
+
+@callback
+def entities_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
+    """Return all entities in a scene."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    script_entity = component.get_entity(entity_id)
+
+    if script_entity is None:
+        return []
+
+    return list(script_entity.script.referenced_entities)
+
+
+@callback
+def scripts_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
+    """Return all scripts that reference the device."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    results = []
+
+    for script_entity in component.entities:
+        if device_id in script_entity.script.referenced_devices:
+            results.append(script_entity.entity_id)
+
+    return results
+
+
+@callback
+def devices_in_script(hass: HomeAssistant, entity_id: str) -> List[str]:
+    """Return all devices in a scene."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    script_entity = component.get_entity(entity_id)
+
+    if script_entity is None:
+        return []
+
+    return list(script_entity.script.referenced_devices)
+
+
 async def async_setup(hass, config):
     """Load the scripts from the configuration."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_SCRIPTS
-    )
+    hass.data[DOMAIN] = component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await _async_process_config(hass, config, component)
 
@@ -207,7 +270,7 @@ class ScriptEntity(ToggleEntity):
         )
         try:
             await self.script.async_run(kwargs.get(ATTR_VARIABLES), context)
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:
             self.script.async_log_exception(
                 _LOGGER, f"Error executing script {self.entity_id}", err
             )
@@ -218,7 +281,7 @@ class ScriptEntity(ToggleEntity):
         self.script.async_stop()
 
     async def async_will_remove_from_hass(self):
-        """Stop script and remove service when it will be removed from HASS."""
+        """Stop script and remove service when it will be removed from Home Assistant."""
         if self.script.is_running:
             self.script.async_stop()
 

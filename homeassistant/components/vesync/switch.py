@@ -1,10 +1,12 @@
 """Support for Etekcity VeSync switches."""
 import logging
-from homeassistant.core import callback
+
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from .const import VS_DISCOVERY, VS_DISPATCHERS, VS_SWITCHES, DOMAIN
+
 from .common import VeSyncDevice
+from .const import DOMAIN, VS_DISCOVERY, VS_DISPATCHERS, VS_SWITCHES
 
 _LOGGER = logging.getLogger(__name__)
 

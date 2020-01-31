@@ -18,7 +18,7 @@ def setup(hass, config):
         GPIO.cleanup()
 
     def prepare_gpio(event):
-        """Stuff to do when home assistant starts."""
+        """Stuff to do when Home Assistant starts."""
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, cleanup_gpio)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, prepare_gpio)

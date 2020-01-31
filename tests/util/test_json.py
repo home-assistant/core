@@ -1,16 +1,15 @@
 """Test Home Assistant json utility functions."""
 from json import JSONEncoder
 import os
-import unittest
-from unittest.mock import Mock
 import sys
 from tempfile import mkdtemp
+import unittest
+from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.util.json import SerializationError, load_json, save_json
 from homeassistant.exceptions import HomeAssistantError
-
+from homeassistant.util.json import SerializationError, load_json, save_json
 
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}

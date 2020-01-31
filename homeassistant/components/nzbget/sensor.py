@@ -18,6 +18,7 @@ SENSOR_TYPES = {
     "download_rate": ["DownloadRate", "Speed", "MB/s"],
     "download_size": ["DownloadedSizeMB", "Size", "MB"],
     "free_disk_space": ["FreeDiskSpaceMB", "Disk Free", "MB"],
+    "post_job_count": ["PostJobCount", "Post Processing Jobs", "Jobs"],
     "post_paused": ["PostPaused", "Post Processing Paused", None],
     "remaining_size": ["RemainingSizeMB", "Queue Size", "MB"],
     "uptime": ["UpTimeSec", "Uptime", "min"],

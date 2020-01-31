@@ -1,6 +1,6 @@
 {
   "domain": "default_config",
-  "name": "Default config",
+  "name": "Default Config",
   "documentation": "https://www.home-assistant.io/integrations/default_config",
   "requirements": [],
   "dependencies": [
@@ -18,7 +18,8 @@
     "sun",
     "system_health",
     "updater",
-    "zeroconf"
+    "zeroconf",
+    "zone"
   ],
   "codeowners": []
 }

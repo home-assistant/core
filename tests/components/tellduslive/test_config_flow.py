@@ -15,7 +15,7 @@ from homeassistant.components.tellduslive import (
 )
 from homeassistant.const import CONF_HOST
 
-from tests.common import MockConfigEntry, MockDependency, mock_coro
+from tests.common import MockConfigEntry, mock_coro
 
 
 def init_config_flow(hass, side_effect=None):
@@ -42,13 +42,17 @@ def authorize():
 @pytest.fixture
 def mock_tellduslive(supports_local_api, authorize):
     """Mock tellduslive."""
-    with MockDependency("tellduslive") as mock_tellduslive_:
-        mock_tellduslive_.supports_local_api.return_value = supports_local_api
-        mock_tellduslive_.Session().authorize.return_value = authorize
-        mock_tellduslive_.Session().access_token = "token"
-        mock_tellduslive_.Session().access_token_secret = "token_secret"
-        mock_tellduslive_.Session().authorize_url = "https://example.com"
-        yield mock_tellduslive_
+    with patch(
+        "homeassistant.components.tellduslive.config_flow.Session"
+    ) as Session, patch(
+        "homeassistant.components.tellduslive.config_flow.supports_local_api"
+    ) as tellduslive_supports_local_api:
+        tellduslive_supports_local_api.return_value = supports_local_api
+        Session().authorize.return_value = authorize
+        Session().access_token = "token"
+        Session().access_token_secret = "token_secret"
+        Session().authorize_url = "https://example.com"
+        yield Session, tellduslive_supports_local_api
 
 
 async def test_abort_if_already_setup(hass):

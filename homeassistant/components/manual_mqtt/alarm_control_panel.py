@@ -6,30 +6,32 @@ import re
 
 import voluptuous as vol
 
+from homeassistant.components import mqtt
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.util.dt as dt_util
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_TRIGGER,
+)
 from homeassistant.const import (
+    CONF_CODE,
+    CONF_DELAY_TIME,
+    CONF_DISARM_AFTER_TRIGGER,
+    CONF_NAME,
+    CONF_PENDING_TIME,
+    CONF_PLATFORM,
+    CONF_TRIGGER_TIME,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
-    CONF_PLATFORM,
-    CONF_NAME,
-    CONF_CODE,
-    CONF_DELAY_TIME,
-    CONF_PENDING_TIME,
-    CONF_TRIGGER_TIME,
-    CONF_DISARM_AFTER_TRIGGER,
 )
-from homeassistant.components import mqtt
-
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.core import callback
-
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_point_in_time
+from homeassistant.helpers.event import async_track_state_change, track_point_in_time
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -279,6 +281,16 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
         return self._state
 
     @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return (
+            SUPPORT_ALARM_ARM_HOME
+            | SUPPORT_ALARM_ARM_AWAY
+            | SUPPORT_ALARM_ARM_NIGHT
+            | SUPPORT_ALARM_TRIGGER
+        )
+
+    @property
     def _active_state(self):
         """Get the current state."""
         if self.state == STATE_ALARM_PENDING:
@@ -414,17 +426,16 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
             self.hass, self.entity_id, self._async_state_changed_listener
         )
 
-        @callback
-        def message_received(msg):
+        async def message_received(msg):
             """Run when new MQTT message has been received."""
             if msg.payload == self._payload_disarm:
-                self.async_alarm_disarm(self._code)
+                await self.async_alarm_disarm(self._code)
             elif msg.payload == self._payload_arm_home:
-                self.async_alarm_arm_home(self._code)
+                await self.async_alarm_arm_home(self._code)
             elif msg.payload == self._payload_arm_away:
-                self.async_alarm_arm_away(self._code)
+                await self.async_alarm_arm_away(self._code)
             elif msg.payload == self._payload_arm_night:
-                self.async_alarm_arm_night(self._code)
+                await self.async_alarm_arm_night(self._code)
             else:
                 _LOGGER.warning("Received unexpected payload: %s", msg.payload)
                 return

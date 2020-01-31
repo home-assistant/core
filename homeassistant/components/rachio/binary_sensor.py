@@ -63,7 +63,7 @@ class RachioControllerBinarySensor(BinarySensorDevice):
             return
 
         # For this device
-        self._handle_update()
+        self._handle_update(args, kwargs)
 
     @abstractmethod
     def _poll_update(self, data=None) -> bool:
@@ -119,9 +119,9 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
 
     def _handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""
-        if args[0][KEY_SUBTYPE] == SUBTYPE_ONLINE:
+        if args[0][0][KEY_SUBTYPE] == SUBTYPE_ONLINE:
             self._state = True
-        elif args[0][KEY_SUBTYPE] == SUBTYPE_OFFLINE:
+        elif args[0][0][KEY_SUBTYPE] == SUBTYPE_OFFLINE:
             self._state = False
 
         self.schedule_update_ha_state()

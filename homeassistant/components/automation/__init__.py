@@ -1,9 +1,8 @@
 """Allow to set up simple automation rules via the config file."""
-import asyncio
 from functools import partial
 import importlib
 import logging
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, List
 
 import voluptuous as vol
 
@@ -20,18 +19,17 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import Context, CoreState, HomeAssistant
+from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import condition, extract_domain_configs, script
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime, utcnow
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -50,6 +48,7 @@ CONF_ACTION = "action"
 CONF_TRIGGER = "trigger"
 CONF_CONDITION_TYPE = "condition_type"
 CONF_INITIAL_STATE = "initial_state"
+CONF_SKIP_CONDITION = "skip_condition"
 
 CONDITION_USE_TRIGGER_VALUES = "use_trigger_values"
 CONDITION_TYPE_AND = "and"
@@ -92,25 +91,22 @@ _TRIGGER_SCHEMA = vol.All(
 
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
-PLATFORM_SCHEMA = vol.Schema(
-    {
-        # str on purpose
-        CONF_ID: str,
-        CONF_ALIAS: cv.string,
-        vol.Optional(CONF_DESCRIPTION): cv.string,
-        vol.Optional(CONF_INITIAL_STATE): cv.boolean,
-        vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
-        vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
-        vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
-        vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.107"),
+    vol.Schema(
+        {
+            # str on purpose
+            CONF_ID: str,
+            CONF_ALIAS: cv.string,
+            vol.Optional(CONF_DESCRIPTION): cv.string,
+            vol.Optional(CONF_INITIAL_STATE): cv.boolean,
+            vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
+            vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
+            vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
+            vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
+        }
+    ),
 )
-
-TRIGGER_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Optional(ATTR_VARIABLES, default={}): dict}
-)
-
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 @bind_hass
@@ -123,50 +119,97 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+@callback
+def automations_with_entity(hass: HomeAssistant, entity_id: str) -> List[str]:
+    """Return all automations that reference the entity."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    results = []
+
+    for automation_entity in component.entities:
+        if entity_id in automation_entity.action_script.referenced_entities:
+            results.append(automation_entity.entity_id)
+
+    return results
+
+
+@callback
+def entities_in_automation(hass: HomeAssistant, entity_id: str) -> List[str]:
+    """Return all entities in a scene."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    automation_entity = component.get_entity(entity_id)
+
+    if automation_entity is None:
+        return []
+
+    return list(automation_entity.action_script.referenced_entities)
+
+
+@callback
+def automations_with_device(hass: HomeAssistant, device_id: str) -> List[str]:
+    """Return all automations that reference the device."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    results = []
+
+    for automation_entity in component.entities:
+        if device_id in automation_entity.action_script.referenced_devices:
+            results.append(automation_entity.entity_id)
+
+    return results
+
+
+@callback
+def devices_in_automation(hass: HomeAssistant, entity_id: str) -> List[str]:
+    """Return all devices in a scene."""
+    if DOMAIN not in hass.data:
+        return []
+
+    component = hass.data[DOMAIN]
+
+    automation_entity = component.get_entity(entity_id)
+
+    if automation_entity is None:
+        return []
+
+    return list(automation_entity.action_script.referenced_devices)
+
+
 async def async_setup(hass, config):
     """Set up the automation."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_AUTOMATIONS
-    )
+    hass.data[DOMAIN] = component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await _async_process_config(hass, config, component)
 
-    async def trigger_service_handler(service_call):
+    async def trigger_service_handler(entity, service_call):
         """Handle automation triggers."""
-        tasks = []
-        for entity in await component.async_extract_from_service(service_call):
-            tasks.append(
-                entity.async_trigger(
-                    service_call.data.get(ATTR_VARIABLES),
-                    skip_condition=True,
-                    context=service_call.context,
-                )
-            )
+        await entity.async_trigger(
+            service_call.data[ATTR_VARIABLES],
+            skip_condition=service_call.data[CONF_SKIP_CONDITION],
+            context=service_call.context,
+        )
 
-        if tasks:
-            await asyncio.wait(tasks)
-
-    async def turn_onoff_service_handler(service_call):
-        """Handle automation turn on/off service calls."""
-        tasks = []
-        method = f"async_{service_call.service}"
-        for entity in await component.async_extract_from_service(service_call):
-            tasks.append(getattr(entity, method)())
-
-        if tasks:
-            await asyncio.wait(tasks)
-
-    async def toggle_service_handler(service_call):
-        """Handle automation toggle service calls."""
-        tasks = []
-        for entity in await component.async_extract_from_service(service_call):
-            if entity.is_on:
-                tasks.append(entity.async_turn_off())
-            else:
-                tasks.append(entity.async_turn_on())
-
-        if tasks:
-            await asyncio.wait(tasks)
+    component.async_register_entity_service(
+        SERVICE_TRIGGER,
+        {
+            vol.Optional(ATTR_VARIABLES, default={}): dict,
+            vol.Optional(CONF_SKIP_CONDITION, default=True): bool,
+        },
+        trigger_service_handler,
+    )
+    component.async_register_entity_service(SERVICE_TOGGLE, {}, "async_toggle")
+    component.async_register_entity_service(SERVICE_TURN_ON, {}, "async_turn_on")
+    component.async_register_entity_service(SERVICE_TURN_OFF, {}, "async_turn_off")
 
     async def reload_service_handler(service_call):
         """Remove all automations and load new ones from config."""
@@ -175,22 +218,9 @@ async def async_setup(hass, config):
             return
         await _async_process_config(hass, conf, component)
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_TRIGGER, trigger_service_handler, schema=TRIGGER_SERVICE_SCHEMA
+    async_register_admin_service(
+        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({}),
     )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=RELOAD_SERVICE_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, toggle_service_handler, schema=ENTITY_SERVICE_SCHEMA
-    )
-
-    for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
-        hass.services.async_register(
-            DOMAIN, service, turn_onoff_service_handler, schema=ENTITY_SERVICE_SCHEMA
-        )
 
     return True
 
@@ -204,7 +234,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         name,
         async_attach_triggers,
         cond_func,
-        async_action,
+        action_script,
         hidden,
         initial_state,
     ):
@@ -214,7 +244,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._async_attach_triggers = async_attach_triggers
         self._async_detach_triggers = None
         self._cond_func = cond_func
-        self._async_action = async_action
+        self.action_script = action_script
         self._last_triggered = None
         self._hidden = hidden
         self._initial_state = initial_state
@@ -224,6 +254,11 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     def name(self):
         """Name of the automation."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return unique ID."""
+        return self._id
 
     @property
     def should_poll(self):
@@ -265,7 +300,7 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         else:
             enable_automation = DEFAULT_INITIAL_STATE
             _LOGGER.debug(
-                "Automation %s not in state storage, state %s from " "default is used.",
+                "Automation %s not in state storage, state %s from default is used.",
                 self.entity_id,
                 enable_automation,
             )
@@ -308,12 +343,21 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
             {ATTR_NAME: self._name, ATTR_ENTITY_ID: self.entity_id},
             context=trigger_context,
         )
-        await self._async_action(self.entity_id, variables, trigger_context)
+
+        _LOGGER.info("Executing %s", self._name)
+
+        try:
+            await self.action_script.async_run(variables, trigger_context)
+        except Exception as err:  # pylint: disable=broad-except
+            self.action_script.async_log_exception(
+                _LOGGER, f"Error while executing automation {self.entity_id}", err
+            )
+
         self._last_triggered = utcnow()
         await self.async_update_ha_state()
 
     async def async_will_remove_from_hass(self):
-        """Remove listeners when removing automation from HASS."""
+        """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
         await self.async_disable()
 
@@ -389,7 +433,7 @@ async def _async_process_config(hass, config, component):
             hidden = config_block[CONF_HIDE_ENTITY]
             initial_state = config_block.get(CONF_INITIAL_STATE)
 
-            action = _async_get_action(hass, config_block.get(CONF_ACTION, {}), name)
+            action_script = script.Script(hass, config_block.get(CONF_ACTION, {}), name)
 
             if CONF_CONDITION in config_block:
                 cond_func = await _async_process_if(hass, config, config_block)
@@ -414,7 +458,7 @@ async def _async_process_config(hass, config, component):
                 name,
                 async_attach_triggers,
                 cond_func,
-                action,
+                action_script,
                 hidden,
                 initial_state,
             )
@@ -423,24 +467,6 @@ async def _async_process_config(hass, config, component):
 
     if entities:
         await component.async_add_entities(entities)
-
-
-def _async_get_action(hass, config, name):
-    """Return an action based on a configuration."""
-    script_obj = script.Script(hass, config, name)
-
-    async def action(entity_id, variables, context):
-        """Execute an action."""
-        _LOGGER.info("Executing %s", name)
-
-        try:
-            await script_obj.async_run(variables, context)
-        except Exception as err:  # pylint: disable=broad-except
-            script_obj.async_log_exception(
-                _LOGGER, f"Error while executing automation {entity_id}", err
-            )
-
-    return action
 
 
 async def _async_process_if(hass, config, p_config):

@@ -1,6 +1,6 @@
 """Generic device for the HomematicIP Cloud component."""
 import logging
-from typing import Optional
+from typing import Any, Dict, Optional
 
 from homematicip.aio.device import AsyncDevice
 from homematicip.aio.group import AsyncGroup
@@ -79,7 +79,7 @@ class HomematicipGenericDevice(Entity):
         _LOGGER.info("Setting up %s (%s)", self.name, self._device.modelType)
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, Any]:
         """Return device specific attributes."""
         # Only physical devices should be HA devices.
         if isinstance(self._device, AsyncDevice):
@@ -96,14 +96,14 @@ class HomematicipGenericDevice(Entity):
             }
         return None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._hap.hmip_device_by_entity_id[self.entity_id] = self._device
         self._device.on_update(self._async_device_changed)
         self._device.on_remove(self._async_device_removed)
 
     @callback
-    def _async_device_changed(self, *args, **kwargs):
+    def _async_device_changed(self, *args, **kwargs) -> None:
         """Handle device state changes."""
         # Don't update disabled entities
         if self.enabled:
@@ -152,7 +152,7 @@ class HomematicipGenericDevice(Entity):
                     entity_registry.async_remove(entity_id)
 
     @callback
-    def _async_device_removed(self, *args, **kwargs):
+    def _async_device_removed(self, *args, **kwargs) -> None:
         """Handle hmip device removal."""
         # Set marker showing that the HmIP device hase been removed.
         self.hmip_device_removed = True
@@ -193,7 +193,7 @@ class HomematicipGenericDevice(Entity):
         return None
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict[str, Any]:
         """Return the state attributes of the generic device."""
         state_attr = {}
 

@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from meteoalertapi import Meteoalert
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
@@ -33,7 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MeteoAlarm binary sensor platform."""
-    from meteoalertapi import Meteoalert
 
     country = config[CONF_COUNTRY]
     province = config[CONF_PROVINCE]

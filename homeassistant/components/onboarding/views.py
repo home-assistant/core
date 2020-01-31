@@ -8,12 +8,12 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import callback
 
 from .const import (
+    DEFAULT_AREAS,
     DOMAIN,
+    STEP_CORE_CONFIG,
+    STEP_INTEGRATION,
     STEP_USER,
     STEPS,
-    DEFAULT_AREAS,
-    STEP_INTEGRATION,
-    STEP_CORE_CONFIG,
 )
 
 

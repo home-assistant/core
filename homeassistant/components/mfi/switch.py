@@ -1,16 +1,17 @@
 """Support for Ubiquiti mFi switches."""
 import logging
 
+from mficlient.client import FailedToLogin, MFiClient
 import requests
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PORT,
     CONF_PASSWORD,
-    CONF_USERNAME,
+    CONF_PORT,
     CONF_SSL,
+    CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
 import homeassistant.helpers.config_validation as cv
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_SSL = True
 DEFAULT_VERIFY_SSL = True
 
-SWITCH_MODELS = ["Outlet", "Output 5v", "Output 12v", "Output 24v"]
+SWITCH_MODELS = ["Outlet", "Output 5v", "Output 12v", "Output 24v", "Dimmer Switch"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -43,8 +44,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     verify_tls = config.get(CONF_VERIFY_SSL)
     default_port = 6443 if use_tls else 6080
     port = int(config.get(CONF_PORT, default_port))
-
-    from mficlient.client import FailedToLogin, MFiClient
 
     try:
         client = MFiClient(

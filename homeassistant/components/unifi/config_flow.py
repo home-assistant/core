@@ -1,8 +1,9 @@
 """Config flow for UniFi."""
+import socket
+
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -10,6 +11,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import callback
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -21,10 +23,10 @@ from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     CONTROLLER_ID,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
+    DEFAULT_DETECTION_TIME,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
-    DEFAULT_DETECTION_TIME,
     DOMAIN,
     LOGGER,
 )
@@ -104,11 +106,15 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="unknown")
 
+        host = ""
+        if await async_discover_unifi(self.hass):
+            host = "unifi"
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_HOST, default=host): str,
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
@@ -235,3 +241,11 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
     async def _update_options(self):
         """Update config entry options."""
         return self.async_create_entry(title="", data=self.options)
+
+
+async def async_discover_unifi(hass):
+    """Discover UniFi address."""
+    try:
+        return await hass.async_add_executor_job(socket.gethostbyname, "unifi")
+    except socket.gaierror:
+        return None

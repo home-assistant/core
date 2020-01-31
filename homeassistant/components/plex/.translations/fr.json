@@ -6,6 +6,7 @@
             "already_in_progress": "Plex en cours de configuration",
             "discovery_no_file": "Aucun fichier de configuration h\u00e9rit\u00e9 trouv\u00e9",
             "invalid_import": "La configuration import\u00e9e est invalide",
+            "non-interactive": "Importation non interactive",
             "token_request_timeout": "D\u00e9lai d'obtention du jeton",
             "unknown": "\u00c9chec pour une raison inconnue"
         },

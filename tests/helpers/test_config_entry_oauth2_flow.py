@@ -1,15 +1,15 @@
 """Tests for the Somfy config flow."""
 import asyncio
 import logging
-from unittest.mock import patch
 import time
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant import data_entry_flow, setup, config_entries
+from homeassistant import config_entries, data_entry_flow, setup
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from tests.common import mock_platform, MockConfigEntry
+from tests.common import MockConfigEntry, mock_platform
 
 TEST_DOMAIN = "oauth2_test"
 CLIENT_SECRET = "5678"
@@ -120,6 +120,64 @@ async def test_abort_if_authorization_timeout(hass, flow_handler, local_impl):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "authorize_url_timeout"
+
+
+async def test_step_discovery(hass, flow_handler, local_impl):
+    """Check flow triggers from discovery."""
+    hass.config.api.base_url = "https://example.com"
+    flow_handler.async_register_implementation(hass, local_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, MockOAuth2Implementation()
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "pick_implementation"
+
+
+async def test_abort_discovered_multiple(hass, flow_handler, local_impl):
+    """Test if aborts when discovered multiple times."""
+    hass.config.api.base_url = "https://example.com"
+    flow_handler.async_register_implementation(hass, local_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, MockOAuth2Implementation()
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_SSDP}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "pick_implementation"
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+async def test_abort_discovered_existing_entries(hass, flow_handler, local_impl):
+    """Test if abort discovery when entries exists."""
+    hass.config.api.base_url = "https://example.com"
+    flow_handler.async_register_implementation(hass, local_impl)
+    config_entry_oauth2_flow.async_register_implementation(
+        hass, TEST_DOMAIN, MockOAuth2Implementation()
+    )
+
+    entry = MockConfigEntry(domain=TEST_DOMAIN, data={},)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        TEST_DOMAIN, context={"source": config_entries.SOURCE_SSDP}
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_full_flow(

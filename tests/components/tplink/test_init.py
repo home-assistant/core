@@ -242,7 +242,7 @@ async def test_unload(hass, platform):
     with patch(
         "homeassistant.components.tplink.common.SmartDevice._query_helper"
     ), patch(
-        "homeassistant.components.tplink.{}" ".async_setup_entry".format(platform),
+        "homeassistant.components.tplink.{}.async_setup_entry".format(platform),
         return_value=mock_coro(True),
     ) as light_setup:
         config = {

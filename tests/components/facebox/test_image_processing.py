@@ -5,23 +5,23 @@ import pytest
 import requests
 import requests_mock
 
-from homeassistant.core import callback
+import homeassistant.components.facebox.image_processing as fb
+import homeassistant.components.image_processing as ip
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_FRIENDLY_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
     CONF_IP_ADDRESS,
+    CONF_PASSWORD,
     CONF_PORT,
+    CONF_USERNAME,
     HTTP_BAD_REQUEST,
     HTTP_OK,
     HTTP_UNAUTHORIZED,
     STATE_UNKNOWN,
 )
+from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-import homeassistant.components.image_processing as ip
-import homeassistant.components.facebox.image_processing as fb
 
 MOCK_IP = "192.168.0.1"
 MOCK_PORT = "8080"
@@ -81,7 +81,7 @@ VALID_CONFIG = {
 def mock_healthybox():
     """Mock fb.check_box_health."""
     check_box_health = (
-        "homeassistant.components.facebox.image_processing." "check_box_health"
+        "homeassistant.components.facebox.image_processing.check_box_health"
     )
     with patch(check_box_health, return_value=MOCK_BOX_ID) as _mock_healthybox:
         yield _mock_healthybox
@@ -261,7 +261,7 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
 
@@ -275,7 +275,7 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
         assert "AuthenticationError on facebox" in caplog.text
@@ -290,7 +290,7 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
         assert MOCK_ERROR_NO_FACE in caplog.text
@@ -305,7 +305,7 @@ async def test_teach_service(
             fb.FILE_PATH: MOCK_FILE_PATH,
         }
         await hass.services.async_call(
-            ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
+            fb.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data
         )
         await hass.async_block_till_done()
         assert "ConnectionError: Is facebox running?" in caplog.text

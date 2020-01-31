@@ -9,7 +9,7 @@
             },
             "step": {
                 "init": {
-                    "description": "Selecteer een van de meldingsdiensten:",
+                    "description": "Selecteer een van de meldingsservices:",
                     "title": "Stel een \u00e9\u00e9nmalig wachtwoord in dat wordt afgegeven door een meldingscomponent"
                 },
                 "setup": {

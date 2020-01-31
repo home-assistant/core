@@ -1,13 +1,13 @@
 """Service calling related helpers."""
 import asyncio
-from functools import wraps
+from functools import partial, wraps
 import logging
 from typing import Callable
 
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, ATTR_AREA_ID
+from homeassistant.const import ATTR_AREA_ID, ATTR_ENTITY_ID, ENTITY_MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -16,12 +16,11 @@ from homeassistant.exceptions import (
     UnknownUser,
 )
 from homeassistant.helpers import template, typing
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -110,12 +109,30 @@ def extract_entity_ids(hass, service_call, expand_group=True):
 
 
 @bind_hass
+async def async_extract_entities(hass, entities, service_call, expand_group=True):
+    """Extract a list of entity objects from a service call.
+
+    Will convert group entity ids to the entity ids it represents.
+    """
+    data_ent_id = service_call.data.get(ATTR_ENTITY_ID)
+
+    if data_ent_id == ENTITY_MATCH_ALL:
+        return [entity for entity in entities if entity.available]
+
+    entity_ids = await async_extract_entity_ids(hass, service_call, expand_group)
+
+    return [
+        entity
+        for entity in entities
+        if entity.available and entity.entity_id in entity_ids
+    ]
+
+
+@bind_hass
 async def async_extract_entity_ids(hass, service_call, expand_group=True):
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
-
-    Async friendly.
     """
     entity_ids = service_call.data.get(ATTR_ENTITY_ID)
     area_ids = service_call.data.get(ATTR_AREA_ID)
@@ -241,13 +258,11 @@ def async_set_service_schema(hass, domain, service, schema):
         "fields": schema.get("fields") or {},
     }
 
-    hass.data[SERVICE_DESCRIPTION_CACHE]["{}.{}".format(domain, service)] = description
+    hass.data[SERVICE_DESCRIPTION_CACHE][f"{domain}.{service}"] = description
 
 
 @bind_hass
-async def entity_service_call(
-    hass, platforms, func, call, service_name="", required_features=None
-):
+async def entity_service_call(hass, platforms, func, call, required_features=None):
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -260,19 +275,7 @@ async def entity_service_call(
     else:
         entity_perms = None
 
-    # Are we trying to target all entities
-    if ATTR_ENTITY_ID in call.data:
-        target_all_entities = call.data[ATTR_ENTITY_ID] == ENTITY_MATCH_ALL
-    else:
-        # Remove the service_name parameter along with this warning
-        _LOGGER.warning(
-            "Not passing an entity ID to a service to target all "
-            "entities is deprecated. Update your call to %s to be "
-            "instead: entity_id: %s",
-            service_name,
-            ENTITY_MATCH_ALL,
-        )
-        target_all_entities = True
+    target_all_entities = call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL
 
     if not target_all_entities:
         # A set of entities we're trying to target.
@@ -336,7 +339,7 @@ async def entity_service_call(
 
     tasks = [
         _handle_service_platform_call(
-            func, data, entities, call.context, required_features
+            hass, func, data, entities, call.context, required_features
         )
         for platform, entities in zip(platforms, platforms_entities)
     ]
@@ -349,7 +352,7 @@ async def entity_service_call(
 
 
 async def _handle_service_platform_call(
-    func, data, entities, context, required_features
+    hass, func, data, entities, context, required_features
 ):
     """Handle a function call."""
     tasks = []
@@ -367,9 +370,21 @@ async def _handle_service_platform_call(
         entity.async_set_context(context)
 
         if isinstance(func, str):
-            await getattr(entity, func)(**data)
+            result = hass.async_add_job(partial(getattr(entity, func), **data))
         else:
-            await func(entity, data)
+            result = hass.async_add_job(func, entity, data)
+
+        # Guard because callback functions do not return a task when passed to async_add_job.
+        if result is not None:
+            result = await result
+
+        if asyncio.iscoroutine(result):
+            _LOGGER.error(
+                "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to component author.",
+                func,
+                entity.entity_id,
+            )
+            await result
 
         if entity.should_poll:
             tasks.append(entity.async_update_ha_state(True))

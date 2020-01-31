@@ -4,16 +4,20 @@ from datetime import timedelta
 import logging
 import math
 
+from Adafruit_SHT31 import SHT31
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS, CONF_NAME, CONF_MONITORED_CONDITIONS
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS,
+    CONF_NAME,
+    PRECISION_TENTHS,
+    TEMP_CELSIUS,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.temperature import display_temp
-from homeassistant.const import PRECISION_TENTHS
 from homeassistant.util import Throttle
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    from Adafruit_SHT31 import SHT31
 
     i2c_address = config.get(CONF_I2C_ADDRESS)
     sensor = SHT31(address=i2c_address)

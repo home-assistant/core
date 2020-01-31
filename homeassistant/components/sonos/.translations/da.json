@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Ingen Sonos-enheder kunne findes p\u00e5 netv\u00e6rket.",
+            "no_devices_found": "Der blev ikke fundet nogen Sonos-enheder p\u00e5 netv\u00e6rket.",
             "single_instance_allowed": "Det er kun n\u00f8dvendigt med en ops\u00e6tning af Sonos"
         },
         "step": {

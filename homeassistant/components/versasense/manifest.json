@@ -1,0 +1,8 @@
+{
+  "domain": "versasense",
+  "name": "VersaSense",
+  "documentation": "https://www.home-assistant.io/integrations/versasense",
+  "dependencies": [],
+  "codeowners": ["@flamm3blemuff1n"],
+  "requirements": ["pyversasense==0.0.6"]
+}
