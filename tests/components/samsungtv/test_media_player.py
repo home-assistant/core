@@ -152,24 +152,22 @@ async def test_update_off(hass, remote, mock_now):
 
 async def test_update_access_denied(hass, remote, mock_now):
     """Testing update tv unhandled response exception."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+
     with patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote",
         side_effect=exceptions.AccessDenied("Boom"),
     ), patch("homeassistant.components.samsungtv.config_flow.socket"):
-        await setup_samsungtv(hass, MOCK_CONFIG)
-
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
             async_fire_time_changed(hass, next_update)
             await hass.async_block_till_done()
 
-        assert any(
-            [
-                entry
-                for entry in hass.config_entries.async_entries()
-                if entry.source == "reauth"
-            ]
-        )
+        assert [
+            entry
+            for entry in hass.config_entries.async_entries()
+            if entry.source == "reauth"
+        ]
 
 
 async def test_update_unhandled_response(hass, remote, mock_now):
