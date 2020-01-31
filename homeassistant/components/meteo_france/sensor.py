@@ -26,11 +26,6 @@ STATE_ATTR_FORECAST = "1h rain forecast"
 STATE_ATTR_BULLETIN_TIME = "Bulletin date"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up the Meteo-France platform."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
