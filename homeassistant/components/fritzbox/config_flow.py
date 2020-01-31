@@ -128,5 +128,5 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="confirm",
             data_schema=DATA_SCHEMA_CONFIRM,
-            description_placeholders={"model": self._model},
+            description_placeholders={"name": self._name},
         )

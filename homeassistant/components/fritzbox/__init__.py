@@ -1,29 +1,37 @@
 """Support for AVM Fritz!Box smarthome devices."""
+import socket
+
 from pyfritzhome import Fritzhome
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, SUPPORTED_DOMAINS
 
+
+def ensure_unique_hosts(value):
+    """Validate that all configs have a unique host."""
+    vol.Schema(vol.Unique("duplicate host entries found"))(
+        [socket.gethostbyname(entry[CONF_HOST]) for entry in value]
+    )
+    return value
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_DEVICES): vol.All(
-                    cv.ensure_list,
-                    [
-                        vol.Schema(
-                            {
-                                vol.Required(CONF_HOST): cv.string,
-                                vol.Required(CONF_PASSWORD): cv.string,
-                                vol.Required(CONF_USERNAME): cv.string,
-                            }
-                        )
-                    ],
+        DOMAIN: vol.All(
+            cv.ensure_list,
+            [
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): cv.string,
+                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Required(CONF_USERNAME): cv.string,
+                    }
                 )
-            }
+            ],
+            ensure_unique_hosts,
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -33,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the AVM Fritz!Box integration."""
     if DOMAIN in config:
-        for entry_config in config[DOMAIN][CONF_DEVICES]:
+        for entry_config in config[DOMAIN]:
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": "import"}, data=entry_config
