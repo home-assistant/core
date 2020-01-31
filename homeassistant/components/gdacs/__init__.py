@@ -34,6 +34,7 @@ from .const import (
     SIGNAL_NEW_GEOLOCATION,
     SIGNAL_STATUS,
     SIGNAL_UPDATE_ENTITY,
+    VALID_CATEGORIES,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +50,7 @@ CONFIG_SCHEMA = vol.Schema(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): cv.time_period,
                 vol.Optional(CONF_CATEGORIES, default=[]): vol.All(
-                    cv.ensure_list, [cv.string]
+                    cv.ensure_list, [vol.In(VALID_CATEGORIES)]
                 ),
             }
         )

@@ -18,3 +18,12 @@ SIGNAL_UPDATE_ENTITY = "gdacs_update_{}"
 SIGNAL_STATUS = "gdacs_status_{}"
 
 SIGNAL_NEW_GEOLOCATION = "gdacs_new_geolocation_{}"
+
+VALID_CATEGORIES = [
+    "Drought",
+    "Earthquake",
+    "Flood",
+    "Tropical Cyclone",
+    "Tsunami",
+    "Volcano",
+]
