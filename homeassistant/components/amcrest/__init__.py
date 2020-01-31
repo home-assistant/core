@@ -1,6 +1,7 @@
 """Support for Amcrest IP cameras."""
 from datetime import timedelta
 import logging
+import re
 import threading
 
 import aiohttp
@@ -42,6 +43,8 @@ from .const import (
     DATA_AMCREST,
     DEVICES,
     DOMAIN,
+    SENSOR_EVENT_CODE,
+    SERVICE_EVENT,
     SERVICE_UPDATE,
 )
 from .helpers import service_signal
@@ -70,6 +73,8 @@ SCAN_INTERVAL = timedelta(seconds=10)
 
 AUTHENTICATION_LIST = {"basic": "basic"}
 
+_event_threads = 0  # pylint: disable=invalid-name
+
 
 def _has_unique_names(devices):
     names = [device[CONF_NAME] for device in devices]
@@ -96,9 +101,11 @@ AMCREST_SCHEMA = vol.Schema(
         vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_ARGUMENTS): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
         vol.Optional(CONF_BINARY_SENSORS): vol.All(
-            cv.ensure_list, [vol.In(BINARY_SENSORS)]
+            cv.ensure_list, [vol.In(BINARY_SENSORS)], vol.Unique()
         ),
-        vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [vol.In(SENSORS)]),
+        vol.Optional(CONF_SENSORS): vol.All(
+            cv.ensure_list, [vol.In(SENSORS)], vol.Unique()
+        ),
         vol.Optional(CONF_CONTROL_LIGHT, default=True): cv.boolean,
     }
 )
@@ -119,6 +126,8 @@ class AmcrestChecker(Http):
         self._wrap_errors = 0
         self._wrap_lock = threading.Lock()
         self._wrap_login_err = False
+        self._wrap_event_flag = threading.Event()
+        self._wrap_event_flag.set()
         self._unsub_recheck = None
         super().__init__(
             host,
@@ -134,16 +143,22 @@ class AmcrestChecker(Http):
         """Return if camera's API is responding."""
         return self._wrap_errors <= MAX_ERRORS and not self._wrap_login_err
 
+    @property
+    def available_flag(self):
+        """Return threading event flag that indicates if camera's API is responding."""
+        return self._wrap_event_flag
+
     def _start_recovery(self):
+        self._wrap_event_flag.clear()
         dispatcher_send(self._hass, service_signal(SERVICE_UPDATE, self._wrap_name))
         self._unsub_recheck = track_time_interval(
             self._hass, self._wrap_test_online, RECHECK_INTERVAL
         )
 
-    def command(self, cmd, retries=None, timeout_cmd=None, stream=False):
+    def command(self, *args, **kwargs):
         """amcrest.Http.command wrapper to catch errors."""
         try:
-            ret = super().command(cmd, retries, timeout_cmd, stream)
+            ret = super().command(*args, **kwargs)
         except LoginError as ex:
             with self._wrap_lock:
                 was_online = self.available
@@ -172,6 +187,7 @@ class AmcrestChecker(Http):
             self._unsub_recheck()
             self._unsub_recheck = None
             _LOGGER.error("%s camera back online", self._wrap_name)
+            self._wrap_event_flag.set()
             dispatcher_send(self._hass, service_signal(SERVICE_UPDATE, self._wrap_name))
         return ret
 
@@ -182,6 +198,38 @@ class AmcrestChecker(Http):
             self.current_time
         except AmcrestError:
             pass
+
+
+def _monitor_events(hass, name, api, event_codes):
+    event_codes = ",".join(event_codes)
+    start_stop = re.compile(r"Code=([^;]+);action=(Start|Stop)", flags=re.S)
+    while True:
+        try:
+            api.available_flag.wait()
+            for event_info in api.event_stream(event_codes, retries=5):
+                _LOGGER.debug("%s event info: %r", name, event_info)
+                for code, action in start_stop.findall(event_info):
+                    signal = service_signal(SERVICE_EVENT, name, code)
+                    start = action == "Start"
+                    _LOGGER.debug("Sending signal: %s: %s", signal, start)
+                    dispatcher_send(hass, signal, start)
+        except AmcrestError as error:
+            _LOGGER.warning(
+                "Error while processing events from %s camera: %r", name, error
+            )
+
+
+def _start_event_monitor(hass, name, api, event_codes):
+    global _event_threads  # pylint: disable=invalid-name
+
+    _event_threads += 1
+    thread = threading.Thread(
+        target=_monitor_events,
+        name=f"Amcrest_{_event_threads}",
+        args=(hass, name, api, event_codes),
+    )
+    thread.daemon = True
+    thread.start()
 
 
 def setup(hass, config):
@@ -230,6 +278,13 @@ def setup(hass, config):
                 {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
                 config,
             )
+            event_codes = [
+                BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE]
+                for sensor_type in binary_sensors
+                if BINARY_SENSORS[sensor_type][SENSOR_EVENT_CODE] is not None
+            ]
+            if event_codes:
+                _start_event_monitor(hass, name, api, event_codes)
 
         if sensors:
             discovery.load_platform(
