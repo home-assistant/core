@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "identifier_exists": "Location already registered"
-        },
         "step": {
             "user": {
                 "data": {

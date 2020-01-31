@@ -22,7 +22,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .config_flow import configured_instances
 from .const import (
     CONF_CATEGORIES,
     DEFAULT_RADIUS,
@@ -65,15 +64,10 @@ async def async_setup(hass, config):
         return True
 
     conf = config[DOMAIN]
-
     latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
     longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
     scan_interval = conf[CONF_SCAN_INTERVAL]
     categories = conf[CONF_CATEGORIES]
-
-    identifier = f"{latitude}, {longitude}"
-    if identifier in configured_instances(hass):
-        return True
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(

@@ -16,10 +16,12 @@ async def test_duplicate_error(hass, config_entry):
     """Test that errors are shown when duplicates are added."""
     conf = {CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25}
     config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}, data=conf
     )
-    assert result["errors"] == {"base": "identifier_exists"}
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_show_form(hass):

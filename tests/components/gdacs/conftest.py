@@ -27,4 +27,5 @@ def config_entry():
             CONF_CATEGORIES: [],
         },
         title="-41.2, 174.7",
+        unique_id="-41.2, 174.7",
     )

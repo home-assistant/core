@@ -61,8 +61,9 @@ class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         user_input[CONF_LONGITUDE] = longitude
 
         identifier = f"{user_input[CONF_LATITUDE]}, {user_input[CONF_LONGITUDE]}"
-        if identifier in configured_instances(self.hass):
-            return await self._show_form({"base": "identifier_exists"})
+
+        await self.async_set_unique_id(identifier)
+        self._abort_if_unique_id_configured()
 
         if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             user_input[CONF_UNIT_SYSTEM] = CONF_UNIT_SYSTEM_IMPERIAL

@@ -8,9 +8,6 @@
           "radius": "Radius"
         }
       }
-    },
-    "error": {
-      "identifier_exists": "Location already registered"
     }
   }
 }
