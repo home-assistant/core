@@ -293,6 +293,7 @@ class SimpliSafe:
         self._emergency_refresh_token_used = False
         self._hass = hass
         self.last_event_data = {}
+        self.systems = None
 
     async def async_init(self):
         """Initialize the data class."""
