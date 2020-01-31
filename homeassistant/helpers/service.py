@@ -370,9 +370,13 @@ async def _handle_service_platform_call(
         entity.async_set_context(context)
 
         if isinstance(func, str):
-            result = await hass.async_add_job(partial(getattr(entity, func), **data))
+            result = hass.async_add_job(partial(getattr(entity, func), **data))
         else:
-            result = await hass.async_add_job(func, entity, data)
+            result = hass.async_add_job(func, entity, data)
+
+        # Guard because callback functions do not return a task when passed to async_add_job.
+        if result is not None:
+            result = await result
 
         if asyncio.iscoroutine(result):
             _LOGGER.error(
