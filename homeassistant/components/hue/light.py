@@ -8,7 +8,6 @@ import random
 import aiohue
 import async_timeout
 
-from homeassistant.components import hue
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
@@ -33,6 +32,7 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import color
 
+from .const import DOMAIN as HUE_DOMAIN
 from .helpers import remove_devices
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -77,7 +77,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Hue lights from a config entry."""
-    bridge = hass.data[hue.DOMAIN][config_entry.data["host"]]
+    bridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
 
     light_coordinator = DataUpdateCoordinator(
         hass,
@@ -97,8 +97,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     update_lights = partial(
         async_update_items,
-        hass,
-        config_entry,
+        bridge,
         bridge.api.lights,
         {},
         async_add_entities,
@@ -134,8 +133,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     update_groups = partial(
         async_update_items,
-        hass,
-        config_entry,
+        bridge,
         bridge.api.groups,
         {},
         async_add_entities,
@@ -163,9 +161,7 @@ async def async_safe_fetch(bridge, fetch_method):
 
 
 @callback
-def async_update_items(
-    hass, config_entry, api, current, async_add_entities, create_item
-):
+def async_update_items(bridge, api, current, async_add_entities, create_item):
     """Update items."""
     new_items = []
 
@@ -176,7 +172,7 @@ def async_update_items(
         current[item_id] = create_item(api[item_id])
         new_items.append(current[item_id])
 
-    hass.async_create_task(remove_devices(hass, config_entry, api, current))
+    bridge.hass.async_create_task(remove_devices(bridge, api, current))
 
     if new_items:
         async_add_entities(new_items)
@@ -314,7 +310,7 @@ class HueLight(Light):
             return None
 
         return {
-            "identifiers": {(hue.DOMAIN, self.device_id)},
+            "identifiers": {(HUE_DOMAIN, self.device_id)},
             "name": self.name,
             "manufacturer": self.light.manufacturername,
             # productname added in Hue Bridge API 1.24
@@ -322,7 +318,7 @@ class HueLight(Light):
             "model": self.light.productname or self.light.modelid,
             # Not yet exposed as properties in aiohue
             "sw_version": self.light.raw["swversion"],
-            "via_device": (hue.DOMAIN, self.bridge.api.config.bridgeid),
+            "via_device": (HUE_DOMAIN, self.bridge.api.config.bridgeid),
         }
 
     async def async_added_to_hass(self):

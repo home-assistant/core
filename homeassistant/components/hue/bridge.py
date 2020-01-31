@@ -13,6 +13,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from .const import DOMAIN, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
 from .helpers import create_config_flow
+from .sensor_base import SensorManager
 
 SERVICE_HUE_SCENE = "hue_activate_scene"
 ATTR_GROUP_NAME = "group_name"
@@ -37,6 +38,7 @@ class HueBridge:
         self.parallel_updates_semaphore = None
         # Jobs to be executed when API is reset.
         self.reset_jobs = []
+        self.sensor_manager = None
 
     @property
     def host(self):
@@ -74,6 +76,7 @@ class HueBridge:
             return False
 
         self.api = bridge
+        self.sensor_manager = SensorManager(self)
 
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(self.config_entry, "light")

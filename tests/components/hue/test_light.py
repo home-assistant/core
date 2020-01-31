@@ -179,13 +179,14 @@ LIGHT_GAMUT_TYPE = "A"
 def mock_bridge(hass):
     """Mock a Hue bridge."""
     bridge = Mock(
+        hass=hass,
         available=True,
         authorized=True,
         allow_unreachable=False,
         allow_groups=False,
         api=Mock(),
-        spec=hue.HueBridge,
         reset_jobs=[],
+        spec=hue.HueBridge,
     )
     bridge.mock_requests = []
     # We're using a deque so we can schedule multiple responses
@@ -219,7 +220,6 @@ def mock_bridge(hass):
 async def setup_bridge(hass, mock_bridge):
     """Load the Hue light platform with the provided bridge."""
     hass.config.components.add(hue.DOMAIN)
-    hass.data[hue.DOMAIN] = {"mock-host": mock_bridge}
     config_entry = config_entries.ConfigEntry(
         1,
         hue.DOMAIN,
@@ -229,6 +229,8 @@ async def setup_bridge(hass, mock_bridge):
         config_entries.CONN_CLASS_LOCAL_POLL,
         system_options={},
     )
+    mock_bridge.config_entry = config_entry
+    hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}
     await hass.config_entries.async_forward_entry_setup(config_entry, "light")
     # To flush out the service call to update the group
     await hass.async_block_till_done()
