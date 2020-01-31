@@ -519,24 +519,21 @@ async def async_load_config(
 
     This method is a coroutine.
     """
-    dev_schema = vol.All(
-        cv.deprecated(CONF_AWAY_HIDE, invalidation_version="0.107.0"),
-        vol.Schema(
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_ICON, default=None): vol.Any(None, cv.icon),
-                vol.Optional("track", default=False): cv.boolean,
-                vol.Optional(CONF_MAC, default=None): vol.Any(
-                    None, vol.All(cv.string, vol.Upper)
-                ),
-                vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
-                vol.Optional("gravatar", default=None): vol.Any(None, cv.string),
-                vol.Optional("picture", default=None): vol.Any(None, cv.string),
-                vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-            }
-        ),
+    dev_schema = vol.Schema(
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_ICON, default=None): vol.Any(None, cv.icon),
+            vol.Optional("track", default=False): cv.boolean,
+            vol.Optional(CONF_MAC, default=None): vol.Any(
+                None, vol.All(cv.string, vol.Upper)
+            ),
+            vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
+            vol.Optional("gravatar", default=None): vol.Any(None, cv.string),
+            vol.Optional("picture", default=None): vol.Any(None, cv.string),
+            vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
+        }
     )
     result = []
     try:
