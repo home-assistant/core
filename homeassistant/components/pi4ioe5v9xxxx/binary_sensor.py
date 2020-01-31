@@ -1,7 +1,8 @@
 """Support for binary sensor using RPi GPIO."""
 import logging
-import voluptuous as vol
+
 from pi4ioe5v9xxxx import pi4ioe5v9xxxx  # pylint: disable=import-error
+import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -39,9 +40,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     pins = config[CONF_PINS]
     binary_sensors = []
 
-    pi4ioe5v9xxxx.setup(i2c_bus=config[CONF_I2CBUS], i2c_addr=config[CONF_I2CADDR], bits=config[CONF_BITS], read_mode=True, invert=False)
+    pi4ioe5v9xxxx.setup(
+        i2c_bus=config[CONF_I2CBUS],
+        i2c_addr=config[CONF_I2CADDR],
+        bits=config[CONF_BITS],
+        read_mode=True,
+        invert=False,
+    )
     for pin_num, pin_name in pins.items():
-        binary_sensors.append(Pi4ioe5v9BinarySensor(pin_name, pin_num, config[CONF_INVERT_LOGIC]))
+        binary_sensors.append(
+            Pi4ioe5v9BinarySensor(pin_name, pin_num, config[CONF_INVERT_LOGIC])
+        )
     add_entities(binary_sensors, True)
 
 
