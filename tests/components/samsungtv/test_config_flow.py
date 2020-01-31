@@ -170,7 +170,7 @@ async def test_ssdp(hass, remote):
         result["flow_id"], user_input="whatever"
     )
     assert result["type"] == "create_entry"
-    assert result["title"] == "fake_name (fake_model)"
+    assert result["title"] == "fake_model"
     assert result["data"][CONF_HOST] == "fake_host"
     assert result["data"][CONF_NAME] == "fake_name"
     assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
@@ -193,7 +193,7 @@ async def test_ssdp_noprefix(hass, remote):
         result["flow_id"], user_input="whatever"
     )
     assert result["type"] == "create_entry"
-    assert result["title"] == "fake2_name (fake2_model)"
+    assert result["title"] == "fake2_model"
     assert result["data"][CONF_HOST] == "fake2_host"
     assert result["data"][CONF_NAME] == "fake2_name"
     assert result["data"][CONF_MANUFACTURER] == "fake2_manufacturer"
