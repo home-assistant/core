@@ -134,7 +134,7 @@ class SamsungTVDevice(MediaPlayerDevice):
                         DOMAIN, context={"source": "reauth"}, data=self._config_entry
                     )
                 )
-                raise samsung_exceptions.AccessDenied()
+                raise
 
         return self._remote
 
