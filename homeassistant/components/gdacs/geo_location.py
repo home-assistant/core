@@ -63,6 +63,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
             hass, manager.async_event_new_entity(), async_add_geolocation
         )
     )
+    # Do not wait for update here so that the setup can be completed and because an
+    # update will fetch data from the feed via HTTP and then process that data.
     hass.async_create_task(manager.async_update())
     _LOGGER.debug("Geolocation setup done")
 
