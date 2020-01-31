@@ -87,7 +87,7 @@ async def test_user(hass, remote):
     assert result["type"] == "create_entry"
     assert result["title"] == "fake_name"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] is None
+    assert result["data"][CONF_NAME] == "fake_name"
     assert result["data"][CONF_MANUFACTURER] is None
     assert result["data"][CONF_MODEL] is None
     assert result["data"][CONF_ID] is None
@@ -172,7 +172,7 @@ async def test_ssdp(hass, remote):
     assert result["type"] == "create_entry"
     assert result["title"] == "fake_model"
     assert result["data"][CONF_HOST] == "fake_host"
-    assert result["data"][CONF_NAME] == "fake_name"
+    assert result["data"][CONF_NAME] == "Samsung fake_model"
     assert result["data"][CONF_MANUFACTURER] == "fake_manufacturer"
     assert result["data"][CONF_MODEL] == "fake_model"
     assert result["data"][CONF_ID] == "fake_uuid"
@@ -195,7 +195,7 @@ async def test_ssdp_noprefix(hass, remote):
     assert result["type"] == "create_entry"
     assert result["title"] == "fake2_model"
     assert result["data"][CONF_HOST] == "fake2_host"
-    assert result["data"][CONF_NAME] == "fake2_name"
+    assert result["data"][CONF_NAME] == "Samsung fake2_model"
     assert result["data"][CONF_MANUFACTURER] == "fake2_manufacturer"
     assert result["data"][CONF_MODEL] == "fake2_model"
     assert result["data"][CONF_ID] == "fake2_uuid"

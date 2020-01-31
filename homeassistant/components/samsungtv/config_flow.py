@@ -9,7 +9,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components.ssdp import (
     ATTR_SSDP_LOCATION,
-    ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_MANUFACTURER,
     ATTR_UPNP_MODEL_NAME,
     ATTR_UPNP_UDN,
@@ -134,7 +133,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self._host = user_input.get(CONF_HOST)
             self._ip = self.context[CONF_IP_ADDRESS] = ip_address
-            self._title = user_input.get(CONF_NAME)
+            self._name = user_input.get(CONF_NAME)
+            self._title = self._name
 
             result = await self.hass.async_add_executor_job(self._try_connect)
 
@@ -153,15 +153,13 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._ip = self.context[CONF_IP_ADDRESS] = ip_address
         self._manufacturer = user_input.get(ATTR_UPNP_MANUFACTURER)
         self._model = user_input.get(ATTR_UPNP_MODEL_NAME)
-        self._name = user_input.get(ATTR_UPNP_FRIENDLY_NAME)
+        self._name = f"Samsung {self._model}"
         self._uuid = user_input.get(ATTR_UPNP_UDN)
         self._title = self._model
 
         # probably access denied
-        if self._name is None:
+        if self._uuid is None:
             return self.async_abort(reason=RESULT_AUTH_MISSING)
-        elif self._name.startswith("[TV]"):
-            self._name = self._name[4:]
         if self._uuid.startswith("uuid:"):
             self._uuid = self._uuid[5:]
 
@@ -199,7 +197,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = user_input.data.get(CONF_NAME)
         self._on_script = user_input.data.get(CONF_ON_ACTION)
         self._port = user_input.data.get(CONF_PORT)
-        self._title = self._model or self._name
+        self._title = user_input.title
 
         await self.async_set_unique_id(self._ip)
         self.context["title_placeholders"] = {"model": self._model}

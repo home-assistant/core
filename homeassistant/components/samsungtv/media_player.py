@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_METHOD,
+    CONF_NAME,
     CONF_PORT,
     STATE_OFF,
     STATE_ON,
@@ -70,12 +71,11 @@ class SamsungTVDevice(MediaPlayerDevice):
     def __init__(self, config_entry, on_script):
         """Initialize the Samsung device."""
         self._config_entry = config_entry
-        self._name = config_entry.title
-        self._uuid = config_entry.data.get(CONF_ID)
         self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
         self._model = config_entry.data.get(CONF_MODEL)
+        self._name = config_entry.data.get(CONF_NAME)
         self._on_script = on_script
-        self._update_listener = None
+        self._uuid = config_entry.data.get(CONF_ID)
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
