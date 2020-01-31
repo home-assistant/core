@@ -1,22 +1,32 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
+  "config": {
+    "abort": {
+      "already_configured": "Apparaat is al geconfigureerd"
+    },
+    "error": {
+      "cannot_connect": "Verbindingsfout",
+      "invalid_auth": "Ongeldige authenticatie",
+      "unknown": "Onverwachte fout"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Wachtwoord",
+          "username": "Gebruikersnaam"
         },
-        "error": {
-            "cannot_connect": "Verbindingsfout",
-            "invalid_auth": "Ongeldige authenticatie",
-            "unknown": "Onverwachte fout"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "password": "Wachtwoord",
-                    "username": "Gebruikersnaam"
-                },
-                "title": "Aanmelden met Carson-account"
-            }
-        },
-        "title": "Carson"
+        "title": "Aanmelden met Carson-account"
+      }
+    },
+    "title": "Carson"
+  },
+  "options": {
+    "step": {
+      "carson_devices": {
+        "description": "Configure visibility of Carson device types",
+        "data": {
+          "list_from_eagle_eye": "Get cameras from Eagle Eye directly"
+        }
+      }
     }
+  }
 }

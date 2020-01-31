@@ -13,18 +13,6 @@ async def test_entity_registry(hass, success_requests_mock):
     assert entry.unique_id == "eagleeye_camera_c0"
     entry = entity_registry.async_get("camera.camera_name_2")
     assert entry.unique_id == "eagleeye_camera_c1"
-    entry = entity_registry.async_get("camera.camera_name_3")
-    assert entry.unique_id == "eagleeye_camera_c2"
-    entry = entity_registry.async_get("camera.camera_name_4")
-    assert entry.unique_id == "eagleeye_camera_c3"
-    entry = entity_registry.async_get("camera.camera_name_5")
-    assert entry.unique_id == "eagleeye_camera_c4"
-    entry = entity_registry.async_get("camera.camera_name_6")
-    assert entry.unique_id == "eagleeye_camera_c5"
-    entry = entity_registry.async_get("camera.camera_name_7")
-    assert entry.unique_id == "eagleeye_camera_c6"
-    entry = entity_registry.async_get("camera.camera_name_8")
-    assert entry.unique_id == "eagleeye_camera_c7"
 
 
 async def test_camera_can_be_updated(hass, success_requests_mock):

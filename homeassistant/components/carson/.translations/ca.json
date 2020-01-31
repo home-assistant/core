@@ -1,22 +1,32 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
-        },
-        "error": {
-            "cannot_connect": "Error de connexi\u00f3",
-            "invalid_auth": "Invalid Auth",
-            "unknown": "Unknown Error"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "password": "Contrasenya",
-                    "username": "Nom d'usuari"
-                },
-                "title": "Carson"
-            }
+  "config": {
+    "abort": {
+      "already_configured": "El dispositiu ja est\u00e0 configurat"
+    },
+    "error": {
+      "cannot_connect": "Error de connexi\u00f3",
+      "invalid_auth": "Invalid Auth",
+      "unknown": "Unknown Error"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Contrasenya",
+          "username": "Nom d'usuari"
         },
         "title": "Carson"
+      }
+    },
+    "title": "Carson"
+  },
+  "options": {
+    "step": {
+      "carson_devices": {
+        "description": "Configure visibility of Carson device types",
+        "data": {
+          "list_from_eagle_eye": "Get cameras from Eagle Eye directly"
+        }
+      }
     }
+  }
 }

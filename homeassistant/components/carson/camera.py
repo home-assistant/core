@@ -6,20 +6,35 @@ import logging
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.const import ATTR_ATTRIBUTION
 
-from .const import ATTRIBUTION, DOMAIN
+from .const import (
+    ATTRIBUTION,
+    CONF_LIST_FROM_EAGLE_EYE,
+    DEFAULT_CONF_LIST_FROM_EAGLE_EYE,
+    DOMAIN,
+)
 from .entity import CarsonEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Set up a Ring Door Bell and StickUp Camera."""
-    _LOGGER.debug(
-        "async def async_setup_entry(hass, config_entry, async_add_entities) called"
-    )
-    cameras = hass.data[DOMAIN][config_entry.entry_id]["cameras"]
+    """Create the Cameras for the Carson devices."""
+    carson = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    if get_list_een_option(config_entry):
+        cameras = [
+            camera for b in carson.buildings for camera in b.eagleeye_api.cameras
+        ]
+    else:
+        cameras = [camera for b in carson.buildings for camera in b.cameras]
 
     async_add_entities(EagleEyeCamera(config_entry.entry_id, cam) for cam in cameras)
+
+
+def get_list_een_option(config_entry):
+    """Return config option load cameras from EEN vs Carson."""
+    return config_entry.options.get(
+        CONF_LIST_FROM_EAGLE_EYE, DEFAULT_CONF_LIST_FROM_EAGLE_EYE
+    )
 
 
 class EagleEyeCamera(CarsonEntityMixin, Camera):

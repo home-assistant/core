@@ -1,22 +1,32 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+  "config": {
+    "abort": {
+      "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
+    },
+    "error": {
+      "cannot_connect": "Errore di connessione",
+      "invalid_auth": "Autenticazione non valida",
+      "unknown": "Errore imprevisto"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Nome utente"
         },
-        "error": {
-            "cannot_connect": "Errore di connessione",
-            "invalid_auth": "Autenticazione non valida",
-            "unknown": "Errore imprevisto"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "password": "Password",
-                    "username": "Nome utente"
-                },
-                "title": "Accedi con l'account Carson"
-            }
-        },
-        "title": "Carson"
+        "title": "Accedi con l'account Carson"
+      }
+    },
+    "title": "Carson"
+  },
+  "options": {
+    "step": {
+      "carson_devices": {
+        "description": "Configure visibility of Carson device types",
+        "data": {
+          "list_from_eagle_eye": "Get cameras from Eagle Eye directly"
+        }
+      }
     }
+  }
 }

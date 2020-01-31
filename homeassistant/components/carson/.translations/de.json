@@ -1,22 +1,32 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+  "config": {
+    "abort": {
+      "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+    },
+    "error": {
+      "cannot_connect": "Verbindungsfehler",
+      "invalid_auth": "Ung\u00fcltige Authentifizierung",
+      "unknown": "Unerwarteter Fehler"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Passwort",
+          "username": "Benutzername"
         },
-        "error": {
-            "cannot_connect": "Verbindungsfehler",
-            "invalid_auth": "Ung\u00fcltige Authentifizierung",
-            "unknown": "Unerwarteter Fehler"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "password": "Passwort",
-                    "username": "Benutzername"
-                },
-                "title": "Anmeldung zu Carson"
-            }
-        },
-        "title": "Carson"
+        "title": "Anmeldung zu Carson"
+      }
+    },
+    "title": "Carson"
+  },
+  "options": {
+    "step": {
+      "carson_devices": {
+        "description": "Configure visibility of Carson device types",
+        "data": {
+          "list_from_eagle_eye": "Get cameras from Eagle Eye directly"
+        }
+      }
     }
+  }
 }

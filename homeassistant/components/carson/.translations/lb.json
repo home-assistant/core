@@ -1,22 +1,32 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+  "config": {
+    "abort": {
+      "already_configured": "Apparat ass scho konfigur\u00e9iert"
+    },
+    "error": {
+      "cannot_connect": "Feeler bei der Verbindung",
+      "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+      "unknown": "Onerwaarte Feeler"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Passwuert",
+          "username": "Benotzernumm"
         },
-        "error": {
-            "cannot_connect": "Feeler bei der Verbindung",
-            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
-            "unknown": "Onerwaarte Feeler"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "password": "Passwuert",
-                    "username": "Benotzernumm"
-                },
-                "title": "Mam Carson Kont verbannen"
-            }
-        },
-        "title": "Carson"
+        "title": "Mam Carson Kont verbannen"
+      }
+    },
+    "title": "Carson"
+  },
+  "options": {
+    "step": {
+      "carson_devices": {
+        "description": "Configure visibility of Carson device types",
+        "data": {
+          "list_from_eagle_eye": "Get cameras from Eagle Eye directly"
+        }
+      }
     }
+  }
 }

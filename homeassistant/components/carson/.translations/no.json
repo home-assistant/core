@@ -1,22 +1,32 @@
 {
-    "config": {
-        "abort": {
-            "already_configured": "Enheten er allerede konfigurert"
+  "config": {
+    "abort": {
+      "already_configured": "Enheten er allerede konfigurert"
+    },
+    "error": {
+      "cannot_connect": "Tilkoblingen mislyktes",
+      "invalid_auth": "Ugyldig godkjenning",
+      "unknown": "Uventet feil"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "Passord",
+          "username": "Brukernavn"
         },
-        "error": {
-            "cannot_connect": "Tilkoblingen mislyktes",
-            "invalid_auth": "Ugyldig godkjenning",
-            "unknown": "Uventet feil"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "password": "Passord",
-                    "username": "Brukernavn"
-                },
-                "title": "Logg p\u00e5 med din Carson-konto"
-            }
-        },
-        "title": "Carson"
+        "title": "Logg p\u00e5 med din Carson-konto"
+      }
+    },
+    "title": "Carson"
+  },
+  "options": {
+    "step": {
+      "carson_devices": {
+        "description": "Configure visibility of Carson device types",
+        "data": {
+          "list_from_eagle_eye": "Get cameras from Eagle Eye directly"
+        }
+      }
     }
+  }
 }

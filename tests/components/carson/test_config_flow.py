@@ -3,9 +3,11 @@ from asynctest import Mock, patch
 from carson_living import CarsonAuthenticationError, CarsonCommunicationError
 
 from homeassistant import config_entries, setup
-from homeassistant.components.carson.const import DOMAIN
+from homeassistant.components.carson.const import CONF_LIST_FROM_EAGLE_EYE, DOMAIN
 
 from .common import CONF_AND_FORM_CREDS
+
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass):
@@ -75,3 +77,25 @@ async def test_form_cannot_connect(hass):
 
     assert result2["type"] == "form"
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_option_flow(hass):
+    """Test config flow options."""
+    entry = MockConfigEntry(domain=DOMAIN, data={}, options=None)
+    entry.add_to_hass(hass)
+
+    flow = await hass.config_entries.options.async_create_flow(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+
+    result = await flow.async_step_init()
+    assert result["type"] == "form"
+    assert result["step_id"] == "carson_devices"
+
+    result = await flow.async_step_carson_devices(
+        user_input={CONF_LIST_FROM_EAGLE_EYE: False}
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        CONF_LIST_FROM_EAGLE_EYE: False,
+    }

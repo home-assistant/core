@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Create the lights for the Ring devices."""
+    """Create the Locks for the Carson devices."""
     _LOGGER.debug(
         "async def async_setup_entry(hass, config_entry, async_add_entities) called"
     )

@@ -9,8 +9,13 @@ from carson_living import (
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
+from homeassistant.core import callback
 
-from .const import DOMAIN  # pylint: disable=unused-import
+from .const import (  # pylint: disable=unused-import
+    CONF_LIST_FROM_EAGLE_EYE,
+    DEFAULT_CONF_LIST_FROM_EAGLE_EYE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +83,12 @@ class CarsonConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(user_input)
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Get the options flow for this handler."""
+        return CarsonOptionsFlowHandler(config_entry)
+
 
 class CannotConnect(exceptions.HomeAssistantError):
     """Error to indicate we cannot connect."""
@@ -85,3 +96,38 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
+
+
+class CarsonOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle Carson options."""
+
+    def __init__(self, config_entry):
+        """Initialize Carson options flow."""
+        self.config_entry = config_entry
+        self.options = dict(config_entry.options)
+
+    async def async_step_init(self, user_input=None):
+        """Manage the Carson options."""
+        return await self.async_step_carson_devices()
+
+    async def async_step_carson_devices(self, user_input=None):
+        """Manage the Carson devices options."""
+        if user_input is not None:
+            self.options[CONF_LIST_FROM_EAGLE_EYE] = user_input[
+                CONF_LIST_FROM_EAGLE_EYE
+            ]
+            return self.async_create_entry(title="", data=self.options)
+
+        return self.async_show_form(
+            step_id="carson_devices",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_LIST_FROM_EAGLE_EYE,
+                        default=self.config_entry.options.get(
+                            CONF_LIST_FROM_EAGLE_EYE, DEFAULT_CONF_LIST_FROM_EAGLE_EYE
+                        ),
+                    ): bool,
+                }
+            ),
+        )
