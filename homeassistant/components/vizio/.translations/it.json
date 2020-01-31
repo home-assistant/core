@@ -11,8 +11,8 @@
         },
         "error": {
             "cant_connect": "Impossibile connettersi al dispositivo. [Esamina i documenti] (https://www.home-assistant.io/integrations/vizio/) e verifica nuovamente che: \n - Il dispositivo sia acceso \n - Il dispositivo sia collegato alla rete \n - I valori inseriti siano corretti \n prima di ritentare.",
-            "host_exists": "Host gi\u00e0 configurato.",
-            "name_exists": "Nome gi\u00e0 configurato.",
+            "host_exists": "Dispositivo Vizio con host specificato gi\u00e0 configurato.",
+            "name_exists": "Dispositivo Vizio con il nome specificato gi\u00e0 configurato.",
             "tv_needs_token": "Quando Device Type \u00e8 `tv`, \u00e8 necessario un token di accesso valido."
         },
         "step": {

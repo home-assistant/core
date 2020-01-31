@@ -39,7 +39,7 @@ def mock_controller_service():
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
-        service_mock.return_value.requires_2fa = True
+        service_mock.return_value.requires_2sa = True
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
         service_mock.return_value.send_verification_code = Mock(return_value=True)
         service_mock.return_value.validate_verification_code = Mock(return_value=True)
@@ -52,7 +52,7 @@ def mock_controller_service_with_cookie():
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
-        service_mock.return_value.requires_2fa = False
+        service_mock.return_value.requires_2sa = False
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
         service_mock.return_value.send_verification_code = Mock(return_value=True)
         service_mock.return_value.validate_verification_code = Mock(return_value=True)
@@ -65,7 +65,7 @@ def mock_controller_service_send_verification_code_failed():
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
-        service_mock.return_value.requires_2fa = True
+        service_mock.return_value.requires_2sa = True
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
         service_mock.return_value.send_verification_code = Mock(return_value=False)
         yield service_mock
@@ -77,7 +77,7 @@ def mock_controller_service_validate_verification_code_failed():
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService"
     ) as service_mock:
-        service_mock.return_value.requires_2fa = True
+        service_mock.return_value.requires_2sa = True
         service_mock.return_value.trusted_devices = TRUSTED_DEVICES
         service_mock.return_value.send_verification_code = Mock(return_value=True)
         service_mock.return_value.validate_verification_code = Mock(return_value=False)
@@ -324,7 +324,7 @@ async def test_verification_code_success(hass: HomeAssistantType, service: Magic
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_TRUSTED_DEVICE: 0}
     )
-    service.return_value.requires_2fa = False
+    service.return_value.requires_2sa = False
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_VERIFICATION_CODE: "0"}

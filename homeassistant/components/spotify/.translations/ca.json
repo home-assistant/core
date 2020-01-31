@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Nom\u00e9s pots configurar un \u00fanic compte amb Spotify.",
+            "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
+            "missing_configuration": "La integraci\u00f3 Spotify no est\u00e0 configurada. Mira'n la documentaci\u00f3."
+        },
+        "create_entry": {
+            "default": "Autenticaci\u00f3 exitosa amb Spotify."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
+            }
+        },
+        "title": "Spotify"
+    }
+}

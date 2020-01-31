@@ -4,7 +4,6 @@ Test setup of RFLink lights component/platform. State tracking and
 control of RFLink switch devices.
 
 """
-
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
@@ -267,15 +266,11 @@ async def test_signal_repetitions_alternation(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test"}
     )
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test1"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test1"}
     )
 
     await hass.async_block_till_done()
@@ -299,10 +294,8 @@ async def test_signal_repetitions_cancelling(hass, monkeypatch):
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test"}
-        )
+    await hass.services.async_call(
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: DOMAIN + ".test"}
     )
 
     hass.async_create_task(

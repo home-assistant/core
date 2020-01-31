@@ -59,6 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     registry = await async_get_registry(hass)
 
+    @callback
     def async_new_media_players(new_entities):
         _async_add_entities(
             hass, registry, config_entry, async_add_entities, server_id, new_entities

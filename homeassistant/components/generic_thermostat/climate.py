@@ -453,10 +453,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_OFF, data)
 
     async def async_set_preset_mode(self, preset_mode: str):
-        """Set new preset mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Set new preset mode."""
         if preset_mode == PRESET_AWAY and not self._is_away:
             self._is_away = True
             self._saved_target_temp = self._target_temp

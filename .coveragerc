@@ -253,6 +253,9 @@ omit =
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
     homeassistant/components/garadget/cover.py
+    homeassistant/components/garmin_connect/__init__.py
+    homeassistant/components/garmin_connect/const.py
+    homeassistant/components/garmin_connect/sensor.py
     homeassistant/components/gc100/*
     homeassistant/components/geniushub/*
     homeassistant/components/gearbest/sensor.py
@@ -417,7 +420,8 @@ omit =
     homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
     homeassistant/components/miflora/sensor.py
-    homeassistant/components/mikrotik/*
+    homeassistant/components/mikrotik/hub.py
+    homeassistant/components/mikrotik/device_tracker.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/const.py
     homeassistant/components/minio/*
@@ -505,6 +509,7 @@ omit =
     homeassistant/components/openuv/sensor.py
     homeassistant/components/openweathermap/sensor.py
     homeassistant/components/openweathermap/weather.py
+    homeassistant/components/opnsense/*
     homeassistant/components/opple/light.py
     homeassistant/components/orangepi_gpio/*
     homeassistant/components/oru/*
@@ -636,6 +641,7 @@ omit =
     homeassistant/components/smappee/*
     homeassistant/components/smarty/*
     homeassistant/components/smarthab/*
+    homeassistant/components/sms/*
     homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/media_player.py
     homeassistant/components/snmp/*
@@ -777,9 +783,6 @@ omit =
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vicare/*
     homeassistant/components/vivotek/camera.py
-    homeassistant/components/vizio/__init__.py
-    homeassistant/components/vizio/const.py
-    homeassistant/components/vizio/media_player.py
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/media_player.py
     homeassistant/components/volkszaehler/sensor.py

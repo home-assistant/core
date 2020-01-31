@@ -1,0 +1,13 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan endast konfigurera ett Netatmo-konto."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e4lj autentiseringsmetod"
+            }
+        },
+        "title": ""
+    }
+}

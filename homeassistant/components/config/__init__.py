@@ -28,6 +28,8 @@ SECTIONS = (
     "scene",
 )
 ON_DEMAND = ("zwave",)
+ACTION_CREATE_UPDATE = "create_update"
+ACTION_DELETE = "delete"
 
 
 async def async_setup(hass, config):
@@ -152,7 +154,9 @@ class BaseEditConfigView(HomeAssistantView):
         await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_create_task(self.post_write_hook(hass))
+            hass.async_create_task(
+                self.post_write_hook(ACTION_CREATE_UPDATE, config_key)
+            )
 
         return self.json({"result": "ok"})
 
@@ -170,7 +174,7 @@ class BaseEditConfigView(HomeAssistantView):
         await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_create_task(self.post_write_hook(hass))
+            hass.async_create_task(self.post_write_hook(ACTION_DELETE, config_key))
 
         return self.json({"result": "ok"})
 
