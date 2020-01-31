@@ -3,7 +3,6 @@ import asyncio
 from datetime import timedelta
 
 from samsungctl import Remote as SamsungRemote, exceptions as samsung_exceptions
-from samsungctl.exceptions import AccessDenied
 import voluptuous as vol
 from websocket import WebSocketException
 
@@ -129,12 +128,13 @@ class SamsungTVDevice(MediaPlayerDevice):
                 self._remote = SamsungRemote(self._config.copy())
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
-            except AccessDenied:
+            except samsung_exceptions.AccessDenied:
                 self.hass.async_create_task(
                     self.hass.config_entries.flow.async_init(
                         DOMAIN, context={"source": "reauth"}, data=self._config_entry
                     )
                 )
+                raise
 
         return self._remote
 

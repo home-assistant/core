@@ -109,8 +109,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except UnhandledResponse:
                 LOGGER.debug("Working but unsupported config: %s", config)
                 return RESULT_NOT_SUPPORTED
-            except OSError as e:
-                LOGGER.debug("Failing config: %s, error: %s", config, e)
+            except OSError as err:
+                LOGGER.debug("Failing config: %s, error: %s", config, err)
 
         LOGGER.debug("No working config found")
         return RESULT_NOT_SUCCESSFUL
