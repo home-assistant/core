@@ -1,7 +1,7 @@
 """The tests for the GDACS Feed integration."""
 import datetime
 
-from asynctest import CoroutineMock, patch
+from asynctest import patch
 
 from homeassistant.components import gdacs
 from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL
@@ -86,7 +86,7 @@ async def test_setup(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_georss_client.feed.GeoRssFeed.update", new_callable=CoroutineMock
+        "aio_georss_client.feed.GeoRssFeed.update"
     ) as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]
         assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
@@ -203,15 +203,11 @@ async def test_setup_imperial(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "aio_georss_client.feed.GeoRssFeed.update", new_callable=CoroutineMock
+        "aio_georss_client.feed.GeoRssFeed.update"
     ) as mock_feed_update, patch(
-        "aio_georss_client.feed.GeoRssFeed.__init__",
-        new_callable=CoroutineMock,
-        create=True,
+        "aio_georss_client.feed.GeoRssFeed.__init__", create=True,
     ) as mock_feed_init, patch(
-        "aio_georss_client.feed.GeoRssFeed.last_timestamp",
-        new_callable=CoroutineMock,
-        create=True,
+        "aio_georss_client.feed.GeoRssFeed.last_timestamp", create=True,
     ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
         assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
