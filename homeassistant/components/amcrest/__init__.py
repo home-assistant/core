@@ -256,7 +256,7 @@ def setup(hass, config):
             async_dispatcher_send(hass, service_signal(call.service, entity_id), *args)
 
     for service, params in CAMERA_SERVICES.items():
-        hass.services.async_register(DOMAIN, service, async_service_handler, params[0])
+        hass.services.register(DOMAIN, service, async_service_handler, params[0])
 
     return True
 
