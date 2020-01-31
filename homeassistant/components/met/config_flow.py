@@ -6,7 +6,7 @@ from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, C
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, HOME_LOCATION_NAME, CONF_TRACK_HOME
+from .const import CONF_TRACK_HOME, DOMAIN, HOME_LOCATION_NAME
 
 
 @callback

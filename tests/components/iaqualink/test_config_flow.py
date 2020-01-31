@@ -5,6 +5,7 @@ import iaqualink
 import pytest
 
 from homeassistant.components.iaqualink import config_flow
+
 from tests.common import MockConfigEntry, mock_coro
 
 DATA = {"username": "test@example.com", "password": "pass"}

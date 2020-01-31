@@ -6,4 +6,3 @@
   "codeowners": ["@oischinger"],
   "requirements": ["PyViCare==0.1.2"]
 }
-

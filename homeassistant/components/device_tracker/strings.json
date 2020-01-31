@@ -1,6 +1,6 @@
 {
   "device_automation": {
-    "condtion_type": {
+    "condition_type": {
       "is_home": "{entity_name} is home",
       "is_not_home": "{entity_name} is not home"
     }

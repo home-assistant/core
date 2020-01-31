@@ -2,15 +2,15 @@
 from asynctest.mock import patch
 import pytest
 
-from homeassistant.setup import async_setup_component
-from homeassistant.components import switch, light
+from homeassistant.components import light, switch
 from homeassistant.const import (
     CONF_PLATFORM,
-    STATE_ON,
     SERVICE_TURN_ON,
+    STATE_ON,
     SUN_EVENT_SUNRISE,
 )
 from homeassistant.core import State
+from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (

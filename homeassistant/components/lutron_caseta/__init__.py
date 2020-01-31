@@ -1,11 +1,12 @@
 """Component for interacting with a Lutron Caseta system."""
 import logging
 
+from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,12 +33,11 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene"]
+LUTRON_CASETA_COMPONENTS = ["light", "switch", "cover", "scene", "fan"]
 
 
 async def async_setup(hass, base_config):
     """Set up the Lutron component."""
-    from pylutron_caseta.smartbridge import Smartbridge
 
     config = base_config.get(DOMAIN)
     keyfile = hass.config.path(config[CONF_KEYFILE])
@@ -76,28 +76,39 @@ class LutronCasetaDevice(Entity):
         [:param]device the device metadata
         [:param]bridge the smartbridge object
         """
-        self._device_id = device["device_id"]
-        self._device_type = device["type"]
-        self._device_name = device["name"]
-        self._device_zone = device["zone"]
-        self._state = None
+        self._device = device
         self._smartbridge = bridge
 
     async def async_added_to_hass(self):
         """Register callbacks."""
         self._smartbridge.add_subscriber(
-            self._device_id, self.async_schedule_update_ha_state
+            self.device_id, self.async_schedule_update_ha_state
         )
+
+    @property
+    def device_id(self):
+        """Return the device ID used for calling pylutron_caseta."""
+        return self._device["device_id"]
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._device_name
+        return self._device["name"]
+
+    @property
+    def serial(self):
+        """Return the serial number of the device."""
+        return self._device["serial"]
+
+    @property
+    def unique_id(self):
+        """Return the unique ID of the device (serial)."""
+        return str(self.serial)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {"Device ID": self._device_id, "Zone ID": self._device_zone}
+        attr = {"Device ID": self.device_id, "Zone ID": self._device["zone"]}
         return attr
 
     @property

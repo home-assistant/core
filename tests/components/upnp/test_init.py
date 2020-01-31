@@ -1,23 +1,21 @@
 """Test UPnP/IGD setup process."""
 
 from ipaddress import ip_address
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import upnp
 from homeassistant.components.upnp.device import Device
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-from tests.common import MockDependency
-from tests.common import mock_coro
+from tests.common import MockConfigEntry, MockDependency, mock_coro
 
 
 class MockDevice(Device):
     """Mock device for Device."""
 
     def __init__(self, udn):
-        """Initializer."""
+        """Initialize mock device."""
         device = MagicMock()
         device.manufacturer = "mock-manuf"
         device.name = "mock-name"

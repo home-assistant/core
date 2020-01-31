@@ -1,10 +1,9 @@
 """Test Z-Wave Websocket API."""
 from homeassistant.bootstrap import async_setup_component
-
 from homeassistant.components.zwave.const import (
-    CONF_USB_STICK_PATH,
     CONF_AUTOHEAL,
     CONF_POLLING_INTERVAL,
+    CONF_USB_STICK_PATH,
 )
 from homeassistant.components.zwave.websocket_api import ID, TYPE
 

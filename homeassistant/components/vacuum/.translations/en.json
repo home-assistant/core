@@ -4,7 +4,7 @@
             "clean": "Let {entity_name} clean",
             "dock": "Let {entity_name} return to the dock"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_cleaning": "{entity_name} is cleaning",
             "is_docked": "{entity_name} is docked"
         },

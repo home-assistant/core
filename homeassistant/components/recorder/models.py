@@ -1,6 +1,6 @@
 """Models for SQLAlchemy."""
-import json
 from datetime import datetime
+import json
 import logging
 
 from sqlalchemy import (
@@ -17,9 +17,9 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.session import Session
 
-import homeassistant.util.dt as dt_util
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.json import JSONEncoder
+import homeassistant.util.dt as dt_util
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name

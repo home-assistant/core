@@ -1,18 +1,18 @@
 """The tests for Vacuum device triggers."""
 import pytest
 
-from homeassistant.components.vacuum import DOMAIN, STATE_DOCKED, STATE_CLEANING
-from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
+from homeassistant.components.vacuum import DOMAIN, STATE_CLEANING, STATE_DOCKED
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
 )
 
 
@@ -30,7 +30,7 @@ def entity_reg(hass):
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -118,14 +118,14 @@ async def test_if_fires_on_state_change(hass, calls):
     hass.states.async_set("vacuum.entity", STATE_CLEANING)
     await hass.async_block_till_done()
     assert len(calls) == 1
-    assert calls[0].data["some"] == "cleaning - device - {} - docked - cleaning".format(
-        "vacuum.entity"
+    assert (
+        calls[0].data["some"] == "cleaning - device - vacuum.entity - docked - cleaning"
     )
 
     # Fake that the entity is docked
     hass.states.async_set("vacuum.entity", STATE_DOCKED)
     await hass.async_block_till_done()
     assert len(calls) == 2
-    assert calls[1].data["some"] == "docked - device - {} - cleaning - docked".format(
-        "vacuum.entity"
+    assert (
+        calls[1].data["some"] == "docked - device - vacuum.entity - cleaning - docked"
     )

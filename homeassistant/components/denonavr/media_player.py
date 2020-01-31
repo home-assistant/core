@@ -24,16 +24,21 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_TIMEOUT,
     CONF_ZONE,
+    ENTITY_MATCH_ALL,
     STATE_OFF,
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +94,6 @@ NewHost = namedtuple("NewHost", ["host", "name"])
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Denon platform."""
-
     # Initialize list with receivers to be started
     receivers = []
 
@@ -189,6 +193,21 @@ class DenonDevice(MediaPlayerDevice):
         self._supported_features_base |= (
             self._sound_mode_support and SUPPORT_SELECT_SOUND_MODE
         )
+
+    async def async_added_to_hass(self):
+        """Register signal handler."""
+        async_dispatcher_connect(self.hass, DOMAIN, self.signal_handler)
+
+    def signal_handler(self, data):
+        """Handle domain-specific signal by calling appropriate method."""
+        entity_ids = data[ATTR_ENTITY_ID]
+        if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
+            params = {
+                key: value
+                for key, value in data.items()
+                if key not in ["entity_id", "method"]
+            }
+            getattr(self, data["method"])(**params)
 
     def update(self):
         """Get the latest status information from device."""
@@ -345,8 +364,16 @@ class DenonDevice(MediaPlayerDevice):
         return attributes
 
     def media_play_pause(self):
-        """Simulate play pause media player."""
+        """Play or pause the media player."""
         return self._receiver.toggle_play_pause()
+
+    def media_play(self):
+        """Send play command."""
+        return self._receiver.play()
+
+    def media_pause(self):
+        """Send pause command."""
+        return self._receiver.pause()
 
     def media_previous_track(self):
         """Send previous track command."""
@@ -398,3 +425,7 @@ class DenonDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Send mute command."""
         return self._receiver.mute(mute)
+
+    def get_command(self, command, **kwargs):
+        """Send generic command."""
+        self._receiver.send_get_command(command)

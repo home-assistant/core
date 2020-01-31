@@ -2,11 +2,7 @@
   "domain": "netdata",
   "name": "Netdata",
   "documentation": "https://www.home-assistant.io/integrations/netdata",
-  "requirements": [
-    "netdata==0.1.2"
-  ],
+  "requirements": ["netdata==0.1.2"],
   "dependencies": [],
-  "codeowners": [
-    "@fabaff"
-  ]
+  "codeowners": ["@fabaff"]
 }

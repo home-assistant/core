@@ -4,17 +4,16 @@ import os
 import shutil
 from unittest.mock import patch
 
-import homeassistant.components.tts as tts
 from homeassistant.components.media_player.const import (
-    SERVICE_PLAY_MEDIA,
     ATTR_MEDIA_CONTENT_ID,
     DOMAIN as DOMAIN_MP,
+    SERVICE_PLAY_MEDIA,
 )
+import homeassistant.components.tts as tts
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component, mock_service
-
-from tests.components.tts.test_init import mutagen_mock  # noqa
+from tests.common import assert_setup_component, get_test_home_assistant, mock_service
+from tests.components.tts.test_init import mutagen_mock  # noqa: F401
 
 
 class TestTTSGooglePlatform:

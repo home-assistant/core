@@ -1,31 +1,29 @@
 """Support for the MaryTTS service."""
-import asyncio
 import logging
-import re
 
-import aiohttp
-import async_timeout
+from speak2mary import MaryTTS
 import voluptuous as vol
 
 from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.const import CONF_EFFECT, CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_LANGUAGES = ["de", "en-GB", "en-US", "fr", "it", "lb", "ru", "sv", "te", "tr"]
-
-SUPPORT_CODEC = ["aiff", "au", "wav"]
-
 CONF_VOICE = "voice"
 CONF_CODEC = "codec"
 
+SUPPORT_LANGUAGES = MaryTTS.supported_locales()
+SUPPORT_CODEC = MaryTTS.supported_codecs()
+SUPPORT_OPTIONS = [CONF_EFFECT]
+SUPPORT_EFFECTS = MaryTTS.supported_effects().keys()
+
 DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 59125
-DEFAULT_LANG = "en-US"
+DEFAULT_LANG = "en_US"
 DEFAULT_VOICE = "cmu-slt-hsmm"
-DEFAULT_CODEC = "wav"
+DEFAULT_CODEC = "WAVE_FILE"
+DEFAULT_EFFECTS = {}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -34,6 +32,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
         vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): cv.string,
         vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODEC),
+        vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECTS): {
+            vol.All(cv.string, vol.In(SUPPORT_EFFECTS)): cv.string
+        },
     }
 )
 
@@ -49,57 +50,40 @@ class MaryTTSProvider(Provider):
     def __init__(self, hass, conf):
         """Init MaryTTS TTS service."""
         self.hass = hass
-        self._host = conf.get(CONF_HOST)
-        self._port = conf.get(CONF_PORT)
-        self._codec = conf.get(CONF_CODEC)
-        self._voice = conf.get(CONF_VOICE)
-        self._language = conf.get(CONF_LANG)
+        self._mary = MaryTTS(
+            conf.get(CONF_HOST),
+            conf.get(CONF_PORT),
+            conf.get(CONF_CODEC),
+            conf.get(CONF_LANG),
+            conf.get(CONF_VOICE),
+        )
+        self._effects = conf.get(CONF_EFFECT)
         self.name = "MaryTTS"
 
     @property
     def default_language(self):
         """Return the default language."""
-        return self._language
+        return self._mary.locale
 
     @property
     def supported_languages(self):
         """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
+    @property
+    def default_options(self):
+        """Return dict include default options."""
+        return {CONF_EFFECT: self._effects}
+
+    @property
+    def supported_options(self):
+        """Return a list of supported options."""
+        return SUPPORT_OPTIONS
+
     async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from MaryTTS."""
-        websession = async_get_clientsession(self.hass)
+        effects = options[CONF_EFFECT]
 
-        actual_language = re.sub("-", "_", language)
+        data = self._mary.speak(message, effects)
 
-        try:
-            with async_timeout.timeout(10):
-                url = f"http://{self._host}:{self._port}/process?"
-
-                audio = self._codec.upper()
-                if audio == "WAV":
-                    audio = "WAVE"
-
-                url_param = {
-                    "INPUT_TEXT": message,
-                    "INPUT_TYPE": "TEXT",
-                    "AUDIO": audio,
-                    "VOICE": self._voice,
-                    "OUTPUT_TYPE": "AUDIO",
-                    "LOCALE": actual_language,
-                }
-
-                request = await websession.get(url, params=url_param)
-
-                if request.status != 200:
-                    _LOGGER.error(
-                        "Error %d on load url %s", request.status, request.url
-                    )
-                    return (None, None)
-                data = await request.read()
-
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Timeout for MaryTTS API")
-            return (None, None)
-
-        return (self._codec, data)
+        return self._mary.codec, data

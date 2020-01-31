@@ -16,9 +16,19 @@ from . import get_api
 from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
+DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+    }
+)
+
 
 class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a UniFi config flow."""
+    """Handle Tansmission config flow."""
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
@@ -57,17 +67,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                    vol.Required(CONF_HOST): str,
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                    vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-                }
-            ),
-            errors=errors,
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors,
         )
 
     async def async_step_import(self, import_config):

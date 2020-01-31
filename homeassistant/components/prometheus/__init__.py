@@ -168,7 +168,10 @@ class PrometheusMetrics:
         return "".join(
             [
                 c
-                if c in string.ascii_letters or c.isdigit() or c == "_" or c == ":"
+                if c in string.ascii_letters
+                or c in string.digits
+                or c == "_"
+                or c == ":"
                 else f"u{hex(ord(c))}"
                 for c in metric
             ]
@@ -283,15 +286,6 @@ class PrometheusMetrics:
                 "Current Temperature in degrees Celsius",
             )
             metric.labels(**self._labels(state)).set(current_temp)
-
-        metric = self._metric(
-            "climate_state", self.prometheus_cli.Gauge, "State of the thermostat (0/1)"
-        )
-        try:
-            value = self.state_as_number(state)
-            metric.labels(**self._labels(state)).set(value)
-        except ValueError:
-            pass
 
     def _handle_sensor(self, state):
         unit = self._unit_string(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))

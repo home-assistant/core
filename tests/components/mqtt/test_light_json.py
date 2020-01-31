@@ -117,7 +117,7 @@ class JsonValidator(object):
     """Helper to compare JSON."""
 
     def __init__(self, jsondata):
-        """Constructor."""
+        """Initialize JSON validator."""
         self.jsondata = jsondata
 
     def __eq__(self, other):
@@ -299,7 +299,7 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock):
     )
 
     with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity" ".async_get_last_state",
+        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
         return_value=mock_coro(fake_state),
     ):
         assert await async_setup_component(

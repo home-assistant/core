@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from raincloudy.core import RainCloudy
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
@@ -96,8 +97,6 @@ def setup(hass, config):
     scan_interval = conf.get(CONF_SCAN_INTERVAL)
 
     try:
-        from raincloudy.core import RainCloudy
-
         raincloud = RainCloudy(username=username, password=password)
         if not raincloud.is_connected:
             raise HTTPError

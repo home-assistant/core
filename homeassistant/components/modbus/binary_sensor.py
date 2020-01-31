@@ -1,11 +1,15 @@
 """Support for Modbus Coil sensors."""
 import logging
+from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_SLAVE
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA,
+    PLATFORM_SCHEMA,
+    BinarySensorDevice,
+)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_SLAVE
 from homeassistant.helpers import config_validation as cv
 
 from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
@@ -21,6 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             {
                 vol.Required(CONF_COIL): cv.positive_int,
                 vol.Required(CONF_NAME): cv.string,
+                vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
                 vol.Optional(CONF_SLAVE): cv.positive_int,
             }
@@ -36,7 +41,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         hub = hass.data[MODBUS_DOMAIN][coil.get(CONF_HUB)]
         sensors.append(
             ModbusCoilSensor(
-                hub, coil.get(CONF_NAME), coil.get(CONF_SLAVE), coil.get(CONF_COIL)
+                hub,
+                coil.get(CONF_NAME),
+                coil.get(CONF_SLAVE),
+                coil.get(CONF_COIL),
+                coil.get(CONF_DEVICE_CLASS),
             )
         )
 
@@ -46,12 +55,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ModbusCoilSensor(BinarySensorDevice):
     """Modbus coil sensor."""
 
-    def __init__(self, hub, name, slave, coil):
+    def __init__(self, hub, name, slave, coil, device_class):
         """Initialize the Modbus coil sensor."""
         self._hub = hub
         self._name = name
         self._slave = int(slave) if slave else None
         self._coil = int(coil)
+        self._device_class = device_class
         self._value = None
 
     @property
@@ -63,6 +73,11 @@ class ModbusCoilSensor(BinarySensorDevice):
     def is_on(self):
         """Return the state of the sensor."""
         return self._value
+
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the device class of the sensor."""
+        return self._device_class
 
     def update(self):
         """Update the state of the sensor."""

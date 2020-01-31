@@ -1,24 +1,25 @@
 """Component for the Go Slide API."""
 
-import logging
 from datetime import timedelta
+import logging
 
-import voluptuous as vol
 from goslideapi import GoSlideCloud, goslideapi
+import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_USERNAME,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
-    STATE_OPEN,
+    CONF_USERNAME,
     STATE_CLOSED,
-    STATE_OPENING,
     STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.event import async_track_time_interval, async_call_later
-from .const import DOMAIN, SLIDES, API, COMPONENT, DEFAULT_RETRY
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
+
+from .const import API, COMPONENT, DEFAULT_RETRY, DOMAIN, SLIDES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +60,7 @@ async def async_setup(hass, config):
         for slide in result:
             if "device_id" not in slide:
                 _LOGGER.error(
-                    "Found invalid Slide entry, device_id is " "missing. Entry=%s",
-                    slide,
+                    "Found invalid Slide entry, device_id is missing. Entry=%s", slide,
                 )
                 continue
 
@@ -103,7 +103,7 @@ async def async_setup(hass, config):
                     )
             elif "code" in slide["device_info"]:
                 _LOGGER.warning(
-                    "Slide %s (%s) is offline with " "code=%s",
+                    "Slide %s (%s) is offline with code=%s",
                     slide["id"],
                     slidenew["mac"],
                     slide["device_info"]["code"],

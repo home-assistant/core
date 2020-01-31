@@ -5,22 +5,21 @@ from typing import Any, Callable, Dict, Iterable, Optional, Union, cast
 
 import attr
 
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.sun import get_astral_event_next
-from homeassistant.helpers.template import Template
-from homeassistant.core import HomeAssistant, callback, CALLBACK_TYPE, Event, State
 from homeassistant.const import (
     ATTR_NOW,
+    EVENT_CORE_CONFIG_UPDATE,
     EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED,
     MATCH_ALL,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
-    EVENT_CORE_CONFIG_UPDATE,
 )
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, State, callback
+from homeassistant.helpers.sun import get_astral_event_next
+from homeassistant.helpers.template import Template
+from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
-
 
 # PyLint does not like the use of threaded_listener_factory
 # pylint: disable=invalid-name

@@ -1,15 +1,16 @@
 """Support for ASUSWRT devices."""
 import logging
 
+from aioasuswrt.asuswrt import AsusWrt
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_PORT,
     CONF_MODE,
+    CONF_PASSWORD,
+    CONF_PORT,
     CONF_PROTOCOL,
+    CONF_USERNAME,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -53,7 +54,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the asuswrt component."""
-    from aioasuswrt.asuswrt import AsusWrt
 
     conf = config[DOMAIN]
 
