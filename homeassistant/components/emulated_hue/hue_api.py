@@ -704,9 +704,10 @@ def entity_to_json(config, entity):
         retval["modelid"] = "HASS123"
         retval["state"].update({HUE_API_STATE_BRI: state[STATE_BRIGHTNESS]})
     else:
-        # On/off light (Zigbee Device ID: 0x0000)
-        # Supports groups, scenes and on/off control
-        retval["type"] = "On/off light"
+        # On/off plug-in unit (Zigbee Device ID: 0x0000)
+        # Supports groups and on/off control
+        # Used for compatibility purposes with Alexa instead of "On/off light"
+        retval["type"] = "On/off plug-in unit"
         retval["modelid"] = "HASS321"
 
     return retval
