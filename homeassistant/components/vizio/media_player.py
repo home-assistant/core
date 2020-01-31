@@ -5,7 +5,6 @@ from typing import Callable, List
 
 from pyvizio import VizioAsync
 
-from homeassistant import util
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -32,8 +31,6 @@ from .const import (
     DEVICE_ID,
     DOMAIN,
     ICON,
-    MIN_TIME_BETWEEN_FORCED_SCANS,
-    MIN_TIME_BETWEEN_SCANS,
     SUPPORTED_COMMANDS,
     VIZIO_DEVICE_CLASSES,
 )
@@ -111,7 +108,6 @@ class VizioDevice(MediaPlayerDevice):
         self._icon = ICON[device_class]
         self._available = True
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
         is_on = await self._device.get_power_state(log_api_exception=False)
