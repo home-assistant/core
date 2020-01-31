@@ -14,6 +14,15 @@ repos:
           - --safe
           - --quiet
         files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
+-   repo: https://github.com/codespell-project/codespell
+    rev: v1.16.0
+    hooks:
+    -   id: codespell
+        args:
+          - --ignore-words-list=hass,alot,datas,dof,dur,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing
+          - --skip="./.*,*.json"
+          - --quiet-level=2
+        exclude_types: [json]
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 3.7.9
     hooks:

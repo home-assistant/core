@@ -126,14 +126,14 @@ class TodSensor(BinarySensorDevice):
         current_local_date = self.current_datetime.astimezone(
             self.hass.config.time_zone
         ).date()
-        # calcuate utc datetime corecponding to local time
+        # calculate utc datetime corecponding to local time
         utc_datetime = self.hass.config.time_zone.localize(
             datetime.combine(current_local_date, naive_time)
         ).astimezone(tz=pytz.UTC)
         return utc_datetime
 
     def _calculate_initial_boudary_time(self):
-        """Calculate internal absolute time boudaries."""
+        """Calculate internal absolute time boundaries."""
         nowutc = self.current_datetime
         # If after value is a sun event instead of absolute time
         if is_sun_event(self._after):

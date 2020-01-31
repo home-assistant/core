@@ -110,7 +110,7 @@ async def async_build_devices(hass, zha_gateway, config_entry, cluster_ids):
 
     This will build devices for all cluster ids that exist in cluster_ids.
     They get added to the network and then the sensor component is loaded
-    which will cause sensor entites to get created for each device.
+    which will cause sensor entities to get created for each device.
     A dict containing relevant device info for testing is returned. It contains
     the entity id, zigpy device, and the zigbee cluster for the sensor.
     """

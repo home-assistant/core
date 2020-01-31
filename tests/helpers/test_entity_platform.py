@@ -394,7 +394,7 @@ async def test_using_prescribed_entity_id(hass):
 
 
 async def test_using_prescribed_entity_id_with_unique_id(hass):
-    """Test for ammending predefined entity ID because currently exists."""
+    """Test for amending predefined entity ID because currently exists."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     await component.async_add_entities([MockEntity(entity_id="test_domain.world")])
@@ -839,7 +839,7 @@ async def test_override_restored_entities(hass):
 
 
 async def test_platform_with_no_setup(hass, caplog):
-    """Test setting up a platform that doesnt' support setup."""
+    """Test setting up a platform that does not support setup."""
     entity_platform = MockEntityPlatform(
         hass, domain="mock-integration", platform_name="mock-platform", platform=None
     )

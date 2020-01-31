@@ -100,7 +100,7 @@ async def test_network_key_validation(hass, mock_openzwave):
 
 
 async def test_erronous_network_key_fails_validation(hass, mock_openzwave):
-    """Test failing erronous network key validation."""
+    """Test failing erroneous network key validation."""
     test_values = [
         (
             "0x 01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, "

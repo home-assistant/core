@@ -50,7 +50,7 @@ async def test_user_connection_works(hass, mock_try_connection, mock_finish_setu
 
 
 async def test_user_connection_fails(hass, mock_try_connection, mock_finish_setup):
-    """Test if connnection cannot be made."""
+    """Test if connection cannot be made."""
     mock_try_connection.return_value = False
 
     result = await hass.config_entries.flow.async_init(

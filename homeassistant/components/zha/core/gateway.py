@@ -424,7 +424,7 @@ class ZHAGateway:
             # ZHA already has an initialized device so either the device was assigned a
             # new nwk or device was physically reset and added again without being removed
             _LOGGER.debug(
-                "device - %s has been reset and readded or its nwk address changed",
+                "device - %s has been reset and re-added or its nwk address changed",
                 f"0x{device.nwk:04x}:{device.ieee}",
             )
             await self._async_device_rejoined(zha_device)

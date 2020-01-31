@@ -348,7 +348,7 @@ async def test_call_context_user_not_exist(hass):
 
 
 async def test_call_context_target_all(hass, mock_service_platform_call, mock_entities):
-    """Check we only target allowed entities if targetting all."""
+    """Check we only target allowed entities if targeting all."""
     with patch(
         "homeassistant.auth.AuthManager.async_get_user",
         return_value=mock_coro(
@@ -473,7 +473,7 @@ async def test_call_no_context_target_specific(
 async def test_call_with_match_all(
     hass, mock_service_platform_call, mock_entities, caplog
 ):
-    """Check we only target allowed entities if targetting all."""
+    """Check we only target allowed entities if targeting all."""
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
