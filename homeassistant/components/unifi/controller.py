@@ -297,7 +297,7 @@ class UniFiController:
     @callback
     def reconnect(self) -> None:
         """Prepare to reconnect UniFi session."""
-        LOGGER.debug("Reconnecting to UniFi in %i.", RETRY_TIMER)
+        LOGGER.debug("Reconnecting to UniFi in %i", RETRY_TIMER)
         self.hass.loop.create_task(self.async_reconnect())
 
     async def async_reconnect(self) -> None:
