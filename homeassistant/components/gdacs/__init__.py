@@ -88,14 +88,14 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up the GDACS component as config entry."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(FEED, {})
+    feeds = hass.data[DOMAIN].setdefault(FEED, {})
 
     radius = config_entry.data[CONF_RADIUS]
     if hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
         radius = METRIC_SYSTEM.length(radius, LENGTH_MILES)
     # Create feed entity manager for all platforms.
     manager = GdacsFeedEntityManager(hass, config_entry, radius)
-    hass.data[DOMAIN][FEED][config_entry.entry_id] = manager
+    feeds[config_entry.entry_id] = manager
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await manager.async_init()
     return True
