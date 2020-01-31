@@ -1497,7 +1497,7 @@ pysher==1.0.1
 pysignalclirestapi==0.1.4
 
 # homeassistant.components.sma
-pysma==0.3.4
+pysma==0.3.5
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
