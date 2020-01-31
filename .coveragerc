@@ -248,7 +248,6 @@ omit =
     homeassistant/components/fritzbox/*
     homeassistant/components/fritzbox_callmonitor/sensor.py
     homeassistant/components/fritzbox_netmonitor/sensor.py
-    homeassistant/components/fritzdect/switch.py
     homeassistant/components/fronius/sensor.py
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
