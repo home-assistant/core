@@ -11,7 +11,6 @@ from homeassistant.components.gdacs import (
     FEED,
     async_setup_entry,
     async_unload_entry,
-    config_flow,
 )
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -44,22 +43,18 @@ def config_entry():
 async def test_duplicate_error(hass, config_entry):
     """Test that errors are shown when duplicates are added."""
     conf = {CONF_LATITUDE: -41.2, CONF_LONGITUDE: 174.7, CONF_RADIUS: 25}
-
     config_entry.add_to_hass(hass)
-    flow = config_flow.GdacsFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=conf)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}, data=conf
+    )
     assert result["errors"] == {"base": "identifier_exists"}
 
 
 async def test_show_form(hass):
     """Test that the form is served with no input."""
-    flow = config_flow.GdacsFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=None)
-
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
@@ -75,10 +70,9 @@ async def test_step_import(hass):
         CONF_CATEGORIES: ["Drought", "Earthquake"],
     }
 
-    flow = config_flow.GdacsFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_import(import_config=conf)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "import"}, data=conf
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
@@ -97,10 +91,9 @@ async def test_step_user(hass):
     hass.config.longitude = 174.7
     conf = {CONF_RADIUS: 25}
 
-    flow = config_flow.GdacsFlowHandler()
-    flow.hass = hass
-
-    result = await flow.async_step_user(user_input=conf)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}, data=conf
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "-41.2, 174.7"
     assert result["data"] == {
@@ -117,7 +110,7 @@ async def test_component_unload_config_entry(hass, config_entry):
     """Test that loading and unloading of a config entry works."""
     config_entry.add_to_hass(hass)
     with patch(
-        "aio_georss_gdacs.GdacsFeedManager.update", new_callable=CoroutineMock,
+        "aio_georss_gdacs.GdacsFeedManager.update", new_callable=CoroutineMock
     ) as mock_feed_manager_update:
         # Load config entry.
         assert await async_setup_entry(hass, config_entry)
