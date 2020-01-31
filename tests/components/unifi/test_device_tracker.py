@@ -269,7 +269,7 @@ async def test_restoring_client(hass):
 
 
 async def test_dont_track_clients(hass):
-    """Test dont track clients config works."""
+    """Test don't track clients config works."""
     await setup_unifi_integration(
         hass,
         options={unifi.controller.CONF_TRACK_CLIENTS: False},
@@ -287,7 +287,7 @@ async def test_dont_track_clients(hass):
 
 
 async def test_dont_track_devices(hass):
-    """Test dont track devices config works."""
+    """Test don't track devices config works."""
     await setup_unifi_integration(
         hass,
         options={unifi.controller.CONF_TRACK_DEVICES: False},
@@ -305,7 +305,7 @@ async def test_dont_track_devices(hass):
 
 
 async def test_dont_track_wired_clients(hass):
-    """Test dont track wired clients config works."""
+    """Test don't track wired clients config works."""
     await setup_unifi_integration(
         hass,
         options={unifi.controller.CONF_TRACK_WIRED_CLIENTS: False},

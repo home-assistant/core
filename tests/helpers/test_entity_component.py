@@ -263,7 +263,7 @@ async def test_extract_from_service_no_group_expand(hass):
 async def test_setup_dependencies_platform(hass):
     """Test we setup the dependencies of a platform.
 
-    We're explictely testing that we process dependencies even if a component
+    We're explicitly testing that we process dependencies even if a component
     with the same name has already been loaded.
     """
     mock_integration(
@@ -305,7 +305,7 @@ async def test_setup_entry(hass):
 
 
 async def test_setup_entry_platform_not_exist(hass):
-    """Test setup entry fails if platform doesnt exist."""
+    """Test setup entry fails if platform does not exist."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain="non_existing")
 

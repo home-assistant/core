@@ -121,7 +121,7 @@ class AmcrestCam(Camera):
         available = self.available
         if not available or not self.is_on:
             _LOGGER.warning(
-                "Attempt to take snaphot when %s camera is %s",
+                "Attempt to take snapshot when %s camera is %s",
                 self.name,
                 "offline" if not available else "off",
             )

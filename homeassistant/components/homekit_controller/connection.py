@@ -77,7 +77,7 @@ class HKDevice:
         # The platorms we have forwarded the config entry so far. If a new
         # accessory is added to a bridge we may have to load additional
         # platforms. We don't want to load all platforms up front if its just
-        # a lightbulb. And we dont want to forward a config entry twice
+        # a lightbulb. And we don't want to forward a config entry twice
         # (triggers a Config entry already set up error)
         self.platforms = set()
 
@@ -331,7 +331,7 @@ class HKDevice:
             key = (row["aid"], row["iid"])
 
             # If the key was returned by put_characteristics() then the
-            # change didnt work
+            # change didn't work
             if key in results:
                 continue
 

@@ -316,7 +316,7 @@ async def test_zeroconf_flow(
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    # Apply discovery updates to entry to mimick when user hits submit without changing
+    # Apply discovery updates to entry to mimic when user hits submit without changing
     # defaults which were set from discovery parameters
     user_input = result["data_schema"](discovery_info)
 
