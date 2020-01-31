@@ -37,9 +37,10 @@ async def test_setup_entry(hass):
 
 async def test_setup_entry_fails(hass):
     """Test successful setup of entry."""
-    entry = MockConfigEntry(
-        domain=axis.DOMAIN, data={axis.CONF_MAC: "0123"}, options=True
+    config_entry = MockConfigEntry(
+        domain=axis.DOMAIN, data={axis.CONF_MAC: "0123"}, options=True, version=2
     )
+    config_entry.add_to_hass(hass)
 
     mock_device = Mock()
     mock_device.async_setup.return_value = mock_coro(False)
@@ -47,7 +48,7 @@ async def test_setup_entry_fails(hass):
     with patch.object(axis, "AxisNetworkDevice") as mock_device_class:
         mock_device_class.return_value = mock_device
 
-        assert not await axis.async_setup_entry(hass, entry)
+        assert not await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert not hass.data[axis.DOMAIN]
 
@@ -57,7 +58,7 @@ async def test_unload_entry(hass):
     device = await setup_axis_integration(hass)
     assert hass.data[axis.DOMAIN]
 
-    assert await axis.async_unload_entry(hass, device.config_entry)
+    assert await hass.config_entries.async_unload(device.config_entry.entry_id)
     assert not hass.data[axis.DOMAIN]
 
 
