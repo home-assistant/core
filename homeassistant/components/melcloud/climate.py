@@ -123,9 +123,9 @@ class AtaDeviceClimate(ClimateDevice):
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes."""
-        return [HVAC_MODE_OFF] + list(
-            map(HVAC_MODE_LOOKUP.get, self._device.operation_modes)
-        )
+        return [HVAC_MODE_OFF] + [
+            HVAC_MODE_LOOKUP.get(mode) for mode in self._device.operation_modes
+        ]
 
     @property
     def current_temperature(self) -> Optional[float]:
