@@ -400,19 +400,17 @@ class Camera(Entity):
         """Turn off camera."""
         raise NotImplementedError()
 
-    @callback
-    def async_turn_off(self):
+    async def async_turn_off(self):
         """Turn off camera."""
-        return self.hass.async_add_job(self.turn_off)
+        await self.hass.async_add_job(self.turn_off)
 
     def turn_on(self):
         """Turn off camera."""
         raise NotImplementedError()
 
-    @callback
-    def async_turn_on(self):
+    async def async_turn_on(self):
         """Turn off camera."""
-        return self.hass.async_add_job(self.turn_on)
+        await self.hass.async_add_job(self.turn_on)
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
