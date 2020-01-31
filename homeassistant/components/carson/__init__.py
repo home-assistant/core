@@ -86,14 +86,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         "doors": [door for b in carson.buildings for door in b.doors],
         "cameras": [
             camera for b in carson.buildings for camera in b.eagleeye_api.cameras
-        ]
-        # "cameras": [camera for b in carson.buildings for camera in b.cameras],
+        ],
+        # all HA API entities live in that dictionary
+        "ha_entities": {},
     }
 
     for component in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
+
+    if hass.services.has_service(DOMAIN, "update"):
+        return True
+
+    async def async_carson_api(_):
+        """Refresh all carson data."""
+        _LOGGER.debug("Updating all carson ")
+        for info in hass.data[DOMAIN].values():
+            await hass.async_add_executor_job(info["api"].update)
+            for ha_entity in info["ha_entities"].values():
+                ha_entity.schedule_update_ha_state()
+
+    # register service
+    hass.services.async_register(DOMAIN, "update", async_carson_api)
 
     return True
 

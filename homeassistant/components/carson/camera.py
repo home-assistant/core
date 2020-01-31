@@ -7,6 +7,7 @@ from homeassistant.components.camera import SUPPORT_STREAM, Camera
 from homeassistant.const import ATTR_ATTRIBUTION
 
 from .const import ATTRIBUTION, DOMAIN
+from .entity import CarsonEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,21 +19,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     cameras = hass.data[DOMAIN][config_entry.entry_id]["cameras"]
 
-    async_add_entities(EagleEyeCamera(cam) for cam in cameras)
+    async_add_entities(EagleEyeCamera(config_entry.entry_id, cam) for cam in cameras)
 
 
-class EagleEyeCamera(Camera):
+class EagleEyeCamera(CarsonEntityMixin, Camera):
     """An implementation of a Eagle Eye camera."""
 
-    def __init__(self, ee_camera):
-        """Initialize a Ring Door Bell camera."""
-        super().__init__()
+    def __init__(self, config_entry_id, ee_camera):
+        """Initialize the lock."""
+        super().__init__(config_entry_id, ee_camera)
         self._ee_camera = ee_camera
-
-    @property
-    def unique_id(self):
-        """Return the unique id in EEN API."""
-        return self._ee_camera.unique_entity_id
 
     @property
     def name(self):
@@ -42,7 +38,14 @@ class EagleEyeCamera(Camera):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        return {ATTR_ATTRIBUTION: ATTRIBUTION}
+        return {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+            "account_id": self._ee_camera.account_id,
+            "guid": self._ee_camera.guid,
+            "tags": self._ee_camera.tags,
+            "utc_offset": self._ee_camera.utc_offset,
+            "timezone": self._ee_camera.timezone,
+        }
 
     def camera_image(self):
         """Return bytes of camera image."""

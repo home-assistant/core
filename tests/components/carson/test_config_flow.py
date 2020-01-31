@@ -5,6 +5,8 @@ from carson_living import CarsonAuthenticationError, CarsonCommunicationError
 from homeassistant import config_entries, setup
 from homeassistant.components.carson.const import DOMAIN
 
+from .common import CONF_AND_FORM_CREDS
+
 
 async def test_form(hass):
     """Test we get the form."""
@@ -24,15 +26,14 @@ async def test_form(hass):
         "homeassistant.components.carson.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
+            result["flow_id"], CONF_AND_FORM_CREDS,
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "test-username"
+    assert result2["title"] == CONF_AND_FORM_CREDS["username"]
     assert result2["data"] == {
-        "username": "test-username",
-        "password": "test-password",
+        "username": CONF_AND_FORM_CREDS["username"],
+        "password": CONF_AND_FORM_CREDS["password"],
         "token": "test-token",
     }
     await hass.async_block_till_done()
@@ -51,8 +52,7 @@ async def test_form_invalid_auth(hass):
         side_effect=CarsonAuthenticationError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
+            result["flow_id"], CONF_AND_FORM_CREDS,
         )
 
     assert result2["type"] == "form"
@@ -70,8 +70,7 @@ async def test_form_cannot_connect(hass):
         side_effect=CarsonCommunicationError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"username": "test-username", "password": "test-password"},
+            result["flow_id"], CONF_AND_FORM_CREDS,
         )
 
     assert result2["type"] == "form"

@@ -1,0 +1,169 @@
+{
+  "code": 0,
+  "status": "OK",
+  "data": {
+    "id": 2974,
+    "firstName": "John",
+    "lastName": "Doe",
+    "properties": [
+      {
+        "id": 3381,
+        "name": "122 Fake St",
+        "propertyLevel": "building",
+        "type": "rental",
+        "accessControl": null,
+        "cameras": [
+          {
+            "id": 11,
+            "building": 3381,
+            "buildingName": "122 Fake St",
+            "name": "Camera 1",
+            "provider": "eagle_eye",
+            "externalId": "c0",
+            "staffOnly": false,
+            "defaultInBuilding": true,
+            "liveViewId": "c0",
+            "property": 3381,
+            "doors": [
+              21
+            ],
+            "available": true,
+            "order": 1
+          },
+          {
+            "id": 12,
+            "building": 3381,
+            "buildingName": "122 Fake St",
+            "name": "Camera 2",
+            "provider": "eagle_eye",
+            "externalId": "c1",
+            "staffOnly": false,
+            "defaultInBuilding": false,
+            "liveViewId": "c1",
+            "property": 3381,
+            "doors": [
+              23
+            ],
+            "available": true,
+            "order": 2
+          }
+        ],
+        "paymentSystem": null,
+        "paymentsEnabled": false,
+        "visitors": [],
+        "area": {
+          "lat": 41.7866273,
+          "lon": -71.9755359,
+          "radius": 200
+        },
+        "visitorInviteEnabled": true,
+        "doorsAvailable": true,
+        "pmc": 2281,
+        "pmcName": "Landlord Inc.",
+        "serviceRequestsEnabled": true,
+        "comelitData": {
+          "hostAddress": "127.0.0.1",
+          "port": 64100
+        },
+        "visitorInvitesLeft": 4,
+        "visitorValidUntilLimitDays": null,
+        "rootDirectory": 616,
+        "doors": [
+          {
+            "id": 21,
+            "building": 3381,
+            "property": 3381,
+            "name": "Door 1",
+            "provider": "smartair",
+            "isActive": true,
+            "disabled": false,
+            "isUnitDoor": false,
+            "staffOnly": false,
+            "defaultInBuilding": true,
+            "externalId": "204",
+            "available": true,
+            "order": 1
+          },
+          {
+            "id": 22,
+            "building": 3381,
+            "property": 5381,
+            "name": "Door 2",
+            "provider": "smartair",
+            "isActive": true,
+            "disabled": false,
+            "isUnitDoor": true,
+            "staffOnly": false,
+            "defaultInBuilding": false,
+            "externalId": "143",
+            "available": true,
+            "order": 101
+          },
+          {
+            "id": 23,
+            "building": 3381,
+            "property": 3381,
+            "name": "Door 3",
+            "provider": "smartair",
+            "isActive": true,
+            "disabled": false,
+            "isUnitDoor": false,
+            "staffOnly": false,
+            "defaultInBuilding": true,
+            "externalId": "207",
+            "available": true,
+            "order": 2
+          }
+        ],
+        "paymentsAvailability": "disabled",
+        "pmcRootDirectory": 608,
+        "serviceRequestsStatus": "enabled",
+        "serviceRequestsExternalUrl": null,
+        "possibleToReceiveCalls": true,
+        "country": "United States",
+        "state": "New York",
+        "timezone": "America/New_York",
+        "roles": [],
+        "units": [
+          {
+            "id": 5381,
+            "name": "Unit 1",
+            "propertyLevel": "unit",
+            "building": 3381,
+            "paymentsEnabled": false,
+            "roles": [
+              4
+            ]
+          }
+        ]
+      }
+    ],
+    "contactInfo": [
+      {
+        "id": 1437,
+        "type": "email",
+        "primary": true,
+        "contactInfo": "jon.doe@fake-gmail.com",
+        "verified": true,
+        "confirmationInfo": null
+      },
+      {
+        "id": 2437,
+        "type": "phone_number",
+        "primary": true,
+        "contactInfo": "+10000000000",
+        "verified": true,
+        "confirmationInfo": null
+      }
+    ],
+    "photo": {
+      "url": "https://via.placeholder.com/600x600.png?text=Main+Image",
+      "thumbnailUrl": "https://via.placeholder.com/200x200.png?text=Thumbnail+Image"
+    },
+    "verified": true,
+    "isAdmin": false,
+    "isService": false,
+    "pmcRole": null
+  },
+  "msg": null
+}

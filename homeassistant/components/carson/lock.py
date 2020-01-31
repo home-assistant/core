@@ -5,6 +5,7 @@ import logging
 from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
 
 from .const import DOMAIN, UNLOCKED_TIMESPAN_SEC
+from .entity import CarsonEntityMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,26 +17,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     )
     doors = hass.data[DOMAIN][config_entry.entry_id]["doors"]
 
-    async_add_entities(CarsonLock(door) for door in doors)
+    async_add_entities(CarsonLock(config_entry.entry_id, door) for door in doors)
 
 
-class CarsonLock(LockDevice):
+class CarsonLock(CarsonEntityMixin, LockDevice):
     """Representation of an Carson Door lock."""
 
-    def __init__(self, carson_door):
-        """Initialize the light."""
+    def __init__(self, config_entry_id, carson_door):
+        """Initialize the lock."""
+        super().__init__(config_entry_id, carson_door)
+
         self._carson_door = carson_door
         self._is_locked = True
-
-    @property
-    def should_poll(self):
-        """Do not poll. Update via notification."""
-        return False
-
-    @property
-    def unique_id(self):
-        """Name of the device."""
-        return self._carson_door.unique_entity_id
 
     @property
     def supported_features(self):
@@ -57,12 +50,16 @@ class CarsonLock(LockDevice):
         """Return true if the lock is locked."""
         return self._is_locked
 
+    @staticmethod
+    def _unlocked_timespan():
+        return UNLOCKED_TIMESPAN_SEC
+
     def open(self, **kwargs):
         """Open the door."""
         self._carson_door.open()
         self._is_locked = False
         self.schedule_update_ha_state()
-        self.hass.add_job(self.async_set_locked_after_delay(UNLOCKED_TIMESPAN_SEC))
+        self.hass.add_job(self.async_set_locked_after_delay(self._unlocked_timespan()))
 
     def lock(self, **kwargs):
         """Lock the device."""
