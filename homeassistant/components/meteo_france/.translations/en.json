@@ -9,9 +9,8 @@
         "step": {
             "user": {
                 "data": {
-                    "city": "City"
+                    "city": "City or postal code"
                 },
-                "description": "Enter your city",
                 "title": "M\u00e9t\u00e9o-France"
             }
         },

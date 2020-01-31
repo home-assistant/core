@@ -40,17 +40,15 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form(user_input, None)
 
-        city = user_input[CONF_CITY]
+        city = user_input[CONF_CITY]  # Might be a city name or a postal code
         monitored_conditions = user_input.get(
             CONF_MONITORED_CONDITIONS, list(SENSOR_TYPES)
         )
-
-        # Check if already configured
-        await self.async_set_unique_id(city)
-        self._abort_if_unique_id_configured()
+        city_name = None
 
         try:
-            await self.hass.async_add_executor_job(meteofranceClient, city)
+            client = await self.hass.async_add_executor_job(meteofranceClient, city)
+            city_name = client.get_data()["name"]
         except meteofranceError as exp:
             _LOGGER.error(
                 "Unexpected error when creating the meteofrance proxy: %s", exp
@@ -58,9 +56,16 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             return self._show_setup_form(user_input, errors)
 
+        # Check if already configured
+        await self.async_set_unique_id(city_name)
+        self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
-            title=city,
-            data={CONF_CITY: city, CONF_MONITORED_CONDITIONS: monitored_conditions},
+            title=city_name,
+            data={
+                CONF_CITY: city_name,
+                CONF_MONITORED_CONDITIONS: monitored_conditions,
+            },
         )
 
     async def async_step_import(self, user_input):
