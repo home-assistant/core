@@ -12,9 +12,10 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 # pylint:disable=unused-import
 from .const import DOMAIN
 
+DEFAULT_HOST = "fritz.box"
 DATA_SCHEMA_USER = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
     }
