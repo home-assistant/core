@@ -1,7 +1,7 @@
 """Support for devices connected to UniFi POE."""
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -95,6 +95,8 @@ async def async_setup_entry(hass, config_entry):
         name="UniFi Controller",
         # sw_version=config.raw['swversion'],
     )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
 
     return True
 
