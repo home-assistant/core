@@ -151,13 +151,17 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._host = host
         self._ip = self.context[CONF_IP_ADDRESS] = ip_address
-        self._manufacturer = user_input[ATTR_UPNP_MANUFACTURER]
-        self._model = user_input[ATTR_UPNP_MODEL_NAME]
-        self._name = user_input[ATTR_UPNP_FRIENDLY_NAME]
-        if self._name.startswith("[TV]"):
+        self._manufacturer = user_input.get(ATTR_UPNP_MANUFACTURER)
+        self._model = user_input.get(ATTR_UPNP_MODEL_NAME)
+        self._name = user_input.get(ATTR_UPNP_FRIENDLY_NAME)
+        self._uuid = user_input.get(ATTR_UPNP_UDN)
+        self._title = self._model
+
+        # probably access denied
+        if self._name is None:
+            return self.async_abort(reason=RESULT_AUTH_MISSING)
+        elif self._name.startswith("[TV]"):
             self._name = self._name[4:]
-        self._title = f"{self._name} ({self._model})"
-        self._uuid = user_input[ATTR_UPNP_UDN]
         if self._uuid.startswith("uuid:"):
             self._uuid = self._uuid[5:]
 
@@ -187,4 +191,17 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Handle configuration by re-auth."""
-        return await self.async_step_confirm(user_input)
+        self._host = user_input.data[CONF_HOST]
+        self._id = user_input.data.get(CONF_ID)
+        self._ip = user_input.data[CONF_IP_ADDRESS]
+        self._manufacturer = user_input.data.get(CONF_MANUFACTURER)
+        self._model = user_input.data.get(CONF_MODEL)
+        self._name = user_input.data.get(CONF_NAME)
+        self._on_script = user_input.data.get(CONF_ON_ACTION)
+        self._port = user_input.data.get(CONF_PORT)
+        self._title = self._model or self._name
+
+        await self.async_set_unique_id(self._ip)
+        self.context["title_placeholders"] = {"model": self._model}
+
+        return await self.async_step_confirm()
