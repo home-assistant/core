@@ -1326,14 +1326,20 @@ class AlexaRangeController(AlexaCapability):
         if name != "rangeValue":
             raise UnsupportedProperty(name)
 
+        # Return None for unavailable and unknown states.
+        # Allows the Alexa.EndpointHealth Interface to handle the unavailable state in a stateReport.
+        if self.entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
+            return None
+
         # Fan Speed
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-            speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
-            speed = self.entity.attributes[fan.ATTR_SPEED]
-            speed_index = next(
-                (i for i, v in enumerate(speed_list) if v == speed), None
-            )
-            return speed_index
+            speed_list = self.entity.attributes.get(fan.ATTR_SPEED_LIST)
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+            if speed_list is not None and speed is not None:
+                speed_index = next(
+                    (i for i, v in enumerate(speed_list) if v == speed), None
+                )
+                return speed_index
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
@@ -1349,12 +1355,13 @@ class AlexaRangeController(AlexaCapability):
 
         # Vacuum Fan Speed
         if self.instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
-            speed_list = self.entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
-            speed = self.entity.attributes[vacuum.ATTR_FAN_SPEED]
-            speed_index = next(
-                (i for i, v in enumerate(speed_list) if v == speed), None
-            )
-            return speed_index
+            speed_list = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED_LIST)
+            speed = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED)
+            if speed_list is not None and speed is not None:
+                speed_index = next(
+                    (i for i, v in enumerate(speed_list) if v == speed), None
+                )
+                return speed_index
 
         return None
 
