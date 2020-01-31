@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the Cameras for the Carson devices."""
+    _LOGGER.debug("Setting up Carson Camera entries")
     carson = hass.data[DOMAIN][config_entry.entry_id]["api"]
     if get_list_een_option(config_entry):
         cameras = [
@@ -76,6 +77,7 @@ class EagleEyeCamera(CarsonEntityMixin, Camera):
 
     async def stream_source(self):
         """Return the stream source."""
+        _LOGGER.debug("Getting live camera video stream for %s", self.name)
         return self._ee_camera.get_video_url(timedelta(minutes=5))
 
     def turn_off(self):

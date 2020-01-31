@@ -82,12 +82,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": carson,
-        "user": carson.user,
-        "doors": [door for b in carson.buildings for door in b.doors],
-        "cameras": [
-            camera for b in carson.buildings for camera in b.eagleeye_api.cameras
-        ],
-        # all HA API entities live in that dictionary
         "ha_entities": {},
     }
 

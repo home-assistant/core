@@ -12,10 +12,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the Locks for the Carson devices."""
-    _LOGGER.debug(
-        "async def async_setup_entry(hass, config_entry, async_add_entities) called"
-    )
-    doors = hass.data[DOMAIN][config_entry.entry_id]["doors"]
+    _LOGGER.debug("Setting up Carson LockDevice entries")
+    carson = hass.data[DOMAIN][config_entry.entry_id]["api"]
+    doors = [door for b in carson.buildings for door in b.doors]
 
     async_add_entities(CarsonLock(config_entry.entry_id, door) for door in doors)
 
@@ -51,7 +50,8 @@ class CarsonLock(CarsonEntityMixin, LockDevice):
         return self._is_locked
 
     @staticmethod
-    def _unlocked_timespan():
+    def unlocked_timespan():
+        """Return default unlocked timestamp."""
         return UNLOCKED_TIMESPAN_SEC
 
     def open(self, **kwargs):
@@ -59,7 +59,7 @@ class CarsonLock(CarsonEntityMixin, LockDevice):
         self._carson_door.open()
         self._is_locked = False
         self.schedule_update_ha_state()
-        self.hass.add_job(self.async_set_locked_after_delay(self._unlocked_timespan()))
+        self.hass.add_job(self.async_set_locked_after_delay(self.unlocked_timespan()))
 
     def lock(self, **kwargs):
         """Lock the device."""

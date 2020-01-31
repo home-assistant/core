@@ -21,11 +21,6 @@ class CarsonEntityMixin:
             del self.carson_ha_entities[self.unique_id]
 
     @property
-    def carson_entity(self):
-        """Return the underlying Carson Entity."""
-        return self._carson_entity
-
-    @property
     def carson_ha_entities(self):
         """Return the Ring API objects."""
         return self.hass.data[DOMAIN][self._config_entry_id]["ha_entities"]

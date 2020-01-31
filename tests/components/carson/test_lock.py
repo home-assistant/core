@@ -38,7 +38,7 @@ async def test_lock_reports_correct_initial_values(hass, success_requests_mock):
     assert state.attributes.get("available")
 
 
-async def test_lock_can_be_opened(hass, success_requests_mock):
+async def test_lock_can_be_unlocked(hass, success_requests_mock):
     """Tests that the initial state of a device that should be off is correct."""
     await setup_platform(hass, LOCK_DOMAIN)
 
@@ -52,10 +52,10 @@ async def test_lock_can_be_opened(hass, success_requests_mock):
 
     # reduce unlock timespan to 0 to not hold test.
     with patch(
-        "homeassistant.components.carson.lock.CarsonLock._unlocked_timespan",
+        "homeassistant.components.carson.lock.CarsonLock.unlocked_timespan",
         return_value=0,
     ) as mock_timespan:
-        await hass.services.async_call("lock", "open", {"entity_id": "lock.door_1"})
+        await hass.services.async_call("lock", "unlock", {"entity_id": "lock.door_1"})
 
         # since the unlocked timespan is 0 an unlock state cannot be tested for.
         await hass.async_block_till_done()
