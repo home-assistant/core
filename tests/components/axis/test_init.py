@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 from homeassistant.components import axis
 from homeassistant.setup import async_setup_component
 
-from .test_device import ENTRY_CONFIG, MAC, setup_axis_integration
+from .test_device import MAC, setup_axis_integration
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -64,14 +64,9 @@ async def test_unload_entry(hass):
 
 async def test_populate_options(hass):
     """Test successful populate options."""
-    entry = MockConfigEntry(domain=axis.DOMAIN, data=ENTRY_CONFIG)
-    entry.add_to_hass(hass)
+    device = await setup_axis_integration(hass, options=None)
 
-    with patch.object(axis, "get_device", return_value=mock_coro(Mock())):
-
-        await axis.async_populate_options(hass, entry)
-
-    assert entry.options == {
+    assert device.config_entry.options == {
         axis.CONF_CAMERA: True,
         axis.CONF_EVENTS: True,
         axis.CONF_TRIGGER_TIME: axis.DEFAULT_TRIGGER_TIME,
