@@ -30,8 +30,7 @@ def configured_instances(hass):
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class GdacsFlowHandler(config_entries.ConfigFlow):
+class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a GDACS config flow."""
 
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
