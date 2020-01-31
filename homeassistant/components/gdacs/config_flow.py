@@ -10,7 +10,6 @@ from homeassistant.const import (
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
 )
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_CATEGORIES, DEFAULT_RADIUS, DEFAULT_SCAN_INTERVAL, DOMAIN
@@ -20,15 +19,6 @@ DATA_SCHEMA = vol.Schema(
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@callback
-def configured_instances(hass):
-    """Return a set of configured GDACS instances."""
-    return set(
-        f"{entry.data[CONF_LATITUDE]}, {entry.data[CONF_LONGITUDE]}"
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    )
 
 
 class GdacsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
