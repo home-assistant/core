@@ -37,7 +37,7 @@ class TotalConnectBinarySensor(BinarySensorDevice):
         self._location_id = location_id
         self._zone = zone
         self._name = self._zone.description
-        self._unique_id = f"TC {location_id} {zone_id}"
+        self._unique_id = f"{location_id} {zone_id}"
         self._is_on = None
         self._is_tampered = None
         self._is_low_battery = None
@@ -52,21 +52,15 @@ class TotalConnectBinarySensor(BinarySensorDevice):
         """Return the name of the device."""
         return self._name
 
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
     def update(self):
         """Return the state of the device."""
-        self._is_on = not self._zone.is_bypassed()
         self._is_tampered = self._zone.is_tampered()
         self._is_low_battery = self._zone.is_low_battery()
 
         if self._zone.is_faulted() or self._zone.is_triggered():
-            self._state = True
+            self._is_on = True
         else:
-            self._state = False
+            self._is_on = False
 
     @property
     def is_on(self):
