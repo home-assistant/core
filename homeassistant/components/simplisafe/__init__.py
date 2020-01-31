@@ -317,14 +317,15 @@ class SimpliSafe:
 
         await self.async_update()
 
-    async def _update_system(self, system):
-        """Update a system."""
-        await system.update()
-        self.last_event_data[system.system_id] = await system.get_latest_event()
-
     async def async_update(self):
         """Get updated data from SimpliSafe."""
-        tasks = [self._update_system(system) for system in self.systems.values()]
+
+        async def update_system(system):
+            """Update a system."""
+            await system.update()
+            self.last_event_data[system.system_id] = await system.get_latest_event()
+
+        tasks = [update_system(system) for system in self.systems.values()]
 
         def cancel_tasks():
             """Cancel tasks and ensure their cancellation is processed."""
