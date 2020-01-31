@@ -8,6 +8,9 @@
           "radius": "Radius"
         }
       }
+    },
+    "abort": {
+      "already_configured": "Location is already configured."
     }
   }
 }
