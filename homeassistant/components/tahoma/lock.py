@@ -3,7 +3,12 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_NAME,
+    STATE_LOCKED,
+    STATE_UNLOCKED,
+)
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 
@@ -27,7 +32,7 @@ class TahomaLock(TahomaDevice, LockDevice):
     def __init__(self, tahoma_device, controller):
         """Initialize the device."""
         super().__init__(tahoma_device, controller)
-        self._state = STATE_UNLOCKED
+        self._lock_status = STATE_UNLOCKED
         self._available = False
         self._battery_level = None
         self._name = None
@@ -41,10 +46,13 @@ class TahomaLock(TahomaDevice, LockDevice):
             _LOGGER.warning("Lock %s has low battery", self._name)
         if self._battery_level == "verylow":
             _LOGGER.error("Lock %s has very low battery", self._name)
-        if self.tahoma_device.active_states.get("core:LockedUnlockedState") == "locked":
-            self._state = STATE_LOCKED
+        if (
+            self.tahoma_device.active_states.get("core:LockedUnlockedState")
+            == STATE_LOCKED
+        ):
+            self._lock_status = STATE_LOCKED
         else:
-            self._state = STATE_UNLOCKED
+            self._lock_status = STATE_UNLOCKED
         self._available = (
             self.tahoma_device.active_states.get("core:AvailabilityState")
             == "available"
@@ -56,12 +64,12 @@ class TahomaLock(TahomaDevice, LockDevice):
 
     def unlock(self, **kwargs):
         """Unlock method."""
-        _LOGGER.info("unlocking %s", self._name)
+        _LOGGER.debug("unlocking %s", self._name)
         self.apply_action("unlock")
 
     def lock(self, **kwargs):
         """Lock method."""
-        _LOGGER.info("locking %s", self._name)
+        _LOGGER.debug("locking %s", self._name)
         self.apply_action("lock")
 
     @property
@@ -70,20 +78,14 @@ class TahomaLock(TahomaDevice, LockDevice):
         return self._state == STATE_LOCKED
 
     @property
-    def state(self):
-        """Return the state."""
-        return self._state
-
-    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attr = {}
+        attr = {
+            ATTR_BATTERY_LEVEL: self.tahoma_device.active_states["core:BatteryState"],
+            "availability": self.tahoma_device.active_states["core:AvailabilityState"],
+            ATTR_NAME: self.tahoma_device.active_states["core:NameState"],
+        }
         super_attr = super().device_state_attributes
         if super_attr is not None:
             attr.update(super_attr)
-        attr[ATTR_BATTERY_LEVEL] = self.tahoma_device.active_states["core:BatteryState"]
-        attr["availability"] = self.tahoma_device.active_states[
-            "core:AvailabilityState"
-        ]
-        attr["name"] = self.tahoma_device.active_states["core:NameState"]
         return attr
