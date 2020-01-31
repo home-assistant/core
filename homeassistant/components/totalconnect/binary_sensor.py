@@ -22,11 +22,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     client_locations = hass.data[TOTALCONNECT_DOMAIN].client.locations
 
-    for location_id in client_locations:
-        for zone_id in client_locations[location_id].zones:
-            zone = client_locations[location_id].zones[zone_id]
+    for location_id, location in client_locations.items():
+        for zone_id, zone in location.zones.items():
             sensors.append(TotalConnectBinarySensor(zone_id, location_id, zone))
-    add_entities(sensors)
+    add_entities(sensors, True)
 
 
 class TotalConnectBinarySensor(BinarySensorDevice):
@@ -38,11 +37,10 @@ class TotalConnectBinarySensor(BinarySensorDevice):
         self._location_id = location_id
         self._zone = zone
         self._name = self._zone.description
-        self._unique_id = "TC Location {} zone {}".format(location_id, zone_id)
+        self._unique_id = f"TC {location_id} {zone_id}"
         self._is_on = None
         self._is_tampered = None
         self._is_low_battery = None
-        self.update()
 
     @property
     def unique_id(self):
@@ -84,11 +82,6 @@ class TotalConnectBinarySensor(BinarySensorDevice):
             return DEVICE_CLASS_SMOKE
         if self._zone.is_type_carbon_monoxide():
             return DEVICE_CLASS_GAS
-        _LOGGER.warning(
-            "Unknown Total Connect zone type %s returned by zone %s.",
-            self._zone.zone_type_id,
-            self._zone_id,
-        )
         return None
 
     @property
