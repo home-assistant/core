@@ -9,7 +9,7 @@ from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
-DEFAULT_MYDEVOLO = "https.mydevolo.com"
+DEFAULT_MYDEVOLO = "https://mydevolo.com"
 DEFAULT_MPRM = "homecontrol.mydevolo.com"
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,17 +70,17 @@ class DevoloSwitch(SwitchDevice):
 
     @property
     def unique_id(self):
-        """Return the unique ID of this Hue light."""
+        """Return the unique ID of switch."""
         return self._device_instance.device_uid
 
     @property
     def device_id(self):
-        """Return the ID of this Hue light."""
+        """Return the ID of this switch."""
         return self._device_instance.device_uid
 
     @property
     def name(self):
-        """Return the display name of this light."""
+        """Return the display name of this switch."""
         return self._name
 
     @property
