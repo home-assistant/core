@@ -1125,7 +1125,7 @@
                             "type": "ais-zigbee2mqtt"
                         }
                     ],
-                    "icon": "mdi:android",
+                    "icon": "mdi:zigbee",
                     "path": "ais_zigbee",
                     "title": "zigbee",
                     "visible": false

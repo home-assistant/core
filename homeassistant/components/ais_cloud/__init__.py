@@ -1699,7 +1699,7 @@ class AisColudData:
 
         # refresh
         self.get_backup_info(
-            call, 0, None, None, None, "OK, przywrucono konfigurację z  kopii"
+            call, 0, None, None, None, "OK, przywrócono konfigurację z  kopii"
         )
 
     def enable_gate_pairing_by_pin(self, call):

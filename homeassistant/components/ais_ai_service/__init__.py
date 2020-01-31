@@ -2249,6 +2249,7 @@ async def async_process_json_from_frame(hass, json_req):
         )
     elif topic == "ais/speech_command":
         try:
+            # TODO add info if the intent is media player type - to publish
             intent_resp = await _process(hass, payload, ais_gate_client_id)
             resp_text = intent_resp.speech["plain"]["speech"]
             res = {"ais": "ok", "say_it": resp_text}
@@ -2263,6 +2264,17 @@ async def async_process_json_from_frame(hass, json_req):
                 {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
             )
         )
+
+    # add player satus for some topics
+    if topic in ("ais/player_status", "ais/player_auto_discovery", "ais/media_player"):
+        attributes = hass.states.get("media_player.wbudowany_glosnik").attributes
+        j_media_info = {
+            "media_title": attributes.get("media_title", ""),
+            "media_source": attributes.get("source", ""),
+            "media_stream_image": attributes.get("media_stream_image", ""),
+            "media_album_name": attributes.get("media_album_name", ""),
+        }
+        res["player_status"] = j_media_info
     return json_response(res)
 
 
@@ -3312,45 +3324,45 @@ def _process_command_from_frame(hass, service):
 
 def _post_message(message, hass, exclude_say_it=None):
     """Post the message to TTS service."""
-    message = message.replace("°C", "stopni Celsjusza")
-    message = message.replace("(Pobrane z Google)", "")
+    # message = message.replace("°C", "stopni Celsjusza")
+    # message = message.replace("(Pobrane z Google)", "")
     # replace emoticons
-    emoji_pattern = re.compile(
-        "["
-        "\U0001F600-\U0001F64F"  # emoticons
-        "\U0001F300-\U0001F5FF"  # symbols & pictographs
-        "\U0001F680-\U0001F6FF"  # transport & map symbols
-        "\U0001F1E0-\U0001F1FF"  # flags (iOS)
-        "\U0001F1F2-\U0001F1F4"  # Macau flag
-        "\U0001F1E6-\U0001F1FF"  # flags
-        "\U0001F600-\U0001F64F"
-        "\U00002702-\U000027B0"
-        "\U000024C2-\U0001F251"
-        "\U0001f926-\U0001f937"
-        "\U0001F1F2"
-        "\U0001F1F4"
-        "\U0001F620"
-        "\u200d"
-        "\u2640-\u2642"
-        "]+",
-        flags=re.UNICODE,
-    )
-
-    text = emoji_pattern.sub(r"", message)
+    # emoji_pattern = re.compile(
+    #     "["
+    #     "\U0001F600-\U0001F64F"  # emoticons
+    #     "\U0001F300-\U0001F5FF"  # symbols & pictographs
+    #     "\U0001F680-\U0001F6FF"  # transport & map symbols
+    #     "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+    #     "\U0001F1F2-\U0001F1F4"  # Macau flag
+    #     "\U0001F1E6-\U0001F1FF"  # flags
+    #     "\U0001F600-\U0001F64F"
+    #     "\U00002702-\U000027B0"
+    #     "\U000024C2-\U0001F251"
+    #     "\U0001f926-\U0001f937"
+    #     "\U0001F1F2"
+    #     "\U0001F1F4"
+    #     "\U0001F620"
+    #     "\u200d"
+    #     "\u2640-\u2642"
+    #     "]+",
+    #     flags=re.UNICODE,
+    # )
+    #
+    # text = emoji_pattern.sub(r"", message)
     j_data = {
-        "text": text,
+        "text": message,
         "pitch": ais_global.GLOBAL_TTS_PITCH,
         "rate": ais_global.GLOBAL_TTS_RATE,
         "voice": ais_global.GLOBAL_TTS_VOICE,
     }
 
     tts_browser_text = message
-    if len(tts_browser_text) > 150:
-        space_position = tts_browser_text.find(" ", 150)
-        if space_position > 150:
+    if len(tts_browser_text) > 250:
+        space_position = tts_browser_text.find(" ", 250)
+        if space_position > 250:
             tts_browser_text = tts_browser_text[0:space_position]
         else:
-            tts_browser_text = tts_browser_text[0:150]
+            tts_browser_text = tts_browser_text[0:250]
 
     hass.async_add_job(
         hass.services.async_call(

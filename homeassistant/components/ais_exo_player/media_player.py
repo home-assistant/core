@@ -263,20 +263,55 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         # ais_cloud.send_audio_to_speaker
         if "entity_id" not in service.data:
             return
+
         entity_id = service.data["entity_id"]
         state = hass.states.get(ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID)
         attr = state.attributes
         media_content_id = attr.get("media_content_id")
-        if media_content_id is not None:
-            hass.services.call(
-                "media_player",
-                "play_media",
-                {
-                    "entity_id": entity_id,
-                    "media_content_type": "music",
-                    "media_content_id": media_content_id,
-                },
-            )
+        if media_content_id is None:
+            return
+
+        # 1. pause internal player
+        hass.services.call(
+            "media_player",
+            "media_pause",
+            {"entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID},
+        )
+
+        # 2. play on selected player
+        # TODO
+        # selected_player_state = hass.states.get(entity_id)
+        # selected_player_attr = selected_player_state.attributes
+        # if "device_ip" in selected_player_attr:
+        #     # full info to exo player
+        #     j_media_info = {
+        #         "media_title": attr.get("media_title", ""),
+        #         "media_source": attr.get("source", ""),
+        #         "media_stream_image": attr.get("media_stream_image", ""),
+        #         "media_album_name": attr.get("media_album_name", ""),
+        #         "media_content_id": attr.get("media_content_id", ""),
+        #         "setPlayerShuffle": attr.get("shuffle", ""),
+        #         "setMediaPosition": attr.get("media_position", ""),
+        #     }
+        #     hass.services.call(
+        #         "media_player",
+        #         "play_media",
+        #         {
+        #             "entity_id": entity_id,
+        #             "media_content_type": "music",
+        #             "media_content_id": json.dumps(j_media_info),
+        #         },
+        #     )
+        # else:
+        hass.services.call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": entity_id,
+                "media_content_type": "music",
+                "media_content_id": media_content_id,
+            },
+        )
 
     def play_text_or_url(service):
         # text
