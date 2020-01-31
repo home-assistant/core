@@ -131,3 +131,5 @@ tmp_cache
 
 # python-language-server / Rope
 .ropeproject
+
+home-assistant-polymer
