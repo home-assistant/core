@@ -299,7 +299,7 @@ class MikrotikHub:
 
     @property
     def firmware(self):
-        """Return the firware of the hub."""
+        """Return the firmware of the hub."""
         return self._mk_data.firmware
 
     @property

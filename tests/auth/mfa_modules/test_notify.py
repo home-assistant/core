@@ -321,7 +321,7 @@ async def test_include_exclude_config(hass):
 
 
 async def test_setup_user_no_notify_service(hass):
-    """Test setup flow abort if there is no avilable notify service."""
+    """Test setup flow abort if there is no available notify service."""
     async_mock_service(hass, "notify", "test1", NOTIFY_SERVICE_SCHEMA)
     notify_auth_module = await auth_mfa_module_from_config(
         hass, {"type": "notify", "exclude": "test1"}

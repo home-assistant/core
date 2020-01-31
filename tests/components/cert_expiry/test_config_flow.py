@@ -19,7 +19,7 @@ HOST = "example.com"
 
 @pytest.fixture(name="test_connect")
 def mock_controller():
-    """Mock a successfull _prt_in_configuration_exists."""
+    """Mock a successful _prt_in_configuration_exists."""
     with patch(
         "homeassistant.components.cert_expiry.config_flow.CertexpiryConfigFlow._test_connection",
         side_effect=lambda *_: mock_coro(True),

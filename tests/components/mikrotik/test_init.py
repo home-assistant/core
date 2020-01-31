@@ -16,7 +16,7 @@ async def test_setup_with_no_config(hass):
 
 
 async def test_successful_config_entry(hass):
-    """Test config entry successfull setup."""
+    """Test config entry successful setup."""
     entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA,)
     entry.add_to_hass(hass)
     mock_registry = Mock()

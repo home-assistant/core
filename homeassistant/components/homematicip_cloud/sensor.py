@@ -305,7 +305,7 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Representation of the HomematicIP power comsumption value."""
+        """Representation of the HomematicIP power consumption value."""
         return self._device.currentPowerConsumption
 
     @property
@@ -356,7 +356,7 @@ class HomematicipTodayRainSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Representation of the HomematicIP todays rain value."""
+        """Representation of the HomematicIP today's rain value."""
         return round(self._device.todayRainCounter, 2)
 
     @property
