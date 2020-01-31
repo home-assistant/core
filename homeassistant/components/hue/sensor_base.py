@@ -8,7 +8,7 @@ from aiohue.sensors import TYPE_ZLL_PRESENCE
 import async_timeout
 
 from homeassistant.core import callback
-from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers import debounce, entity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN as HUE_DOMAIN, REQUEST_REFRESH_DELAY
@@ -45,7 +45,7 @@ class SensorManager:
             "sensor",
             self.async_update_data,
             self.SCAN_INTERVAL,
-            Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
+            debounce.Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
         )
 
     async def async_update_data(self):
@@ -145,7 +145,7 @@ class SensorManager:
             self._component_add_entities[True](new_binary_sensors)
 
 
-class GenericHueSensor:
+class GenericHueSensor(entity.Entity):
     """Representation of a Hue sensor."""
 
     should_poll = False
@@ -195,13 +195,13 @@ class GenericHueSensor:
     async def async_added_to_hass(self):
         """When entity is added to hass."""
         self.bridge.sensor_manager.coordinator.async_add_listener(
-            self.async_write_ha_state  # pylint: disable=no-member
+            self.async_write_ha_state
         )
 
     async def async_will_remove_from_hass(self):
         """When entity will be removed from hass."""
         self.bridge.sensor_manager.coordinator.async_remove_listener(
-            self.async_write_ha_state  # pylint: disable=no-member
+            self.async_write_ha_state
         )
 
     async def async_update(self):
