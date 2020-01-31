@@ -32,7 +32,7 @@ class TahomaLock(TahomaDevice, LockDevice):
     def __init__(self, tahoma_device, controller):
         """Initialize the device."""
         super().__init__(tahoma_device, controller)
-        self._lock_status = STATE_UNLOCKED
+        self._lock_status = None
         self._available = False
         self._battery_level = None
         self._name = None
@@ -58,18 +58,14 @@ class TahomaLock(TahomaDevice, LockDevice):
             == "available"
         )
 
-    def open(self, **kwargs):
-        """Open method."""
-        pass
-
     def unlock(self, **kwargs):
         """Unlock method."""
-        _LOGGER.debug("unlocking %s", self._name)
+        _LOGGER.debug("Unlocking %s", self._name)
         self.apply_action("unlock")
 
     def lock(self, **kwargs):
         """Lock method."""
-        _LOGGER.debug("locking %s", self._name)
+        _LOGGER.debug("Locking %s", self._name)
         self.apply_action("lock")
 
     @property

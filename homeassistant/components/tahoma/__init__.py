@@ -31,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-TAHOMA_COMPONENTS = ["scene", "sensor", "cover", "switch", "binary_sensor", "lock"]
+TAHOMA_COMPONENTS = ["binary_sensor", "cover", "lock", "scene", "sensor", "switch"]
 
 TAHOMA_TYPES = {
     "io:AwningValanceIOComponent": "cover",
