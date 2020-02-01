@@ -406,7 +406,7 @@ class ZHAGateway:
                 "component": "light",
                 "group_id": zha_group.group_id,
                 "zha_device": self._coordinator_zha_device,
-                "unique_id": zha_group.unique_id,
+                "unique_id": zha_group.group_id,
                 "channels": [],
                 "entity_ids": zha_group.member_entity_ids,
             }
