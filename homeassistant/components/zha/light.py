@@ -453,7 +453,7 @@ class LightGroup(BaseZhaEntity, light.Light):
     ) -> None:
         """Initialize a light group."""
         super().__init__(unique_id, zha_device, **kwargs)
-        self._name = f"{zha_device.name}_group_{group_id}"
+        self._name = f"{zha_device.gateway.groups.get(group_id).name}_group_{group_id}"
         self._group_id = group_id
         self._entity_ids = entity_ids
         self._is_on = False
