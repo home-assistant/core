@@ -1589,6 +1589,9 @@ python-juicenet==0.1.6
 # homeassistant.components.lirc
 # python-lirc==1.2.3
 
+# homeassistant.components.lyric
+python-lyric==1.1.5
+
 # homeassistant.components.xiaomi_miio
 python-miio==0.4.8
 
@@ -1739,6 +1742,9 @@ recollect-waste==1.0.1
 
 # homeassistant.components.rainmachine
 regenmaschine==1.5.1
+
+# homeassistant.components.lyric
+requests==2.22.0
 
 # homeassistant.components.python_script
 restrictedpython==5.0
@@ -2024,6 +2030,9 @@ vigilancemeteo==3.0.0
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.1.2
+
+# homeassistant.components.lyric
+voluptuous==0.11.7
 
 # homeassistant.components.volvooncall
 volvooncall==0.8.7
