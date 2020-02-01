@@ -192,6 +192,10 @@ aiopvapi==1.6.14
 # homeassistant.components.webostv
 aiopylgtv==0.3.2
 
+# homeassistant.components.philips_airpurifier
+pycryptodomex>=3.4.7
+CoAPthon3>=1.0.1
+
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
 
