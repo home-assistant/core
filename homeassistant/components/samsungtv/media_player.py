@@ -131,7 +131,9 @@ class SamsungTVDevice(MediaPlayerDevice):
             except samsung_exceptions.AccessDenied:
                 self.hass.async_create_task(
                     self.hass.config_entries.flow.async_init(
-                        DOMAIN, context={"source": "reauth"}, data=self._config_entry
+                        DOMAIN,
+                        context={"source": "reauth"},
+                        data=self._config_entry.data,
                     )
                 )
                 raise

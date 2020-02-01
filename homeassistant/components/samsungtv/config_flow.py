@@ -189,17 +189,17 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, user_input=None):
         """Handle configuration by re-auth."""
-        self._host = user_input.data[CONF_HOST]
-        self._id = user_input.data.get(CONF_ID)
-        self._ip = user_input.data[CONF_IP_ADDRESS]
-        self._manufacturer = user_input.data.get(CONF_MANUFACTURER)
-        self._model = user_input.data.get(CONF_MODEL)
-        self._name = user_input.data.get(CONF_NAME)
-        self._on_script = user_input.data.get(CONF_ON_ACTION)
-        self._port = user_input.data.get(CONF_PORT)
-        self._title = user_input.title
+        self._host = user_input[CONF_HOST]
+        self._id = user_input.get(CONF_ID)
+        self._ip = user_input[CONF_IP_ADDRESS]
+        self._manufacturer = user_input.get(CONF_MANUFACTURER)
+        self._model = user_input.get(CONF_MODEL)
+        self._name = user_input.get(CONF_NAME)
+        self._on_script = user_input.get(CONF_ON_ACTION)
+        self._port = user_input.get(CONF_PORT)
+        self._title = self._model or self._name
 
         await self.async_set_unique_id(self._ip)
-        self.context["title_placeholders"] = {"model": self._model}
+        self.context["title_placeholders"] = {"model": self._title}
 
         return await self.async_step_confirm()
