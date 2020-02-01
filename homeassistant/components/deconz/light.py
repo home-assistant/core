@@ -90,9 +90,12 @@ class DeconzLight(DeconzDevice, Light):
         """Set up light."""
         super().__init__(device, gateway)
 
-        self._features = SUPPORT_BRIGHTNESS
-        self._features |= SUPPORT_FLASH
-        self._features |= SUPPORT_TRANSITION
+        self._features = 0
+
+        if self._device.brightness is not None:
+            self._features |= SUPPORT_BRIGHTNESS
+            self._features |= SUPPORT_FLASH
+            self._features |= SUPPORT_TRANSITION
 
         if self._device.ct is not None:
             self._features |= SUPPORT_COLOR_TEMP
