@@ -1,6 +1,5 @@
 """Constants for the Minecraft Server integration."""
 
-DEFAULT_HOST = ""
 DEFAULT_NAME = "Minecraft Server"
 DEFAULT_PORT = 25565
 DEFAULT_SCAN_INTERVAL = 60

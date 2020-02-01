@@ -90,7 +90,7 @@ class MinecraftServer:
         self._stop_periodic_update = None
 
         _LOGGER.debug(
-            "Initializing '%s' (host='%s', port=%s, scan_interval=%s)...",
+            "Initializing '%s' (host='%s', port=%s, scan_interval=%s)",
             self._name,
             self._host,
             self._port,
@@ -183,7 +183,7 @@ class MinecraftServer:
             self._stop_periodic_update()
         else:
             _LOGGER.debug(
-                "Listener was not started, stopping of periodic update skipped."
+                "Listener was not started, stopping of periodic update skipped"
             )
 
     async def async_check_connection(self) -> None:
@@ -194,7 +194,7 @@ class MinecraftServer:
             )
             self._server_online = True
         except IOError as error:
-            _LOGGER.debug("Error occured while trying to ping the server (%s).", error)
+            _LOGGER.debug("Error occured while trying to ping the server: %s", error)
             self._server_online = False
 
     async def async_update(self, now: datetime = None) -> None:
@@ -206,9 +206,9 @@ class MinecraftServer:
 
         # Inform user once about connection state changes if necessary.
         if (server_online_old is True) and (server_online is False):
-            _LOGGER.warning("Connection to server lost.")
+            _LOGGER.warning("Connection to server lost")
         elif (server_online_old is False) and (server_online is True):
-            _LOGGER.info("Connection to server (re-)established.")
+            _LOGGER.info("Connection to server (re-)established")
 
         # Try to update the server data if server is online.
         if server_online:
@@ -216,7 +216,7 @@ class MinecraftServer:
                 await self._async_status_request()
             except IOError as error:
                 _LOGGER.debug(
-                    "Error occured while trying to update the server data (%s).", error
+                    "Error occured while trying to update the server data: %s", error
                 )
         else:
             # Set all properties except description and version information to
@@ -243,7 +243,7 @@ class MinecraftServer:
                 self._mcstatus.status, self._RETRIES_STATUS
             )
         except IOError:
-            _LOGGER.debug("Error while requesting server status (IOError).")
+            _LOGGER.debug("Error while requesting server status: IOError")
             raise IOError
         else:
             self._description = status_response.description["text"]

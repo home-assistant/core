@@ -7,7 +7,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTER
 
 from . import MinecraftServer
 from .const import (  # pylint: disable=unused-import
-    DEFAULT_HOST,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
@@ -73,9 +72,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
                     ): str,
-                    vol.Required(
-                        CONF_HOST, default=user_input.get(CONF_HOST, DEFAULT_HOST)
-                    ): str,
+                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
                     vol.Optional(
                         CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
                     ): int,

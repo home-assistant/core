@@ -137,7 +137,7 @@ class MinecraftServerDescriptionSensor(MinecraftServerSensorEntity):
             # Limit description length to 255.
             if len(description) > 255:
                 description = description[:255]
-                _LOGGER.debug("Description length > 255 (truncated).")
+                _LOGGER.debug("Description length > 255 (truncated)")
 
         self._state = description
 
@@ -260,6 +260,6 @@ class MinecraftServerPlayersListSensor(MinecraftServerSensorEntity):
                 # Limit players list length to 255.
                 if len(players_string) > 255:
                     players_string = f"{players_string[:-4]}...]"
-                    _LOGGER.debug("Players list length > 255 (truncated).")
+                    _LOGGER.debug("Players list length > 255 (truncated)")
 
         self._state = players_string
