@@ -121,7 +121,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 family = owproxy.read(f"{device}type").decode()
             if "1F" in family:
                 for branch in ["main", "aux"]:
-                    _LOGGER.info(f"Listing : {device}{branch}")
                     new_devices = owproxy.dir(f"{device}{branch}")
                     devices.extend(new_devices)
                 continue
