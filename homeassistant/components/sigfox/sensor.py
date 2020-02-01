@@ -126,7 +126,11 @@ class SigfoxDevice(Entity):
         url = urljoin(API_URL, device_url)
         response = requests.get(url, auth=self._auth, timeout=10)
         data = json.loads(response.text)["data"][0]
-        payload = bytes.fromhex(data["data"]).decode("utf-8")
+        try:
+            payload = bytes.fromhex(data['data']).decode('utf-8')
+        except UnicodeDecodeError:
+            # take it as it is it can be raw binary data
+            payload = data['data']
         lat = data["rinfos"][0]["lat"]
         lng = data["rinfos"][0]["lng"]
         snr = data["snr"]
