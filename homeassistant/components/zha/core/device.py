@@ -18,6 +18,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity_registry import async_entries_for_device
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -406,11 +407,10 @@ class ZHADevice(LogMixin):
         device_info = {}
         device_info.update(self.device_info)
         device_info["entities"] = [
-            {
-                "entity_id": entity_ref.reference_id,
-                ATTR_NAME: entity_ref.device_info[ATTR_NAME],
-            }
-            for entity_ref in self.gateway.device_registry[self.ieee]
+            {"entity_id": entity.entity_id, ATTR_NAME: entity.name}
+            for entity in async_entries_for_device(
+                self.gateway.ha_entity_registry, self.device_id
+            )
         ]
         reg_device = self.gateway.ha_device_registry.async_get(self.device_id)
         if reg_device is not None:
