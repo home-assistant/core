@@ -153,11 +153,6 @@ CLEAR_USERCODE_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave locks."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Z-Wave Lock from Config Entry."""
 
@@ -185,7 +180,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             if len(str(usercode)) < 4:
                 _LOGGER.error(
                     "Invalid code provided: (%s) "
-                    "usercode must be atleast 4 and at most"
+                    "usercode must be at least 4 and at most"
                     " %s digits",
                     usercode,
                     len(value.data),

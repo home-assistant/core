@@ -10,6 +10,11 @@ from homeassistant.components import (
     vacuum,
 )
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 import homeassistant.components.climate.const as climate
 import homeassistant.components.media_player.const as media_player
 from homeassistant.const import (
@@ -1082,10 +1087,23 @@ class AlexaSecurityPanelController(AlexaCapability):
     def configuration(self):
         """Return configuration object with supported authorization types."""
         code_format = self.entity.attributes.get(ATTR_CODE_FORMAT)
+        supported = self.entity.attributes[ATTR_SUPPORTED_FEATURES]
+        configuration = {}
+
+        supported_arm_states = [{"value": "DISARMED"}]
+        if supported & SUPPORT_ALARM_ARM_AWAY:
+            supported_arm_states.append({"value": "ARMED_AWAY"})
+        if supported & SUPPORT_ALARM_ARM_HOME:
+            supported_arm_states.append({"value": "ARMED_STAY"})
+        if supported & SUPPORT_ALARM_ARM_NIGHT:
+            supported_arm_states.append({"value": "ARMED_NIGHT"})
+
+        configuration["supportedArmStates"] = supported_arm_states
 
         if code_format == FORMAT_NUMBER:
-            return {"supportedAuthorizationTypes": [{"type": "FOUR_DIGIT_PIN"}]}
-        return None
+            configuration["supportedAuthorizationTypes"] = [{"type": "FOUR_DIGIT_PIN"}]
+
+        return configuration
 
 
 class AlexaModeController(AlexaCapability):
@@ -1203,7 +1221,10 @@ class AlexaModeController(AlexaCapability):
                 f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}",
                 [AlexaGlobalCatalog.VALUE_CLOSE],
             )
-            self._resource.add_mode(f"{cover.ATTR_POSITION}.custom", ["Custom"])
+            self._resource.add_mode(
+                f"{cover.ATTR_POSITION}.custom",
+                ["Custom", AlexaGlobalCatalog.SETTING_PRESET],
+            )
             return self._resource.serialize_capability_resources()
 
         return None
@@ -1305,14 +1326,20 @@ class AlexaRangeController(AlexaCapability):
         if name != "rangeValue":
             raise UnsupportedProperty(name)
 
+        # Return None for unavailable and unknown states.
+        # Allows the Alexa.EndpointHealth Interface to handle the unavailable state in a stateReport.
+        if self.entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
+            return None
+
         # Fan Speed
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-            speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
-            speed = self.entity.attributes[fan.ATTR_SPEED]
-            speed_index = next(
-                (i for i, v in enumerate(speed_list) if v == speed), None
-            )
-            return speed_index
+            speed_list = self.entity.attributes.get(fan.ATTR_SPEED_LIST)
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+            if speed_list is not None and speed is not None:
+                speed_index = next(
+                    (i for i, v in enumerate(speed_list) if v == speed), None
+                )
+                return speed_index
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
@@ -1328,12 +1355,13 @@ class AlexaRangeController(AlexaCapability):
 
         # Vacuum Fan Speed
         if self.instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
-            speed_list = self.entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
-            speed = self.entity.attributes[vacuum.ATTR_FAN_SPEED]
-            speed_index = next(
-                (i for i, v in enumerate(speed_list) if v == speed), None
-            )
-            return speed_index
+            speed_list = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED_LIST)
+            speed = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED)
+            if speed_list is not None and speed is not None:
+                speed_index = next(
+                    (i for i, v in enumerate(speed_list) if v == speed), None
+                )
+                return speed_index
 
         return None
 
@@ -1397,7 +1425,7 @@ class AlexaRangeController(AlexaCapability):
             unit = self.entity.attributes.get(input_number.ATTR_UNIT_OF_MEASUREMENT)
 
             self._resource = AlexaPresetResource(
-                ["Value"],
+                ["Value", AlexaGlobalCatalog.SETTING_PRESET],
                 min_value=min_value,
                 max_value=max_value,
                 precision=precision,

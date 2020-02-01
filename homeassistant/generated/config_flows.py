@@ -24,6 +24,7 @@ FLOWS = [
     "elgato",
     "emulated_roku",
     "esphome",
+    "garmin_connect",
     "geofency",
     "geonetnz_quakes",
     "geonetnz_volcano",
@@ -53,6 +54,7 @@ FLOWS = [
     "luftdaten",
     "mailgun",
     "met",
+    "mikrotik",
     "mobile_app",
     "mqtt",
     "neato",
@@ -78,6 +80,7 @@ FLOWS = [
     "soma",
     "somfy",
     "sonos",
+    "spotify",
     "starline",
     "tellduslive",
     "tesla",
@@ -98,6 +101,5 @@ FLOWS = [
     "wled",
     "wwlln",
     "zha",
-    "zone",
     "zwave"
 ]

@@ -63,11 +63,6 @@ CHANNEL_ST_HUMIDITY_CLUSTER = f"channel_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation sensors."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation sensor from config entry."""
 
@@ -154,6 +149,7 @@ class Sensor(ZhaEntity):
             return None
         return self._state
 
+    @callback
     def async_set_state(self, state):
         """Handle state update from channel."""
         if state is not None:
@@ -207,10 +203,11 @@ class Battery(Sensor):
             state_attrs["battery_quantity"] = battery_quantity
         return state_attrs
 
+    @callback
     def async_update_state_attribute(self, key, value):
         """Update a single device state attribute."""
         if key == "battery_voltage":
-            self._device_state_attributes["voltage"] = f"{round(value/10, 1)}V"
+            self._device_state_attributes[key] = round(value / 10, 1)
             self.async_schedule_update_ha_state()
 
 

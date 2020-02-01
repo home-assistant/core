@@ -281,7 +281,7 @@ def _get_bom_stations():
     """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config.
 
     This function does several MB of internet requests, so please use the
-    caching version to minimise latency and hit-count.
+    caching version to minimize latency and hit-count.
     """
     latlon = {}
     with io.BytesIO() as file_obj:

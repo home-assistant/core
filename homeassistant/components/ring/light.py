@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+import requests
+
 from homeassistant.components.light import Light
 from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
@@ -72,7 +74,12 @@ class RingLight(RingEntityMixin, Light):
 
     def _set_light(self, new_state):
         """Update light state, and causes Home Assistant to correctly update."""
-        self._device.lights = new_state
+        try:
+            self._device.lights = new_state
+        except requests.Timeout:
+            _LOGGER.error("Time out setting %s light to %s", self.entity_id, new_state)
+            return
+
         self._light_on = new_state == ON_STATE
         self._no_updates_until = dt_util.utcnow() + SKIP_UPDATES_DELAY
         self.async_schedule_update_ha_state()

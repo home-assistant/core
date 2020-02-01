@@ -469,7 +469,7 @@ def _wrap_state(hass, state):
 def _get_state(hass, entity_id):
     state = hass.states.get(entity_id)
     if state is None:
-        # Only need to collect if none, if not none collect first actuall
+        # Only need to collect if none, if not none collect first actual
         # access to the state properties in the state wrapper.
         _collect_state(hass, entity_id)
         return None

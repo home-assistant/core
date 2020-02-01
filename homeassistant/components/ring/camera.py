@@ -51,8 +51,7 @@ class RingCam(RingEntityMixin, Camera):
         self._last_event = None
         self._last_video_id = None
         self._video_url = None
-        self._utcnow = dt_util.utcnow()
-        self._expires_at = self._utcnow - FORCE_REFRESH_INTERVAL
+        self._expires_at = dt_util.utcnow() - FORCE_REFRESH_INTERVAL
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -80,7 +79,7 @@ class RingCam(RingEntityMixin, Camera):
             self._last_event = None
             self._last_video_id = None
             self._video_url = None
-            self._expires_at = self._utcnow
+            self._expires_at = dt_util.utcnow()
             self.async_write_ha_state()
 
     @property
@@ -141,10 +140,8 @@ class RingCam(RingEntityMixin, Camera):
         if self._last_event["recording"]["status"] != "ready":
             return
 
-        if (
-            self._last_video_id == self._last_event["id"]
-            and self._utcnow <= self._expires_at
-        ):
+        utcnow = dt_util.utcnow()
+        if self._last_video_id == self._last_event["id"] and utcnow <= self._expires_at:
             return
 
         try:
@@ -160,4 +157,4 @@ class RingCam(RingEntityMixin, Camera):
         if video_url:
             self._last_video_id = self._last_event["id"]
             self._video_url = video_url
-            self._expires_at = FORCE_REFRESH_INTERVAL + self._utcnow
+            self._expires_at = FORCE_REFRESH_INTERVAL + utcnow

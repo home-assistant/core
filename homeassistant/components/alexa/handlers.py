@@ -119,7 +119,9 @@ async def async_api_turn_on(hass, config, directive, context):
         domain = ha.DOMAIN
 
     service = SERVICE_TURN_ON
-    if domain == media_player.DOMAIN:
+    if domain == cover.DOMAIN:
+        service = cover.SERVICE_OPEN_COVER
+    elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
         if not supported & power_features:
@@ -145,7 +147,9 @@ async def async_api_turn_off(hass, config, directive, context):
         domain = ha.DOMAIN
 
     service = SERVICE_TURN_OFF
-    if domain == media_player.DOMAIN:
+    if entity.domain == cover.DOMAIN:
+        service = cover.SERVICE_CLOSE_COVER
+    elif domain == media_player.DOMAIN:
         supported = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         power_features = media_player.SUPPORT_TURN_ON | media_player.SUPPORT_TURN_OFF
         if not supported & power_features:
@@ -908,8 +912,11 @@ async def async_api_arm(hass, config, directive, context):
         entity.domain, service, data, blocking=False, context=context
     )
 
+    # return 0 until alarm integration supports an exit delay
+    payload = {"exitDelayInSeconds": 0}
+
     response = directive.response(
-        name="Arm.Response", namespace="Alexa.SecurityPanelController"
+        name="Arm.Response", namespace="Alexa.SecurityPanelController", payload=payload
     )
 
     response.add_context_property(
@@ -928,6 +935,12 @@ async def async_api_disarm(hass, config, directive, context):
     """Process a Security Panel Disarm request."""
     entity = directive.entity
     data = {ATTR_ENTITY_ID: entity.entity_id}
+    response = directive.response()
+
+    # Per Alexa Documentation: If you receive a Disarm directive, and the system is already disarmed,
+    # respond with a success response, not an error response.
+    if entity.state == STATE_ALARM_DISARMED:
+        return response
 
     payload = directive.payload
     if "authorization" in payload:
@@ -941,7 +954,6 @@ async def async_api_disarm(hass, config, directive, context):
         msg = "Invalid Code"
         raise AlexaSecurityPanelUnauthorizedError(msg)
 
-    response = directive.response()
     response.add_context_property(
         {
             "name": "armState",
@@ -1129,7 +1141,7 @@ async def async_api_set_range(hass, config, directive, context):
             service = cover.SERVICE_OPEN_COVER_TILT
         else:
             service = cover.SERVICE_SET_COVER_TILT_POSITION
-            data[cover.ATTR_POSITION] = range_value
+            data[cover.ATTR_TILT_POSITION] = range_value
 
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
@@ -1183,6 +1195,7 @@ async def async_api_adjust_range(hass, config, directive, context):
     service = None
     data = {ATTR_ENTITY_ID: entity.entity_id}
     range_delta = directive.payload["rangeValueDelta"]
+    range_delta_default = bool(directive.payload["rangeValueDeltaDefault"])
     response_value = 0
 
     # Fan Speed
@@ -1208,21 +1221,37 @@ async def async_api_adjust_range(hass, config, directive, context):
 
     # Cover Position
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
-        range_delta = int(range_delta)
+        range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_POSITION
         current = entity.attributes.get(cover.ATTR_POSITION)
-        data[cover.ATTR_POSITION] = response_value = min(
-            100, max(0, range_delta + current)
-        )
+        if not current:
+            msg = "Unable to determine {} current position".format(entity.entity_id)
+            raise AlexaInvalidValueError(msg)
+        position = response_value = min(100, max(0, range_delta + current))
+        if position == 100:
+            service = cover.SERVICE_OPEN_COVER
+        elif position == 0:
+            service = cover.SERVICE_CLOSE_COVER
+        else:
+            data[cover.ATTR_POSITION] = position
 
     # Cover Tilt
     elif instance == f"{cover.DOMAIN}.tilt":
-        range_delta = int(range_delta)
+        range_delta = int(range_delta * 20) if range_delta_default else int(range_delta)
         service = SERVICE_SET_COVER_TILT_POSITION
         current = entity.attributes.get(cover.ATTR_TILT_POSITION)
-        data[cover.ATTR_TILT_POSITION] = response_value = min(
-            100, max(0, range_delta + current)
-        )
+        if not current:
+            msg = "Unable to determine {} current tilt position".format(
+                entity.entity_id
+            )
+            raise AlexaInvalidValueError(msg)
+        tilt_position = response_value = min(100, max(0, range_delta + current))
+        if tilt_position == 100:
+            service = cover.SERVICE_OPEN_COVER_TILT
+        elif tilt_position == 0:
+            service = cover.SERVICE_CLOSE_COVER_TILT
+        else:
+            data[cover.ATTR_TILT_POSITION] = tilt_position
 
     # Input Number Value
     elif instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":

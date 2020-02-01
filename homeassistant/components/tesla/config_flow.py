@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, MIN_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,8 +100,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             {
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(CONF_SCAN_INTERVAL, 300),
-                ): vol.All(cv.positive_int, vol.Clamp(min=300))
+                    default=self.config_entry.options.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    ),
+                ): vol.All(cv.positive_int, vol.Clamp(min=MIN_SCAN_INTERVAL))
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
@@ -120,7 +122,7 @@ async def validate_input(hass: core.HomeAssistant, data):
             websession,
             email=data[CONF_USERNAME],
             password=data[CONF_PASSWORD],
-            update_interval=300,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
         (config[CONF_TOKEN], config[CONF_ACCESS_TOKEN]) = await controller.connect(
             test_login=True

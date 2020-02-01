@@ -5,6 +5,7 @@
             "already_setup": "Dieser Eintrag wurde bereits eingerichtet.",
             "host_exists": "Vizio-Komponent mit bereits konfiguriertem Host.",
             "name_exists": "Vizio-Komponent mit bereits konfiguriertem Namen.",
+            "updated_options": "Dieser Eintrag wurde bereits eingerichtet, aber die in der Konfiguration definierten Optionen stimmen nicht mit den zuvor importierten Optionswerten \u00fcberein, daher wurde der Konfigurationseintrag entsprechend aktualisiert.",
             "updated_volume_step": "Dieser Eintrag wurde bereits eingerichtet, aber die Lautst\u00e4rken-Schrittgr\u00f6\u00dfe in der Konfiguration stimmt nicht mit dem Konfigurationseintrag \u00fcberein, sodass der Konfigurationseintrag entsprechend aktualisiert wurde."
         },
         "error": {
@@ -30,6 +31,7 @@
         "step": {
             "init": {
                 "data": {
+                    "timeout": "API Request Timeout (Sekunden)",
                     "volume_step": "Lautst\u00e4rken-Schrittgr\u00f6\u00dfe"
                 },
                 "title": "Aktualisieren Sie die Vizo SmartCast-Optionen"

@@ -9,7 +9,7 @@ from homeassistant.const import CONF_USERNAME
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import IcloudDevice
+from .account import IcloudDevice
 from .const import (
     DEVICE_LOCATION_HORIZONTAL_ACCURACY,
     DEVICE_LOCATION_LATITUDE,

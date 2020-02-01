@@ -1,4 +1,6 @@
 """Config flow for UniFi."""
+import socket
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -104,11 +106,15 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 )
                 return self.async_abort(reason="unknown")
 
+        host = ""
+        if await async_discover_unifi(self.hass):
+            host = "unifi"
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_HOST, default=host): str,
                     vol.Required(CONF_USERNAME): str,
                     vol.Required(CONF_PASSWORD): str,
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
@@ -235,3 +241,11 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
     async def _update_options(self):
         """Update config entry options."""
         return self.async_create_entry(title="", data=self.options)
+
+
+async def async_discover_unifi(hass):
+    """Discover UniFi address."""
+    try:
+        return await hass.async_add_executor_job(socket.gethostbyname, "unifi")
+    except socket.gaierror:
+        return None

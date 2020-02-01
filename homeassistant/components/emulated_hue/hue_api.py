@@ -351,8 +351,9 @@ class HueOneLightChangeView(HomeAssistantView):
 
         if HUE_API_STATE_BRI in request_json:
             if entity.domain == light.DOMAIN:
-                parsed[STATE_ON] = parsed[STATE_BRIGHTNESS] > 0
-                if not entity_features & SUPPORT_BRIGHTNESS:
+                if entity_features & SUPPORT_BRIGHTNESS:
+                    parsed[STATE_ON] = parsed[STATE_BRIGHTNESS] > 0
+                else:
                     parsed[STATE_BRIGHTNESS] = None
 
             elif entity.domain == scene.DOMAIN:
@@ -703,9 +704,10 @@ def entity_to_json(config, entity):
         retval["modelid"] = "HASS123"
         retval["state"].update({HUE_API_STATE_BRI: state[STATE_BRIGHTNESS]})
     else:
-        # On/off light (Zigbee Device ID: 0x0000)
-        # Supports groups, scenes and on/off control
-        retval["type"] = "On/off light"
+        # On/off plug-in unit (Zigbee Device ID: 0x0000)
+        # Supports groups and on/off control
+        # Used for compatibility purposes with Alexa instead of "On/off light"
+        retval["type"] = "On/off plug-in unit"
         retval["modelid"] = "HASS321"
 
     return retval
@@ -718,7 +720,7 @@ def create_hue_success_response(entity_id, attr, value):
 
 
 def create_list_of_entities(config, request):
-    """Create a list of all entites."""
+    """Create a list of all entities."""
     hass = request.app["hass"]
     json_response = {}
 

@@ -774,27 +774,21 @@ class MQTT:
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
-        """Publish a MQTT message.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Publish a MQTT message."""
         async with self._paho_lock:
             _LOGGER.debug("Transmitting message on %s: %s", topic, payload)
-            await self.hass.async_add_job(
+            await self.hass.async_add_executor_job(
                 self._mqttc.publish, topic, payload, qos, retain
             )
 
     async def async_connect(self) -> str:
-        """Connect to the host. Does process messages yet.
-
-        This method is a coroutine.
-        """
+        """Connect to the host. Does process messages yet."""
         # pylint: disable=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         result: int = None
         try:
-            result = await self.hass.async_add_job(
+            result = await self.hass.async_add_executor_job(
                 self._mqttc.connect, self.broker, self.port, self.keepalive
             )
         except OSError as err:
@@ -808,19 +802,15 @@ class MQTT:
         self._mqttc.loop_start()
         return CONNECTION_SUCCESS
 
-    @callback
-    def async_disconnect(self):
-        """Stop the MQTT client.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_disconnect(self):
+        """Stop the MQTT client."""
 
         def stop():
             """Stop the MQTT client."""
             self._mqttc.disconnect()
             self._mqttc.loop_stop()
 
-        return self.hass.async_add_job(stop)
+        await self.hass.async_add_executor_job(stop)
 
     async def async_subscribe(
         self,
@@ -865,7 +855,9 @@ class MQTT:
         """
         async with self._paho_lock:
             result: int = None
-            result, _ = await self.hass.async_add_job(self._mqttc.unsubscribe, topic)
+            result, _ = await self.hass.async_add_executor_job(
+                self._mqttc.unsubscribe, topic
+            )
             _raise_on_error(result)
 
     async def _async_perform_subscription(self, topic: str, qos: int) -> None:
@@ -874,7 +866,9 @@ class MQTT:
 
         async with self._paho_lock:
             result: int = None
-            result, _ = await self.hass.async_add_job(self._mqttc.subscribe, topic, qos)
+            result, _ = await self.hass.async_add_executor_job(
+                self._mqttc.subscribe, topic, qos
+            )
             _raise_on_error(result)
 
     def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code: int) -> None:
@@ -1010,10 +1004,7 @@ class MqttAttributes(Entity):
         self._attributes_config = config
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe MQTT events.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Subscribe MQTT events."""
         await super().async_added_to_hass()
         await self._attributes_subscribe_topics()
 
@@ -1080,10 +1071,7 @@ class MqttAvailability(Entity):
         self._avail_config = config
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe MQTT events.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Subscribe MQTT events."""
         await super().async_added_to_hass()
         await self._availability_subscribe_topics()
 

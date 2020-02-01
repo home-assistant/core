@@ -26,11 +26,6 @@ SCAN_INTERVAL = timedelta(minutes=60)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation covers."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation cover from config entry."""
 
@@ -101,6 +96,16 @@ class ZhaCover(ZhaEntity, CoverDevice):
         return self.current_cover_position == 0
 
     @property
+    def is_opening(self):
+        """Return if the cover is opening or not."""
+        return self._state == STATE_OPENING
+
+    @property
+    def is_closing(self):
+        """Return if the cover is closing or not."""
+        return self._state == STATE_CLOSING
+
+    @property
     def current_cover_position(self):
         """Return the current position of ZHA cover.
 
@@ -108,6 +113,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
         """
         return self._current_position
 
+    @callback
     def async_set_position(self, pos):
         """Handle position update from channel."""
         _LOGGER.debug("setting position: %s", pos)
@@ -118,6 +124,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
             self._state = STATE_OPEN
         self.async_schedule_update_ha_state()
 
+    @callback
     def async_set_state(self, state):
         """Handle state update from channel."""
         _LOGGER.debug("state=%s", state)
@@ -138,7 +145,7 @@ class ZhaCover(ZhaEntity, CoverDevice):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the roller shutter to a specific position."""
-        new_pos = kwargs.get(ATTR_POSITION)
+        new_pos = kwargs[ATTR_POSITION]
         res = await self._cover_channel.go_to_lift_percentage(100 - new_pos)
         if isinstance(res, list) and res[1] is Status.SUCCESS:
             self.async_set_state(

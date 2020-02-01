@@ -364,19 +364,12 @@ class Camera(Entity):
         """Return bytes of camera image."""
         raise NotImplementedError()
 
-    @callback
-    def async_camera_image(self):
-        """Return bytes of camera image.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.camera_image)
+    async def async_camera_image(self):
+        """Return bytes of camera image."""
+        return await self.hass.async_add_job(self.camera_image)
 
     async def handle_async_still_stream(self, request, interval):
-        """Generate an HTTP MJPEG stream from camera images.
-
-        This method must be run in the event loop.
-        """
+        """Generate an HTTP MJPEG stream from camera images."""
         return await async_get_still_stream(
             request, self.async_camera_image, self.content_type, interval
         )
@@ -384,9 +377,8 @@ class Camera(Entity):
     async def handle_async_mjpeg_stream(self, request):
         """Serve an HTTP MJPEG stream from the camera.
 
-        This method can be overridden by camera plaforms to proxy
+        This method can be overridden by camera platforms to proxy
         a direct stream from the camera.
-        This method must be run in the event loop.
         """
         return await self.handle_async_still_stream(request, self.frame_interval)
 
@@ -408,19 +400,17 @@ class Camera(Entity):
         """Turn off camera."""
         raise NotImplementedError()
 
-    @callback
-    def async_turn_off(self):
+    async def async_turn_off(self):
         """Turn off camera."""
-        return self.hass.async_add_job(self.turn_off)
+        await self.hass.async_add_job(self.turn_off)
 
     def turn_on(self):
         """Turn off camera."""
         raise NotImplementedError()
 
-    @callback
-    def async_turn_on(self):
+    async def async_turn_on(self):
         """Turn off camera."""
-        return self.hass.async_add_job(self.turn_on)
+        await self.hass.async_add_job(self.turn_on)
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""

@@ -491,34 +491,25 @@ class DeviceScanner:
         """Scan for devices."""
         raise NotImplementedError()
 
-    def async_scan_devices(self) -> Any:
-        """Scan for devices.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.scan_devices)
+    async def async_scan_devices(self) -> Any:
+        """Scan for devices."""
+        return await self.hass.async_add_job(self.scan_devices)
 
     def get_device_name(self, device: str) -> str:
         """Get the name of a device."""
         raise NotImplementedError()
 
-    def async_get_device_name(self, device: str) -> Any:
-        """Get the name of a device.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.get_device_name, device)
+    async def async_get_device_name(self, device: str) -> Any:
+        """Get the name of a device."""
+        return await self.hass.async_add_job(self.get_device_name, device)
 
     def get_extra_attributes(self, device: str) -> dict:
         """Get the extra attributes of a device."""
         raise NotImplementedError()
 
-    def async_get_extra_attributes(self, device: str) -> Any:
-        """Get the extra attributes of a device.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.get_extra_attributes, device)
+    async def async_get_extra_attributes(self, device: str) -> Any:
+        """Get the extra attributes of a device."""
+        return await self.hass.async_add_job(self.get_extra_attributes, device)
 
 
 async def async_load_config(
@@ -528,24 +519,21 @@ async def async_load_config(
 
     This method is a coroutine.
     """
-    dev_schema = vol.All(
-        cv.deprecated(CONF_AWAY_HIDE, invalidation_version="0.107.0"),
-        vol.Schema(
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_ICON, default=None): vol.Any(None, cv.icon),
-                vol.Optional("track", default=False): cv.boolean,
-                vol.Optional(CONF_MAC, default=None): vol.Any(
-                    None, vol.All(cv.string, vol.Upper)
-                ),
-                vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
-                vol.Optional("gravatar", default=None): vol.Any(None, cv.string),
-                vol.Optional("picture", default=None): vol.Any(None, cv.string),
-                vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-            }
-        ),
+    dev_schema = vol.Schema(
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_ICON, default=None): vol.Any(None, cv.icon),
+            vol.Optional("track", default=False): cv.boolean,
+            vol.Optional(CONF_MAC, default=None): vol.Any(
+                None, vol.All(cv.string, vol.Upper)
+            ),
+            vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
+            vol.Optional("gravatar", default=None): vol.Any(None, cv.string),
+            vol.Optional("picture", default=None): vol.Any(None, cv.string),
+            vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
+        }
     )
     result = []
     try:

@@ -1,6 +1,4 @@
 """Constants used by vizio component."""
-from datetime import timedelta
-
 from pyvizio.const import (
     DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,
@@ -30,6 +28,7 @@ CONF_VOLUME_STEP = "volume_step"
 
 DEFAULT_DEVICE_CLASS = DEVICE_CLASS_TV
 DEFAULT_NAME = "Vizio SmartCast"
+DEFAULT_TIMEOUT = 8
 DEFAULT_VOLUME_STEP = 1
 
 DEVICE_ID = "pyvizio"
@@ -71,6 +70,3 @@ VIZIO_SCHEMA = {
         vol.Coerce(int), vol.Range(min=1, max=10)
     ),
 }
-
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
