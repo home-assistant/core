@@ -84,7 +84,7 @@ class ZHAGroup(LogMixin):
 
     @property
     def member_entity_ids(self):
-        """Return the ZHA entitiy ids for all entities for the members of this group."""
+        """Return the ZHA entity ids for all entities for the members of this group."""
         all_entity_ids = []
         for device in self.members:
             entities = async_entries_for_device(
@@ -93,36 +93,6 @@ class ZHAGroup(LogMixin):
             for entity in entities:
                 all_entity_ids.append(entity.entity_id)
         return all_entity_ids
-
-    async def async_add_members(self, member_ieee_addresses):
-        """Add members to this group."""
-        if len(member_ieee_addresses) > 1:
-            tasks = []
-            for ieee in member_ieee_addresses:
-                tasks.append(
-                    self._zha_gateway.devices[ieee].async_add_to_group(self.group_id)
-                )
-            await asyncio.gather(*tasks)
-        else:
-            await self._zha_gateway.devices[
-                member_ieee_addresses[0]
-            ].async_add_to_group(self.group_id)
-
-    async def async_remove_members(self, member_ieee_addresses):
-        """Remove members from this group."""
-        if len(member_ieee_addresses) > 1:
-            tasks = []
-            for ieee in member_ieee_addresses:
-                tasks.append(
-                    self._zha_gateway.devices[ieee].async_remove_from_group(
-                        self.group_id
-                    )
-                )
-            await asyncio.gather(*tasks)
-        else:
-            await self._zha_gateway.devices[
-                member_ieee_addresses[0]
-            ].async_remove_from_group(self.group_id)
 
     @callback
     def async_get_info(self):
