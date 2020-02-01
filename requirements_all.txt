@@ -1022,7 +1022,7 @@ pmsensor==0.4
 pocketcasts==0.1
 
 # homeassistant.components.reddit
-praw==6.5.0
+praw==6.5.1
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
