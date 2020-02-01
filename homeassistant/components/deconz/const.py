@@ -1,7 +1,7 @@
 """Constants for the deCONZ component."""
 import logging
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "deconz"
 
