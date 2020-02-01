@@ -253,7 +253,7 @@ def requirements_test_output(reqs):
 
 def requirements_pre_commit_output():
     """Generate output for pre-commit dependencies."""
-    source = ".pre-commit-config-all.yaml"
+    source = ".pre-commit-config.yaml"
     pre_commit_conf = load_yaml(source)
     reqs = []
     for repo in (x for x in pre_commit_conf["repos"] if x.get("rev")):
