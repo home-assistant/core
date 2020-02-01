@@ -6,6 +6,7 @@ https://home-assistant.io/components/lyric/
 """
 import asyncio
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
