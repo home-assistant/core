@@ -194,7 +194,7 @@ class MinecraftServer:
             )
             self._server_online = True
         except IOError as error:
-            _LOGGER.debug("Error occured while trying to ping the server: %s", error)
+            _LOGGER.debug("Error occurred while trying to ping the server: %s", error)
             self._server_online = False
 
     async def async_update(self, now: datetime = None) -> None:
@@ -216,7 +216,7 @@ class MinecraftServer:
                 await self._async_status_request()
             except IOError as error:
                 _LOGGER.debug(
-                    "Error occured while trying to update the server data: %s", error
+                    "Error occurred while trying to update the server data: %s", error
                 )
         else:
             # Set all properties except description and version information to
