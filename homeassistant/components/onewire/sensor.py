@@ -168,7 +168,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # We have an owfs mounted
     else:
         families = glob(os.path.join(base_dir, "*", "family"))
-        #for family_file_path in :
         while(families):
             family_file_path = families.pop()
             with open(family_file_path, "r") as family_file:
