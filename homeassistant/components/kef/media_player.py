@@ -218,17 +218,13 @@ class KefMediaPlayer(MediaPlayerDevice):
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_SELECT_SOURCE
             | SUPPORT_TURN_OFF
+            | SUPPORT_NEXT_TRACK  # only in Bluetooth and Wifi
+            | SUPPORT_PAUSE  # only in Bluetooth and Wifi
+            | SUPPORT_PLAY  # only in Bluetooth and Wifi
+            | SUPPORT_PREVIOUS_TRACK  # only in Bluetooth and Wifi
         )
         if self._supports_on:
             support_kef |= SUPPORT_TURN_ON
-
-        if self._source in ("Wifi", "Bluetooth"):
-            support_kef |= (
-                SUPPORT_NEXT_TRACK
-                | SUPPORT_PAUSE
-                | SUPPORT_PLAY
-                | SUPPORT_PREVIOUS_TRACK
-            )
 
         return support_kef
 
