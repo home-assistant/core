@@ -11,6 +11,9 @@ from homeassistant.util.dt import utcnow
 
 from .debounce import Debouncer
 
+REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
+REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
+
 
 class UpdateFailed(Exception):
     """Raised when an update has failed."""
@@ -26,7 +29,7 @@ class DataUpdateCoordinator:
         name: str,
         update_method: Callable[[], Awaitable],
         update_interval: timedelta,
-        request_refresh_debouncer: Debouncer,
+        request_refresh_debouncer: Optional[Debouncer] = None,
     ):
         """Initialize global data updater."""
         self.hass = hass
@@ -41,8 +44,15 @@ class DataUpdateCoordinator:
         self._unsub_refresh: Optional[CALLBACK_TYPE] = None
         self._request_refresh_task: Optional[asyncio.TimerHandle] = None
         self.failed_last_update = False
+        if request_refresh_debouncer is None:
+            request_refresh_debouncer = Debouncer(
+                hass,
+                logger,
+                REQUEST_REFRESH_DEFAULT_COOLDOWN,
+                REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+            )
         self._debounced_refresh = request_refresh_debouncer
-        request_refresh_debouncer.function = self._async_do_refresh
+        request_refresh_debouncer.function = self.async_refresh
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> None:
@@ -64,14 +74,6 @@ class DataUpdateCoordinator:
             self._unsub_refresh()
             self._unsub_refresh = None
 
-    async def async_refresh(self) -> None:
-        """Refresh the data."""
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
-
-        await self._async_do_refresh()
-
     @callback
     def _schedule_refresh(self) -> None:
         """Schedule a refresh."""
@@ -86,7 +88,7 @@ class DataUpdateCoordinator:
     async def _handle_refresh_interval(self, _now: datetime) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
-        await self._async_do_refresh()
+        await self.async_refresh()
 
     async def async_request_refresh(self) -> None:
         """Request a refresh.
@@ -95,8 +97,8 @@ class DataUpdateCoordinator:
         """
         await self._debounced_refresh.async_call()
 
-    async def _async_do_refresh(self) -> None:
-        """Time to update."""
+    async def async_refresh(self) -> None:
+        """Update data."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
