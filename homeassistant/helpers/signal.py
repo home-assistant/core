@@ -4,8 +4,8 @@ import signal
 import sys
 from types import FrameType
 
-from homeassistant.core import callback, HomeAssistant
 from homeassistant.const import RESTART_EXIT_CODE
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)

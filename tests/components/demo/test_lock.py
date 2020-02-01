@@ -1,8 +1,8 @@
 """The tests for the Demo lock platform."""
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.components import lock
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant, mock_service
 from tests.components.lock import common

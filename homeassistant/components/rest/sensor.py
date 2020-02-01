@@ -1,34 +1,34 @@
 """Support for RESTful API sensors."""
-import logging
 import json
+import logging
 
-import voluptuous as vol
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA
+from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_AUTHENTICATION,
+    CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
     CONF_HEADERS,
-    CONF_NAME,
     CONF_METHOD,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
+    CONF_TIMEOUT,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
-    CONF_TIMEOUT,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
-    CONF_DEVICE_CLASS,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -197,13 +197,18 @@ class RestSensor(Entity):
             if value:
                 try:
                     json_dict = json.loads(value)
+                    if isinstance(json_dict, list):
+                        json_dict = json_dict[0]
                     if isinstance(json_dict, dict):
                         attrs = {
                             k: json_dict[k] for k in self._json_attrs if k in json_dict
                         }
                         self._attributes = attrs
                     else:
-                        _LOGGER.warning("JSON result was not a dictionary")
+                        _LOGGER.warning(
+                            "JSON result was not a dictionary"
+                            " or list with 0th element a dictionary"
+                        )
                 except ValueError:
                     _LOGGER.warning("REST result could not be parsed as JSON")
                     _LOGGER.debug("Erroneous JSON: %s", value)
@@ -227,32 +232,33 @@ class RestData:
         self, method, resource, auth, headers, data, verify_ssl, timeout=DEFAULT_TIMEOUT
     ):
         """Initialize the data object."""
-        self._request = requests.Request(
-            method, resource, headers=headers, auth=auth, data=data
-        ).prepare()
+        self._method = method
+        self._resource = resource
+        self._auth = auth
+        self._headers = headers
+        self._request_data = data
         self._verify_ssl = verify_ssl
         self._timeout = timeout
         self.data = None
 
     def set_url(self, url):
         """Set url."""
-        self._request.prepare_url(url, None)
+        self._resource = url
 
     def update(self):
         """Get the latest data from REST service with provided method."""
-        _LOGGER.debug("Updating from %s", self._request.url)
+        _LOGGER.debug("Updating from %s", self._resource)
         try:
-            with requests.Session() as sess:
-                response = sess.send(
-                    self._request, timeout=self._timeout, verify=self._verify_ssl
-                )
-
+            response = requests.request(
+                self._method,
+                self._resource,
+                headers=self._headers,
+                auth=self._auth,
+                data=self._request_data,
+                timeout=self._timeout,
+                verify=self._verify_ssl,
+            )
             self.data = response.text
         except requests.exceptions.RequestException as ex:
-            _LOGGER.error(
-                "Error fetching data: %s from %s failed with %s",
-                self._request,
-                self._request.url,
-                ex,
-            )
+            _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
             self.data = None

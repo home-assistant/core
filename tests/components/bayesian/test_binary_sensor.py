@@ -1,8 +1,8 @@
 """The test for the bayesian sensor platform."""
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.components.bayesian import binary_sensor as bayesian
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -149,7 +149,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         assert state.state == "off"
 
     def test_threshold(self):
-        """Test sensor on probabilty threshold limits."""
+        """Test sensor on probability threshold limits."""
         config = {
             "binary_sensor": {
                 "name": "Test_Binary",

@@ -1,23 +1,21 @@
 """Script to check the configuration file."""
-
 import argparse
-import logging
-import os
 from collections import OrderedDict
 from glob import glob
-from typing import Dict, List, Sequence, Any, Tuple, Callable
+import logging
+import os
+from typing import Any, Callable, Dict, List, Sequence, Tuple
 from unittest.mock import patch
 
 from homeassistant import bootstrap, core
 from homeassistant.config import get_default_config_dir
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.check_config import async_check_ha_config_file
 import homeassistant.util.yaml.loader as yaml_loader
-from homeassistant.exceptions import HomeAssistantError
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==4.0.2",)
+REQUIREMENTS = ("colorlog==4.1.0",)
 
 _LOGGER = logging.getLogger(__name__)
 # pylint: disable=protected-access
@@ -44,7 +42,7 @@ def color(the_color, *args, reset=None):
             return parse_colors(the_color)
         return parse_colors(the_color) + " ".join(args) + escape_codes[reset or "reset"]
     except KeyError as k:
-        raise ValueError("Invalid color {} in {}".format(str(k), the_color))
+        raise ValueError(f"Invalid color {k!s} in {the_color}")
 
 
 def run(script_args: List) -> int:

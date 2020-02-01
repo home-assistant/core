@@ -65,7 +65,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     sensors = []
     for sensor in SENSOR_TYPES:
-        sensors.append(AirlySensor(data, name, sensor))
+        unique_id = f"{config_entry.unique_id}-{sensor.lower()}"
+        sensors.append(AirlySensor(data, name, sensor, unique_id))
+
     async_add_entities(sensors, True)
 
 
@@ -84,11 +86,12 @@ def round_state(func):
 class AirlySensor(Entity):
     """Define an Airly sensor."""
 
-    def __init__(self, airly, name, kind):
+    def __init__(self, airly, name, kind, unique_id):
         """Initialize."""
         self.airly = airly
         self.data = airly.data
         self._name = name
+        self._unique_id = unique_id
         self.kind = kind
         self._device_class = None
         self._state = None
@@ -130,7 +133,7 @@ class AirlySensor(Entity):
     @property
     def unique_id(self):
         """Return a unique_id for this entity."""
-        return f"{self.airly.latitude}-{self.airly.longitude}-{self.kind.lower()}"
+        return self._unique_id
 
     @property
     def unit_of_measurement(self):
@@ -140,7 +143,7 @@ class AirlySensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self.airly.data)
+        return bool(self.data)
 
     async def async_update(self):
         """Update the sensor."""

@@ -5,6 +5,7 @@ from homekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL, STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -17,16 +18,12 @@ CURRENT_STATE_MAP = {0: STATE_UNLOCKED, 1: STATE_LOCKED, 2: STATE_JAMMED, 3: Non
 TARGET_STATE_MAP = {STATE_UNLOCKED: 0, STATE_LOCKED: 1}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Legacy set up platform."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Homekit lock."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
+    @callback
     def async_add_service(aid, service):
         if service["stype"] != "lock-mechanism":
             return False

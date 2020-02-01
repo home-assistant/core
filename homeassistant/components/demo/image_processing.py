@@ -1,10 +1,10 @@
 """Support for the demo image processing."""
 from homeassistant.components.image_processing import (
-    ImageProcessingFaceEntity,
-    ATTR_CONFIDENCE,
-    ATTR_NAME,
     ATTR_AGE,
+    ATTR_CONFIDENCE,
     ATTR_GENDER,
+    ATTR_NAME,
+    ImageProcessingFaceEntity,
 )
 from homeassistant.components.openalpr_local.image_processing import (
     ImageProcessingAlprEntity,

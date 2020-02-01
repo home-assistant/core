@@ -3,7 +3,7 @@
 # Integration domain
 DOMAIN = "wled"
 
-# Hass data keys
+# Home Assistant data keys
 DATA_WLED_CLIENT = "wled_client"
 DATA_WLED_TIMER = "wled_timer"
 DATA_WLED_UPDATED = "wled_updated"

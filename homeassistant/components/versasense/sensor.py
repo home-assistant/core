@@ -5,12 +5,12 @@ from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN
 from .const import (
-    KEY_IDENTIFIER,
-    KEY_PARENT_NAME,
-    KEY_PARENT_MAC,
-    KEY_UNIT,
-    KEY_MEASUREMENT,
     KEY_CONSUMER,
+    KEY_IDENTIFIER,
+    KEY_MEASUREMENT,
+    KEY_PARENT_MAC,
+    KEY_PARENT_NAME,
+    KEY_UNIT,
 )
 
 _LOGGER = logging.getLogger(__name__)

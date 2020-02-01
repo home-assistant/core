@@ -59,6 +59,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
     registry = await async_get_registry(hass)
 
+    @callback
     def async_new_media_players(new_entities):
         _async_add_entities(
             hass, registry, config_entry, async_add_entities, server_id, new_entities
@@ -68,6 +69,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         hass, PLEX_NEW_MP_SIGNAL.format(server_id), async_new_media_players
     )
     hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+    _LOGGER.debug("New entity listener created")
 
 
 @callback
@@ -299,7 +301,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         elif self._session_type == "movie":
             self._media_content_type = MEDIA_TYPE_MOVIE
             if self.session.year is not None and self._media_title is not None:
-                self._media_title += " (" + str(self.session.year) + ")"
+                self._media_title += f" ({self.session.year!s})"
 
         elif self._session_type == "track":
             self._media_content_type = MEDIA_TYPE_MUSIC

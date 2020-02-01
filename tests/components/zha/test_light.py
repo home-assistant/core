@@ -174,7 +174,7 @@ async def async_test_on_off_from_hass(hass, cluster, entity_id):
 
 
 async def async_test_off_from_hass(hass, cluster, entity_id):
-    """Test turning off the light from homeassistant."""
+    """Test turning off the light from Home Assistant."""
     with patch(
         "zigpy.zcl.Cluster.request",
         return_value=mock_coro([0x01, zcl_f.Status.SUCCESS]),

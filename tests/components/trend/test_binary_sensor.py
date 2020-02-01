@@ -5,7 +5,7 @@ from unittest.mock import patch
 from homeassistant import setup
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestTrendBinarySensor:

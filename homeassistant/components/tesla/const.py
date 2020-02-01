@@ -1,6 +1,8 @@
 """Const file for Tesla cars."""
 DOMAIN = "tesla"
 DATA_LISTENER = "listener"
+DEFAULT_SCAN_INTERVAL = 660
+MIN_SCAN_INTERVAL = 60
 TESLA_COMPONENTS = [
     "sensor",
     "lock",
@@ -9,7 +11,7 @@ TESLA_COMPONENTS = [
     "device_tracker",
     "switch",
 ]
-SENSOR_ICONS = {
+ICONS = {
     "battery sensor": "mdi:battery",
     "range sensor": "mdi:gauge",
     "mileage sensor": "mdi:counter",

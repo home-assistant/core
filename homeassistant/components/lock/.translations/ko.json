@@ -6,8 +6,12 @@
             "unlock": "{entity_name} \uc7a0\uae08 \ud574\uc81c"
         },
         "condition_type": {
-            "is_locked": "{entity_name} \uc774(\uac00) \uc7a0\uacbc\uc2b5\ub2c8\ub2e4",
-            "is_unlocked": "{entity_name} \uc758 \uc7a0\uae08\uc774 \ud574\uc81c\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+            "is_locked": "{entity_name} \uc774(\uac00) \uc7a0\uaca8\uc788\uc73c\uba74",
+            "is_unlocked": "{entity_name} \uc774(\uac00) \uc7a0\uaca8\uc788\uc9c0 \uc54a\uc73c\uba74"
+        },
+        "trigger_type": {
+            "locked": "{entity_name} \uc774(\uac00) \uc7a0\uae38 \ub54c",
+            "unlocked": "{entity_name} \uc774(\uac00) \uc7a0\uae08\uc774 \ud574\uc81c\ub420 \ub54c"
         }
     }
 }

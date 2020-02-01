@@ -50,7 +50,7 @@ def log_message(source, *parts):
     """Build log message."""
     message = source.__class__.__name__
     for part in parts:
-        message += ": " + str(part)
+        message += f": {part!s}"
     return message
 
 

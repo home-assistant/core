@@ -25,6 +25,8 @@ NODE_CALLBACK = "mysensors_node_callback_{}_{}"
 TYPE = "type"
 UPDATE_DELAY = 0.1
 
+SERVICE_SEND_IR_CODE = "send_ir_code"
+
 BINARY_SENSOR_TYPES = {
     "S_DOOR": {"V_TRIPPED"},
     "S_MOTION": {"V_TRIPPED"},

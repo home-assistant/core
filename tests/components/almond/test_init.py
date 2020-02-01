@@ -1,16 +1,16 @@
 """Tests for Almond set up."""
-from unittest.mock import patch
 from time import time
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant import config_entries, core
+from homeassistant.components.almond import const
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
-from homeassistant.components.almond import const
 from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry, mock_coro, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, mock_coro
 
 
 @pytest.fixture(autouse=True)
@@ -78,7 +78,7 @@ async def test_set_up_oauth_no_external_url(hass, aioclient_mock):
 
 
 async def test_set_up_hassio(hass, aioclient_mock):
-    """Test we do not set up Almond to connect to HA if we use hassio."""
+    """Test we do not set up Almond to connect to HA if we use Hass.io."""
     entry = MockConfigEntry(
         domain="almond",
         data={
@@ -97,7 +97,7 @@ async def test_set_up_hassio(hass, aioclient_mock):
 
 
 async def test_set_up_local(hass, aioclient_mock):
-    """Test we do not set up Almond to connect to HA if we use hassio."""
+    """Test we do not set up Almond to connect to HA if we use Hass.io."""
     entry = MockConfigEntry(
         domain="almond",
         data={"type": const.TYPE_LOCAL, "host": "http://localhost:9999"},

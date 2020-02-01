@@ -3,10 +3,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import CONF_PLATFORM
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-
 
 # mypy: allow-untyped-defs
 

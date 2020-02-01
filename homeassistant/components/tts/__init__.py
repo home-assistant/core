@@ -1,4 +1,4 @@
-"""Provide functionality to TTS."""
+"""Provide functionality for TTS."""
 import asyncio
 import ctypes
 import functools as ft
@@ -353,7 +353,7 @@ class SpeechManager:
             raise HomeAssistantError(f"No TTS from {engine} for '{message}'")
 
         # Create file infos
-        filename = (f"{key}.{extension}").lower()
+        filename = f"{key}.{extension}".lower()
 
         data = self.write_tags(filename, data, provider, message, language, options)
 
@@ -438,7 +438,7 @@ class SpeechManager:
             await self.async_file_to_mem(key)
 
         content, _ = mimetypes.guess_type(filename)
-        return (content, self.mem_cache[key][MEM_CACHE_VOICE])
+        return content, self.mem_cache[key][MEM_CACHE_VOICE]
 
     @staticmethod
     def write_tags(filename, data, provider, message, language, options):
@@ -501,14 +501,12 @@ class Provider:
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
-    def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options=None):
         """Load tts audio file from provider.
 
         Return a tuple of file extension and data as bytes.
-
-        This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(
+        return await self.hass.async_add_job(
             ft.partial(self.get_tts_audio, message, language, options=options)
         )
 

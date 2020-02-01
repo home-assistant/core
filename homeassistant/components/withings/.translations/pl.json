@@ -1,12 +1,17 @@
 {
     "config": {
         "abort": {
+            "authorize_url_timeout": "Min\u0105\u0142 limit czasu generowania url autoryzacji.",
+            "missing_configuration": "Integracja z Withings nie jest skonfigurowana. Post\u0119puj zgodnie z dokumentacj\u0105.",
             "no_flows": "Musisz skonfigurowa\u0107 Withings, aby m\u00f3c si\u0119 z nim uwierzytelni\u0107. Zapoznaj si\u0119 z dokumentacj\u0105."
         },
         "create_entry": {
             "default": "Pomy\u015blnie uwierzytelniono z Withings dla wybranego profilu"
         },
         "step": {
+            "pick_implementation": {
+                "title": "Wybierz metod\u0119 uwierzytelnienia"
+            },
             "profile": {
                 "data": {
                     "profile": "Profil"

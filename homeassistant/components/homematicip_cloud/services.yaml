@@ -69,3 +69,10 @@ dump_hap_config:
     anonymize:
       description: (Default is True) Should the Configuration be anonymized?
       example: True
+
+reset_energy_counter:
+  description: Reset the energy counter of a measuring entity.
+  fields:
+    entity_id:
+      description: The ID of the measuring entity. Use 'all' keyword to reset all energy counters.
+      example: switch.livingroom

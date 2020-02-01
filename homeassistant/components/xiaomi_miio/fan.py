@@ -4,7 +4,6 @@ from enum import Enum
 from functools import partial
 import logging
 
-import voluptuous as vol
 from miio import (  # pylint: disable=import-error
     AirFresh,
     AirHumidifier,
@@ -12,26 +11,21 @@ from miio import (  # pylint: disable=import-error
     Device,
     DeviceException,
 )
-
-from miio.airfresh import (  # pylint: disable=import-error; pylint: disable=import-error
+from miio.airfresh import (  # pylint: disable=import-error, import-error
     LedBrightness as AirfreshLedBrightness,
     OperationMode as AirfreshOperationMode,
 )
-from miio.airhumidifier import (  # pylint: disable=import-error; pylint: disable=import-error
+from miio.airhumidifier import (  # pylint: disable=import-error, import-error
     LedBrightness as AirhumidifierLedBrightness,
     OperationMode as AirhumidifierOperationMode,
 )
-from miio.airpurifier import (  # pylint: disable=import-error; pylint: disable=import-error
+from miio.airpurifier import (  # pylint: disable=import-error, import-error
     LedBrightness as AirpurifierLedBrightness,
     OperationMode as AirpurifierOperationMode,
 )
+import voluptuous as vol
 
-from homeassistant.components.fan import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import PLATFORM_SCHEMA, SUPPORT_SET_SPEED, FanEntity
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -41,6 +35,28 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+
+from .const import (
+    DOMAIN,
+    SERVICE_RESET_FILTER,
+    SERVICE_SET_AUTO_DETECT_OFF,
+    SERVICE_SET_AUTO_DETECT_ON,
+    SERVICE_SET_BUZZER_OFF,
+    SERVICE_SET_BUZZER_ON,
+    SERVICE_SET_CHILD_LOCK_OFF,
+    SERVICE_SET_CHILD_LOCK_ON,
+    SERVICE_SET_DRY_OFF,
+    SERVICE_SET_DRY_ON,
+    SERVICE_SET_EXTRA_FEATURES,
+    SERVICE_SET_FAVORITE_LEVEL,
+    SERVICE_SET_LEARN_MODE_OFF,
+    SERVICE_SET_LEARN_MODE_ON,
+    SERVICE_SET_LED_BRIGHTNESS,
+    SERVICE_SET_LED_OFF,
+    SERVICE_SET_LED_ON,
+    SERVICE_SET_TARGET_HUMIDITY,
+    SERVICE_SET_VOLUME,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -367,25 +383,6 @@ FEATURE_FLAGS_AIRFRESH = (
     | FEATURE_RESET_FILTER
     | FEATURE_SET_EXTRA_FEATURES
 )
-
-SERVICE_SET_BUZZER_ON = "xiaomi_miio_set_buzzer_on"
-SERVICE_SET_BUZZER_OFF = "xiaomi_miio_set_buzzer_off"
-SERVICE_SET_LED_ON = "xiaomi_miio_set_led_on"
-SERVICE_SET_LED_OFF = "xiaomi_miio_set_led_off"
-SERVICE_SET_CHILD_LOCK_ON = "xiaomi_miio_set_child_lock_on"
-SERVICE_SET_CHILD_LOCK_OFF = "xiaomi_miio_set_child_lock_off"
-SERVICE_SET_LED_BRIGHTNESS = "xiaomi_miio_set_led_brightness"
-SERVICE_SET_FAVORITE_LEVEL = "xiaomi_miio_set_favorite_level"
-SERVICE_SET_AUTO_DETECT_ON = "xiaomi_miio_set_auto_detect_on"
-SERVICE_SET_AUTO_DETECT_OFF = "xiaomi_miio_set_auto_detect_off"
-SERVICE_SET_LEARN_MODE_ON = "xiaomi_miio_set_learn_mode_on"
-SERVICE_SET_LEARN_MODE_OFF = "xiaomi_miio_set_learn_mode_off"
-SERVICE_SET_VOLUME = "xiaomi_miio_set_volume"
-SERVICE_RESET_FILTER = "xiaomi_miio_reset_filter"
-SERVICE_SET_EXTRA_FEATURES = "xiaomi_miio_set_extra_features"
-SERVICE_SET_TARGET_HUMIDITY = "xiaomi_miio_set_target_humidity"
-SERVICE_SET_DRY_ON = "xiaomi_miio_set_dry_on"
-SERVICE_SET_DRY_OFF = "xiaomi_miio_set_dry_off"
 
 AIRPURIFIER_SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 

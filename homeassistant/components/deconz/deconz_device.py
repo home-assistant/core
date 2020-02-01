@@ -59,7 +59,10 @@ class DeconzDevice(DeconzBase, Entity):
 
     @property
     def entity_registry_enabled_default(self):
-        """Return if the entity should be enabled when first added to the entity registry."""
+        """Return if the entity should be enabled when first added to the entity registry.
+
+        Daylight is a virtual sensor from deCONZ that should never be enabled by default.
+        """
         if not self.gateway.option_allow_clip_sensor and self._device.type.startswith(
             "CLIP"
         ):
@@ -69,6 +72,9 @@ class DeconzDevice(DeconzBase, Entity):
             not self.gateway.option_allow_deconz_groups
             and self._device.type == "LightGroup"
         ):
+            return False
+
+        if self._device.type == "Daylight":
             return False
 
         return True
@@ -91,8 +97,11 @@ class DeconzDevice(DeconzBase, Entity):
             unsub_dispatcher()
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self, force_update=False, ignore_update=False):
         """Update the device's state."""
+        if ignore_update:
+            return
+
         self.async_schedule_update_ha_state()
 
     @property

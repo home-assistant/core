@@ -19,14 +19,15 @@ from . import (
     TYPE_BATTOUT,
     AmbientWeatherEntity,
 )
-from .const import ATTR_LAST_DATA, DATA_CLIENT, DOMAIN, TYPE_BINARY_SENSOR
+from .const import (
+    ATTR_LAST_DATA,
+    ATTR_MONITORED_CONDITIONS,
+    DATA_CLIENT,
+    DOMAIN,
+    TYPE_BINARY_SENSOR,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up Ambient PWS binary sensors based on the old way."""
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):
@@ -35,7 +36,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
     binary_sensor_list = []
     for mac_address, station in ambient.stations.items():
-        for condition in ambient.monitored_conditions:
+        for condition in station[ATTR_MONITORED_CONDITIONS]:
             name, _, kind, device_class = SENSOR_TYPES[condition]
             if kind == TYPE_BINARY_SENSOR:
                 binary_sensor_list.append(
