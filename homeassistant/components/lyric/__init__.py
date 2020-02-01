@@ -94,7 +94,7 @@ def setup_lyric(hass, lyric, config, url=None):
         _LOGGER.debug("url acquired, requesting access token")
         lyric.authorization_response(url)
 
-    if lyric._token is None:
+    if lyric.token is None:
         _LOGGER.debug("no access_token, requesting configuration")
         request_configuration(lyric, hass, config)
         return
@@ -108,7 +108,7 @@ def setup_lyric(hass, lyric, config, url=None):
     conf = config[DOMAIN]
     hass.data[DATA_LYRIC] = LyricDevice(hass, conf, lyric)
 
-    _LOGGER.debug(hass.data[DATA_LYRIC].lyric._locations)
+    _LOGGER.debug(hass.data[DATA_LYRIC].lyric.locations)
     _LOGGER.debug("proceeding with discovery of platforms")
     conf.pop(CONF_CLIENT_ID)
     conf.pop(CONF_CLIENT_SECRET)
@@ -150,7 +150,7 @@ def setup(hass, config):
     return True
 
 
-class LyricDevice(object):
+class LyricDevice:
     """Structure Lyric functions for hass."""
 
     def __init__(self, hass, conf, lyric):
@@ -182,22 +182,6 @@ class LyricDevice(object):
                     )
         except TypeError:
             _LOGGER.error("Connection error logging into the Lyric web service.")
-
-    def waterLeakDetectors(self):
-        """Generate a list of water leak detectors."""
-
-        try:
-            for location in self.lyric.locations:
-                if location.name in self._location:
-                    for device in location.waterLeakDetectors:
-                        yield (location, device)
-                else:
-                    _LOGGER.debug(
-                        "Ignoring location %s, not in %s", location.name, self._location
-                    )
-        except TypeError:
-            _LOGGER.error("Connection error logging into the Lyric web service.")
-
 
 class LyricAuthenticateView(HomeAssistantView):
     """Handle redirects from lyric oauth2 api, to authenticate."""

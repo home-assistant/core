@@ -63,8 +63,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    _LOGGER.debug("climate discovery_info: %s" % discovery_info)
-    _LOGGER.debug("climate config: %s" % config)
+    _LOGGER.debug("climate discovery_info: %s", discovery_info)
+    _LOGGER.debug("climate config: %s", config)
 
     _LOGGER.debug("Set up Lyric climate platform")
 
@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
-        _LOGGER.debug("resume_program_service entity_id: %s" % entity_id)
+        _LOGGER.debug("resume_program_service entity_id: %s", entity_id)
 
         if entity_id:
             target_thermostats = [
@@ -327,9 +327,9 @@ class LyricThermostat(ClimateDevice):
 
                 self.device.temperatureSetpoint = (setpoint + 1, setpoint)
 
-    def set_fan_mode(self, fan):
+    def set_fan_mode(self, fan_mode):
         """Set fan state."""
 
         if fan in self._fan_possible_modes_rev.keys():
             self.device.thermostatSetpointStatus = "TemporaryHold"
-            self.device.fanMode = self._fan_possible_modes_rev[fan]
+            self.device.fanMode = self._fan_possible_modes_rev[fan_mode]
