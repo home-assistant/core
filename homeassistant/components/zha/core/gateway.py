@@ -196,21 +196,7 @@ class ZHAGateway:
             device for device in self._devices.values() if device.nwk == 0x0000
         )
 
-        for group_id in self.application_controller.groups:
-            group = self.application_controller.groups[group_id]
-            zha_group = self._async_get_or_create_group(group)
-            discovery_info = {
-                "component": "light",
-                "group_id": zha_group.group_id,
-                "zha_device": self._coordinator_zha_device,
-                "unique_id": zha_group.unique_id,
-                "channels": [],
-                "entity_ids": zha_group.member_entity_ids,
-            }
-
-            self._hass.data[DATA_ZHA]["light"][
-                discovery_info["unique_id"]
-            ] = discovery_info
+        self._initialize_groups()
 
     def device_joined(self, device):
         """Handle device joined.
@@ -292,46 +278,6 @@ class ZHAGateway:
                 },
             )
 
-    def group_member_removed(self, zigpy_group, endpoint):
-        """Handle zigpy group member removed event."""
-        # need to handle endpoint correctly on groups
-        zha_group = self._async_get_or_create_group(zigpy_group)
-        zha_group.info("group_member_removed - endpoint: %s", endpoint)
-        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_REMOVED)
-
-    def group_member_added(self, zigpy_group, endpoint):
-        """Handle zigpy group member added event."""
-        # need to handle endpoint correctly on groups
-        zha_group = self._async_get_or_create_group(zigpy_group)
-        zha_group.info("group_member_added - endpoint: %s", endpoint)
-        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_MEMBER_ADDED)
-
-    def group_added(self, zigpy_group):
-        """Handle zigpy group added event."""
-        zha_group = self._async_get_or_create_group(zigpy_group)
-        zha_group.info("group_added")
-        # need to dispatch for entity creation here
-        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_ADDED)
-
-    def group_removed(self, zigpy_group):
-        """Handle zigpy group added event."""
-        self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
-        zha_group = self._groups.pop(zigpy_group.group_id, None)
-        zha_group.info("group_removed")
-
-    def _send_group_gateway_message(self, zigpy_group, gateway_message_type):
-        """Send the gareway event for a zigpy group event."""
-        zha_group = self._groups.get(zigpy_group.group_id, None)
-        if zha_group is not None:
-            async_dispatcher_send(
-                self._hass,
-                ZHA_GW_MSG,
-                {
-                    ATTR_TYPE: gateway_message_type,
-                    ZHA_GW_MSG_GROUP_INFO: zha_group.async_get_info(),
-                },
-            )
-
     async def _async_remove_device(self, device, entity_refs):
         if entity_refs is not None:
             remove_tasks = []
@@ -372,13 +318,6 @@ class ZHAGateway:
         return self.groups.get(group_id)
 
     @callback
-    def async_get_group_by_name(self, group_name):
-        """Get ZHA group by name."""
-        for group in self.groups.values():
-            if group.name == group_name:
-                return group
-        return None
-
     def async_get_group_by_name(self, group_name):
         """Get ZHA group by name."""
         for group in self.groups.values():
@@ -462,7 +401,19 @@ class ZHAGateway:
         """Initialize ZHA groups."""
         for group_id in self.application_controller.groups:
             group = self.application_controller.groups[group_id]
-            self._async_get_or_create_group(group)
+            zha_group = self._async_get_or_create_group(group)
+            discovery_info = {
+                "component": "light",
+                "group_id": zha_group.group_id,
+                "zha_device": self._coordinator_zha_device,
+                "unique_id": zha_group.unique_id,
+                "channels": [],
+                "entity_ids": zha_group.member_entity_ids,
+            }
+
+            self._hass.data[DATA_ZHA]["light"][
+                discovery_info["unique_id"]
+            ] = discovery_info
 
     @callback
     def _async_get_or_create_device(
