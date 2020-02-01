@@ -11,6 +11,9 @@ from homeassistant.util.dt import utcnow
 
 from .debounce import Debouncer
 
+REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
+REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
+
 
 class UpdateFailed(Exception):
     """Raised when an update has failed."""
@@ -26,7 +29,7 @@ class DataUpdateCoordinator:
         name: str,
         update_method: Callable[[], Awaitable],
         update_interval: timedelta,
-        request_refresh_debouncer: Debouncer,
+        request_refresh_debouncer: Debouncer = None,
     ):
         """Initialize global data updater."""
         self.hass = hass
@@ -41,6 +44,13 @@ class DataUpdateCoordinator:
         self._unsub_refresh: Optional[CALLBACK_TYPE] = None
         self._request_refresh_task: Optional[asyncio.TimerHandle] = None
         self.failed_last_update = False
+        if request_refresh_debouncer is None:
+            request_refresh_debouncer = Debouncer(
+                hass,
+                logger,
+                REQUEST_REFRESH_DEFAULT_COOLDOWN,
+                REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+            )
         self._debounced_refresh = request_refresh_debouncer
         request_refresh_debouncer.function = self._async_do_refresh
 
