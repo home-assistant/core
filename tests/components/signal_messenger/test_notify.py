@@ -1,5 +1,7 @@
 """The tests for the signal_messenger platform."""
 
+import os
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -62,6 +64,59 @@ class TestSignalMesssenger(unittest.TestCase):
             "homeassistant.components.signal_messenger.notify", level="DEBUG"
         ) as context:
             self._signalmessenger.send_message(message)
+        self.assertIn("Sending signal message", context.output[0])
+        self.assertTrue(mock.called)
+        self.assertEqual(mock.call_count, 2)
+
+    @requests_mock.Mocker()
+    def test_send_message_should_show_deprecation_warning(self, mock):
+        """Test send message."""
+        message = "Testing Signal Messenger platform with attachment :)"
+        mock.register_uri(
+            "POST", "http://127.0.0.1:8080/v2/send", status_code=201,
+        )
+        mock.register_uri(
+            "GET",
+            "http://127.0.0.1:8080/v1/about",
+            status_code=200,
+            json={"versions": ["v1", "v2"]},
+        )
+        with self.assertLogs(
+            "homeassistant.components.signal_messenger.notify", level="WARNING"
+        ) as context:
+            with tempfile.NamedTemporaryFile(
+                suffix=".png", prefix=os.path.basename(__file__)
+            ) as tf:
+                data = {"data": {"attachment": tf.name}}
+                self._signalmessenger.send_message(message, **data)
+        self.assertIn(
+            "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108.",
+            context.output[0],
+        )
+        self.assertTrue(mock.called)
+        self.assertEqual(mock.call_count, 2)
+
+    @requests_mock.Mocker()
+    def test_send_message_with_attachment(self, mock):
+        """Test send message."""
+        message = "Testing Signal Messenger platform :)"
+        mock.register_uri(
+            "POST", "http://127.0.0.1:8080/v2/send", status_code=201,
+        )
+        mock.register_uri(
+            "GET",
+            "http://127.0.0.1:8080/v1/about",
+            status_code=200,
+            json={"versions": ["v1", "v2"]},
+        )
+        with self.assertLogs(
+            "homeassistant.components.signal_messenger.notify", level="DEBUG"
+        ) as context:
+            with tempfile.NamedTemporaryFile(
+                suffix=".png", prefix=os.path.basename(__file__)
+            ) as tf:
+                data = {"data": {"attachments": [tf.name]}}
+                self._signalmessenger.send_message(message, **data)
         self.assertIn("Sending signal message", context.output[0])
         self.assertTrue(mock.called)
         self.assertEqual(mock.call_count, 2)
