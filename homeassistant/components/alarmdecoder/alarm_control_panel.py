@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-from . import DATA_AD, DOMAIN, SIGNAL_PANEL_MESSAGE
+from . import CONF_AUTO_BYPASS, DATA_AD, DOMAIN, SIGNAL_PANEL_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,13 +35,17 @@ ALARM_KEYPRESS_SCHEMA = vol.Schema({vol.Required(ATTR_KEYPRESS): cv.string})
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up for AlarmDecoder alarm panels."""
-    device = AlarmDecoderAlarmPanel(discovery_info["autobypass"])
-    add_entities([device])
+    if discovery_info is None:
+        return
+
+    auto_bypass = discovery_info[CONF_AUTO_BYPASS]
+    entity = AlarmDecoderAlarmPanel(auto_bypass)
+    add_entities([entity])
 
     def alarm_toggle_chime_handler(service):
         """Register toggle chime handler."""
         code = service.data.get(ATTR_CODE)
-        device.alarm_toggle_chime(code)
+        entity.alarm_toggle_chime(code)
 
     hass.services.register(
         DOMAIN,
@@ -53,7 +57,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def alarm_keypress_handler(service):
         """Register keypress handler."""
         keypress = service.data[ATTR_KEYPRESS]
-        device.alarm_keypress(keypress)
+        entity.alarm_keypress(keypress)
 
     hass.services.register(
         DOMAIN,
