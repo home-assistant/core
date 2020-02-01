@@ -64,7 +64,7 @@ class SignalNotificationService(BaseNotificationService):
             if ATTR_FILENAMES in data:
                 filenames = data[ATTR_FILENAMES]
             if ATTR_FILENAME in data:
-                _LOGGER.warn(
+                _LOGGER.warning(
                     "The 'attachment' option is deprecated, please replace it with 'attachments'. This option will become invalid in version 0.108."
                 )
                 if filenames is None:
