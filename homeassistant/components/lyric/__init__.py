@@ -183,6 +183,7 @@ class LyricDevice:
         except TypeError:
             _LOGGER.error("Connection error logging into the Lyric web service.")
 
+
 class LyricAuthenticateView(HomeAssistantView):
     """Handle redirects from lyric oauth2 api, to authenticate."""
 

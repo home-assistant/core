@@ -330,6 +330,6 @@ class LyricThermostat(ClimateDevice):
     def set_fan_mode(self, fan_mode):
         """Set fan state."""
 
-        if fan in self._fan_possible_modes_rev.keys():
+        if fan_mode in self._fan_possible_modes_rev.keys():
             self.device.thermostatSetpointStatus = "TemporaryHold"
             self.device.fanMode = self._fan_possible_modes_rev[fan_mode]
