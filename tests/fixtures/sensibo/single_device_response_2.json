@@ -1,0 +1,164 @@
+{
+  "measurements": {
+    "batteryVoltage": null,
+    "temperature": 20.3,
+    "humidity": 46.2,
+    "time": {
+      "secondsAgo": 10,
+      "time": "2020-01-01T01:01:01.000000Z"
+    },
+    "rssi": -80,
+    "piezo": [null, null]
+  },
+  "room": {
+    "name": "Unwanted Fake Sensibo Device"
+  },
+  "temperatureUnit": "C",
+  "connectionStatus": {
+    "isAlive": true
+  },
+  "acState": {
+    "on": true,
+    "fanLevel": "auto",
+    "temperatureUnit": "C",
+    "targetTemperature": 22,
+    "mode": "heat",
+    "swing": "stopped"
+  },
+  "remoteCapabilities": {
+    "modes": {
+      "dry": {
+        "temperatures": {},
+        "swing": ["stopped", "rangeFull"]
+      },
+      "auto": {
+        "swing": ["stopped", "rangeFull"],
+        "temperatures": {
+          "C": {
+            "isNative": true,
+            "values": [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+          },
+          "F": {
+            "isNative": false,
+            "values": [64, 66, 68, 70, 72, 73, 75, 77, 79, 81, 82, 84, 86]
+          }
+        },
+        "fanLevels": [
+          "quiet",
+          "low",
+          "medium_low",
+          "medium",
+          "medium_high",
+          "high",
+          "auto",
+          "strong"
+        ]
+      },
+      "heat": {
+        "swing": ["stopped", "rangeFull"],
+        "temperatures": {
+          "C": {
+            "isNative": true,
+            "values": [
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30
+            ]
+          },
+          "F": {
+            "isNative": false,
+            "values": [
+              50,
+              52,
+              54,
+              55,
+              57,
+              59,
+              61,
+              63,
+              64,
+              66,
+              68,
+              70,
+              72,
+              73,
+              75,
+              77,
+              79,
+              81,
+              82,
+              84,
+              86
+            ]
+          }
+        },
+        "fanLevels": [
+          "quiet",
+          "low",
+          "medium_low",
+          "medium",
+          "medium_high",
+          "high",
+          "auto",
+          "strong"
+        ]
+      },
+      "fan": {
+        "swing": ["stopped", "rangeFull"],
+        "temperatures": {},
+        "fanLevels": [
+          "quiet",
+          "low",
+          "medium_low",
+          "medium",
+          "medium_high",
+          "high",
+          "auto",
+          "strong"
+        ]
+      },
+      "cool": {
+        "swing": ["stopped", "rangeFull"],
+        "temperatures": {
+          "C": {
+            "isNative": true,
+            "values": [18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+          },
+          "F": {
+            "isNative": false,
+            "values": [64, 66, 68, 70, 72, 73, 75, 77, 79, 81, 82, 84, 86]
+          }
+        },
+        "fanLevels": [
+          "quiet",
+          "low",
+          "medium_low",
+          "medium",
+          "medium_high",
+          "high",
+          "auto",
+          "strong"
+        ]
+      }
+    }
+  },
+  "id": "sensibo-device-id-2"
+}

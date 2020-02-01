@@ -8,7 +8,7 @@ import async_timeout
 import pysensibo
 import voluptuous as vol
 
-from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
+from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
@@ -41,15 +41,16 @@ _LOGGER = logging.getLogger(__name__)
 
 ALL = ["all"]
 TIMEOUT = 10
+MANUFACTURER = "Sensibo"
 
 SERVICE_ASSUME_STATE = "assume_state"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_ID, default=ALL): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
+# PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+#     {
+#         vol.Required(CONF_API_KEY): cv.string,
+#         vol.Optional(CONF_ID, default=ALL): vol.All(cv.ensure_list, [cv.string]),
+#     }
+# )
 
 ASSUME_STATE_SCHEMA = vol.Schema(
     {vol.Optional(ATTR_ENTITY_ID): cv.entity_ids, vol.Required(ATTR_STATE): cv.string}
@@ -86,13 +87,23 @@ HA_TO_SENSIBO = {value: key for key, value in SENSIBO_TO_HA.items()}
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up Sensibo devices."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Sensibo devices from config entry."""
+    # async def someother_method():
     client = pysensibo.SensiboClient(
-        config[CONF_API_KEY], session=async_get_clientsession(hass), timeout=TIMEOUT
+        config_entry.data[CONF_API_KEY],
+        session=async_get_clientsession(hass),
+        timeout=TIMEOUT,
     )
     devices = []
     try:
         for dev in await client.async_get_devices(_INITIAL_FETCH_FIELDS):
-            if config[CONF_ID] == ALL or dev["id"] in config[CONF_ID]:
+            if config_entry.data.get(CONF_ID) == ALL or dev[
+                "id"
+            ] in config_entry.data.get(CONF_ID):
                 devices.append(
                     SensiboClimate(client, dev, hass.config.units.temperature_unit)
                 )
@@ -146,15 +157,27 @@ class SensiboClimate(ClimateDevice):
         """
         self._client = client
         self._id = data["id"]
+        self._uuid = data["id"]
         self._external_state = None
         self._units = units
         self._available = False
+        self._manufacturer = MANUFACTURER
         self._do_update(data)
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
         return self._supported_features
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self._name,
+            "identifiers": {(SENSIBO_DOMAIN, self.unique_id)},
+            "manufacturer": self._manufacturer,
+            "model": None,
+        }
 
     def _do_update(self, data):
         self._name = data["room"]["name"]

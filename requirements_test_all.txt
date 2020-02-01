@@ -538,6 +538,9 @@ pyps4-2ndscreen==1.0.6
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
 
+# homeassistant.components.sensibo
+pysensibo==1.0.3
+
 # homeassistant.components.signal_messenger
 pysignalclirestapi==0.2.4
 

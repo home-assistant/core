@@ -1,0 +1,1 @@
+"""Sensibo component tests."""
