@@ -1,6 +1,7 @@
 """Support for AVM Fritz!Box smarthome temperature sensor only devices."""
 import requests
 
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
@@ -10,6 +11,8 @@ from .const import (
     DOMAIN as FRITZBOX_DOMAIN,
     LOGGER,
 )
+
+entities = set()
 
 
 async def async_setup_platform(
@@ -21,7 +24,6 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fritzbox smarthome sensor from config_entry."""
-    LOGGER.debug("Initializing fritzbox temperature sensors")
     devices = []
     fritz_list = hass.data[FRITZBOX_DOMAIN]
 
@@ -32,8 +34,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 device.has_temperature_sensor
                 and not device.has_switch
                 and not device.has_thermostat
+                and device.ain not in entities
             ):
                 devices.append(FritzBoxTempSensor(device, fritz))
+                entities.add(device.ain)
 
     async_add_entities(devices)
 
@@ -51,7 +55,7 @@ class FritzBoxTempSensor(Entity):
         """Return device specific attributes."""
         return {
             "name": self.name,
-            "identifiers": {(FRITZBOX_DOMAIN, self.unique_id)},
+            "identifiers": {(FRITZBOX_DOMAIN, self._device.ain)},
             "manufacturer": self._device.manufacturer,
             "model": self._device.productname,
             "sw_version": self._device.fw_version,
@@ -60,7 +64,7 @@ class FritzBoxTempSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return self._device.ain
+        return f"{self._device.ain}-{DOMAIN}"
 
     @property
     def name(self):

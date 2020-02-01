@@ -1,7 +1,7 @@
 """Support for AVM Fritz!Box smarthome switch devices."""
 import requests
 
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import ATTR_TEMPERATURE, ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS
 
 from .const import (
@@ -16,6 +16,8 @@ ATTR_TOTAL_CONSUMPTION_UNIT = "total_consumption_unit"
 ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR
 
 ATTR_TEMPERATURE_UNIT = "temperature_unit"
+
+entities = set()
 
 
 async def async_setup_platform(
@@ -33,8 +35,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for fritz in fritz_list:
         device_list = fritz.get_devices()
         for device in device_list:
-            if device.has_switch:
+            if device.has_switch and device.ain not in entities:
                 devices.append(FritzboxSwitch(device, fritz))
+                entities.add(device.ain)
 
     async_add_entities(devices)
 
@@ -52,7 +55,7 @@ class FritzboxSwitch(SwitchDevice):
         """Return device specific attributes."""
         return {
             "name": self.name,
-            "identifiers": {(FRITZBOX_DOMAIN, self.unique_id)},
+            "identifiers": {(FRITZBOX_DOMAIN, self._device.ain)},
             "manufacturer": self._device.manufacturer,
             "model": self._device.productname,
             "sw_version": self._device.fw_version,
@@ -61,7 +64,7 @@ class FritzboxSwitch(SwitchDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return self._device.ain
+        return f"{self._device.ain}-{DOMAIN}"
 
     @property
     def available(self):
