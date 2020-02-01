@@ -737,6 +737,8 @@ async def test_fan_range(hass):
         },
     } in presets
 
+    assert {"rangeValue": 5} not in presets
+
     assert {
         "rangeValue": 6,
         "presetResources": {
