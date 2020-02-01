@@ -52,7 +52,7 @@ class DataUpdateCoordinator:
                 REQUEST_REFRESH_DEFAULT_IMMEDIATE,
             )
         self._debounced_refresh = request_refresh_debouncer
-        request_refresh_debouncer.function = self._async_do_refresh
+        request_refresh_debouncer.function = self.async_refresh
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> None:
@@ -74,14 +74,6 @@ class DataUpdateCoordinator:
             self._unsub_refresh()
             self._unsub_refresh = None
 
-    async def async_refresh(self) -> None:
-        """Refresh the data."""
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
-
-        await self._async_do_refresh()
-
     @callback
     def _schedule_refresh(self) -> None:
         """Schedule a refresh."""
@@ -96,7 +88,7 @@ class DataUpdateCoordinator:
     async def _handle_refresh_interval(self, _now: datetime) -> None:
         """Handle a refresh interval occurrence."""
         self._unsub_refresh = None
-        await self._async_do_refresh()
+        await self.async_refresh()
 
     async def async_request_refresh(self) -> None:
         """Request a refresh.
@@ -105,8 +97,8 @@ class DataUpdateCoordinator:
         """
         await self._debounced_refresh.async_call()
 
-    async def _async_do_refresh(self) -> None:
-        """Time to update."""
+    async def async_refresh(self) -> None:
+        """Update data."""
         if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
