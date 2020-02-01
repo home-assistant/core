@@ -111,14 +111,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "Cannot connect to owserver on %s:%d, got: %s", owhost, owport, exc
             )
             devices = []
-        for device in devices:
+        while devices:
             _LOGGER.debug("found device: %s", device)
+            device = devices.pop()
             family = owproxy.read(f"{device}family").decode()
             dev_type = "std"
             if "EF" in family:
                 dev_type = "HobbyBoard"
                 family = owproxy.read(f"{device}type").decode()
-
+            if "1F" in family:
+                for branch in ["main", "aux"]:
+                    _LOGGER.info(f"Listing : {device}{branch}")
+                    new_devices = owproxy.dir(f"{device}{branch}")
+                    devices.extend(new_devices)
+                continue
             if family not in hb_info_from_type(dev_type):
                 _LOGGER.warning(
                     "Ignoring unknown family (%s) of sensor found for device: %s",
@@ -161,10 +167,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     # We have an owfs mounted
     else:
-        for family_file_path in glob(os.path.join(base_dir, "*", "family")):
+        families = glob(os.path.join(base_dir, "*", "family"))
+        #for family_file_path in :
+        while(families):
+            family_file_path = families.pop()
             with open(family_file_path, "r") as family_file:
                 family = family_file.read()
             if "EF" in family:
+                continue
+            if "1F" in family: # coupler
+                for branch in ["main", "aux"]:
+                    new_families = glob(os.path.join(
+                        os.path.split(family_file_path)[0], branch, "*", "family"))
+                    families.extend(new_families)
                 continue
             if family in DEVICE_SENSORS:
                 for sensor_key, sensor_value in DEVICE_SENSORS[family].items():
