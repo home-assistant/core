@@ -114,7 +114,7 @@ class LyricThermostat(ClimateDevice):
             "off": HVAC_MODE_OFF,
             "cool": HVAC_MODE_COOL,
             "auto": HVAC_MODE_HEAT_COOL,
-            "fan": HVAC_MODE_FAN_ONLY
+            "fan": HVAC_MODE_FAN_ONLY,
         }
 
         self._hvac_possible_modes_rev = {
@@ -122,7 +122,7 @@ class LyricThermostat(ClimateDevice):
             HVAC_MODE_OFF: "Off",
             HVAC_MODE_COOL: "Cool",
             HVAC_MODE_HEAT_COOL: "Auto",
-            HVAC_MODE_FAN_ONLY: "Fan"
+            HVAC_MODE_FAN_ONLY: "Fan",
         }
 
         self._hvac_possible_actions = {

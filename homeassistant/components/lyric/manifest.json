@@ -1,7 +1,7 @@
 {
   "domain": "lyric",
   "name": "Honeywell Lyric",
-  "documentation": "https://github.com/shellster/lyric",
+  "documentation": "https://www.home-assistant.io/integrations/lyric",
   "dependencies": [
       "configurator",
       "http"
