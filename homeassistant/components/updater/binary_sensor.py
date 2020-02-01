@@ -7,6 +7,9 @@ from . import ATTR_NEWEST_VERSION, ATTR_RELEASE_NOTES, DOMAIN as UPDATER_DOMAIN
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the updater binary sensors."""
+    if discovery_info is None:
+        return
+
     async_add_entities([UpdaterBinary(hass.data[UPDATER_DOMAIN])])
 
 

@@ -29,7 +29,7 @@ class DataUpdateCoordinator:
         name: str,
         update_method: Callable[[], Awaitable],
         update_interval: timedelta,
-        request_refresh_debouncer: Debouncer = None,
+        request_refresh_debouncer: Optional[Debouncer] = None,
     ):
         """Initialize global data updater."""
         self.hass = hass

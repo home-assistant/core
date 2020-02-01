@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from asynctest import CoroutineMock
+from asynctest import CoroutineMock, Mock
 import pytest
 
 from homeassistant.helpers import update_coordinator
@@ -101,11 +101,7 @@ async def test_update_interval(hass, crd):
     assert crd.data is None
 
     # Add subscriber
-    updates = []
-
-    def update_callback():
-        updates.append(crd.data)
-
+    update_callback = Mock()
     crd.async_add_listener(update_callback)
 
     # Test twice we update with subscriber
