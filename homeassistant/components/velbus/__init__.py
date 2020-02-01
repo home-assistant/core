@@ -82,9 +82,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
     def set_memo_text(service):
         """Handle Memo Text service call."""
+        memo_text = service.data[ATTR_MEMO_TEXT]
+        memo_text.hass = hass
         try:
             controller.get_module(service.data[ATTR_MODULE_ADDRESS]).set_memo_text(
-                service.data[ATTR_MEMO_TEXT]
+                memo_text.async_render()
             )
         except velbus.util.VelbusException as err:
             _LOGGER.error("An error occurred: %s", err)
@@ -98,7 +100,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
                 vol.Required(ATTR_MODULE_ADDRESS): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=255)
                 ),
-                vol.Optional(ATTR_MEMO_TEXT, default=""): cv.string,
+                vol.Optional(ATTR_MEMO_TEXT, default=""): cv.template,
             }
         ),
     )
