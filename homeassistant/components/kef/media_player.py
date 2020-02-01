@@ -17,6 +17,10 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
+    SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE,
+    SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK,
     MediaPlayerDevice,
 )
 from homeassistant.const import (
@@ -218,6 +222,14 @@ class KefMediaPlayer(MediaPlayerDevice):
         if self._supports_on:
             support_kef |= SUPPORT_TURN_ON
 
+        if self._source in ("Wifi", "Bluetooth"):
+            support_kef |= (
+                SUPPORT_NEXT_TRACK
+                | SUPPORT_PAUSE
+                | SUPPORT_PLAY
+                | SUPPORT_PREVIOUS_TRACK
+            )
+
         return support_kef
 
     @property
@@ -280,3 +292,19 @@ class KefMediaPlayer(MediaPlayerDevice):
             await self._speaker.set_source(source)
         else:
             raise ValueError(f"Unknown input source: {source}.")
+
+    async def async_media_play(self):
+        """Send play command."""
+        await self._speaker.play_pause()
+
+    async def async_media_pause(self):
+        """Send pause command."""
+        await self._speaker.play_pause()
+
+    async def async_media_previous_track(self):
+        """Send previous track command."""
+        await self._speaker.prev_track()
+
+    async def async_media_next_track(self):
+        """Send next track command."""
+        await self._speaker.next_track()
