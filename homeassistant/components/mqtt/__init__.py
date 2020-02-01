@@ -652,7 +652,7 @@ async def async_setup_entry(hass, entry):
     if result == CONNECTION_FAILED_RECOVERABLE:
         raise ConfigEntryNotReady
 
-    async def async_stop_mqtt(event: Event):
+    async def async_stop_mqtt(_event: Event):
         """Stop MQTT component."""
         await hass.data[DATA_MQTT].async_disconnect()
 
