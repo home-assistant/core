@@ -1,10 +1,10 @@
 """Support for Volvo On Call."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
+from volvooncall import Connection
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -14,6 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -114,8 +115,6 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the Volvo On Call component."""
     session = async_get_clientsession(hass)
-
-    from volvooncall import Connection
 
     connection = Connection(
         session=session,

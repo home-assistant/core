@@ -1,12 +1,13 @@
 """Support for Tahoma devices."""
 from collections import defaultdict
 import logging
-import voluptuous as vol
-from requests.exceptions import RequestException
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_EXCLUDE
-from homeassistant.helpers import discovery
-from homeassistant.helpers import config_validation as cv
+from requests.exceptions import RequestException
+from tahoma_api import Action, TahomaApi
+import voluptuous as vol
+
+from homeassistant.const import CONF_EXCLUDE, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,11 +31,14 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-TAHOMA_COMPONENTS = ["scene", "sensor", "cover", "switch", "binary_sensor"]
+TAHOMA_COMPONENTS = ["binary_sensor", "cover", "lock", "scene", "sensor", "switch"]
 
 TAHOMA_TYPES = {
+    "io:AwningValanceIOComponent": "cover",
     "io:ExteriorVenetianBlindIOComponent": "cover",
+    "io:DiscreteGarageOpenerIOComponent": "cover",
     "io:HorizontalAwningIOComponent": "cover",
+    "io:GarageOpenerIOComponent": "cover",
     "io:LightIOSystemSensor": "sensor",
     "io:OnOffIOComponent": "switch",
     "io:OnOffLightIOComponent": "switch",
@@ -44,10 +48,11 @@ TAHOMA_TYPES = {
     "io:RollerShutterWithLowSpeedManagementIOComponent": "cover",
     "io:SomfyBasicContactIOSystemSensor": "sensor",
     "io:SomfyContactIOSystemSensor": "sensor",
+    "io:TemperatureIOSystemSensor": "sensor",
     "io:VerticalExteriorAwningIOComponent": "cover",
+    "io:VerticalInteriorBlindVeluxIOComponent": "cover",
     "io:WindowOpenerVeluxIOComponent": "cover",
-    "io:GarageOpenerIOComponent": "cover",
-    "io:DiscreteGarageOpenerIOComponent": "cover",
+    "opendoors:OpenDoorsSmartLockComponent": "lock",
     "rtds:RTDSContactSensor": "sensor",
     "rtds:RTDSMotionSensor": "sensor",
     "rtds:RTDSSmokeSensor": "smoke",
@@ -57,13 +62,13 @@ TAHOMA_TYPES = {
     "rts:ExteriorVenetianBlindRTSComponent": "cover",
     "rts:GarageDoor4TRTSComponent": "switch",
     "rts:RollerShutterRTSComponent": "cover",
+    "rts:OnOffRTSComponent": "switch",
     "rts:VenetianBlindRTSComponent": "cover",
 }
 
 
 def setup(hass, config):
     """Activate Tahoma component."""
-    from tahoma_api import TahomaApi
 
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
@@ -133,7 +138,6 @@ class TahomaDevice(Entity):
 
     def apply_action(self, cmd_name, *args):
         """Apply Action to Device."""
-        from tahoma_api import Action
 
         action = Action(self.tahoma_device.url)
         action.add_command(cmd_name, *args)

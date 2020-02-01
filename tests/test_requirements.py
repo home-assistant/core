@@ -1,20 +1,26 @@
 """Test requirements module."""
 import os
 from pathlib import Path
-from unittest.mock import patch, call
-from pytest import raises
+from unittest.mock import call, patch
 
-from homeassistant import setup
+import pytest
+
+from homeassistant import loader, setup
 from homeassistant.requirements import (
     CONSTRAINT_FILE,
+    PROGRESS_FILE,
+    RequirementsNotFound,
+    _install,
     async_get_integration_with_requirements,
     async_process_requirements,
-    PROGRESS_FILE,
-    _install,
-    RequirementsNotFound,
 )
 
-from tests.common import get_test_home_assistant, MockModule, mock_integration
+from tests.common import (
+    MockModule,
+    get_test_home_assistant,
+    mock_coro,
+    mock_integration,
+)
 
 
 def env_without_wheel_links():
@@ -103,7 +109,7 @@ async def test_install_missing_package(hass):
     with patch(
         "homeassistant.util.package.install_package", return_value=False
     ) as mock_inst:
-        with raises(RequirementsNotFound):
+        with pytest.raises(RequirementsNotFound):
             await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
 
     assert len(mock_inst.mock_calls) == 1
@@ -221,3 +227,44 @@ async def test_progress_lock(hass):
         _install(hass, "hello", kwargs)
 
     assert not progress_path.exists()
+
+
+async def test_discovery_requirements_ssdp(hass):
+    """Test that we load discovery requirements."""
+    hass.config.skip_pip = False
+    ssdp = await loader.async_get_integration(hass, "ssdp")
+
+    mock_integration(
+        hass, MockModule("ssdp_comp", partial_manifest={"ssdp": [{"st": "roku:ecp"}]})
+    )
+    with patch(
+        "homeassistant.requirements.async_process_requirements",
+        side_effect=lambda _, _2, _3: mock_coro(),
+    ) as mock_process:
+        await async_get_integration_with_requirements(hass, "ssdp_comp")
+
+    assert len(mock_process.mock_calls) == 1
+    assert mock_process.mock_calls[0][1][2] == ssdp.requirements
+
+
+@pytest.mark.parametrize(
+    "partial_manifest",
+    [{"zeroconf": ["_googlecast._tcp.local."]}, {"homekit": {"models": ["LIFX"]}}],
+)
+async def test_discovery_requirements_zeroconf(hass, partial_manifest):
+    """Test that we load discovery requirements."""
+    hass.config.skip_pip = False
+    zeroconf = await loader.async_get_integration(hass, "zeroconf")
+
+    mock_integration(
+        hass, MockModule("comp", partial_manifest=partial_manifest),
+    )
+
+    with patch(
+        "homeassistant.requirements.async_process_requirements",
+        side_effect=lambda _, _2, _3: mock_coro(),
+    ) as mock_process:
+        await async_get_integration_with_requirements(hass, "comp")
+
+    assert len(mock_process.mock_calls) == 2  # zeroconf also depends on http
+    assert mock_process.mock_calls[0][1][2] == zeroconf.requirements

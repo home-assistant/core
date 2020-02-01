@@ -17,7 +17,6 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt
 
-
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +29,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 async def async_setup(hass, config):
     """Track states and offer events for calendars."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     hass.http.register_view(CalendarListView(component))

@@ -15,10 +15,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_show_user_form(hass: HomeAssistant) -> None:
     """Test that the user set up form is served."""
-    flow = config_flow.WLEDFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": SOURCE_USER},
+    )
 
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -64,10 +63,11 @@ async def test_connection_error(
     """Test we show user form on WLED connection error."""
     aioclient_mock.get("http://example.com/json/", exc=aiohttp.ClientError)
 
-    flow = config_flow.WLEDFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-    result = await flow.async_step_user(user_input={CONF_HOST: "example.com"})
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: "example.com"},
+    )
 
     assert result["errors"] == {"base": "connection_error"}
     assert result["step_id"] == "user"
@@ -80,10 +80,11 @@ async def test_zeroconf_connection_error(
     """Test we abort zeroconf flow on WLED connection error."""
     aioclient_mock.get("http://example.local/json/", exc=aiohttp.ClientError)
 
-    flow = config_flow.WLEDFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_ZEROCONF}
-    result = await flow.async_step_zeroconf(user_input={"hostname": "example.local."})
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data={"hostname": "example.local."},
+    )
 
     assert result["reason"] == "connection_error"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -95,15 +96,14 @@ async def test_zeroconf_confirm_connection_error(
     """Test we abort zeroconf flow on WLED connection error."""
     aioclient_mock.get("http://example.com/json/", exc=aiohttp.ClientError)
 
-    flow = config_flow.WLEDFlowHandler()
-    flow.hass = hass
-    flow.context = {
-        "source": SOURCE_ZEROCONF,
-        CONF_HOST: "example.com",
-        CONF_NAME: "test",
-    }
-    result = await flow.async_step_zeroconf_confirm(
-        user_input={CONF_HOST: "example.com"}
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={
+            "source": SOURCE_ZEROCONF,
+            CONF_HOST: "example.com",
+            CONF_NAME: "test",
+        },
+        data={"hostname": "example.com."},
     )
 
     assert result["reason"] == "connection_error"
@@ -128,13 +128,14 @@ async def test_user_device_exists_abort(
     """Test we abort zeroconf flow if WLED device already configured."""
     await init_integration(hass, aioclient_mock)
 
-    flow = config_flow.WLEDFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-    result = await flow.async_step_user({CONF_HOST: "example.local"})
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: "example.local"},
+    )
 
-    assert result["reason"] == "already_configured"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_zeroconf_device_exists_abort(
@@ -143,13 +144,14 @@ async def test_zeroconf_device_exists_abort(
     """Test we abort zeroconf flow if WLED device already configured."""
     await init_integration(hass, aioclient_mock)
 
-    flow = config_flow.WLEDFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_ZEROCONF}
-    result = await flow.async_step_zeroconf({"hostname": "example.local."})
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data={"hostname": "example.local."},
+    )
 
-    assert result["reason"] == "already_configured"
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_full_user_flow_implementation(
@@ -162,15 +164,17 @@ async def test_full_user_flow_implementation(
         headers={"Content-Type": "application/json"},
     )
 
-    flow = config_flow.WLEDFlowHandler()
-    flow.hass = hass
-    flow.context = {"source": SOURCE_USER}
-    result = await flow.async_step_user(user_input=None)
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN, context={"source": SOURCE_USER},
+    )
 
     assert result["step_id"] == "user"
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
 
-    result = await flow.async_step_user(user_input={CONF_HOST: "example.local"})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "example.local"}
+    )
+
     assert result["data"][CONF_HOST] == "example.local"
     assert result["data"][CONF_MAC] == "aabbccddeeff"
     assert result["title"] == "example.local"

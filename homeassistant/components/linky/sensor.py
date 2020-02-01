@@ -1,10 +1,9 @@
 """Support for Linky."""
+from datetime import timedelta
 import json
 import logging
-from datetime import timedelta
 
-from pylinky.client import DAILY, MONTHLY, YEARLY, LinkyClient
-from pylinky.client import PyLinkyException
+from pylinky.client import DAILY, MONTHLY, YEARLY, LinkyClient, PyLinkyException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -29,11 +28,6 @@ TIME = "time"
 INDEX_CURRENT = -1
 INDEX_LAST = -2
 ATTRIBUTION = "Data provided by Enedis"
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up the Linky platform."""
-    pass
 
 
 async def async_setup_entry(

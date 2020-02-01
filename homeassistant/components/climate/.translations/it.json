@@ -4,7 +4,7 @@
             "set_hvac_mode": "Cambia modalit\u00e0 HVAC su {entity_name}",
             "set_preset_mode": "Modifica preimpostazione su {entity_name}"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_hvac_mode": "{entity_name} \u00e8 impostato su una modalit\u00e0 HVAC specifica",
             "is_preset_mode": "{entity_name} \u00e8 impostato su una modalit\u00e0 preimpostata specifica"
         },

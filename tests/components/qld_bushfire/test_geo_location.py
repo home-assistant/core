@@ -1,6 +1,6 @@
 """The tests for the Queensland Bushfire Alert Feed platform."""
 import datetime
-from unittest.mock import patch, MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -25,8 +25,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.setup import async_setup_component
-from tests.common import assert_setup_component, async_fire_time_changed
 import homeassistant.util.dt as dt_util
+
+from tests.common import assert_setup_component, async_fire_time_changed
 
 CONFIG = {geo_location.DOMAIN: [{"platform": "qld_bushfire", CONF_RADIUS: 200}]}
 
@@ -88,7 +89,7 @@ async def test_setup(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "georss_qld_bushfire_alert_client." "QldBushfireAlertFeed"
+        "georss_qld_bushfire_alert_client.QldBushfireAlertFeed"
     ) as mock_feed:
         mock_feed.return_value.update.return_value = (
             "OK",
@@ -192,7 +193,7 @@ async def test_setup_with_custom_location(hass):
         "1234", "Title 1", 20.5, (38.1, -3.1), category="Category 1"
     )
 
-    with patch("georss_qld_bushfire_alert_client." "QldBushfireAlertFeed") as mock_feed:
+    with patch("georss_qld_bushfire_alert_client.QldBushfireAlertFeed") as mock_feed:
         mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):

@@ -3,7 +3,8 @@ Provide a mock lock platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
-from homeassistant.components.lock import LockDevice, SUPPORT_OPEN
+from homeassistant.components.lock import SUPPORT_OPEN, LockDevice
+
 from tests.common import MockEntity
 
 ENTITIES = {}

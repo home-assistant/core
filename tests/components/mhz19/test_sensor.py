@@ -1,12 +1,13 @@
 """Tests for MH-Z19 sensor."""
 import unittest
-from unittest.mock import patch, DEFAULT, Mock
+from unittest.mock import DEFAULT, Mock, patch
 
-from homeassistant.setup import setup_component
-from homeassistant.components.sensor import DOMAIN
 import homeassistant.components.mhz19.sensor as mhz19
+from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import TEMP_FAHRENHEIT
-from tests.common import get_test_home_assistant, assert_setup_component
+from homeassistant.setup import setup_component
+
+from tests.common import assert_setup_component, get_test_home_assistant
 
 
 class TestMHZ19Sensor(unittest.TestCase):

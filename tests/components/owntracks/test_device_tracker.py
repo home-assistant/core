@@ -1300,7 +1300,7 @@ async def test_single_waypoint_import(hass, context):
 async def test_not_implemented_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch(
-        "homeassistant.components.owntracks." "messages.async_handle_not_impl_msg",
+        "homeassistant.components.owntracks.messages.async_handle_not_impl_msg",
         return_value=mock_coro(False),
     )
     patch_handler.start()
@@ -1311,7 +1311,7 @@ async def test_not_implemented_message(hass, context):
 async def test_unsupported_message(hass, context):
     """Handle not implemented message type."""
     patch_handler = patch(
-        "homeassistant.components.owntracks." "messages.async_handle_unsupported_msg",
+        "homeassistant.components.owntracks.messages.async_handle_unsupported_msg",
         return_value=mock_coro(False),
     )
     patch_handler.start()
@@ -1396,7 +1396,7 @@ def config_context(hass, setup_comp):
     patch_load.start()
 
     patch_save = patch(
-        "homeassistant.components.device_tracker." "DeviceTracker.async_update_config"
+        "homeassistant.components.device_tracker.DeviceTracker.async_update_config"
     )
     patch_save.start()
 
@@ -1495,8 +1495,7 @@ async def test_encrypted_payload_no_topic_key(hass, setup_comp):
 async def test_encrypted_payload_libsodium(hass, setup_comp):
     """Test sending encrypted message payload."""
     try:
-        # pylint: disable=unused-import
-        import nacl  # noqa: F401
+        import nacl  # noqa: F401 pylint: disable=unused-import
     except (ImportError, OSError):
         pytest.skip("PyNaCl/libsodium is not installed")
         return

@@ -1,16 +1,17 @@
 """Demo platform that has two fake alarm control panels."""
 import datetime
+
 from homeassistant.components.manual.alarm_control_panel import ManualAlarm
 from homeassistant.const import (
+    CONF_DELAY_TIME,
+    CONF_PENDING_TIME,
+    CONF_TRIGGER_TIME,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
-    CONF_DELAY_TIME,
-    CONF_PENDING_TIME,
-    CONF_TRIGGER_TIME,
 )
 
 

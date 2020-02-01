@@ -1,9 +1,9 @@
 """Tests for handling accessories on a Hue bridge via HomeKit."""
 
 from tests.components.homekit_controller.common import (
+    Helper,
     setup_accessories_from_file,
     setup_test_accessories,
-    Helper,
 )
 
 

@@ -3,11 +3,7 @@
   "name": "Toon",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/toon",
-  "requirements": [
-    "toonapilib==3.2.4"
-  ],
+  "requirements": ["toonapilib==3.2.4"],
   "dependencies": [],
-  "codeowners": [
-    "@frenck"
-  ]
+  "codeowners": ["@frenck"]
 }

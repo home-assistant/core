@@ -1,6 +1,6 @@
 """The tests for mqtt camera component."""
-from unittest.mock import ANY
 import json
+from unittest.mock import ANY
 
 from homeassistant.components import camera, mqtt
 from homeassistant.components.mqtt.discovery import async_start

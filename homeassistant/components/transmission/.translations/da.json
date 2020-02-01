@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "V\u00e6rten er allerede konfigureret.",
-            "one_instance_allowed": "Det er kun n\u00f8dvendigt med en ops\u00e6tning."
+            "one_instance_allowed": "Kun en enkelt instans er n\u00f8dvendig."
         },
         "error": {
             "cannot_connect": "Kunne ikke oprette forbindelse til v\u00e6rt",
@@ -14,7 +14,7 @@
                 "data": {
                     "scan_interval": "Opdateringsfrekvens"
                 },
-                "title": "Konfigurer indstillinger"
+                "title": "Konfigurationsmuligheder"
             },
             "user": {
                 "data": {
@@ -24,7 +24,7 @@
                     "port": "Port",
                     "username": "Brugernavn"
                 },
-                "title": "Konfigurer Transmission klient"
+                "title": "Konfigurer Transmission-klient"
             }
         },
         "title": "Transmission"

@@ -7,17 +7,17 @@ https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.dublin_public_transport/
 """
+from datetime import datetime, timedelta
 import logging
-from datetime import timedelta, datetime
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation"

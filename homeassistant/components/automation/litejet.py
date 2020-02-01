@@ -3,12 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import CONF_PLATFORM
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_utc_time
-
+import homeassistant.util.dt as dt_util
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -93,6 +92,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
     hass.data["litejet_system"].on_switch_pressed(number, pressed)
     hass.data["litejet_system"].on_switch_released(number, released)
 
+    @callback
     def async_remove():
         """Remove all subscriptions used for this trigger."""
         return
