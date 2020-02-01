@@ -1,4 +1,4 @@
-# Automatically generated from .pre-commit-config-all.yaml by gen_requirements_all.py, do not edit
+# Automatically generated from .pre-commit-config.yaml by gen_requirements_all.py, do not edit
 
 bandit==1.6.2
 black==19.10b0
