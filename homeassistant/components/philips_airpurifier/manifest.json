@@ -2,7 +2,7 @@
   "domain": "philips_airpurifier",
   "name": "Philips Air Purifier & Humidifier",
   "documentation": "https://www.home-assistant.io/integrations/philips_airpurifier",
-  "requirements": ["pycryptodomex>=3.4.7", "CoAPthon3>=1.0.1"],
+  "requirements": ["pycryptodomex==3.9.4", "CoAPthon3==1.0.1"],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
