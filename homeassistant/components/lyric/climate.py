@@ -233,7 +233,7 @@ class LyricThermostat(ClimateDevice):
 
     @property
     def target_temperature_low(self):
-        """Return target low temerature."""
+        """Return target low temperature."""
 
         return self._target_temperature_low
 

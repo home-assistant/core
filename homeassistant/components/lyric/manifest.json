@@ -8,8 +8,8 @@
   ],
   "requirements": [
       "python-lyric==1.1.5",
-      "voluptuous",
-      "requests"
+      "voluptuous==0.11.7",
+      "requests==2.22.0"
   ],
   "codeowners": [
     "@shellster"

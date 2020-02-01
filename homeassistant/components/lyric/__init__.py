@@ -75,7 +75,7 @@ def request_configuration(lyric, hass, config):
         lyric_configuration_callback,
         description=(
             "To configure Lyric, click Request Authorization below, "
-            "log into your Lyric account, when you get a successfull "
+            "log into your Lyric account, when you get a successful "
             "authorize, click continue. "
         ),
         # 'You can also paste the return url under here.'
