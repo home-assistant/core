@@ -216,7 +216,15 @@ class UniFiPOEClientSwitch(UniFiClient, SwitchDevice, RestoreEntity):
     @property
     def port(self):
         """Shortcut to the switch port that client is connected to."""
-        return self.device.ports[self.client.sw_port]
+        try:
+            return self.device.ports[self.client.sw_port]
+        except TypeError:
+            LOGGER.warning(
+                "Entity %s reports faulty device %s or port %s",
+                self.entity_id,
+                self.client.sw_mac,
+                self.client.sw_port,
+            )
 
 
 class UniFiBlockClientSwitch(UniFiClient, SwitchDevice):
