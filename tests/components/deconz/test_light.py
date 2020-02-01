@@ -60,13 +60,9 @@ LIGHTS = {
         "uniqueid": "00:00:00:00:00:00:00:02-00",
     },
     "4": {
-        "hascolor": False,
-        "manufacturername": "MLI",
-        "modelid": "tint Smart Switch",
         "name": "On off light",
-        "state": {"alert": "none", "on": True, "reachable": True},
-        "swversion": "2.5.3_r47",
-        "type": "On/Off light",
+        "state": {"on": True, "reachable": True},
+        "type": "On and Off light",
         "uniqueid": "00:00:00:00:00:00:00:03-00",
     },
 }
