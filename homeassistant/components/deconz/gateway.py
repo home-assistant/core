@@ -19,13 +19,13 @@ from homeassistant.helpers.entity_registry import (
 )
 
 from .const import (
-    _LOGGER,
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
     CONF_MASTER_GATEWAY,
     DEFAULT_ALLOW_CLIP_SENSOR,
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DOMAIN,
+    LOGGER,
     NEW_DEVICE,
     SUPPORTED_PLATFORMS,
 )
@@ -103,7 +103,7 @@ class DeconzGateway:
             raise ConfigEntryNotReady
 
         except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error("Error connecting with deCONZ gateway: %s", err)
+            LOGGER.error("Error connecting with deCONZ gateway: %s", err)
             return False
 
         for component in SUPPORTED_PLATFORMS:
@@ -221,11 +221,11 @@ async def get_gateway(
         return deconz
 
     except errors.Unauthorized:
-        _LOGGER.warning("Invalid key for deCONZ at %s", config[CONF_HOST])
+        LOGGER.warning("Invalid key for deCONZ at %s", config[CONF_HOST])
         raise AuthenticationRequired
 
     except (asyncio.TimeoutError, errors.RequestError):
-        _LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
+        LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
         raise CannotConnect
 
 
