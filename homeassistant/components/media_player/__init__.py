@@ -173,6 +173,23 @@ SCHEMA_WEBSOCKET_GET_THUMBNAIL = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.exten
 )
 
 
+def _rename_keys(**keys):
+    """Create validator that renames keys.
+
+    Necessary because the service schema names do not match the command parameters.
+
+    Async friendly.
+    """
+
+    def rename(value):
+        for to_key, from_key in keys.items():
+            if from_key in value:
+                value[to_key] = value.pop(from_key)
+        return value
+
+    return rename
+
+
 async def async_setup(hass, config):
     """Track states and offer events for media_players."""
     component = hass.data[DOMAIN] = EntityComponent(
@@ -239,8 +256,10 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_VOLUME_SET,
         vol.All(
-            {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
-            lambda data: {"volume": data[ATTR_MEDIA_VOLUME_LEVEL]},
+            cv.make_entity_service_schema(
+                {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float}
+            ),
+            _rename_keys(volume=ATTR_MEDIA_VOLUME_LEVEL),
         ),
         "async_set_volume_level",
         [SUPPORT_VOLUME_SET],
@@ -248,8 +267,10 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_VOLUME_MUTE,
         vol.All(
-            {vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean},
-            lambda data: {"mute": data[ATTR_MEDIA_VOLUME_MUTED]},
+            cv.make_entity_service_schema(
+                {vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean}
+            ),
+            _rename_keys(mute=ATTR_MEDIA_VOLUME_MUTED),
         ),
         "async_mute_volume",
         [SUPPORT_VOLUME_MUTE],
@@ -257,12 +278,14 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_MEDIA_SEEK,
         vol.All(
-            {
-                vol.Required(ATTR_MEDIA_SEEK_POSITION): vol.All(
-                    vol.Coerce(float), vol.Range(min=0)
-                )
-            },
-            lambda data: {"position": data[ATTR_MEDIA_SEEK_POSITION]},
+            cv.make_entity_service_schema(
+                {
+                    vol.Required(ATTR_MEDIA_SEEK_POSITION): vol.All(
+                        vol.Coerce(float), vol.Range(min=0)
+                    )
+                }
+            ),
+            _rename_keys(position=ATTR_MEDIA_SEEK_POSITION),
         ),
         "async_media_seek",
         [SUPPORT_SEEK],
@@ -282,12 +305,12 @@ async def async_setup(hass, config):
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
         vol.All(
-            MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
-            lambda data: {
-                "media_type": data[ATTR_MEDIA_CONTENT_TYPE],
-                "media_id": data[ATTR_MEDIA_CONTENT_ID],
-                "enqueue": data.get(ATTR_MEDIA_ENQUEUE),
-            },
+            cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
+            _rename_keys(
+                media_type=ATTR_MEDIA_CONTENT_TYPE,
+                media_id=ATTR_MEDIA_CONTENT_ID,
+                enqueue=ATTR_MEDIA_ENQUEUE,
+            ),
         ),
         "async_play_media",
         [SUPPORT_PLAY_MEDIA],

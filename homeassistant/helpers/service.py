@@ -327,7 +327,7 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
         for platform in platforms:
             platform_entities = []
             for entity in platform.entities.values():
-                print(entity.entity_id, entity.entity_id in entity_ids)
+
                 if entity.entity_id not in entity_ids:
                     continue
 
