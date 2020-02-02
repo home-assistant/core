@@ -129,6 +129,11 @@ class DerivativeSensor(RestoreEntity):
             for i in reversed(to_remove):
                 self._state_list.pop(i)
 
+            # It can happen that the list only has one entry, in that case
+            # we use the old_state, because we cannot do anything better.
+            if len(self._state_list) == 1:
+                self._state_list.insert(0, (old_state.last_updated, old_state.state))
+
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
                 self._unit_of_measurement = self._unit_template.format(
