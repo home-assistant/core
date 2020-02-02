@@ -50,7 +50,7 @@ class DeconzEvent(DeconzBase):
             CONF_EVENT: self._device.state,
         }
 
-        if self._device.gesture:
+        if self._device.gesture is not None:
             data[CONF_GESTURE] = self._device.gesture
 
         self.gateway.hass.bus.async_fire(CONF_DECONZ_EVENT, data)
