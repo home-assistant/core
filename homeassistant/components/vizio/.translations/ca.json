@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Aquesta entrada ja ha estat configurada."
+            "already_setup": "Aquesta entrada ja ha estat configurada.",
+            "host_exists": "Ja existeix un component Vizio configurat amb el host.",
+            "name_exists": "Ja existeix un component Vizio configurat amb el nom."
         },
         "error": {
             "host_exists": "L'amfitri\u00f3 ja est\u00e0 configurat.",
