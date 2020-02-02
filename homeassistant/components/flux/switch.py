@@ -205,7 +205,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
         self._interval = interval
         self._transition = transition
         self.unsub_tracker = None
-        self._attributes = {}
+        self._state_attributes = {}
 
     @property
     def name(self):
@@ -220,7 +220,7 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
     @property
     def device_state_attributes(self):
         """Return the attributes of the switch."""
-        return self._attributes
+        return self._state_attributes
 
     async def async_added_to_hass(self):
         """Call when entity about to be added to hass."""
@@ -326,12 +326,10 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
                 time_state,
                 now,
             )
-            self._attributes = {}
-            self._attributes["Colour Temperature (K)"] = int(temp)
-            self._attributes["Brightness (%)"] = round(brightness / 255 * 100, 1)
-            self._attributes["x, y"] = (
-                str(round(x_val, 4)) + ", " + str(round(y_val, 4))
-            )
+            self._state_attributes = {}
+            self._state_attributes["Colour Temperature (K)"] = f"{int(temp)}"
+            self._state_attributes["Brightness (%)"] = f"{int(brightness / 255 * 100)}"
+            self._state_attributes["x, y"] = f"{round(x_val,4)}, {round(y_val,4)}"
 
         elif self._mode == MODE_RGB:
             await async_set_lights_rgb(self.hass, self._lights, rgb, self._transition)
@@ -343,12 +341,10 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
                 now,
             )
             r_val, g_val, b_val = rgb
-            self._attributes = {}
-            self._attributes["Colour Temperature (K)"] = int(temp)
-            self._attributes["Brightness (%)"] = round(brightness / 255 * 100, 1)
-            self._attributes["rgb"] = (
-                str(int(r_val)) + ", " + str(int(g_val)) + ", " + str(int(b_val))
-            )
+            self._state_attributes = {}
+            self._state_attributes["Colour Temperature (K)"] = f"{int(temp)}"
+            self._state_attributes["Brightness (%)"] = f"{int(brightness / 255 * 100)}"
+            self._state_attributes["rgb"] = f"{int(r_val)}, {int(g_val)}, {int(b_val)}"
 
         else:
             # Convert to mired and clamp to allowed values
@@ -365,10 +361,10 @@ class FluxSwitch(SwitchDevice, RestoreEntity):
                 time_state,
                 now,
             )
-            self._attributes = {}
-            self._attributes["Colour Temperature (K)"] = int(temp)
-            self._attributes["Brightness (%)"] = round(brightness / 255 * 100, 1)
-            self._attributes["mireds"] = int(mired)
+            self._state_attributes = {}
+            self._state_attributes["Colour Temperature (K)"] = f"{int(temp)}"
+            self._state_attributes["Brightness (%)"] = f"{int(brightness / 255 * 100)}"
+            self._state_attributes["mireds"] = f"{int(mired)}"
 
     def find_start_time(self, now):
         """Return sunrise or start_time if given."""
