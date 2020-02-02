@@ -29,7 +29,7 @@ def get_scanner(hass, config):
 
     # Test whether the router is accessible.
     data = scanner.get_salt_data()
-    return scanner if data else None
+    return scanner if data is not None else None
 
 
 class SaltDeviceScanner(DeviceScanner):
@@ -59,12 +59,13 @@ class SaltDeviceScanner(DeviceScanner):
         """Retrieve data from Salt router and return parsed result."""
         try:
             clients = self.saltbox.get_online_clients()
-            return clients if clients else []
+            return clients
         except (RouterLoginException, RouterNotReachableException) as error:
             _LOGGER.warning(error)
-            return []
+            return None
 
     def _update_info(self):
         """Pull the current information from the Salt router."""
         _LOGGER.debug("Loading data from Salt Fiber Box")
-        self.online_clients = self.get_salt_data()
+        data = self.get_salt_data()
+        self.online_clients = data if data else []
