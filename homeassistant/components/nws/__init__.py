@@ -110,6 +110,7 @@ class NwsData:
         If None, nearest station is used.
         """
         await self.nws.set_station(station)
+        _LOGGER.debug("Nearby station list: %s", self.nws.stations)
 
     @property
     def station(self):
@@ -183,3 +184,4 @@ class NwsData:
                 )
             self.update_forecast_hourly_success = False
         async_dispatcher_send(self.hass, unique_id(self.latitude, self.longitude))
+        _LOGGER.debug("Updating complete for station %s", self.station)
