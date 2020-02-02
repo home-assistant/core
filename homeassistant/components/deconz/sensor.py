@@ -216,7 +216,7 @@ class DeconzSensorStateTracker:
         """Set up tracker."""
         self.sensor = sensor
         self.gateway = gateway
-        sensor.register_async_callback(self.async_update_callback)
+        sensor.register_callback(self.async_update_callback)
 
     @callback
     def close(self):
