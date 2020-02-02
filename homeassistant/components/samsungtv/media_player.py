@@ -23,6 +23,7 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
+    CONF_IP_ADDRESS,
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
@@ -60,8 +61,16 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
-    turn_on_action = config_entry.data.get(CONF_ON_ACTION)
-    on_script = Script(hass, turn_on_action) if turn_on_action else None
+    ip = config_entry.data[CONF_IP_ADDRESS]
+    on_script = None
+    if (
+        DOMAIN in hass.data
+        and ip in hass.data[DOMAIN]
+        and CONF_ON_ACTION in hass.data[DOMAIN][ip]
+        and hass.data[DOMAIN][ip][CONF_ON_ACTION]
+    ):
+        turn_on_action = hass.data[DOMAIN][ip][CONF_ON_ACTION]
+        on_script = Script(hass, turn_on_action)
     async_add_entities([SamsungTVDevice(config_entry, on_script)])
 
 

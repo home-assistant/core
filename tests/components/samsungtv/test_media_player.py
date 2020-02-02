@@ -47,6 +47,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -153,7 +154,7 @@ async def test_update_off(hass, remote, mock_now):
         assert state.state == STATE_OFF
 
 
-async def test_update_access_denied(hass, remote, mock_now):
+async def test_update_access_denied(hass: HomeAssistant, remote, mock_now):
     """Testing update tv unhandled response exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
 
@@ -167,11 +168,11 @@ async def test_update_access_denied(hass, remote, mock_now):
             async_fire_time_changed(hass, next_update)
             await hass.async_block_till_done()
 
-        assert [
-            entry
-            for entry in hass.config_entries.async_entries()
-            if entry.source == "reauth"
-        ]
+    assert [
+        entry
+        for entry in hass.config_entries.async_entries()
+        if entry.source == "reauth"
+    ]
 
 
 async def test_update_unhandled_response(hass, remote, mock_now):

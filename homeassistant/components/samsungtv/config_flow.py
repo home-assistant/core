@@ -23,14 +23,7 @@ from homeassistant.const import (
 )
 
 # pylint:disable=unused-import
-from .const import (
-    CONF_MANUFACTURER,
-    CONF_MODEL,
-    CONF_ON_ACTION,
-    DOMAIN,
-    LOGGER,
-    METHODS,
-)
+from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, METHODS
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 
@@ -62,7 +55,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._method = None
         self._model = None
         self._name = None
-        self._on_script = None
         self._port = None
         self._title = None
         self._uuid = None
@@ -78,7 +70,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_METHOD: self._method,
                 CONF_MODEL: self._model,
                 CONF_NAME: self._name,
-                CONF_ON_ACTION: self._on_script,
                 CONF_PORT: self._port,
             },
         )
@@ -116,7 +107,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
-        self._on_script = user_input.get(CONF_ON_ACTION)
         self._port = user_input.get(CONF_PORT)
 
         return await self.async_step_user(user_input)
@@ -195,7 +185,6 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._manufacturer = user_input.get(CONF_MANUFACTURER)
         self._model = user_input.get(CONF_MODEL)
         self._name = user_input.get(CONF_NAME)
-        self._on_script = user_input.get(CONF_ON_ACTION)
         self._port = user_input.get(CONF_PORT)
         self._title = self._model or self._name
 

@@ -42,7 +42,10 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the Samsung TV integration."""
     if DOMAIN in config:
+        hass.data[DOMAIN] = dict()
         for entry_config in config[DOMAIN]:
+            ip = socket.gethostbyname(entry_config[CONF_HOST])
+            hass.data[DOMAIN][ip] = {CONF_ON_ACTION: entry_config.get(CONF_ON_ACTION)}
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": "import"}, data=entry_config
