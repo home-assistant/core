@@ -1386,12 +1386,16 @@ class AlexaRangeController(AlexaCapability):
                 precision=1,
             )
             for index, speed in enumerate(speed_list):
-                labels = [speed.replace("_", " ")]
+                labels = []
+                if isinstance(speed, str):
+                    labels.append(speed.replace("_", " "))
                 if index == 1:
                     labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
                 if index == max_value:
                     labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
-                self._resource.add_preset(value=index, labels=labels)
+
+                if len(labels) > 0:
+                    self._resource.add_preset(value=index, labels=labels)
 
             return self._resource.serialize_capability_resources()
 
