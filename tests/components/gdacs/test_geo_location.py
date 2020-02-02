@@ -219,8 +219,8 @@ async def test_setup_imperial(hass):
         # Test conversion of 200 miles to kilometers.
         feeds = hass.data[DOMAIN][FEED]
         assert feeds is not None
-        assert len(feeds.keys()) == 1
-        manager = hass.data[DOMAIN][FEED][list(feeds.keys())[0]]
+        assert len(feeds) == 1
+        manager = list(feeds.values())[0]
         # Ensure that the filter value in km is correctly set.
         assert manager._feed_manager._feed._filter_radius == 321.8688
 
