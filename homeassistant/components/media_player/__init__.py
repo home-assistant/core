@@ -238,30 +238,33 @@ async def async_setup(hass, config):
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_SET,
-        {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
-        lambda entity, call: entity.async_set_volume_level(
-            volume=call.data[ATTR_MEDIA_VOLUME_LEVEL]
+        vol.All(
+            {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
+            lambda data: {"volume": data[ATTR_MEDIA_VOLUME_LEVEL]},
         ),
+        "async_set_volume_level",
         [SUPPORT_VOLUME_SET],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_MUTE,
-        {vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean},
-        lambda entity, call: entity.async_mute_volume(
-            mute=call.data[ATTR_MEDIA_VOLUME_MUTED]
+        vol.All(
+            {vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean},
+            lambda data: {"mute": data[ATTR_MEDIA_VOLUME_MUTED]},
         ),
+        "async_mute_volume",
         [SUPPORT_VOLUME_MUTE],
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_SEEK,
-        {
-            vol.Required(ATTR_MEDIA_SEEK_POSITION): vol.All(
-                vol.Coerce(float), vol.Range(min=0)
-            )
-        },
-        lambda entity, call: entity.async_media_seek(
-            position=call.data[ATTR_MEDIA_SEEK_POSITION]
+        vol.All(
+            {
+                vol.Required(ATTR_MEDIA_SEEK_POSITION): vol.All(
+                    vol.Coerce(float), vol.Range(min=0)
+                )
+            },
+            lambda data: {"position": data[ATTR_MEDIA_SEEK_POSITION]},
         ),
+        "async_media_seek",
         [SUPPORT_SEEK],
     )
     component.async_register_entity_service(
@@ -278,12 +281,15 @@ async def async_setup(hass, config):
     )
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
-        MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
-        lambda entity, call: entity.async_play_media(
-            media_type=call.data[ATTR_MEDIA_CONTENT_TYPE],
-            media_id=call.data[ATTR_MEDIA_CONTENT_ID],
-            enqueue=call.data.get(ATTR_MEDIA_ENQUEUE),
+        vol.All(
+            MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
+            lambda data: {
+                "media_type": data[ATTR_MEDIA_CONTENT_TYPE],
+                "media_id": data[ATTR_MEDIA_CONTENT_ID],
+                "enqueue": data.get(ATTR_MEDIA_ENQUEUE),
+            },
         ),
+        "async_play_media",
         [SUPPORT_PLAY_MEDIA],
     )
     component.async_register_entity_service(
