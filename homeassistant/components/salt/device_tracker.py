@@ -31,6 +31,7 @@ def get_scanner(hass, config):
     data = scanner.get_salt_data()
     return scanner if data else None
 
+
 class SaltDeviceScanner(DeviceScanner):
     """This class queries a Salt Fiber Box router."""
 
@@ -49,8 +50,6 @@ class SaltDeviceScanner(DeviceScanner):
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
-        if not self.online_clients:
-            return None
         for client in self.online_clients:
             if client["mac"] == device:
                 return client["name"]
