@@ -60,7 +60,8 @@ class SaltDeviceScanner(DeviceScanner):
     def get_salt_data(self):
         """Retrieve data from Salt router and return parsed result."""
         try:
-            return self.saltbox.get_online_clients()
+            clients = self.saltbox.get_online_clients()
+            return clients if clients is not None else []
         except (RouterLoginException, RouterNotReachableException) as error:
             _LOGGER.warning(error)
             return []
