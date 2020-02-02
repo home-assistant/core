@@ -36,7 +36,7 @@ class TestOpenERZSensor(unittest.TestCase):
         self.mock_config = {
             "platform": "openerz",
             "name": "test_name",
-            "zip": "1234",
+            "zip": 1234,
             "waste_type": "glass",
             "entity_id": "sensor.erz_glass_1234",
         }
@@ -52,13 +52,13 @@ class TestOpenERZSensor(unittest.TestCase):
 
             test_openerz = OpenERZSensor(self.mock_config)
 
-            self.assertEqual(test_openerz.zip, "1234")
+            self.assertEqual(test_openerz.zip, 1234)
             self.assertEqual(test_openerz.waste_type, "glass")
             self.assertEqual(test_openerz.friendly_name, "test_name")
             self.assertEqual(test_openerz.start_date, self.mock_datetime)
             self.assertIsNone(test_openerz.end_date)
             self.assertIsNone(test_openerz.last_api_response)
-            self.assertEqual(test_openerz.name, "ERZ - test_name (1234)")
+            self.assertEqual(test_openerz.name, "test_name")
             patched_update.assert_called_once()
 
     @patch(
@@ -74,7 +74,7 @@ class TestOpenERZSensor(unittest.TestCase):
             test_openerz = OpenERZSensor(self.mock_config)
 
             self.assertEqual(test_openerz.friendly_name, "glass")
-            self.assertEqual(test_openerz.name, "ERZ - glass (1234)")
+            self.assertEqual(test_openerz.name, "glass")
 
     @patch(
         "homeassistant.components.openerz.sensor.OpenERZSensor.update",
@@ -134,7 +134,7 @@ class TestOpenERZSensor(unittest.TestCase):
                 expected_headers = {"accept": "application/json"}
                 expected_url = "http://openerz.metaodi.ch/api/calendar/glass.json"
                 expected_payload = {
-                    "zip": "1234",
+                    "zip": 1234,
                     "start": "2019-12-10",
                     "end": "2020-01-10",
                     "offset": 0,
@@ -191,7 +191,7 @@ class TestOpenERZSensor(unittest.TestCase):
 
             response_data = {
                 "_metadata": {"total_count": 1},
-                "result": [{"zip": "1234", "type": "glass", "date": "2020-01-10"}],
+                "result": [{"zip": 1234, "type": "glass", "date": "2020-01-10"}],
             }
             test_openerz.last_api_response = MockAPIResponse(True, 200, response_data)
 
@@ -243,7 +243,7 @@ class TestOpenERZSensor(unittest.TestCase):
 
             response_data = {
                 "_metadata": {"total_count": 1},
-                "result": [{"zip": "1235", "type": "glass", "date": "2020-01-10"}],
+                "result": [{"zip": 1235, "type": "glass", "date": "2020-01-10"}],
             }
 
             with LogCapture() as captured_logs:
@@ -276,7 +276,7 @@ class TestOpenERZSensor(unittest.TestCase):
 
             response_data = {
                 "_metadata": {"total_count": 1},
-                "result": [{"zip": "1234", "type": "metal", "date": "2020-01-10"}],
+                "result": [{"zip": 1234, "type": "metal", "date": "2020-01-10"}],
             }
 
             with LogCapture() as captured_logs:
@@ -345,7 +345,7 @@ class TestOpenERZSensor(unittest.TestCase):
 
             response_data = {
                 "_metadata": {"total_count": 1},
-                "result": [{"zip": "1234", "type": "glass", "date": "2020-01-10"}],
+                "result": [{"zip": 1234, "type": "glass", "date": "2020-01-10"}],
             }
             test_openerz.last_api_response = MockAPIResponse(True, 200, response_data)
             test_openerz.update()

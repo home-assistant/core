@@ -15,7 +15,7 @@ SCAN_INTERVAL = timedelta(hours=12)
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required("zip"): cv.string,
+        vol.Required("zip"): cv.positive_int,
         vol.Required("waste_type", default="waste"): cv.string,
         vol.Optional("name"): cv.string,
     }
@@ -105,7 +105,7 @@ class OpenERZSensor(Entity):
         result_list = response_json.get("result")
         first_scheduled_pickup = result_list[0]
         if (
-            str(first_scheduled_pickup["zip"]) == self.zip
+            first_scheduled_pickup["zip"] == self.zip
             and first_scheduled_pickup["type"] == self.waste_type
         ):
             return first_scheduled_pickup["date"]
@@ -118,7 +118,7 @@ class OpenERZSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
 
-        return f"ERZ - {self.friendly_name} ({self.zip})"
+        return self.friendly_name
 
     @property
     def state(self):
