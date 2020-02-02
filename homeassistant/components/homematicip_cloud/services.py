@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.typing import HomeAssistantType, ServiceCallType
 
 from .const import DOMAIN
 
@@ -123,26 +123,26 @@ async def async_setup_services(hass: HomeAssistantType) -> None:
 
     hass.data[HOMEMATICIP_CLOUD_SERVICES] = True
 
-    async def async_call_hmipc_service(service_call):
+    async def async_call_hmipc_service(service: ServiceCallType):
         """Call correct HomematicIP Cloud service."""
-        service_name = service_call.service
+        service_name = service.service
 
         if service_name == SERVICE_ACTIVATE_ECO_MODE_WITH_DURATION:
-            await _async_activate_eco_mode_with_duration(hass, service_call)
+            await _async_activate_eco_mode_with_duration(hass, service)
         elif service_name == SERVICE_ACTIVATE_ECO_MODE_WITH_PERIOD:
-            await _async_activate_eco_mode_with_period(hass, service_call)
+            await _async_activate_eco_mode_with_period(hass, service)
         elif service_name == SERVICE_ACTIVATE_VACATION:
-            await _async_activate_vacation(hass, service_call)
+            await _async_activate_vacation(hass, service)
         elif service_name == SERVICE_DEACTIVATE_ECO_MODE:
-            await _async_deactivate_eco_mode(hass, service_call)
+            await _async_deactivate_eco_mode(hass, service)
         elif service_name == SERVICE_DEACTIVATE_VACATION:
-            await _async_deactivate_vacation(hass, service_call)
+            await _async_deactivate_vacation(hass, service)
         elif service_name == SERVICE_DUMP_HAP_CONFIG:
-            await _async_dump_hap_config(hass, service_call)
+            await _async_dump_hap_config(hass, service)
         elif service_name == SERVICE_RESET_ENERGY_COUNTER:
-            await _async_reset_energy_counter(hass, service_call)
+            await _async_reset_energy_counter(hass, service)
         elif service_name == SERVICE_SET_ACTIVE_CLIMATE_PROFILE:
-            await _set_active_climate_profile(hass, service_call)
+            await _set_active_climate_profile(hass, service)
 
     hass.services.async_register(
         DOMAIN,
@@ -216,7 +216,7 @@ async def async_unload_services(hass):
 
 
 async def _async_activate_eco_mode_with_duration(
-    hass: HomeAssistantType, service
+    hass: HomeAssistantType, service: ServiceCallType
 ) -> None:
     """Service to activate eco mode with duration."""
     duration = service.data[ATTR_DURATION]
@@ -232,7 +232,7 @@ async def _async_activate_eco_mode_with_duration(
 
 
 async def _async_activate_eco_mode_with_period(
-    hass: HomeAssistantType, service
+    hass: HomeAssistantType, service: ServiceCallType
 ) -> None:
     """Service to activate eco mode with period."""
     endtime = service.data[ATTR_ENDTIME]
@@ -247,7 +247,9 @@ async def _async_activate_eco_mode_with_period(
             await hap.home.activate_absence_with_period(endtime)
 
 
-async def _async_activate_vacation(hass: HomeAssistantType, service) -> None:
+async def _async_activate_vacation(
+    hass: HomeAssistantType, service: ServiceCallType
+) -> None:
     """Service to activate vacation."""
     endtime = service.data[ATTR_ENDTIME]
     temperature = service.data[ATTR_TEMPERATURE]
@@ -262,7 +264,9 @@ async def _async_activate_vacation(hass: HomeAssistantType, service) -> None:
             await hap.home.activate_vacation(endtime, temperature)
 
 
-async def _async_deactivate_eco_mode(hass: HomeAssistantType, service) -> None:
+async def _async_deactivate_eco_mode(
+    hass: HomeAssistantType, service: ServiceCallType
+) -> None:
     """Service to deactivate eco mode."""
     hapid = service.data.get(ATTR_ACCESSPOINT_ID)
 
@@ -275,7 +279,9 @@ async def _async_deactivate_eco_mode(hass: HomeAssistantType, service) -> None:
             await hap.home.deactivate_absence()
 
 
-async def _async_deactivate_vacation(hass: HomeAssistantType, service) -> None:
+async def _async_deactivate_vacation(
+    hass: HomeAssistantType, service: ServiceCallType
+) -> None:
     """Service to deactivate vacation."""
     hapid = service.data.get(ATTR_ACCESSPOINT_ID)
 
@@ -288,7 +294,9 @@ async def _async_deactivate_vacation(hass: HomeAssistantType, service) -> None:
             await hap.home.deactivate_vacation()
 
 
-async def _set_active_climate_profile(hass: HomeAssistantType, service) -> None:
+async def _set_active_climate_profile(
+    hass: HomeAssistantType, service: ServiceCallType
+) -> None:
     """Service to set the active climate profile."""
     entity_id_list = service.data[ATTR_ENTITY_ID]
     climate_profile_index = service.data[ATTR_CLIMATE_PROFILE_INDEX] - 1
@@ -305,7 +313,9 @@ async def _set_active_climate_profile(hass: HomeAssistantType, service) -> None:
                     await group.set_active_profile(climate_profile_index)
 
 
-async def _async_dump_hap_config(hass: HomeAssistantType, service) -> None:
+async def _async_dump_hap_config(
+    hass: HomeAssistantType, service: ServiceCallType
+) -> None:
     """Service to dump the configuration of a Homematic IP Access Point."""
     config_path = service.data.get(ATTR_CONFIG_OUTPUT_PATH) or hass.config.config_dir
     config_file_prefix = service.data[ATTR_CONFIG_OUTPUT_FILE_PREFIX]
@@ -327,7 +337,9 @@ async def _async_dump_hap_config(hass: HomeAssistantType, service) -> None:
         config_file.write_text(json_state, encoding="utf8")
 
 
-async def _async_reset_energy_counter(hass: HomeAssistantType, service):
+async def _async_reset_energy_counter(
+    hass: HomeAssistantType, service: ServiceCallType
+):
     """Service to reset the energy counter."""
     entity_id_list = service.data[ATTR_ENTITY_ID]
 
