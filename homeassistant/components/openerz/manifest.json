@@ -1,8 +1,12 @@
 {
-    "domain": "openerz",
-    "name": "Open ERZ",
-    "documentation": "https://www.home-assistant.io/components/openerz",
-    "dependencies": [],
-    "codeowners": ["@misialq"],
-    "requirements": ["testfixtures==6.10.3"]
-  }
+  "domain": "openerz",
+  "name": "Open ERZ",
+  "documentation": "https://www.home-assistant.io/integrations/openerz",
+  "dependencies": [],
+  "codeowners": [
+    "@misialq"
+  ],
+  "requirements": [
+    "testfixtures==6.10.3"
+  ]
+}
