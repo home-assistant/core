@@ -68,5 +68,5 @@ class SaltDeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Pull the current information from the Salt router."""
-        _LOGGER.info("Loading data from Salt Fiber Box")
+        _LOGGER.debug("Loading data from Salt Fiber Box")
         self.online_clients = self.get_salt_data()
