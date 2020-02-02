@@ -2,6 +2,7 @@
 import logging
 
 from saltbox import SaltBox
+from saltbox import RouterLoginException, RouterNotReachableException
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -26,7 +27,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_scanner(hass, config):
     """Return the Salt device scanner."""
     scanner = SaltDeviceScanner(config[DOMAIN])
-    return scanner if scanner.success_init else None
+
+    # Test whether the router is accessible.
+    data = scanner.get_salt_data()
+    return scanner if data is not None else None
 
 
 class SaltDeviceScanner(DeviceScanner):
@@ -39,10 +43,6 @@ class SaltDeviceScanner(DeviceScanner):
         password = config[CONF_PASSWORD]
         self.saltbox = SaltBox(f"http://{host}", username, password)
         self.online_clients = []
-
-        # Test the router is accessible.
-        data = self.get_salt_data()
-        self.success_init = data is not None
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -58,23 +58,15 @@ class SaltDeviceScanner(DeviceScanner):
                 return client["name"]
         return None
 
-    def _update_info(self):
-        """Pull the current information from the Salt router."""
-        if not self.success_init:
-            return False
-
-        _LOGGER.info("Loading data from Salt Fiber Box")
-        data = self.get_salt_data()
-        if not data:
-            return False
-
-        self.online_clients = data
-        return True
-
     def get_salt_data(self):
         """Retrieve data from Salt router and return parsed result."""
         try:
             return self.saltbox.get_online_clients()
-        except:  # noqa: E722  # pylint: disable=bare-except
-            _LOGGER.warning("Could not get data from Salt Fiber Box")
-        return self.online_clients
+        except (RouterLoginException, RouterNotReachableException) as e:
+            _LOGGER.warning(e)
+            return []
+
+    def _update_info(self):
+        """Pull the current information from the Salt router."""
+        _LOGGER.info("Loading data from Salt Fiber Box")
+        self.online_clients = self.get_salt_data()
