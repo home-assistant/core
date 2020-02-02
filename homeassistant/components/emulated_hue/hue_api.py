@@ -688,27 +688,25 @@ def entity_to_json(config, entity):
         retval["state"].update(
             {HUE_API_STATE_COLORMODE: "ct", HUE_API_STATE_CT: state[STATE_COLOR_TEMP]}
         )
-    elif (
-        entity_features
-        & (
-            SUPPORT_BRIGHTNESS
-            | SUPPORT_SET_POSITION
-            | SUPPORT_SET_SPEED
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_TARGET_TEMPERATURE
-        )
-    ) or entity.domain == script.DOMAIN:
+    elif entity_features & (
+        SUPPORT_BRIGHTNESS
+        | SUPPORT_SET_POSITION
+        | SUPPORT_SET_SPEED
+        | SUPPORT_VOLUME_SET
+        | SUPPORT_TARGET_TEMPERATURE
+    ):
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
         retval["type"] = "Dimmable light"
         retval["modelid"] = "HASS123"
         retval["state"].update({HUE_API_STATE_BRI: state[STATE_BRIGHTNESS]})
     else:
-        # On/off plug-in unit (Zigbee Device ID: 0x0000)
-        # Supports groups and on/off control
-        # Used for compatibility purposes with Alexa instead of "On/off light"
-        retval["type"] = "On/off plug-in unit"
-        retval["modelid"] = "HASS321"
+        # Dimmable light (Zigbee Device ID: 0x0100)
+        # Supports groups, scenes, on/off and dimming
+        # Reports fixed brightness for compatibility with Alexa.
+        retval["type"] = "Dimmable light"
+        retval["modelid"] = "HASS123"
+        retval["state"].update({HUE_API_STATE_BRI: HUE_API_STATE_BRI_MAX})
 
     return retval
 
