@@ -669,7 +669,7 @@ async def test_fan_range(hass):
         {
             "friendly_name": "Test fan 5",
             "supported_features": 1,
-            "speed_list": ["off", "low", "medium", "high", "turbo", "warp_speed"],
+            "speed_list": ["off", "low", "medium", "high", "turbo", 5, "warp_speed"],
             "speed": "medium",
         },
     )
@@ -705,7 +705,7 @@ async def test_fan_range(hass):
 
     supported_range = configuration["supportedRange"]
     assert supported_range["minimumValue"] == 0
-    assert supported_range["maximumValue"] == 5
+    assert supported_range["maximumValue"] == 6
     assert supported_range["precision"] == 1
 
     presets = configuration["presets"]
@@ -737,8 +737,10 @@ async def test_fan_range(hass):
         },
     } in presets
 
+    assert {"rangeValue": 5} not in presets
+
     assert {
-        "rangeValue": 5,
+        "rangeValue": 6,
         "presetResources": {
             "friendlyNames": [
                 {"@type": "text", "value": {"text": "warp speed", "locale": "en-US"}},
@@ -765,6 +767,17 @@ async def test_fan_range(hass):
         "fan.set_speed",
         hass,
         payload={"rangeValue": 5},
+        instance="fan.speed",
+    )
+    assert call.data["speed"] == 5
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "fan#test_5",
+        "fan.set_speed",
+        hass,
+        payload={"rangeValue": 6},
         instance="fan.speed",
     )
     assert call.data["speed"] == "warp_speed"
