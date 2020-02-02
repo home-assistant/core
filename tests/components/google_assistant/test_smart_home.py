@@ -92,7 +92,10 @@ async def test_sync_message(hass):
             "devices": [
                 {
                     "id": "light.demo_light",
-                    "name": {"name": "Demo Light", "nicknames": ["Hello", "World"]},
+                    "name": {
+                        "name": "Demo Light",
+                        "nicknames": ["Demo Light", "Hello", "World"],
+                    },
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
                         trait.TRAIT_ONOFF,
