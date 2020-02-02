@@ -1,8 +1,7 @@
 """Configure py.test."""
 from asynctest import patch
 import pytest
-from pyvizio.const import DEVICE_CLASS_SPEAKER
-from pyvizio.vizio import MAX_VOLUME
+from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
 
 from .const import CURRENT_INPUT, INPUT_LIST, UNIQUE_ID
 
@@ -91,9 +90,9 @@ def vizio_update_fixture():
         return_value=int(MAX_VOLUME[DEVICE_CLASS_SPEAKER] / 2),
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_current_input",
-        return_value=MockInput(CURRENT_INPUT),
+        return_value=CURRENT_INPUT,
     ), patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.get_inputs",
+        "homeassistant.components.vizio.media_player.VizioAsync.get_inputs_list",
         return_value=get_mock_inputs(INPUT_LIST),
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",

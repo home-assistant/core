@@ -7,8 +7,8 @@ import pytest
 from pyvizio.const import (
     DEVICE_CLASS_SPEAKER as VIZIO_DEVICE_CLASS_SPEAKER,
     DEVICE_CLASS_TV as VIZIO_DEVICE_CLASS_TV,
+    MAX_VOLUME,
 )
-from pyvizio.vizio import MAX_VOLUME
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
@@ -107,6 +107,7 @@ async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
         assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
 
 
+# pylint: disable=keyword-arg-before-vararg
 async def _test_service(
     hass: HomeAssistantType,
     vizio_func_name: str,
@@ -203,7 +204,7 @@ async def test_services(
         hass, "mute_off", SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: False}
     )
     await _test_service(
-        hass, "input_switch", SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "USB"}, "USB"
+        hass, "set_input", SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "USB"}, "USB"
     )
     await _test_service(hass, "vol_up", SERVICE_VOLUME_UP)
     await _test_service(hass, "vol_down", SERVICE_VOLUME_DOWN)
