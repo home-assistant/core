@@ -3,7 +3,7 @@ from asynctest import patch
 import pytest
 from pyvizio.const import DEVICE_CLASS_SPEAKER, MAX_VOLUME
 
-from .const import CURRENT_INPUT, INPUT_LIST, UNIQUE_ID
+from .const import CURRENT_INPUT, INPUT_LIST, MODEL, UNIQUE_ID, VERSION
 
 
 class MockInput:
@@ -97,5 +97,11 @@ def vizio_update_fixture():
     ), patch(
         "homeassistant.components.vizio.media_player.VizioAsync.get_power_state",
         return_value=True,
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_model",
+        return_value=MODEL,
+    ), patch(
+        "homeassistant.components.vizio.media_player.VizioAsync.get_version",
+        return_value=VERSION,
     ):
         yield
