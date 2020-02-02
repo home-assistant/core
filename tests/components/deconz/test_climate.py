@@ -95,7 +95,7 @@ async def test_climate_devices(hass):
         "id": "1",
         "config": {"mode": "off"},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
@@ -109,7 +109,7 @@ async def test_climate_devices(hass):
         "config": {"mode": "other"},
         "state": {"on": True},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
@@ -122,7 +122,7 @@ async def test_climate_devices(hass):
         "id": "1",
         "state": {"on": False},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
@@ -232,7 +232,7 @@ async def test_verify_state_update(hass):
         "id": "1",
         "state": {"on": False},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
@@ -252,7 +252,7 @@ async def test_add_new_climate_device(hass):
         "id": "1",
         "sensor": deepcopy(SENSORS["1"]),
     }
-    gateway.api.async_event_handler(state_added_event)
+    gateway.api.event_handler(state_added_event)
     await hass.async_block_till_done()
 
     assert "climate.thermostat" in gateway.deconz_ids

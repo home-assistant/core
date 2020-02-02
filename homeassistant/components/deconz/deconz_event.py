@@ -21,7 +21,7 @@ class DeconzEvent(DeconzBase):
         """Register callback that will be used for signals."""
         super().__init__(device, gateway)
 
-        self._device.register_async_callback(self.async_update_callback)
+        self._device.register_callback(self.async_update_callback)
 
         self.device_id = None
         self.event_id = slugify(self._device.name)
