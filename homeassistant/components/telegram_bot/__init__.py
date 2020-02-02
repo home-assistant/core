@@ -135,6 +135,7 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -152,7 +153,6 @@ SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_AUTHENTICATION): cv.string,
         vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
-        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
     }
 )
 
