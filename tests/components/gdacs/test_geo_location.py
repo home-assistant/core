@@ -4,7 +4,7 @@ import datetime
 from asynctest import patch
 
 from homeassistant.components import gdacs
-from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.gdacs import DEFAULT_SCAN_INTERVAL, DOMAIN, FEED
 from homeassistant.components.gdacs.geo_location import (
     ATTR_ALERT_LEVEL,
     ATTR_COUNTRY,
@@ -205,9 +205,7 @@ async def test_setup_imperial(hass):
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
         "aio_georss_client.feed.GeoRssFeed.update"
     ) as mock_feed_update, patch(
-        "aio_georss_client.feed.GeoRssFeed.__init__", create=True,
-    ) as mock_feed_init, patch(
-        "aio_georss_client.feed.GeoRssFeed.last_timestamp", create=True,
+        "aio_georss_client.feed.GeoRssFeed.last_timestamp", create=True
     ):
         mock_feed_update.return_value = "OK", [mock_entry_1]
         assert await async_setup_component(hass, gdacs.DOMAIN, CONFIG)
@@ -219,7 +217,12 @@ async def test_setup_imperial(hass):
         assert len(all_states) == 2
 
         # Test conversion of 200 miles to kilometers.
-        assert mock_feed_init.call_args[1].get("filter_radius") == 321.8688
+        feeds = hass.data[DOMAIN][FEED]
+        assert feeds is not None
+        assert len(feeds.keys()) == 1
+        manager = hass.data[DOMAIN][FEED][list(feeds.keys())[0]]
+        # Ensure that the filter value in km is correctly set.
+        assert manager._feed_manager._feed._filter_radius == 321.8688
 
         state = hass.states.get("geo_location.drought_name_1")
         assert state is not None
@@ -235,4 +238,5 @@ async def test_setup_imperial(hass):
             ATTR_SOURCE: "gdacs",
             ATTR_ICON: "mdi:water-off",
         }
+        # 15.5km (as defined in mock entry) has been converted to 9.6mi.
         assert float(state.state) == 9.6
