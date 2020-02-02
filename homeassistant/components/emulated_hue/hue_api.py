@@ -688,15 +688,12 @@ def entity_to_json(config, entity):
         retval["state"].update(
             {HUE_API_STATE_COLORMODE: "ct", HUE_API_STATE_CT: state[STATE_COLOR_TEMP]}
         )
-    elif (
-        entity_features
-        & (
-            SUPPORT_BRIGHTNESS
-            | SUPPORT_SET_POSITION
-            | SUPPORT_SET_SPEED
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_TARGET_TEMPERATURE
-        )
+    elif entity_features & (
+        SUPPORT_BRIGHTNESS
+        | SUPPORT_SET_POSITION
+        | SUPPORT_SET_SPEED
+        | SUPPORT_VOLUME_SET
+        | SUPPORT_TARGET_TEMPERATURE
     ):
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
