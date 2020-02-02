@@ -332,7 +332,7 @@ async def test_call_with_sync_attr(hass, mock_entities):
         ),
     )
     assert mock_method.call_count == 1
-    # We pass empty kwargs because both entity_id and area_id are filted out
+    # We pass empty kwargs because both entity_id and area_id are filtered out
     assert mock_method.mock_calls[0][2] == {}
 
 
