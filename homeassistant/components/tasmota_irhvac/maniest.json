@@ -1,0 +1,11 @@
+{
+    "domain": "tasmota_irhvac",
+    "name": "Tasmota Irhvac",
+    "documentation": "https://github.com/hristo-atanasov/Tasmota-IRHVAC",
+    "requirements": [],
+    "dependencies": [
+      "mqtt",
+      "sensor"
+    ],
+    "codeowners": []
+  }
