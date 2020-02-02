@@ -81,7 +81,7 @@ class DeconzDevice(DeconzBase, Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
-        self._device.register_async_callback(self.async_update_callback)
+        self._device.register_callback(self.async_update_callback)
         self.gateway.deconz_ids[self.entity_id] = self._device.deconz_id
         self.listeners.append(
             async_dispatcher_connect(

@@ -97,7 +97,7 @@ async def test_switches(hass):
         "id": "1",
         "state": {"on": False},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     state_changed_event = {
         "t": "event",
         "e": "changed",
@@ -105,7 +105,7 @@ async def test_switches(hass):
         "id": "3",
         "state": {"alert": None},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     on_off_switch = hass.states.get("switch.on_off_switch")
