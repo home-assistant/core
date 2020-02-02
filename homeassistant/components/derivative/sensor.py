@@ -27,6 +27,7 @@ CONF_ROUND_DIGITS = "round"
 CONF_UNIT_PREFIX = "unit_prefix"
 CONF_UNIT_TIME = "unit_time"
 CONF_UNIT = "unit"
+CONF_TIME_WINDOW = "time_window"
 
 # SI Metric prefixes
 UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "G": 10 ** 6, "T": 10 ** 9}
@@ -46,6 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
         vol.Optional(CONF_UNIT_TIME, default="h"): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT): cv.string,
+        vol.Optional(CONF_TIME_WINDOW): vol.Coerce(float),
     }
 )
 
@@ -59,6 +61,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         config[CONF_UNIT_PREFIX],
         config[CONF_UNIT_TIME],
         config.get(CONF_UNIT),
+        config.get(CONF_TIME_WINDOW),
     )
 
     async_add_entities([derivative])
@@ -75,6 +78,7 @@ class DerivativeSensor(RestoreEntity):
         unit_prefix,
         unit_time,
         unit_of_measurement,
+        time_window,
     ):
         """Initialize the derivative sensor."""
         self._sensor_source_id = source_entity
@@ -94,6 +98,10 @@ class DerivativeSensor(RestoreEntity):
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
+        if time_window is None:
+            self._time_window = 0
+        else:
+            self._time_window = time_window * self._unit_time
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -120,8 +128,8 @@ class DerivativeSensor(RestoreEntity):
 
             # Get indices of tuples that are older than `unit_time`
             to_remove = []
-            for i, (timestamp, _) in enumerate(self._state_list):
-                if (now - timestamp).total_seconds() > self._unit_time:
+            for i, (timestamp, _) in enumerate(self._state_list[:-1]):
+                if (now - timestamp).total_seconds() > self._time_window:
                     to_remove.append(i)
                 else:
                     break
