@@ -1,8 +1,7 @@
 """Support for Salt Fiber Box routers."""
 import logging
 
-from saltbox import SaltBox
-from saltbox import RouterLoginException, RouterNotReachableException
+from saltbox import RouterLoginException, RouterNotReachableException, SaltBox
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
@@ -62,8 +61,8 @@ class SaltDeviceScanner(DeviceScanner):
         """Retrieve data from Salt router and return parsed result."""
         try:
             return self.saltbox.get_online_clients()
-        except (RouterLoginException, RouterNotReachableException) as e:
-            _LOGGER.warning(e)
+        except (RouterLoginException, RouterNotReachableException) as error:
+            _LOGGER.warning(error)
             return []
 
     def _update_info(self):
