@@ -18,6 +18,7 @@ from homeassistant.components.ssdp import (
     ATTR_UPNP_UDN,
 )
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_METHOD, CONF_NAME
+from homeassistant.core import HomeAssistant
 
 MOCK_USER_DATA = {CONF_HOST: "fake_host", CONF_NAME: "fake_name"}
 MOCK_SSDP_DATA = {
@@ -70,7 +71,7 @@ def remote_fixture():
         yield remote
 
 
-async def test_user(hass, remote):
+async def test_user(hass: HomeAssistant, remote):
     """Test starting a flow by user."""
 
     # show form
@@ -93,7 +94,7 @@ async def test_user(hass, remote):
     assert result["data"][CONF_ID] is None
 
 
-async def test_user_missing_auth(hass):
+async def test_user_missing_auth(hass: HomeAssistant):
     """Test starting a flow by user with authentication."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
@@ -108,7 +109,7 @@ async def test_user_missing_auth(hass):
         assert result["reason"] == "auth_missing"
 
 
-async def test_user_not_supported(hass):
+async def test_user_not_supported(hass: HomeAssistant):
     """Test starting a flow by user for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
@@ -123,7 +124,7 @@ async def test_user_not_supported(hass):
         assert result["reason"] == "not_supported"
 
 
-async def test_user_not_successful(hass):
+async def test_user_not_successful(hass: HomeAssistant):
     """Test starting a flow by user but no connection found."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
@@ -138,7 +139,7 @@ async def test_user_not_successful(hass):
         assert result["reason"] == "not_successful"
 
 
-async def test_user_already_configured(hass, remote):
+async def test_user_already_configured(hass: HomeAssistant, remote):
     """Test starting a flow by user when already configured."""
 
     # entry was added
@@ -155,7 +156,7 @@ async def test_user_already_configured(hass, remote):
     assert result["reason"] == "already_configured"
 
 
-async def test_ssdp(hass, remote):
+async def test_ssdp(hass: HomeAssistant, remote):
     """Test starting a flow from discovery."""
 
     # confirm to add the entry
@@ -178,7 +179,7 @@ async def test_ssdp(hass, remote):
     assert result["data"][CONF_ID] == "fake_uuid"
 
 
-async def test_ssdp_noprefix(hass, remote):
+async def test_ssdp_noprefix(hass: HomeAssistant, remote):
     """Test starting a flow from discovery without prefixes."""
 
     # confirm to add the entry
@@ -201,7 +202,7 @@ async def test_ssdp_noprefix(hass, remote):
     assert result["data"][CONF_ID] == "fake2_uuid"
 
 
-async def test_ssdp_missing_auth(hass):
+async def test_ssdp_missing_auth(hass: HomeAssistant):
     """Test starting a flow from discovery with authentication."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
@@ -223,7 +224,7 @@ async def test_ssdp_missing_auth(hass):
         assert result["reason"] == "auth_missing"
 
 
-async def test_ssdp_not_supported(hass):
+async def test_ssdp_not_supported(hass: HomeAssistant):
     """Test starting a flow from discovery for not supported device."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
@@ -245,7 +246,7 @@ async def test_ssdp_not_supported(hass):
         assert result["reason"] == "not_supported"
 
 
-async def test_ssdp_not_successful(hass):
+async def test_ssdp_not_successful(hass: HomeAssistant):
     """Test starting a flow from discovery but no device found."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
@@ -267,7 +268,7 @@ async def test_ssdp_not_successful(hass):
         assert result["reason"] == "not_successful"
 
 
-async def test_ssdp_already_in_progress(hass, remote):
+async def test_ssdp_already_in_progress(hass: HomeAssistant, remote):
     """Test starting a flow from discovery twice."""
 
     # confirm to add the entry
@@ -285,7 +286,7 @@ async def test_ssdp_already_in_progress(hass, remote):
     assert result["reason"] == "already_in_progress"
 
 
-async def test_ssdp_already_configured(hass, remote):
+async def test_ssdp_already_configured(hass: HomeAssistant, remote):
     """Test starting a flow from discovery when already configured."""
 
     # entry was added
@@ -310,7 +311,7 @@ async def test_ssdp_already_configured(hass, remote):
     assert result["data"][CONF_ID] == "fake_uuid"
 
 
-async def test_autodetect_websocket(hass, remote):
+async def test_autodetect_websocket(hass: HomeAssistant, remote):
     """Test for send key with autodetection of protocol."""
     with patch("homeassistant.components.samsungtv.config_flow.Remote") as remote:
         result = await hass.config_entries.flow.async_init(
@@ -322,7 +323,7 @@ async def test_autodetect_websocket(hass, remote):
         assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
 
 
-async def test_autodetect_auth_missing(hass, remote):
+async def test_autodetect_auth_missing(hass: HomeAssistant, remote):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
@@ -337,7 +338,7 @@ async def test_autodetect_auth_missing(hass, remote):
         assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
 
 
-async def test_autodetect_not_supported(hass, remote):
+async def test_autodetect_not_supported(hass: HomeAssistant, remote):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
@@ -352,7 +353,7 @@ async def test_autodetect_not_supported(hass, remote):
         assert remote.call_args_list == [call(AUTODETECT_WEBSOCKET)]
 
 
-async def test_autodetect_legacy(hass, remote):
+async def test_autodetect_legacy(hass: HomeAssistant, remote):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
@@ -370,7 +371,7 @@ async def test_autodetect_legacy(hass, remote):
         ]
 
 
-async def test_autodetect_none(hass, remote):
+async def test_autodetect_none(hass: HomeAssistant, remote):
     """Test for send key with autodetection of protocol."""
     with patch(
         "homeassistant.components.samsungtv.config_flow.Remote",
