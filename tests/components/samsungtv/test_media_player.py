@@ -169,9 +169,9 @@ async def test_update_access_denied(hass: HomeAssistant, remote, mock_now):
             await hass.async_block_till_done()
 
     assert [
-        entry
-        for entry in hass.config_entries.async_entries()
-        if entry.source == "reauth"
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
     ]
 
 
