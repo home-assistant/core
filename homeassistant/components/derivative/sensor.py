@@ -80,6 +80,7 @@ class DerivativeSensor(RestoreEntity):
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = 0
+        self._state_list = []  # List of tuples with (timestamp, sensor_value)
 
         self._name = name if name is not None else f"{source_entity} derivative"
 
@@ -107,12 +108,26 @@ class DerivativeSensor(RestoreEntity):
         @callback
         def calc_derivative(entity, old_state, new_state):
             """Handle the sensor state changes."""
+
             if (
                 old_state is None
                 or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
                 or new_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
             ):
                 return
+
+            now = new_state.last_updated
+            self._state_list.append((now, new_state.state))
+
+            # Get indices of tuples that are older than `unit_time`
+            to_remove = [
+                i
+                for i, (timestamp, _) in enumerate(self._state_list)
+                if (now - timestamp).total_seconds() > self._unit_time
+            ]
+            # Delete those tuples from the list
+            for i in reversed(to_remove):
+                self._state_list.pop(i)
 
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -122,12 +137,12 @@ class DerivativeSensor(RestoreEntity):
 
             try:
                 # derivative of previous measures.
-                gradient = 0
-                elapsed_time = (
-                    new_state.last_updated - old_state.last_updated
-                ).total_seconds()
-                gradient = Decimal(new_state.state) - Decimal(old_state.state)
-                derivative = gradient / (
+                last_time, last_value = self._state_list[-1]
+                first_time, first_value = self._state_list[0]
+
+                elapsed_time = (last_time - first_time).total_seconds()
+                delta_value = Decimal(last_value) - Decimal(first_value)
+                derivative = delta_value / (
                     Decimal(elapsed_time) * (self._unit_prefix * self._unit_time)
                 )
                 assert isinstance(derivative, Decimal)
