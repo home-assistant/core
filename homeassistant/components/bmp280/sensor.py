@@ -2,7 +2,7 @@
 import logging
 
 from adafruit_bmp280 import Adafruit_BMP280_I2C
-import busio
+from busio import I2C
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
