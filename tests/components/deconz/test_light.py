@@ -131,7 +131,7 @@ async def test_lights_and_groups(hass):
         "id": "1",
         "state": {"on": False},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     rgb_light = hass.states.get("light.rgb_light")

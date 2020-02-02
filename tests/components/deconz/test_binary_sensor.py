@@ -96,7 +96,7 @@ async def test_binary_sensors(hass):
         "id": "1",
         "state": {"presence": True},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
@@ -147,7 +147,7 @@ async def test_add_new_binary_sensor(hass):
         "id": "1",
         "sensor": deepcopy(SENSORS["1"]),
     }
-    gateway.api.async_event_handler(state_added_event)
+    gateway.api.event_handler(state_added_event)
     await hass.async_block_till_done()
 
     assert "binary_sensor.presence_sensor" in gateway.deconz_ids
