@@ -79,5 +79,5 @@ class SaltDeviceScanner(DeviceScanner):
         try:
             return self.saltbox.get_online_clients()
         except:  # noqa: E722  # pylint: disable=bare-except
-            _LOGGER.info("Could not get data from Salt Fiber Box")
+            _LOGGER.warning("Could not get data from Salt Fiber Box")
         return self.online_clients
