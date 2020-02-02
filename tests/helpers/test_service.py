@@ -320,14 +320,20 @@ async def test_call_with_sync_func(hass, mock_entities):
 
 async def test_call_with_sync_attr(hass, mock_entities):
     """Test invoking sync service calls."""
-    mock_entities["light.kitchen"].sync_method = Mock()
+    mock_method = mock_entities["light.kitchen"].sync_method = Mock()
     await service.entity_service_call(
         hass,
         [Mock(entities=mock_entities)],
         "sync_method",
-        ha.ServiceCall("test_domain", "test_service", {"entity_id": "light.kitchen"}),
+        ha.ServiceCall(
+            "test_domain",
+            "test_service",
+            {"entity_id": "light.kitchen", "area_id": "abcd"},
+        ),
     )
-    assert mock_entities["light.kitchen"].sync_method.call_count == 1
+    assert mock_method.call_count == 1
+    # We pass empty kwargs because both entity_id and area_id are filtered out
+    assert mock_method.mock_calls[0][2] == {}
 
 
 async def test_call_context_user_not_exist(hass):
