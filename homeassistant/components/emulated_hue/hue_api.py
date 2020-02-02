@@ -697,17 +697,19 @@ def entity_to_json(config, entity):
             | SUPPORT_VOLUME_SET
             | SUPPORT_TARGET_TEMPERATURE
         )
-    ) or entity.domain == script.DOMAIN:
+    ):
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
         retval["type"] = "Dimmable light"
         retval["modelid"] = "HASS123"
         retval["state"].update({HUE_API_STATE_BRI: state[STATE_BRIGHTNESS]})
     else:
-        # On/off light (Zigbee Device ID: 0x0000)
-        # Supports groups, scenes and on/off control
-        retval["type"] = "On/off light"
-        retval["modelid"] = "HASS321"
+        # Dimmable light (Zigbee Device ID: 0x0100)
+        # Supports groups, scenes, on/off and dimming
+        # Reports fixed brightness for compatibility with Alexa.
+        retval["type"] = "Dimmable light"
+        retval["modelid"] = "HASS123"
+        retval["state"].update({HUE_API_STATE_BRI: HUE_API_STATE_BRI_MAX})
 
     return retval
 
