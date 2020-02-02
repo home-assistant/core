@@ -283,7 +283,11 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
 
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
-        data = {key: val for key, val in call.data.items() if key != ATTR_ENTITY_ID}
+        data = {
+            key: val
+            for key, val in call.data.items()
+            if key not in cv.ENTITY_SERVICE_FIELDS
+        }
     # If the service function is not a string, we pass the service call
     else:
         data = call
@@ -323,6 +327,7 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
         for platform in platforms:
             platform_entities = []
             for entity in platform.entities.values():
+                print(entity.entity_id, entity.entity_id in entity_ids)
                 if entity.entity_id not in entity_ids:
                     continue
 
