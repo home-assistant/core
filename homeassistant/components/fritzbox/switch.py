@@ -20,13 +20,6 @@ ATTR_TEMPERATURE_UNIT = "temperature_unit"
 entities = set()
 
 
-async def async_setup_platform(
-    hass, config, add_entities, discovery_info=None
-):  # pragma: no cover
-    """Set up the Fritzbox smarthome switch platform."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fritzbox smarthome switch from config_entry."""
     devices = []
