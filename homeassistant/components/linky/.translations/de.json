@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Konto bereits konfiguriert",
             "username_exists": "Konto bereits konfiguriert"
         },
         "error": {
