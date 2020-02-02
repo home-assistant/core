@@ -355,7 +355,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 
     # Register on HA stop event to gracefully shutdown HomematicIP Cloud connection
     hap.reset_connection_listener = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, async_reset_hap_connection()
+        EVENT_HOMEASSISTANT_STOP, await async_reset_hap_connection()
     )
 
     # Register hap as device in registry.
