@@ -399,7 +399,7 @@ class GoogleEntity:
         # use aliases
         aliases = entity_config.get(CONF_ALIASES)
         if aliases:
-            device["name"]["nicknames"] = aliases
+            device["name"]["nicknames"] = [name] + aliases
 
         if self.config.is_local_sdk_active:
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]
