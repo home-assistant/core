@@ -135,7 +135,6 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-        vol.Optional(ATTR_TIMEOUT): vol.Coerce(float),
     },
     extra=vol.ALLOW_EXTRA,
 )
