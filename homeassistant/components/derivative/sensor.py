@@ -108,7 +108,6 @@ class DerivativeSensor(RestoreEntity):
         @callback
         def calc_derivative(entity, old_state, new_state):
             """Handle the sensor state changes."""
-
             if (
                 old_state is None
                 or old_state.state in [STATE_UNKNOWN, STATE_UNAVAILABLE]
@@ -120,11 +119,12 @@ class DerivativeSensor(RestoreEntity):
             self._state_list.append((now, new_state.state))
 
             # Get indices of tuples that are older than `unit_time`
-            to_remove = [
-                i
-                for i, (timestamp, _) in enumerate(self._state_list)
-                if (now - timestamp).total_seconds() > self._unit_time
-            ]
+            to_remove = []
+            for i, (timestamp, _) in enumerate(self._state_list):
+                if (now - timestamp).total_seconds() > self._unit_time:
+                    to_remove.append(i)
+                else:
+                    break
             # Delete those tuples from the list
             for i in reversed(to_remove):
                 self._state_list.pop(i)
