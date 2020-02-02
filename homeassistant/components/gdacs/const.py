@@ -1,6 +1,8 @@
 """Define constants for the GDACS integration."""
 from datetime import timedelta
 
+from aio_georss_gdacs.consts import EVENT_TYPE_MAP
+
 DOMAIN = "gdacs"
 
 PLATFORMS = ("sensor", "geo_location")
@@ -19,11 +21,5 @@ SIGNAL_STATUS = "gdacs_status_{}"
 
 SIGNAL_NEW_GEOLOCATION = "gdacs_new_geolocation_{}"
 
-VALID_CATEGORIES = [
-    "Drought",
-    "Earthquake",
-    "Flood",
-    "Tropical Cyclone",
-    "Tsunami",
-    "Volcano",
-]
+# Fetch valid categories from integration library.
+VALID_CATEGORIES = list(EVENT_TYPE_MAP.values())
