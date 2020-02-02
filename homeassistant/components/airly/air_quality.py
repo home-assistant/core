@@ -74,6 +74,11 @@ class AirlyAirQuality(AirQualityEntity):
         return self._name
 
     @property
+    def should_poll(self):
+        """Return the polling requirement for this entity."""
+        return False
+
+    @property
     def icon(self):
         """Return the icon."""
         return self._icon

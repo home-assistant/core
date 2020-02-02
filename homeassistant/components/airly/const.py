@@ -16,4 +16,5 @@ ATTR_API_TEMPERATURE = "TEMPERATURE"
 DATA_CLIENT = "client"
 DEFAULT_NAME = "Airly"
 DOMAIN = "airly"
+MAX_REQUESTS_PER_DAY = 100
 NO_AIRLY_SENSORS = "There are no Airly sensors in this area yet."

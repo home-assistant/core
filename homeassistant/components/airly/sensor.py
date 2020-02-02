@@ -105,6 +105,11 @@ class AirlySensor(Entity):
         return f"{self._name} {SENSOR_TYPES[self.kind][ATTR_LABEL]}"
 
     @property
+    def should_poll(self):
+        """Return the polling requirement for this sensor."""
+        return False
+
+    @property
     def state(self):
         """Return the state."""
         self._state = self.data[self.kind]
