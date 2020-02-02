@@ -104,7 +104,10 @@ DEMO_DEVICES = [
     },
     {
         "id": "light.ceiling_lights",
-        "name": {"name": "Roof Lights", "nicknames": ["top lights", "ceiling lights"]},
+        "name": {
+            "name": "Roof Lights",
+            "nicknames": ["Roof Lights", "top lights", "ceiling lights"],
+        },
         "traits": [
             "action.devices.traits.OnOff",
             "action.devices.traits.Brightness",
