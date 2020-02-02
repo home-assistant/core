@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         import board
 
         # initializing I2C bus using the auto-detected pins
-        i2c = busio.I2C(board.SCL, board.SDA)
+        i2c = I2C(board.SCL, board.SDA)
         # initializing the sensor
         bmp280 = Adafruit_BMP280_I2C(i2c, address=config.get(CONF_I2C_ADDRESS))
         # use custom name if there's any
