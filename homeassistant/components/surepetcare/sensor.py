@@ -55,6 +55,7 @@ class SurePetcareSensor(Entity):
     def __init__(
         self: Entity, _id: int, sure_type: SureProductID, spc: SurePetcareAPI,
     ):
+        """Initialize a Sure Petcare sensor."""
 
         self._id = _id
         self._sure_type = sure_type
@@ -82,6 +83,7 @@ class SurePetcareSensor(Entity):
 
     @property
     def available(self) -> bool:
+        """Return true if entity is available."""
         return bool(self._state["online"])
 
     @property
