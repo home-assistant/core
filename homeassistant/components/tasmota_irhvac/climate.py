@@ -604,9 +604,7 @@ class TasmotaIrhvac(ClimateDevice, RestoreEntity):
         """Set new target fan mode."""
         if fan_mode not in self._fan_list:
             _LOGGER.error(
-                "Invalid swing mode selected. Got '"
-                + fan_mode
-                + "'. Allowed modes are:"
+                "Invalid swing mode selected. Got '%s'. Allowed modes are:", fan_mode
             )
             _LOGGER.error(self._fan_list)
             return
@@ -619,11 +617,9 @@ class TasmotaIrhvac(ClimateDevice, RestoreEntity):
         """Set new target swing operation."""
         if swing_mode not in self._swing_list:
             _LOGGER.error(
-                "Invalid swing mode selected. Got '"
-                + swing_mode
-                + "'. Allowed modes are:"
+                "Invalid swing mode selected. Got '%s'. Allowed modes are:", swing_mode
             )
-            _LOGGER.error(self.swing_list)
+            _LOGGER.error(self._swing_list)
             return
         self._swing_mode = swing_mode
         self.power_mode = STATE_ON
