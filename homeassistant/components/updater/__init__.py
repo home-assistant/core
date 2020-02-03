@@ -80,13 +80,13 @@ async def async_setup(hass, config):
         # This component only makes sense in release versions
         _LOGGER.info("Running on 'dev', only analytics will be submitted")
 
-    config = config.get(DOMAIN, {})
-    if config.get(CONF_REPORTING):
+    conf = config.get(DOMAIN, {})
+    if conf.get(CONF_REPORTING):
         huuid = await hass.async_add_job(_load_uuid, hass)
     else:
         huuid = None
 
-    include_components = config.get(CONF_COMPONENT_REPORTING)
+    include_components = conf.get(CONF_COMPONENT_REPORTING)
 
     async def check_new_version():
         """Check if a new version is available and report if one is."""
