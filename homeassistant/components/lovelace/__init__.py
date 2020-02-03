@@ -96,46 +96,21 @@ class LovelaceStorage:
         config = self._data["config"]
         ais_dom_config = self._ais_dom_data["config"]
         if config is None:
-            if ais_dom_config is None:
-                raise ConfigNotFound
-            else:
-                config = ais_dom_config
-        # ais dom merge
-        if "resources" not in config:
-            config["resources"] = []
-        if "views" not in config:
-            config["views"] = []
-
-        for aisview in ais_dom_config["views"]:
-            _LOGGER.debug("---------------------------------")
-            _LOGGER.debug("Processing " + aisview["path"])
-            view_found = False
+            # use default ais dom config
+            config = ais_dom_config
+        else:
+            # ais dom merge
+            if "views" not in config:
+                config["views"] = []
+            # remove ais views from user config
             for idx, view in enumerate(config["views"]):
-                if view["path"] in (
-                    "audio",
-                    "dev",
-                    "ais_audio",
-                    "ais_dev",
-                    "ais_zigbee",
-                ):
-                    if view["path"] == "ais_dev":
-                        config["views"].remove(view)
-                        break
-                    elif "visible" in view:
-                        if not view["visible"]:
-                            config["views"].remove(view)
-                            break
-
-                if "path" in view:
-                    if aisview["path"] == view["path"]:
-                        _LOGGER.debug(aisview["path"] + " -> COPY")
-                        config["views"][idx] = aisview
-                        view_found = True
-                        break
-            if not view_found:
-                _LOGGER.debug(aisview["path"] + " -> ADD")
-                config["views"].append(aisview)
-            _LOGGER.debug("---------------------------------")
+                if view["path"] in ("ais_audio", "ais_zigbee"):
+                    config["views"].remove(view)
+            # add hidden ais views on the end of the config
+            for aisview in ais_dom_config["views"]:
+                if "visible" in aisview:
+                    if not aisview["visible"]:
+                        config["views"].append(aisview)
         return config
 
     async def async_save(self, config):
