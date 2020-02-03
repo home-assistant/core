@@ -163,24 +163,14 @@ class Flap(SurePetcareBinarySensor):
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
-            try:
-                attributes = {
-                    "online": bool(self._state["online"]),
-                    "learn_mode": bool(self._state["learn_mode"]),
-                    ATTR_VOLTAGE: f'{self._state["battery"] / 4:.2f}',
-                    "locking_mode": SureLockStateID(
-                        self._state["locking"]["mode"]
-                    ).name.capitalize(),
-                }
-
-            except (KeyError, TypeError) as error:
-                _LOGGER.error(
-                    "Error getting device state attributes from %s: %s\n\n%s",
-                    self._name,
-                    error,
-                    self._state,
-                )
-                attributes = self._state
+            attributes = {
+                "online": bool(self._state["online"]),
+                "learn_mode": bool(self._state["learn_mode"]),
+                ATTR_VOLTAGE: f'{self._state["battery"] / 4:.2f}',
+                "locking_mode": SureLockStateID(
+                    self._state["locking"]["mode"]
+                ).name.capitalize(),
+            }
 
         return attributes
 
@@ -205,23 +195,12 @@ class Pet(SurePetcareBinarySensor):
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
-            try:
-                attributes = {
-                    "since": str(
-                        datetime.fromisoformat(self._state["since"]).replace(
-                            tzinfo=None
-                        )
-                    ),
-                    "where": SureLocationID(self._state["where"]).name.capitalize(),
-                }
-
-            except (KeyError, TypeError) as error:
-                _LOGGER.error(
-                    "Error getting device state attributes from %s: %s\n\n%s",
-                    self._name,
-                    error,
-                    self._state,
-                )
+            attributes = {
+                "since": str(
+                    datetime.fromisoformat(self._state["since"]).replace(tzinfo=None)
+                ),
+                "where": SureLocationID(self._state["where"]).name.capitalize(),
+            }
 
         return attributes
 
@@ -268,19 +247,10 @@ class DeviceConnectivity(SurePetcareBinarySensor):
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
-            try:
-                attributes = {
-                    "device_rssi": f'{self._state["signal"]["device_rssi"]:.2f}',
-                    "hub_rssi": f'{self._state["signal"]["hub_rssi"]:.2f}',
-                }
-
-            except (KeyError, TypeError) as error:
-                _LOGGER.error(
-                    "Error getting device state attributes from %s: %s\n\n%s",
-                    self._name,
-                    error,
-                    self._state,
-                )
+            attributes = {
+                "device_rssi": f'{self._state["signal"]["device_rssi"]:.2f}',
+                "hub_rssi": f'{self._state["signal"]["hub_rssi"]:.2f}',
+            }
 
         return attributes
 
@@ -306,18 +276,9 @@ class Hub(SurePetcareBinarySensor):
         """Return the state attributes of the device."""
         attributes = None
         if self._state:
-            try:
-                attributes = {
-                    "led_mode": int(self._state["led_mode"]),
-                    "pairing_mode": bool(self._state["pairing_mode"]),
-                }
-
-            except (KeyError, TypeError) as error:
-                _LOGGER.error(
-                    "Error getting device state attributes from %s: %s\n\n%s",
-                    self._name,
-                    error,
-                    self._state,
-                )
+            attributes = {
+                "led_mode": int(self._state["led_mode"]),
+                "pairing_mode": bool(self._state["pairing_mode"]),
+            }
 
         return attributes
