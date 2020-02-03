@@ -1,4 +1,5 @@
 """Support for Meteo-France weather data."""
+import asyncio
 import datetime
 import logging
 
@@ -74,6 +75,22 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         )
     _LOGGER.debug("meteo_france sensor platform loaded for %s", city)
     return True
+
+
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.data[CONF_CITY])
+
+    return unload_ok
 
 
 class MeteoFranceUpdater:
