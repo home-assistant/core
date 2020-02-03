@@ -355,7 +355,9 @@ class SimpliSafe:
                 2 * self._websocket_reconnect_delay, 480
             )
             async_call_later(
-                self._hass, self._websocket_reconnect_delay, self.ws_connect
+                self._hass,
+                self._websocket_reconnect_delay,
+                self.async_websocket_connect,
             )
 
     async def async_init(self):
@@ -386,7 +388,7 @@ class SimpliSafe:
         async def update_system(system):
             """Update a system."""
             await system.update()
-            _LOGGER.debug(f"Updated REST API data for system {system.system_id}")
+            _LOGGER.debug('Updated REST API data for "%s"', system.name)
             async_dispatcher_send(self._hass, TOPIC_UPDATE.format(system.system_id))
 
         tasks = [update_system(system) for system in self.systems.values()]
@@ -462,7 +464,8 @@ class SimpliSafe:
             """Define a handler to fire when a new SimpliSafe event arrives."""
             event = async_create_event_from_raw_data(data)
             self.last_websocket_data[data["sid"]] = event
-            _LOGGER.debug(f'Updated websocket data for system {data["sid"]}')
+            system = self.systems[data["sid"]]
+            _LOGGER.debug('Updated websocket data for "%s"', system.name)
             async_dispatcher_send(self._hass, TOPIC_UPDATE.format(data["sid"]))
 
             _LOGGER.debug("Resetting websocket watchdog")
@@ -552,8 +555,8 @@ class SimpliSafeEntity(Entity):
 
     async def async_update(self):
         """Update the entity."""
-        rest_data = self._simplisafe.last_rest_api_data.get(self._system.system_id)
-        ws_data = self._simplisafe.last_websocket_data.get(self._system.system_id)
+        rest_data = self.last_rest_api_data.get(self._system.system_id)
+        websocket_data = self.last_websocket_data.get(self._system.system_id)
 
         # If the most recent REST API data (within the data object) doesn't match what
         # this entity last used, update:
@@ -563,17 +566,17 @@ class SimpliSafeEntity(Entity):
 
         # If the most recent websocket data (within the data object) doesn't match what
         # this entity last used, update:
-        if self._last_used_websocket_data != ws_data:
-            self._last_used_websocket_data = ws_data
-            self.async_update_from_websocket_api(ws_data)
+        if self._last_used_websocket_data != websocket_data:
+            self._last_used_websocket_data = websocket_data
+            self.async_update_from_websocket_api(websocket_data)
 
     @callback
-    def async_update_from_rest_api(data):
+    def async_update_from_rest_api(self, data):
         """Update the entity with the provided REST API data."""
         raise NotImplementedError()
 
     @callback
-    def async_update_from_websocket_api(data):
+    def async_update_from_websocket_api(self, data):
         """Update the entity with the provided websocket API data."""
         pass
 
