@@ -112,6 +112,9 @@ class AirlySensor(Entity):
         """Disconnect dispatcher listener when removed."""
         if self._async_unsub_dispatcher_connect:
             self._async_unsub_dispatcher_connect()
+        if self.airly._unsub_fetch_data:
+            self.airly._unsub_fetch_data()
+            self.airly._unsub_fetch_data = None
 
     @property
     def name(self):

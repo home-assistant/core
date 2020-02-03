@@ -26,6 +26,8 @@ from .const import (
     TOPIC_DATA_UPDATE,
 )
 
+PLATFORMS = ["air_quality", "sensor"]
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -56,21 +58,28 @@ async def async_setup_entry(hass, config_entry):
 
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = airly
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "air_quality")
-    )
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
-    )
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
+        )
+
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
-    hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
-    await hass.config_entries.async_forward_entry_unload(config_entry, "air_quality")
-    await hass.config_entries.async_forward_entry_unload(config_entry, "sensor")
-    return True
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(config_entry, component)
+                for component in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN][DATA_CLIENT].pop(config_entry.entry_id)
+
+    return unload_ok
 
 
 class AirlyData:
@@ -83,6 +92,8 @@ class AirlyData:
         self.airly = Airly(api_key, session)
         self.data = {}
         self._hass = hass
+
+        self._unsub_fetch_data = None
 
     async def async_update(self, *args):
         """Update Airly data."""
@@ -121,5 +132,7 @@ class AirlyData:
         instances = len(self._hass.config_entries.async_entries(DOMAIN))
         interval = ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances
         _LOGGER.debug("Next update in %i minutes", interval)
-        async_call_later(self._hass, interval * 60, self.async_update)
+        self._unsub_fetch_data = async_call_later(
+            self._hass, interval * 60, self.async_update
+        )
         async_dispatcher_send(self._hass, TOPIC_DATA_UPDATE)
