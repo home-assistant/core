@@ -717,7 +717,7 @@ class AlexaInputController(AlexaCapability):
 
     @staticmethod
     def get_valid_inputs(source_list):
-        """Return list of supported inputs"""
+        """Return list of supported inputs."""
         input_list = []
         for source in source_list:
             formatted_source = (
