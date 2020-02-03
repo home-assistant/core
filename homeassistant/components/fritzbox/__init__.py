@@ -4,10 +4,10 @@ import socket
 from pyfritzhome import Fritzhome
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, SUPPORTED_DOMAINS
+from .const import CONF_CONNECTIONS, DOMAIN, SUPPORTED_DOMAINS
 
 
 def ensure_unique_hosts(value):
@@ -60,7 +60,8 @@ async def async_setup_entry(hass, entry):
     )
     fritz.login()
 
-    entry.data["fritz"] = fritz
+    hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}, CONF_DEVICES: set()})
+    hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = fritz
 
     for domain in SUPPORTED_DOMAINS:
         hass.async_create_task(

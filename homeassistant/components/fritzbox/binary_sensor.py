@@ -2,15 +2,16 @@
 import requests
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
+from homeassistant.const import CONF_DEVICES
 
-from .const import DOMAIN as FRITZBOX_DOMAIN, LOGGER
+from .const import CONF_CONNECTIONS, DOMAIN as FRITZBOX_DOMAIN, LOGGER
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fritzbox binary sensor from config_entry."""
     devices = []
-    device_ids = hass.data.setdefault(FRITZBOX_DOMAIN, set())
-    fritz = config_entry.data["fritz"]
+    device_ids = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
+    fritz = hass.data[FRITZBOX_DOMAIN][CONF_CONNECTIONS][config_entry.entry_id]
 
     for device in fritz.get_devices():
         if device.has_alarm and device.ain not in device_ids:

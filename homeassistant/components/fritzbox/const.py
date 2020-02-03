@@ -5,6 +5,7 @@ LOGGER = logging.getLogger(__package__)
 DOMAIN = "fritzbox"
 
 SUPPORTED_DOMAINS = ["binary_sensor", "climate", "switch", "sensor"]
+CONF_CONNECTIONS = "connections"
 
 ATTR_STATE_BATTERY_LOW = "battery_low"
 ATTR_STATE_DEVICE_LOCKED = "device_locked"
