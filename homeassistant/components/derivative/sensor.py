@@ -131,23 +131,18 @@ class DerivativeSensor(RestoreEntity):
                 return
 
             now = new_state.last_updated
-            self._state_list.append((now, new_state.state))
-            _LOGGER.debug("Current state_list for %s: %s", self._name, self._state_list)
-            # Get indices of tuples that are older than (and outside of the) `time_window`
-            to_remove = []
-            for i, (timestamp, _) in enumerate(self._state_list[:-1]):
-                if (now - timestamp).total_seconds() > self._time_window:
-                    to_remove.append(i)
-                else:
-                    break
-            # Delete those tuples from the list
-            for i in reversed(to_remove):
-                self._state_list.pop(i)
-            _LOGGER.debug("Removing indices %s", to_remove)
-            # It can happen that the list only has one entry, in that case
+            # Filter out the tuples that are older than (and outside of the) `time_window`
+            self._state_list = [
+                (timestamp, state)
+                for timestamp, state in self._state_list
+                if (now - timestamp).total_seconds() < self._time_window
+            ]
+            # It can happen that the list is now empty, in that case
             # we use the old_state, because we cannot do anything better.
-            if len(self._state_list) == 1:
-                self._state_list.insert(0, (old_state.last_updated, old_state.state))
+            if len(self._state_list) == 0:
+                self._state_list.append((old_state.last_updated, old_state.state))
+            self._state_list.append((new_state.last_updated, new_state.state))
+            _LOGGER.debug("Current state_list for %s: %s", self._name, self._state_list)
 
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -163,7 +158,7 @@ class DerivativeSensor(RestoreEntity):
                 elapsed_time = (last_time - first_time).total_seconds()
                 delta_value = Decimal(last_value) - Decimal(first_value)
                 derivative = delta_value / (
-                    Decimal(elapsed_time) * (self._unit_prefix * self._unit_time)
+                    Decimal(elapsed_time) * Decimal(self._unit_prefix * self._unit_time)
                 )
 
                 _LOGGER.debug(
