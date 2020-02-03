@@ -667,25 +667,12 @@ class TasmotaIrhvac(ClimateDevice, RestoreEntity):
     @property
     def _is_device_active(self):
         """If the toggleable device is currently active."""
-        # return self.hass.states.is_state(self.heater_entity_id, STATE_ON)
         return self.power_mode == STATE_ON
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
         return self._support_flags
-
-    # def set_preset_mode(self, preset_mode):
-    #     """Set new preset mode."""
-    #     if preset_mode == PRESET_AWAY and not self._is_away:
-    #         self._is_away = True
-    #         self._saved_target_temp = self._target_temp
-    #         self._target_temp = self._away_temp
-    #     elif preset_mode == PRESET_NONE and self._is_away:
-    #         self._is_away = False
-    #         self._target_temp = self._saved_target_temp
-    #     await self.hass.async_add_executor_job(self.send_ir)
-    #     await self.async_update_ha_state()
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new preset mode.
