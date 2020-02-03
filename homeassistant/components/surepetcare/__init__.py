@@ -121,7 +121,7 @@ async def async_setup(hass, config) -> bool:
         [{CONF_ID: pet, CONF_TYPE: SureProductID.PET} for pet in conf[CONF_PETS]]
     )
 
-    _LOGGER.debug("Devices and Pets: %s", things)
+    _LOGGER.debug("Devices and Pets to setup: %s", things)
 
     spc = hass.data[DATA_SURE_PETCARE][SPC] = SurePetcareAPI(hass, surepy, things)
 
