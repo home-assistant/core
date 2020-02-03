@@ -22,9 +22,9 @@
   "options": {
     "step": {
       "carson_devices": {
-        "description": "Configure visibility of Carson device types",
+        "description": "Configurar la visibilidad de los tipos de dispositivos Carson",
         "data": {
-          "list_from_eagle_eye": "Get cameras from Eagle Eye directly"
+          "list_from_eagle_eye": "Lista de c\u00e1maras directamente desde Eagle Eye"
         }
       }
     }

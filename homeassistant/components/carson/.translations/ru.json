@@ -22,9 +22,9 @@
   "options": {
     "step": {
       "carson_devices": {
-        "description": "Configure visibility of Carson device types",
+        "description": "\u041d\u0430\u0441\u0442\u0440\u043e\u0439\u043a\u0438 \u0432\u0438\u0434\u0438\u043c\u043e\u0441\u0442\u0438 \u0442\u0438\u043f\u043e\u0432 \u0443\u0441\u0442\u0440\u043e\u0439\u0441\u0442\u0432 Carson",
         "data": {
-          "list_from_eagle_eye": "Get cameras from Eagle Eye directly"
+          "list_from_eagle_eye": "\u0421\u043f\u0438\u0441\u043e\u043a \u043a\u0430\u043c\u0435\u0440 \u043f\u0440\u044f\u043c\u043e \u0438\u0437 Eagle Eye"
         }
       }
     }

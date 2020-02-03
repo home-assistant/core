@@ -24,7 +24,7 @@
       "carson_devices": {
         "description": "Configure visibility of Carson device types",
         "data": {
-          "list_from_eagle_eye": "Get cameras from Eagle Eye directly."
+          "list_from_eagle_eye": "Camera list directly from Eagle Eye"
         }
       }
     }
