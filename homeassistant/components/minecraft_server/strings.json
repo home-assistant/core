@@ -8,14 +8,12 @@
                 "data": {
                     "name": "Name",
                     "host": "Host",
-                    "port": "Port",
-                    "scan_interval": "Scan interval"
+                    "port": "Port"
                 }
             }
         },
         "error": {
             "invalid_port": "Port must be in range from 1024 to 65535, please correct it and try again.",
-            "invalid_scan_interval": "Scan interval must be in range from 5 to 86400 seconds, please correct it and try again.",
             "cannot_connect": "Failed to connect to server, please check the host and port and try again. Also ensure that you are running at least Minecraft version 1.7 on your server."
           },
         "abort": {

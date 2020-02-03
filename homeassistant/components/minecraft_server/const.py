@@ -3,7 +3,6 @@
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Minecraft Server"
 DEFAULT_PORT = 25565
-DEFAULT_SCAN_INTERVAL = 60
 
 DOMAIN = "minecraft_server"
 
@@ -28,6 +27,8 @@ NAME_PLAYERS_ONLINE = "Players Online"
 NAME_PROTOCOL_VERSION = "Protocol Version"
 NAME_STATUS = "Status"
 NAME_VERSION = "Version"
+
+SCAN_INTERVAL = 60
 
 SIGNAL_NAME_PREFIX = f"signal_{DOMAIN}"
 

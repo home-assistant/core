@@ -1,24 +1,24 @@
 """The Minecraft Server integration."""
 
+import asyncio
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from mcstatus.server import MinecraftServer as MCStatus
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN, MANUFACTURER, SIGNAL_NAME_PREFIX
+from .const import DOMAIN, MANUFACTURER, SCAN_INTERVAL, SIGNAL_NAME_PREFIX
 
 PLATFORMS = ["binary_sensor", "sensor"]
 
@@ -37,15 +37,15 @@ async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) 
     # Create and store server instance.
     unique_id = config_entry.unique_id
     _LOGGER.debug(
-        "Creating server instance for '%s' (host='%s', port=%s, scan_interval=%s)",
+        "Creating server instance for '%s' (host='%s', port=%s)",
         config_entry.data[CONF_NAME],
         config_entry.data[CONF_HOST],
         config_entry.data[CONF_PORT],
-        config_entry.data[CONF_SCAN_INTERVAL],
     )
     server = MinecraftServer(hass, unique_id, config_entry.data)
     domain_data[unique_id] = server
     await server.async_update()
+    server.start_periodic_update()
 
     # Set up platform(s).
     for platform in PLATFORMS:
@@ -64,8 +64,12 @@ async def async_unload_entry(
     server = hass.data[DOMAIN][unique_id]
 
     # Unload platforms.
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(config_entry, platform)
+    await asyncio.gather(
+        *[
+            hass.config_entries.async_forward_entry_unload(config_entry, platform)
+            for platform in PLATFORMS
+        ]
+    )
 
     # Clean up.
     server.stop_periodic_update()
@@ -86,95 +90,37 @@ class MinecraftServer:
     ) -> None:
         """Initialize server instance."""
         self._hass = hass
-        self._unique_id = unique_id
 
         # Server data
-        self._name = config_data[CONF_NAME]
-        self._host = config_data[CONF_HOST]
-        self._port = config_data[CONF_PORT]
-        self._scan_interval = config_data[CONF_SCAN_INTERVAL]
-        self._server_online = False
-        self._stop_periodic_update = None
+        self.unique_id = unique_id
+        self.name = config_data[CONF_NAME]
+        self.host = config_data[CONF_HOST]
+        self.port = config_data[CONF_PORT]
+        self.online = False
 
         # 3rd party library instance
-        self._mc_status = MCStatus(self._host, self._port)
+        self._mc_status = MCStatus(self.host, self.port)
 
         # Data provided by 3rd party library
-        self._description = None
-        self._version = None
-        self._protocol_version = None
-        self._latency = None
-        self._players_online = None
-        self._players_max = None
-        self._players_list = None
+        self.description = None
+        self.version = None
+        self.protocol_version = None
+        self.latency_time = None
+        self.players_online = None
+        self.players_max = None
+        self.players_list = None
 
         # Dispatcher signal name
-        self._signal_name = f"{SIGNAL_NAME_PREFIX}_{self._unique_id}"
+        self.signal_name = f"{SIGNAL_NAME_PREFIX}_{self.unique_id}"
 
-    @property
-    def name(self) -> str:
-        """Return server name."""
-        return self._name
+        # Callback for stopping periodic update.
+        self._stop_periodic_update = None
 
-    @property
-    def unique_id(self) -> str:
-        """Return server unique ID."""
-        return self._unique_id
-
-    @property
-    def host(self) -> str:
-        """Return server host."""
-        return self._host
-
-    @property
-    def port(self) -> int:
-        """Return server port."""
-        return self._port
-
-    @property
-    def signal_name(self) -> str:
-        """Return dispatcher signal name."""
-        return self._signal_name
-
-    @property
-    def description(self) -> str:
-        """Return server description."""
-        return self._description
-
-    @property
-    def version(self) -> str:
-        """Return server version."""
-        return self._version
-
-    @property
-    def protocol_version(self) -> int:
-        """Return server protocol version."""
-        return self._protocol_version
-
-    @property
-    def latency_time(self) -> int:
-        """Return server latency time."""
-        return self._latency
-
-    @property
-    def players_online(self) -> int:
-        """Return online players on server."""
-        return self._players_online
-
-    @property
-    def players_max(self) -> int:
-        """Return maximum number of players on server."""
-        return self._players_max
-
-    @property
-    def players_list(self) -> List[str]:
-        """Return players list on server."""
-        return self._players_list
-
-    @property
-    def online(self) -> bool:
-        """Return server connection status."""
-        return self._server_online
+    def start_periodic_update(self) -> None:
+        """Start periodic execution of update method."""
+        self._stop_periodic_update = async_track_time_interval(
+            self._hass, self.async_update, timedelta(seconds=SCAN_INTERVAL)
+        )
 
     def stop_periodic_update(self) -> None:
         """Stop periodic execution of update method."""
@@ -191,10 +137,10 @@ class MinecraftServer:
             await self._hass.async_add_executor_job(
                 self._mc_status.ping, self._RETRIES_PING
             )
-            self._server_online = True
+            self.online = True
         except IOError as error:
             _LOGGER.debug("Error occurred while trying to ping the server: %s", error)
-            self._server_online = False
+            self.online = False
 
     async def async_update(self, now: datetime = None) -> None:
         """Get server data from 3rd party library and update properties."""
@@ -220,20 +166,13 @@ class MinecraftServer:
         else:
             # Set all properties except description and version information to
             # unknown until server connection is established again.
-            self._players_online = None
-            self._players_max = None
-            self._players_list = None
-            self._latency = None
+            self.players_online = None
+            self.players_max = None
+            self.players_list = None
+            self.latency_time = None
 
         # Notify sensors about new data.
-        async_dispatcher_send(self._hass, self._signal_name)
-
-        # Periodically update status.
-        self._stop_periodic_update = async_track_point_in_utc_time(
-            self._hass,
-            self.async_update,
-            utcnow() + timedelta(seconds=self._scan_interval),
-        )
+        async_dispatcher_send(self._hass, self.signal_name)
 
     async def _async_status_request(self) -> None:
         """Request server status and update properties."""
@@ -245,16 +184,16 @@ class MinecraftServer:
             _LOGGER.debug("Error while requesting server status: IOError")
             raise IOError
         else:
-            self._description = status_response.description["text"]
-            self._version = status_response.version.name
-            self._protocol_version = status_response.version.protocol
-            self._players_online = status_response.players.online
-            self._players_max = status_response.players.max
-            self._latency = status_response.latency
-            self._players_list = []
+            self.description = status_response.description["text"]
+            self.version = status_response.version.name
+            self.protocol_version = status_response.version.protocol
+            self.players_online = status_response.players.online
+            self.players_max = status_response.players.max
+            self.latency_time = status_response.latency
+            self.players_list = []
             if status_response.players.sample is not None:
                 for player in status_response.players.sample:
-                    self._players_list.append(player.name)
+                    self.players_list.append(player.name)
 
 
 class MinecraftServerEntity(Entity):
