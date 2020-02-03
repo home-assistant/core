@@ -8,7 +8,7 @@ CONF_APP_KEY = "app_key"
 
 DATA_CLIENT = "data_client"
 
-TOPIC_UPDATE = "update"
+TOPIC_UPDATE = "ambient_station_data_update_{0}"
 
 TYPE_BINARY_SENSOR = "binary_sensor"
 TYPE_SENSOR = "sensor"
