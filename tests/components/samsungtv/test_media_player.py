@@ -75,15 +75,17 @@ MOCK_CONFIG_NOTURNON = {
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
-        "homeassistant.components.samsungtv.config_flow.Remote"
-    ), patch(
+    with patch("homeassistant.components.samsungtv.config_flow.Remote"), patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ) as socket1, patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote"
     ) as remote_class, patch(
         "homeassistant.components.samsungtv.socket"
-    ):
+    ) as socket2:
         remote = mock.Mock()
         remote_class.return_value = remote
+        socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
+        socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remote
 
 
@@ -135,11 +137,12 @@ async def test_update_on(hass, remote, mock_now):
 
 async def test_update_off(hass, remote, mock_now):
     """Testing update tv off."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+
     with patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote",
         side_effect=[OSError("Boom"), mock.DEFAULT],
-    ), patch("homeassistant.components.samsungtv.config_flow.socket"):
-        await setup_samsungtv(hass, MOCK_CONFIG)
+    ):
 
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
@@ -150,13 +153,35 @@ async def test_update_off(hass, remote, mock_now):
         assert state.state == STATE_OFF
 
 
+async def test_update_access_denied(hass, remote, mock_now):
+    """Testing update tv unhandled response exception."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+
+    with patch(
+        "homeassistant.components.samsungtv.media_player.SamsungRemote",
+        side_effect=exceptions.AccessDenied("Boom"),
+    ):
+
+        next_update = mock_now + timedelta(minutes=5)
+        with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+            async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
 async def test_update_unhandled_response(hass, remote, mock_now):
     """Testing update tv unhandled response exception."""
+    await setup_samsungtv(hass, MOCK_CONFIG)
+
     with patch(
         "homeassistant.components.samsungtv.media_player.SamsungRemote",
         side_effect=[exceptions.UnhandledResponse("Boom"), mock.DEFAULT],
-    ), patch("homeassistant.components.samsungtv.config_flow.socket"):
-        await setup_samsungtv(hass, MOCK_CONFIG)
+    ):
 
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
