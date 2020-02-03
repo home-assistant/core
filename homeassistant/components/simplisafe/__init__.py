@@ -1,5 +1,6 @@
 """Support for SimpliSafe alarm systems."""
 import asyncio
+from functools import partial
 import logging
 
 from simplipy import API
@@ -56,7 +57,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ACCOUNTS = "accounts"
 
 DATA_LISTENER = "listener"
-TOPIC_UPDATE = "update_{0}"
+TOPIC_UPDATE = partial("{domain}_update_{system_id}".format, domain=DOMAIN)
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 DEFAULT_WATCHDOG_SECONDS = 5 * 60
@@ -389,7 +390,7 @@ class SimpliSafe:
             """Update a system."""
             await system.update()
             _LOGGER.debug('Updated REST API data for "%s"', system.name)
-            async_dispatcher_send(self._hass, TOPIC_UPDATE.format(system.system_id))
+            async_dispatcher_send(self._hass, TOPIC_UPDATE(system_id=system.system_id))
 
         tasks = [update_system(system) for system in self.systems.values()]
 
@@ -466,7 +467,7 @@ class SimpliSafe:
             self.last_websocket_data[data["sid"]] = event
             system = self.systems[data["sid"]]
             _LOGGER.debug('Updated websocket data for "%s"', system.name)
-            async_dispatcher_send(self._hass, TOPIC_UPDATE.format(data["sid"]))
+            async_dispatcher_send(self._hass, TOPIC_UPDATE(system_id=data["sid"]))
 
             _LOGGER.debug("Resetting websocket watchdog")
             self._websocket_watchdog_listener()
@@ -550,7 +551,7 @@ class SimpliSafeEntity(Entity):
             self.async_schedule_update_ha_state(True)
 
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE.format(self._system.system_id), update
+            self.hass, TOPIC_UPDATE(system_id=self._system.system_id), update
         )
 
     async def async_update(self):
