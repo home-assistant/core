@@ -78,12 +78,12 @@ class MeteoFranceSensor(Entity):
 
     def __init__(
         self,
-        type: str,
+        sensor_type: str,
         client: meteofranceClient,
         alert_watcher: VigilanceMeteoFranceProxy,
     ):
         """Initialize the Meteo-France sensor."""
-        self._type = type
+        self._type = sensor_type
         self._client = client
         self._alert_watcher = alert_watcher
         self._state = None

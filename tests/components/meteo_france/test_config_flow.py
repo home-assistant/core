@@ -5,9 +5,8 @@ from meteofrance.client import meteofranceError
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.meteo_france.const import CONF_CITY, DOMAIN, SENSOR_TYPES
+from homeassistant.components.meteo_france.const import CONF_CITY, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_MONITORED_CONDITIONS
 
 from tests.common import MockConfigEntry
 
@@ -16,8 +15,6 @@ CITY_1_NAME = "La Clusaz"
 CITY_2_POSTAL_DISTRICT_1 = "69001"
 CITY_2_POSTAL_DISTRICT_4 = "69004"
 CITY_2_NAME = "Lyon"
-MONITORED_CONDITIONS = ["temperature", "weather"]
-DEFAULT_MONITORED_CONDITIONS = list(SENSOR_TYPES)
 
 
 @pytest.fixture(name="client_1")
@@ -58,12 +55,11 @@ async def test_user(hass, client_1):
     assert result["result"].unique_id == CITY_1_NAME
     assert result["title"] == CITY_1_NAME
     assert result["data"][CONF_CITY] == CITY_1_NAME
-    assert result["data"][CONF_MONITORED_CONDITIONS] == DEFAULT_MONITORED_CONDITIONS
 
 
 async def test_import(hass, client_1):
     """Test import step."""
-    # import with city
+    # import with all
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_CITY: CITY_1_POSTAL},
     )
@@ -71,25 +67,6 @@ async def test_import(hass, client_1):
     assert result["result"].unique_id == CITY_1_NAME
     assert result["title"] == CITY_1_NAME
     assert result["data"][CONF_CITY] == CITY_1_NAME
-    assert result["data"][CONF_MONITORED_CONDITIONS] == DEFAULT_MONITORED_CONDITIONS
-
-
-async def test_import_all(hass, client_2):
-    """Test import step."""
-    # import with all
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_CITY: CITY_2_POSTAL_DISTRICT_4,
-            CONF_MONITORED_CONDITIONS: MONITORED_CONDITIONS,
-        },
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["result"].unique_id == CITY_2_NAME
-    assert result["title"] == CITY_2_NAME
-    assert result["data"][CONF_CITY] == CITY_2_NAME
-    assert result["data"][CONF_MONITORED_CONDITIONS] == MONITORED_CONDITIONS
 
 
 async def test_abort_if_already_setup(hass, client_1):
