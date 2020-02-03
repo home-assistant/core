@@ -1,6 +1,7 @@
 """Test the Minecraft Server config flow."""
 
-from unittest.mock import PropertyMock, patch
+from asynctest import patch
+from mcstatus.pinger import PingResponse
 
 from homeassistant.components.minecraft_server.const import (
     DEFAULT_NAME,
@@ -17,7 +18,21 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
+
+STATUS_RESPONSE_RAW = {
+    "description": {"text": "Dummy Description"},
+    "version": {"name": "Dummy Version", "protocol": 123},
+    "players": {
+        "online": 3,
+        "max": 10,
+        "sample": [
+            {"name": "Player 1", "id": "1"},
+            {"name": "Player 2", "id": "2"},
+            {"name": "Player 3", "id": "3"},
+        ],
+    },
+}
 
 USER_INPUT = {
     CONF_NAME: DEFAULT_NAME,
@@ -65,7 +80,7 @@ USER_INPUT_PORT_LARGE = {
 async def test_show_config_form(hass: HomeAssistantType) -> None:
     """Test if initial configuration form is shown."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=None
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
     assert result["type"] == RESULT_TYPE_FORM
@@ -74,7 +89,7 @@ async def test_show_config_form(hass: HomeAssistantType) -> None:
 
 async def test_same_host(hass: HomeAssistantType) -> None:
     """Test abort in case of same host name."""
-    unique_id = f"{USER_INPUT[CONF_HOST].lower()}-{USER_INPUT[CONF_PORT]}"
+    unique_id = f"{USER_INPUT[CONF_HOST]}-{USER_INPUT[CONF_PORT]}"
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN, unique_id=unique_id, data=USER_INPUT
     )
@@ -130,48 +145,29 @@ async def test_port_too_large(hass: HomeAssistantType) -> None:
 
 async def test_connection_failed(hass: HomeAssistantType) -> None:
     """Test error in case of a failed connection."""
-    with patch(
-        "homeassistant.components.minecraft_server.MinecraftServer.async_check_connection",
-        return_value=mock_coro(None),
-    ):
+    with patch("mcstatus.server.MinecraftServer.ping", side_effect=IOError):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
+        )
+
+        assert result["type"] == RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_connection_succeeded(hass: HomeAssistantType) -> None:
+    """Test config entry in case of a successful connection."""
+    with patch("mcstatus.server.MinecraftServer.ping", return_value=50):
         with patch(
-            "homeassistant.components.minecraft_server.MinecraftServer.online",
-            new_callable=PropertyMock(return_value=False),
+            "mcstatus.server.MinecraftServer.status",
+            return_value=PingResponse(STATUS_RESPONSE_RAW),
         ):
             result = await hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
             )
 
-            assert result["type"] == RESULT_TYPE_FORM
-            assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_connection_succeeded(hass: HomeAssistantType) -> None:
-    """Test config entry in case of a successful connection."""
-    with patch(
-        "homeassistant.components.minecraft_server.MinecraftServer.async_check_connection",
-        return_value=mock_coro(None),
-    ):
-        with patch(
-            "homeassistant.components.minecraft_server.MinecraftServer.async_update",
-            return_value=mock_coro(None),
-        ):
-            with patch(
-                "homeassistant.components.minecraft_server.MinecraftServer.online",
-                new_callable=PropertyMock(return_value=True),
-            ):
-                result = await hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_USER}, data=USER_INPUT
-                )
-
-                assert result["type"] == RESULT_TYPE_CREATE_ENTRY
-                assert (
-                    result["title"]
-                    == f"{USER_INPUT[CONF_HOST].lower()}:{USER_INPUT[CONF_PORT]}"
-                )
-                assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
-                assert result["data"][CONF_HOST] == USER_INPUT[CONF_HOST]
-                assert result["data"][CONF_PORT] == USER_INPUT[CONF_PORT]
-                assert (
-                    result["data"][CONF_SCAN_INTERVAL] == USER_INPUT[CONF_SCAN_INTERVAL]
-                )
+            assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+            assert result["title"] == f"{USER_INPUT[CONF_HOST]}:{USER_INPUT[CONF_PORT]}"
+            assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
+            assert result["data"][CONF_HOST] == USER_INPUT[CONF_HOST]
+            assert result["data"][CONF_PORT] == USER_INPUT[CONF_PORT]
+            assert result["data"][CONF_SCAN_INTERVAL] == USER_INPUT[CONF_SCAN_INTERVAL]

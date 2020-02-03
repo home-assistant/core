@@ -25,7 +25,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             # No configuration data available yet, show default configuration form.
-            return await self._show_config_form()
+            return self._show_config_form()
 
         # User inputs.
         host = user_input[CONF_HOST]
@@ -33,7 +33,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
         scan_interval = user_input[CONF_SCAN_INTERVAL]
 
         # Abort in case the host was already configured before.
-        unique_id = f"{host.lower()}-{port}"
+        unique_id = f"{host}-{port}"
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
@@ -51,17 +51,16 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
             await server.async_check_connection()
             if not server.online:
                 errors["base"] = "cannot_connect"
-            del server
 
         # Configuration data are available, but an error was detected.
         # Show configuration form with error message.
         if "base" in errors:
-            return await self._show_config_form(user_input, errors=errors)
+            return self._show_config_form(user_input, errors=errors)
 
         # Configuration data are available and no error was detected, create configuration entry.
-        return self.async_create_entry(title=f"{host.lower()}:{port}", data=user_input)
+        return self.async_create_entry(title=f"{host}:{port}", data=user_input)
 
-    async def _show_config_form(self, user_input=None, errors=None):
+    def _show_config_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
         if user_input is None:
             user_input = {}
@@ -75,7 +74,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     ): str,
                     vol.Required(
                         CONF_HOST, default=user_input.get(CONF_HOST, DEFAULT_HOST)
-                    ): str,
+                    ): vol.All(str, vol.Lower),
                     vol.Optional(
                         CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
                     ): int,

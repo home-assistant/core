@@ -43,13 +43,13 @@ async def async_setup_entry(
 
     # Create entities list.
     entities = [
-        MinecraftServerDescriptionSensor(hass, server),
-        MinecraftServerVersionSensor(hass, server),
-        MinecraftServerProtocolVersionSensor(hass, server),
-        MinecraftServerLatencyTimeSensor(hass, server),
-        MinecraftServerPlayersOnlineSensor(hass, server),
-        MinecraftServerPlayersMaxSensor(hass, server),
-        MinecraftServerPlayersListSensor(hass, server),
+        MinecraftServerDescriptionSensor(server),
+        MinecraftServerVersionSensor(server),
+        MinecraftServerProtocolVersionSensor(server),
+        MinecraftServerLatencyTimeSensor(server),
+        MinecraftServerPlayersOnlineSensor(server),
+        MinecraftServerPlayersMaxSensor(server),
+        MinecraftServerPlayersListSensor(server),
     ]
 
     # Add sensor entities.
@@ -61,7 +61,6 @@ class MinecraftServerSensorEntity(MinecraftServerEntity):
 
     def __init__(
         self,
-        hass: HomeAssistantType,
         server: MinecraftServer,
         type_name: str,
         icon: str = None,
@@ -69,7 +68,7 @@ class MinecraftServerSensorEntity(MinecraftServerEntity):
         device_class: str = None,
     ) -> None:
         """Initialize sensor base entity."""
-        super().__init__(hass, server, type_name, icon, device_class)
+        super().__init__(server, type_name, icon, device_class)
         self._state = None
         self._unit = unit
 
@@ -112,10 +111,9 @@ class MinecraftServerDescriptionSensor(MinecraftServerSensorEntity):
         "§r",
     ]
 
-    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
+    def __init__(self, server: MinecraftServer) -> None:
         """Initialize description sensor."""
         super().__init__(
-            hass=hass,
             server=server,
             type_name=NAME_DESCRIPTION,
             icon=ICON_DESCRIPTION,
@@ -145,14 +143,10 @@ class MinecraftServerDescriptionSensor(MinecraftServerSensorEntity):
 class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server version sensor."""
 
-    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
+    def __init__(self, server: MinecraftServer) -> None:
         """Initialize version sensor."""
         super().__init__(
-            hass=hass,
-            server=server,
-            type_name=NAME_VERSION,
-            icon=ICON_VERSION,
-            unit=UNIT_VERSION,
+            server=server, type_name=NAME_VERSION, icon=ICON_VERSION, unit=UNIT_VERSION
         )
 
     async def async_update(self) -> None:
@@ -163,10 +157,9 @@ class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
 class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server protocol version sensor."""
 
-    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
+    def __init__(self, server: MinecraftServer) -> None:
         """Initialize protocol version sensor."""
         super().__init__(
-            hass=hass,
             server=server,
             type_name=NAME_PROTOCOL_VERSION,
             icon=ICON_PROTOCOL_VERSION,
@@ -181,10 +174,9 @@ class MinecraftServerProtocolVersionSensor(MinecraftServerSensorEntity):
 class MinecraftServerLatencyTimeSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server latency time sensor."""
 
-    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
+    def __init__(self, server: MinecraftServer) -> None:
         """Initialize latency time sensor."""
         super().__init__(
-            hass=hass,
             server=server,
             type_name=NAME_LATENCY_TIME,
             icon=ICON_LATENCY_TIME,
@@ -199,10 +191,9 @@ class MinecraftServerLatencyTimeSensor(MinecraftServerSensorEntity):
 class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server online players sensor."""
 
-    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
+    def __init__(self, server: MinecraftServer) -> None:
         """Initialize online players sensor."""
         super().__init__(
-            hass=hass,
             server=server,
             type_name=NAME_PLAYERS_ONLINE,
             icon=ICON_PLAYERS_ONLINE,
@@ -217,10 +208,9 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
 class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server maximum number of players sensor."""
 
-    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
+    def __init__(self, server: MinecraftServer) -> None:
         """Initialize maximum number of players sensor."""
         super().__init__(
-            hass=hass,
             server=server,
             type_name=NAME_PLAYERS_MAX,
             icon=ICON_PLAYERS_MAX,
@@ -235,10 +225,9 @@ class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
 class MinecraftServerPlayersListSensor(MinecraftServerSensorEntity):
     """Representation of a Minecraft Server players list sensor."""
 
-    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
+    def __init__(self, server: MinecraftServer) -> None:
         """Initialize players list sensor."""
         super().__init__(
-            hass=hass,
             server=server,
             type_name=NAME_PLAYERS_LIST,
             icon=ICON_PLAYERS_LIST,

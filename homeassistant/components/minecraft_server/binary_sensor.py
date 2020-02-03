@@ -18,7 +18,7 @@ async def async_setup_entry(
     server = hass.data[DOMAIN][config_entry.unique_id]
 
     # Create entities list.
-    entities = [MinecraftServerStatusBinarySensor(hass, server)]
+    entities = [MinecraftServerStatusBinarySensor(server)]
 
     # Add binary sensor entities.
     async_add_entities(entities, True)
@@ -27,10 +27,9 @@ async def async_setup_entry(
 class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorDevice):
     """Representation of a Minecraft Server status binary sensor."""
 
-    def __init__(self, hass: HomeAssistantType, server: MinecraftServer) -> None:
+    def __init__(self, server: MinecraftServer) -> None:
         """Initialize status binary sensor."""
         super().__init__(
-            hass=hass,
             server=server,
             type_name=NAME_STATUS,
             icon=ICON_STATUS,
@@ -45,7 +44,4 @@ class MinecraftServerStatusBinarySensor(MinecraftServerEntity, BinarySensorDevic
 
     async def async_update(self) -> None:
         """Update status."""
-        if self._server.online:
-            self._is_on = True
-        else:
-            self._is_on = False
+        self._is_on = self._server.online

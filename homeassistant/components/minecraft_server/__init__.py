@@ -32,12 +32,19 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+    domain_data = hass.data.setdefault(DOMAIN, {})
 
     # Create and store server instance.
     unique_id = config_entry.unique_id
+    _LOGGER.debug(
+        "Creating server instance for '%s' (host='%s', port=%s, scan_interval=%s)",
+        config_entry.data[CONF_NAME],
+        config_entry.data[CONF_HOST],
+        config_entry.data[CONF_PORT],
+        config_entry.data[CONF_SCAN_INTERVAL],
+    )
     server = MinecraftServer(hass, unique_id, config_entry.data)
-    hass.data[DOMAIN][unique_id] = server
+    domain_data[unique_id] = server
     await server.async_update()
 
     # Set up platform(s).
@@ -89,16 +96,8 @@ class MinecraftServer:
         self._server_online = False
         self._stop_periodic_update = None
 
-        _LOGGER.debug(
-            "Initializing '%s' (host='%s', port=%s, scan_interval=%s)",
-            self._name,
-            self._host,
-            self._port,
-            self._scan_interval,
-        )
-
         # 3rd party library instance
-        self._mcstatus = MCStatus(self._host, self._port)
+        self._mc_status = MCStatus(self._host, self._port)
 
         # Data provided by 3rd party library
         self._description = None
@@ -110,7 +109,7 @@ class MinecraftServer:
         self._players_list = None
 
         # Dispatcher signal name
-        self._signal_name = SIGNAL_NAME_PREFIX + self._unique_id
+        self._signal_name = f"{SIGNAL_NAME_PREFIX}_{self._unique_id}"
 
     @property
     def name(self) -> str:
@@ -190,7 +189,7 @@ class MinecraftServer:
         """Check server connection using a 'ping' request and store result."""
         try:
             await self._hass.async_add_executor_job(
-                self._mcstatus.ping, self._RETRIES_PING
+                self._mc_status.ping, self._RETRIES_PING
             )
             self._server_online = True
         except IOError as error:
@@ -205,9 +204,9 @@ class MinecraftServer:
         server_online = self.online
 
         # Inform user once about connection state changes if necessary.
-        if (server_online_old is True) and (server_online is False):
+        if server_online_old and not server_online:
             _LOGGER.warning("Connection to server lost")
-        elif (server_online_old is False) and (server_online is True):
+        elif not server_online_old and server_online:
             _LOGGER.info("Connection to server (re-)established")
 
         # Try to update the server data if server is online.
@@ -240,7 +239,7 @@ class MinecraftServer:
         """Request server status and update properties."""
         try:
             status_response = await self._hass.async_add_executor_job(
-                self._mcstatus.status, self._RETRIES_STATUS
+                self._mc_status.status, self._RETRIES_STATUS
             )
         except IOError:
             _LOGGER.debug("Error while requesting server status: IOError")
@@ -262,16 +261,10 @@ class MinecraftServerEntity(Entity):
     """Representation of a Minecraft Server base entity."""
 
     def __init__(
-        self,
-        hass: HomeAssistantType,
-        server: MinecraftServer,
-        type_name: str,
-        icon: str,
-        device_class: str,
+        self, server: MinecraftServer, type_name: str, icon: str, device_class: str
     ) -> None:
         """Initialize base entity."""
         self._server = server
-        self._hass = hass
         self._name = f"{server.name} {type_name}"
         self._icon = icon
         self._unique_id = f"{self._server.unique_id}-{type_name}"
@@ -322,7 +315,7 @@ class MinecraftServerEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Connect dispatcher to signal from server."""
         self._disconnect_dispatcher = async_dispatcher_connect(
-            self._hass, self._server.signal_name, self._update_callback
+            self.hass, self._server.signal_name, self._update_callback
         )
 
     async def async_will_remove_from_hass(self) -> None:
