@@ -4,6 +4,7 @@ Security channels module for Zigbee Home Automation.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
+import asyncio
 import logging
 
 from zigpy.exceptions import DeliveryError
@@ -13,7 +14,6 @@ from homeassistant.core import callback
 
 from .. import registries
 from ..const import (
-    CLUSTER_COMMAND_SERVER,
     SIGNAL_ATTR_UPDATED,
     WARNING_DEVICE_MODE_EMERGENCY,
     WARNING_DEVICE_SOUND_HIGH,
@@ -74,13 +74,7 @@ class IasWd(ZigbeeChannel):
         value = IasWd.set_bit(value, 6, mode, 2)
         value = IasWd.set_bit(value, 7, mode, 3)
 
-        await self.device.issue_cluster_command(
-            self.cluster.endpoint.endpoint_id,
-            self.cluster.cluster_id,
-            0x0001,
-            CLUSTER_COMMAND_SERVER,
-            [value],
-        )
+        await self.squawk(value)
 
     async def start_warning(
         self,
@@ -115,12 +109,8 @@ class IasWd(ZigbeeChannel):
         value = IasWd.set_bit(value, 6, mode, 2)
         value = IasWd.set_bit(value, 7, mode, 3)
 
-        await self.device.issue_cluster_command(
-            self.cluster.endpoint.endpoint_id,
-            self.cluster.cluster_id,
-            0x0000,
-            CLUSTER_COMMAND_SERVER,
-            [value, warning_duration, strobe_duty_cycle, strobe_intensity],
+        await self.start_warning(
+            value, warning_duration, strobe_duty_cycle, strobe_intensity
         )
 
 
@@ -139,7 +129,7 @@ class IASZoneChannel(ZigbeeChannel):
         elif command_id == 1:
             self.debug("Enroll requested")
             res = self._cluster.enroll_response(0, 0)
-            self._zha_device.hass.async_create_task(res)
+            asyncio.create_task(res)
 
     async def async_configure(self):
         """Configure IAS device."""
