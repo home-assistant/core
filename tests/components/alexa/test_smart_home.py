@@ -1293,6 +1293,7 @@ async def test_media_player_no_supported_inputs(hass):
     assert appliance["displayCategories"][0] == "TV"
     assert appliance["friendlyName"] == "Test media player"
 
+    # Assert Alexa.InputController is not in capabilities list.
     assert_endpoint_capabilities(
         appliance, "Alexa", "Alexa.EndpointHealth", "Alexa.PowerController"
     )
