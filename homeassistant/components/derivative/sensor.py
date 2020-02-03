@@ -30,7 +30,16 @@ CONF_UNIT = "unit"
 CONF_TIME_WINDOW = "time_window"
 
 # SI Metric prefixes
-UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "G": 10 ** 6, "T": 10 ** 9}
+UNIT_PREFIXES = {
+    None: 1,
+    "n": 1e-9,
+    "µ": 1e-6,
+    "m": 1e-3,
+    "k": 1e3,
+    "M": 1e6,
+    "G": 1e9,
+    "T": 1e12,
+}
 
 # SI Time prefixes
 UNIT_TIME = {"s": 1, "min": 60, "h": 60 * 60, "d": 24 * 60 * 60}
