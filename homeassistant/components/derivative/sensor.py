@@ -99,7 +99,7 @@ class DerivativeSensor(RestoreEntity):
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
-        self._time_window = time_window * _unit_time
+        self._time_window = time_window.total_seconds()
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
