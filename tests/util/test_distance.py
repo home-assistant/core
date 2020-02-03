@@ -1,14 +1,14 @@
-"""Test homeassistant distance utility functions."""
+"""Test Home Assistant distance utility functions."""
 
 import pytest
 
-import homeassistant.util.distance as distance_util
 from homeassistant.const import (
+    LENGTH_FEET,
     LENGTH_KILOMETERS,
     LENGTH_METERS,
-    LENGTH_FEET,
     LENGTH_MILES,
 )
+import homeassistant.util.distance as distance_util
 
 INVALID_SYMBOL = "bob"
 VALID_SYMBOL = LENGTH_KILOMETERS

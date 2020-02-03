@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "S\u00f3lo puedes configurar una cuenta de Spotify.",
+            "authorize_url_timeout": "Tiempo de espera agotado para la autorizaci\u00f3n de la url.",
+            "missing_configuration": "La integraci\u00f3n de Spotify no est\u00e1 configurada. Por favor, siga la documentaci\u00f3n."
+        },
+        "create_entry": {
+            "default": "Autentificado con \u00e9xito con Spotify."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Elija el m\u00e9todo de autenticaci\u00f3n"
+            }
+        },
+        "title": "Spotify"
+    }
+}

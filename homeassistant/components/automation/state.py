@@ -6,11 +6,10 @@ from typing import Dict
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.core import HomeAssistant, CALLBACK_TYPE, callback
-from homeassistant.const import MATCH_ALL, CONF_PLATFORM, CONF_FOR
+from homeassistant.const import CONF_FOR, CONF_PLATFORM, MATCH_ALL
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.event import async_track_state_change, async_track_same_state
-
+from homeassistant.helpers.event import async_track_same_state, async_track_state_change
 
 # mypy: allow-incomplete-defs, allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs

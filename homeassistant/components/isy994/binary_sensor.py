@@ -100,8 +100,8 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
 
     Often times, a single device is represented by multiple nodes in the ISY,
     allowing for different nuances in how those devices report their on and
-    off events. This class turns those multiple nodes in to a single Hass
-    entity and handles both ways that ISY binary sensors can work.
+    off events. This class turns those multiple nodes in to a single Home
+    Assistant entity and handles both ways that ISY binary sensors can work.
     """
 
     def __init__(self, node) -> None:
@@ -110,7 +110,6 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         self._negative_node = None
         self._heartbeat_device = None
         self._device_class_from_type = _detect_device_type(self._node)
-        # pylint: disable=protected-access
         if _is_val_unknown(self._node.status._val):
             self._computed_state = None
             self._status_was_unknown = True
@@ -166,7 +165,7 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         """Handle an "On" control event from the "negative" node."""
         if event == "DON":
             _LOGGER.debug(
-                "Sensor %s turning Off via the Negative node " "sending a DON command",
+                "Sensor %s turning Off via the Negative node sending a DON command",
                 self.name,
             )
             self._computed_state = False
@@ -182,7 +181,7 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
         """
         if event == "DON":
             _LOGGER.debug(
-                "Sensor %s turning On via the Primary node " "sending a DON command",
+                "Sensor %s turning On via the Primary node sending a DON command",
                 self.name,
             )
             self._computed_state = True
@@ -190,7 +189,7 @@ class ISYBinarySensorDevice(ISYDevice, BinarySensorDevice):
             self._heartbeat()
         if event == "DOF":
             _LOGGER.debug(
-                "Sensor %s turning Off via the Primary node " "sending a DOF command",
+                "Sensor %s turning Off via the Primary node sending a DOF command",
                 self.name,
             )
             self._computed_state = False

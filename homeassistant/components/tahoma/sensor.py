@@ -2,7 +2,7 @@
 from datetime import timedelta
 import logging
 
-from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.const import ATTR_BATTERY_LEVEL, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
@@ -40,8 +40,8 @@ class TahomaSensor(TahomaDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        if self.tahoma_device.type == "Temperature Sensor":
-            return None
+        if self.tahoma_device.type == "io:TemperatureIOSystemSensor":
+            return TEMP_CELSIUS
         if self.tahoma_device.type == "io:SomfyContactIOSystemSensor":
             return None
         if self.tahoma_device.type == "io:SomfyBasicContactIOSystemSensor":
@@ -78,6 +78,11 @@ class TahomaSensor(TahomaDevice, Entity):
             self._available = True
         if self.tahoma_device.type == "rtds:RTDSMotionSensor":
             self.current_value = self.tahoma_device.active_states["core:OccupancyState"]
+            self._available = True
+        if self.tahoma_device.type == "io:TemperatureIOSystemSensor":
+            self.current_value = round(
+                float(self.tahoma_device.active_states["core:TemperatureState"]), 1
+            )
             self._available = True
 
         _LOGGER.debug("Update %s, value: %d", self._name, self.current_value)

@@ -4,7 +4,7 @@
             "set_hvac_mode": "Endre HVAC-modus p\u00e5 {entity_name}",
             "set_preset_mode": "Endre forh\u00e5ndsinnstilling p\u00e5 {entity_name}"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_hvac_mode": "{entity_name} er satt til en spesifikk HVAC-modus",
             "is_preset_mode": "{entity_name} er satt til en spesifikk forh\u00e5ndsinnstilt modus"
         },

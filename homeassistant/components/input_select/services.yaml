@@ -20,3 +20,5 @@ set_options:
         for., example: input_select.my_select}
     options: {description: Options for the input select entity., example: '["Item
         A", "Item B", "Item C"]'}
+reload:
+  description: Reload the input_select configuration.

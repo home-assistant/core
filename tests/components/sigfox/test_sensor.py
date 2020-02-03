@@ -1,7 +1,8 @@
 """Tests for the sigfox sensor."""
 import re
-import requests_mock
 import unittest
+
+import requests_mock
 
 from homeassistant.components.sigfox.sensor import (
     API_URL,
@@ -9,6 +10,7 @@ from homeassistant.components.sigfox.sensor import (
     CONF_API_PASSWORD,
 )
 from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant
 
 TEST_API_LOGIN = "foo"

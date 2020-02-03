@@ -6,6 +6,13 @@
             "arm_night": "{entity_name} \uc57c\uac04\uacbd\ube44",
             "disarm": "{entity_name} \uacbd\ube44\ud574\uc81c",
             "trigger": "{entity_name} \ud2b8\ub9ac\uac70"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} \uc774(\uac00) \uc678\ucd9c \uacbd\ube44\ubaa8\ub4dc\ub85c \uc124\uc815\ub420 \ub54c",
+            "armed_home": "{entity_name} \uc774(\uac00) \uc7ac\uc2e4 \uacbd\ube44\ubaa8\ub4dc\ub85c \uc124\uc815\ub420 \ub54c",
+            "armed_night": "{entity_name} \uc774(\uac00) \uc57c\uac04 \uacbd\ube44\ubaa8\ub4dc\ub85c \uc124\uc815\ub420 \ub54c",
+            "disarmed": "{entity_name} \uc774(\uac00) \ud574\uc81c\ub420 \ub54c",
+            "triggered": "{entity_name} \uc774(\uac00) \ud2b8\ub9ac\uac70\ub420 \ub54c"
         }
     }
 }

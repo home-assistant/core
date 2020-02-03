@@ -9,15 +9,14 @@ import os
 from TwitterAPI import TwitterAPI
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_point_in_time
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_point_in_time
 
 _LOGGER = logging.getLogger(__name__)
 

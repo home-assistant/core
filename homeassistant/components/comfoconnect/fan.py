@@ -43,23 +43,33 @@ class ComfoConnectFan(FanEntity):
 
     async def async_added_to_hass(self):
         """Register for sensor updates."""
+        _LOGGER.debug("Registering for fan speed")
+        async_dispatcher_connect(
+            self.hass,
+            SIGNAL_COMFOCONNECT_UPDATE_RECEIVED.format(SENSOR_FAN_SPEED_MODE),
+            self._handle_update,
+        )
         await self.hass.async_add_executor_job(
             self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
         )
-        async_dispatcher_connect(
-            self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, self._handle_update
-        )
 
-    def _handle_update(self, var):
+    def _handle_update(self, value):
         """Handle update callbacks."""
-        if var == SENSOR_FAN_SPEED_MODE:
-            _LOGGER.debug("Received update for %s", var)
-            self.schedule_update_ha_state()
+        _LOGGER.debug(
+            "Handle update for fan speed (%d): %s", SENSOR_FAN_SPEED_MODE, value
+        )
+        self._ccb.data[SENSOR_FAN_SPEED_MODE] = value
+        self.schedule_update_ha_state()
 
     @property
     def should_poll(self) -> bool:
         """Do not poll."""
         return False
+
+    @property
+    def unique_id(self):
+        """Return a unique_id for this entity."""
+        return self._ccb.unique_id
 
     @property
     def name(self):

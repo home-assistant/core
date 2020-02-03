@@ -16,6 +16,7 @@ from . import (
     SENSOR_TYPE_CURRENT,
     SENSOR_TYPE_PULSE_COUNTER,
     SENSOR_TYPE_TEMPERATURE,
+    SENSOR_TYPE_VOLTAGE,
     TIME_UNIT_HOUR,
     TIME_UNIT_MINUTE,
     TIME_UNIT_SECOND,
@@ -31,6 +32,7 @@ UNIT_WATTS = POWER_WATT
 COUNTER_ICON = "mdi:counter"
 CURRENT_SENSOR_ICON = "mdi:flash"
 TEMPERATURE_ICON = "mdi:thermometer"
+VOLTAGE_ICON = "mdi:current-ac"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -68,6 +70,14 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                     sensor[CONF_NUMBER],
                     sensor[CONF_NAME],
                     sensor[CONF_TEMPERATURE_UNIT],
+                )
+            )
+        elif sensor_type == SENSOR_TYPE_VOLTAGE:
+            entities.append(
+                VoltageSensor(
+                    sensor[CONF_MONITOR_SERIAL_NUMBER],
+                    sensor[CONF_NUMBER],
+                    sensor[CONF_NAME],
                 )
             )
 
@@ -276,3 +286,35 @@ class TemperatureSensor(GEMSensor):
     def unit_of_measurement(self):
         """Return the unit of measurement for this sensor (user specified)."""
         return self._unit
+
+
+class VoltageSensor(GEMSensor):
+    """Entity showing voltage."""
+
+    def __init__(self, monitor_serial_number, number, name):
+        """Construct the entity."""
+        super().__init__(monitor_serial_number, name, "volts", number)
+        self._monitor = None
+
+    def _get_sensor(self, monitor):
+        """Wire the updates to a current channel."""
+        self._monitor = monitor
+        return monitor.channels[self._number - 1]
+
+    @property
+    def icon(self):
+        """Return the icon that should represent this sensor in the UI."""
+        return VOLTAGE_ICON
+
+    @property
+    def state(self):
+        """Return the current voltage being reported by this sensor."""
+        if not self._monitor.voltage:
+            return None
+
+        return self._monitor.voltage
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement for this sensor."""
+        return "V"

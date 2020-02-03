@@ -9,8 +9,8 @@ from . import (
     CONF_DEVICE_CODE,
     CONF_SWITCHABLE_OUTPUTS,
     CONF_ZONE_NAME,
-    SIGNAL_OUTPUTS_UPDATED,
     DATA_SATEL,
+    SIGNAL_OUTPUTS_UPDATED,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,14 +69,14 @@ class SatelIntegraSwitch(SwitchDevice):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        _LOGGER.debug("Switch: %s status: %s," " turning on", self._name, self._state)
+        _LOGGER.debug("Switch: %s status: %s, turning on", self._name, self._state)
         await self._satel.set_output(self._code, self._device_number, True)
         self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
         _LOGGER.debug(
-            "Switch name: %s status: %s," " turning off", self._name, self._state
+            "Switch name: %s status: %s, turning off", self._name, self._state
         )
         await self._satel.set_output(self._code, self._device_number, False)
         self.async_schedule_update_ha_state()

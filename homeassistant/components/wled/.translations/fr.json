@@ -17,7 +17,7 @@
                 "title": "Liez votre WLED"
             },
             "zeroconf_confirm": {
-                "description": "Voulez-vous ajouter le dispositif WLED nomm\u00e9 '{name}' \u00e0 Home Assistant?",
+                "description": "Voulez-vous ajouter le dispositif WLED nomm\u00e9 `{name}` \u00e0 Home Assistant?",
                 "title": "Dispositif WLED d\u00e9couvert"
             }
         },

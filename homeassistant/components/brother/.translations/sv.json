@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Typ av skrivare"
+                }
+            }
+        }
+    }
+}

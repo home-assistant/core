@@ -1,28 +1,30 @@
 """Support for HLK-SW16 relay switches."""
 import logging
 
+from hlk_sw16 import create_hlk_sw16_connection
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-    CONF_SWITCHES,
     CONF_NAME,
+    CONF_PORT,
+    CONF_SWITCHES,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
     async_dispatcher_connect,
+    async_dispatcher_send,
 )
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_DEVICE_REGISTER = "hlk_sw16_device_register"
 DEFAULT_RECONNECT_INTERVAL = 10
+DEFAULT_KEEP_ALIVE_INTERVAL = 3
 CONNECTION_TIMEOUT = 10
 DEFAULT_PORT = 8080
 
@@ -59,7 +61,6 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Set up the HLK-SW16 switch."""
     # Allow platform to specify function to register new unknown devices
-    from hlk_sw16 import create_hlk_sw16_connection
 
     hass.data[DATA_DEVICE_REGISTER] = {}
 
@@ -93,6 +94,7 @@ async def async_setup(hass, config):
                 loop=hass.loop,
                 timeout=CONNECTION_TIMEOUT,
                 reconnect_interval=DEFAULT_RECONNECT_INTERVAL,
+                keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
             )
 
             hass.data[DATA_DEVICE_REGISTER][device] = client

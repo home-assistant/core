@@ -1,19 +1,21 @@
 """Provides device automations for Fan."""
-from typing import Optional, List
+from typing import List, Optional
+
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_DOMAIN,
-    CONF_TYPE,
     CONF_DEVICE_ID,
+    CONF_DOMAIN,
     CONF_ENTITY_ID,
-    SERVICE_TURN_ON,
+    CONF_TYPE,
     SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
-from homeassistant.core import HomeAssistant, Context
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry
 import homeassistant.helpers.config_validation as cv
+
 from . import DOMAIN
 
 ACTION_TYPES = {"turn_on", "turn_off"}

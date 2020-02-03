@@ -1,13 +1,14 @@
 """Tests for the Cert Expiry config flow."""
-import pytest
-import ssl
 import socket
+import ssl
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant import data_entry_flow
 from homeassistant.components.cert_expiry import config_flow
 from homeassistant.components.cert_expiry.const import DEFAULT_NAME, DEFAULT_PORT
-from homeassistant.const import CONF_PORT, CONF_NAME, CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from tests.common import MockConfigEntry, mock_coro
 
@@ -18,7 +19,7 @@ HOST = "example.com"
 
 @pytest.fixture(name="test_connect")
 def mock_controller():
-    """Mock a successfull _prt_in_configuration_exists."""
+    """Mock a successful _prt_in_configuration_exists."""
     with patch(
         "homeassistant.components.cert_expiry.config_flow.CertexpiryConfigFlow._test_connection",
         side_effect=lambda *_: mock_coro(True),

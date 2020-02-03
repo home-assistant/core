@@ -1,18 +1,22 @@
 """The test for the statistics sensor platform."""
-import unittest
+from datetime import datetime, timedelta
 import statistics
+import unittest
+from unittest.mock import patch
 
 import pytest
 
-from homeassistant.setup import setup_component
-from homeassistant.components.statistics.sensor import StatisticsSensor
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, STATE_UNKNOWN
-from homeassistant.util import dt as dt_util
-from tests.common import get_test_home_assistant
-from unittest.mock import patch
-from datetime import datetime, timedelta
-from tests.common import init_recorder_component
 from homeassistant.components import recorder
+from homeassistant.components.statistics.sensor import StatisticsSensor
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN, TEMP_CELSIUS
+from homeassistant.setup import setup_component
+from homeassistant.util import dt as dt_util
+
+from tests.common import (
+    fire_time_changed,
+    get_test_home_assistant,
+    init_recorder_component,
+)
 
 
 class TestStatisticsSensor(unittest.TestCase):
@@ -210,6 +214,58 @@ class TestStatisticsSensor(unittest.TestCase):
 
         assert 6 == state.attributes.get("min_value")
         assert 14 == state.attributes.get("max_value")
+
+    def test_max_age_without_sensor_change(self):
+        """Test value deprecation."""
+        mock_data = {"return_time": datetime(2017, 8, 2, 12, 23, tzinfo=dt_util.UTC)}
+
+        def mock_now():
+            return mock_data["return_time"]
+
+        with patch(
+            "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
+        ):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "statistics",
+                        "name": "test",
+                        "entity_id": "sensor.test_monitored",
+                        "max_age": {"minutes": 3},
+                    }
+                },
+            )
+
+            self.hass.start()
+            self.hass.block_till_done()
+
+            for value in self.values:
+                self.hass.states.set(
+                    "sensor.test_monitored",
+                    value,
+                    {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                )
+                self.hass.block_till_done()
+                # insert the next value 30 seconds later
+                mock_data["return_time"] += timedelta(seconds=30)
+
+            state = self.hass.states.get("sensor.test")
+
+            assert 3.8 == state.attributes.get("min_value")
+            assert 15.2 == state.attributes.get("max_value")
+
+            # wait for 3 minutes (max_age).
+            mock_data["return_time"] += timedelta(minutes=3)
+            fire_time_changed(self.hass, mock_data["return_time"])
+            self.hass.block_till_done()
+
+            state = self.hass.states.get("sensor.test")
+
+            assert state.attributes.get("min_value") == STATE_UNKNOWN
+            assert state.attributes.get("max_value") == STATE_UNKNOWN
+            assert state.attributes.get("count") == 0
 
     def test_change_rate(self):
         """Test min_age/max_age and change_rate."""

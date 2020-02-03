@@ -5,13 +5,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.core import callback
-from homeassistant.const import MATCH_ALL
-from homeassistant.setup import async_setup_component
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.components.recorder.models import Events, States
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.components.recorder.models import States, Events
+from homeassistant.const import MATCH_ALL
+from homeassistant.core import callback
+from homeassistant.setup import async_setup_component
 
 from tests.common import get_test_home_assistant, init_recorder_component
 
@@ -89,7 +89,7 @@ class TestRecorder(unittest.TestCase):
 
 @pytest.fixture
 def hass_recorder():
-    """HASS fixture with in-memory recorder."""
+    """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
 
     def setup_recorder(config=None):

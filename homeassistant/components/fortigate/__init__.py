@@ -1,12 +1,13 @@
 """Fortigate integration."""
 import logging
 
+from pyFGT.fortigate import FGTConnectionError, FortiGate
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_DEVICES,
     CONF_HOST,
-    CONF_API_KEY,
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
@@ -52,8 +53,6 @@ async def async_setup(hass, config):
 
 async def async_setup_fortigate(hass, config, host, user, api_key, devices):
     """Start up the Fortigate component platforms."""
-    from pyFGT.fortigate import FGTConnectionError, FortiGate
-
     fgt = FortiGate(host, user, apikey=api_key, disable_request_warnings=True)
 
     try:

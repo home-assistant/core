@@ -1,9 +1,10 @@
 """Support for Edimax switches."""
 import logging
 
+from pyedimax.smartplug import SmartPlug
 import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
@@ -25,8 +26,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return Edimax Smart Plugs."""
-    from pyedimax.smartplug import SmartPlug
-
     host = config.get(CONF_HOST)
     auth = (config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
     name = config.get(CONF_NAME)

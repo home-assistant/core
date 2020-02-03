@@ -2,9 +2,8 @@
 # pylint: disable=redefined-outer-name
 import pytest
 
-from homeassistant.setup import async_setup_component
-
 from homeassistant.components.mobile_app.const import DOMAIN
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 

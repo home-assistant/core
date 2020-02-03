@@ -77,15 +77,21 @@
             "remote_button_short_release": "przycisk \"{subtype}\" zostanie zwolniony",
             "remote_button_triple_press": "przycisk \"{subtype}\" zostanie trzykrotnie naci\u015bni\u0119ty",
             "remote_double_tap": "urz\u0105dzenie \"{subtype}\" zostanie dwukrotnie pukni\u0119te",
+            "remote_double_tap_any_side": "urz\u0105dzenie dwukrotnie pukni\u0119te z dowolnej strony",
             "remote_falling": "urz\u0105dzenie zarejestruje swobodny spadek",
+            "remote_flip_180_degrees": "urz\u0105dzenie odwr\u00f3cone o 180 stopni",
+            "remote_flip_90_degrees": "urz\u0105dzenie odwr\u00f3cone o 90 stopni",
             "remote_gyro_activated": "nast\u0105pi potrz\u0105\u015bni\u0119cie urz\u0105dzeniem",
             "remote_moved": "urz\u0105dzenie poruszone z \"{subtype}\" w g\u00f3r\u0119",
+            "remote_moved_any_side": "urz\u0105dzenie przesuni\u0119te dowoln\u0105 stron\u0105 do g\u00f3ry",
             "remote_rotate_from_side_1": "urz\u0105dzenie obr\u00f3cone ze \"strona 1\" na \"{subtype}\"",
             "remote_rotate_from_side_2": "urz\u0105dzenie obr\u00f3cone ze \"strona 2\" na \"{subtype}\"",
             "remote_rotate_from_side_3": "urz\u0105dzenie obr\u00f3cone ze \"strona 3\" na \"{subtype}\"",
             "remote_rotate_from_side_4": "urz\u0105dzenie obr\u00f3cone ze \"strona 4\" na \"{subtype}\"",
             "remote_rotate_from_side_5": "urz\u0105dzenie obr\u00f3cone ze \"strona 5\" na \"{subtype}\"",
-            "remote_rotate_from_side_6": "urz\u0105dzenie obr\u00f3cone ze \"strona 6\" na \"{subtype}\""
+            "remote_rotate_from_side_6": "urz\u0105dzenie obr\u00f3cone ze \"strona 6\" na \"{subtype}\"",
+            "remote_turned_clockwise": "urz\u0105dzenie obr\u00f3cone zgodnie z ruchem wskaz\u00f3wek zegara",
+            "remote_turned_counter_clockwise": "urz\u0105dzenie obr\u00f3cone przeciwnie do ruchu wskaz\u00f3wek zegara"
         }
     },
     "options": {

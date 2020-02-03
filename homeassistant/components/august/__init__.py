@@ -165,7 +165,7 @@ def setup(hass, config):
         _LOGGER.debug("August HTTP session closed.")
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_http_session)
-    _LOGGER.debug("Registered for HASS stop event")
+    _LOGGER.debug("Registered for Home Assistant stop event")
 
     return setup_august(hass, config, api, authenticator)
 
@@ -254,7 +254,7 @@ class AugustData:
                 )
             except RequestException as ex:
                 _LOGGER.error(
-                    "Request error trying to retrieve doorbell" " status for %s. %s",
+                    "Request error trying to retrieve doorbell status for %s. %s",
                     doorbell.device_name,
                     ex,
                 )
@@ -301,7 +301,7 @@ class AugustData:
                 )
             except RequestException as ex:
                 _LOGGER.error(
-                    "Request error trying to retrieve door" " status for %s. %s",
+                    "Request error trying to retrieve door status for %s. %s",
                     lock.device_name,
                     ex,
                 )
@@ -327,7 +327,7 @@ class AugustData:
                 )
             except RequestException as ex:
                 _LOGGER.error(
-                    "Request error trying to retrieve door" " status for %s. %s",
+                    "Request error trying to retrieve door status for %s. %s",
                     lock.device_name,
                     ex,
                 )
@@ -342,7 +342,7 @@ class AugustData:
                 )
             except RequestException as ex:
                 _LOGGER.error(
-                    "Request error trying to retrieve door" " details for %s. %s",
+                    "Request error trying to retrieve door details for %s. %s",
                     lock.device_name,
                     ex,
                 )

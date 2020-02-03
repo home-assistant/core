@@ -1,8 +1,7 @@
 """Support for Epson projector."""
 import logging
 
-import voluptuous as vol
-
+import epson_projector as epson
 from epson_projector.const import (
     BACK,
     BUSY,
@@ -19,17 +18,16 @@ from epson_projector.const import (
     POWER,
     SOURCE,
     SOURCE_LIST,
-    TURN_ON,
     TURN_OFF,
-    VOLUME,
+    TURN_ON,
     VOL_DOWN,
     VOL_UP,
+    VOLUME,
 )
-import epson_projector as epson
+import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
@@ -50,15 +48,16 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
+from .const import (
+    ATTR_CMODE,
+    DATA_EPSON,
+    DEFAULT_NAME,
+    DOMAIN,
+    SERVICE_SELECT_CMODE,
+    SUPPORT_CMODE,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_CMODE = "cmode"
-
-DATA_EPSON = "epson"
-DEFAULT_NAME = "EPSON Projector"
-
-SERVICE_SELECT_CMODE = "epson_select_cmode"
-SUPPORT_CMODE = 33001
 
 SUPPORT_EPSON = (
     SUPPORT_TURN_ON

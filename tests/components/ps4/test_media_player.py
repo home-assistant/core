@@ -29,13 +29,13 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
-    STATE_STANDBY,
     STATE_PLAYING,
+    STATE_STANDBY,
     STATE_UNKNOWN,
 )
 from homeassistant.setup import async_setup_component
-from tests.common import MockConfigEntry, mock_device_registry, mock_registry, mock_coro
 
+from tests.common import MockConfigEntry, mock_coro, mock_device_registry, mock_registry
 
 MOCK_CREDS = "123412341234abcd12341234abcd12341234abcd12341234abcd12341234abcd"
 MOCK_NAME = "ha_ps4_name"

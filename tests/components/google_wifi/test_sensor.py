@@ -1,17 +1,17 @@
 """The tests for the Google Wifi platform."""
-import unittest
-from unittest.mock import patch, Mock
 from datetime import datetime, timedelta
+import unittest
+from unittest.mock import Mock, patch
 
 import requests_mock
 
 from homeassistant import core as ha
-from homeassistant.setup import setup_component
 import homeassistant.components.google_wifi.sensor as google_wifi
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.setup import setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 NAME = "foo"
 

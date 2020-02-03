@@ -1,20 +1,14 @@
 """Support for SimpliSafe alarm systems."""
 import asyncio
 import logging
-from datetime import timedelta
 
 from simplipy import API
 from simplipy.errors import InvalidCredentialsError, SimplipyError
+from simplipy.system.v3 import VOLUME_HIGH, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_OFF
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_TOKEN,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -28,34 +22,69 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.service import (
+    async_register_admin_service,
+    verify_domain_control,
+)
 
 from .config_flow import configured_instances
 from .const import DATA_CLIENT, DEFAULT_SCAN_INTERVAL, DOMAIN, TOPIC_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_PIN_LABEL = "label"
-ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
-ATTR_PIN_VALUE = "pin"
-ATTR_SYSTEM_ID = "system_id"
-
 CONF_ACCOUNTS = "accounts"
 
 DATA_LISTENER = "listener"
 
-SERVICE_REMOVE_PIN_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_SYSTEM_ID): cv.string,
-        vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string,
-    }
+ATTR_ALARM_DURATION = "alarm_duration"
+ATTR_ALARM_VOLUME = "alarm_volume"
+ATTR_CHIME_VOLUME = "chime_volume"
+ATTR_ENTRY_DELAY_AWAY = "entry_delay_away"
+ATTR_ENTRY_DELAY_HOME = "entry_delay_home"
+ATTR_EXIT_DELAY_AWAY = "exit_delay_away"
+ATTR_EXIT_DELAY_HOME = "exit_delay_home"
+ATTR_LIGHT = "light"
+ATTR_PIN_LABEL = "label"
+ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
+ATTR_PIN_VALUE = "pin"
+ATTR_SYSTEM_ID = "system_id"
+ATTR_VOICE_PROMPT_VOLUME = "voice_prompt_volume"
+
+VOLUMES = [VOLUME_OFF, VOLUME_LOW, VOLUME_MEDIUM, VOLUME_HIGH]
+
+SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
+
+SERVICE_REMOVE_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {vol.Required(ATTR_PIN_LABEL_OR_VALUE): cv.string}
 )
 
-SERVICE_SET_PIN_SCHEMA = vol.Schema(
+SERVICE_SET_PIN_SCHEMA = SERVICE_BASE_SCHEMA.extend(
+    {vol.Required(ATTR_PIN_LABEL): cv.string, vol.Required(ATTR_PIN_VALUE): cv.string}
+)
+
+SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = SERVICE_BASE_SCHEMA.extend(
     {
-        vol.Required(ATTR_SYSTEM_ID): cv.string,
-        vol.Required(ATTR_PIN_LABEL): cv.string,
-        vol.Required(ATTR_PIN_VALUE): cv.string,
+        vol.Optional(ATTR_ALARM_DURATION): vol.All(
+            cv.time_period, lambda value: value.seconds, vol.Range(min=30, max=480)
+        ),
+        vol.Optional(ATTR_ALARM_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
+        vol.Optional(ATTR_CHIME_VOLUME): vol.All(vol.Coerce(int), vol.In(VOLUMES)),
+        vol.Optional(ATTR_ENTRY_DELAY_AWAY): vol.All(
+            cv.time_period, lambda value: value.seconds, vol.Range(min=30, max=255)
+        ),
+        vol.Optional(ATTR_ENTRY_DELAY_HOME): vol.All(
+            cv.time_period, lambda value: value.seconds, vol.Range(max=255)
+        ),
+        vol.Optional(ATTR_EXIT_DELAY_AWAY): vol.All(
+            cv.time_period, lambda value: value.seconds, vol.Range(min=45, max=255)
+        ),
+        vol.Optional(ATTR_EXIT_DELAY_HOME): vol.All(
+            cv.time_period, lambda value: value.seconds, vol.Range(max=255)
+        ),
+        vol.Optional(ATTR_LIGHT): cv.boolean,
+        vol.Optional(ATTR_VOICE_PROMPT_VOLUME): vol.All(
+            vol.Coerce(int), vol.In(VOLUMES)
+        ),
     }
 )
 
@@ -64,7 +93,6 @@ ACCOUNT_CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_CODE): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
     }
 )
 
@@ -124,7 +152,6 @@ async def async_setup(hass, config):
                     CONF_USERNAME: account[CONF_USERNAME],
                     CONF_PASSWORD: account[CONF_PASSWORD],
                     CONF_CODE: account.get(CONF_CODE),
-                    CONF_SCAN_INTERVAL: account[CONF_SCAN_INTERVAL],
                 },
             )
         )
@@ -149,57 +176,105 @@ async def async_setup_entry(hass, config_entry):
 
     _async_save_refresh_token(hass, config_entry, api.refresh_token)
 
-    systems = await api.get_systems()
-    simplisafe = SimpliSafe(hass, config_entry, systems)
-    await simplisafe.async_update()
+    simplisafe = SimpliSafe(hass, api, config_entry)
+    await simplisafe.async_init()
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = simplisafe
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(
-            config_entry, "alarm_control_panel"
-        )
-    )
-
-    async def refresh(event_time):
-        """Refresh data from the SimpliSafe account."""
-        await simplisafe.async_update()
-        _LOGGER.debug("Updated data for all SimpliSafe systems")
-        async_dispatcher_send(hass, TOPIC_UPDATE)
-
-    hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = async_track_time_interval(
-        hass, refresh, timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
-    )
-
-    # Register the base station for each system:
-    for system in systems.values():
+    for component in ("alarm_control_panel", "lock"):
         hass.async_create_task(
-            async_register_base_station(hass, system, config_entry.entry_id)
+            hass.config_entries.async_forward_entry_setup(config_entry, component)
         )
 
+    @callback
+    def verify_system_exists(coro):
+        """Log an error if a service call uses an invalid system ID."""
+
+        async def decorator(call):
+            """Decorate."""
+            system_id = int(call.data[ATTR_SYSTEM_ID])
+            if system_id not in simplisafe.systems:
+                _LOGGER.error("Unknown system ID in service call: %s", system_id)
+                return
+            await coro(call)
+
+        return decorator
+
+    @callback
+    def v3_only(coro):
+        """Log an error if the decorated coroutine is called with a v2 system."""
+
+        async def decorator(call):
+            """Decorate."""
+            system = simplisafe.systems[int(call.data[ATTR_SYSTEM_ID])]
+            if system.version != 3:
+                _LOGGER.error("Service only available on V3 systems")
+                return
+            await coro(call)
+
+        return decorator
+
+    @verify_system_exists
     @_verify_domain_control
     async def remove_pin(call):
         """Remove a PIN."""
-        system = systems[int(call.data[ATTR_SYSTEM_ID])]
-        await system.remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
+        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
+        try:
+            await system.remove_pin(call.data[ATTR_PIN_LABEL_OR_VALUE])
+        except SimplipyError as err:
+            _LOGGER.error("Error during service call: %s", err)
+            return
 
+    @verify_system_exists
     @_verify_domain_control
     async def set_pin(call):
         """Set a PIN."""
-        system = systems[int(call.data[ATTR_SYSTEM_ID])]
-        await system.set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
+        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
+        try:
+            await system.set_pin(call.data[ATTR_PIN_LABEL], call.data[ATTR_PIN_VALUE])
+        except SimplipyError as err:
+            _LOGGER.error("Error during service call: %s", err)
+            return
+
+    @verify_system_exists
+    @v3_only
+    @_verify_domain_control
+    async def set_system_properties(call):
+        """Set one or more system parameters."""
+        system = simplisafe.systems[call.data[ATTR_SYSTEM_ID]]
+        try:
+            await system.set_properties(
+                {
+                    prop: value
+                    for prop, value in call.data.items()
+                    if prop != ATTR_SYSTEM_ID
+                }
+            )
+        except SimplipyError as err:
+            _LOGGER.error("Error during service call: %s", err)
+            return
 
     for service, method, schema in [
         ("remove_pin", remove_pin, SERVICE_REMOVE_PIN_SCHEMA),
         ("set_pin", set_pin, SERVICE_SET_PIN_SCHEMA),
+        (
+            "set_system_properties",
+            set_system_properties,
+            SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA,
+        ),
     ]:
-        hass.services.async_register(DOMAIN, service, method, schema=schema)
+        async_register_admin_service(hass, DOMAIN, service, method, schema=schema)
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a SimpliSafe config entry."""
-    await hass.config_entries.async_forward_entry_unload(entry, "alarm_control_panel")
+    tasks = [
+        hass.config_entries.async_forward_entry_unload(entry, component)
+        for component in ("alarm_control_panel", "lock")
+    ]
+
+    await asyncio.gather(*tasks)
 
     hass.data[DOMAIN][DATA_CLIENT].pop(entry.entry_id)
     remove_listener = hass.data[DOMAIN][DATA_LISTENER].pop(entry.entry_id)
@@ -211,39 +286,93 @@ async def async_unload_entry(hass, entry):
 class SimpliSafe:
     """Define a SimpliSafe API object."""
 
-    def __init__(self, hass, config_entry, systems):
+    def __init__(self, hass, api, config_entry):
         """Initialize."""
+        self._api = api
         self._config_entry = config_entry
+        self._emergency_refresh_token_used = False
         self._hass = hass
         self.last_event_data = {}
-        self.systems = systems
+        self.systems = None
 
-    async def _update_system(self, system):
-        """Update a system."""
-        try:
-            await system.update()
-            latest_event = await system.get_latest_event()
-        except SimplipyError as err:
-            _LOGGER.error(
-                'SimpliSafe error while updating "%s": %s', system.address, err
+    async def async_init(self):
+        """Initialize the data class."""
+        self.systems = await self._api.get_systems()
+
+        # Register the base station for each system:
+        for system in self.systems.values():
+            self._hass.async_create_task(
+                async_register_base_station(
+                    self._hass, system, self._config_entry.entry_id
+                )
             )
-            return
-        except Exception as err:  # pylint: disable=broad-except
-            _LOGGER.error('Unknown error while updating "%s": %s', system.address, err)
-            return
 
-        self.last_event_data[system.system_id] = latest_event
+        async def refresh(event_time):
+            """Refresh data from the SimpliSafe account."""
+            await self.async_update()
 
-        if system.api.refresh_token_dirty:
-            _async_save_refresh_token(
-                self._hass, self._config_entry, system.api.refresh_token
-            )
+        self._hass.data[DOMAIN][DATA_LISTENER][
+            self._config_entry.entry_id
+        ] = async_track_time_interval(self._hass, refresh, DEFAULT_SCAN_INTERVAL)
+
+        await self.async_update()
 
     async def async_update(self):
         """Get updated data from SimpliSafe."""
-        tasks = [self._update_system(system) for system in self.systems.values()]
 
-        await asyncio.gather(*tasks)
+        async def update_system(system):
+            """Update a system."""
+            await system.update()
+            self.last_event_data[system.system_id] = await system.get_latest_event()
+
+        tasks = [update_system(system) for system in self.systems.values()]
+
+        def cancel_tasks():
+            """Cancel tasks and ensure their cancellation is processed."""
+            for task in tasks:
+                task.cancel()
+
+        try:
+            await asyncio.gather(*tasks)
+        except InvalidCredentialsError:
+            cancel_tasks()
+
+            if self._emergency_refresh_token_used:
+                _LOGGER.error(
+                    "SimpliSafe authentication disconnected. Please restart HASS."
+                )
+                remove_listener = self._hass.data[DOMAIN][DATA_LISTENER].pop(
+                    self._config_entry.entry_id
+                )
+                remove_listener()
+                return
+
+            _LOGGER.warning("SimpliSafe cloud error; trying stored refresh token")
+            self._emergency_refresh_token_used = True
+            return await self._api.refresh_access_token(
+                self._config_entry.data[CONF_TOKEN]
+            )
+        except SimplipyError as err:
+            cancel_tasks()
+            _LOGGER.error("SimpliSafe error while updating: %s", err)
+            return
+        except Exception as err:  # pylint: disable=broad-except
+            cancel_tasks()
+            _LOGGER.error("Unknown error while updating: %s", err)
+            return
+
+        if self._api.refresh_token_dirty:
+            _async_save_refresh_token(
+                self._hass, self._config_entry, self._api.refresh_token
+            )
+
+        # If we've reached this point using an emergency refresh token, we're in the
+        # clear and we can discard it:
+        if self._emergency_refresh_token_used:
+            self._emergency_refresh_token_used = False
+
+        _LOGGER.debug("Updated data for all SimpliSafe systems")
+        async_dispatcher_send(self._hass, TOPIC_UPDATE)
 
 
 class SimpliSafeEntity(Entity):

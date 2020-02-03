@@ -2,18 +2,18 @@
 import pytest
 import voluptuous_serialize
 
-from homeassistant.components.climate import DOMAIN, const, device_action
-from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
-from homeassistant.helpers import device_registry, config_validation as cv
+from homeassistant.components.climate import DOMAIN, const, device_action
+from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
 )
 
 
@@ -39,6 +39,7 @@ async def test_get_actions(hass, device_reg, entity_reg):
     )
     entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
     hass.states.async_set("climate.test_5678", const.HVAC_MODE_COOL, {})
+    hass.states.async_set("climate.test_5678", "attributes", {"supported_features": 17})
     expected_actions = [
         {
             "domain": DOMAIN,
@@ -49,6 +50,29 @@ async def test_get_actions(hass, device_reg, entity_reg):
         {
             "domain": DOMAIN,
             "type": "set_preset_mode",
+            "device_id": device_entry.id,
+            "entity_id": "climate.test_5678",
+        },
+    ]
+    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    assert_lists_same(actions, expected_actions)
+
+
+async def test_get_action_hvac_only(hass, device_reg, entity_reg):
+    """Test we get the expected actions from a climate."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(DOMAIN, "test", "5678", device_id=device_entry.id)
+    hass.states.async_set("climate.test_5678", const.HVAC_MODE_COOL, {})
+    hass.states.async_set("climate.test_5678", "attributes", {"supported_features": 1})
+    expected_actions = [
+        {
+            "domain": DOMAIN,
+            "type": "set_hvac_mode",
             "device_id": device_entry.id,
             "entity_id": "climate.test_5678",
         },
