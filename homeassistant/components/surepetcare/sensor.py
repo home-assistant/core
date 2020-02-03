@@ -98,7 +98,7 @@ class SureBattery(Entity):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return f"spc-{self._spc_data['household_id']}-{self._id}"
+        return f"{self._spc_data['household_id']}-{self._id}-battery"
 
     @property
     def device_class(self) -> str:
