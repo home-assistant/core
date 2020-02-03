@@ -113,7 +113,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self: BinarySensorDevice) -> str:
         """Return an unique ID."""
-        return f"spc-{self._spc_data['household_id']}-{self._id}"
+        return f"{self._spc_data['household_id']}-{self._id}"
 
     async def async_update(self) -> None:
         """Get the latest data and update the state."""
@@ -175,6 +175,35 @@ class Flap(SurePetcareBinarySensor):
         return attributes
 
 
+class Hub(SurePetcareBinarySensor):
+    """Sure Petcare Pet."""
+
+    def __init__(self: BinarySensorDevice, _id: int, spc: SurePetcareAPI) -> None:
+        """Initialize a Sure Petcare Hub."""
+        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, SureProductID.HUB)
+
+    @property
+    def available(self) -> bool:
+        return bool(self._state["online"])
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if entity is online."""
+        return self.available
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the state attributes of the device."""
+        attributes = None
+        if self._state:
+            attributes = {
+                "led_mode": int(self._state["led_mode"]),
+                "pairing_mode": bool(self._state["pairing_mode"]),
+            }
+
+        return attributes
+
+
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
@@ -231,7 +260,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
     @property
     def unique_id(self: BinarySensorDevice) -> str:
         """Return an unique ID."""
-        return f"spc-{self._spc_data['household_id']}-{self._id}-connectivity"
+        return f"{self._spc_data['household_id']}-{self._id}-connectivity"
 
     @property
     def available(self) -> bool:
@@ -250,35 +279,6 @@ class DeviceConnectivity(SurePetcareBinarySensor):
             attributes = {
                 "device_rssi": f'{self._state["signal"]["device_rssi"]:.2f}',
                 "hub_rssi": f'{self._state["signal"]["hub_rssi"]:.2f}',
-            }
-
-        return attributes
-
-
-class Hub(SurePetcareBinarySensor):
-    """Sure Petcare Pet."""
-
-    def __init__(self: BinarySensorDevice, _id: int, spc: SurePetcareAPI) -> None:
-        """Initialize a Sure Petcare Hub."""
-        super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, SureProductID.HUB)
-
-    @property
-    def available(self) -> bool:
-        return bool(self._state["online"])
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if entity is online."""
-        return self.available
-
-    @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the state attributes of the device."""
-        attributes = None
-        if self._state:
-            attributes = {
-                "led_mode": int(self._state["led_mode"]),
-                "pairing_mode": bool(self._state["pairing_mode"]),
             }
 
         return attributes
