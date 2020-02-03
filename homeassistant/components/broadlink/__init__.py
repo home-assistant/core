@@ -88,6 +88,7 @@ def async_setup_service(hass, host, device):
                 except socket.timeout:
                     if retry == DEFAULT_RETRY - 1:
                         _LOGGER.error("Failed to enter learning mode")
+                        return
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()
