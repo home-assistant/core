@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import comp_entity_ids
@@ -349,15 +348,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     if not await hap.async_setup():
         return False
 
-    @callback
-    def reset_hap_connection():
-        """Reset hmip hap connection."""
-        hass.async_create_task(hap.async_reset())
-        _LOGGER.debug("Reset connection to access point id %s", entry.unique_id)
-
     # Register on HA stop event to gracefully shutdown HomematicIP Cloud connection
     hap.reset_connection_listener = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, reset_hap_connection()
+        EVENT_HOMEASSISTANT_STOP, hap.shutdown
     )
 
     # Register hap as device in registry.

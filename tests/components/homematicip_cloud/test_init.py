@@ -111,7 +111,7 @@ async def test_unload_entry(hass):
     assert config_entries[0].state == ENTRY_STATE_LOADED
     await hass.config_entries.async_unload(config_entries[0].entry_id)
     assert config_entries[0].state == ENTRY_STATE_NOT_LOADED
-    assert mock_hap.return_value.mock_calls[4][0] == "async_reset"
+    assert mock_hap.return_value.mock_calls[3][0] == "async_reset"
     # entry is unloaded
     assert hass.data[HMIPC_DOMAIN] == {}
 
