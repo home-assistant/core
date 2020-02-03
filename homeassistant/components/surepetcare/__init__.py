@@ -93,7 +93,7 @@ async def async_setup(hass, config) -> bool:
         for feeder in conf[CONF_FEEDERS]
     ]
 
-    # add flaps (dont differentiate between CAT and PET for now)
+    # add flaps (don't differentiate between CAT and PET for now)
     things.extend(
         [
             {CONF_ID: flap, CONF_TYPE: SureProductID.PET_FLAP}
