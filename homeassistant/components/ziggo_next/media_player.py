@@ -2,7 +2,7 @@
 import logging
 import random
 
-from ziggonext import ONLINE_RUNNING, ONLINE_STANDBY, ZiggoNext
+from ziggonext import ONLINE_RUNNING, ONLINE_STANDBY, ZiggoNext, ZiggoNextBox
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -32,9 +32,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up entry."""
     players = []
     api = hass.data[ZIGGO_API]
-    for box_id in api.settopBoxes.keys():
-        box = api.settopBoxes[box_id]
-        players.append(ZiggoNextMediaPlayer(box_id, box.name, api))
+    for box_id, box in api.settop_boxes.items():
+        players.append(ZiggoNextMediaPlayer(box, api))
     async_add_devices(players, update_before_add=True)
 
 
@@ -54,20 +53,16 @@ class ZiggoNextMediaPlayer(MediaPlayerDevice):
             "model": "Mediabox Next",
         }
 
-    def __init__(self, box_id: str, name: str, api: ZiggoNext):
+    def __init__(self, box: ZiggoNextBox, api: ZiggoNext):
         """Init the media player."""
+        self._box = box
         self.api = api
-        self.box_id = box_id
-        self.box_name = name
-        self.box_state = None
-        self.box_info = None
+        self.box_id = box.box_id
+        self.box_name = box.name
 
     def update(self):
         """Update the box."""
         self.api.load_channels()
-        box = self.api.settopBoxes[self.box_id]
-        self.box_state = box.state
-        self.box_info = box.info
 
     @property
     def name(self):
@@ -77,25 +72,25 @@ class ZiggoNextMediaPlayer(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the player."""
-        if self.box_state == ONLINE_RUNNING:
-            if self.box_info is not None and self.box_info.paused:
+        if self._box.state == ONLINE_RUNNING:
+            if self._box.info is not None and self._box.info.paused:
                 return STATE_PAUSED
             return STATE_PLAYING
-        if self.box_state == ONLINE_STANDBY:
+        if self._box.state == ONLINE_STANDBY:
             return STATE_OFF
         return STATE_UNAVAILABLE
 
     @property
     def media_content_type(self):
         """Return the media type."""
-        if self.box_info.sourceType == "app":
+        if self._box.info.sourceType == "app":
             return MEDIA_TYPE_APP
         return MEDIA_TYPE_CHANNEL
 
     @property
     def supported_features(self):
         """Return the supported features."""
-        if self.box_info.sourceType == "app":
+        if self._box.info.sourceType == "app":
             return SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
         return (
@@ -125,22 +120,22 @@ class ZiggoNextMediaPlayer(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Return the media image URL."""
-        if self.box_info.image is not None:
+        if self._box.info.image is not None:
             join_param = "?"
-            if join_param in self.box_info.image:
+            if join_param in self._box.info.image:
                 join_param = "&"
-            return self.box_info.image + join_param + str(random.randrange(1000000))
+            return self._box.info.image + join_param + str(random.randrange(1000000))
         return None
 
     @property
     def media_title(self):
         """Return the media title."""
-        return self.box_info.title
+        return self._box.info.title
 
     @property
     def source(self):
         """Name of the current channel."""
-        return self.box_info.channelTitle
+        return self._box.info.channelTitle
 
     @property
     def source_list(self):
@@ -176,8 +171,8 @@ class ZiggoNextMediaPlayer(MediaPlayerDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         return {
-            "play_mode": self.box_info.sourceType,
-            "channel": self.box_info.channelTitle,
-            "title": self.box_info.title,
-            "image": self.box_info.image,
+            "play_mode": self._box.info.sourceType,
+            "channel": self._box.info.channelTitle,
+            "title": self._box.info.title,
+            "image": self._box.info.image,
         }

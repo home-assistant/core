@@ -690,7 +690,7 @@ zeroconf==0.24.4
 zha-quirks==0.0.31
 
 # homeassistant.components.ziggo_next
-ziggonext==0.5.13
+ziggonext==0.5.15
 
 # homeassistant.components.zha
 zigpy-deconz==0.7.0

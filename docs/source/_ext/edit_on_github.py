@@ -8,7 +8,7 @@ Loosely based on https://github.com/astropy/astropy/pull/347
 import os
 import warnings
 
-__licence__ = "BSD (3 clause)"
+__licence__ = 'BSD (3 clause)'
 
 
 def get_github_url(app, view, path):

@@ -5,7 +5,7 @@
       "user": {
         "title": "Your Ziggo credentials",
         "data": {
-          "username": "E-mail",
+          "username": "E-mail address",
           "password": "Password",
           "country_code": "Country code"
         }
