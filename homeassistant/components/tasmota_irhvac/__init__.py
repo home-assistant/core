@@ -1,1 +1,1 @@
-"""The climate component."""
+"""The Tasmota Irhvac climate component."""
