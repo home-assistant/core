@@ -2,6 +2,8 @@
 
 import logging
 
+from pyqvrpro import Client
+from pyqvrpro.client import AuthenticationError
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -31,9 +33,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the QVR Pro component."""
-    from pyqvrpro import Client
-    from pyqvrpro.client import AuthenticationError
-
     user = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
     host = config[DOMAIN][CONF_HOST]
@@ -42,14 +41,14 @@ def setup(hass, config):
     try:
         qvrpro = Client(user, password, host)
     except AuthenticationError:
-        _LOGGER.error("QVR Pro authentication failed.  Please check your credentials.")
+        _LOGGER.error("Authentication failed")
         return False
 
     channel_resp = qvrpro.get_channel_list()
 
     if "message" in channel_resp.keys():
         if channel_resp["message"] == "Insufficient permission.":
-            _LOGGER.error("QVR Pro user must have Surveillance Management permission.")
+            _LOGGER.error("QVR Pro user must have Surveillance Management permission")
             return False
 
     channels = []
