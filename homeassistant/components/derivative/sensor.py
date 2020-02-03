@@ -157,8 +157,11 @@ class DerivativeSensor(RestoreEntity):
 
                 elapsed_time = (last_time - first_time).total_seconds()
                 delta_value = Decimal(last_value) - Decimal(first_value)
-                derivative = delta_value / (
-                    Decimal(elapsed_time) * Decimal(self._unit_prefix * self._unit_time)
+                derivative = (
+                    delta_value
+                    / Decimal(elapsed_time)
+                    / Decimal(self._unit_prefix)
+                    * Decimal(self._unit_time)
                 )
 
                 _LOGGER.debug(
