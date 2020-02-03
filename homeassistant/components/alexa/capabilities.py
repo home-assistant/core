@@ -648,9 +648,9 @@ class AlexaSpeaker(AlexaCapability):
 
     def properties_supported(self):
         """Return what properties this entity supports."""
-        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         properties = [{"name": "volume"}]
 
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.SUPPORT_VOLUME_MUTE:
             properties.append({"name": "muted"})
 
