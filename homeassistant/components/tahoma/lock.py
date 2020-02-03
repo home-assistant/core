@@ -11,7 +11,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=120)
 TAHOMA_STATE_LOCKED = "locked"
-TAHOMA_STATE_UNLOCKED = "unlocked"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
