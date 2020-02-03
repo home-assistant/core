@@ -49,7 +49,7 @@ def setup(hass, config):
 
     if "message" in channel_resp.keys():
         if channel_resp["message"] == "Insufficient permission.":
-            _LOGGER.error("QVR Pro user must have Surveillance Management permission.")
+            _LOGGER.error("User must have Surveillance Management permission")
             return False
 
     channels = []
