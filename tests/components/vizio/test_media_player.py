@@ -107,12 +107,11 @@ async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
         assert len(hass.states.async_entity_ids(MP_DOMAIN)) == 0
 
 
-# pylint: disable=keyword-arg-before-vararg
 async def _test_service(
     hass: HomeAssistantType,
     vizio_func_name: str,
     ha_service_name: str,
-    additional_service_data: dict = None,
+    additional_service_data: dict,
     *args,
     **kwargs,
 ) -> None:
@@ -195,8 +194,8 @@ async def test_services(
     """Test all Vizio media player entity services."""
     await _test_setup(hass, DEVICE_CLASS_TV, True)
 
-    await _test_service(hass, "pow_on", SERVICE_TURN_ON)
-    await _test_service(hass, "pow_off", SERVICE_TURN_OFF)
+    await _test_service(hass, "pow_on", SERVICE_TURN_ON, None)
+    await _test_service(hass, "pow_off", SERVICE_TURN_OFF, None)
     await _test_service(
         hass, "mute_on", SERVICE_VOLUME_MUTE, {ATTR_MEDIA_VOLUME_MUTED: True}
     )
@@ -206,16 +205,16 @@ async def test_services(
     await _test_service(
         hass, "set_input", SERVICE_SELECT_SOURCE, {ATTR_INPUT_SOURCE: "USB"}, "USB"
     )
-    await _test_service(hass, "vol_up", SERVICE_VOLUME_UP)
-    await _test_service(hass, "vol_down", SERVICE_VOLUME_DOWN)
+    await _test_service(hass, "vol_up", SERVICE_VOLUME_UP, None)
+    await _test_service(hass, "vol_down", SERVICE_VOLUME_DOWN, None)
     await _test_service(
         hass, "vol_up", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 1}
     )
     await _test_service(
         hass, "vol_down", SERVICE_VOLUME_SET, {ATTR_MEDIA_VOLUME_LEVEL: 0}
     )
-    await _test_service(hass, "ch_up", SERVICE_MEDIA_NEXT_TRACK)
-    await _test_service(hass, "ch_down", SERVICE_MEDIA_PREVIOUS_TRACK)
+    await _test_service(hass, "ch_up", SERVICE_MEDIA_NEXT_TRACK, None)
+    await _test_service(hass, "ch_down", SERVICE_MEDIA_PREVIOUS_TRACK, None)
 
 
 async def test_options_update(
@@ -232,7 +231,7 @@ async def test_options_update(
         entry=config_entry, options=new_options,
     )
     assert config_entry.options == updated_options
-    await _test_service(hass, "vol_up", SERVICE_VOLUME_UP, num=VOLUME_STEP)
+    await _test_service(hass, "vol_up", SERVICE_VOLUME_UP, None, num=VOLUME_STEP)
 
 
 async def _test_update_availability_switch(
