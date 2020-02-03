@@ -173,15 +173,6 @@ class SurePetcareAPI:
                 elif sure_type == SureProductID.PET:
                     type_state[sure_id] = await self.surepy.pet(sure_id)
 
-                # if sure_type in [SureProductID.CAT_FLAP, SureProductID.PET_FLAP]:
-                #     type_state[sure_id] = await self.surepy.flap(sure_id)
-                # if sure_type == SureProductID.FEEDER:
-                #     type_state[sure_id] = await self.surepy.feeder(sure_id)
-                # if sure_type == SureProductID.HUB:
-                #     type_state[sure_id] = await self.surepy.device(sure_id)
-                # elif sure_type == SureProductID.PET:
-                #     type_state[sure_id] = await self.surepy.pet(sure_id)
-
             except SurePetcareError as error:
                 _LOGGER.error("Unable to retrieve data from surepetcare.io: %s", error)
 
