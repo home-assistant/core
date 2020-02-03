@@ -2,7 +2,6 @@
 import requests
 
 from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
-from homeassistant.const import CONF_DEVICES, CONF_ENTITIES
 
 from .const import DOMAIN as FRITZBOX_DOMAIN, LOGGER
 
@@ -10,15 +9,13 @@ from .const import DOMAIN as FRITZBOX_DOMAIN, LOGGER
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fritzbox binary sensor from config_entry."""
     devices = []
-    fritz_list = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
-    entities = hass.data[FRITZBOX_DOMAIN][CONF_ENTITIES].setdefault(DOMAIN, set())
+    device_ids = hass.data.setdefault(FRITZBOX_DOMAIN, set())
+    fritz = config_entry.data["fritz"]
 
-    for fritz in fritz_list:
-        device_list = fritz.get_devices()
-        for device in device_list:
-            if device.has_alarm and device.ain not in entities:
-                devices.append(FritzboxBinarySensor(device, fritz))
-                entities.add(device.ain)
+    for device in fritz.get_devices():
+        if device.has_alarm and device.ain not in device_ids:
+            devices.append(FritzboxBinarySensor(device, fritz))
+            device_ids.add(device.ain)
 
     async_add_entities(devices, True)
 

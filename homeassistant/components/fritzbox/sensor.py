@@ -2,7 +2,7 @@
 import requests
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import CONF_DEVICES, CONF_ENTITIES, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -16,20 +16,18 @@ from .const import (
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fritzbox smarthome sensor from config_entry."""
     devices = []
-    fritz_list = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
-    entities = hass.data[FRITZBOX_DOMAIN][CONF_ENTITIES].setdefault(DOMAIN, set())
+    device_ids = hass.data.setdefault(FRITZBOX_DOMAIN, set())
+    fritz = config_entry.data["fritz"]
 
-    for fritz in fritz_list:
-        device_list = fritz.get_devices()
-        for device in device_list:
-            if (
-                device.has_temperature_sensor
-                and not device.has_switch
-                and not device.has_thermostat
-                and device.ain not in entities
-            ):
-                devices.append(FritzBoxTempSensor(device, fritz))
-                entities.add(device.ain)
+    for device in fritz.get_devices():
+        if (
+            device.has_temperature_sensor
+            and not device.has_switch
+            and not device.has_thermostat
+            and device.ain not in device_ids
+        ):
+            devices.append(FritzBoxTempSensor(device, fritz))
+            device_ids.add(device.ain)
 
     async_add_entities(devices)
 

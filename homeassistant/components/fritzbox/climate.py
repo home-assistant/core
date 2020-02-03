@@ -15,8 +15,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_TEMPERATURE,
-    CONF_DEVICES,
-    CONF_ENTITIES,
     PRECISION_HALVES,
     TEMP_CELSIUS,
 )
@@ -51,15 +49,13 @@ OFF_REPORT_SET_TEMPERATURE = 0.0
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fritzbox smarthome thermostat from config_entry."""
     devices = []
-    fritz_list = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
-    entities = hass.data[FRITZBOX_DOMAIN][CONF_ENTITIES].setdefault(DOMAIN, set())
+    device_ids = hass.data.setdefault(FRITZBOX_DOMAIN, set())
+    fritz = config_entry.data["fritz"]
 
-    for fritz in fritz_list:
-        device_list = fritz.get_devices()
-        for device in device_list:
-            if device.has_thermostat and device.ain not in entities:
-                devices.append(FritzboxThermostat(device, fritz))
-                entities.add(device.ain)
+    for device in fritz.get_devices():
+        if device.has_thermostat and device.ain not in device_ids:
+            devices.append(FritzboxThermostat(device, fritz))
+            device_ids.add(device.ain)
 
     async_add_entities(devices)
 
