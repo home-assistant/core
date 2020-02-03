@@ -886,6 +886,7 @@ async def test_media_player(hass):
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
             "volume_level": 0.75,
+            "source_list": ["hdmi", "tv"],
         },
     )
     appliance = await discovery_test(device, hass)
@@ -1134,7 +1135,6 @@ async def test_media_player_power(hass):
         "Alexa",
         "Alexa.ChannelController",
         "Alexa.EndpointHealth",
-        "Alexa.InputController",
         "Alexa.PlaybackController",
         "Alexa.PlaybackStateReporter",
         "Alexa.PowerController",
@@ -1262,6 +1262,40 @@ async def test_media_player_inputs(hass):
         payload={"input": "TV"},
     )
     assert call.data["source"] == "tv"
+
+
+async def test_media_player_no_supported_inputs(hass):
+    """Test media player discovery with no supported inputs."""
+    device = (
+        "media_player.test_no_inputs",
+        "off",
+        {
+            "friendly_name": "Test media player",
+            "supported_features": SUPPORT_SELECT_SOURCE,
+            "volume_level": 0.75,
+            "source_list": [
+                "foo",
+                "foo_2",
+                "vcr",
+                "betamax",
+                "record_player",
+                "f.m.",
+                "a.m.",
+                "tape_deck",
+                "laser_disc",
+                "hd_dvd",
+            ],
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "media_player#test_no_inputs"
+    assert appliance["displayCategories"][0] == "TV"
+    assert appliance["friendlyName"] == "Test media player"
+
+    assert_endpoint_capabilities(
+        appliance, "Alexa", "Alexa.EndpointHealth", "Alexa.PowerController"
+    )
 
 
 async def test_media_player_speaker(hass):
