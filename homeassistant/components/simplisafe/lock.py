@@ -10,7 +10,7 @@ from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 from homeassistant.core import callback
 
 from . import SimpliSafeEntity
-from .const import ATTR_LAST_EVENT_TYPE, DATA_CLIENT, DOMAIN
+from .const import DATA_CLIENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     simplisafe = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]
     async_add_entities(
         [
-            SimpliSafeLock(system, lock)
+            SimpliSafeLock(simplisafe, system, lock)
             for system in simplisafe.systems.values()
             for lock in system.locks.values()
         ]
@@ -34,9 +34,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class SimpliSafeLock(SimpliSafeEntity, LockDevice):
     """Define a SimpliSafe lock."""
 
-    def __init__(self, system, lock):
+    def __init__(self, simplisafe, system, lock):
         """Initialize."""
-        super().__init__(system, lock.name, serial=lock.serial)
+        super().__init__(simplisafe, system, lock.name, serial=lock.serial)
         self._lock = lock
 
     @property
@@ -65,7 +65,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
         self._state = STATE_UNLOCKED
 
     @callback
-    def async_update_from_rest_api(self, data):
+    def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
         if self._lock.offline or self._lock.disabled:
             self._online = False
@@ -81,15 +81,13 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
         )
 
     @callback
-    def async_update_from_websocket_api(self, data):
-        """Update the entity with the provided websocket API data."""
-        if data[ATTR_LAST_EVENT_TYPE] == EVENT_LOCK_LOCKED:
+    def async_update_from_websocket_event(self, event):
+        """Update the entity with the provided websocket event data."""
+        if event.event_type == EVENT_LOCK_LOCKED:
             self._state = STATE_LOCKED
-        elif data[ATTR_LAST_EVENT_TYPE] == EVENT_LOCK_UNLOCKED:
+        elif event.event_type == EVENT_LOCK_UNLOCKED:
             self._state = STATE_UNLOCKED
-        elif data[ATTR_LAST_EVENT_TYPE] == EVENT_LOCK_ERROR:
+        elif event.event_type == EVENT_LOCK_ERROR:
             self._state = STATE_UNKNOWN
         else:
             self._state = None
-
-        self._attrs.update(data)

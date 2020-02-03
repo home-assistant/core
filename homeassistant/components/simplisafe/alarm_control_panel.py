@@ -46,7 +46,6 @@ from .const import (
     ATTR_ENTRY_DELAY_HOME,
     ATTR_EXIT_DELAY_AWAY,
     ATTR_EXIT_DELAY_HOME,
-    ATTR_LAST_EVENT_TYPE,
     ATTR_LIGHT,
     ATTR_VOICE_PROMPT_VOLUME,
     DATA_CLIENT,
@@ -81,11 +80,10 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
 
     def __init__(self, simplisafe, system, code):
         """Initialize the SimpliSafe alarm."""
-        super().__init__(system, "Alarm Control Panel")
+        super().__init__(simplisafe, system, "Alarm Control Panel")
         self._changed_by = None
         self._code = code
         self._last_event = None
-        self._simplisafe = simplisafe
 
         if system.alarm_going_off:
             self._state = STATE_ALARM_TRIGGERED
@@ -175,12 +173,11 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
         self._state = STATE_ALARM_ARMING
 
     @callback
-    def async_update_from_rest_api(self, data):
+    def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
         if self._system.state == SystemStates.error:
             self._online = False
             return
-
         self._online = True
 
         if self._system.version == 3:
@@ -206,28 +203,25 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
             )
 
     @callback
-    def async_update_from_websocket_api(self, data):
-        """Update the entity with the provided websocket API data."""
-        if data.get(ATTR_PIN_NAME):
-            self._changed_by = data[ATTR_PIN_NAME]
-
-        if data[ATTR_LAST_EVENT_TYPE] in (
+    def async_update_from_websocket_event(self, event):
+        """Update the entity with the provided websocket API event data."""
+        if event.event_type in (
             EVENT_ALARM_CANCELED,
             EVENT_DISARMED_BY_MASTER_PIN,
             EVENT_DISARMED_BY_REMOTE,
         ):
             self._state = STATE_ALARM_DISARMED
-        elif data[ATTR_LAST_EVENT_TYPE] == EVENT_ALARM_TRIGGERED:
+        elif event.event_type == EVENT_ALARM_TRIGGERED:
             self._state = STATE_ALARM_TRIGGERED
-        elif data[ATTR_LAST_EVENT_TYPE] in (
+        elif event.event_type in (
             EVENT_ARMED_AWAY,
             EVENT_ARMED_AWAY_BY_KEYPAD,
             EVENT_ARMED_AWAY_BY_REMOTE,
         ):
             self._state = STATE_ALARM_ARMED_AWAY
-        elif data[ATTR_LAST_EVENT_TYPE] == EVENT_ARMED_HOME:
+        elif event.event_type == EVENT_ARMED_HOME:
             self._state = STATE_ALARM_ARMED_HOME
-        elif data[ATTR_LAST_EVENT_TYPE] in (
+        elif event.event_type in (
             EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
             EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
             EVENT_HOME_EXIT_DELAY,
@@ -236,4 +230,4 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
         else:
             self._state = None
 
-        self._attrs.update(data)
+        self._changed_by = event.changed_by
