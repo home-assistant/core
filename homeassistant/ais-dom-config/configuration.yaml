@@ -29,9 +29,6 @@ ais_updater:
   include_used_components: false
 ais_drives_service:
 
-# Show links to resources in log and frontend
-ais_intro:
-
 # Enables a map showing the location of tracked devices
 map:
 
