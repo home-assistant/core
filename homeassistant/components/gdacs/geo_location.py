@@ -45,7 +45,7 @@ ICONS = {
 }
 
 # An update of this entity is not making a web request, but uses internal data only.
-PARALLEL_UPDATES = 100
+PARALLEL_UPDATES = 0
 
 SOURCE = "gdacs"
 
