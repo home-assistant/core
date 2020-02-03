@@ -1,6 +1,4 @@
 """Define constants for the Ambient PWS component."""
-from functools import partial
-
 DOMAIN = "ambient_station"
 
 ATTR_LAST_DATA = "last_data"
@@ -10,7 +8,7 @@ CONF_APP_KEY = "app_key"
 
 DATA_CLIENT = "data_client"
 
-TOPIC_UPDATE = partial("{domain}_update_{mac_address}".format, domain=DOMAIN)
+TOPIC_UPDATE = "ambient_station_data_update_{0}"
 
 TYPE_BINARY_SENSOR = "binary_sensor"
 TYPE_SENSOR = "sensor"
