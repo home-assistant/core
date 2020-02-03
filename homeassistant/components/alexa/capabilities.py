@@ -676,12 +676,12 @@ class AlexaSpeaker(AlexaCapability):
                 current = 0
             return current
 
-        elif name == "muted":
+        if name == "muted":
             return bool(
                 self.entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_MUTED)
             )
-        else:
-            raise UnsupportedProperty(name)
+
+        return None
 
 
 class AlexaStepSpeaker(AlexaCapability):
