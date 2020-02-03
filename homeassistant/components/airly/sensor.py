@@ -70,7 +70,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         unique_id = f"{config_entry.unique_id}-{sensor.lower()}"
         sensors.append(AirlySensor(data, name, sensor, unique_id))
 
-    async_add_entities(sensors, True)
+    async_add_entities(sensors, False)
 
 
 def round_state(func):

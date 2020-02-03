@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     data = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
 
-    async_add_entities([AirlyAirQuality(data, name, config_entry.unique_id)], True)
+    async_add_entities([AirlyAirQuality(data, name, config_entry.unique_id)], False)
 
 
 def round_state(func):
