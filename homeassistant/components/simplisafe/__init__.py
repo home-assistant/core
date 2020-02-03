@@ -423,7 +423,7 @@ class SimpliSafe:
         self._config_entry = config_entry
         self._emergency_refresh_token_used = False
         self._hass = hass
-        self.inital_event_to_use = {}
+        self.initial_event_to_use = {}
         self.systems = None
         self.websocket = SimpliSafeWebsocket(hass, api.websocket)
 
@@ -452,9 +452,9 @@ class SimpliSafe:
             most_recent_event = await system.get_latest_event()
         except SimplipyError as err:
             _LOGGER.error("Error while fetching initial event: %s", err)
-            self.inital_event_to_use[system.system_id] = None
+            self.initial_event_to_use[system.system_id] = {}
         else:
-            self.inital_event_to_use[system.system_id] = most_recent_event
+            self.initial_event_to_use[system.system_id] = most_recent_event
 
         await self.async_update()
 
@@ -533,18 +533,18 @@ class SimpliSafeEntity(Entity):
             self._serial = system.serial
 
         self._attrs = {
-            ATTR_LAST_EVENT_INFO: simplisafe.inital_event_to_use[system.system_id][
+            ATTR_LAST_EVENT_INFO: simplisafe.initial_event_to_use[system.system_id].get(
                 "info"
-            ],
-            ATTR_LAST_EVENT_SENSOR_NAME: simplisafe.inital_event_to_use[
+            ),
+            ATTR_LAST_EVENT_SENSOR_NAME: simplisafe.initial_event_to_use[
                 system.system_id
-            ]["sensorName"],
-            ATTR_LAST_EVENT_SENSOR_TYPE: simplisafe.inital_event_to_use[
+            ].get("sensorName"),
+            ATTR_LAST_EVENT_SENSOR_TYPE: simplisafe.initial_event_to_use[
                 system.system_id
-            ]["sensorType"],
-            ATTR_LAST_EVENT_TIMESTAMP: simplisafe.inital_event_to_use[system.system_id][
-                "eventTimestamp"
-            ],
+            ].get("sensorType"),
+            ATTR_LAST_EVENT_TIMESTAMP: simplisafe.initial_event_to_use[
+                system.system_id
+            ].get("eventTimestamp"),
             ATTR_SYSTEM_ID: system.system_id,
         }
 
