@@ -44,10 +44,12 @@ async def async_setup(hass, config):
     if DOMAIN in config:
         hass.data[DOMAIN] = {}
         for entry_config in config[DOMAIN]:
-            ip = await hass.async_add_executor_job(
+            ip_address = await hass.async_add_executor_job(
                 socket.gethostbyname, entry_config[CONF_HOST]
             )
-            hass.data[DOMAIN][ip] = {CONF_ON_ACTION: entry_config.get(CONF_ON_ACTION)}
+            hass.data[DOMAIN][ip_address] = {
+                CONF_ON_ACTION: entry_config.get(CONF_ON_ACTION)
+            }
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN, context={"source": "import"}, data=entry_config

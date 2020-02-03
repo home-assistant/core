@@ -61,15 +61,15 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
-    ip = config_entry.data[CONF_IP_ADDRESS]
+    ip_address = config_entry.data[CONF_IP_ADDRESS]
     on_script = None
     if (
         DOMAIN in hass.data
-        and ip in hass.data[DOMAIN]
-        and CONF_ON_ACTION in hass.data[DOMAIN][ip]
-        and hass.data[DOMAIN][ip][CONF_ON_ACTION]
+        and ip_address in hass.data[DOMAIN]
+        and CONF_ON_ACTION in hass.data[DOMAIN][ip_address]
+        and hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
     ):
-        turn_on_action = hass.data[DOMAIN][ip][CONF_ON_ACTION]
+        turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
         on_script = Script(hass, turn_on_action)
     async_add_entities([SamsungTVDevice(config_entry, on_script)])
 

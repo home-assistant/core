@@ -57,14 +57,14 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._name = None
         self._port = None
         self._title = None
-        self._uuid = None
+        self._id = None
 
     def _get_entry(self):
         return self.async_create_entry(
             title=self._title,
             data={
                 CONF_HOST: self._host,
-                CONF_ID: self._uuid,
+                CONF_ID: self._id,
                 CONF_IP_ADDRESS: self._ip,
                 CONF_MANUFACTURER: self._manufacturer,
                 CONF_METHOD: self._method,
@@ -144,18 +144,18 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._manufacturer = user_input.get(ATTR_UPNP_MANUFACTURER)
         self._model = user_input.get(ATTR_UPNP_MODEL_NAME)
         self._name = f"Samsung {self._model}"
-        self._uuid = user_input.get(ATTR_UPNP_UDN)
+        self._id = user_input.get(ATTR_UPNP_UDN)
         self._title = self._model
 
         # probably access denied
-        if self._uuid is None:
+        if self._id is None:
             return self.async_abort(reason=RESULT_AUTH_MISSING)
-        if self._uuid.startswith("uuid:"):
-            self._uuid = self._uuid[5:]
+        if self._id.startswith("uuid:"):
+            self._id = self._id[5:]
 
         config_entry = await self.async_set_unique_id(ip_address)
         if config_entry:
-            config_entry.data[CONF_ID] = self._uuid
+            config_entry.data[CONF_ID] = self._id
             config_entry.data[CONF_MANUFACTURER] = self._manufacturer
             config_entry.data[CONF_MODEL] = self._model
             self.hass.config_entries.async_update_entry(config_entry)
