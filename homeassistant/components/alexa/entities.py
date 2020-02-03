@@ -508,12 +508,7 @@ class MediaPlayerCapabilities(AlexaEntity):
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         if supported & media_player.const.SUPPORT_VOLUME_SET:
             yield AlexaSpeaker(self.entity)
-
-        step_volume_features = (
-            media_player.const.SUPPORT_VOLUME_MUTE
-            | media_player.const.SUPPORT_VOLUME_STEP
-        )
-        if supported & step_volume_features:
+        elif supported & media_player.const.SUPPORT_VOLUME_STEP:
             yield AlexaStepSpeaker(self.entity)
 
         playback_features = (
