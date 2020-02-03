@@ -50,7 +50,9 @@ async def test_init(hass):
     twitch_mock.channels = channels
     twitch_mock.streams = streams
 
-    with patch("twitch.TwitchClient", return_value=twitch_mock):
+    with patch(
+        "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock
+    ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
 
     sensor_state = hass.states.get(ENTITY_ID)
@@ -59,7 +61,7 @@ async def test_init(hass):
     assert sensor_state.attributes["icon"] == "mdi:twitch"
     assert sensor_state.attributes["friendly_name"] == "channel123"
     assert sensor_state.attributes["views"] == 24
-    assert sensor_state.attributes["following"] == 42
+    assert sensor_state.attributes["follower"] == 42
 
 
 async def test_offline(hass):
@@ -71,7 +73,7 @@ async def test_offline(hass):
     twitch_mock.streams.get_stream_by_user.return_value = None
 
     with patch(
-        "twitch.TwitchClient", return_value=twitch_mock,
+        "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
 
@@ -89,7 +91,7 @@ async def test_streaming(hass):
     twitch_mock.streams.get_stream_by_user.return_value = STREAM_OBJECT_ONLINE
 
     with patch(
-        "twitch.TwitchClient", return_value=twitch_mock,
+        "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
     ):
         assert await async_setup_component(hass, sensor.DOMAIN, CONFIG) is True
 
@@ -112,7 +114,7 @@ async def test_oauth_without_sub_and_follow(hass):
     twitch_mock.users.check_follows_channel.side_effect = HTTPError()
 
     with patch(
-        "twitch.TwitchClient", return_value=twitch_mock,
+        "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
     ):
         assert (
             await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH) is True
@@ -135,7 +137,7 @@ async def test_oauth_with_sub(hass):
     twitch_mock.users.check_follows_channel.side_effect = HTTPError()
 
     with patch(
-        "twitch.TwitchClient", return_value=twitch_mock,
+        "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
     ):
         assert (
             await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH) is True
@@ -160,7 +162,7 @@ async def test_oauth_with_follow(hass):
     twitch_mock.users.check_follows_channel.return_value = FOLLOW_ACTIVE
 
     with patch(
-        "twitch.TwitchClient", return_value=twitch_mock,
+        "homeassistant.components.twitch.sensor.TwitchClient", return_value=twitch_mock,
     ):
         assert (
             await async_setup_component(hass, sensor.DOMAIN, CONFIG_WITH_OAUTH) is True

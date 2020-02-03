@@ -154,8 +154,8 @@ class TwitchSensor(Entity):
 
         stream = self._client.streams.get_stream_by_user(self._channel.id)
         if stream:
-            self._game = stream.channel.game
-            self._title = stream.channel.status
+            self._game = stream.channel.get("game")
+            self._title = stream.channel.get("status")
             self._preview = stream.preview.get("medium")
             self._state = STATE_STREAMING
         else:
