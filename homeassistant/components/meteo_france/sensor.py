@@ -43,6 +43,11 @@ async def async_setup_entry(
             alert_watcher = await hass.async_add_executor_job(
                 DepartmentWeatherAlert, datas["dept"], weather_alert_client
             )
+            _LOGGER.info(
+                "Weather alert watcher added for %s in department %s",
+                city,
+                datas["dept"],
+            )
         except ValueError as exp:
             _LOGGER.error(
                 "Unexpected error when creating the weather alert sensor for %s in department %s: %s",
@@ -51,12 +56,6 @@ async def async_setup_entry(
                 exp,
             )
             alert_watcher = None
-        else:
-            _LOGGER.info(
-                "Weather alert watcher added for %s in department %s",
-                city,
-                datas["dept"],
-            )
     else:
         _LOGGER.warning(
             "No 'dept' key found for '%s'. So weather alert information won't be available",
@@ -153,8 +152,7 @@ class MeteoFranceSensor(Entity):
                     self._alert_watcher.update_department_status()
                     self._state = self._alert_watcher.department_color
                     _LOGGER.debug(
-                        "weather alert watcher for %s updated. Proxy"
-                        " have the status: %s",
+                        "weather alert watcher for %s updated. Proxy have the status: %s",
                         self._data["name"],
                         self._alert_watcher.proxy.status,
                     )

@@ -48,9 +48,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     hass.data.setdefault(DOMAIN, {})
 
     # Weather alert
-    weather_alert_client = await hass.async_add_executor_job(VigilanceMeteoFranceProxy)
+    weather_alert_client = VigilanceMeteoFranceProxy()
     try:
-        weather_alert_client.update_data()
+        await hass.async_add_executor_job(weather_alert_client.update_data)
     except VigilanceMeteoError as exp:
         _LOGGER.error(
             "Unexpected error when creating the vigilance_meteoFrance proxy: %s ", exp
@@ -67,7 +67,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         return False
 
     hass.data[DOMAIN][city] = MeteoFranceUpdater(client)
-    hass.data[DOMAIN][city].update()
+    await hass.async_add_executor_job(hass.data[DOMAIN][city].update)
 
     for platform in PLATFORMS:
         hass.async_create_task(

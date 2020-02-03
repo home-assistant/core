@@ -5,7 +5,6 @@ from meteofrance.client import meteofranceClient, meteofranceError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import AbortFlow
 
 from .const import CONF_CITY
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -50,7 +49,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error(
                 "Unexpected error when creating the meteofrance proxy: %s", exp
             )
-            raise AbortFlow("unknown")
+            return self.async_abort(reason="unknown")
 
         # Check if already configured
         await self.async_set_unique_id(city_name)
