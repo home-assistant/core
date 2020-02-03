@@ -110,19 +110,11 @@ class SureBattery(Entity):
         """Return state attributes."""
         attributes = None
         if self._state:
-            try:
-                voltage_per_battery = float(self._state["battery"]) / 4
-                attributes = {
-                    ATTR_VOLTAGE: f"{float(self._state['battery']):.2f}",
-                    f"{ATTR_VOLTAGE}_per_battery": f"{voltage_per_battery:.2f}",
-                }
-            except (KeyError, TypeError) as error:
-                _LOGGER.error(
-                    "Error getting device state attributes from %s: %s\n\n%s",
-                    self._name,
-                    error,
-                    self._state,
-                )
+            voltage_per_battery = float(self._state["battery"]) / 4
+            attributes = {
+                ATTR_VOLTAGE: f"{float(self._state['battery']):.2f}",
+                f"{ATTR_VOLTAGE}_per_battery": f"{voltage_per_battery:.2f}",
+            }
 
         return attributes
 
@@ -166,7 +158,8 @@ class SureBattery(Entity):
 #         self._sure_type = sure_type
 
 #         self._spc = spc
-#         self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
+#         self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(
+#             self._id)
 #         self._state: Dict[str, Any] = {}
 
 #         self._name = (
