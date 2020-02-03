@@ -10,10 +10,13 @@ from . import DOMAIN as TAHOMA_DOMAIN, TahomaDevice
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=120)
+TAHOMA_STATE_LOCKED = "locked"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tahoma lock."""
+    if discovery_info is None:
+        return
     controller = hass.data[TAHOMA_DOMAIN]["controller"]
     devices = []
     for device in hass.data[TAHOMA_DOMAIN]["devices"]["lock"]:
@@ -37,13 +40,9 @@ class TahomaLock(TahomaDevice, LockDevice):
         self.controller.get_states([self.tahoma_device])
         self._battery_level = self.tahoma_device.active_states["core:BatteryState"]
         self._name = self.tahoma_device.active_states["core:NameState"]
-        if self._battery_level == "low":
-            _LOGGER.warning("Lock %s has low battery", self._name)
-        if self._battery_level == "verylow":
-            _LOGGER.error("Lock %s has very low battery", self._name)
         if (
             self.tahoma_device.active_states.get("core:LockedUnlockedState")
-            == STATE_LOCKED
+            == TAHOMA_STATE_LOCKED
         ):
             self._lock_status = STATE_LOCKED
         else:
