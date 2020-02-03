@@ -9,14 +9,8 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
-from homeassistant.helpers.entity_registry import (
-    DISABLED_CONFIG_ENTRY,
-    async_get_registry,
-)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_registry import async_get_registry
 
 from .const import (
     CONF_ALLOW_CLIP_SENSOR,
@@ -227,38 +221,3 @@ async def get_gateway(
     except (asyncio.TimeoutError, errors.RequestError):
         LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
         raise CannotConnect
-
-
-class DeconzEntityHandler:
-    """Platform entity handler to help with updating disabled by."""
-
-    def __init__(self, gateway) -> None:
-        """Create an entity handler."""
-        self.gateway = gateway
-        self._entities = []
-
-        gateway.listeners.append(
-            async_dispatcher_connect(
-                gateway.hass, gateway.signal_options_update, self.update_entity_registry
-            )
-        )
-
-    @callback
-    def add_entity(self, entity) -> None:
-        """Add a new entity to handler."""
-        self._entities.append(entity)
-
-    @callback
-    def update_entity_registry(self, entity_registry) -> None:
-        """Update entity registry disabled by status."""
-        for entity in self._entities:
-
-            if entity.entity_registry_enabled_default != entity.enabled:
-                disabled_by = None
-
-                if entity.enabled:
-                    disabled_by = DISABLED_CONFIG_ENTRY
-
-                entity_registry.async_update_entity(
-                    entity.registry_entry.entity_id, disabled_by=disabled_by
-                )

@@ -37,7 +37,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for sensor in sensors:
 
-            if new and sensor.type in Thermostat.ZHATYPE:
+            if (
+                new
+                and sensor.type in Thermostat.ZHATYPE
+                and (
+                    gateway.option_allow_clip_sensor
+                    or not sensor.type.startswith("CLIP")
+                )
+            ):
                 entities.append(DeconzThermostat(sensor, gateway))
 
         async_add_entities(entities, True)
