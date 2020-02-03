@@ -78,8 +78,6 @@ class SurePetcareBinarySensor(BinarySensorDevice):
         self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(self._id)
         self._state: Dict[str, Any] = {}
 
-        _LOGGER.debug("%s -> self._spc_data: %s", self._id, self._spc_data)
-
         # cover special case where a device has no name set
         if "name" in self._spc_data:
             name = self._spc_data["name"]
@@ -119,7 +117,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
         """Get the latest data and update the state."""
         self._spc_data = self._spc.states[self._sure_type].get(self._id)
         self._state = self._spc_data.get("status")
-        # _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
+        _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""

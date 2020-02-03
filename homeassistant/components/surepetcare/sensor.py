@@ -125,8 +125,8 @@ class Flap(SurePetcareSensor):
     """Sure Petcare Flap."""
 
     def __init__(
-        self: Entity, _id: int, sure_type: SureProductID, spc: SurePetcareAPI
-    ) -> None:
+        self: SurePetcareSensor, _id: int, sure_type: SureProductID, spc: SurePetcareAPI
+    ):
         """Initialize a Sure Petcare Flap."""
         super().__init__(_id, sure_type, spc)
 
@@ -134,18 +134,6 @@ class Flap(SurePetcareSensor):
     def state(self) -> Optional[int]:
         """Return battery level in percent."""
         return SureLockStateID(self._state["locking"]["mode"]).name.capitalize()
-
-    # @property
-    # def is_on(self) -> Optional[bool]:
-    #     """Return true if entity is on/unlocked."""
-    #     try:
-    #         return SureLockStateID(self._state["online"])
-    #     except (KeyError, TypeError):
-    #         return None
-
-    # @property
-    # def available(self) -> bool:
-    #     return bool(self._state["online"])
 
     @property
     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
@@ -162,8 +150,10 @@ class Flap(SurePetcareSensor):
 class SureBattery(SurePetcareSensor):
     """Sure Petcare Flap."""
 
-    def __init__(self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI):
-        """Initialize a Sure Petcare Flap battery sensor."""
+    def __init__(
+        self: SurePetcareSensor, _id: int, sure_type: SureProductID, spc: SurePetcareAPI
+    ):
+        """Initialize a Sure Petcare battery sensor."""
         super().__init__(_id, sure_type, spc)
 
     @property
