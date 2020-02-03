@@ -2,7 +2,7 @@
 import requests
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import CONF_DEVICES, CONF_ENTITIES, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -12,13 +12,12 @@ from .const import (
     LOGGER,
 )
 
-entities = set()
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fritzbox smarthome sensor from config_entry."""
     devices = []
-    fritz_list = hass.data[FRITZBOX_DOMAIN]
+    fritz_list = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
+    entities = hass.data[FRITZBOX_DOMAIN][CONF_ENTITIES].setdefault(DOMAIN, set())
 
     for fritz in fritz_list:
         device_list = fritz.get_devices()

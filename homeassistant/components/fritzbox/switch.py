@@ -2,7 +2,13 @@
 import requests
 
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.const import ATTR_TEMPERATURE, ENERGY_KILO_WATT_HOUR, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_DEVICES,
+    CONF_ENTITIES,
+    ENERGY_KILO_WATT_HOUR,
+    TEMP_CELSIUS,
+)
 
 from .const import (
     ATTR_STATE_DEVICE_LOCKED,
@@ -17,13 +23,12 @@ ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = ENERGY_KILO_WATT_HOUR
 
 ATTR_TEMPERATURE_UNIT = "temperature_unit"
 
-entities = set()
-
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fritzbox smarthome switch from config_entry."""
     devices = []
-    fritz_list = hass.data[FRITZBOX_DOMAIN]
+    fritz_list = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
+    entities = hass.data[FRITZBOX_DOMAIN][CONF_ENTITIES].setdefault(DOMAIN, set())
 
     for fritz in fritz_list:
         device_list = fritz.get_devices()

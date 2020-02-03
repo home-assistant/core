@@ -4,7 +4,13 @@ import socket
 from pyfritzhome import Fritzhome
 import voluptuous as vol
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_ENTITIES,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, SUPPORTED_DOMAINS
@@ -60,9 +66,8 @@ async def async_setup_entry(hass, entry):
     )
     fritz.login()
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = []
-    hass.data[DOMAIN].append(fritz)
+    hass.data.setdefault(DOMAIN, {CONF_DEVICES: [], CONF_ENTITIES: {}})
+    hass.data[DOMAIN][CONF_DEVICES].append(fritz)
 
     for domain in SUPPORTED_DOMAINS:
         hass.async_create_task(
