@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         requests.exceptions.ConnectionError,
         requests.exceptions.HTTPError,
     ) as error:
-        _LOGGER.error("Couldn't fetch stations, API password correct?: %s", error)
+        _LOGGER.error("Couldn't fetch stations, API key correct?: %s", error)
         return
 
     sensors = []
