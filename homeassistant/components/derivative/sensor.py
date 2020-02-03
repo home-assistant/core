@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
         vol.Optional(CONF_UNIT_TIME, default="h"): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT): cv.string,
-        vol.Optional(CONF_TIME_WINDOW): vol.Coerce(float),
+        vol.Optional(CONF_TIME_WINDOW): cv.time_period,
     }
 )
 
@@ -101,7 +101,7 @@ class DerivativeSensor(RestoreEntity):
         if time_window is None:
             self._time_window = 0
         else:
-            self._time_window = time_window * self._unit_time
+            self._time_window = time_window * _unit_time
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
