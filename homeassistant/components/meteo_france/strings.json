@@ -9,11 +9,9 @@
                 }
             }
         },
-        "error":{
-            "unknown": "Unknown error: please retry later"
-        },
         "abort":{
-            "already_configured": "City already configured"
+            "already_configured": "City already configured",
+            "unknown": "Unknown error: please retry later"
         }
     }
 }

@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import CONF_CITY, SENSOR_TYPES
 from .const import DOMAIN  # pylint: disable=unused-import
@@ -38,7 +39,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is None:
-            return self._show_setup_form(user_input, None)
+            return self._show_setup_form(user_input, errors)
 
         city = user_input[CONF_CITY]  # Might be a city name or a postal code
         monitored_conditions = user_input.get(
@@ -53,8 +54,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error(
                 "Unexpected error when creating the meteofrance proxy: %s", exp
             )
-            errors["base"] = "unknown"
-            return self._show_setup_form(user_input, errors)
+            raise AbortFlow("unknown")
 
         # Check if already configured
         await self.async_set_unique_id(city_name)

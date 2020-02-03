@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         client = meteofranceClient(city)
     except meteofranceError as exp:
         _LOGGER.error("Unexpected error when creating the meteofrance proxy: %s", exp)
-        return
+        return False
 
     client.need_rain_forecast = bool(
         CONF_MONITORED_CONDITIONS in entry.data

@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "City already configured"
-        },
-        "error": {
+            "already_configured": "City already configured",
             "unknown": "Unknown error: please retry later"
         },
         "step": {
