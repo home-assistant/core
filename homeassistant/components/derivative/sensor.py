@@ -65,13 +65,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the derivative sensor."""
     derivative = DerivativeSensor(
-        config[CONF_SOURCE],
-        config.get(CONF_NAME),
-        config[CONF_ROUND_DIGITS],
-        config[CONF_UNIT_PREFIX],
-        config[CONF_UNIT_TIME],
-        config.get(CONF_UNIT),
-        config[CONF_TIME_WINDOW],
+        source_entity=config[CONF_SOURCE],
+        name=config.get(CONF_NAME),
+        round_digits=config[CONF_ROUND_DIGITS],
+        unit_prefix=config[CONF_UNIT_PREFIX],
+        unit_time=config[CONF_UNIT_TIME],
+        unit_of_measurement=config.get(CONF_UNIT),
+        time_window=config[CONF_TIME_WINDOW],
     )
 
     async_add_entities([derivative])
@@ -132,7 +132,7 @@ class DerivativeSensor(RestoreEntity):
 
             now = new_state.last_updated
             self._state_list.append((now, new_state.state))
-
+            _LOGGER.debug("Current state_list for %s: %s", self._name, self._state_list)
             # Get indices of tuples that are older than (and outside of the) `time_window`
             to_remove = []
             for i, (timestamp, _) in enumerate(self._state_list[:-1]):
@@ -143,7 +143,7 @@ class DerivativeSensor(RestoreEntity):
             # Delete those tuples from the list
             for i in reversed(to_remove):
                 self._state_list.pop(i)
-
+            _LOGGER.debug("Removing indices %s", to_remove)
             # It can happen that the list only has one entry, in that case
             # we use the old_state, because we cannot do anything better.
             if len(self._state_list) == 1:
@@ -164,6 +164,13 @@ class DerivativeSensor(RestoreEntity):
                 delta_value = Decimal(last_value) - Decimal(first_value)
                 derivative = delta_value / (
                     Decimal(elapsed_time) * (self._unit_prefix * self._unit_time)
+                )
+
+                _LOGGER.debug(
+                    "Δy is %s and Δx is %s, so Δy/Δx is %s (in the correct unit)",
+                    delta_value,
+                    elapsed_time,
+                    derivative,
                 )
                 assert isinstance(derivative, Decimal)
             except ValueError as err:
