@@ -37,13 +37,13 @@ async def async_setup_entry(
 
     alert_watcher = None
     if "weather_alert" in monitored_conditions:
-        datas = hass.data[DOMAIN][city].get_data()
+        datas = client.get_data()
         # Check if a department code is available for this city.
         if "dept" in datas:
             try:
                 # If yes create the watcher DepartmentWeatherAlert object.
-                alert_watcher = DepartmentWeatherAlert(
-                    datas["dept"], weather_alert_client
+                alert_watcher = await hass.async_add_executor_job(
+                    DepartmentWeatherAlert, datas["dept"], weather_alert_client
                 )
             except ValueError as exp:
                 _LOGGER.error(

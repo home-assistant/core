@@ -63,7 +63,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     ):
         _LOGGER.debug("Weather Alert monitoring expected. Loading vigilancemeteo")
 
-        weather_alert_client = VigilanceMeteoFranceProxy()
+        weather_alert_client = await hass.async_add_executor_job(
+            VigilanceMeteoFranceProxy
+        )
         try:
             weather_alert_client.update_data()
         except VigilanceMeteoError as exp:
@@ -78,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     city = entry.data[CONF_CITY]
 
     try:
-        client = meteofranceClient(city)
+        client = await hass.async_add_executor_job(meteofranceClient, city)
     except meteofranceError as exp:
         _LOGGER.error("Unexpected error when creating the meteofrance proxy: %s", exp)
         return False
