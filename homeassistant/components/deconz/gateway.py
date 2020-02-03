@@ -10,7 +10,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.entity_registry import async_get_registry
 
 from .const import (
     CONF_ALLOW_CLIP_SENSOR,
@@ -110,7 +109,6 @@ class DeconzGateway:
         self.api.start()
 
         self.config_entry.add_update_listener(self.async_new_address)
-        self.config_entry.add_update_listener(self.async_options_updated)
 
         return True
 
@@ -137,19 +135,6 @@ class DeconzGateway:
         """Handle signals of gateway connection status."""
         self.available = available
         async_dispatcher_send(self.hass, self.signal_reachable, True)
-
-    @property
-    def signal_options_update(self) -> str:
-        """Event specific per deCONZ entry to signal new options."""
-        return f"deconz-options-{self.bridgeid}"
-
-    @staticmethod
-    async def async_options_updated(hass, entry) -> None:
-        """Triggered by config entry options updates."""
-        gateway = get_gateway_from_config_entry(hass, entry)
-
-        registry = await async_get_registry(hass)
-        async_dispatcher_send(hass, gateway.signal_options_update, registry)
 
     @callback
     def async_signal_new_device(self, device_type) -> str:
