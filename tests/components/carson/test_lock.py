@@ -7,7 +7,7 @@ from .common import CARSON_API_VERSION, carson_load_fixture, setup_platform
 
 
 async def test_entity_registry(hass, success_requests_mock):
-    """Tests that the devices are registed in the entity registry."""
+    """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, LOCK_DOMAIN)
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
