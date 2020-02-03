@@ -1,91 +1,14 @@
 """Test the Ziggo Next config flow."""
-from asynctest import patch
-
-from homeassistant import config_entries, setup
-from homeassistant.components.ziggo_next.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.ziggo_next.const import CONF_COUNTRY_CODE, DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant import data_entry_flow
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
 
 
-async def test_form(hass):
-    """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+async def test_show_user_form(hass: HomeAssistant) -> None:
+    """Test that the user set up form is served."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == "form"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.ziggo_next.config_flow.validate_input",
-        return_value={"title": "test@username.nl"},
-    ), patch(
-        "homeassistant.components.ziggo_next.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.ziggo_next.async_setup_entry", return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test@username.nl",
-                CONF_PASSWORD: "test-password",
-                CONF_COUNTRY_CODE: "nl",
-            },
-        )
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "test@username.nl"
-    assert result2["data"] == {
-        CONF_USERNAME: "test@username.nl",
-        CONF_PASSWORD: "test-password",
-        CONF_COUNTRY_CODE: "nl",
-    }
-    await hass.async_block_till_done()
-    assert len(mock_setup.mock_calls) == 1
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        "ziggo_next", context={"source": SOURCE_USER},
     )
 
-    with patch(
-        "homeassistant.components.ziggo_next.config_flow.validate_input",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test@username.nl",
-                CONF_PASSWORD: "test-password",
-                CONF_COUNTRY_CODE: "nl",
-            },
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
-
-
-async def test_form_cannot_connect(hass):
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.ziggo_next.config_flow.validate_input",
-        side_effect=CannotConnect,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_USERNAME: "test@username.nl",
-                CONF_PASSWORD: "test-password",
-                CONF_COUNTRY_CODE: "nl",
-            },
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["step_id"] == "user"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
