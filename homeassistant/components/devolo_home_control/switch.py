@@ -114,16 +114,12 @@ class DevoloSwitch(SwitchDevice):
 
     def update(self, websocket_update=False):
         """Update the binary switch state and consumption."""
-        for (
-            binary_switch,
-            binary_switch_property,
-        ) in self._device_instance.binary_switch_property.items():
+        for binary_switch in self._device_instance.binary_switch_property.keys():
             self._is_on = self._api.get_binary_switch_state(binary_switch)
         try:
             for (
-                current_consumption,
-                current_consumption_property,
-            ) in self._device_instance.consumption_property.items():
+                current_consumption
+            ) in self._device_instance.consumption_property.keys():
                 self._consumption = self._api.get_consumption(
                     current_consumption, "current"
                 )
