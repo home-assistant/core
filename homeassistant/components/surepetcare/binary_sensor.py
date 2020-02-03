@@ -137,42 +137,6 @@ class SurePetcareBinarySensor(BinarySensorDevice):
             self._async_unsub_dispatcher_connect()
 
 
-# class Flap(SurePetcareBinarySensor):
-#     """Sure Petcare Flap."""
-
-#     def __init__(self: BinarySensorDevice, _id: int, spc: SurePetcareAPI) -> None:
-#         """Initialize a Sure Petcare Flap."""
-#         super().__init__(_id, spc, DEVICE_CLASS_LOCK, SureProductID.PET_FLAP)
-
-#     @property
-#     def is_on(self) -> Optional[bool]:
-#         """Return true if entity is on/unlocked."""
-#         try:
-#             return bool(self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
-#         except (KeyError, TypeError):
-#             return None
-
-#     @property
-#     def available(self) -> bool:
-#         return bool(self._state["online"])
-
-#     @property
-#     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-#         """Return the state attributes of the device."""
-#         attributes = None
-#         if self._state:
-#             attributes = {
-#                 "online": bool(self._state["online"]),
-#                 "learn_mode": bool(self._state["learn_mode"]),
-#                 ATTR_VOLTAGE: f'{self._state["battery"] / 4:.2f}',
-#                 "locking_mode": SureLockStateID(
-#                     self._state["locking"]["mode"]
-#                 ).name.capitalize(),
-#             }
-
-#         return attributes
-
-
 class Hub(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
