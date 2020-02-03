@@ -10,6 +10,7 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.const import ATTR_AREA_ID, ATTR_ENTITY_ID, ENTITY_MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.exceptions import (
+    EntitiesNotFound,
     HomeAssistantError,
     TemplateError,
     Unauthorized,
@@ -121,11 +122,23 @@ async def async_extract_entities(hass, entities, service_call, expand_group=True
 
     entity_ids = await async_extract_entity_ids(hass, service_call, expand_group)
 
-    return [
-        entity
-        for entity in entities
-        if entity.available and entity.entity_id in entity_ids
-    ]
+    found = []
+
+    for entity in entities:
+        if entity.entity_id not in entity_ids:
+            continue
+
+        entity_ids.remove(entity.entity_id)
+
+        if not entity.available:
+            continue
+
+        found.append(entity)
+
+    if entity_ids:
+        raise EntitiesNotFound(entity_ids)
+
+    return found
 
 
 @bind_hass
@@ -341,6 +354,14 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
                 platform_entities.append(entity)
 
             platforms_entities.append(platform_entities)
+
+    if not target_all_entities:
+        for platform_entities in platforms_entities:
+            for entity in platform_entities:
+                entity_ids.remove(entity.entity_id)
+
+        if entity_ids:
+            raise EntitiesNotFound(entity_ids)
 
     tasks = [
         _handle_service_platform_call(
