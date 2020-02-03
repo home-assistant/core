@@ -433,7 +433,7 @@ class ZHAGateway:
                 model=zha_device.model,
             )
             zha_device.set_device_id(device_registry_device.id)
-        entry = self.zha_storage.async_get_or_create(zha_device)
+        entry = self.zha_storage.async_get_or_create_device(zha_device)
         zha_device.async_update_last_seen(entry.last_seen)
         return zha_device
 
@@ -444,6 +444,8 @@ class ZHAGateway:
         if zha_group is None:
             zha_group = ZHAGroup(self._hass, self, zigpy_group)
             self._groups[zigpy_group.group_id] = zha_group
+        group_entry = self.zha_storage.async_get_or_create_group(zha_group)
+        zha_group.entity_domain = group_entry.entity_domain
         return zha_group
 
     @callback
@@ -465,7 +467,9 @@ class ZHAGateway:
     async def async_update_device_storage(self):
         """Update the devices in the store."""
         for device in self.devices.values():
-            self.zha_storage.async_update(device)
+            self.zha_storage.async_update_device(device)
+        for group in self.groups.values():
+            self.zha_storage.async_update_group(group)
         await self.zha_storage.async_save()
 
     async def async_device_initialized(self, device: zha_typing.ZigpyDeviceType):
