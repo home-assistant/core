@@ -58,7 +58,9 @@ DIR_LEFT = "LEFT"
 DIR_RIGHT = "RIGHT"
 ZOOM_OUT = "ZOOM_OUT"
 ZOOM_IN = "ZOOM_IN"
-
+PAN_FACTOR = {DIR_RIGHT: 1, DIR_LEFT: -1}
+TILT_FACTOR = {DIR_UP: 1, DIR_DOWN: -1}
+ZOOM_FACTOR = {ZOOM_IN: 1, ZOOM_OUT: -1}
 CONTINUOUS_MOVE = "ContinuousMove"
 RELATIVE_MOVE = "RelativeMove"
 ABSOLUTE_MOVE = "AbsoluteMove"
@@ -90,9 +92,7 @@ SERVICE_PTZ_SCHEMA = vol.Schema(
         vol.Optional(ATTR_PAN): vol.In([DIR_LEFT, DIR_RIGHT]),
         vol.Optional(ATTR_TILT): vol.In([DIR_UP, DIR_DOWN]),
         vol.Optional(ATTR_ZOOM): vol.In([ZOOM_OUT, ZOOM_IN]),
-        ATTR_MOVE_MODE: vol.In(
-            [CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE]
-        ),
+        ATTR_MOVE_MODE: vol.In([CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE]),
         vol.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
         vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
         vol.Optional(ATTR_SPEED, default=0.5): cv.small_float,
@@ -371,21 +371,9 @@ class ONVIFHassCamera(Camera):
             return
 
         if self._ptz_service:
-            PAN_FACTOR = {
-                DIR_RIGHT: 1,
-                DIR_LEFT: -1,
-            }            
-            TILT_FACTOR = {
-                DIR_UP: 1,
-                DIR_DOWN: -1,
-            }            
-            ZOOM_FACTOR = {
-                ZOOM_IN: 1,
-                ZOOM_OUT: -1,
-            }
             pan_val = distance * PAN_FACTOR.get(pan, 0)
             tilt_val = distance * TILT_FACTOR.get(tilt, 0)
-            zoom_val = distance * ZOOM_FACTOR.get(zoom, 0)           
+            zoom_val = distance * ZOOM_FACTOR.get(zoom, 0)
             speed_val = speed
             _LOGGER.debug(
                 "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed = %4.2f",
