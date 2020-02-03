@@ -55,7 +55,6 @@ async def async_setup_entry(
                 datas["dept"],
                 exp,
             )
-            alert_watcher = None
     else:
         _LOGGER.warning(
             "No 'dept' key found for '%s'. So weather alert information won't be available",
