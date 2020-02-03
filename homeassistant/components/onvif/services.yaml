@@ -5,14 +5,14 @@ onvif_ptz:
       description: "String or list of strings that point at entity_ids of cameras. Else targets all."
       example: "camera.living_room_camera"
     tilt:
-      description: "Tilt direction. Allowed values: UP, DOWN, NONE"
+      description: "Tilt direction. Allowed values: UP, DOWN"
       example: "UP"
     pan:
-      description: "Pan direction. Allowed values: RIGHT, LEFT, NONE"
+      description: "Pan direction. Allowed values: RIGHT, LEFT"
       example: "RIGHT"
     zoom:
-      description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT, NONE"
-      example: "NONE"
+      description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
+      example: "ZOOM_IN"
     distance:
       description: "Distance coefficient. Sets how much PTZ should be executed in one request. Allowed values: floating point numbers, 0 to 1"
       default: 0.1
