@@ -1,5 +1,6 @@
 """Support for Konnected devices."""
 import asyncio
+import copy
 import hmac
 import json
 import logging
@@ -9,6 +10,7 @@ from aiohttp.web import Request, Response
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -16,10 +18,14 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_BINARY_SENSORS,
     CONF_DEVICES,
+    CONF_HOST,
     CONF_ID,
+    CONF_NAME,
     CONF_PIN,
+    CONF_PORT,
     CONF_SENSORS,
     CONF_SWITCHES,
+    CONF_TYPE,
     CONF_ZONE,
     HTTP_BAD_REQUEST,
     HTTP_NOT_FOUND,
@@ -31,22 +37,158 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .config_flow import (  # Loading the config flow file will register the flow
-    DEVICE_SCHEMA_YAML,
+    CONF_DEFAULT_OPTIONS,
+    CONF_IO,
+    CONF_IO_BIN,
+    CONF_IO_DIG,
+    CONF_IO_SWI,
+    OPTIONS_SCHEMA,
 )
 from .const import (
     CONF_ACTIVATION,
     CONF_API_HOST,
+    CONF_BLINK,
+    CONF_DISCOVERY,
+    CONF_INVERSE,
+    CONF_MOMENTARY,
+    CONF_PAUSE,
+    CONF_POLL_INTERVAL,
+    CONF_REPEAT,
     DOMAIN,
     PIN_TO_ZONE,
     STATE_HIGH,
+    STATE_LOW,
     UPDATE_ENDPOINT,
     ZONE_TO_PIN,
+    ZONES,
 )
 from .errors import CannotConnect
 from .handlers import HANDLERS
 from .panel import AlarmPanel
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def ensure_pin(value):
+    """Check if valid pin and coerce to string."""
+    if value is None:
+        raise vol.Invalid("pin value is None")
+
+    if PIN_TO_ZONE.get(str(value)) is None:
+        raise vol.Invalid("pin not valid")
+
+    return str(value)
+
+
+def ensure_zone(value):
+    """Check if valid zone and coerce to string."""
+    if value is None:
+        raise vol.Invalid("zone value is None")
+
+    if str(value) not in ZONES is None:
+        raise vol.Invalid("zone not valid")
+
+    return str(value)
+
+
+def import_validator(config):
+    """Validate zones and reformat for import."""
+    config = copy.deepcopy(config)
+    io_cfgs = {}
+    # Replace pins with zones
+    for zone in config.get(CONF_BINARY_SENSORS, []):
+        if zone.get(CONF_PIN):
+            zone[CONF_ZONE] = PIN_TO_ZONE[zone[CONF_PIN]]
+            del zone[CONF_PIN]
+        io_cfgs[zone[CONF_ZONE]] = CONF_IO_BIN
+    for zone in config.get(CONF_SENSORS, []):
+        if zone.get(CONF_PIN):
+            zone[CONF_ZONE] = PIN_TO_ZONE[zone[CONF_PIN]]
+            del zone[CONF_PIN]
+        io_cfgs[zone[CONF_ZONE]] = CONF_IO_DIG
+    for zone in config.get(CONF_SWITCHES, []):
+        if zone.get(CONF_PIN):
+            zone[CONF_ZONE] = PIN_TO_ZONE[zone[CONF_PIN]]
+            del zone[CONF_PIN]
+        io_cfgs[zone[CONF_ZONE]] = CONF_IO_SWI
+
+    # Migrate config_entry data into default_options structure
+    config[CONF_IO] = io_cfgs
+    config[CONF_DEFAULT_OPTIONS] = OPTIONS_SCHEMA(config)
+
+    # clean up fields migrated to options
+    config.pop(CONF_BINARY_SENSORS, None)
+    config.pop(CONF_SENSORS, None)
+    config.pop(CONF_SWITCHES, None)
+    config.pop(CONF_BLINK, None)
+    config.pop(CONF_DISCOVERY, None)
+    config.pop(CONF_IO, None)
+    return config
+
+
+# configuration.yaml schemas (legacy)
+BINARY_SENSOR_SCHEMA_YAML = vol.All(
+    vol.Schema(
+        {
+            vol.Exclusive(CONF_ZONE, "s_zone"): ensure_zone,
+            vol.Exclusive(CONF_PIN, "s_pin"): ensure_pin,
+            vol.Required(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_INVERSE, default=False): cv.boolean,
+        }
+    ),
+    cv.has_at_least_one_key(CONF_PIN, CONF_ZONE),
+)
+
+SENSOR_SCHEMA_YAML = vol.All(
+    vol.Schema(
+        {
+            vol.Exclusive(CONF_ZONE, "s_zone"): ensure_zone,
+            vol.Exclusive(CONF_PIN, "s_pin"): ensure_pin,
+            vol.Required(CONF_TYPE): vol.All(vol.Lower, vol.In(["dht", "ds18b20"])),
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_POLL_INTERVAL, default=3): vol.All(
+                vol.Coerce(int), vol.Range(min=1)
+            ),
+        }
+    ),
+    cv.has_at_least_one_key(CONF_PIN, CONF_ZONE),
+)
+
+SWITCH_SCHEMA_YAML = vol.All(
+    vol.Schema(
+        {
+            vol.Exclusive(CONF_ZONE, "s_zone"): ensure_zone,
+            vol.Exclusive(CONF_PIN, "s_pin"): ensure_pin,
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_ACTIVATION, default=STATE_HIGH): vol.All(
+                vol.Lower, vol.Any(STATE_HIGH, STATE_LOW)
+            ),
+            vol.Optional(CONF_MOMENTARY): vol.All(vol.Coerce(int), vol.Range(min=10)),
+            vol.Optional(CONF_PAUSE): vol.All(vol.Coerce(int), vol.Range(min=10)),
+            vol.Optional(CONF_REPEAT): vol.All(vol.Coerce(int), vol.Range(min=-1)),
+        }
+    ),
+    cv.has_at_least_one_key(CONF_PIN, CONF_ZONE),
+)
+
+DEVICE_SCHEMA_YAML = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONF_ID): cv.matches_regex("[0-9a-f]{12}"),
+            vol.Optional(CONF_BINARY_SENSORS): vol.All(
+                cv.ensure_list, [BINARY_SENSOR_SCHEMA_YAML]
+            ),
+            vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA_YAML]),
+            vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA_YAML]),
+            vol.Inclusive(CONF_HOST, "host_info"): cv.string,
+            vol.Inclusive(CONF_PORT, "host_info"): cv.port,
+            vol.Optional(CONF_BLINK, default=True): cv.boolean,
+            vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
+        }
+    ),
+    import_validator,
+)
 
 # pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
@@ -55,7 +197,9 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_ACCESS_TOKEN): cv.string,
                 vol.Optional(CONF_API_HOST): vol.Url(),
-                vol.Optional(CONF_DEVICES): [DEVICE_SCHEMA_YAML],
+                vol.Optional(CONF_DEVICES): vol.All(
+                    cv.ensure_list, [DEVICE_SCHEMA_YAML]
+                ),
             }
         )
     },

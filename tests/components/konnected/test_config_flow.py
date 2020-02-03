@@ -3,6 +3,7 @@ from asynctest import patch
 import pytest
 import voluptuous_serialize
 
+from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
 
 from tests.common import MockConfigEntry
@@ -130,7 +131,33 @@ async def test_import_no_host_user_finish(hass, mock_panel):
     }
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "import"}, data={"id": "112233445566"}
+        config_flow.DOMAIN,
+        context={"source": "import"},
+        data={
+            "default_options": {
+                "blink": True,
+                "discovery": True,
+                "io": {
+                    "1": "Disabled",
+                    "10": "Disabled",
+                    "11": "Disabled",
+                    "12": "Disabled",
+                    "2": "Disabled",
+                    "3": "Disabled",
+                    "4": "Disabled",
+                    "5": "Disabled",
+                    "6": "Disabled",
+                    "7": "Disabled",
+                    "8": "Disabled",
+                    "9": "Disabled",
+                    "alarm1": "Disabled",
+                    "alarm2_out2": "Disabled",
+                    "out": "Disabled",
+                    "out1": "Disabled",
+                },
+            },
+            "id": "aabbccddeeff",
+        },
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -181,7 +208,7 @@ async def test_ssdp_already_configured(hass, mock_panel):
 
 async def test_ssdp_host_update(hass, mock_panel):
     """Test if a discovered panel has already been configured but changed host."""
-    device_config = config_flow.CONFIG_SCHEMA(
+    device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,
@@ -269,7 +296,7 @@ async def test_import_existing_config(hass, mock_panel):
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": "import"},
-        data=config_flow.DEVICE_SCHEMA_YAML(
+        data=konnected.DEVICE_SCHEMA_YAML(
             {
                 "host": "1.2.3.4",
                 "port": 1234,
@@ -384,18 +411,38 @@ async def test_import_existing_config_entry(hass, mock_panel):
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": "import"},
-        data=config_flow.DEVICE_SCHEMA_YAML(
-            {
-                "host": "1.2.3.4",
-                "port": 1234,
-                "id": "112233445566",
+        data={
+            "host": "1.2.3.4",
+            "port": 1234,
+            "id": "112233445566",
+            "default_options": {
+                "blink": True,
+                "discovery": True,
+                "io": {
+                    "1": "Disabled",
+                    "10": "Binary Sensor",
+                    "11": "Disabled",
+                    "12": "Disabled",
+                    "2": "Binary Sensor",
+                    "3": "Disabled",
+                    "4": "Disabled",
+                    "5": "Disabled",
+                    "6": "Binary Sensor",
+                    "7": "Disabled",
+                    "8": "Disabled",
+                    "9": "Disabled",
+                    "alarm1": "Disabled",
+                    "alarm2_out2": "Disabled",
+                    "out": "Disabled",
+                    "out1": "Disabled",
+                },
                 "binary_sensors": [
-                    {"zone": "2", "type": "door"},
-                    {"zone": "6", "type": "window", "name": "winder", "inverse": True},
-                    {"zone": "10", "type": "door"},
+                    {"inverse": False, "type": "door", "zone": "2"},
+                    {"inverse": True, "type": "Window", "name": "winder", "zone": "6"},
+                    {"inverse": False, "type": "door", "zone": "10"},
                 ],
-            }
-        ),
+            },
+        },
     )
 
     assert result["type"] == "abort"
@@ -422,7 +469,7 @@ async def test_import_pin_config(hass, mock_panel):
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
         context={"source": "import"},
-        data=config_flow.DEVICE_SCHEMA_YAML(
+        data=konnected.DEVICE_SCHEMA_YAML(
             {
                 "host": "1.2.3.4",
                 "port": 1234,
@@ -510,7 +557,7 @@ async def test_import_pin_config(hass, mock_panel):
 
 async def test_option_flow(hass, mock_panel):
     """Test config flow options."""
-    device_config = config_flow.CONFIG_SCHEMA(
+    device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,
@@ -630,7 +677,7 @@ async def test_option_flow(hass, mock_panel):
 
 async def test_option_flow_pro(hass, mock_panel):
     """Test config flow options for pro board."""
-    device_config = config_flow.CONFIG_SCHEMA(
+    device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,
@@ -837,7 +884,7 @@ async def test_option_flow_import(hass, mock_panel):
         }
     )
 
-    device_config = config_flow.CONFIG_SCHEMA(
+    device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,
@@ -978,7 +1025,7 @@ async def test_option_flow_existing(hass, mock_panel):
         }
     )
 
-    device_config = config_flow.CONFIG_SCHEMA(
+    device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,

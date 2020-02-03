@@ -40,7 +40,7 @@ async def mock_panel_fixture():
 
 async def test_create_and_setup(hass, mock_panel):
     """Test that we create a Konnected Panel and save the data."""
-    device_config = config_flow.CONFIG_SCHEMA(
+    device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,
@@ -197,7 +197,7 @@ async def test_create_and_setup(hass, mock_panel):
 
 async def test_create_and_setup_pro(hass, mock_panel):
     """Test that we create a Konnected Pro Panel and save the data."""
-    device_config = config_flow.CONFIG_SCHEMA(
+    device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,

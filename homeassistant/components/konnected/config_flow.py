@@ -20,7 +20,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
-    CONF_PIN,
     CONF_PORT,
     CONF_SENSORS,
     CONF_SWITCHES,
@@ -41,7 +40,6 @@ from .const import (
     CONF_POLL_INTERVAL,
     CONF_REPEAT,
     DOMAIN,
-    PIN_TO_ZONE,
     STATE_HIGH,
     STATE_LOW,
     ZONES,
@@ -68,89 +66,6 @@ OPTIONS_IO_ANY = vol.In([CONF_IO_DIS, CONF_IO_BIN, CONF_IO_DIG, CONF_IO_SWI])
 OPTIONS_IO_INPUT_ONLY = vol.In([CONF_IO_DIS, CONF_IO_BIN, CONF_IO_DIG])
 OPTIONS_IO_OUTPUT_ONLY = vol.In([CONF_IO_DIS, CONF_IO_SWI])
 
-
-def ensure_pin(value):
-    """Check if valid pin and coerce to string."""
-    if value is None:
-        raise vol.Invalid("pin value is None")
-
-    if PIN_TO_ZONE.get(str(value)) is None:
-        raise vol.Invalid("pin not valid")
-
-    return str(value)
-
-
-def ensure_zone(value):
-    """Check if valid zone and coerce to string."""
-    if value is None:
-        raise vol.Invalid("zone value is None")
-
-    if str(value) not in ZONES is None:
-        raise vol.Invalid("zone not valid")
-
-    return str(value)
-
-
-# configuration.yaml schemas (legacy)
-BINARY_SENSOR_SCHEMA_YAML = vol.All(
-    vol.Schema(
-        {
-            vol.Exclusive(CONF_ZONE, "s_zone"): ensure_zone,
-            vol.Exclusive(CONF_PIN, "s_pin"): ensure_pin,
-            vol.Required(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_INVERSE, default=False): cv.boolean,
-        }
-    ),
-    cv.has_at_least_one_key(CONF_PIN, CONF_ZONE),
-)
-
-SENSOR_SCHEMA_YAML = vol.All(
-    vol.Schema(
-        {
-            vol.Exclusive(CONF_ZONE, "s_zone"): ensure_zone,
-            vol.Exclusive(CONF_PIN, "s_pin"): ensure_pin,
-            vol.Required(CONF_TYPE): vol.All(vol.Lower, vol.In(["dht", "ds18b20"])),
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_POLL_INTERVAL, default=3): vol.All(
-                vol.Coerce(int), vol.Range(min=1)
-            ),
-        }
-    ),
-    cv.has_at_least_one_key(CONF_PIN, CONF_ZONE),
-)
-
-SWITCH_SCHEMA_YAML = vol.All(
-    vol.Schema(
-        {
-            vol.Exclusive(CONF_ZONE, "s_zone"): ensure_zone,
-            vol.Exclusive(CONF_PIN, "s_pin"): ensure_pin,
-            vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_ACTIVATION, default=STATE_HIGH): vol.All(
-                vol.Lower, vol.Any(STATE_HIGH, STATE_LOW)
-            ),
-            vol.Optional(CONF_MOMENTARY): vol.All(vol.Coerce(int), vol.Range(min=10)),
-            vol.Optional(CONF_PAUSE): vol.All(vol.Coerce(int), vol.Range(min=10)),
-            vol.Optional(CONF_REPEAT): vol.All(vol.Coerce(int), vol.Range(min=-1)),
-        }
-    ),
-    cv.has_at_least_one_key(CONF_PIN, CONF_ZONE),
-)
-
-DEVICE_SCHEMA_YAML = vol.Schema(
-    {
-        vol.Required(CONF_ID): cv.matches_regex("[0-9a-f]{12}"),
-        vol.Optional(CONF_BINARY_SENSORS): vol.All(
-            cv.ensure_list, [BINARY_SENSOR_SCHEMA_YAML]
-        ),
-        vol.Optional(CONF_SENSORS): vol.All(cv.ensure_list, [SENSOR_SCHEMA_YAML]),
-        vol.Optional(CONF_SWITCHES): vol.All(cv.ensure_list, [SWITCH_SCHEMA_YAML]),
-        vol.Inclusive(CONF_HOST, "host_info"): cv.string,
-        vol.Inclusive(CONF_PORT, "host_info"): cv.port,
-        vol.Optional(CONF_BLINK, default=True): cv.boolean,
-        vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
-    }
-)
 
 # Config entry schemas
 IO_SCHEMA = vol.Schema(
@@ -209,15 +124,6 @@ SWITCH_SCHEMA = vol.Schema(
     }
 )
 
-
-def pins_to_zones(config):
-    """Swap out pin for zones in a io config."""
-    for zone in config:
-        if zone.get(CONF_PIN):
-            zone[CONF_ZONE] = PIN_TO_ZONE[zone[CONF_PIN]]
-            del zone[CONF_PIN]
-
-
 OPTIONS_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_IO): IO_SCHEMA,
@@ -233,7 +139,7 @@ OPTIONS_SCHEMA = vol.Schema(
 )
 
 CONF_DEFAULT_OPTIONS = "default_options"
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_ENTRY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ID): cv.matches_regex("[0-9a-f]{12}"),
         vol.Required(CONF_HOST): cv.string,
@@ -241,7 +147,8 @@ CONFIG_SCHEMA = vol.Schema(
         vol.Required(CONF_MODEL): vol.Any(*KONN_PANEL_MODEL_NAMES),
         vol.Required(CONF_ACCESS_TOKEN): cv.matches_regex("[a-zA-Z0-9]+"),
         vol.Required(CONF_DEFAULT_OPTIONS): OPTIONS_SCHEMA,
-    }
+    },
+    extra=vol.REMOVE_EXTRA,
 )
 
 
@@ -283,26 +190,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """
         _LOGGER.debug(device_config)
 
-        # populate any options
-        device_config[CONF_IO] = {}
-        if device_config.get(CONF_BINARY_SENSORS):
-            pins_to_zones(device_config[CONF_BINARY_SENSORS])
-            for io_cfg in device_config[CONF_BINARY_SENSORS]:
-                device_config[CONF_IO][io_cfg[CONF_ZONE]] = CONF_IO_BIN
-
-        if device_config.get(CONF_SENSORS):
-            pins_to_zones(device_config[CONF_SENSORS])
-            for io_cfg in device_config[CONF_SENSORS]:
-                device_config[CONF_IO][io_cfg[CONF_ZONE]] = CONF_IO_DIG
-
-        if device_config.get(CONF_SWITCHES):
-            pins_to_zones(device_config[CONF_SWITCHES])
-            for io_cfg in device_config[CONF_SWITCHES]:
-                device_config[CONF_IO][io_cfg[CONF_ZONE]] = CONF_IO_SWI
-
         # save the data and confirm connection via user step
         await self.async_set_unique_id(device_config["id"])
-        self.options = OPTIONS_SCHEMA(device_config)
+        self.options = device_config[CONF_DEFAULT_OPTIONS]
         if device_config.get(CONF_HOST) and device_config.get(CONF_PORT):
             return await self.async_step_user(
                 user_input={

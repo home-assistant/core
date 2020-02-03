@@ -39,6 +39,144 @@ async def mock_panel_fixture():
         yield konn_client
 
 
+async def test_config_schema(hass):
+    """Test that config schema is imported properly."""
+    config = {
+        konnected.DOMAIN: {
+            konnected.CONF_ACCESS_TOKEN: "abcdefgh",
+            konnected.CONF_DEVICES: [{konnected.CONF_ID: "aabbccddeeff"}],
+        }
+    }
+    assert konnected.CONFIG_SCHEMA(config) == {
+        "konnected": {
+            "access_token": "abcdefgh",
+            "devices": [
+                {
+                    "default_options": {
+                        "blink": True,
+                        "discovery": True,
+                        "io": {
+                            "1": "Disabled",
+                            "10": "Disabled",
+                            "11": "Disabled",
+                            "12": "Disabled",
+                            "2": "Disabled",
+                            "3": "Disabled",
+                            "4": "Disabled",
+                            "5": "Disabled",
+                            "6": "Disabled",
+                            "7": "Disabled",
+                            "8": "Disabled",
+                            "9": "Disabled",
+                            "alarm1": "Disabled",
+                            "alarm2_out2": "Disabled",
+                            "out": "Disabled",
+                            "out1": "Disabled",
+                        },
+                    },
+                    "id": "aabbccddeeff",
+                }
+            ],
+        }
+    }
+
+    # check with host info
+    config = {
+        konnected.DOMAIN: {
+            konnected.CONF_ACCESS_TOKEN: "abcdefgh",
+            konnected.CONF_DEVICES: [
+                {konnected.CONF_ID: "aabbccddeeff", "host": "192.168.1.1", "port": 1234}
+            ],
+        }
+    }
+    assert konnected.CONFIG_SCHEMA(config) == {
+        "konnected": {
+            "access_token": "abcdefgh",
+            "devices": [
+                {
+                    "default_options": {
+                        "blink": True,
+                        "discovery": True,
+                        "io": {
+                            "1": "Disabled",
+                            "10": "Disabled",
+                            "11": "Disabled",
+                            "12": "Disabled",
+                            "2": "Disabled",
+                            "3": "Disabled",
+                            "4": "Disabled",
+                            "5": "Disabled",
+                            "6": "Disabled",
+                            "7": "Disabled",
+                            "8": "Disabled",
+                            "9": "Disabled",
+                            "alarm1": "Disabled",
+                            "alarm2_out2": "Disabled",
+                            "out": "Disabled",
+                            "out1": "Disabled",
+                        },
+                    },
+                    "id": "aabbccddeeff",
+                    "host": "192.168.1.1",
+                    "port": 1234,
+                }
+            ],
+        }
+    }
+
+    # check pin to zone
+    config = {
+        konnected.DOMAIN: {
+            konnected.CONF_ACCESS_TOKEN: "abcdefgh",
+            konnected.CONF_DEVICES: [
+                {
+                    konnected.CONF_ID: "aabbccddeeff",
+                    "binary_sensors": [
+                        {"pin": 2, "type": "door"},
+                        {"zone": 1, "type": "door"},
+                    ],
+                }
+            ],
+        }
+    }
+    assert konnected.CONFIG_SCHEMA(config) == {
+        "konnected": {
+            "access_token": "abcdefgh",
+            "devices": [
+                {
+                    "default_options": {
+                        "blink": True,
+                        "discovery": True,
+                        "io": {
+                            "1": "Binary Sensor",
+                            "10": "Disabled",
+                            "11": "Disabled",
+                            "12": "Disabled",
+                            "2": "Binary Sensor",
+                            "3": "Disabled",
+                            "4": "Disabled",
+                            "5": "Disabled",
+                            "6": "Disabled",
+                            "7": "Disabled",
+                            "8": "Disabled",
+                            "9": "Disabled",
+                            "alarm1": "Disabled",
+                            "alarm2_out2": "Disabled",
+                            "out": "Disabled",
+                            "out1": "Disabled",
+                        },
+                        "binary_sensors": [
+                            {"inverse": False, "type": "door", "zone": "2"},
+                            {"inverse": False, "type": "door", "zone": "1"},
+                        ],
+                    },
+                    "id": "aabbccddeeff",
+                }
+            ],
+        }
+    }
+
+
 async def test_setup_with_no_config(hass):
     """Test that we do not discover anything or try to set up a Konnected panel."""
     assert await async_setup_component(hass, konnected.DOMAIN, {})
@@ -158,7 +296,7 @@ async def test_api(hass, aiohttp_client, mock_panel):
     """Test callback view."""
     await async_setup_component(hass, "http", {"http": {}})
 
-    device_config = config_flow.CONFIG_SCHEMA(
+    device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,
@@ -323,7 +461,7 @@ async def test_state_updates(hass, aiohttp_client, mock_panel):
     """Test callback view."""
     await async_setup_component(hass, "http", {"http": {}})
 
-    device_config = config_flow.CONFIG_SCHEMA(
+    device_config = config_flow.CONFIG_ENTRY_SCHEMA(
         {
             "host": "1.2.3.4",
             "port": 1234,
