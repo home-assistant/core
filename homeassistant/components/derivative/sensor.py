@@ -126,7 +126,7 @@ class DerivativeSensor(RestoreEntity):
             now = new_state.last_updated
             self._state_list.append((now, new_state.state))
 
-            # Get indices of tuples that are older than `unit_time`
+            # Get indices of tuples that are older than `time_window`
             to_remove = []
             for i, (timestamp, _) in enumerate(self._state_list[:-1]):
                 if (now - timestamp).total_seconds() > self._time_window:
