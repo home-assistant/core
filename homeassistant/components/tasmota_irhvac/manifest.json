@@ -7,5 +7,5 @@
       "mqtt",
       "sensor"
     ],
-    "codeowners": []
+    "codeowners": ["@hristo-atanasov"]
   }
