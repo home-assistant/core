@@ -87,11 +87,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SERVICE_PTZ_SCHEMA = vol.Schema(
     {
         ATTR_ENTITY_ID: cv.entity_ids,
-        vol.Optional(ATTR_PAN, default=None): vol.In([DIR_LEFT, DIR_RIGHT, None]),
-        vol.Optional(ATTR_TILT, default=None): vol.In([DIR_UP, DIR_DOWN, None]),
-        vol.Optional(ATTR_ZOOM, default=None): vol.In([ZOOM_OUT, ZOOM_IN, None]),
+        vol.Optional(ATTR_PAN): vol.In([DIR_LEFT, DIR_RIGHT]),
+        vol.Optional(ATTR_TILT): vol.In([DIR_UP, DIR_DOWN]),
+        vol.Optional(ATTR_ZOOM): vol.In([ZOOM_OUT, ZOOM_IN]),
         ATTR_MOVE_MODE: vol.In(
-            [CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE, None]
+            [CONTINUOUS_MOVE, RELATIVE_MOVE, ABSOLUTE_MOVE]
         ),
         vol.Optional(ATTR_CONTINUOUS_DURATION, default=0.5): cv.small_float,
         vol.Optional(ATTR_DISTANCE, default=0.1): cv.small_float,
@@ -106,9 +106,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async def async_handle_ptz(service):
         """Handle PTZ service call."""
-        pan = service.data[ATTR_PAN]
-        tilt = service.data[ATTR_TILT]
-        zoom = service.data[ATTR_ZOOM]
+        pan = service.data.get[ATTR_PAN]
+        tilt = service.data.get[ATTR_TILT]
+        zoom = service.data.get[ATTR_ZOOM]
         distance = service.data[ATTR_DISTANCE]
         speed = service.data[ATTR_SPEED]
         move_mode = service.data[ATTR_MOVE_MODE]
@@ -371,15 +371,21 @@ class ONVIFHassCamera(Camera):
             return
 
         if self._ptz_service:
-            pan_val = (
-                distance if pan == DIR_RIGHT else -distance if pan == DIR_LEFT else 0
-            )
-            tilt_val = (
-                distance if tilt == DIR_UP else -distance if tilt == DIR_DOWN else 0
-            )
-            zoom_val = (
-                distance if zoom == ZOOM_IN else -distance if zoom == ZOOM_OUT else 0
-            )
+            PAN_FACTOR = {
+                DIR_RIGHT: 1,
+                DIR_LEFT: -1,
+            }            
+            TILT_FACTOR = {
+                DIR_UP: 1,
+                DIR_DOWN: -1,
+            }            
+            ZOOM_FACTOR = {
+                ZOOM_IN: 1,
+                ZOOM_OUT: -1,
+            }
+            pan_val = distance * PAN_FACTOR.get(pan, 0)
+            tilt_val = distance * TILT_FACTOR.get(tilt, 0)
+            zoom_val = distance * ZOOM_FACTOR.get(zoom, 0)           
             speed_val = speed
             _LOGGER.debug(
                 "Calling %s PTZ | Pan = %4.2f | Tilt = %4.2f | Zoom = %4.2f | Speed = %4.2f",
