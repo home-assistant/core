@@ -38,6 +38,7 @@ UNIT_TIME = {"s": 1, "min": 60, "h": 60 * 60, "d": 24 * 60 * 60}
 ICON = "mdi:chart-line"
 
 DEFAULT_ROUND = 3
+DEFAULT_TIME_WINDOW = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -47,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
         vol.Optional(CONF_UNIT_TIME, default="h"): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT): cv.string,
-        vol.Optional(CONF_TIME_WINDOW): cv.time_period,
+        vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
     }
 )
 
@@ -61,7 +62,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         config[CONF_UNIT_PREFIX],
         config[CONF_UNIT_TIME],
         config.get(CONF_UNIT),
-        config.get(CONF_TIME_WINDOW),
+        config[CONF_TIME_WINDOW],
     )
 
     async_add_entities([derivative])
@@ -98,10 +99,7 @@ class DerivativeSensor(RestoreEntity):
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
-        if time_window is None:
-            self._time_window = 0
-        else:
-            self._time_window = time_window * _unit_time
+        self._time_window = time_window * _unit_time
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
