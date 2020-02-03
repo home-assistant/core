@@ -142,7 +142,6 @@ class DerivativeSensor(RestoreEntity):
             if len(self._state_list) == 0:
                 self._state_list.append((old_state.last_updated, old_state.state))
             self._state_list.append((new_state.last_updated, new_state.state))
-            _LOGGER.debug("Current state_list for %s: %s", self._name, self._state_list)
 
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
@@ -162,13 +161,6 @@ class DerivativeSensor(RestoreEntity):
                     / Decimal(elapsed_time)
                     / Decimal(self._unit_prefix)
                     * Decimal(self._unit_time)
-                )
-
-                _LOGGER.debug(
-                    "Δy is %s and Δx is %s, so Δy/Δx is %s (in the correct unit)",
-                    delta_value,
-                    elapsed_time,
-                    derivative,
                 )
                 assert isinstance(derivative, Decimal)
             except ValueError as err:
