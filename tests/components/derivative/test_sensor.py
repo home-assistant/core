@@ -77,21 +77,26 @@ async def setup_tests(hass, config, times, values, expected_state):
 
 async def test_dataSet1(hass):
     """Test derivative sensor state."""
-    times, values = zip(*[(20, 10), (30, 30), (40, 5), (50, 0)])
-    await setup_tests(hass, {"unit_time": "s"}, times, values, expected_state=-0.5)
+    await setup_tests(
+        hass,
+        {"unit_time": "s"},
+        times=[20, 30, 40, 50],
+        values=[10, 30, 5, 0],
+        expected_state=-0.5,
+    )
 
 
 async def test_dataSet2(hass):
     """Test derivative sensor state."""
-    times, values = zip(*[(20, 5), (30, 0)])
-    await setup_tests(hass, {"unit_time": "s"}, times, values, expected_state=-0.5)
+    await setup_tests(
+        hass, {"unit_time": "s"}, times=[20, 30], values=[5, 0], expected_state=-0.5
+    )
 
 
 async def test_dataSet3(hass):
     """Test derivative sensor state."""
-    times, values = zip(*[(20, 5), (30, 10)])
     state = await setup_tests(
-        hass, {"unit_time": "s"}, times, values, expected_state=0.5
+        hass, {"unit_time": "s"}, times=[20, 30], values=[5, 10], expected_state=0.5
     )
 
     assert state.attributes.get("unit_of_measurement") == "/s"
@@ -99,20 +104,21 @@ async def test_dataSet3(hass):
 
 async def test_dataSet4(hass):
     """Test derivative sensor state."""
-    times, values = zip(*[(20, 5), (30, 5)])
-    await setup_tests(hass, {"unit_time": "s"}, times, values, expected_state=0)
+    await setup_tests(
+        hass, {"unit_time": "s"}, times=[20, 30], values=[5, 5], expected_state=0
+    )
 
 
 async def test_dataSet5(hass):
     """Test derivative sensor state."""
-    times, values = zip(*[(20, 10), (30, -10)])
-    await setup_tests(hass, {"unit_time": "s"}, times, values, expected_state=-2)
+    await setup_tests(
+        hass, {"unit_time": "s"}, times=[20, 30], values=[10, -10], expected_state=-2
+    )
 
 
 async def test_dataSet6(hass):
     """Test derivative sensor state."""
-    times, values = zip(*[(0, 0), (60, 1 / 60)])
-    await setup_tests(hass, {}, times, values, expected_state=1)
+    await setup_tests(hass, {}, times=[0, 60], values=[0, 1 / 60], expected_state=1)
 
 
 async def test_data_moving_average_for_discrete_sensor(hass):
@@ -142,7 +148,7 @@ async def test_data_moving_average_for_discrete_sensor(hass):
             state = hass.states.get("sensor.power")
             derivative = round(float(state.state), config["sensor"]["round"])
             # Test that the error is never more than
-            # (time_window_in_minutes / true_derivative * 100) =10%
+            # (time_window_in_minutes / true_derivative * 100) = 10%
             assert abs(1 - derivative) <= 0.1
 
 
