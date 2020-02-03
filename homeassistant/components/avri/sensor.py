@@ -23,7 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_POSTCODE): cv.string,
         vol.Required(CONF_HOUSE_NUMBER): cv.string,
-        vol.Optional(CONF_HOUSE_NUMBER_EXTENSION, default=""): cv.string,
+        vol.Optional(CONF_HOUSE_NUMBER_EXTENSION): cv.string,
         vol.Optional(CONF_COUNTRY_CODE, default="NL"): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     client = Avri(
         postal_code=config[CONF_POSTCODE],
         house_nr=config[CONF_HOUSE_NUMBER],
-        house_nr_extension=config[CONF_HOUSE_NUMBER_EXTENSION],
+        house_nr_extension=config.get(CONF_HOUSE_NUMBER_EXTENSION, ""),
         country_code=config[CONF_COUNTRY_CODE],
     )
 
@@ -44,10 +44,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except AvriException as ex:
         raise PlatformNotReady from ex
     else:
-        for upcoming in each_upcoming:
-            add_entities(
-                [AvriWasteUpcoming(config[CONF_NAME], client, upcoming.name)], True
-            )
+        entities = [
+            AvriWasteUpcoming(config[CONF_NAME], client, upcoming.name)
+            for upcoming in each_upcoming
+        ]
+        add_entities(entities, True)
 
 
 class AvriWasteUpcoming(Entity):
@@ -88,13 +89,14 @@ class AvriWasteUpcoming(Entity):
         """Update device state."""
         try:
             pickup_events = self.client.upcoming_of_each()
+        except AvriException as ex:
+            _LOGGER.error(ex)
+            self._state = None
+        else:
             if len(pickup_events) == 0:
+                self._state = None
                 return
             for event in pickup_events:
                 if event.name == self._waste_type:
                     self._state = event.day.date()
                     break
-            else:
-                self._state = None
-        except AvriException as ex:
-            _LOGGER.error("Avri platform error. %s", ex)
