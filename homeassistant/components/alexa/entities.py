@@ -503,13 +503,9 @@ class MediaPlayerCapabilities(AlexaEntity):
 
     def interfaces(self):
         """Yield the supported interfaces."""
+        yield AlexaPowerController(self.entity)
+
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-
-        if supported & (
-            media_player.const.SUPPORT_TURN_OFF | media_player.const.SUPPORT_TURN_ON
-        ):
-            yield AlexaPowerController(self.entity)
-
         if supported & media_player.const.SUPPORT_VOLUME_SET:
             yield AlexaSpeaker(self.entity)
         elif supported & media_player.const.SUPPORT_VOLUME_STEP:
