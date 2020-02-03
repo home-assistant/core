@@ -6,6 +6,7 @@ from homeassistant.components.air_quality import (
     AirQualityEntity,
 )
 from homeassistant.const import CONF_NAME
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     ATTR_API_ADVICE,
@@ -20,6 +21,7 @@ from .const import (
     ATTR_API_PM25_PERCENT,
     DATA_CLIENT,
     DOMAIN,
+    TOPIC_DATA_UPDATE,
 )
 
 ATTRIBUTION = "Data provided by Airly"
@@ -58,8 +60,8 @@ class AirlyAirQuality(AirQualityEntity):
 
     def __init__(self, airly, name, unique_id):
         """Initialize."""
+        self._async_unsub_dispatcher_connect = None
         self.airly = airly
-        self.data = airly.data
         self._name = name
         self._unique_id = unique_id
         self._pm_2_5 = None
@@ -68,6 +70,18 @@ class AirlyAirQuality(AirQualityEntity):
         self._icon = "mdi:blur"
         self._attrs = {}
 
+    async def async_added_to_hass(self):
+        """Call when entity is added to HA."""
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_DATA_UPDATE, self._update_callback
+        )
+        self._update_callback()
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
+
     @property
     def name(self):
         """Return the name."""
@@ -75,7 +89,7 @@ class AirlyAirQuality(AirQualityEntity):
 
     @property
     def should_poll(self):
-        """Return the polling requirement for this entity."""
+        """No polling needed."""
         return False
 
     @property
@@ -109,7 +123,7 @@ class AirlyAirQuality(AirQualityEntity):
     @property
     def state(self):
         """Return the CAQI description."""
-        return self.data[ATTR_API_CAQI_DESCRIPTION]
+        return self.airly.data[ATTR_API_CAQI_DESCRIPTION]
 
     @property
     def unique_id(self):
@@ -119,25 +133,27 @@ class AirlyAirQuality(AirQualityEntity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self.data)
+        return bool(self.airly.data)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        self._attrs[LABEL_ADVICE] = self.data[ATTR_API_ADVICE]
-        self._attrs[LABEL_AQI_LEVEL] = self.data[ATTR_API_CAQI_LEVEL]
-        self._attrs[LABEL_PM_2_5_LIMIT] = self.data[ATTR_API_PM25_LIMIT]
-        self._attrs[LABEL_PM_2_5_PERCENT] = round(self.data[ATTR_API_PM25_PERCENT])
-        self._attrs[LABEL_PM_10_LIMIT] = self.data[ATTR_API_PM10_LIMIT]
-        self._attrs[LABEL_PM_10_PERCENT] = round(self.data[ATTR_API_PM10_PERCENT])
         return self._attrs
 
-    async def async_update(self):
-        """Update the entity."""
-        await self.airly.async_update()
-
+    def _update_callback(self):
+        """Call update method."""
         if self.airly.data:
-            self.data = self.airly.data
-            self._pm_10 = self.data[ATTR_API_PM10]
-            self._pm_2_5 = self.data[ATTR_API_PM25]
-            self._aqi = self.data[ATTR_API_CAQI]
+            self._pm_10 = self.airly.data[ATTR_API_PM10]
+            self._pm_2_5 = self.airly.data[ATTR_API_PM25]
+            self._aqi = self.airly.data[ATTR_API_CAQI]
+            self._attrs[LABEL_ADVICE] = self.airly.data[ATTR_API_ADVICE]
+            self._attrs[LABEL_AQI_LEVEL] = self.airly.data[ATTR_API_CAQI_LEVEL]
+            self._attrs[LABEL_PM_2_5_LIMIT] = self.airly.data[ATTR_API_PM25_LIMIT]
+            self._attrs[LABEL_PM_2_5_PERCENT] = round(
+                self.airly.data[ATTR_API_PM25_PERCENT]
+            )
+            self._attrs[LABEL_PM_10_LIMIT] = self.airly.data[ATTR_API_PM10_LIMIT]
+            self._attrs[LABEL_PM_10_PERCENT] = round(
+                self.airly.data[ATTR_API_PM10_PERCENT]
+            )
+        self.async_schedule_update_ha_state()

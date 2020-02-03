@@ -1,7 +1,7 @@
 """The Airly component."""
 import asyncio
-from datetime import timedelta
 import logging
+from math import ceil
 
 from aiohttp.client_exceptions import ClientConnectorError
 from airly import Airly
@@ -11,7 +11,8 @@ import async_timeout
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import Throttle
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 
 from .const import (
     ATTR_API_ADVICE,
@@ -20,12 +21,12 @@ from .const import (
     ATTR_API_CAQI_LEVEL,
     DATA_CLIENT,
     DOMAIN,
+    MAX_REQUESTS_PER_DAY,
     NO_AIRLY_SENSORS,
+    TOPIC_DATA_UPDATE,
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
 
 async def async_setup(hass: HomeAssistant, config: Config) -> bool:
@@ -49,7 +50,7 @@ async def async_setup_entry(hass, config_entry):
 
     websession = async_get_clientsession(hass)
 
-    airly = AirlyData(websession, api_key, latitude, longitude)
+    airly = AirlyData(hass, websession, api_key, latitude, longitude)
 
     await airly.async_update()
 
@@ -75,17 +76,16 @@ async def async_unload_entry(hass, config_entry):
 class AirlyData:
     """Define an object to hold Airly data."""
 
-    def __init__(self, session, api_key, latitude, longitude):
+    def __init__(self, hass, session, api_key, latitude, longitude):
         """Initialize."""
         self.latitude = latitude
         self.longitude = longitude
         self.airly = Airly(api_key, session)
         self.data = {}
+        self._hass = hass
 
-    @Throttle(DEFAULT_SCAN_INTERVAL)
-    async def async_update(self):
+    async def async_update(self, *args):
         """Update Airly data."""
-
         try:
             with async_timeout.timeout(20):
                 measurements = self.airly.create_measurements_session_point(
@@ -115,3 +115,11 @@ class AirlyData:
         except (ValueError, AirlyError, ClientConnectorError) as error:
             _LOGGER.error(error)
             self.data = {}
+
+        # Airly allows 100 requests per day. We check how many Airly config entries are
+        # and calculate interval to not exceed allowed numbers of requests.
+        instances = len(self._hass.config_entries.async_entries(DOMAIN))
+        interval = ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances
+        _LOGGER.debug("Next update in %i minutes", interval)
+        async_call_later(self._hass, interval * 60, self.async_update)
+        async_dispatcher_send(self._hass, TOPIC_DATA_UPDATE)

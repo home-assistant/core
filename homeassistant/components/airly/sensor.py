@@ -9,6 +9,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -18,6 +19,7 @@ from .const import (
     ATTR_API_TEMPERATURE,
     DATA_CLIENT,
     DOMAIN,
+    TOPIC_DATA_UPDATE,
 )
 
 ATTRIBUTION = "Data provided by Airly"
@@ -88,8 +90,8 @@ class AirlySensor(Entity):
 
     def __init__(self, airly, name, kind, unique_id):
         """Initialize."""
+        self._async_unsub_dispatcher_connect = None
         self.airly = airly
-        self.data = airly.data
         self._name = name
         self._unique_id = unique_id
         self.kind = kind
@@ -99,6 +101,18 @@ class AirlySensor(Entity):
         self._unit_of_measurement = None
         self._attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
 
+    async def async_added_to_hass(self):
+        """Call when entity is added to HA."""
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_DATA_UPDATE, self._update_callback
+        )
+        self._update_callback()
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
+
     @property
     def name(self):
         """Return the name."""
@@ -106,17 +120,12 @@ class AirlySensor(Entity):
 
     @property
     def should_poll(self):
-        """Return the polling requirement for this sensor."""
+        """No polling needed."""
         return False
 
     @property
     def state(self):
         """Return the state."""
-        self._state = self.data[self.kind]
-        if self.kind in [ATTR_API_PM1, ATTR_API_PRESSURE]:
-            self._state = round(self._state)
-        if self.kind in [ATTR_API_TEMPERATURE, ATTR_API_HUMIDITY]:
-            self._state = round(self._state, 1)
         return self._state
 
     @property
@@ -148,11 +157,14 @@ class AirlySensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self.data)
+        return bool(self.airly.data)
 
-    async def async_update(self):
-        """Update the sensor."""
-        await self.airly.async_update()
-
+    def _update_callback(self):
+        """Call update method."""
         if self.airly.data:
-            self.data = self.airly.data
+            self._state = self.airly.data[self.kind]
+            if self.kind in [ATTR_API_PM1, ATTR_API_PRESSURE]:
+                self._state = round(self._state)
+            if self.kind in [ATTR_API_TEMPERATURE, ATTR_API_HUMIDITY]:
+                self._state = round(self._state, 1)
+        self.async_schedule_update_ha_state()
