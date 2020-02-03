@@ -32,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up entry."""
     players = []
     api = hass.data[ZIGGO_API]
-    for box_id, box in api.settop_boxes.items():
+    for box in api.settop_boxes.values():
         players.append(ZiggoNextMediaPlayer(box, api))
     async_add_devices(players, update_before_add=True)
 
