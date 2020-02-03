@@ -23,7 +23,9 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
+    CONF_IP_ADDRESS,
     CONF_METHOD,
+    CONF_NAME,
     CONF_PORT,
     STATE_OFF,
     STATE_ON,
@@ -59,8 +61,16 @@ async def async_setup_platform(
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Samsung TV from a config entry."""
-    turn_on_action = config_entry.data.get(CONF_ON_ACTION)
-    on_script = Script(hass, turn_on_action) if turn_on_action else None
+    ip_address = config_entry.data[CONF_IP_ADDRESS]
+    on_script = None
+    if (
+        DOMAIN in hass.data
+        and ip_address in hass.data[DOMAIN]
+        and CONF_ON_ACTION in hass.data[DOMAIN][ip_address]
+        and hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
+    ):
+        turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
+        on_script = Script(hass, turn_on_action)
     async_add_entities([SamsungTVDevice(config_entry, on_script)])
 
 
@@ -70,12 +80,11 @@ class SamsungTVDevice(MediaPlayerDevice):
     def __init__(self, config_entry, on_script):
         """Initialize the Samsung device."""
         self._config_entry = config_entry
-        self._name = config_entry.title
-        self._uuid = config_entry.data.get(CONF_ID)
         self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
         self._model = config_entry.data.get(CONF_MODEL)
+        self._name = config_entry.data.get(CONF_NAME)
         self._on_script = on_script
-        self._update_listener = None
+        self._uuid = config_entry.data.get(CONF_ID)
         # Assume that the TV is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -88,7 +97,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         # Generate a configuration for the Samsung library
         self._config = {
             "name": "HomeAssistant",
-            "description": self._name,
+            "description": "HomeAssistant",
             "id": "ha.component.samsung",
             "method": config_entry.data[CONF_METHOD],
             "port": config_entry.data.get(CONF_PORT),
@@ -124,7 +133,19 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
-            self._remote = SamsungRemote(self._config.copy())
+            try:
+                self._remote = SamsungRemote(self._config.copy())
+            # This is only happening when the auth was switched to DENY
+            # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
+            except samsung_exceptions.AccessDenied:
+                self.hass.async_create_task(
+                    self.hass.config_entries.flow.async_init(
+                        DOMAIN,
+                        context={"source": "reauth"},
+                        data=self._config_entry.data,
+                    )
+                )
+                raise
 
         return self._remote
 
