@@ -10,7 +10,6 @@ from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.const import ATTR_AREA_ID, ATTR_ENTITY_ID, ENTITY_MATCH_ALL
 import homeassistant.core as ha
 from homeassistant.exceptions import (
-    EntitiesNotFound,
     HomeAssistantError,
     TemplateError,
     Unauthorized,
@@ -136,7 +135,9 @@ async def async_extract_entities(hass, entities, service_call, expand_group=True
         found.append(entity)
 
     if entity_ids:
-        raise EntitiesNotFound(entity_ids)
+        _LOGGER.warning(
+            "Unable to find referenced entities %s", ", ".join(sorted(entity_ids))
+        )
 
     return found
 
@@ -361,7 +362,9 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
                 entity_ids.remove(entity.entity_id)
 
         if entity_ids:
-            raise EntitiesNotFound(entity_ids)
+            _LOGGER.warning(
+                "Unable to find referenced entities %s", ", ".join(sorted(entity_ids))
+            )
 
     tasks = [
         _handle_service_platform_call(

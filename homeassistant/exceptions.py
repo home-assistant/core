@@ -1,5 +1,5 @@
 """The exceptions used by Home Assistant."""
-from typing import TYPE_CHECKING, Iterable, Optional, Tuple
+from typing import TYPE_CHECKING, Optional, Tuple
 
 import jinja2
 
@@ -79,19 +79,3 @@ class ServiceNotFound(HomeAssistantError):
     def __str__(self) -> str:
         """Return string representation."""
         return f"Unable to find service {self.domain}/{self.service}"
-
-
-class EntitiesNotFound(HomeAssistantError):
-    """Raised when specified entities are not found."""
-
-    def __init__(self, entity_ids: Iterable[str]) -> None:
-        """Initialize error."""
-        self.entity_ids = sorted(entity_ids)
-        super().__init__(
-            self, f"Referenced entities {', '.join(self.entity_ids)} not found"
-        )
-
-    def __str__(self) -> str:
-        """Return string representation."""
-        word = "entity" if len(self.entity_ids) == 1 else "entities"
-        return f"Unable to find {word} {', '.join(self.entity_ids)}"
