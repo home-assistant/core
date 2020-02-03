@@ -9,6 +9,7 @@
         },
         "step": {
             "confirm": {
+                "description": "Vols configurar la Samsung TV {model}? Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent a la TV demanant autenticaci\u00f3. Les configuracuons manuals d'aquesta TV es sobreescriuran.",
                 "title": "Samsung TV"
             },
             "user": {
@@ -16,6 +17,7 @@
                     "host": "Amfitri\u00f3 o adre\u00e7a IP",
                     "name": "Nom"
                 },
+                "description": "Introdeix les dades de la Samsung TV. Si mai abans l'has connectat a Home Assistant haur\u00edes de veure una finestra emergent demanant autenticaci\u00f3.",
                 "title": "Samsung TV"
             }
         },
