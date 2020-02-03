@@ -35,11 +35,13 @@ class ZHAGroup(LogMixin):
         """Return the endpoint for this group."""
         return self._zigpy_group.endpoint
 
+    @property
     def entity_domain(self):
         """Return the domain that will be used for the entity representing this group."""
         return self._entity_domain
 
-    def set_entity_domain(self, domain):
+    @entity_domain.setter
+    def entity_domain(self, domain):
         """Set the domain that will be used for the entity representing this group."""
         self._entity_domain = domain
 
