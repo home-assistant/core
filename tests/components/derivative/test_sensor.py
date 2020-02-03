@@ -38,23 +38,28 @@ async def test_state(hass):
     assert state.attributes.get("unit_of_measurement") == "kW"
 
 
-async def setup_tests(hass, config, times, values, expected_state):
-    """Test derivative sensor state."""
+async def _setup_sensor(hass, config):
     default_config = {
-        "sensor": {
-            "platform": "derivative",
-            "name": "power",
-            "source": "sensor.energy",
-            "unit_time": "s",
-            "round": 2,
-        }
+        "platform": "derivative",
+        "name": "power",
+        "source": "sensor.energy",
+        "unit_time": "s",
+        "round": 2,
     }
-    config = dict(default_config, **config)
+
+    config = {"sensor": dict(default_config, **config)}
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
     hass.states.async_set(entity_id, 0, {})
     await hass.async_block_till_done()
+
+    return config, entity_id
+
+
+async def setup_tests(hass, config, times, values, expected_state):
+    """Test derivative sensor state."""
+    config, entity_id = await _setup_sensor(hass, config)
 
     # Testing a energy sensor with non-monotonic intervals and values
     for time, value in zip(times, values):
@@ -107,6 +112,35 @@ async def test_dataSet6(hass):
     """Test derivative sensor state."""
     times, values = zip(*[(20, 0), (30, 36000)])
     await setup_tests(hass, {}, times, values, expected_state=1)
+
+
+async def test_data_moving_average_for_discrete_sensor(hass):
+    """Test derivative sensor state."""
+    # We simulate the following situation:
+    # The temperature rises 1 degree per minute, for 1 hour long.
+    # There is a data point every second. However, the sensor returns
+    # the temperature rounded down to an integer value.
+
+    temperature_values = []
+    for minute in range(60):
+        temperature_values += [minute] * 60
+    time_window = 600
+    times = list(range(len(temperature_values)))
+    config, entity_id = await _setup_sensor(
+        hass, {"time_window": {"seconds": time_window}, "unit_time": "min", "round": 1}
+    )  # two minute window
+
+    for time, value in zip(times, temperature_values):
+        now = dt_util.utcnow() + timedelta(seconds=time)
+        with patch("homeassistant.util.dt.utcnow", return_value=now):
+            hass.states.async_set(entity_id, value, {}, force_update=True)
+            await hass.async_block_till_done()
+
+        if time_window < time < len(times) - time_window:
+            state = hass.states.get("sensor.power")
+            derivative = round(float(state.state), config["sensor"]["round"])
+            # Test that the error is never more than 10%
+            assert abs(1 - derivative) <= 0.1
 
 
 async def test_prefix(hass):
