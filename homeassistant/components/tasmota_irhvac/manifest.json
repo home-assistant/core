@@ -1,7 +1,7 @@
 {
     "domain": "tasmota_irhvac",
     "name": "Tasmota Irhvac",
-    "documentation": "https://github.com/hristo-atanasov/Tasmota-IRHVAC",
+    "documentation": "https://www.home-assistant.io/integrations/tasmota_irhvac",
     "requirements": [],
     "dependencies": [
       "mqtt",
