@@ -2,7 +2,7 @@
 import logging
 from typing import Any, Dict, Optional
 
-from surepy import SureProductID  # , SureLockStateID
+from surepy import SureLockStateID, SureProductID
 
 from homeassistant.const import ATTR_VOLTAGE, CONF_ID, CONF_TYPE, DEVICE_CLASS_BATTERY
 from homeassistant.core import callback
@@ -40,20 +40,22 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ]:
             entities.append(SureBattery(entity[CONF_ID], sure_type, spc))
 
-        # if sure_type in [
-        #     SureProductID.CAT_FLAP,
-        #     SureProductID.PET_FLAP,
-        # ]:
-        #     entities.append(Flap(entity[CONF_ID], sure_type, spc))
+        if sure_type in [
+            SureProductID.CAT_FLAP,
+            SureProductID.PET_FLAP,
+        ]:
+            entities.append(Flap(entity[CONF_ID], sure_type, spc))
 
     async_add_entities(entities, True)
 
 
-class SureBattery(Entity):
-    """Sure Petcare Flap."""
+class SurePetcareSensor(Entity):
+    """A binary sensor implementation for Sure Petcare Entities."""
 
-    def __init__(self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI):
-        """Initialize a Sure Petcare Flap battery sensor."""
+    def __init__(
+        self: Entity, _id: int, sure_type: SureProductID, spc: SurePetcareAPI,
+    ):
+
         self._id = _id
         self._sure_type = sure_type
 
@@ -63,15 +65,10 @@ class SureBattery(Entity):
 
         self._name = (
             f"{self._sure_type.name.capitalize()} "
-            f"{self._spc_data['name'].capitalize()} Battery Level"
+            f"{self._spc_data['name'].capitalize()}"
         )
 
         self._async_unsub_dispatcher_connect = None
-
-    @property
-    def should_poll(self) -> bool:
-        """Return true."""
-        return False
 
     @property
     def name(self) -> str:
@@ -79,8 +76,100 @@ class SureBattery(Entity):
         return self._name
 
     @property
+    def unique_id(self) -> str:
+        """Return an unique ID."""
+        return f"{self._spc_data['household_id']}-{self._id}"
+
+    @property
     def available(self) -> bool:
         return bool(self._state["online"])
+
+    @property
+    def is_on(self) -> Optional[bool]:
+        """Return true if entity is on/unlocked."""
+        try:
+            return SureLockStateID(self._state["online"])
+        except (KeyError, TypeError):
+            return None
+
+    @property
+    def should_poll(self) -> bool:
+        """Return true."""
+        return False
+
+    async def async_update(self) -> None:
+        """Get the latest data and update the state."""
+        self._spc_data = self._spc.states[self._sure_type].get(self._id)
+        self._state = self._spc_data.get("status")
+        _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks."""
+
+        @callback
+        def update() -> None:
+            """Update the state."""
+            self.async_schedule_update_ha_state(True)
+
+        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
+            self.hass, TOPIC_UPDATE, update
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect dispatcher listener when removed."""
+        if self._async_unsub_dispatcher_connect:
+            self._async_unsub_dispatcher_connect()
+
+
+class Flap(SurePetcareSensor):
+    """Sure Petcare Flap."""
+
+    def __init__(
+        self: Entity, _id: int, sure_type: SureProductID, spc: SurePetcareAPI
+    ) -> None:
+        """Initialize a Sure Petcare Flap."""
+        super().__init__(_id, sure_type, spc)
+
+    @property
+    def state(self) -> Optional[int]:
+        """Return battery level in percent."""
+        return SureLockStateID(self._state["locking"]["mode"]).name.capitalize()
+
+    # @property
+    # def is_on(self) -> Optional[bool]:
+    #     """Return true if entity is on/unlocked."""
+    #     try:
+    #         return SureLockStateID(self._state["online"])
+    #     except (KeyError, TypeError):
+    #         return None
+
+    # @property
+    # def available(self) -> bool:
+    #     return bool(self._state["online"])
+
+    @property
+    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+        """Return the state attributes of the device."""
+        attributes = None
+        if self._state:
+            attributes = {
+                "learn_mode": bool(self._state["learn_mode"]),
+            }
+
+        return attributes
+
+
+class SureBattery(SurePetcareSensor):
+    """Sure Petcare Flap."""
+
+    def __init__(self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI):
+        """Initialize a Sure Petcare Flap battery sensor."""
+        super().__init__(_id, sure_type, spc)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        return f"{self._name} Battery Level"
 
     @property
     def state(self) -> Optional[int]:
@@ -122,117 +211,3 @@ class SureBattery(Entity):
     def unit_of_measurement(self) -> str:
         """Return the unit of measurement."""
         return "%"
-
-    async def async_update(self) -> None:
-        """Get the latest data and update the state."""
-        self._spc_data = self._spc.states[self._sure_type].get(self._id)
-        self._state = self._spc_data.get("status")
-        _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
-
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-
-        @callback
-        def update() -> None:
-            """Update the state."""
-            self.async_schedule_update_ha_state(True)
-
-        self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect dispatcher listener when removed."""
-        if self._async_unsub_dispatcher_connect:
-            self._async_unsub_dispatcher_connect()
-
-
-# class Flap(Entity):
-#     """Sure Petcare Flap."""
-
-#     def __init__(
-#         self: Entity, _id: int, sure_type: SureProductID, spc: SurePetcareAPI
-#     ) -> None:
-#         """Initialize a Sure Petcare Flap."""
-#         self._id = _id
-#         self._sure_type = sure_type
-
-#         self._spc = spc
-#         self._spc_data: Dict[str, Any] = self._spc.states[self._sure_type].get(
-#             self._id)
-#         self._state: Dict[str, Any] = {}
-
-#         self._name = (
-#             f"{self._sure_type.name.capitalize()} "
-#             f"{self._spc_data['name'].capitalize()}"
-#         )
-
-#         self._async_unsub_dispatcher_connect = None
-
-#     @property
-#     def state(self) -> Optional[int]:
-#         """Return battery level in percent."""
-#         return SureLockStateID(self._state["locking"]["mode"]).name.capitalize()
-
-#     @property
-#     def is_on(self) -> Optional[bool]:
-#         """Return true if entity is on/unlocked."""
-#         try:
-#             return SureLockStateID(self._state["online"])
-#         except (KeyError, TypeError):
-#             return None
-
-#     @property
-#     def available(self) -> bool:
-#         return bool(self._state["online"])
-
-#     @property
-#     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-#         """Return the state attributes of the device."""
-#         attributes = None
-#         if self._state:
-#             try:
-#                 attributes = {
-#                     "online": bool(self._state["online"]),
-#                     "learn_mode": bool(self._state["learn_mode"]),
-#                     "battery_voltage": f'{self._state["battery"] / 4:.2f}',
-#                     # "locking_mode": SureLockStateID(
-#                     #     self._state["locking"]["mode"]
-#                     # ).name.capitalize(),
-#                     "device_rssi": f'{self._state["signal"]["device_rssi"]:.2f}',
-#                     "hub_rssi": f'{self._state["signal"]["hub_rssi"]:.2f}',
-#                 }
-
-#             except (KeyError, TypeError) as error:
-#                 _LOGGER.error(
-#                     "Error getting device state attributes from %s: %s\n\n%s",
-#                     self._name,
-#                     error,
-#                     self._state,
-#                 )
-#                 attributes = self._state
-
-#         return attributes
-
-#     async def async_update(self) -> None:
-#         """Get the latest data and update the state."""
-#         self._spc_data = self._spc.states[self._sure_type].get(self._id)
-#         self._state = self._spc_data.get("status")
-#         _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
-
-#     async def async_added_to_hass(self) -> None:
-#         """Register callbacks."""
-
-#         @callback
-#         def update() -> None:
-#             """Update the state."""
-#             self.async_schedule_update_ha_state(True)
-
-#         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-#             self.hass, TOPIC_UPDATE, update
-#         )
-
-#     async def async_will_remove_from_hass(self) -> None:
-#         """Disconnect dispatcher listener when removed."""
-#         if self._async_unsub_dispatcher_connect:
-#             self._async_unsub_dispatcher_connect()

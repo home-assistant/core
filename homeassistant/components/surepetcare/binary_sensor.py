@@ -3,15 +3,14 @@ from datetime import datetime
 import logging
 from typing import Any, Dict, Optional
 
-from surepy import SureLocationID, SureLockStateID, SureProductID
+from surepy import SureLocationID, SureProductID
 
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_CONNECTIVITY,
-    DEVICE_CLASS_LOCK,
     DEVICE_CLASS_PRESENCE,
     BinarySensorDevice,
 )
-from homeassistant.const import ATTR_VOLTAGE, CONF_ID, CONF_TYPE
+from homeassistant.const import CONF_ID, CONF_TYPE
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -45,9 +44,10 @@ async def async_setup_platform(
             entities.append(DeviceConnectivity(sure_id, sure_type, spc))
 
         # devices
-        if sure_type in [SureProductID.CAT_FLAP, SureProductID.PET_FLAP]:
-            entity = Flap(sure_id, spc)
-        elif sure_type == SureProductID.PET:
+        # if sure_type in [SureProductID.CAT_FLAP, SureProductID.PET_FLAP]:
+        #     entity = Flap(sure_id, spc)
+        # el
+        if sure_type == SureProductID.PET:
             entity = Pet(sure_id, spc)
         elif sure_type == SureProductID.HUB:
             entity = Hub(sure_id, spc)
@@ -119,7 +119,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
         """Get the latest data and update the state."""
         self._spc_data = self._spc.states[self._sure_type].get(self._id)
         self._state = self._spc_data.get("status")
-        _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
+        # _LOGGER.debug("%s -> self._state: %s", self._name, self._state)
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -139,40 +139,40 @@ class SurePetcareBinarySensor(BinarySensorDevice):
             self._async_unsub_dispatcher_connect()
 
 
-class Flap(SurePetcareBinarySensor):
-    """Sure Petcare Flap."""
+# class Flap(SurePetcareBinarySensor):
+#     """Sure Petcare Flap."""
 
-    def __init__(self: BinarySensorDevice, _id: int, spc: SurePetcareAPI) -> None:
-        """Initialize a Sure Petcare Flap."""
-        super().__init__(_id, spc, DEVICE_CLASS_LOCK, SureProductID.PET_FLAP)
+#     def __init__(self: BinarySensorDevice, _id: int, spc: SurePetcareAPI) -> None:
+#         """Initialize a Sure Petcare Flap."""
+#         super().__init__(_id, spc, DEVICE_CLASS_LOCK, SureProductID.PET_FLAP)
 
-    @property
-    def is_on(self) -> Optional[bool]:
-        """Return true if entity is on/unlocked."""
-        try:
-            return bool(self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
-        except (KeyError, TypeError):
-            return None
+#     @property
+#     def is_on(self) -> Optional[bool]:
+#         """Return true if entity is on/unlocked."""
+#         try:
+#             return bool(self._state["locking"]["mode"] == SureLockStateID.UNLOCKED)
+#         except (KeyError, TypeError):
+#             return None
 
-    @property
-    def available(self) -> bool:
-        return bool(self._state["online"])
+#     @property
+#     def available(self) -> bool:
+#         return bool(self._state["online"])
 
-    @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
-        """Return the state attributes of the device."""
-        attributes = None
-        if self._state:
-            attributes = {
-                "online": bool(self._state["online"]),
-                "learn_mode": bool(self._state["learn_mode"]),
-                ATTR_VOLTAGE: f'{self._state["battery"] / 4:.2f}',
-                "locking_mode": SureLockStateID(
-                    self._state["locking"]["mode"]
-                ).name.capitalize(),
-            }
+#     @property
+#     def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+#         """Return the state attributes of the device."""
+#         attributes = None
+#         if self._state:
+#             attributes = {
+#                 "online": bool(self._state["online"]),
+#                 "learn_mode": bool(self._state["learn_mode"]),
+#                 ATTR_VOLTAGE: f'{self._state["battery"] / 4:.2f}',
+#                 "locking_mode": SureLockStateID(
+#                     self._state["locking"]["mode"]
+#                 ).name.capitalize(),
+#             }
 
-        return attributes
+#         return attributes
 
 
 class Hub(SurePetcareBinarySensor):
