@@ -76,6 +76,7 @@ homeassistant/components/deconz/* @kane610
 homeassistant/components/delijn/* @bollewolle
 homeassistant/components/demo/* @home-assistant/core
 homeassistant/components/device_automation/* @home-assistant/core
+homeassistant/components/devolo_home_control/* @2Fake
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/discogs/* @thibmaek
 homeassistant/components/doorbird/* @oblogic7
