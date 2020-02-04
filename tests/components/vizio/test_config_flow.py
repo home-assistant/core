@@ -317,11 +317,41 @@ async def test_import_flow_update_options(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "updated_options"
+    assert result["reason"] == "updated_entry"
     assert (
         hass.config_entries.async_get_entry(entry_id).options[CONF_VOLUME_STEP]
         == VOLUME_STEP + 1
     )
+
+
+async def test_import_flow_update_name(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_update: pytest.fixture,
+) -> None:
+    """Test import config flow with updated name."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=vol.Schema(VIZIO_SCHEMA)(MOCK_IMPORT_VALID_TV_CONFIG),
+    )
+    await hass.async_block_till_done()
+
+    assert result["result"].data[CONF_NAME] == NAME
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    entry_id = result["result"].entry_id
+
+    updated_config = MOCK_IMPORT_VALID_TV_CONFIG.copy()
+    updated_config[CONF_NAME] = NAME2
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=vol.Schema(VIZIO_SCHEMA)(updated_config),
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "updated_entry"
+    assert hass.config_entries.async_get_entry(entry_id).data[CONF_NAME] == NAME2
 
 
 async def test_zeroconf_flow(

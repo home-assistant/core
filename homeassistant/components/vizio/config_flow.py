@@ -58,11 +58,6 @@ def _host_is_same(host1: str, host2: str) -> bool:
     return host1.split(":")[0] == host2.split(":")[0]
 
 
-def _name_is_same(name1: str, name2: str) -> bool:
-    """Check if name1 and name2 are the same."""
-    return name1 == name2
-
-
 class VizioOptionsConfigFlow(config_entries.OptionsFlow):
     """Handle Transmission client options."""
 
@@ -122,7 +117,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors[CONF_HOST] = "host_exists"
                     break
 
-                if _name_is_same(entry.data[CONF_NAME], user_input[CONF_NAME]):
+                if entry.data[CONF_NAME] == user_input[CONF_NAME]:
                     errors[CONF_NAME] = "name_exists"
                     break
 
@@ -175,26 +170,31 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         # Check if new config entry matches any existing config entries
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if _host_is_same(
-                entry.data[CONF_HOST], import_config[CONF_HOST]
-            ) and _name_is_same(
-                entry.data[CONF_NAME], import_config.get(CONF_NAME, DEFAULT_NAME)
-            ):
+            if _host_is_same(entry.data[CONF_HOST], import_config[CONF_HOST]):
                 updated_options = {}
+                updated_name = {}
+
+                if entry.data[CONF_NAME] != import_config[CONF_NAME]:
+                    updated_name[CONF_NAME] = import_config[CONF_NAME]
 
                 if entry.data[CONF_VOLUME_STEP] != import_config[CONF_VOLUME_STEP]:
                     updated_options[CONF_VOLUME_STEP] = import_config[CONF_VOLUME_STEP]
 
-                if updated_options:
+                if updated_options or updated_name:
                     new_data = entry.data.copy()
-                    new_data.update(updated_options)
                     new_options = entry.options.copy()
-                    new_options.update(updated_options)
+
+                    if updated_name:
+                        new_data.update(updated_name)
+
+                    if updated_options:
+                        new_data.update(updated_options)
+                        new_options.update(updated_options)
 
                     self.hass.config_entries.async_update_entry(
                         entry=entry, data=new_data, options=new_options,
                     )
-                    return self.async_abort(reason="updated_options")
+                    return self.async_abort(reason="updated_entry")
 
                 return self.async_abort(reason="already_setup")
 
