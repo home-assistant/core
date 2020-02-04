@@ -1,9 +1,4 @@
-"""
-Support for monitoring the state of a Luxtronik heatpump.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/luxtronik/
-"""
+"""Support for Luxtronik heatpump binary states."""
 import logging
 
 import voluptuous as vol
@@ -62,7 +57,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for sensor_cfg in sensors:
         sensor = luxtronik.get_sensor(sensor_cfg[CONF_GROUP], sensor_cfg[CONF_ID])
         if sensor:
-            entities.append(LuxtronikBinarySensor(luxtronik, sensor, sensor_cfg))
+            entities.append(
+                LuxtronikBinarySensor(
+                    luxtronik,
+                    sensor,
+                    sensor_cfg[CONF_FRIENDLY_NAME],
+                    sensor_cfg[CONF_ICON],
+                    sensor_cfg[CONF_INVERT_STATE],
+                )
+            )
         else:
             _LOGGER.warning(
                 "Invalid Luxtronik ID %s in group %s",
@@ -76,13 +79,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class LuxtronikBinarySensor(BinarySensorDevice):
     """Representation of a Luxtronik binary sensor."""
 
-    def __init__(self, luxtronik, sensor, sensor_cfg):
+    def __init__(self, luxtronik, sensor, friendly_name, icon, invert_state):
         """Initialize a new Luxtronik binary sensor."""
         self._luxtronik = luxtronik
         self._sensor = sensor
-        self._name = sensor_cfg[CONF_FRIENDLY_NAME]
-        self._icon = sensor_cfg[CONF_ICON]
-        self._invert = sensor_cfg[CONF_INVERT_STATE]
+        self._name = friendly_name
+        self._icon = icon
+        self._invert = invert_state
 
     @property
     def entity_id(self):
