@@ -413,7 +413,10 @@ omit =
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
-    homeassistant/components/meteo_france/*
+    homeassistant/components/meteo_france/__init__.py
+    homeassistant/components/meteo_france/const.py
+    homeassistant/components/meteo_france/sensor.py
+    homeassistant/components/meteo_france/weather.py
     homeassistant/components/meteoalarm/*
     homeassistant/components/metoffice/sensor.py
     homeassistant/components/metoffice/weather.py
