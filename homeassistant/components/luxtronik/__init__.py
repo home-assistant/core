@@ -60,11 +60,11 @@ def setup(hass, config):
     """Set up the Luxtronik component."""
     conf = config[DOMAIN]
 
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    safe = conf.get(CONF_SAFE)
+    host = conf["CONF_HOST"]
+    port = conf["CONF_PORT"]
+    safe = conf["CONF_SAFE"]
 
-    luxtronik = Luxtronik(host, port, safe)
+    luxtronik = LuxtronikDevice(host, port, safe)
 
     hass.data[DATA_LUXTRONIK] = luxtronik
 
@@ -81,7 +81,7 @@ def setup(hass, config):
     return True
 
 
-class Luxtronik:
+class LuxtronikDevice:
     """Handle all communication with Luxtronik."""
 
     def __init__(self, host, port, safe=True):
