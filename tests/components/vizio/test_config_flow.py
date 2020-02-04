@@ -130,6 +130,29 @@ async def test_user_host_already_configured(
     assert result["errors"] == {CONF_HOST: "host_exists"}
 
 
+async def test_user_host_already_configured_no_port(
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_bypass_setup: pytest.fixture,
+) -> None:
+    """Test host is already configured during user setup when existing entry has no port."""
+    no_port_entry = MOCK_SPEAKER_CONFIG.copy()
+    no_port_entry[CONF_HOST] = no_port_entry[CONF_HOST].split(":")[0]
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=no_port_entry, options={CONF_VOLUME_STEP: VOLUME_STEP}
+    )
+    entry.add_to_hass(hass)
+    fail_entry = MOCK_SPEAKER_CONFIG.copy()
+    fail_entry[CONF_NAME] = "newtestname"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=fail_entry
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {CONF_HOST: "host_exists"}
+
+
 async def test_user_name_already_configured(
     hass: HomeAssistantType,
     vizio_connect: pytest.fixture,

@@ -53,6 +53,16 @@ def _get_config_flow_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
     )
 
 
+def _host_is_same(host1: str, host2: str) -> bool:
+    """Check if host1 and host2 are the same."""
+    return host1.split(":")[0] == host2.split(":")[0]
+
+
+def _name_is_same(name1: str, name2: str) -> bool:
+    """Check if name1 and name2 are the same."""
+    return name1 == name2
+
+
 class VizioOptionsConfigFlow(config_entries.OptionsFlow):
     """Handle Transmission client options."""
 
@@ -108,11 +118,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
-                if entry.data[CONF_HOST] == user_input[CONF_HOST]:
+                if _host_is_same(entry.data[CONF_HOST], user_input[CONF_HOST]):
                     errors[CONF_HOST] = "host_exists"
                     break
 
-                if entry.data[CONF_NAME] == user_input[CONF_NAME]:
+                if _name_is_same(entry.data[CONF_NAME], user_input[CONF_NAME]):
                     errors[CONF_NAME] = "name_exists"
                     break
 
@@ -165,9 +175,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         # Check if new config entry matches any existing config entries
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == import_config[CONF_HOST] and entry.data[
-                CONF_NAME
-            ] == import_config.get(CONF_NAME):
+            if _host_is_same(
+                entry.data[CONF_HOST], import_config[CONF_HOST]
+            ) and _name_is_same(
+                entry.data[CONF_NAME], import_config.get(CONF_NAME, DEFAULT_NAME)
+            ):
                 updated_options = {}
 
                 if entry.data[CONF_VOLUME_STEP] != import_config[CONF_VOLUME_STEP]:
@@ -199,7 +211,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Check if new config entry matches any existing config entries and abort if so
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == discovery_info[CONF_HOST]:
+            if _host_is_same(entry.data[CONF_HOST], discovery_info[CONF_HOST]):
                 return self.async_abort(reason="already_setup")
 
         # Set default name to discovered device name by stripping zeroconf service
