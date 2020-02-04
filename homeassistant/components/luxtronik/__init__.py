@@ -65,7 +65,6 @@ def setup(hass, config):
     safe = conf.get(CONF_SAFE)
 
     luxtronik = Luxtronik(host, port, safe)
-    luxtronik.update()
 
     hass.data[DATA_LUXTRONIK] = luxtronik
 
