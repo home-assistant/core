@@ -154,13 +154,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NUT sensors."""
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    port = config[CONF_PORT]
+
     alias = config.get(CONF_ALIAS)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    scan_interval = config.get(CONF_SCAN_INTERVAL)
+
+    scan_interval = config[CONF_SCAN_INTERVAL]
 
     data = PyNUTData(host, port, alias, username, password, scan_interval)
 
