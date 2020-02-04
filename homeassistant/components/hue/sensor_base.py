@@ -209,7 +209,7 @@ class GenericHueSensor(entity.Entity):
 
         Only used by the generic entity update service.
         """
-        await self.bridge.sensor_manager.coordinator.coordinator.async_request_refresh()
+        await self.bridge.sensor_manager.coordinator.async_request_refresh()
 
     @property
     def device_info(self):
