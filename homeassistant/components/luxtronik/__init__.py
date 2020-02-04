@@ -60,9 +60,9 @@ def setup(hass, config):
     """Set up the Luxtronik component."""
     conf = config[DOMAIN]
 
-    host = conf["CONF_HOST"]
-    port = conf["CONF_PORT"]
-    safe = conf["CONF_SAFE"]
+    host = conf[CONF_HOST]
+    port = conf[CONF_PORT]
+    safe = conf[CONF_SAFE]
 
     luxtronik = LuxtronikDevice(host, port, safe)
 
