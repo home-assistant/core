@@ -389,12 +389,12 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
 
 
 async def _handle_service_platform_call(
-    hass, func, data, entities, context, required_features
+    hass, func, data, entity_candidates, context, required_features
 ):
     """Handle a function call."""
-    tasks = []
+    entities = []
 
-    for entity in entities:
+    for entity in entity_candidates:
         if not entity.available:
             continue
 
@@ -404,33 +404,61 @@ async def _handle_service_platform_call(
         ):
             continue
 
-        entity.async_set_context(context)
+        entities.append(entity)
 
-        if isinstance(func, str):
-            result = hass.async_add_job(partial(getattr(entity, func), **data))
-        else:
-            result = hass.async_add_job(func, entity, data)
+    if not entities:
+        return
 
-        # Guard because callback functions do not return a task when passed to async_add_job.
-        if result is not None:
-            result = await result
-
-        if asyncio.iscoroutine(result):
-            _LOGGER.error(
-                "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to integration author.",
-                func,
-                entity.entity_id,
+    done, pending = await asyncio.wait(
+        [
+            entity.async_request_call(
+                _handle_entity_call(hass, entity, func, data, context)
             )
-            await result
+            for entity in entities
+        ]
+    )
+    assert not pending
+    for future in done:
+        future.result()  # pop exception if have
 
-        if entity.should_poll:
-            tasks.append(entity.async_update_ha_state(True))
+    tasks = []
+
+    for entity in entities:
+        if not entity.should_poll:
+            continue
+
+        # Context expires if the turn on commands took a long time.
+        # Set context again so it's there when we update
+        entity.async_set_context(context)
+        tasks.append(entity.async_update_ha_state(True))
 
     if tasks:
         done, pending = await asyncio.wait(tasks)
         assert not pending
         for future in done:
             future.result()  # pop exception if have
+
+
+async def _handle_entity_call(hass, entity, func, data, context):
+    """Handle calling service method."""
+    entity.async_set_context(context)
+
+    if isinstance(func, str):
+        result = hass.async_add_job(partial(getattr(entity, func), **data))
+    else:
+        result = hass.async_add_job(func, entity, data)
+
+    # Guard because callback functions do not return a task when passed to async_add_job.
+    if result is not None:
+        await result
+
+    if asyncio.iscoroutine(result):
+        _LOGGER.error(
+            "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to integration author.",
+            func,
+            entity.entity_id,
+        )
+        await result
 
 
 @bind_hass
@@ -474,6 +502,7 @@ def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
                 return await service_handler(call)
 
             user = await hass.auth.async_get_user(call.context.user_id)
+
             if user is None:
                 raise UnknownUser(
                     context=call.context,
@@ -482,14 +511,12 @@ def verify_domain_control(hass: HomeAssistantType, domain: str) -> Callable:
                 )
 
             reg = await hass.helpers.entity_registry.async_get_registry()
-            entities = [
-                entity.entity_id
-                for entity in reg.entities.values()
-                if entity.platform == domain
-            ]
 
-            for entity_id in entities:
-                if user.permissions.check_entity(entity_id, POLICY_CONTROL):
+            for entity in reg.entities.values():
+                if entity.platform != domain:
+                    continue
+
+                if user.permissions.check_entity(entity.entity_id, POLICY_CONTROL):
                     return await service_handler(call)
 
             raise Unauthorized(

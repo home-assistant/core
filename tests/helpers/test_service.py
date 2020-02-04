@@ -49,21 +49,19 @@ def mock_service_platform_call():
 
 
 @pytest.fixture
-def mock_entities():
+def mock_entities(hass):
     """Return mock entities in an ordered dict."""
-    kitchen = Mock(
+    kitchen = MockEntity(
         entity_id="light.kitchen",
         available=True,
         should_poll=False,
         supported_features=1,
-        platform="test_domain",
     )
-    living_room = Mock(
+    living_room = MockEntity(
         entity_id="light.living_room",
         available=True,
         should_poll=False,
         supported_features=0,
-        platform="test_domain",
     )
     entities = OrderedDict()
     entities[kitchen.entity_id] = kitchen
@@ -644,96 +642,113 @@ async def test_domain_control_unknown(hass, mock_entities):
         assert len(calls) == 0
 
 
-async def test_domain_control_unauthorized(hass, hass_read_only_user, mock_entities):
+async def test_domain_control_unauthorized(hass, hass_read_only_user):
     """Test domain verification in a service call with an unauthorized user."""
-    calls = []
-
-    async def mock_service_log(call):
-        """Define a protected service."""
-        calls.append(call)
-
-    with patch(
-        "homeassistant.helpers.entity_registry.async_get_registry",
-        return_value=mock_coro(Mock(entities=mock_entities)),
-    ):
-        protected_mock_service = hass.helpers.service.verify_domain_control(
-            "test_domain"
-        )(mock_service_log)
-
-        hass.services.async_register(
-            "test_domain", "test_service", protected_mock_service, schema=None
-        )
-
-        with pytest.raises(exceptions.Unauthorized):
-            await hass.services.async_call(
-                "test_domain",
-                "test_service",
-                {},
-                blocking=True,
-                context=ha.Context(user_id=hass_read_only_user.id),
+    mock_registry(
+        hass,
+        {
+            "light.kitchen": ent_reg.RegistryEntry(
+                entity_id="light.kitchen", unique_id="kitchen", platform="test_domain",
             )
+        },
+    )
+
+    calls = []
+
+    async def mock_service_log(call):
+        """Define a protected service."""
+        calls.append(call)
+
+    protected_mock_service = hass.helpers.service.verify_domain_control("test_domain")(
+        mock_service_log
+    )
+
+    hass.services.async_register(
+        "test_domain", "test_service", protected_mock_service, schema=None
+    )
+
+    with pytest.raises(exceptions.Unauthorized):
+        await hass.services.async_call(
+            "test_domain",
+            "test_service",
+            {},
+            blocking=True,
+            context=ha.Context(user_id=hass_read_only_user.id),
+        )
+
+    assert len(calls) == 0
 
 
-async def test_domain_control_admin(hass, hass_admin_user, mock_entities):
+async def test_domain_control_admin(hass, hass_admin_user):
     """Test domain verification in a service call with an admin user."""
+    mock_registry(
+        hass,
+        {
+            "light.kitchen": ent_reg.RegistryEntry(
+                entity_id="light.kitchen", unique_id="kitchen", platform="test_domain",
+            )
+        },
+    )
+
     calls = []
 
     async def mock_service_log(call):
         """Define a protected service."""
         calls.append(call)
 
-    with patch(
-        "homeassistant.helpers.entity_registry.async_get_registry",
-        return_value=mock_coro(Mock(entities=mock_entities)),
-    ):
-        protected_mock_service = hass.helpers.service.verify_domain_control(
-            "test_domain"
-        )(mock_service_log)
+    protected_mock_service = hass.helpers.service.verify_domain_control("test_domain")(
+        mock_service_log
+    )
 
-        hass.services.async_register(
-            "test_domain", "test_service", protected_mock_service, schema=None
-        )
+    hass.services.async_register(
+        "test_domain", "test_service", protected_mock_service, schema=None
+    )
 
-        await hass.services.async_call(
-            "test_domain",
-            "test_service",
-            {},
-            blocking=True,
-            context=ha.Context(user_id=hass_admin_user.id),
-        )
+    await hass.services.async_call(
+        "test_domain",
+        "test_service",
+        {},
+        blocking=True,
+        context=ha.Context(user_id=hass_admin_user.id),
+    )
 
-        assert len(calls) == 1
+    assert len(calls) == 1
 
 
-async def test_domain_control_no_user(hass, mock_entities):
+async def test_domain_control_no_user(hass):
     """Test domain verification in a service call with no user."""
+    mock_registry(
+        hass,
+        {
+            "light.kitchen": ent_reg.RegistryEntry(
+                entity_id="light.kitchen", unique_id="kitchen", platform="test_domain",
+            )
+        },
+    )
+
     calls = []
 
     async def mock_service_log(call):
         """Define a protected service."""
         calls.append(call)
 
-    with patch(
-        "homeassistant.helpers.entity_registry.async_get_registry",
-        return_value=mock_coro(Mock(entities=mock_entities)),
-    ):
-        protected_mock_service = hass.helpers.service.verify_domain_control(
-            "test_domain"
-        )(mock_service_log)
+    protected_mock_service = hass.helpers.service.verify_domain_control("test_domain")(
+        mock_service_log
+    )
 
-        hass.services.async_register(
-            "test_domain", "test_service", protected_mock_service, schema=None
-        )
+    hass.services.async_register(
+        "test_domain", "test_service", protected_mock_service, schema=None
+    )
 
-        await hass.services.async_call(
-            "test_domain",
-            "test_service",
-            {},
-            blocking=True,
-            context=ha.Context(user_id=None),
-        )
+    await hass.services.async_call(
+        "test_domain",
+        "test_service",
+        {},
+        blocking=True,
+        context=ha.Context(user_id=None),
+    )
 
-        assert len(calls) == 1
+    assert len(calls) == 1
 
 
 async def test_extract_from_service_available_device(hass):
