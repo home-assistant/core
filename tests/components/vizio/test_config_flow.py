@@ -136,6 +136,7 @@ async def test_user_host_already_configured_no_port(
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
     """Test host is already configured during user setup when existing entry has no port."""
+    # Mock entry without port so we can test that the same entry WITH a port will fail
     no_port_entry = MOCK_SPEAKER_CONFIG.copy()
     no_port_entry[CONF_HOST] = no_port_entry[CONF_HOST].split(":")[0]
     entry = MockConfigEntry(
