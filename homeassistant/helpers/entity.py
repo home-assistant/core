@@ -568,7 +568,6 @@ class Entity(ABC):
     # call an requests
     async def async_request_call(self, coro):
         """Process request batched."""
-        print("REQUEST CALL", self.entity_id, self.parallel_updates)
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 

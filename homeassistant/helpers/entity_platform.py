@@ -75,7 +75,11 @@ class EntityPlatform:
     ) -> Optional[asyncio.Semaphore]:
         """Get or create a semaphore for parallel updates.
 
-        semaphore will be created on demand because we base it off if update method is async or not.
+        Semaphore will be created on demand because we base it off if update method is async or not.
+
+        If parallel updates is set to 0, we skip the semaphore.
+        If parallel updates is set to a number, we initialize the semaphore to that number.
+        Default for entities with `async_update` method is 1. Otherwise it's 0.
         """
         if self.parallel_updates_created:
             return self.parallel_updates
