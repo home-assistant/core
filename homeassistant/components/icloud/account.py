@@ -11,7 +11,10 @@ from pyicloud.services.findmyiphone import AppleDevice
 from homeassistant.components.zone import async_active_zone
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.event import (
+    async_track_time_interval,
+    track_point_in_utc_time,
+)
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import slugify
@@ -38,6 +41,8 @@ from .const import (
     DEVICE_STATUS_SET,
     SERVICE_UPDATE,
 )
+
+SCAN_INTERVAL = timedelta(minutes=1)
 
 ATTRIBUTION = "Data provided by Apple iCloud"
 
@@ -92,8 +97,25 @@ class IcloudAccount:
 
         self.unsub_device_tracker = None
 
+        # Callback for stopping keeping alive the API.
+        self._stop_keep_alive = None
+
+    def start_keep_alive(self) -> None:
+        """Start periodic execution of update method."""
+        _LOGGER.warn("start_keep_alive")
+        self._stop_keep_alive = async_track_time_interval(
+            self.hass, self.keep_alive, SCAN_INTERVAL
+        )
+
+    def stop_keep_alive(self) -> None:
+        """Stop periodic execution of update method."""
+        _LOGGER.warn("stop_keep_alive")
+        if self._stop_keep_alive is not None:
+            self._stop_keep_alive()
+
     def setup(self) -> None:
         """Set up an iCloud account."""
+        _LOGGER.warn("setup")
         try:
             self.api = PyiCloudService(
                 self._username, self._password, self._icloud_dir.path
@@ -123,9 +145,13 @@ class IcloudAccount:
         self._devices = {}
         self.update_devices()
 
+        if self._stop_keep_alive is None:
+            self.start_keep_alive()
+
     def update_devices(self) -> None:
         """Update iCloud devices."""
         if self.api is None:
+            self.setup()
             return
 
         api_devices = {}
@@ -169,7 +195,7 @@ class IcloudAccount:
         dispatcher_send(self.hass, SERVICE_UPDATE)
         track_point_in_utc_time(
             self.hass,
-            self.keep_alive,
+            self.update_devices,
             utcnow() + timedelta(minutes=self._fetch_interval),
         )
 
@@ -242,14 +268,12 @@ class IcloudAccount:
 
     def keep_alive(self, now=None) -> None:
         """Keep the API alive."""
+        _LOGGER.warn("keep_alive")
         if self.api is None:
             self.setup()
-
-        if self.api is None:
             return
 
         self.api.authenticate()
-        self.update_devices()
 
     def get_devices_with_name(self, name: str) -> [any]:
         """Get devices by name."""
