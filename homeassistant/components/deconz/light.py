@@ -61,10 +61,13 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def async_add_group(groups):
         """Add group from deCONZ."""
+        if not gateway.option_allow_deconz_groups:
+            return
+
         entities = []
 
         for group in groups:
-            if group.lights and gateway.option_allow_deconz_groups:
+            if group.lights:
                 entities.append(DeconzGroup(group, gateway))
 
         async_add_entities(entities, True)
