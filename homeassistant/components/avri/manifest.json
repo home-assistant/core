@@ -2,7 +2,7 @@
   "domain": "avri",
   "name": "Avri",
   "documentation": "https://www.home-assistant.io/integrations/avri",
-  "requirements": ["avri-api==0.1.3"],
+  "requirements": ["avri-api==0.1.5"],
   "dependencies": [],
   "codeowners": ["@timvancann"]
 }

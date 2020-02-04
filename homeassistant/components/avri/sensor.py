@@ -18,13 +18,14 @@ CONF_HOUSE_NUMBER_EXTENSION = "house_number_extension"
 DEFAULT_NAME = "avri"
 ICON = "mdi:trash-can-outline"
 SCAN_INTERVAL = 14_400
+DEFAULT_COUNTRY_CODE = "NL"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_POSTCODE): cv.string,
         vol.Required(CONF_HOUSE_NUMBER): cv.string,
         vol.Optional(CONF_HOUSE_NUMBER_EXTENSION): cv.string,
-        vol.Optional(CONF_COUNTRY_CODE, default="NL"): cv.string,
+        vol.Optional(CONF_COUNTRY_CODE, default=DEFAULT_COUNTRY_CODE): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
@@ -35,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     client = Avri(
         postal_code=config[CONF_POSTCODE],
         house_nr=config[CONF_HOUSE_NUMBER],
-        house_nr_extension=config.get(CONF_HOUSE_NUMBER_EXTENSION, ""),
+        house_nr_extension=config[CONF_HOUSE_NUMBER_EXTENSION],
         country_code=config[CONF_COUNTRY_CODE],
     )
 
@@ -90,7 +91,9 @@ class AvriWasteUpcoming(Entity):
         try:
             pickup_events = self.client.upcoming_of_each()
         except AvriException as ex:
-            _LOGGER.error(ex)
+            _LOGGER.error(
+                "There was an error retrieving upcoming garbage pickups: %s", ex
+            )
             self._state = None
         else:
             if len(pickup_events) == 0:
