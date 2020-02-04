@@ -84,7 +84,7 @@ def setup(hass, config):
 class LuxtronikDevice:
     """Handle all communication with Luxtronik."""
 
-    def __init__(self, host, port, safe=True):
+    def __init__(self, host, port, safe):
         """Initialize the Luxtronik connection."""
 
         self._host = host
