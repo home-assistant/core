@@ -436,6 +436,17 @@ class SimpliSafe:
                 )
             )
 
+            # Future events will come from the websocket, but since subscription to the
+            # websocket doesn't provide the most recent event, we grab it from the REST
+            # API to ensure event-related attributes aren't empty on startup:
+            try:
+                most_recent_event = await system.get_latest_event()
+            except SimplipyError as err:
+                _LOGGER.error("Error while fetching initial event: %s", err)
+                self.initial_event_to_use[system.system_id] = {}
+            else:
+                self.initial_event_to_use[system.system_id] = most_recent_event
+
         async def refresh(event_time):
             """Refresh data from the SimpliSafe account."""
             await self.async_update()
@@ -443,17 +454,6 @@ class SimpliSafe:
         self._hass.data[DOMAIN][DATA_LISTENER][
             self._config_entry.entry_id
         ] = async_track_time_interval(self._hass, refresh, DEFAULT_SCAN_INTERVAL)
-
-        # Future events will come from the websocket, but since subscription to the
-        # websocket doesn't provide the most recent event, we grab it from the REST API
-        # to ensure event-related attributes aren't empty on startup:
-        try:
-            most_recent_event = await system.get_latest_event()
-        except SimplipyError as err:
-            _LOGGER.error("Error while fetching initial event: %s", err)
-            self.initial_event_to_use[system.system_id] = {}
-        else:
-            self.initial_event_to_use[system.system_id] = most_recent_event
 
         await self.async_update()
 
