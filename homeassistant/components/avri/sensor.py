@@ -1,5 +1,6 @@
 """Support for Avri waste curbside collection pickup."""
 import logging
+from datetime import timedelta
 
 from avri.api import Avri, AvriException
 import voluptuous as vol
@@ -17,7 +18,7 @@ CONF_HOUSE_NUMBER = "house_number"
 CONF_HOUSE_NUMBER_EXTENSION = "house_number_extension"
 DEFAULT_NAME = "avri"
 ICON = "mdi:trash-can-outline"
-SCAN_INTERVAL = 14_400
+SCAN_INTERVAL = timedelta(hours=4)
 DEFAULT_COUNTRY_CODE = "NL"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
