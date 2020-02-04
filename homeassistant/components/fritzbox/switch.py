@@ -1,7 +1,7 @@
 """Support for AVM Fritz!Box smarthome switch devices."""
 import requests
 
-from homeassistant.components.switch import DOMAIN, SwitchDevice
+from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICES,
@@ -26,16 +26,16 @@ ATTR_TEMPERATURE_UNIT = "temperature_unit"
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fritzbox smarthome switch from config_entry."""
-    devices = []
-    device_ids = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
+    entities = []
+    devices = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
     fritz = hass.data[FRITZBOX_DOMAIN][CONF_CONNECTIONS][config_entry.entry_id]
 
     for device in fritz.get_devices():
-        if device.has_switch and device.ain not in device_ids:
-            devices.append(FritzboxSwitch(device, fritz))
-            device_ids.add(device.ain)
+        if device.has_switch and device.ain not in devices:
+            entities.append(FritzboxSwitch(device, fritz))
+            devices.add(device.ain)
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class FritzboxSwitch(SwitchDevice):
@@ -60,7 +60,7 @@ class FritzboxSwitch(SwitchDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return f"{self._device.ain}-{DOMAIN}"
+        return self._device.ain
 
     @property
     def available(self):

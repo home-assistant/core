@@ -4,7 +4,6 @@ import requests
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
-    DOMAIN,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_COMFORT,
@@ -50,16 +49,16 @@ OFF_REPORT_SET_TEMPERATURE = 0.0
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fritzbox smarthome thermostat from config_entry."""
-    devices = []
-    device_ids = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
+    entities = []
+    devices = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
     fritz = hass.data[FRITZBOX_DOMAIN][CONF_CONNECTIONS][config_entry.entry_id]
 
     for device in fritz.get_devices():
-        if device.has_thermostat and device.ain not in device_ids:
-            devices.append(FritzboxThermostat(device, fritz))
-            device_ids.add(device.ain)
+        if device.has_thermostat and device.ain not in devices:
+            entities.append(FritzboxThermostat(device, fritz))
+            devices.add(device.ain)
 
-    async_add_entities(devices)
+    async_add_entities(entities)
 
 
 class FritzboxThermostat(ClimateDevice):
@@ -88,7 +87,7 @@ class FritzboxThermostat(ClimateDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return f"{self._device.ain}-{DOMAIN}"
+        return self._device.ain
 
     @property
     def supported_features(self):

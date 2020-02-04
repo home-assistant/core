@@ -58,7 +58,7 @@ async def async_setup_entry(hass, entry):
         user=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
     )
-    fritz.login()
+    await hass.async_add_executor_job(fritz.login())
 
     hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}, CONF_DEVICES: set()})
     hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = fritz

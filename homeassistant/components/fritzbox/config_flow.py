@@ -30,12 +30,6 @@ RESULT_SUCCESS = "success"
 RESULT_NOT_FOUND = "not_found"
 
 
-def _get_ip(host):
-    if host is None:
-        return None
-    return socket.gethostbyname(host)
-
-
 class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a AVM Fritz!Box config flow."""
 
@@ -85,7 +79,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         if user_input is not None:
             ip_address = await self.hass.async_add_executor_job(
-                _get_ip, user_input[CONF_HOST]
+                socket.gethostbyname, user_input[CONF_HOST]
             )
 
             await self.async_set_unique_id(ip_address)
@@ -104,10 +98,10 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA_USER)
 
-    async def async_step_ssdp(self, user_input=None):
+    async def async_step_ssdp(self, user_input):
         """Handle a flow initialized by discovery."""
         host = urlparse(user_input[ATTR_SSDP_LOCATION]).hostname
-        ip_address = await self.hass.async_add_executor_job(_get_ip, host)
+        ip_address = await self.hass.async_add_executor_job(socket.gethostbyname, host)
 
         await self.async_set_unique_id(ip_address)
         self._abort_if_unique_id_configured()

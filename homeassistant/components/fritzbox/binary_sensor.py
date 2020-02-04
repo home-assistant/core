@@ -1,7 +1,7 @@
 """Support for Fritzbox binary sensors."""
 import requests
 
-from homeassistant.components.binary_sensor import DOMAIN, BinarySensorDevice
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_DEVICES
 
 from .const import CONF_CONNECTIONS, DOMAIN as FRITZBOX_DOMAIN, LOGGER
@@ -9,16 +9,16 @@ from .const import CONF_CONNECTIONS, DOMAIN as FRITZBOX_DOMAIN, LOGGER
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Fritzbox binary sensor from config_entry."""
-    devices = []
-    device_ids = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
+    entities = []
+    devices = hass.data[FRITZBOX_DOMAIN][CONF_DEVICES]
     fritz = hass.data[FRITZBOX_DOMAIN][CONF_CONNECTIONS][config_entry.entry_id]
 
     for device in fritz.get_devices():
-        if device.has_alarm and device.ain not in device_ids:
-            devices.append(FritzboxBinarySensor(device, fritz))
-            device_ids.add(device.ain)
+        if device.has_alarm and device.ain not in devices:
+            entities.append(FritzboxBinarySensor(device, fritz))
+            devices.add(device.ain)
 
-    async_add_entities(devices, True)
+    async_add_entities(entities, True)
 
 
 class FritzboxBinarySensor(BinarySensorDevice):
@@ -43,7 +43,7 @@ class FritzboxBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the device."""
-        return f"{self._device.ain}-{DOMAIN}"
+        return self._device.ain
 
     @property
     def name(self):
