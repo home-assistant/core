@@ -105,9 +105,7 @@ class ParticleDevice(Entity):
         function = service.data.get(ATTR_FUNCTION)
         args = service.data.get(ATTR_ARGS, [])
 
-        source = f"self._info.{function}(*args)"
-
-        return eval(source, {"self": self, "args": args})
+        return self._info.__getattr__(function)(*args)
 
     @property
     def device_state_attributes(self):
@@ -118,9 +116,8 @@ class ParticleDevice(Entity):
         """Get the latest data from the Particle Cloud for this device."""
         if self._info.variables is not None:
             for name, _ in self._info.variables.items():
-                source = f"self._info.{name}"
                 try:
-                    self._attributes[name] = eval(source, {"self": self})
+                    self._attributes[name] = self._info.__getattr__(name)
                 except Exception as ex:
                     _LOGGER.error("Unable to update from Particle Cloud: %s", str(ex))
                     self._attributes[name] = None
