@@ -167,7 +167,7 @@ class FreeboxRouter:
 
     @property
     def firmware_version(self) -> str:
-        """Return the router sofware version."""
+        """Return the router software version."""
         return self._sw_v
 
     @property

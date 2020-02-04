@@ -80,7 +80,7 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         fbx = Freepybox(APP_DESC, token_file, API_VERSION)
 
         try:
-            # Check connection and authentification
+            # Open connection and check authentication
             await fbx.open(self._host, self._port)
 
             # Check permissions
