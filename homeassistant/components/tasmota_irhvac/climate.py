@@ -654,42 +654,25 @@ class TasmotaIrhvac(ClimateDevice, RestoreEntity):
         elif self.swing_mode == SWING_VERTICAL:
             swing_v = STATE_AUTO
         # Populate the payload
-        payload = (
-            '{"Vendor":"'
-            + self._protocol
-            + '","Model":'
-            + self._model
-            + ', "Power":"'
-            + self.power_mode
-            + '","Mode":"'
-            + curr_operation
-            + '","Celsius":"'
-            + self._celsius
-            + '","Temp":'
-            + str(self._target_temp)
-            + ',"FanSpeed":"'
-            + fan_speed
-            + '","SwingV":"'
-            + swing_v
-            + '","SwingH":"'
-            + swing_h
-            + '", "Quiet":"'
-            + self._quiet
-            + '","Turbo":"'
-            + self._turbo
-            + '","Econo":"'
-            + self._econo
-            + '","Light":"'
-            + self._light
-            + '","Filter":"'
-            + self._filterr
-            + '","Clean":"'
-            + self._clean
-            + '","Beep":"'
-            + self._beep
-            + '","Sleep":'
-            + self._sleep
-            + "}"
-        )
+        payload_data = {
+            "Vendor": self._protocol,
+            "Model": self._model,
+            "Power": self.power_mode,
+            "Mode": curr_operation,
+            "Celsius": self._celsius,
+            "Temp": self._target_temp,
+            "FanSpeed": fan_speed,
+            "SwingV": swing_v,
+            "SwingH": swing_h,
+            "Quiet": self._quiet,
+            "Turbo": self._turbo,
+            "Econo": self._econo,
+            "Light": self._light,
+            "Filter": self._filterr,
+            "Clean": self._clean,
+            "Beep": self._beep,
+            "Sleep": self._sleep
+            }
+        payload = (json.dumps(payload_data))
         # Publish mqtt message
         mqtt.async_publish(self.hass, self.topic, payload)
