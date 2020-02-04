@@ -54,7 +54,7 @@ async def test_user(hass, client_1):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == CITY_1_NAME
     assert result["title"] == CITY_1_NAME
-    assert result["data"][CONF_CITY] == CITY_1_NAME
+    assert result["data"][CONF_CITY] == CITY_1_POSTAL
 
 
 async def test_import(hass, client_1):
@@ -66,7 +66,7 @@ async def test_import(hass, client_1):
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["result"].unique_id == CITY_1_NAME
     assert result["title"] == CITY_1_NAME
-    assert result["data"][CONF_CITY] == CITY_1_NAME
+    assert result["data"][CONF_CITY] == CITY_1_POSTAL
 
 
 async def test_abort_if_already_setup(hass, client_1):
