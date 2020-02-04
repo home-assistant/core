@@ -36,7 +36,9 @@ class TestLuxtronikBinarySensor(unittest.TestCase):
         mock_sensor.name = "ID_WEB_EVUin"
         mock_sensor.value = True
         mock_luxtronik().calculations.get.return_value = mock_sensor
-        luxtronik.setup(self.hass, {DOMAIN: {"host": "192.168.1.1", "port": 8889}})
+        luxtronik.setup(
+            self.hass, {DOMAIN: {"host": "192.168.1.1", "port": 8889, "safe": True}}
+        )
         config = {
             "platform": DOMAIN,
             "sensors": [
@@ -64,7 +66,9 @@ class TestLuxtronikBinarySensor(unittest.TestCase):
         mock_sensor.name = "ID_WEB_EVUin"
         mock_sensor.value = True
         mock_luxtronik().calculations.get.return_value = mock_sensor
-        luxtronik.setup(self.hass, {DOMAIN: {"host": "192.168.1.1", "port": 8889}})
+        luxtronik.setup(
+            self.hass, {DOMAIN: {"host": "192.168.1.1", "port": 8889, "safe": True}}
+        )
         config = {
             "platform": DOMAIN,
             "sensors": [
@@ -90,7 +94,9 @@ class TestLuxtronikBinarySensor(unittest.TestCase):
         mock_sensor.name = "ID_WEB_EVUin"
         mock_sensor.value = True
         mock_luxtronik().calculations.get.return_value = mock_sensor
-        luxtronik.setup(self.hass, {DOMAIN: {"host": "192.168.1.1", "port": 8889}})
+        luxtronik.setup(
+            self.hass, {DOMAIN: {"host": "192.168.1.1", "port": 8889, "safe": True}}
+        )
         config = {
             "platform": DOMAIN,
             "sensors": [
@@ -121,7 +127,9 @@ class TestLuxtronikBinarySensor(unittest.TestCase):
         mock_luxtronik().parameters.get.return_value = mock_param_sensor
         mock_visi_sensor = Mock()
         mock_luxtronik().visibilities.get.return_value = mock_visi_sensor
-        luxtronik.setup(self.hass, {DOMAIN: {"host": "192.168.1.1", "port": 8889}})
+        luxtronik.setup(
+            self.hass, {DOMAIN: {"host": "192.168.1.1", "port": 8889, "safe": True}}
+        )
         config = {
             "platform": DOMAIN,
             "sensors": [
@@ -159,7 +167,9 @@ class TestLuxtronikBinarySensor(unittest.TestCase):
         """Test invalid sensor setup."""
         self.DEVICES = []
         mock_luxtronik().calculations.get.return_value = None
-        luxtronik.setup(self.hass, {DOMAIN: {"host": "192.168.1.1", "port": 8889}})
+        luxtronik.setup(
+            self.hass, {DOMAIN: {"host": "192.168.1.1", "port": 8889, "safe": True}}
+        )
         config = {
             "platform": DOMAIN,
             "sensors": [
