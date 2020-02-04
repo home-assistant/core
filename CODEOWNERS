@@ -83,6 +83,7 @@ homeassistant/components/delijn/* @bollewolle
 homeassistant/components/demo/* @home-assistant/core
 homeassistant/components/derivative/* @afaucogney
 homeassistant/components/device_automation/* @home-assistant/core
+homeassistant/components/devolo_home_control/* @2Fake
 homeassistant/components/digital_ocean/* @fabaff
 homeassistant/components/directv/* @ctalkington
 homeassistant/components/discogs/* @thibmaek

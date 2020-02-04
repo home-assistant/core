@@ -101,6 +101,7 @@ class DevoloSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Switch on the device."""
         # TODO: Prepare for more than one switch
+        self._is_on = True
         self._api.set_binary_switch(
             element_uid=[*self._device_instance.binary_switch_property][0], state=True
         )
@@ -108,23 +109,41 @@ class DevoloSwitch(SwitchDevice):
     def turn_off(self, **kwargs):
         """Switch off the device."""
         # TODO: Prepare for more than one switch
+        self._is_on = False
         self._api.set_binary_switch(
             element_uid=[*self._device_instance.binary_switch_property][0], state=False
         )
 
-    def update(self, websocket_update=False):
+    def update(self, message=None, websocket_update=False):
         """Update the binary switch state and consumption."""
-        for binary_switch in self._device_instance.binary_switch_property.keys():
-            self._is_on = self._api.get_binary_switch_state(binary_switch)
-        try:
-            for (
-                current_consumption
-            ) in self._device_instance.consumption_property.keys():
-                self._consumption = self._api.get_consumption(
-                    current_consumption, "current"
-                )
-        except (IndexError, AttributeError):
-            self._consumption = None
+        if websocket_update:
+            if message[0].startswith("devolo.BinarySwitch"):
+                self._is_on = self._device_instance.binary_switch_property[
+                    message[0]
+                ].state
+            elif message[0].startswith("devolo.Meter"):
+                self._consumption = self._device_instance.consumption_property[
+                    message[0]
+                ].current
+            else:
+                _LOGGER.info("No valid message received")
+        else:
+            try:
+                for (
+                    binary_switch
+                ) in self._device_instance.binary_switch_property.keys():
+                    self._is_on = self._device_instance.binary_switch_property[
+                        binary_switch
+                    ].state
+                for (
+                    current_consumption
+                ) in self._device_instance.consumption_property.keys():
+                    self._consumption = self._device_instance.consumption_property[
+                        current_consumption
+                    ].current
+            except (IndexError, AttributeError):
+                # Not every binary switch device has a consumption
+                self._consumption = None
         if websocket_update:
             self.schedule_update_ha_state()
 
@@ -139,5 +158,6 @@ class Subscriber:
 
     def update(self, message):
         """Trigger hass to update the device."""
+        # Make this message to DEBUG before PR
         _LOGGER.info(f'{self.name} got message "{message}"')
-        self.device.update(websocket_update=True)
+        self.device.update(websocket_update=True, message=message)
