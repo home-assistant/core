@@ -48,7 +48,7 @@ def mock_controller_connect():
 async def test_user(hass: HomeAssistantType, connect: MagicMock):
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=None,
+        DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
