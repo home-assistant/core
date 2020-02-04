@@ -55,7 +55,7 @@ class MeteoFranceFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(city_name)
         self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(title=city_name, data={CONF_CITY: city_name})
+        return self.async_create_entry(title=city_name, data={CONF_CITY: city})
 
     async def async_step_import(self, user_input):
         """Import a config entry."""

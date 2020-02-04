@@ -4,8 +4,9 @@
         "step": {
             "user": {
                 "title": "Météo-France",
+                "description": "Enter the postal code (only for France, recommanded) or city name",
                 "data": {
-                    "city": "City or postal code"
+                    "city": "City"
                 }
             }
         },
