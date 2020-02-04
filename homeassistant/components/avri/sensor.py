@@ -17,7 +17,7 @@ CONF_HOUSE_NUMBER = "house_number"
 CONF_HOUSE_NUMBER_EXTENSION = "house_number_extension"
 DEFAULT_NAME = "avri"
 ICON = "mdi:trash-can-outline"
-SCAN_INTERVAL = 86400
+SCAN_INTERVAL = 14_400
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
