@@ -236,7 +236,8 @@ def setup(hass, config):
                 for entity_id in hass.data[DATA_AMCREST][CAMERAS]
                 if have_permission(user, entity_id)
             ]
-        elif call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_NONE:
+
+        if call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_NONE:
             return []
 
         call_ids = await async_extract_entity_ids(hass, call)
