@@ -316,16 +316,15 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
 
     # Check the permissions
 
-    # A list with for each platform in platforms a list of entities to call
-    # the service on.
-    platforms_entities = []
+    # A list with entities to call the service on.
+    entity_candidates = []
 
     if entity_perms is None:
         for platform in platforms:
             if target_all_entities:
-                platforms_entities.append(list(platform.entities.values()))
+                entity_candidates.extend(platform.entities.values())
             else:
-                platforms_entities.append(
+                entity_candidates.extend(
                     [
                         entity
                         for entity in platform.entities.values()
@@ -337,7 +336,7 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
         # If we target all entities, we will select all entities the user
         # is allowed to control.
         for platform in platforms:
-            platforms_entities.append(
+            entity_candidates.extend(
                 [
                     entity
                     for entity in platform.entities.values()
@@ -362,36 +361,17 @@ async def entity_service_call(hass, platforms, func, call, required_features=Non
 
                 platform_entities.append(entity)
 
-            platforms_entities.append(platform_entities)
+            entity_candidates.extend(platform_entities)
 
     if not target_all_entities:
-        for platform_entities in platforms_entities:
-            for entity in platform_entities:
-                entity_ids.remove(entity.entity_id)
+        for entity in entity_candidates:
+            entity_ids.remove(entity.entity_id)
 
         if entity_ids:
             _LOGGER.warning(
                 "Unable to find referenced entities %s", ", ".join(sorted(entity_ids))
             )
 
-    tasks = [
-        _handle_service_platform_call(
-            hass, func, data, entities, call.context, required_features
-        )
-        for platform, entities in zip(platforms, platforms_entities)
-    ]
-
-    if tasks:
-        done, pending = await asyncio.wait(tasks)
-        assert not pending
-        for future in done:
-            future.result()  # pop exception if have
-
-
-async def _handle_service_platform_call(
-    hass, func, data, entity_candidates, context, required_features
-):
-    """Handle a function call."""
     entities = []
 
     for entity in entity_candidates:
@@ -412,7 +392,7 @@ async def _handle_service_platform_call(
     done, pending = await asyncio.wait(
         [
             entity.async_request_call(
-                _handle_entity_call(hass, entity, func, data, context)
+                _handle_entity_call(hass, entity, func, data, call.context)
             )
             for entity in entities
         ]
@@ -429,7 +409,7 @@ async def _handle_service_platform_call(
 
         # Context expires if the turn on commands took a long time.
         # Set context again so it's there when we update
-        entity.async_set_context(context)
+        entity.async_set_context(call.context)
         tasks.append(entity.async_update_ha_state(True))
 
     if tasks:

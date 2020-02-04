@@ -39,10 +39,10 @@ from tests.common import (
 
 
 @pytest.fixture
-def mock_service_platform_call():
+def mock_handle_entity_call():
     """Mock service platform call."""
     with patch(
-        "homeassistant.helpers.service._handle_service_platform_call",
+        "homeassistant.helpers.service._handle_entity_call",
         side_effect=lambda *args: mock_coro(),
     ) as mock_call:
         yield mock_call
@@ -372,7 +372,7 @@ async def test_call_context_user_not_exist(hass):
     assert err.value.context.user_id == "non-existing"
 
 
-async def test_call_context_target_all(hass, mock_service_platform_call, mock_entities):
+async def test_call_context_target_all(hass, mock_handle_entity_call, mock_entities):
     """Check we only target allowed entities if targeting all."""
     with patch(
         "homeassistant.auth.AuthManager.async_get_user",
@@ -396,13 +396,12 @@ async def test_call_context_target_all(hass, mock_service_platform_call, mock_en
             ),
         )
 
-    assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][3]
-    assert entities == [mock_entities["light.kitchen"]]
+    assert len(mock_handle_entity_call.mock_calls) == 1
+    assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
 
 
 async def test_call_context_target_specific(
-    hass, mock_service_platform_call, mock_entities
+    hass, mock_handle_entity_call, mock_entities
 ):
     """Check targeting specific entities."""
     with patch(
@@ -427,13 +426,12 @@ async def test_call_context_target_specific(
             ),
         )
 
-    assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][3]
-    assert entities == [mock_entities["light.kitchen"]]
+    assert len(mock_handle_entity_call.mock_calls) == 1
+    assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
 
 
 async def test_call_context_target_specific_no_auth(
-    hass, mock_service_platform_call, mock_entities
+    hass, mock_handle_entity_call, mock_entities
 ):
     """Check targeting specific entities without auth."""
     with pytest.raises(exceptions.Unauthorized) as err:
@@ -457,9 +455,7 @@ async def test_call_context_target_specific_no_auth(
     assert err.value.entity_id == "light.kitchen"
 
 
-async def test_call_no_context_target_all(
-    hass, mock_service_platform_call, mock_entities
-):
+async def test_call_no_context_target_all(hass, mock_handle_entity_call, mock_entities):
     """Check we target all if no user context given."""
     await service.entity_service_call(
         hass,
@@ -470,13 +466,14 @@ async def test_call_no_context_target_all(
         ),
     )
 
-    assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][3]
-    assert entities == list(mock_entities.values())
+    assert len(mock_handle_entity_call.mock_calls) == 2
+    assert [call[1][1] for call in mock_handle_entity_call.mock_calls] == list(
+        mock_entities.values()
+    )
 
 
 async def test_call_no_context_target_specific(
-    hass, mock_service_platform_call, mock_entities
+    hass, mock_handle_entity_call, mock_entities
 ):
     """Check we can target specified entities."""
     await service.entity_service_call(
@@ -490,13 +487,12 @@ async def test_call_no_context_target_specific(
         ),
     )
 
-    assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][3]
-    assert entities == [mock_entities["light.kitchen"]]
+    assert len(mock_handle_entity_call.mock_calls) == 1
+    assert mock_handle_entity_call.mock_calls[0][1][1].entity_id == "light.kitchen"
 
 
 async def test_call_with_match_all(
-    hass, mock_service_platform_call, mock_entities, caplog
+    hass, mock_handle_entity_call, mock_entities, caplog
 ):
     """Check we only target allowed entities if targeting all."""
     await service.entity_service_call(
@@ -506,20 +502,13 @@ async def test_call_with_match_all(
         ha.ServiceCall("test_domain", "test_service", {"entity_id": "all"}),
     )
 
-    assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][3]
-    assert entities == [
-        mock_entities["light.kitchen"],
-        mock_entities["light.living_room"],
-    ]
-    assert (
-        "Not passing an entity ID to a service to target all entities is deprecated"
-    ) not in caplog.text
+    assert len(mock_handle_entity_call.mock_calls) == 2
+    assert [call[1][1] for call in mock_handle_entity_call.mock_calls] == list(
+        mock_entities.values()
+    )
 
 
-async def test_call_with_omit_entity_id(
-    hass, mock_service_platform_call, mock_entities
-):
+async def test_call_with_omit_entity_id(hass, mock_handle_entity_call, mock_entities):
     """Check service call if we do not pass an entity ID."""
     await service.entity_service_call(
         hass,
@@ -528,9 +517,7 @@ async def test_call_with_omit_entity_id(
         ha.ServiceCall("test_domain", "test_service"),
     )
 
-    assert len(mock_service_platform_call.mock_calls) == 1
-    entities = mock_service_platform_call.mock_calls[0][1][3]
-    assert entities == []
+    assert len(mock_handle_entity_call.mock_calls) == 0
 
 
 async def test_register_admin_service(hass, hass_read_only_user, hass_admin_user):
