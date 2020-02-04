@@ -331,14 +331,13 @@ class IcloudDevice:
         device_status = DEVICE_STATUS_CODES.get(self._status[DEVICE_STATUS], "error")
         self._attrs[ATTR_DEVICE_STATUS] = device_status
 
-        if self._status[DEVICE_BATTERY_STATUS] != "Unknown":
-            self._battery_level = int(self._status.get(DEVICE_BATTERY_LEVEL, 0) * 100)
-            self._battery_status = self._status[DEVICE_BATTERY_STATUS]
-            low_power_mode = self._status[DEVICE_LOW_POWER_MODE]
-
+        self._battery_status = self._status[DEVICE_BATTERY_STATUS]
+        self._attrs[ATTR_BATTERY_STATUS] = self._battery_status
+        device_battery_level = self._status.get(DEVICE_BATTERY_LEVEL, 0)
+        if self._battery_status != "Unknown" and device_battery_level is not None:
+            self._battery_level = int(device_battery_level * 100)
             self._attrs[ATTR_BATTERY] = self._battery_level
-            self._attrs[ATTR_BATTERY_STATUS] = self._battery_status
-            self._attrs[ATTR_LOW_POWER_MODE] = low_power_mode
+            self._attrs[ATTR_LOW_POWER_MODE] = self._status[DEVICE_LOW_POWER_MODE]
 
             if (
                 self._status[DEVICE_LOCATION]
