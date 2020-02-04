@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_PORT,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
 )
 import homeassistant.helpers.config_validation as cv
 
@@ -136,7 +137,9 @@ DEL_ALL_LINK_SCHEMA = vol.Schema(
 
 LOAD_ALDB_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTITY_ID): vol.Any(cv.entity_id, ENTITY_MATCH_ALL),
+        vol.Required(CONF_ENTITY_ID): vol.Any(
+            cv.entity_id, ENTITY_MATCH_ALL, ENTITY_MATCH_NONE
+        ),
         vol.Optional(SRV_LOAD_DB_RELOAD, default=False): cv.boolean,
     }
 )

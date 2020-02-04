@@ -7,7 +7,12 @@ from typing import Callable
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
-from homeassistant.const import ATTR_AREA_ID, ATTR_ENTITY_ID, ENTITY_MATCH_ALL
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
+)
 import homeassistant.core as ha
 from homeassistant.exceptions import (
     HomeAssistantError,
@@ -151,12 +156,15 @@ async def async_extract_entity_ids(hass, service_call, expand_group=True):
     entity_ids = service_call.data.get(ATTR_ENTITY_ID)
     area_ids = service_call.data.get(ATTR_AREA_ID)
 
-    if not entity_ids and not area_ids:
-        return []
-
     extracted = set()
 
-    if entity_ids:
+    if entity_ids in (None, ENTITY_MATCH_NONE) and area_ids in (
+        None,
+        ENTITY_MATCH_NONE,
+    ):
+        return extracted
+
+    if entity_ids and entity_ids != ENTITY_MATCH_NONE:
         # Entity ID attr can be a list or a string
         if isinstance(entity_ids, str):
             entity_ids = [entity_ids]
@@ -166,7 +174,7 @@ async def async_extract_entity_ids(hass, service_call, expand_group=True):
 
         extracted.update(entity_ids)
 
-    if area_ids:
+    if area_ids and area_ids != ENTITY_MATCH_NONE:
         if isinstance(area_ids, str):
             area_ids = [area_ids]
 

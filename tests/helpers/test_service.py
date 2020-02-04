@@ -12,7 +12,13 @@ import voluptuous as vol
 from homeassistant import core as ha, exceptions
 from homeassistant.auth.permissions import PolicyPermissions
 import homeassistant.components  # noqa: F401
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.helpers import (
     device_registry as dev_reg,
     entity_registry as ent_reg,
@@ -252,6 +258,14 @@ async def test_extract_entity_ids(hass):
         hass, call, expand_group=False
     )
 
+    assert (
+        await service.async_extract_entity_ids(
+            hass,
+            ha.ServiceCall("light", "turn_on", {ATTR_ENTITY_ID: ENTITY_MATCH_NONE}),
+        )
+        == set()
+    )
+
 
 async def test_extract_entity_ids_from_area(hass, area_mock):
     """Test extract_entity_ids method with areas."""
@@ -265,6 +279,13 @@ async def test_extract_entity_ids_from_area(hass, area_mock):
         "light.in_area",
         "light.diff_area",
     } == await service.async_extract_entity_ids(hass, call)
+
+    assert (
+        await service.async_extract_entity_ids(
+            hass, ha.ServiceCall("light", "turn_on", {"area_id": ENTITY_MATCH_NONE})
+        )
+        == set()
+    )
 
 
 @asyncio.coroutine
@@ -741,6 +762,15 @@ async def test_extract_from_service_available_device(hass):
         ent.entity_id
         for ent in (await service.async_extract_entities(hass, entities, call_2))
     ]
+
+    assert (
+        await service.async_extract_entities(
+            hass,
+            entities,
+            ha.ServiceCall("test", "service", data={"entity_id": ENTITY_MATCH_NONE},),
+        )
+        == []
+    )
 
 
 async def test_extract_from_service_empty_if_no_entity_id(hass):

@@ -16,6 +16,7 @@ PLATFORM_FORMAT = "{platform}.{domain}"
 MATCH_ALL = "*"
 
 # Entity target all constant
+ENTITY_MATCH_NONE = "none"
 ENTITY_MATCH_ALL = "all"
 
 # If no name is specified
