@@ -270,8 +270,6 @@ async def test_parallel_updates_async_platform_with_constant(hass):
 
     handle = list(component._platforms.values())[-1]
 
-    assert handle.parallel_updates == 2
-
     class AsyncEntity(MockEntity):
         """Mock entity that has async_update."""
 
@@ -296,7 +294,6 @@ async def test_parallel_updates_sync_platform(hass):
     await component.async_setup({DOMAIN: {"platform": "platform"}})
 
     handle = list(component._platforms.values())[-1]
-    assert handle.parallel_updates is None
 
     class SyncEntity(MockEntity):
         """Mock entity that has update."""
@@ -323,7 +320,6 @@ async def test_parallel_updates_sync_platform_with_constant(hass):
     await component.async_setup({DOMAIN: {"platform": "platform"}})
 
     handle = list(component._platforms.values())[-1]
-    assert handle.parallel_updates == 2
 
     class SyncEntity(MockEntity):
         """Mock entity that has update."""
