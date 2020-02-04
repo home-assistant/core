@@ -9,5 +9,6 @@
   "dependencies": [],
   "codeowners": [
     "@exxamalte"
-  ]
+  ],
+  "quality_scale": "platinum"
 }
