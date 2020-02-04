@@ -95,7 +95,7 @@ class LuxtronikSensor(Entity):
     def icon(self):
         """Icon to use in the frontend, if any."""
         if not self._icon:
-            return ICONS.get(self._sensor.measurement_type, None)
+            return ICONS.get(self._sensor.measurement_type)
         return self._icon
 
     @property
@@ -111,7 +111,7 @@ class LuxtronikSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return UNITS.get(self._sensor.measurement_type, None)
+        return UNITS.get(self._sensor.measurement_type)
 
     def update(self):
         """Get the latest status and use it to update our sensor state."""
