@@ -526,7 +526,13 @@ class MediaPlayerCapabilities(AlexaEntity):
             yield AlexaSeekController(self.entity)
 
         if supported & media_player.SUPPORT_SELECT_SOURCE:
-            yield AlexaInputController(self.entity)
+            inputs = AlexaInputController.get_valid_inputs(
+                self.entity.attributes.get(
+                    media_player.const.ATTR_INPUT_SOURCE_LIST, []
+                )
+            )
+            if len(inputs) > 0:
+                yield AlexaInputController(self.entity)
 
         if supported & media_player.const.SUPPORT_PLAY_MEDIA:
             yield AlexaChannelController(self.entity)

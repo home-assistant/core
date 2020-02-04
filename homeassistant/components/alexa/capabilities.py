@@ -749,6 +749,13 @@ class AlexaInputController(AlexaCapability):
         source_list = self.entity.attributes.get(
             media_player.ATTR_INPUT_SOURCE_LIST, []
         )
+        input_list = AlexaInputController.get_valid_inputs(source_list)
+
+        return input_list
+
+    @staticmethod
+    def get_valid_inputs(source_list):
+        """Return list of supported inputs."""
         input_list = []
         for source in source_list:
             formatted_source = (
