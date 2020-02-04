@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, STATE_ON, STATE_UNAVAILABLE
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
@@ -20,7 +20,7 @@ CONFIG_SCHEMA = vol.Schema(
 ATTR_ARGS = "args"
 ATTR_FUNCTION = "function"
 
-FUNCTION_CALL_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
+FUNCTION_CALL_SCHEMA = make_entity_service_schema(
     {
         vol.Required(ATTR_FUNCTION): cv.string,
         vol.Optional(ATTR_ARGS): vol.All(
@@ -97,8 +97,8 @@ class ParticleDevice(Entity):
         """Return a high-level state for the device."""
         if self._info.connected:
             return STATE_ON
-        else:
-            return STATE_UNAVAILABLE
+
+        return STATE_UNAVAILABLE
 
     def call(self, service):
         """Call a specified Cloud Function available on the device."""
