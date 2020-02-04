@@ -1,16 +1,13 @@
 """Adds support for generic thermostat units."""
 import json
 import logging
+
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components import mqtt
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
-from homeassistant.core import callback
-from homeassistant.helpers.event import async_track_state_change
-from homeassistant.helpers.restore_state import RestoreEntity
-
 from homeassistant.components.climate.const import (
+    ATTR_PRESET_MODE,
     FAN_AUTO,
     FAN_DIFFUSE,
     FAN_FOCUS,
@@ -20,23 +17,21 @@ from homeassistant.components.climate.const import (
     FAN_MIDDLE,
     FAN_OFF,
     FAN_ON,
-    HVAC_MODE_DRY,
-    ATTR_PRESET_MODE,
     HVAC_MODE_COOL,
+    HVAC_MODE_DRY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_NONE,
     SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
     SUPPORT_PRESET_MODE,
+    SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
-    SWING_VERTICAL
+    SWING_VERTICAL,
 )
-
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_NAME,
@@ -44,12 +39,74 @@ from homeassistant.const import (
     PRECISION_HALVES,
     PRECISION_TENTHS,
     PRECISION_WHOLE,
-    STATE_ON,
     STATE_OFF,
-    STATE_UNKNOWN
+    STATE_ON,
+    STATE_UNKNOWN,
 )
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.restore_state import RestoreEntity
 
-from .const import *
+from .const import (
+    CONF_AWAY_TEMP,
+    CONF_BEEP,
+    CONF_CELSIUS,
+    CONF_CLEAN,
+    CONF_COMMAND_TOPIC,
+    CONF_ECONO,
+    CONF_FAN_LIST,
+    CONF_FILTER,
+    CONF_INITIAL_OPERATION_MODE,
+    CONF_LIGHT,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
+    CONF_MODEL,
+    CONF_MODES_LIST,
+    CONF_PRECISION,
+    CONF_PROTOCOL,
+    CONF_QUIET,
+    CONF_SLEEP,
+    CONF_STATE_TOPIC,
+    CONF_SWING_LIST,
+    CONF_TARGET_TEMP,
+    CONF_TEMP_SENSOR,
+    CONF_TURBO,
+    DEFAULT_AWAY_TEMP,
+    DEFAULT_COMMAND_TOPIC,
+    DEFAULT_CONF_BEEP,
+    DEFAULT_CONF_CELSIUS,
+    DEFAULT_CONF_CLEAN,
+    DEFAULT_CONF_ECONO,
+    DEFAULT_CONF_FILTER,
+    DEFAULT_CONF_LIGHT,
+    DEFAULT_CONF_MODEL,
+    DEFAULT_CONF_QUIET,
+    DEFAULT_CONF_SLEEP,
+    DEFAULT_CONF_TURBO,
+    DEFAULT_FAN_LIST,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
+    DEFAULT_NAME,
+    DEFAULT_PRECISION,
+    DEFAULT_PROTOCOL,
+    DEFAULT_STATE_TOPIC,
+    DEFAULT_TARGET_TEMP,
+    HVAC_FAN_AUTO,
+    HVAC_FAN_AUTO_MAX,
+    HVAC_FAN_MAX,
+    HVAC_FAN_MAX_HIGH,
+    HVAC_FAN_MEDIUM,
+    HVAC_FAN_MIN,
+    HVAC_MODE_AUTO_FAN,
+    HVAC_MODE_FAN_AUTO,
+    HVAC_MODES,
+    STATE_AUTO,
+    STATE_COOL,
+    STATE_DRY,
+    STATE_FAN_ONLY,
+    STATE_HEAT,
+)
 
 DEFAULT_MODES_LIST = [
     HVAC_MODE_COOL,
@@ -137,6 +194,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SLEEP, default=DEFAULT_CONF_SLEEP): cv.string,
     }
 )
+
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the generic thermostat platform."""
@@ -671,8 +729,8 @@ class TasmotaIrhvac(ClimateDevice, RestoreEntity):
             "Filter": self._filterr,
             "Clean": self._clean,
             "Beep": self._beep,
-            "Sleep": self._sleep
-            }
-        payload = (json.dumps(payload_data))
+            "Sleep": self._sleep,
+        }
+        payload = json.dumps(payload_data)
         # Publish mqtt message
         mqtt.async_publish(self.hass, self.topic, payload)
