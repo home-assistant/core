@@ -57,6 +57,8 @@ ATTR_WHITE_VALUE = "white_value"
 # Brightness of the light, 0..255 or percentage
 ATTR_BRIGHTNESS = "brightness"
 ATTR_BRIGHTNESS_PCT = "brightness_pct"
+ATTR_BRIGHTNESS_STEP = "brightness_step"
+ATTR_BRIGHTNESS_STEP_PCT = "brightness_step_pct"
 
 # String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
@@ -83,12 +85,16 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
+VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
+VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
 
 LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
     vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+    vol.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
+    vol.Exclusive(ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP_PCT,
     vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
     vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
         vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
@@ -216,6 +222,20 @@ async def async_setup(hass, config):
                 params = {ATTR_PROFILE: default_profile}
                 preprocess_turn_on_alternatives(params)
                 turn_light_off, off_params = preprocess_turn_off(params)
+
+        elif ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params:
+            brightness = light.brightness if light.is_on else 0
+
+            params = params.copy()
+
+            if ATTR_BRIGHTNESS_STEP in params:
+                brightness += params.pop(ATTR_BRIGHTNESS_STEP)
+
+            else:
+                brightness += int(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
+
+            params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
+            turn_light_off, off_params = preprocess_turn_off(params)
 
         if turn_light_off:
             await light.async_turn_off(**off_params)
