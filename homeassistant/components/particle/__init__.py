@@ -41,7 +41,7 @@ async def async_setup(hass, config):
 
     try:
         particle = hass.data[DOMAIN] = ParticleCloud(access_token)
-    except Exception as ex:
+    except Exception as ex:  # pylint: disable=broad-except
         _LOGGER.error("Unable to connect to Particle Cloud: %s", str(ex))
         return False
 
@@ -118,6 +118,6 @@ class ParticleDevice(Entity):
             for name, _ in self._info.variables.items():
                 try:
                     self._attributes[name] = self._info.__getattr__(name)
-                except Exception as ex:
+                except Exception as ex:  # pylint: disable=broad-except
                     _LOGGER.error("Unable to update from Particle Cloud: %s", str(ex))
                     self._attributes[name] = None
