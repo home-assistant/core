@@ -142,7 +142,6 @@ class BayesianBinarySensor(BinarySensorDevice):
             if "value_template" in obs:
                 for ent in obs.get(CONF_VALUE_TEMPLATE).extract_entities():
                     self.entity_obs[ent].append(obs)
-
         self.watchers = {
             "numeric_state": self._process_numeric_state,
             "state": self._process_state,
@@ -157,14 +156,12 @@ class BayesianBinarySensor(BinarySensorDevice):
             """Handle sensor state changes."""
             if new_state.state == STATE_UNKNOWN:
                 return
-
             entity_obs_list = self.entity_obs[entity]
 
             for entity_obs in entity_obs_list:
                 platform = entity_obs["platform"]
 
                 self.watchers[platform](entity_obs)
-
             prior = self.prior
             for obs in self.current_obs.values():
                 prior = update_probability(prior, obs["prob_true"], obs["prob_false"])
@@ -185,16 +182,16 @@ class BayesianBinarySensor(BinarySensorDevice):
             prob_false = entity_observation.get("prob_given_false", 1 - prob_true)
 
             if "entity_id" in entity_observation:
-                entity_id=entity_observation.get("entity_id")
+                entity_id = entity_observation.get("entity_id")
             if "value_template" in entity_observation:
-                entity_id=entity_observation.get(CONF_VALUE_TEMPLATE).extract_entities()
-
+                entity_id = entity_observation.get(
+                    CONF_VALUE_TEMPLATE
+                ).extract_entities()
             self.current_obs[obs_id] = {
                 "prob_true": prob_true,
                 "prob_false": prob_false,
-				"entity_id": entity_id,
+                "entity_id": entity_id,
             }
-
         else:
             self.current_obs.pop(obs_id, None)
 
@@ -256,7 +253,9 @@ class BayesianBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
-            ATTR_OBSERVATIONS: list(self.current_obs[obs]["entity_id"] for obs in self.current_obs),
+            ATTR_OBSERVATIONS: list(
+                self.current_obs[obs]["entity_id"] for obs in self.current_obs
+            ),
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
         }

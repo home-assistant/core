@@ -67,8 +67,8 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
         assert [
-            {"prob_false": 0.4, "prob_true": 0.6},
-            {"prob_false": 0.1, "prob_true": 0.9},
+            "sensor.test_monitored",
+            "sensor.test_monitored1",
         ] == state.attributes.get("observations")
         assert round(abs(0.77 - state.attributes.get("probability")), 7) == 0
 
@@ -131,9 +131,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert [{"prob_true": 0.8, "prob_false": 0.4}] == state.attributes.get(
-            "observations"
-        )
+        assert ["sensor.test_monitored"] == state.attributes.get("observations")
         assert round(abs(0.33 - state.attributes.get("probability")), 7) == 0
 
         assert state.state == "on"
@@ -223,9 +221,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert [{"prob_true": 0.8, "prob_false": 0.4}] == state.attributes.get(
-            "observations"
-        )
+        assert ["sensor.test_monitored"] == state.attributes.get("observations")
         assert round(abs(0.33 - state.attributes.get("probability")), 7) == 0
 
         assert state.state == "on"
