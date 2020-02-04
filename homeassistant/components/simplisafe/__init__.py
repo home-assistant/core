@@ -372,40 +372,39 @@ class SimpliSafeWebsocket:
         await self.async_websocket_disconnect()
         await self._async_attempt_websocket_connect()
 
+    def _on_connect(self):
+        """Define a handler to fire when the websocket is connected."""
+        _LOGGER.info("Connected to websocket")
+        _LOGGER.debug("Websocket watchdog starting")
+        if self._websocket_watchdog_listener is not None:
+            self._websocket_watchdog_listener()
+        self._websocket_watchdog_listener = async_call_later(
+            self._hass, DEFAULT_WATCHDOG_SECONDS, self._async_websocket_reconnect
+        )
+
+    def _on_disconnect(self):
+        """Define a handler to fire when the websocket is disconnected."""
+        _LOGGER.info("Disconnected from websocket")
+
+    def _on_event(self, data):
+        """Define a handler to fire when a new SimpliSafe event arrives."""
+        event = SimpliSafeWebsocketEvent(data)
+        _LOGGER.debug("New websocket event: %s", event)
+        self.last_events[data["sid"]] = event
+        async_dispatcher_send(self._hass, TOPIC_UPDATE.format(data["sid"]))
+
+        _LOGGER.debug("Resetting websocket watchdog")
+        self._websocket_watchdog_listener()
+        self._websocket_watchdog_listener = async_call_later(
+            self._hass, DEFAULT_WATCHDOG_SECONDS, self._async_websocket_reconnect
+        )
+        self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
+
     async def async_websocket_connect(self):
         """Register handlers and connect to the websocket."""
-
-        def on_connect():
-            """Define a handler to fire when the websocket is connected."""
-            _LOGGER.info("Connected to websocket")
-            _LOGGER.debug("Websocket watchdog starting")
-            if self._websocket_watchdog_listener is not None:
-                self._websocket_watchdog_listener()
-            self._websocket_watchdog_listener = async_call_later(
-                self._hass, DEFAULT_WATCHDOG_SECONDS, self._async_websocket_reconnect
-            )
-
-        def on_disconnect():
-            """Define a handler to fire when the websocket is disconnected."""
-            _LOGGER.info("Disconnected from websocket")
-
-        def on_event(data):
-            """Define a handler to fire when a new SimpliSafe event arrives."""
-            event = SimpliSafeWebsocketEvent(data)
-            _LOGGER.debug("New websocket event: %s", event)
-            self.last_events[data["sid"]] = event
-            async_dispatcher_send(self._hass, TOPIC_UPDATE.format(data["sid"]))
-
-            _LOGGER.debug("Resetting websocket watchdog")
-            self._websocket_watchdog_listener()
-            self._websocket_watchdog_listener = async_call_later(
-                self._hass, DEFAULT_WATCHDOG_SECONDS, self._async_websocket_reconnect
-            )
-            self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
-
-        self._websocket.on_connect(on_connect)
-        self._websocket.on_disconnect(on_disconnect)
-        self._websocket.on_event(on_event)
+        self._websocket.on_connect(self._on_connect)
+        self._websocket.on_disconnect(self._on_disconnect)
+        self._websocket.on_event(self._on_event)
 
         await self._async_attempt_websocket_connect()
 
