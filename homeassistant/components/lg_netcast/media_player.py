@@ -1,5 +1,5 @@
 """Support for LG TV running on NetCast 3 or 4."""
-from datetime import timedelta, datetime
+from datetime import datetime, timedelta
 import logging
 
 from pylgnetcast import LgNetCastClient, LgNetCastError
