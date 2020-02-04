@@ -1,6 +1,6 @@
 """Support for Avri waste curbside collection pickup."""
-import logging
 from datetime import timedelta
+import logging
 
 from avri.api import Avri, AvriException
 import voluptuous as vol
