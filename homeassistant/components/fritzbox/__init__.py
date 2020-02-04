@@ -58,7 +58,7 @@ async def async_setup_entry(hass, entry):
         user=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
     )
-    await hass.async_add_executor_job(fritz.login())
+    await hass.async_add_executor_job(fritz.login)
 
     hass.data.setdefault(DOMAIN, {CONF_CONNECTIONS: {}, CONF_DEVICES: set()})
     hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id] = fritz
@@ -69,3 +69,9 @@ async def async_setup_entry(hass, entry):
         )
 
     return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unloading the AVM Fritz!Box platforms."""
+    fritz = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
+    return await hass.async_add_executor_job(fritz.logout)
