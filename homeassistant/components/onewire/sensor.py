@@ -1,10 +1,8 @@
 """Support for 1-Wire environment sensors."""
 from glob import glob
-import json
 import logging
 import os
 import time
-import json
 
 from pyownet import protocol
 import voluptuous as vol
@@ -105,12 +103,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the one wire Sensors."""
     base_dir = config[CONF_MOUNT_DIR]
     owport = config[CONF_PORT]
-    owhost = config[CONF_HOST]
+    owhost = config.get(CONF_HOST)
     if owhost:
-        _LOGGER.debug("Initializing using %s:%s", owhost, owport)
+        _LOGGER.info("Initializing using %s:%s", owhost, owport)
     else:
-        _LOGGER.debug("Initializing using %s", base_dir)
-    
+        _LOGGER.info("Initializing using %s", base_dir)
+
     devs = []
     device_names = {}
     if CONF_NAMES in config:
@@ -152,7 +150,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         sensor_key = f"wetness_{id}"
                 sensor_id = os.path.split(os.path.split(device)[0])[1]
                 device_file = os.path.join(os.path.split(device)[0], sensor_value)
-
                 devs.append(
                     OneWireProxy(
                         device_names.get(sensor_id, sensor_id),
@@ -217,6 +214,7 @@ class OneWire(Entity):
         self._device_file = device_file
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._state = None
+        self._value_raw = None
 
     def _read_value_raw(self):
         """Read the value as it is returned by the sensor."""
@@ -244,11 +242,7 @@ class OneWire(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-
-        return {
-            "device_file" : self._device_file,
-            "raw_value" : self._value_raw
-        }
+        return {"device_file": self._device_file, "raw_value": self._value_raw}
 
 
 class OneWireProxy(OneWire):
