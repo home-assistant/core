@@ -68,9 +68,7 @@ async def test_devices(
     }
 
     event_channels = {
-        ch.id
-        for ep_chans in zha_dev.channels.pools.values()
-        for ch in ep_chans.relay_channels.values()
+        ch.id for pool in zha_dev.channels.pools for ch in pool.relay_channels.values()
     }
 
     entity_map = device["entity_map"]
@@ -217,7 +215,7 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
         )
 
     assert device_info["event_channels"] == sorted(
-        [ch.id for ep in channels.pools.values() for ch in ep.relay_channels.values()]
+        [ch.id for pool in channels.pools for ch in pool.relay_channels.values()]
     )
     assert new_ent.call_count == len(
         [

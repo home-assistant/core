@@ -297,10 +297,10 @@ class ZHADevice(LogMixin):
                             "Attempting to checkin with device - missed checkins: %s",
                             self._checkins_missed_count,
                         )
-                        ch_bank_id = next(self._channels.pools, None)
-                        if ch_bank_id is None:
+                        if not self._channels.pools:
                             return
-                        basic_ch = self._channels.pools[ch_bank_id][f"{ch_bank_id}:0"]
+                        pool = self._channels.pools[0]
+                        basic_ch = pool.all_channels[f"{pool.id}:0"]
                         self.hass.async_create_task(
                             basic_ch.get_attribute_value(
                                 ATTR_MANUFACTURER, from_cache=False

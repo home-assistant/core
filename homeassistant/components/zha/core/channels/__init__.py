@@ -34,6 +34,7 @@ from .. import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+ChannelsDict = Dict[str, zha_typing.ChannelType]
 
 
 class Channels:
@@ -41,7 +42,7 @@ class Channels:
 
     def __init__(self, zha_device: zha_typing.ZhaDeviceType) -> None:
         """Initialize instance."""
-        self._pools = {}
+        self._pools: List[zha_typing.ChannelPoolType] = []
         self._power_config = None
         self._semaphore = asyncio.Semaphore(3)
         self._unique_id = str(zha_device.ieee)
@@ -49,8 +50,8 @@ class Channels:
         self._zha_device = zha_device
 
     @property
-    def pools(self) -> Dict[int, "ChannelPool"]:
-        """Return discover endpoints dict."""
+    def pools(self) -> List["ChannelPool"]:
+        """Return channel pools list."""
         return self._pools
 
     @property
@@ -96,21 +97,21 @@ class Channels:
         """Add channels for a specific endpoint."""
         if ep_id == 0:
             return
-        self._pools[ep_id] = ChannelPool.new(self, ep_id)
+        self._pools.append(ChannelPool.new(self, ep_id))
 
     async def async_initialize(self, from_cache: bool = False) -> None:
         """Initialize claimed channels."""
         await self.zdo_channel.async_initialize(from_cache)
         self.zdo_channel.debug("'async_initialize' stage succeeded")
         await asyncio.gather(
-            *(ep.async_initialize(from_cache) for ep in self.pools.values())
+            *(pool.async_initialize(from_cache) for pool in self.pools)
         )
 
     async def async_configure(self) -> None:
         """Configure claimed channels."""
         await self.zdo_channel.async_configure()
         self.zdo_channel.debug("'async_configure' stage succeeded")
-        await asyncio.gather(*(ep.async_configure() for ep in self.pools.values()))
+        await asyncio.gather(*(pool.async_configure() for pool in self.pools))
 
     @callback
     def async_new_entity(
@@ -151,20 +152,20 @@ class ChannelPool:
 
     def __init__(self, channels: Channels, ep_id: int):
         """Initialize instance."""
-        self._all_channels = {}
-        self._channels = channels
-        self._claimed_channels = {}
-        self._id = ep_id
-        self._relay_channels = {}
-        self._unique_id = f"{channels.unique_id}-{ep_id}"
+        self._all_channels: ChannelsDict = {}
+        self._channels: Channels = channels
+        self._claimed_channels: ChannelsDict = {}
+        self._id: int = ep_id
+        self._relay_channels: Dict[str, zha_typing.EventRelayChannelType] = {}
+        self._unique_id: str = f"{channels.unique_id}-{ep_id}"
 
     @property
-    def all_channels(self) -> Dict[str, zha_typing.ChannelType]:
+    def all_channels(self) -> ChannelsDict:
         """All channels of an endpoint."""
         return self._all_channels
 
     @property
-    def claimed_channels(self) -> Dict[str, zha_typing.ChannelType]:
+    def claimed_channels(self) -> ChannelsDict:
         """Channels in use."""
         return self._claimed_channels
 
@@ -216,11 +217,11 @@ class ChannelPool:
     @classmethod
     def new(cls, channels: Channels, ep_id: int) -> "ChannelPool":
         """Create new channels for an endpoint."""
-        ep_chnls = cls(channels, ep_id)
-        ep_chnls.add_all_channels()
-        ep_chnls.add_relay_channels()
-        zha_disc.probe.discover_entities(ep_chnls)
-        return ep_chnls
+        pool = cls(channels, ep_id)
+        pool.add_all_channels()
+        pool.add_relay_channels()
+        zha_disc.probe.discover_entities(pool)
+        return pool
 
     @callback
     def add_all_channels(self) -> None:

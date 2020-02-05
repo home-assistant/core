@@ -305,16 +305,17 @@ def test_channel_power_config(m1, zha_device_mock):
         }
     )
     channels = zha_channels.Channels.new(zha_device)
-    assert "1:0x0000" in channels.pools[1].all_channels
-    assert "1:0x0001" in channels.pools[1].all_channels
-    assert "1:0x0006" in channels.pools[1].all_channels
-    assert "1:0x0008" in channels.pools[1].all_channels
-    assert "1:0x0300" not in channels.pools[1].all_channels
-    assert "2:0x0000" in channels.pools[2].all_channels
-    assert "2:0x0001" not in channels.pools[2].all_channels
-    assert "2:0x0006" in channels.pools[2].all_channels
-    assert "2:0x0008" in channels.pools[2].all_channels
-    assert "2:0x0300" in channels.pools[2].all_channels
+    pools = {pool.id: pool for pool in channels.pools}
+    assert "1:0x0000" in pools[1].all_channels
+    assert "1:0x0001" in pools[1].all_channels
+    assert "1:0x0006" in pools[1].all_channels
+    assert "1:0x0008" in pools[1].all_channels
+    assert "1:0x0300" not in pools[1].all_channels
+    assert "2:0x0000" in pools[2].all_channels
+    assert "2:0x0001" not in pools[2].all_channels
+    assert "2:0x0006" in pools[2].all_channels
+    assert "2:0x0008" in pools[2].all_channels
+    assert "2:0x0300" in pools[2].all_channels
 
     zha_device = zha_device_mock(
         {
@@ -323,14 +324,16 @@ def test_channel_power_config(m1, zha_device_mock):
         }
     )
     channels = zha_channels.Channels.new(zha_device)
-    assert "1:0x0001" not in channels.pools[1].all_channels
-    assert "2:0x0001" in channels.pools[2].all_channels
+    pools = {pool.id: pool for pool in channels.pools}
+    assert "1:0x0001" not in pools[1].all_channels
+    assert "2:0x0001" in pools[2].all_channels
 
     zha_device = zha_device_mock(
         {2: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0x0000}}
     )
     channels = zha_channels.Channels.new(zha_device)
-    assert "2:0x0001" in channels.pools[2].all_channels
+    pools = {pool.id: pool for pool in channels.pools}
+    assert "2:0x0001" in pools[2].all_channels
 
 
 async def test_ep_channels_configure(channel):
