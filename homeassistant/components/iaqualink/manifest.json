@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/iaqualink/",
   "dependencies": [],
   "codeowners": ["@flz"],
-  "requirements": ["iaqualink==0.3.0"]
+  "requirements": ["iaqualink==0.3.1"]
 }

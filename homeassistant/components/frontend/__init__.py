@@ -13,7 +13,7 @@ from yarl import URL
 
 from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.config import find_config_file, load_yaml_config_file
+from homeassistant.config import async_hass_config_yaml
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -342,10 +342,12 @@ def _async_setup_themes(hass, themes):
         """Update theme_color in manifest."""
         name = hass.data[DATA_DEFAULT_THEME]
         themes = hass.data[DATA_THEMES]
-        if name != DEFAULT_THEME and PRIMARY_COLOR in themes[name]:
-            MANIFEST_JSON["theme_color"] = themes[name][PRIMARY_COLOR]
-        else:
-            MANIFEST_JSON["theme_color"] = DEFAULT_THEME_COLOR
+        MANIFEST_JSON["theme_color"] = DEFAULT_THEME_COLOR
+        if name != DEFAULT_THEME:
+            MANIFEST_JSON["theme_color"] = themes[name].get(
+                "app-header-background-color",
+                themes[name].get(PRIMARY_COLOR, DEFAULT_THEME_COLOR),
+            )
         hass.bus.async_fire(
             EVENT_THEMES_UPDATED, {"themes": themes, "default_theme": name}
         )
@@ -362,11 +364,10 @@ def _async_setup_themes(hass, themes):
         else:
             _LOGGER.warning("Theme %s is not defined.", name)
 
-    @callback
-    def reload_themes(_):
+    async def reload_themes(_):
         """Reload themes."""
-        path = find_config_file(hass.config.config_dir)
-        new_themes = load_yaml_config_file(path)[DOMAIN].get(CONF_THEMES, {})
+        config = await async_hass_config_yaml(hass)
+        new_themes = config[DOMAIN].get(CONF_THEMES, {})
         hass.data[DATA_THEMES] = new_themes
         if hass.data[DATA_DEFAULT_THEME] not in new_themes:
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME

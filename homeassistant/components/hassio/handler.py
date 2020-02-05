@@ -130,7 +130,7 @@ class HassIO:
             "ssl": CONF_SSL_CERTIFICATE in http_config,
             "port": port,
             "watchdog": True,
-            "refresh_token": refresh_token,
+            "refresh_token": refresh_token.token,
         }
 
         if CONF_SERVER_HOST in http_config:

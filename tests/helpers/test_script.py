@@ -1022,3 +1022,59 @@ def test_log_exception():
             assert p_error == ""
         else:
             assert p_error == str(exc)
+
+
+async def test_referenced_entities():
+    """Test referenced entities."""
+    script_obj = script.Script(
+        None,
+        cv.SCRIPT_SCHEMA(
+            [
+                {
+                    "service": "test.script",
+                    "data": {"entity_id": "light.service_not_list"},
+                },
+                {
+                    "service": "test.script",
+                    "data": {"entity_id": ["light.service_list"]},
+                },
+                {
+                    "condition": "state",
+                    "entity_id": "sensor.condition",
+                    "state": "100",
+                },
+                {"service": "test.script", "data": {"without": "entity_id"}},
+                {"scene": "scene.hello"},
+                {"event": "test_event"},
+                {"delay": "{{ delay_period }}"},
+            ]
+        ),
+    )
+    assert script_obj.referenced_entities == {
+        "light.service_not_list",
+        "light.service_list",
+        "sensor.condition",
+        "scene.hello",
+    }
+    # Test we cache results.
+    assert script_obj.referenced_entities is script_obj.referenced_entities
+
+
+async def test_referenced_devices():
+    """Test referenced entities."""
+    script_obj = script.Script(
+        None,
+        cv.SCRIPT_SCHEMA(
+            [
+                {"domain": "light", "device_id": "script-dev-id"},
+                {
+                    "condition": "device",
+                    "device_id": "condition-dev-id",
+                    "domain": "switch",
+                },
+            ]
+        ),
+    )
+    assert script_obj.referenced_devices == {"script-dev-id", "condition-dev-id"}
+    # Test we cache results.
+    assert script_obj.referenced_devices is script_obj.referenced_devices

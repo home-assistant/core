@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Den h\u00e4r enheten har redan konfigurerats"
+        }
+    }
+}

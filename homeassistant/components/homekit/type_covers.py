@@ -119,7 +119,8 @@ class WindowCovering(HomeAccessory):
     def update_state(self, new_state):
         """Update cover position after state changed."""
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
-        if isinstance(current_position, int):
+        if isinstance(current_position, (float, int)):
+            current_position = int(current_position)
             self.char_current_position.set_value(current_position)
             if (
                 self._homekit_target is None

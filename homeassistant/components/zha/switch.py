@@ -23,11 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation switches."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation switch from config entry."""
 
@@ -98,6 +93,7 @@ class Switch(ZhaEntity, SwitchDevice):
         self._state = False
         self.async_schedule_update_ha_state()
 
+    @callback
     def async_set_state(self, state):
         """Handle state update from channel."""
         self._state = bool(state)

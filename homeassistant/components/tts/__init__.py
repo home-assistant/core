@@ -501,14 +501,12 @@ class Provider:
         """Load tts audio file from provider."""
         raise NotImplementedError()
 
-    def async_get_tts_audio(self, message, language, options=None):
+    async def async_get_tts_audio(self, message, language, options=None):
         """Load tts audio file from provider.
 
         Return a tuple of file extension and data as bytes.
-
-        This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(
+        return await self.hass.async_add_job(
             ft.partial(self.get_tts_audio, message, language, options=options)
         )
 
