@@ -1,5 +1,4 @@
 """Test configuration for the ZHA component."""
-import asyncio
 from unittest import mock
 
 import asynctest
@@ -154,6 +153,7 @@ def zha_device_restored(hass, zigpy_app_controller, setup_zha):
         zigpy_app_controller.devices[zigpy_dev.ieee] = zigpy_dev
         await setup_zha()
         zha_gateway = hass.data[zha_const.DATA_ZHA][zha_const.DATA_ZHA_GATEWAY]
+        await zha_gateway.async_load_devices()
         return zha_gateway.get_device(zigpy_dev.ieee)
 
     return _zha_device

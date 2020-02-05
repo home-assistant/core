@@ -2,7 +2,6 @@
 import functools
 import logging
 import numbers
-from typing import List, Tuple
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_BATTERY,
@@ -23,7 +22,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
-from .core import typing as zha_typing
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
     CHANNEL_ELECTRICAL_MEASUREMENT,
@@ -38,7 +36,6 @@ from .core.const import (
     DATA_ZHA_DISPATCHERS,
     SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    SIGNAL_ENQUEUE_ENTITY,
     SIGNAL_STATE_ATTR,
 )
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
@@ -69,7 +66,7 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation sensor from config entry."""
-    entities = []
+    entities = hass.data[DATA_ZHA][DOMAIN] = []
 
     async def async_discover(update: bool = True):
         """Add enqueued entities."""
@@ -79,17 +76,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities(to_add, update_before_add=update)
         entities.clear()
 
-    def async_enqueue_entity(
-        entity: zha_typing.CALLABLE_T, args: Tuple[str, zha_typing.ZhaDeviceType, List]
-    ):
-        """Stash entity for later addition."""
-        entities.append((entity, args))
-
     unsub = async_dispatcher_connect(hass, SIGNAL_ADD_ENTITIES, async_discover)
-    hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
-    unsub = async_dispatcher_connect(
-        hass, f"{SIGNAL_ENQUEUE_ENTITY}_{DOMAIN}", async_enqueue_entity
-    )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 

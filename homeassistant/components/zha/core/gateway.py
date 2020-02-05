@@ -142,12 +142,12 @@ class ZHAGateway:
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
             self.application_controller.ieee
         )
+        self._initialize_groups()
 
     async def async_load_devices(self) -> None:
         """Restore ZHA devices from zigpy application state."""
         await self._hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED].wait()
 
-        self._initialize_groups()
         semaphore = asyncio.Semaphore(2)
 
         async def _throttle(device: zha_typing.ZigpyDeviceType):
