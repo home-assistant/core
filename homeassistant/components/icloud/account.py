@@ -42,7 +42,7 @@ from .const import (
     SERVICE_UPDATE,
 )
 
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 ATTRIBUTION = "Data provided by Apple iCloud"
 
@@ -148,7 +148,7 @@ class IcloudAccount:
         if self._stop_keep_alive is None:
             self.start_keep_alive()
 
-    def update_devices(self) -> None:
+    def update_devices(self, now=None) -> None:
         """Update iCloud devices."""
         if self.api is None:
             self.setup()
@@ -162,13 +162,8 @@ class IcloudAccount:
             return
         except Exception as err:  # pylint: disable=broad-except
             _LOGGER.error("Unknown iCloud error: %s", err)
-            self._fetch_interval = 5
-            dispatcher_send(self.hass, SERVICE_UPDATE)
-            track_point_in_utc_time(
-                self.hass,
-                self.keep_alive,
-                utcnow() + timedelta(minutes=self._fetch_interval),
-            )
+            self.keep_alive()
+            self.update_devices()
             return
 
         # Gets devices infos
@@ -348,6 +343,10 @@ class IcloudDevice:
 
     def update(self, status) -> None:
         """Update the iCloud device."""
+
+        _LOGGER.error("--------------------")
+        _LOGGER.error("updating device : %s", self.name)
+        _LOGGER.error("--------------------")
         self._status = status
 
         self._status[ATTR_ACCOUNT_FETCH_INTERVAL] = self._account.fetch_interval
