@@ -2198,6 +2198,10 @@ async def async_process_json_from_frame(hass, json_req):
     topic = json_req["topic"]
     payload = json_req["payload"]
     ais_gate_client_id = json_req["ais_gate_client_id"]
+    if "hot_word_on" in json_req:
+        hot_word_on = json_req["hot_word_on"]
+    else:
+        hot_word_on = False
     if topic == "ais/player_auto_discovery":
         # parse the json storing the result on the response object
         model = payload["Model"]
@@ -2250,7 +2254,7 @@ async def async_process_json_from_frame(hass, json_req):
     elif topic == "ais/speech_command":
         try:
             # TODO add info if the intent is media player type - to publish
-            intent_resp = await _process(hass, payload, ais_gate_client_id)
+            intent_resp = await _process(hass, payload, ais_gate_client_id, hot_word_on)
             resp_text = intent_resp.speech["plain"]["speech"]
             res = {"ais": "ok", "say_it": resp_text}
         except Exception as e:
@@ -3578,7 +3582,7 @@ def get_context_suffix(hass):
 
 
 @asyncio.coroutine
-def _process(hass, text, exclude_say_it=None):
+def _process(hass, text, calling_client_id=None, hot_word_on=False):
     """Process a line of text."""
     global CURR_VIRTUAL_KEYBOARD_VALUE
     # clear text
@@ -3692,7 +3696,8 @@ def _process(hass, text, exclude_say_it=None):
                         s = True
                         found_intent = "YT"
 
-        if found_intent is None:
+        # only if how word is disabled
+        if found_intent is None and hot_word_on is False:
             suffix = get_context_suffix(hass)
             if suffix is not None:
                 for intent_type, matchers in intents.items():
@@ -3720,7 +3725,8 @@ def _process(hass, text, exclude_say_it=None):
 
         # the was no match - try again but with player context
         # we should get media player source first
-        if found_intent is None:
+        # this is done only if the hot word is False
+        if calling_client_id is None and hot_word_on is False:
             if (
                 CURR_ENTITIE == "media_player.wbudowany_glosnik"
                 and CURR_ENTITIE_ENTERED
@@ -3787,7 +3793,7 @@ def _process(hass, text, exclude_say_it=None):
     if m.startswith("DO_NOT_SAY"):
         m = m.replace("DO_NOT_SAY", "")
     else:
-        _say_it(hass, m, exclude_say_it=exclude_say_it)
+        _say_it(hass, m, exclude_say_it=calling_client_id)
     # return response to the hass conversation
     intent_resp = intent.IntentResponse()
     # intent_resp.async_set_card("Beer ordered", "You chose a XXX")
