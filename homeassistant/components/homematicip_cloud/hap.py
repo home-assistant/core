@@ -95,8 +95,7 @@ class HomematicipHAP:
             raise ConfigEntryNotReady
 
         _LOGGER.info(
-            "Connected to HomematicIP with HAP %s",
-            self.config_entry.data.get(HMIPC_HAPID),
+            "Connected to HomematicIP with HAP %s", self.config_entry.unique_id
         )
 
         for component in COMPONENTS:
@@ -193,7 +192,7 @@ class HomematicipHAP:
                 _LOGGER.error(
                     "Error connecting to HomematicIP with HAP %s. "
                     "Retrying in %d seconds",
-                    self.config_entry.data.get(HMIPC_HAPID),
+                    self.config_entry.unique_id,
                     retry_delay,
                 )
 

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "title": "Samsung TV"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3 o adre\u00e7a IP",
+                    "name": "Nom"
+                },
+                "title": "Samsung TV"
+            }
+        },
+        "title": "Samsung TV"
+    }
+}

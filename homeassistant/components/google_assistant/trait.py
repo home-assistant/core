@@ -1447,6 +1447,8 @@ def _verify_pin_challenge(data, state, challenge):
 
 
 def _verify_ack_challenge(data, state, challenge):
-    """Verify a pin challenge."""
+    """Verify an ack challenge."""
+    if not data.config.should_2fa(state):
+        return
     if not challenge or not challenge.get("ack"):
         raise ChallengeNeeded(CHALLENGE_ACK_NEEDED)

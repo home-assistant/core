@@ -122,7 +122,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
     @property
     def fan_modes(self):
         """Return the list of available fan modes."""
-        return self.tuya.fan_modes()
+        return self.tuya.fan_list()
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""

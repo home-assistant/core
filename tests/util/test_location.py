@@ -92,6 +92,19 @@ async def test_detect_location_info_ipapi(aioclient_mock, session):
     assert info.use_metric
 
 
+async def test_detect_location_info_ipapi_exhaust(aioclient_mock, session):
+    """Test detect location info using ipapi.co."""
+    aioclient_mock.get(location_util.IPAPI, json={"latitude": "Sign up to access"})
+    aioclient_mock.get(location_util.IP_API, text=load_fixture("ip-api.com.json"))
+
+    info = await location_util.async_detect_location_info(session, _test_real=True)
+
+    assert info is not None
+    # ip_api result because ipapi got skipped
+    assert info.country_code == "US"
+    assert len(aioclient_mock.mock_calls) == 2
+
+
 async def test_detect_location_info_ip_api(aioclient_mock, session):
     """Test detect location info using ip-api.com."""
     aioclient_mock.get(location_util.IP_API, text=load_fixture("ip-api.com.json"))

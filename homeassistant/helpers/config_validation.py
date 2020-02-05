@@ -724,6 +724,8 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
+ENTITY_SERVICE_FIELDS = (ATTR_ENTITY_ID, ATTR_AREA_ID)
+
 
 def make_entity_service_schema(
     schema: dict, *, extra: int = vol.PREVENT_EXTRA
@@ -738,7 +740,7 @@ def make_entity_service_schema(
             },
             extra=extra,
         ),
-        has_at_least_one_key(ATTR_ENTITY_ID, ATTR_AREA_ID),
+        has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
     )
 
 

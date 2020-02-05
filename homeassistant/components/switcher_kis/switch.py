@@ -124,17 +124,11 @@ class SwitcherControl(SwitchDevice):
                 self.async_schedule_update_ha_state()
 
     async def async_turn_on(self, **kwargs: Dict) -> None:
-        """Turn the entity on.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Turn the entity on."""
         await self._control_device(True)
 
     async def async_turn_off(self, **kwargs: Dict) -> None:
-        """Turn the entity off.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Turn the entity off."""
         await self._control_device(False)
 
     async def _control_device(self, send_on: bool) -> None:

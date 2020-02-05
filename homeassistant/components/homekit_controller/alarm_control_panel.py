@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -40,16 +41,12 @@ TARGET_STATE_MAP = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Legacy set up platform."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Homekit alarm control panel."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
+    @callback
     def async_add_service(aid, service):
         if service["stype"] != "security-system":
             return False

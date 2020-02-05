@@ -1,12 +1,17 @@
 {
     "config": {
         "abort": {
+            "authorize_url_timeout": "\u7522\u751f\u8a8d\u8b49 URL \u6642\u903e\u6642\u3002",
+            "missing_configuration": "Withings \u6574\u5408\u5c1a\u672a\u8a2d\u7f6e\uff0c\u8acb\u53c3\u95b1\u6587\u4ef6\u8aaa\u660e\u3002",
             "no_flows": "\u5fc5\u9808\u5148\u8a2d\u5b9a Withings \u65b9\u80fd\u9032\u884c\u8a8d\u8b49\u3002\u8acb\u53c3\u95b1\u6587\u4ef6\u3002"
         },
         "create_entry": {
-            "default": "\u5df2\u6210\u529f\u4f7f\u7528\u6240\u9078\u8a2d\u5b9a\u8a8d\u8b49 Withings \u8a2d\u5099\u3002"
+            "default": "\u5df2\u6210\u529f\u8a8d\u8b49 Withings \u8a2d\u5099\u3002"
         },
         "step": {
+            "pick_implementation": {
+                "title": "\u9078\u64c7\u9a57\u8b49\u6a21\u5f0f"
+            },
             "profile": {
                 "data": {
                     "profile": "\u500b\u4eba\u8a2d\u5b9a"

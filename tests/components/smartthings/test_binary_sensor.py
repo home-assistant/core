@@ -32,11 +32,6 @@ async def test_mapping_integrity():
         assert device_class in DEVICE_CLASSES, device_class
 
 
-async def test_async_setup_platform():
-    """Test setup platform does nothing (it uses config entries)."""
-    await binary_sensor.async_setup_platform(None, None, None)
-
-
 async def test_entity_state(hass, device_factory):
     """Tests the state attributes properly match the light types."""
     device = device_factory(

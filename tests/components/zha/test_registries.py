@@ -19,16 +19,10 @@ def zha_device():
 
 
 @pytest.fixture
-def channels():
+def channels(channel):
     """Return a mock of channels."""
 
-    def channel(name, chan_id):
-        ch = mock.MagicMock()
-        ch.name = name
-        ch.generic_id = chan_id
-        return ch
-
-    return [channel("level", "channel_0x0008"), channel("on_off", "channel_0x0006")]
+    return [channel("level", 8), channel("on_off", 6)]
 
 
 @pytest.mark.parametrize(
