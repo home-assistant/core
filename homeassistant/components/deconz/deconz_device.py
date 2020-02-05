@@ -63,17 +63,6 @@ class DeconzDevice(DeconzBase, Entity):
 
         Daylight is a virtual sensor from deCONZ that should never be enabled by default.
         """
-        if not self.gateway.option_allow_clip_sensor and self._device.type.startswith(
-            "CLIP"
-        ):
-            return False
-
-        if (
-            not self.gateway.option_allow_deconz_groups
-            and self._device.type == "LightGroup"
-        ):
-            return False
-
         if self._device.type == "Daylight":
             return False
 
