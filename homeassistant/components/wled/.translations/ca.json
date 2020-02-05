@@ -14,7 +14,7 @@
                     "host": "Amfitri\u00f3 o adre\u00e7a IP"
                 },
                 "description": "Configura el teu WLED per integrar-lo amb Home Assistant.",
-                "title": "Enlla\u00e7a el teu WLED"
+                "title": "Enlla\u00e7 amb WLED"
             },
             "zeroconf_confirm": {
                 "description": "Vols afegir el WLED `{name}` a Home Assistant?",
