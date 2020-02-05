@@ -568,7 +568,6 @@ def _trigger_extract_device(trigger_conf: dict) -> Optional[str]:
 @callback
 def _trigger_extract_entities(trigger_conf: dict) -> List[str]:
     """Extract entities from a trigger config."""
-
     if trigger_conf[CONF_PLATFORM] in ("state", "numeric_state"):
         return trigger_conf[CONF_ENTITY_ID]
 
