@@ -1,18 +1,18 @@
 {
     "device_automation": {
         "action_type": {
-            "arm_away": "\u8a2d\u5b9a {entity_name} \u5916\u51fa\u6a21\u5f0f",
-            "arm_home": "\u8a2d\u5b9a {entity_name} \u8fd4\u5bb6\u6a21\u5f0f",
-            "arm_night": "\u8a2d\u5b9a {entity_name} \u591c\u9593\u6a21\u5f0f",
-            "disarm": "\u89e3\u9664 {entity_name}",
-            "trigger": "\u89f8\u767c {entity_name}"
+            "arm_away": "\u8a2d\u5b9a{entity_name}\u5916\u51fa\u6a21\u5f0f",
+            "arm_home": "\u8a2d\u5b9a{entity_name}\u8fd4\u5bb6\u6a21\u5f0f",
+            "arm_night": "\u8a2d\u5b9a{entity_name}\u591c\u9593\u6a21\u5f0f",
+            "disarm": "\u89e3\u9664{entity_name}",
+            "trigger": "\u89f8\u767c{entity_name}"
         },
         "trigger_type": {
-            "armed_away": "{entity_name} \u8a2d\u5b9a\u5916\u51fa",
-            "armed_home": "{entity_name} \u8a2d\u5b9a\u5728\u5bb6",
-            "armed_night": "{entity_name} \u8a2d\u5b9a\u591c\u9593",
-            "disarmed": "{entity_name} \u5df2\u89e3\u9664",
-            "triggered": "{entity_name} \u5df2\u89f8\u767c"
+            "armed_away": "{entity_name}\u8a2d\u5b9a\u5916\u51fa",
+            "armed_home": "{entity_name}\u8a2d\u5b9a\u5728\u5bb6",
+            "armed_night": "{entity_name}\u8a2d\u5b9a\u591c\u9593",
+            "disarmed": "{entity_name}\u5df2\u89e3\u9664",
+            "triggered": "{entity_name}\u5df2\u89f8\u767c"
         }
     }
 }
