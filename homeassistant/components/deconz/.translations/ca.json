@@ -77,15 +77,21 @@
             "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat",
             "remote_button_triple_press": "Bot\u00f3 \"{subtype}\" clicat tres vegades consecutives",
             "remote_double_tap": "Dispositiu \"{subtype}\" tocat dues vegades",
+            "remote_double_tap_any_side": "Dispositiu tocat dues vegades a alguna cara",
             "remote_falling": "Dispositiu en caiguda lliure",
+            "remote_flip_180_degrees": "Dispositiu voltejat 180 graus",
+            "remote_flip_90_degrees": "Dispositiu voltejat 90 graus",
             "remote_gyro_activated": "Dispositiu sacsejat",
             "remote_moved": "Dispositiu mogut amb la \"{subtype}\" amunt",
+            "remote_moved_any_side": "Dispositiu mogut amb alguna cara amunt",
             "remote_rotate_from_side_1": "Dispositiu rotat de la \"cara 1\" a la \"{subtype}\"",
             "remote_rotate_from_side_2": "Dispositiu rotat de la \"cara 2\" a la \"{subtype}\"",
             "remote_rotate_from_side_3": "Dispositiu rotat de la \"cara 3\" a la \"{subtype}\"",
             "remote_rotate_from_side_4": "Dispositiu rotat de la \"cara 4\" a la \"{subtype}\"",
             "remote_rotate_from_side_5": "Dispositiu rotat de la \"cara 5\" a la \"{subtype}\"",
-            "remote_rotate_from_side_6": "Dispositiu rotat de la \"cara 6\" a la \"{subtype}\""
+            "remote_rotate_from_side_6": "Dispositiu rotat de la \"cara 6\" a la \"{subtype}\"",
+            "remote_turned_clockwise": "Dispositiu girat en sentit horari",
+            "remote_turned_counter_clockwise": "Dispositiu girat en sentit antihorari"
         }
     },
     "options": {
