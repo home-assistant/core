@@ -235,7 +235,7 @@ class DSMREntity(Entity):
 
     @staticmethod
     def translate_tariff(value, dsmr_version):
-        """Convert 2/1 to normal/low depening on DSMR version."""
+        """Convert 2/1 to normal/low depending on DSMR version."""
         # DSMR V5B: Note: In Belgium values are swapped:
         # Rate code 2 is used for low rate and rate code 1 is used for normal rate.
         if dsmr_version in ("5B"):
