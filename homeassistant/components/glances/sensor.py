@@ -19,6 +19,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     dev = []
 
     for sensor_type, sensor_details in SENSOR_TYPES.items():
+        if not sensor_details[0] in client.api.data:
+            continue
         if sensor_details[0] in client.api.data:
             if sensor_details[0] == "fs":
                 # fs will provide a list of disks attached
@@ -132,10 +134,13 @@ class GlancesSensor(Entity):
         """Unsubscribe from update dispatcher."""
         if self.unsub_update:
             self.unsub_update()
+        self.unsub_update = None
 
     async def async_update(self):
         """Get the latest data from REST API."""
         value = self.glances_data.api.data
+        if value is None:
+            return
 
         if value is not None:
             if self.sensor_details[0] == "fs":
