@@ -10,7 +10,7 @@ import zigpy.zdo
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
 ChannelType = "ZigbeeChannel"
 ChannelsType = "Channels"
-EndpointChannelsType = "EndpointChannelsType"
+ChannelPoolType = "ChannelPool"
 EventRelayChannelType = "EventRelayChannel"
 ZDOChannelType = "ZDOChannel"
 ZhaDeviceType = "ZHADevice"
@@ -32,7 +32,7 @@ if TYPE_CHECKING:
     # pylint: disable=invalid-name
     ChannelType = base_channels.ZigbeeChannel
     ChannelsType = channels.Channels
-    EndpointChannelsType = channels.EndpointChannels
+    ChannelPoolType = channels.ChannelPool
     EventRelayChannelType = base_channels.EventRelayChannel
     ZDOChannelType = base_channels.ZDOChannel
     ZhaDeviceType = homeassistant.components.zha.core.device.ZHADevice

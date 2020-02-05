@@ -25,64 +25,63 @@ class ProbeEndpoint:
         self._device_configs = {}
 
     @callback
-    def discover_entities(self, ep_chnls: zha_typing.EndpointChannelsType) -> None:
+    def discover_entities(self, channel_pool: zha_typing.ChannelPoolType) -> None:
         """Process an endpoint on a zigpy device."""
-        self.discover_by_device_type(ep_chnls)
-        self.discover_by_cluster_id(ep_chnls)
+        self.discover_by_device_type(channel_pool)
+        self.discover_by_cluster_id(channel_pool)
 
     @callback
-    def discover_by_device_type(
-        self, ep_channels: zha_typing.EndpointChannelsType
-    ) -> None:
+    def discover_by_device_type(self, channel_pool: zha_typing.ChannelPoolType) -> None:
         """Process an endpoint on a zigpy device."""
 
-        unique_id = ep_channels.unique_id
+        unique_id = channel_pool.unique_id
 
         component = self._device_configs.get(unique_id, {}).get(ha_const.CONF_TYPE)
         if component is None:
-            ep_profile_id = ep_channels.endpoint.profile_id
-            ep_device_type = ep_channels.endpoint.device_type
+            ep_profile_id = channel_pool.endpoint.profile_id
+            ep_device_type = channel_pool.endpoint.device_type
             component = zha_regs.DEVICE_CLASS[ep_profile_id].get(ep_device_type)
 
         if component and component in zha_const.COMPONENTS:
-            channels = ep_channels.unclaimed_channels()
+            channels = channel_pool.unclaimed_channels()
             entity, claimed = zha_regs.ZHA_ENTITIES.get_entity(
-                component, ep_channels.manufacturer, ep_channels.model, channels
+                component, channel_pool.manufacturer, channel_pool.model, channels
             )
             if entity is None:
                 return
-            ep_channels.claim_channels(claimed)
-            ep_channels.async_new_entity(component, entity, unique_id, claimed)
+            channel_pool.claim_channels(claimed)
+            channel_pool.async_new_entity(component, entity, unique_id, claimed)
 
     @callback
-    def discover_by_cluster_id(
-        self, ep_channels: zha_typing.EndpointChannelsType
-    ) -> None:
+    def discover_by_cluster_id(self, channel_pool: zha_typing.ChannelPoolType) -> None:
         """Process an endpoint on a zigpy device."""
 
-        remaining_channels = ep_channels.unclaimed_channels()
+        remaining_channels = channel_pool.unclaimed_channels()
         for channel in remaining_channels:
             if channel.cluster.cluster_id in zha_regs.CHANNEL_ONLY_CLUSTERS:
-                ep_channels.claim_channels([channel])
+                channel_pool.claim_channels([channel])
                 continue
 
-            component = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS.get(
-                channel.cluster.__class__
-            )
-            if component is None:
-                component = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS.get(
-                    channel.cluster.cluster_id
-                )
-            self.probe_single_cluster(component, channel, ep_channels)
+            cmpnt = None
+            for class_or_id in zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS:
+                if isinstance(class_or_id, int):
+                    if class_or_id == channel.cluster.cluster_id:
+                        cmpnt = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS[class_or_id]
+                        break
+                elif isinstance(channel.cluster, class_or_id):
+                    cmpnt = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS[class_or_id]
+                    break
+
+            self.probe_single_cluster(cmpnt, channel, channel_pool)
 
         # until we can get rid off registries
-        self.handle_on_off_output_cluster_exception(ep_channels)
+        self.handle_on_off_output_cluster_exception(channel_pool)
 
     @staticmethod
     def probe_single_cluster(
         component: str,
         channel: zha_typing.ChannelType,
-        ep_channels: zha_typing.EndpointChannelsType,
+        ep_channels: zha_typing.ChannelPoolType,
     ) -> None:
         """Probe specified cluster for specific component."""
         if component is None or component not in zha_const.COMPONENTS:
@@ -99,7 +98,7 @@ class ProbeEndpoint:
         ep_channels.async_new_entity(component, entity, unique_id, claimed)
 
     def handle_on_off_output_cluster_exception(
-        self, ep_channels: zha_typing.EndpointChannelsType
+        self, ep_channels: zha_typing.ChannelPoolType
     ) -> None:
         """Process output clusters of the endpoint."""
 

@@ -9,6 +9,7 @@ import zigpy.group
 import zigpy.types
 
 import homeassistant.components.zha.core.const as zha_const
+import homeassistant.components.zha.core.device as zha_core_device
 import homeassistant.components.zha.core.registries as zha_regs
 from homeassistant.setup import async_setup_component
 
@@ -163,3 +164,36 @@ def zha_device_restored(hass, zigpy_app_controller, setup_zha):
 def zha_device_joined_restored(request):
     """Join or restore ZHA device."""
     return request.getfixturevalue(request.param)
+
+
+@pytest.fixture
+def zha_device_mock(hass, zigpy_device_mock):
+    """Return a zha Device factory."""
+
+    def _zha_device(
+        endpoints=None,
+        ieee="00:11:22:33:44:55:66:77",
+        manufacturer="mock manufacturer",
+        model="mock model",
+        node_desc=b"\x02@\x807\x10\x7fd\x00\x00*d\x00\x00",
+    ):
+        if endpoints is None:
+            endpoints = {
+                1: {
+                    "in_clusters": [0, 1, 8, 768],
+                    "out_clusters": [0x19],
+                    "device_type": 0x0105,
+                },
+                2: {
+                    "in_clusters": [0],
+                    "out_clusters": [6, 8, 0x19, 768],
+                    "device_type": 0x0810,
+                },
+            }
+        zigpy_device = zigpy_device_mock(
+            endpoints, ieee, manufacturer, model, node_desc
+        )
+        zha_device = zha_core_device.ZHADevice(hass, zigpy_device, mock.MagicMock())
+        return zha_device
+
+    return _zha_device

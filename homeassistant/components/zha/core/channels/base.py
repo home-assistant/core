@@ -84,19 +84,17 @@ class ZigbeeChannel(LogMixin):
     REPORT_CONFIG = ()
 
     def __init__(
-        self,
-        cluster: zha_typing.ZigpyClusterType,
-        ep_channels: zha_typing.EndpointChannelsType,
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
     ) -> None:
         """Initialize ZigbeeChannel."""
         self._channel_name = cluster.ep_attribute
         if self.CHANNEL_NAME:
             self._channel_name = self.CHANNEL_NAME
-        self._ep_channels = ep_channels
+        self._ch_pool = ch_pool
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
         self._cluster = cluster
-        self._id = f"{ep_channels.id}:0x{cluster.cluster_id:04x}"
-        unique_id = ep_channels.unique_id.replace("-", ":")
+        self._id = f"{ch_pool.id}:0x{cluster.cluster_id:04x}"
+        unique_id = ch_pool.unique_id.replace("-", ":")
         self._unique_id = f"{unique_id}:0x{cluster.cluster_id:04x}"
         self._report_config = self.REPORT_CONFIG
         self._status = ChannelStatus.CREATED
@@ -135,7 +133,7 @@ class ZigbeeChannel(LogMixin):
     @callback
     def async_send_signal(self, signal: str, *args: Any) -> None:
         """Send a signal through hass dispatcher."""
-        self._ep_channels.async_send_signal(signal, *args)
+        self._ch_pool.async_send_signal(signal, *args)
 
     async def bind(self):
         """Bind a zigbee cluster.
@@ -168,8 +166,8 @@ class ZigbeeChannel(LogMixin):
         attr_name = self.cluster.attributes.get(attr, [attr])[0]
 
         kwargs = {}
-        if self.cluster.cluster_id >= 0xFC00 and self._ep_channels.manufacturer_code:
-            kwargs["manufacturer"] = self._ep_channels.manufacturer_code
+        if self.cluster.cluster_id >= 0xFC00 and self._ch_pool.manufacturer_code:
+            kwargs["manufacturer"] = self._ch_pool.manufacturer_code
 
         min_report_int, max_report_int, reportable_change = report_config
         try:
@@ -231,7 +229,7 @@ class ZigbeeChannel(LogMixin):
     @callback
     def zha_send_event(self, command: str, args: Union[int, dict]) -> None:
         """Relay events to hass."""
-        self._ep_channels.zha_send_event(
+        self._ch_pool.zha_send_event(
             {
                 ATTR_UNIQUE_ID: self.unique_id,
                 ATTR_CLUSTER_ID: self.cluster.cluster_id,
@@ -247,7 +245,7 @@ class ZigbeeChannel(LogMixin):
     async def get_attribute_value(self, attribute, from_cache=True):
         """Get the value for an attribute."""
         manufacturer = None
-        manufacturer_code = self._ep_channels.manufacturer_code
+        manufacturer_code = self._ch_pool.manufacturer_code
         if self.cluster.cluster_id >= 0xFC00 and manufacturer_code:
             manufacturer = manufacturer_code
         result = await safe_read(
@@ -262,7 +260,7 @@ class ZigbeeChannel(LogMixin):
     def log(self, level, msg, *args):
         """Log a message."""
         msg = f"[%s:%s]: {msg}"
-        args = (self._ep_channels.nwk, self._id) + args
+        args = (self._ch_pool.nwk, self._id) + args
         _LOGGER.log(level, msg, *args)
 
     def __getattr__(self, name):
@@ -280,12 +278,10 @@ class AttributeListeningChannel(ZigbeeChannel):
     REPORT_CONFIG = [{"attr": 0, "config": REPORT_CONFIG_DEFAULT}]
 
     def __init__(
-        self,
-        cluster: zha_typing.ZigpyClusterType,
-        ep_channels: zha_typing.EndpointChannelsType,
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
     ) -> None:
         """Initialize AttributeListeningChannel."""
-        super().__init__(cluster, ep_channels)
+        super().__init__(cluster, ch_pool)
         attr = self._report_config[0].get("attr")
         if isinstance(attr, str):
             self.value_attribute = get_attr_id_by_name(self.cluster, attr)

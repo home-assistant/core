@@ -36,7 +36,7 @@ async def zha_gateway(hass, setup_zha):
 @pytest.fixture
 def ep_channels():
     """Endpoint Channels fixture."""
-    ep_ch_mock = mock.MagicMock(spec_set=zha_channels.EndpointChannels)
+    ep_ch_mock = mock.MagicMock(spec_set=zha_channels.ChannelPool)
     ep_ch_mock.id = 1
     return ep_ch_mock
 
@@ -180,7 +180,7 @@ def test_epch_unclaimed_channels(channel):
     ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
     ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
 
-    ep_channels = zha_channels.EndpointChannels(
+    ep_channels = zha_channels.ChannelPool(
         mock.MagicMock(spec_set=zha_channels.Channels), mock.sentinel.ep
     )
     all_channels = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
@@ -216,7 +216,7 @@ def test_epch_claim_channels(channel):
     ch_2 = channel(zha_const.CHANNEL_LEVEL, 8)
     ch_3 = channel(zha_const.CHANNEL_COLOR, 768)
 
-    ep_channels = zha_channels.EndpointChannels(
+    ep_channels = zha_channels.ChannelPool(
         mock.MagicMock(spec_set=zha_channels.Channels), mock.sentinel.ep
     )
     all_channels = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
@@ -241,8 +241,10 @@ def test_epch_claim_channels(channel):
         assert "1:0x0300" in ep_channels.claimed_channels
 
 
+@mock.patch("homeassistant.components.zha.core.channels.ChannelPool.add_relay_channels")
 @mock.patch(
-    "homeassistant.components.zha.core.channels.EndpointChannels.add_relay_channels"
+    "homeassistant.components.zha.core.discovery.probe.discover_entities",
+    mock.MagicMock(),
 )
 def test_ep_channels_all_channels(m1, zha_device_mock):
     """Test EndpointChannels adding all channels."""
@@ -258,7 +260,7 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
     )
     channels = zha_channels.Channels(zha_device)
 
-    ep_channels = zha_channels.EndpointChannels.new(channels, 1)
+    ep_channels = zha_channels.ChannelPool.new(channels, 1)
     assert "1:0x0000" in ep_channels.all_channels
     assert "1:0x0001" in ep_channels.all_channels
     assert "1:0x0006" in ep_channels.all_channels
@@ -271,7 +273,7 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
     assert "2:0x0300" not in ep_channels.all_channels
 
     channels = zha_channels.Channels(zha_device)
-    ep_channels = zha_channels.EndpointChannels.new(channels, 2)
+    ep_channels = zha_channels.ChannelPool.new(channels, 2)
     assert "1:0x0000" not in ep_channels.all_channels
     assert "1:0x0001" not in ep_channels.all_channels
     assert "1:0x0006" not in ep_channels.all_channels
@@ -284,8 +286,10 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
     assert "2:0x0300" in ep_channels.all_channels
 
 
+@mock.patch("homeassistant.components.zha.core.channels.ChannelPool.add_relay_channels")
 @mock.patch(
-    "homeassistant.components.zha.core.channels.EndpointChannels.add_relay_channels"
+    "homeassistant.components.zha.core.discovery.probe.discover_entities",
+    mock.MagicMock(),
 )
 def test_channel_power_config(m1, zha_device_mock):
     """Test that channels only get a single power channel."""
@@ -301,16 +305,16 @@ def test_channel_power_config(m1, zha_device_mock):
         }
     )
     channels = zha_channels.Channels.new(zha_device)
-    assert "1:0x0000" in channels.endpoints[1].all_channels
-    assert "1:0x0001" in channels.endpoints[1].all_channels
-    assert "1:0x0006" in channels.endpoints[1].all_channels
-    assert "1:0x0008" in channels.endpoints[1].all_channels
-    assert "1:0x0300" not in channels.endpoints[1].all_channels
-    assert "2:0x0000" in channels.endpoints[2].all_channels
-    assert "2:0x0001" not in channels.endpoints[2].all_channels
-    assert "2:0x0006" in channels.endpoints[2].all_channels
-    assert "2:0x0008" in channels.endpoints[2].all_channels
-    assert "2:0x0300" in channels.endpoints[2].all_channels
+    assert "1:0x0000" in channels.pools[1].all_channels
+    assert "1:0x0001" in channels.pools[1].all_channels
+    assert "1:0x0006" in channels.pools[1].all_channels
+    assert "1:0x0008" in channels.pools[1].all_channels
+    assert "1:0x0300" not in channels.pools[1].all_channels
+    assert "2:0x0000" in channels.pools[2].all_channels
+    assert "2:0x0001" not in channels.pools[2].all_channels
+    assert "2:0x0006" in channels.pools[2].all_channels
+    assert "2:0x0008" in channels.pools[2].all_channels
+    assert "2:0x0300" in channels.pools[2].all_channels
 
     zha_device = zha_device_mock(
         {
@@ -319,14 +323,14 @@ def test_channel_power_config(m1, zha_device_mock):
         }
     )
     channels = zha_channels.Channels.new(zha_device)
-    assert "1:0x0001" not in channels.endpoints[1].all_channels
-    assert "2:0x0001" in channels.endpoints[2].all_channels
+    assert "1:0x0001" not in channels.pools[1].all_channels
+    assert "2:0x0001" in channels.pools[2].all_channels
 
     zha_device = zha_device_mock(
         {2: {"in_clusters": in_clusters, "out_clusters": [], "device_type": 0x0000}}
     )
     channels = zha_channels.Channels.new(zha_device)
-    assert "2:0x0001" in channels.endpoints[2].all_channels
+    assert "2:0x0001" in channels.pools[2].all_channels
 
 
 async def test_ep_channels_configure(channel):
@@ -344,7 +348,7 @@ async def test_ep_channels_configure(channel):
 
     channels = mock.MagicMock(spec_set=zha_channels.Channels)
     type(channels).semaphore = mock.PropertyMock(return_value=asyncio.Semaphore(3))
-    ep_channels = zha_channels.EndpointChannels(channels, mock.sentinel.ep)
+    ep_channels = zha_channels.ChannelPool(channels, mock.sentinel.ep)
 
     claimed = {ch_1.id: ch_1, ch_2.id: ch_2, ch_3.id: ch_3}
     relay = {ch_4.id: ch_4, ch_5.id: ch_5}

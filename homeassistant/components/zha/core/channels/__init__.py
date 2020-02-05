@@ -41,7 +41,7 @@ class Channels:
 
     def __init__(self, zha_device: zha_typing.ZhaDeviceType) -> None:
         """Initialize instance."""
-        self._endpoints = {}
+        self._pools = {}
         self._power_config = None
         self._semaphore = asyncio.Semaphore(3)
         self._unique_id = str(zha_device.ieee)
@@ -49,9 +49,9 @@ class Channels:
         self._zha_device = zha_device
 
     @property
-    def endpoints(self) -> Dict[int, "EndpointChannels"]:
+    def pools(self) -> Dict[int, "ChannelPool"]:
         """Return discover endpoints dict."""
-        return self._endpoints
+        return self._pools
 
     @property
     def power_configuration_ch(self) -> zha_typing.ChannelType:
@@ -89,28 +89,28 @@ class Channels:
         """Create new instance."""
         channels = cls(zha_device)
         for ep_id in sorted(zha_device.device.endpoints):
-            channels.add_endpoint(ep_id)
+            channels.add_pool(ep_id)
         return channels
 
-    def add_endpoint(self, ep_id: int) -> None:
+    def add_pool(self, ep_id: int) -> None:
         """Add channels for a specific endpoint."""
         if ep_id == 0:
             return
-        self._endpoints[ep_id] = EndpointChannels.new(self, ep_id)
+        self._pools[ep_id] = ChannelPool.new(self, ep_id)
 
     async def async_initialize(self, from_cache: bool = False) -> None:
         """Initialize claimed channels."""
         await self.zdo_channel.async_initialize(from_cache)
         self.zdo_channel.debug("'async_initialize' stage succeeded")
         await asyncio.gather(
-            *(ep.async_initialize(from_cache) for ep in self.endpoints.values())
+            *(ep.async_initialize(from_cache) for ep in self.pools.values())
         )
 
     async def async_configure(self) -> None:
         """Configure claimed channels."""
         await self.zdo_channel.async_configure()
         self.zdo_channel.debug("'async_configure' stage succeeded")
-        await asyncio.gather(*(ep.async_configure() for ep in self.endpoints.values()))
+        await asyncio.gather(*(ep.async_configure() for ep in self.pools.values()))
 
     @callback
     def async_new_entity(
@@ -146,7 +146,7 @@ class Channels:
         )
 
 
-class EndpointChannels:
+class ChannelPool:
     """All channels of an endpoint."""
 
     def __init__(self, channels: Channels, ep_id: int):
@@ -214,7 +214,7 @@ class EndpointChannels:
         return self._unique_id
 
     @classmethod
-    def new(cls, channels: Channels, ep_id: int) -> "EndpointChannels":
+    def new(cls, channels: Channels, ep_id: int) -> "ChannelPool":
         """Create new channels for an endpoint."""
         ep_chnls = cls(channels, ep_id)
         ep_chnls.add_all_channels()
