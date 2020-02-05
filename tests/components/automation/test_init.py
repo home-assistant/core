@@ -935,6 +935,11 @@ async def test_extraction_functions(hass):
                 {
                     "alias": "test1",
                     "trigger": {"platform": "state", "entity_id": "sensor.trigger_1"},
+                    "condition": {
+                        "condition": "state",
+                        "entity_id": "light.condition_state",
+                        "state": "on",
+                    },
                     "action": [
                         {
                             "service": "test.script",
@@ -954,7 +959,20 @@ async def test_extraction_functions(hass):
                 },
                 {
                     "alias": "test2",
-                    "trigger": {"platform": "state", "entity_id": "sensor.trigger_2"},
+                    "trigger": {
+                        "platform": "device",
+                        "domain": "light",
+                        "type": "turned_on",
+                        "entity_id": "light.trigger_2",
+                        "device_id": "trigger-device-2",
+                    },
+                    "condition": {
+                        "condition": "device",
+                        "device_id": "condition-device",
+                        "domain": "light",
+                        "type": "is_on",
+                        "entity_id": "light.bla",
+                    },
                     "action": [
                         {
                             "service": "test.script",
@@ -989,6 +1007,8 @@ async def test_extraction_functions(hass):
         "automation.test2",
     }
     assert set(automation.entities_in_automation(hass, "automation.test1")) == {
+        "sensor.trigger_1",
+        "light.condition_state",
         "light.in_both",
         "light.in_first",
     }
@@ -997,6 +1017,8 @@ async def test_extraction_functions(hass):
         "automation.test2",
     }
     assert set(automation.devices_in_automation(hass, "automation.test2")) == {
+        "trigger-device-2",
+        "condition-device",
         "device-in-both",
         "device-in-last",
     }
