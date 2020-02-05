@@ -127,13 +127,13 @@ class BunqData:
             await asyncio.wait(tasks)
 
     async def schedule_update(self, seconds):
-        """Schedule an update"""
+        """Schedule an update."""
         async_track_time_interval(
             self.hass, self.async_update, timedelta(seconds=seconds)
         )
 
     async def async_update(self, *_):
-        """Update data"""
+        """Update data."""
         try:
             # get new data from api
             accounts = get_account_data()
