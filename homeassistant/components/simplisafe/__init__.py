@@ -440,12 +440,12 @@ class SimpliSafe:
             # websocket doesn't provide the most recent event, we grab it from the REST
             # API to ensure event-related attributes aren't empty on startup:
             try:
-                most_recent_event = await system.get_latest_event()
+                self.initial_event_to_use[
+                    system.system_id
+                ] = await system.get_latest_event()
             except SimplipyError as err:
                 _LOGGER.error("Error while fetching initial event: %s", err)
                 self.initial_event_to_use[system.system_id] = {}
-            else:
-                self.initial_event_to_use[system.system_id] = most_recent_event
 
         async def refresh(event_time):
             """Refresh data from the SimpliSafe account."""
