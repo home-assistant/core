@@ -26,6 +26,7 @@ class DataUpdateCoordinator:
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
+        *,
         name: str,
         update_method: Callable[[], Awaitable],
         update_interval: timedelta,
@@ -44,15 +45,19 @@ class DataUpdateCoordinator:
         self._unsub_refresh: Optional[CALLBACK_TYPE] = None
         self._request_refresh_task: Optional[asyncio.TimerHandle] = None
         self.failed_last_update = False
+
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
                 hass,
                 logger,
-                REQUEST_REFRESH_DEFAULT_COOLDOWN,
-                REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+                cooldown=REQUEST_REFRESH_DEFAULT_COOLDOWN,
+                immediate=REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+                function=self.async_refresh,
             )
+        else:
+            request_refresh_debouncer.function = self.async_refresh
+
         self._debounced_refresh = request_refresh_debouncer
-        request_refresh_debouncer.function = self.async_refresh
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> None:

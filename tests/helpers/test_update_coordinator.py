@@ -23,7 +23,11 @@ def crd(hass):
         return len(calls)
 
     crd = update_coordinator.DataUpdateCoordinator(
-        hass, LOGGER, "test", refresh, timedelta(seconds=10),
+        hass,
+        LOGGER,
+        name="test",
+        update_method=refresh,
+        update_interval=timedelta(seconds=10),
     )
     return crd
 
