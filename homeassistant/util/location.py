@@ -174,6 +174,10 @@ async def _get_ipapi(session: aiohttp.ClientSession) -> Optional[Dict[str, Any]]
     except (aiohttp.ClientError, ValueError):
         return None
 
+    # ipapi allows 30k free requests/month. Some users exhaust those.
+    if raw_info.get("latitude") == "Sign up to access":
+        return None
+
     return {
         "ip": raw_info.get("ip"),
         "country_code": raw_info.get("country"),

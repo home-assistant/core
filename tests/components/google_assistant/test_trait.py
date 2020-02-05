@@ -51,11 +51,15 @@ _LOGGER = logging.getLogger(__name__)
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 
-BASIC_DATA = helpers.RequestData(BASIC_CONFIG, "test-agent", REQ_ID, None)
+BASIC_DATA = helpers.RequestData(
+    BASIC_CONFIG, "test-agent", const.SOURCE_CLOUD, REQ_ID, None
+)
 
 PIN_CONFIG = MockConfig(secure_devices_pin="1234")
 
-PIN_DATA = helpers.RequestData(PIN_CONFIG, "test-agent", REQ_ID, None)
+PIN_DATA = helpers.RequestData(
+    PIN_CONFIG, "test-agent", const.SOURCE_CLOUD, REQ_ID, None
+)
 
 
 async def test_brightness_light(hass):

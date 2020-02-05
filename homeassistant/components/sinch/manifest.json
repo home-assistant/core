@@ -1,7 +1,7 @@
 {
   "domain": "sinch",
   "name": "Sinch SMS",
-  "documentation": "https://www.home-assistant.io/components/sinch",
+  "documentation": "https://www.home-assistant.io/integrations/sinch",
   "dependencies": [],
   "codeowners": ["@bendikrb"],
   "requirements": ["clx-sdk-xms==1.0.0"]

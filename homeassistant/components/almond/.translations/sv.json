@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "hassio_confirm": {
+                "title": "Almond via Hass.io-till\u00e4gget"
+            }
+        }
+    }
+}

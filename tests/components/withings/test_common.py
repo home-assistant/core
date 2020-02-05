@@ -11,7 +11,6 @@ from homeassistant.components.withings.common import (
     NotAuthenticatedError,
     WithingsDataManager,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import dt
 
@@ -25,17 +24,6 @@ def withings_api_fixture() -> WithingsApi:
     withings_api.sleep_get = MagicMock()
     withings_api.sleep_get_summary = MagicMock()
     return withings_api
-
-
-@pytest.fixture
-def mock_time_zone():
-    """Provide an alternative time zone."""
-    patch_time_zone = patch(
-        "homeassistant.util.dt.DEFAULT_TIME_ZONE",
-        new=dt.get_time_zone("America/Los_Angeles"),
-    )
-    with patch_time_zone:
-        yield
 
 
 @pytest.fixture(name="data_manager")
@@ -122,20 +110,26 @@ async def test_data_manager_call_throttle_disabled(
 
 
 async def test_data_manager_update_sleep_date_range(
-    hass: HomeAssistant, data_manager: WithingsDataManager, mock_time_zone
+    data_manager: WithingsDataManager,
 ) -> None:
     """Test method."""
-    update_start_time = dt.now()
-    await data_manager.update_sleep()
+    patch_time_zone = patch(
+        "homeassistant.util.dt.DEFAULT_TIME_ZONE",
+        new=dt.get_time_zone("America/Los_Angeles"),
+    )
 
-    call_args = data_manager.api.sleep_get.call_args_list[0][1]
-    startdate = call_args.get("startdate")
-    enddate = call_args.get("enddate")
+    with patch_time_zone:
+        update_start_time = dt.now()
+        await data_manager.update_sleep()
 
-    assert startdate.tzname() == "PST"
+        call_args = data_manager.api.sleep_get.call_args_list[0][1]
+        startdate = call_args.get("startdate")
+        enddate = call_args.get("enddate")
 
-    assert enddate.tzname() == "PST"
-    assert startdate.tzname() == "PST"
-    assert update_start_time < enddate
-    assert enddate < update_start_time + timedelta(seconds=1)
-    assert enddate > startdate
+        assert startdate.tzname() == "PST"
+
+        assert enddate.tzname() == "PST"
+        assert startdate.tzname() == "PST"
+        assert update_start_time < enddate
+        assert enddate < update_start_time + timedelta(seconds=1)
+        assert enddate > startdate

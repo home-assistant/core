@@ -1,12 +1,17 @@
 {
     "config": {
         "abort": {
+            "authorize_url_timeout": "Timeout durante la generazione dell'URL di autorizzazione.",
+            "missing_configuration": "Il componente Withings non \u00e8 configurato. Si prega di seguire la documentazione.",
             "no_flows": "\u00c8 necessario configurare Withings prima di potersi autenticare con esso. Si prega di leggere la documentazione."
         },
         "create_entry": {
-            "default": "Autenticazione completata con Withings per il profilo selezionato."
+            "default": "Autenticazione riuscita con Withings."
         },
         "step": {
+            "pick_implementation": {
+                "title": "Scegli il metodo di autenticazione"
+            },
             "profile": {
                 "data": {
                     "profile": "Profilo"

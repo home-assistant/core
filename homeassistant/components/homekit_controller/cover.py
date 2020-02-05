@@ -16,6 +16,7 @@ from homeassistant.components.cover import (
     CoverDevice,
 )
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
 
@@ -36,16 +37,12 @@ TARGET_GARAGE_STATE_MAP = {STATE_OPEN: 0, STATE_CLOSED: 1, STATE_STOPPED: 2}
 CURRENT_WINDOW_STATE_MAP = {0: STATE_CLOSING, 1: STATE_OPENING, 2: STATE_STOPPED}
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Legacy set up platform."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Homekit covers."""
     hkid = config_entry.data["AccessoryPairingID"]
     conn = hass.data[KNOWN_DEVICES][hkid]
 
+    @callback
     def async_add_service(aid, service):
         info = {"aid": aid, "iid": service["iid"]}
         if service["stype"] == "garage-door-opener":

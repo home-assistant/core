@@ -122,7 +122,7 @@ async def async_setup_entry(
     if not await bridge.async_setup():
         return False
 
-    hass.data[DOMAIN][host] = bridge
+    hass.data[DOMAIN][entry.entry_id] = bridge
     config = bridge.api.config
 
     # For backwards compat
@@ -151,5 +151,5 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    bridge = hass.data[DOMAIN].pop(entry.data["host"])
+    bridge = hass.data[DOMAIN].pop(entry.entry_id)
     return await bridge.async_reset()

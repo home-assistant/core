@@ -19,7 +19,10 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import (
+    async_track_point_in_utc_time,
+    async_track_state_change,
+)
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,6 +99,7 @@ class StatisticsSensor(Entity):
         self.total = self.min = self.max = None
         self.min_age = self.max_age = None
         self.change = self.average_change = self.change_rate = None
+        self._update_listener = None
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -214,6 +218,15 @@ class StatisticsSensor(Entity):
             self.ages.popleft()
             self.states.popleft()
 
+    def _next_to_purge_timestamp(self):
+        """Find the timestamp when the next purge would occur."""
+        if self.ages and self._max_age:
+            # Take the oldest entry from the ages list and add the configured max_age.
+            # If executed after purging old states, the result is the next timestamp
+            # in the future when the oldest state will expire.
+            return self.ages[0] + self._max_age
+        return None
+
     async def async_update(self):
         """Get the latest data and updates the states."""
         _LOGGER.debug("%s: updating statistics.", self.entity_id)
@@ -265,6 +278,26 @@ class StatisticsSensor(Entity):
                 self.min_age = self.max_age = dt_util.utcnow()
                 self.change = self.average_change = STATE_UNKNOWN
                 self.change_rate = STATE_UNKNOWN
+
+        # If max_age is set, ensure to update again after the defined interval.
+        next_to_purge_timestamp = self._next_to_purge_timestamp()
+        if next_to_purge_timestamp:
+            _LOGGER.debug(
+                "%s: scheduling update at %s", self.entity_id, next_to_purge_timestamp
+            )
+            if self._update_listener:
+                self._update_listener()
+                self._update_listener = None
+
+            @callback
+            def _scheduled_update(now):
+                """Timer callback for sensor update."""
+                _LOGGER.debug("%s: executing scheduled update", self.entity_id)
+                self.async_schedule_update_ha_state(True)
+
+            self._update_listener = async_track_point_in_utc_time(
+                self.hass, _scheduled_update, next_to_purge_timestamp
+            )
 
     async def _async_initialize_from_database(self):
         """Initialize the list of states from the database.
