@@ -3,7 +3,13 @@ import logging
 
 from simplipy.errors import SimplipyError
 from simplipy.lock import LockStates
-from simplipy.websocket import EVENT_LOCK_ERROR, EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED
+from simplipy.websocket import (
+    EVENT_CONNECTION_LOST,
+    EVENT_CONNECTION_RESTORED,
+    EVENT_LOCK_ERROR,
+    EVENT_LOCK_LOCKED,
+    EVENT_LOCK_UNLOCKED,
+)
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
@@ -89,5 +95,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
             self._state = STATE_UNLOCKED
         elif event.event_type == EVENT_LOCK_ERROR:
             self._state = STATE_UNKNOWN
-        else:
-            self._state = None
+        elif event.event_type == EVENT_CONNECTION_LOST:
+            self._online = False
+        elif event.event_type == EVENT_CONNECTION_RESTORED:
+            self._online = True

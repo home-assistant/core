@@ -13,6 +13,8 @@ from simplipy.websocket import (
     EVENT_ARMED_HOME,
     EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
     EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
+    EVENT_CONNECTION_LOST,
+    EVENT_CONNECTION_RESTORED,
     EVENT_DISARMED_BY_MASTER_PIN,
     EVENT_DISARMED_BY_REMOTE,
     EVENT_HOME_EXIT_DELAY,
@@ -175,11 +177,6 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
     @callback
     def async_update_from_rest_api(self):
         """Update the entity with the provided REST API data."""
-        if self._system.state == SystemStates.error:
-            self._online = False
-            return
-        self._online = True
-
         if self._system.version == 3:
             self._attrs.update(
                 {
@@ -227,7 +224,9 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
             EVENT_HOME_EXIT_DELAY,
         ):
             self._state = STATE_ALARM_ARMING
-        else:
-            self._state = None
+        elif event.event_type == EVENT_CONNECTION_LOST:
+            self._online = False
+        elif event.event_type == EVENT_CONNECTION_RESTORED:
+            self._online = True
 
         self._changed_by = event.changed_by
