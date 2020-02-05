@@ -382,7 +382,8 @@ class SimpliSafeWebsocket:
             self._hass, DEFAULT_WATCHDOG_SECONDS, self._async_websocket_reconnect
         )
 
-    def _on_disconnect(self):
+    @staticmethod
+    def _on_disconnect():
         """Define a handler to fire when the websocket is disconnected."""
         _LOGGER.info("Disconnected from websocket")
 
