@@ -65,7 +65,7 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    _LOGGER.debug("setting up tankerkoenig")
+    _LOGGER.debug("Setting up platform")
 
     tankerkoenig = await hass.async_add_executor_job(
         partial(TankerkoenigData, hass, conf)
@@ -94,13 +94,13 @@ class TankerkoenigData:
         """Initialize the data object."""
         self._api_key = conf[CONF_API_KEY]
         self._entities = {}
-        self._fuel_types = conf.get(CONF_FUEL_TYPES)
+        self._fuel_types = conf[CONF_FUEL_TYPES]
 
         latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
         longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-        radius = conf.get(CONF_RADIUS)
+        radius = conf[CONF_RADIUS]
 
-        additional_stations = conf.get(CONF_STATIONS)
+        additional_stations = conf[CONF_STATIONS]
 
         _LOGGER.debug("Fetching data for (%s,%s) rad: %s", latitude, longitude, radius)
 
@@ -113,7 +113,7 @@ class TankerkoenigData:
         _LOGGER.debug("Received data: %s", data)
         if not data["ok"]:
             _LOGGER.error(
-                "Error fetching data from tankerkoenig.de:\n%s\nCould not setup sensors",
+                "Setup for sensors was unsuccessful. Error occurred while fetching data from tankerkoenig.de: %s",
                 data["message"],
             )
             return
@@ -166,7 +166,8 @@ class TankerkoenigData:
     def update(self, now=None):
         """Get the latest data from tankerkoenig.de."""
         _LOGGER.debug("Fetching new data from tankerkoenig.de")
-        data = pytankerkoenig.getPriceList(self._api_key, list(self._entities.keys()))
+        entity_list = list(self._entities.keys())
+        data = pytankerkoenig.getPriceList(self._api_key, entity_list)
 
         if data["ok"]:
             _LOGGER.debug("Received data: %s", data)
@@ -183,7 +184,7 @@ class TankerkoenigData:
         station_id = station["id"]
         if station_id in self._entities.keys():
             _LOGGER.warning(
-                "Sensor for station with id %s was already created.", station_id
+                "Sensor for station with id %s was already created", station_id
             )
             return
 
