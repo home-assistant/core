@@ -1,31 +1,26 @@
 """The Minecraft Server sensor platform."""
 
 import logging
-from typing import Any
+from typing import Any, Dict
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
 from . import MinecraftServer, MinecraftServerEntity
 from .const import (
+    ATTR_PLAYERS_LIST,
     DOMAIN,
-    ICON_DESCRIPTION,
     ICON_LATENCY_TIME,
-    ICON_PLAYERS_LIST,
     ICON_PLAYERS_MAX,
     ICON_PLAYERS_ONLINE,
     ICON_PROTOCOL_VERSION,
     ICON_VERSION,
-    NAME_DESCRIPTION,
     NAME_LATENCY_TIME,
-    NAME_PLAYERS_LIST,
     NAME_PLAYERS_MAX,
     NAME_PLAYERS_ONLINE,
     NAME_PROTOCOL_VERSION,
     NAME_VERSION,
-    UNIT_DESCRIPTION,
     UNIT_LATENCY_TIME,
-    UNIT_PLAYERS_LIST,
     UNIT_PLAYERS_MAX,
     UNIT_PLAYERS_ONLINE,
     UNIT_PROTOCOL_VERSION,
@@ -43,13 +38,11 @@ async def async_setup_entry(
 
     # Create entities list.
     entities = [
-        MinecraftServerDescriptionSensor(server),
         MinecraftServerVersionSensor(server),
         MinecraftServerProtocolVersionSensor(server),
         MinecraftServerLatencyTimeSensor(server),
         MinecraftServerPlayersOnlineSensor(server),
         MinecraftServerPlayersMaxSensor(server),
-        MinecraftServerPlayersListSensor(server),
     ]
 
     # Add sensor entities.
@@ -81,63 +74,6 @@ class MinecraftServerSensorEntity(MinecraftServerEntity):
     def unit_of_measurement(self) -> str:
         """Return sensor measurement unit."""
         return self._unit
-
-
-class MinecraftServerDescriptionSensor(MinecraftServerSensorEntity):
-    """Representation of a Minecraft Server description sensor."""
-
-    _COLOR_CODES = [
-        "§0",
-        "§1",
-        "§2",
-        "§3",
-        "§4",
-        "§5",
-        "§6",
-        "§7",
-        "§8",
-        "§9",
-        "§a",
-        "§b",
-        "§c",
-        "§d",
-        "§e",
-        "§f",
-        "§k",
-        "§l",
-        "§m",
-        "§n",
-        "§o",
-        "§r",
-    ]
-
-    def __init__(self, server: MinecraftServer) -> None:
-        """Initialize description sensor."""
-        super().__init__(
-            server=server,
-            type_name=NAME_DESCRIPTION,
-            icon=ICON_DESCRIPTION,
-            unit=UNIT_DESCRIPTION,
-        )
-
-    async def async_update(self) -> None:
-        """Update description."""
-        description = self._server.description
-
-        if description is not None:
-            # Remove color codes.
-            for color_code in self._COLOR_CODES:
-                description = description.replace(color_code, "")
-
-            # Remove newlines.
-            description = description.replace("\n", " ")
-
-            # Limit description length to 255.
-            if len(description) > 255:
-                description = description[:255]
-                _LOGGER.debug("Description length > 255 (truncated)")
-
-        self._state = description
 
 
 class MinecraftServerVersionSensor(MinecraftServerSensorEntity):
@@ -201,8 +137,22 @@ class MinecraftServerPlayersOnlineSensor(MinecraftServerSensorEntity):
         )
 
     async def async_update(self) -> None:
-        """Update online players."""
+        """Update online players state and device state attributes."""
         self._state = self._server.players_online
+
+        device_state_attributes = None
+        players_list = self._server.players_list
+
+        if players_list is not None:
+            if len(players_list) != 0:
+                device_state_attributes = {ATTR_PLAYERS_LIST: self._server.players_list}
+
+        self._device_state_attributes = device_state_attributes
+
+    @property
+    def device_state_attributes(self) -> Dict[str, Any]:
+        """Return players list in device state attributes."""
+        return self._device_state_attributes
 
 
 class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
@@ -220,35 +170,3 @@ class MinecraftServerPlayersMaxSensor(MinecraftServerSensorEntity):
     async def async_update(self) -> None:
         """Update maximum number of players."""
         self._state = self._server.players_max
-
-
-class MinecraftServerPlayersListSensor(MinecraftServerSensorEntity):
-    """Representation of a Minecraft Server players list sensor."""
-
-    def __init__(self, server: MinecraftServer) -> None:
-        """Initialize players list sensor."""
-        super().__init__(
-            server=server,
-            type_name=NAME_PLAYERS_LIST,
-            icon=ICON_PLAYERS_LIST,
-            unit=UNIT_PLAYERS_LIST,
-        )
-
-    async def async_update(self) -> None:
-        """Update players list."""
-        players_list = self._server.players_list
-        players_string = None
-
-        if players_list is not None:
-            if not players_list:
-                players_string = "[]"
-            else:
-                separator = ", "
-                players_string = f"[{separator.join(players_list)}]"
-
-                # Limit players list length to 255.
-                if len(players_string) > 255:
-                    players_string = f"{players_string[:-4]}...]"
-                    _LOGGER.debug("Players list length > 255 (truncated)")
-
-        self._state = players_string

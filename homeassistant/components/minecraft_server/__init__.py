@@ -124,12 +124,7 @@ class MinecraftServer:
 
     def stop_periodic_update(self) -> None:
         """Stop periodic execution of update method."""
-        if self._stop_periodic_update is not None:
-            self._stop_periodic_update()
-        else:
-            _LOGGER.debug(
-                "Listener was not started, stopping of periodic update skipped"
-            )
+        self._stop_periodic_update()
 
     async def async_check_connection(self) -> None:
         """Check server connection using a 'ping' request and store result."""
@@ -159,7 +154,7 @@ class MinecraftServer:
         if server_online:
             try:
                 await self._async_status_request()
-            except IOError as error:
+            except OSError as error:
                 _LOGGER.debug(
                     "Error occurred while trying to update the server data: %s", error
                 )
@@ -180,9 +175,8 @@ class MinecraftServer:
             status_response = await self._hass.async_add_executor_job(
                 self._mc_status.status, self._RETRIES_STATUS
             )
-        except IOError:
-            _LOGGER.debug("Error while requesting server status: IOError")
-            raise IOError
+        except IOError as error:
+            raise OSError(error)
         else:
             self.description = status_response.description["text"]
             self.version = status_response.version.name
@@ -215,6 +209,7 @@ class MinecraftServerEntity(Entity):
             "sw_version": self._server.protocol_version,
         }
         self._device_class = device_class
+        self._device_state_attributes = None
         self._disconnect_dispatcher = None
 
     @property

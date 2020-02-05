@@ -22,38 +22,38 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
-        if user_input is None:
-            # No configuration data available yet, show default configuration form.
-            return self._show_config_form()
+        if user_input is not None:
+            # User inputs.
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
 
-        # User inputs.
-        host = user_input[CONF_HOST]
-        port = user_input[CONF_PORT]
+            # Abort in case the host was already configured before.
+            unique_id = f"{host}-{port}"
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
 
-        # Abort in case the host was already configured before.
-        unique_id = f"{host}-{port}"
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
+            errors = {}
 
-        errors = {}
+            # Validate port configuration (limit to user and dynamic port range).
+            if (port < 1024) or (port > 65535):
+                errors["base"] = "invalid_port"
+            # Validate host and port via ping request to server.
+            else:
+                server = MinecraftServer(self.hass, unique_id, user_input)
+                await server.async_check_connection()
+                if not server.online:
+                    errors["base"] = "cannot_connect"
 
-        # Validate port configuration (limit to user and dynamic port range).
-        if (port < 1024) or (port > 65535):
-            errors["base"] = "invalid_port"
-        # Validate host and port via ping request to server.
-        else:
-            server = MinecraftServer(self.hass, unique_id, user_input)
-            await server.async_check_connection()
-            if not server.online:
-                errors["base"] = "cannot_connect"
+            # Configuration data are available, but an error was detected.
+            # Show configuration form with error message.
+            if "base" in errors:
+                return self._show_config_form(user_input, errors=errors)
 
-        # Configuration data are available, but an error was detected.
-        # Show configuration form with error message.
-        if "base" in errors:
-            return self._show_config_form(user_input, errors=errors)
+            # Configuration data are available and no error was detected, create configuration entry.
+            return self.async_create_entry(title=f"{host}:{port}", data=user_input)
 
-        # Configuration data are available and no error was detected, create configuration entry.
-        return self.async_create_entry(title=f"{host}:{port}", data=user_input)
+        # No configuration data available yet, show default configuration form.
+        return self._show_config_form()
 
     def _show_config_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
