@@ -1765,18 +1765,18 @@ DEVICES = [
         },
         "entities": [
             "binary_sensor.lumi_lumi_router_77665544_on_off",
-            "light.lumi_lumi_router_77665544_on_off_on_off",
+            "light.lumi_lumi_router_77665544_on_off",
         ],
         "entity_map": {
             ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Opening",
-                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off_on_off",
+                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off",
             },
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Light",
-                "entity_id": "light.lumi_lumi_router_77665544_on_off_on_off",
+                "entity_id": "light.lumi_lumi_router_77665544_on_off",
             },
         },
         "event_channels": ["8:0x0006"],
@@ -1797,18 +1797,18 @@ DEVICES = [
         },
         "entities": [
             "binary_sensor.lumi_lumi_router_77665544_on_off",
-            "light.lumi_lumi_router_77665544_on_off_on_off",
+            "light.lumi_lumi_router_77665544_on_off",
         ],
         "entity_map": {
             ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Opening",
-                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off_on_off",
+                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off",
             },
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Light",
-                "entity_id": "light.lumi_lumi_router_77665544_on_off_on_off",
+                "entity_id": "light.lumi_lumi_router_77665544_on_off",
             },
         },
         "event_channels": ["8:0x0006"],
@@ -1829,18 +1829,18 @@ DEVICES = [
         },
         "entities": [
             "binary_sensor.lumi_lumi_router_77665544_on_off",
-            "light.lumi_lumi_router_77665544_on_off_on_off",
+            "light.lumi_lumi_router_77665544_on_off",
         ],
         "entity_map": {
             ("binary_sensor", "00:11:22:33:44:55:66:77-8-6"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Opening",
-                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off_on_off",
+                "entity_id": "binary_sensor.lumi_lumi_router_77665544_on_off",
             },
             ("light", "00:11:22:33:44:55:66:77-8"): {
                 "channels": ["on_off", "on_off"],
                 "entity_class": "Light",
-                "entity_id": "light.lumi_lumi_router_77665544_on_off_on_off",
+                "entity_id": "light.lumi_lumi_router_77665544_on_off",
             },
         },
         "event_channels": ["8:0x0006"],
