@@ -29,11 +29,11 @@ async def async_setup_platform(hass, _config, async_add_devices, _discovery_info
 async def async_setup_entry(hass, entry, async_add_devices):
     """Load a config entry."""
     atag = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([AtagOneThermostat(atag, "Thermostat")])
+    async_add_devices([AtagThermostat(atag, "Thermostat")])
 
 
 # pylint: disable=abstract-method
-class AtagOneThermostat(AtagEntity, ClimateDevice, RestoreEntity):
+class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
     """Atag climate device."""
 
     def __init__(self, atag, atagtype):

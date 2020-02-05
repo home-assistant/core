@@ -23,11 +23,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     atag = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
     for sensor in DEFAULT_SENSORS:
-        entities.append(AtagOneSensor(atag, sensor))
+        entities.append(AtagSensor(atag, sensor))
     async_add_entities(entities)
 
 
-class AtagOneSensor(AtagEntity):
+class AtagSensor(AtagEntity):
     """Representation of a AtagOne Sensor."""
 
     @property
@@ -38,7 +38,6 @@ class AtagOneSensor(AtagEntity):
     async def async_update(self):
         """Get latest data from datastore."""
         data = self.atag.sensordata.get(self._datafield)
-        if isinstance(data, list):
-            self._state, self._icon = data
-        else:
-            self._state = data
+        if data:
+            self._state = data.get("state")
+            self._icon = data.get("icon") or self._icon

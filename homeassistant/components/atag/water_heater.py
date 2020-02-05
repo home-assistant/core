@@ -21,12 +21,10 @@ async def async_setup_platform(hass, config, async_add_devices, _discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Initialize DHW device from config entry."""
     atag = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([AtagOneWaterHeater(atag, "DHW")])
+    async_add_entities([AtagWaterHeater(atag, "DHW")])
 
 
-class AtagOneWaterHeater(
-    AtagEntity, WaterHeaterDevice
-):  # pylint: disable=abstract-method
+class AtagWaterHeater(AtagEntity, WaterHeaterDevice):
     """Representation of an ATAG water heater."""
 
     @property

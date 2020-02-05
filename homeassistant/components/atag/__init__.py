@@ -21,7 +21,6 @@ DATA_LISTENER = "atag_listener"
 SIGNAL_UPDATE_ATAG = "atag_update"
 PLATFORMS = ["sensor", "climate", "water_heater"]
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
-PROJECT_URL = "https://www.atag-one.com"
 UNIT_TO_CLASS = {"°C": DEVICE_CLASS_TEMPERATURE, "Bar": DEVICE_CLASS_PRESSURE}
 
 
@@ -88,26 +87,22 @@ class AtagEntity(Entity):
 
     def __init__(self, atag: AtagDataStore, atagtype: str) -> None:
         """Initialize the Atag entity."""
-        sensortype = SENSOR_TYPES.get(atagtype)
-        if sensortype is not None:
-            self._type = sensortype[0]
-            self._unit = sensortype[1]
-            self._icon = sensortype[2]
-            self._datafield = sensortype[3]
-            data = atag.sensordata.get(self._datafield)
-            if isinstance(data, list):
-                self._state, self._icon = data
-            else:
-                self._state = data
-        else:
+        if atagtype not in SENSOR_TYPES:
             self._type = atagtype
+        else:
+            sensortype = SENSOR_TYPES[atagtype]
+            self._type = sensortype["type"]
+            self._unit = sensortype["unit"]
+            self._datafield = sensortype["datafield"]
+            self._state = atag.sensordata[self._datafield]["state"]
+            self._icon = atag.sensordata[self._datafield].get("icon")
 
-        self._name = " ".join([DOMAIN.title(), self._type])
+        self._name = f"{DOMAIN.title()} {self._type}"
         self.atag = atag
         self._unsub_dispatcher = None
 
     @property
-    def device_info(self):
+    def device_info(self) -> dict:
         """Return info for device registry."""
         device = self.atag.device
         host = self.atag.config.host
@@ -117,7 +112,7 @@ class AtagEntity(Entity):
             "name": "Atag Thermostat",
             "model": "Atag One",
             "sw_version": version,
-            "manufacturer": PROJECT_URL,
+            "manufacturer": "Atag",
         }
 
     @property
@@ -166,4 +161,4 @@ class AtagEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique ID to use for this entity."""
-        return "-".join([DOMAIN.title(), self._type, self.atag.device])
+        return f"{DOMAIN.title()}-{self._type}-{self.atag.device}"
