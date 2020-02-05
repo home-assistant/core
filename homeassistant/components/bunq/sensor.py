@@ -8,11 +8,11 @@ from bunq.sdk.exception import ApiException, BunqException
 from bunq.sdk.model.generated import endpoint
 import voluptuous as vol
 
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_API_KEY
 
 ICON = "mdi:cash-multiple"
 UPDATE_INTERVAL = 60
