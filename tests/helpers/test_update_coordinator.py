@@ -37,7 +37,7 @@ async def test_async_refresh(crd):
     assert crd.data is None
     await crd.async_refresh()
     assert crd.data == 1
-    assert crd.failed_last_update is False
+    assert crd.last_update_success is True
 
     updates = []
 
@@ -62,12 +62,12 @@ async def test_request_refresh(crd):
     assert crd.data is None
     await crd.async_request_refresh()
     assert crd.data == 1
-    assert crd.failed_last_update is False
+    assert crd.last_update_success is True
 
     # Second time we hit the debonuce
     await crd.async_request_refresh()
     assert crd.data == 1
-    assert crd.failed_last_update is False
+    assert crd.last_update_success is True
 
 
 async def test_refresh_fail(crd, caplog):
@@ -77,7 +77,7 @@ async def test_refresh_fail(crd, caplog):
     await crd.async_refresh()
 
     assert crd.data is None
-    assert crd.failed_last_update is True
+    assert crd.last_update_success is False
     assert "Error fetching test data" in caplog.text
 
     crd.update_method = CoroutineMock(return_value=1)
@@ -85,7 +85,7 @@ async def test_refresh_fail(crd, caplog):
     await crd.async_refresh()
 
     assert crd.data == 1
-    assert crd.failed_last_update is False
+    assert crd.last_update_success is True
 
     crd.update_method = CoroutineMock(side_effect=ValueError)
     caplog.clear()
@@ -93,7 +93,7 @@ async def test_refresh_fail(crd, caplog):
     await crd.async_refresh()
 
     assert crd.data == 1  # value from previous fetch
-    assert crd.failed_last_update is True
+    assert crd.last_update_success is False
     assert "Unexpected error fetching test data" in caplog.text
 
 

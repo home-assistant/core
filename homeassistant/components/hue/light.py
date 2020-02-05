@@ -91,7 +91,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     # Otherwise we will declare not ready.
     await light_coordinator.async_refresh()
 
-    if light_coordinator.failed_last_update:
+    if not light_coordinator.last_update_success:
         raise PlatformNotReady
 
     update_lights = partial(
@@ -281,7 +281,7 @@ class HueLight(Light):
     @property
     def available(self):
         """Return if light is available."""
-        return not self.coordinator.failed_last_update and (
+        return self.coordinator.last_update_success and (
             self.is_group
             or self.bridge.allow_unreachable
             or self.light.state["reachable"]
