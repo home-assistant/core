@@ -342,10 +342,12 @@ def _async_setup_themes(hass, themes):
         """Update theme_color in manifest."""
         name = hass.data[DATA_DEFAULT_THEME]
         themes = hass.data[DATA_THEMES]
-        if name != DEFAULT_THEME and PRIMARY_COLOR in themes[name]:
-            MANIFEST_JSON["theme_color"] = themes[name][PRIMARY_COLOR]
-        else:
-            MANIFEST_JSON["theme_color"] = DEFAULT_THEME_COLOR
+        MANIFEST_JSON["theme_color"] = DEFAULT_THEME_COLOR
+        if name != DEFAULT_THEME:
+            MANIFEST_JSON["theme_color"] = themes[name].get(
+                "app-header-background-color",
+                themes[name].get(PRIMARY_COLOR, DEFAULT_THEME_COLOR),
+            )
         hass.bus.async_fire(
             EVENT_THEMES_UPDATED, {"themes": themes, "default_theme": name}
         )

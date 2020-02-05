@@ -215,7 +215,7 @@ async def test_flow_link_timeout(hass):
 
 
 async def test_flow_link_unknown_error(hass):
-    """Test if a unknown error happend during the linking processes."""
+    """Test if a unknown error happened during the linking processes."""
     mock_bridge = get_mock_bridge(mock_create_user=CoroutineMock(side_effect=OSError),)
     with patch(
         "homeassistant.components.hue.config_flow.discover_nupnp",

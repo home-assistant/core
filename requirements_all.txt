@@ -5,7 +5,7 @@ async_timeout==3.0.1
 attrs==19.3.0
 bcrypt==3.1.7
 certifi>=2019.11.28
-importlib-metadata==1.4.0
+importlib-metadata==1.5.0
 jinja2>=2.10.3
 PyJWT==1.7.1
 cryptography==2.8
@@ -172,7 +172,7 @@ aioimaplib==0.7.15
 aiokafka==0.5.1
 
 # homeassistant.components.kef
-aiokef==0.2.6
+aiokef==0.2.7
 
 # homeassistant.components.lifx
 aiolifx==0.6.7
@@ -196,7 +196,7 @@ aiopylgtv==0.3.2
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==11
+aiounifi==12
 
 # homeassistant.components.wwlln
 aiowwlln==2.0.2
@@ -208,10 +208,10 @@ airly==0.0.2
 aladdin_connect==0.3
 
 # homeassistant.components.alarmdecoder
-alarmdecoder==1.13.9
+alarmdecoder==1.13.2
 
 # homeassistant.components.alpha_vantage
-alpha_vantage==2.1.2
+alpha_vantage==2.1.3
 
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
@@ -334,7 +334,7 @@ bomradarloop==0.1.3
 boto3==1.9.252
 
 # homeassistant.components.braviatv
-braviarc-homeassistant==0.3.7.dev0
+bravia-tv==1.0
 
 # homeassistant.components.broadlink
 broadlink==0.12.0
@@ -432,7 +432,7 @@ directpy==0.5
 discogs_client==2.2.2
 
 # homeassistant.components.discord
-discord.py==1.2.5
+discord.py==1.3.1
 
 # homeassistant.components.updater
 distro==1.4.0
@@ -547,9 +547,6 @@ freesms==0.1.2
 # homeassistant.components.fritzbox_callmonitor
 # homeassistant.components.fritzbox_netmonitor
 fritzconnection==1.2.0
-
-# homeassistant.components.fritzdect
-fritzhome==1.0.4
 
 # homeassistant.components.google_translate
 gTTS-token==1.1.3
@@ -676,10 +673,10 @@ hlk-sw16==0.0.8
 hole==0.5.0
 
 # homeassistant.components.workday
-holidays==0.9.12
+holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200130.0
+home-assistant-frontend==20200130.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -769,7 +766,7 @@ konnected==0.1.5
 lakeside==0.12
 
 # homeassistant.components.dyson
-libpurecool==0.6.0
+libpurecool==0.6.1
 
 # homeassistant.components.foscam
 libpyfoscam==1.0
@@ -905,7 +902,7 @@ niko-home-control==0.2.1
 niluclient==0.1.2
 
 # homeassistant.components.nederlandse_spoorwegen
-nsapi==3.0.0
+nsapi==3.0.2
 
 # homeassistant.components.nsw_fuel_station
 nsw-fuel-api-client==1.0.10
@@ -917,7 +914,7 @@ nuheat==0.3.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.17.4
+numpy==1.18.1
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
@@ -1025,7 +1022,7 @@ pmsensor==0.4
 pocketcasts==0.1
 
 # homeassistant.components.reddit
-praw==6.5.0
+praw==6.5.1
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
@@ -1191,7 +1188,7 @@ pydaikin==1.6.2
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==69
+pydeconz==70
 
 # homeassistant.components.delijn
 pydelijn==0.5.1
@@ -1285,7 +1282,7 @@ pyhik==0.2.5
 pyhiveapi==0.2.19.3
 
 # homeassistant.components.homematic
-pyhomematic==0.1.63
+pyhomematic==0.1.64
 
 # homeassistant.components.homeworks
 pyhomeworks==0.0.6
@@ -1494,10 +1491,10 @@ pysesame2==1.0.1
 pysher==1.0.1
 
 # homeassistant.components.signal_messenger
-pysignalclirestapi==0.1.4
+pysignalclirestapi==0.2.4
 
 # homeassistant.components.sma
-pysma==0.3.4
+pysma==0.3.5
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
@@ -1696,7 +1693,7 @@ pyversasense==0.0.6
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.16
+pyvizio==0.1.21
 
 # homeassistant.components.velux
 pyvlx==0.2.12
@@ -1750,7 +1747,7 @@ restrictedpython==5.0
 rfk101py==0.0.1
 
 # homeassistant.components.rflink
-rflink==0.0.50
+rflink==0.0.51
 
 # homeassistant.components.ring
 ring_doorbell==0.6.0
@@ -1785,6 +1782,9 @@ russound_rio==0.1.7
 # homeassistant.components.yamaha
 rxv==0.6.0
 
+# homeassistant.components.salt
+saltbox==0.1.3
+
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
 
@@ -1798,7 +1798,7 @@ schiene==0.23
 scsgate==0.1.0
 
 # homeassistant.components.sendgrid
-sendgrid==6.1.0
+sendgrid==6.1.1
 
 # homeassistant.components.sensehat
 sense-hat==2.2.0
@@ -1984,7 +1984,7 @@ todoist-python==8.0.0
 toonapilib==3.2.4
 
 # homeassistant.components.totalconnect
-total_connect_client==0.28
+total_connect_client==0.50
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
@@ -2118,7 +2118,7 @@ zengge==0.2
 zeroconf==0.24.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.31
+zha-quirks==0.0.32
 
 # homeassistant.components.zhong_hong
 zhong_hong_hvac==1.0.9

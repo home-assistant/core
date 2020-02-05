@@ -63,17 +63,6 @@ class DeconzDevice(DeconzBase, Entity):
 
         Daylight is a virtual sensor from deCONZ that should never be enabled by default.
         """
-        if not self.gateway.option_allow_clip_sensor and self._device.type.startswith(
-            "CLIP"
-        ):
-            return False
-
-        if (
-            not self.gateway.option_allow_deconz_groups
-            and self._device.type == "LightGroup"
-        ):
-            return False
-
         if self._device.type == "Daylight":
             return False
 
@@ -81,7 +70,7 @@ class DeconzDevice(DeconzBase, Entity):
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
-        self._device.register_async_callback(self.async_update_callback)
+        self._device.register_callback(self.async_update_callback)
         self.gateway.deconz_ids[self.entity_id] = self._device.deconz_id
         self.listeners.append(
             async_dispatcher_connect(

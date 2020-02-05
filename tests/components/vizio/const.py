@@ -26,6 +26,8 @@ HOST2 = "192.168.1.2:9000"
 ACCESS_TOKEN = "deadbeef"
 VOLUME_STEP = 2
 UNIQUE_ID = "testid"
+MODEL = "model"
+VERSION = "version"
 
 MOCK_USER_VALID_TV_CONFIG = {
     CONF_NAME: NAME,

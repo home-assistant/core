@@ -54,6 +54,7 @@ FLOWS = [
     "luftdaten",
     "mailgun",
     "met",
+    "meteo_france",
     "mikrotik",
     "mobile_app",
     "mqtt",

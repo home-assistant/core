@@ -32,9 +32,9 @@ async def async_setup_entry(
         GarminConnectAuthenticationError,
         GarminConnectTooManyRequestsError,
     ) as err:
-        _LOGGER.error("Error occured during Garmin Connect Client update: %s", err)
+        _LOGGER.error("Error occurred during Garmin Connect Client update: %s", err)
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unknown error occured during Garmin Connect Client update.")
+        _LOGGER.error("Unknown error occurred during Garmin Connect Client update.")
 
     entities = []
     for (

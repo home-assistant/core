@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_USERNAME,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     HTTP_BASIC_AUTHENTICATION,
 )
 from homeassistant.exceptions import Unauthorized, UnknownUser
@@ -235,6 +236,9 @@ def setup(hass, config):
                 for entity_id in hass.data[DATA_AMCREST][CAMERAS]
                 if have_permission(user, entity_id)
             ]
+
+        if call.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_NONE:
+            return []
 
         call_ids = await async_extract_entity_ids(hass, call)
         entity_ids = []

@@ -75,7 +75,7 @@ aiopylgtv==0.3.2
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==11
+aiounifi==12
 
 # homeassistant.components.wwlln
 aiowwlln==2.0.2
@@ -244,10 +244,10 @@ herepy==2.0.0
 hole==0.5.0
 
 # homeassistant.components.workday
-holidays==0.9.12
+holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200130.0
+home-assistant-frontend==20200130.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -281,7 +281,7 @@ keyring==20.0.0
 keyrings.alt==3.4.0
 
 # homeassistant.components.dyson
-libpurecool==0.6.0
+libpurecool==0.6.1
 
 # homeassistant.components.mikrotik
 librouteros==3.0.0
@@ -297,6 +297,9 @@ luftdaten==0.6.3
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
+
+# homeassistant.components.meteo_france
+meteofrance==0.3.7
 
 # homeassistant.components.mfi
 mficlient==0.3.0
@@ -324,7 +327,7 @@ nuheat==0.3.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.17.4
+numpy==1.18.1
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -356,7 +359,7 @@ plexwebsocket==0.0.6
 pmsensor==0.4
 
 # homeassistant.components.reddit
-praw==6.5.0
+praw==6.5.1
 
 # homeassistant.components.islamic_prayer_times
 prayer_times_calculator==0.0.3
@@ -423,7 +426,7 @@ pycoolmasternet==0.0.4
 pydaikin==1.6.2
 
 # homeassistant.components.deconz
-pydeconz==69
+pydeconz==70
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -451,7 +454,7 @@ pyhaversion==3.2.0
 pyheos==0.6.0
 
 # homeassistant.components.homematic
-pyhomematic==0.1.63
+pyhomematic==0.1.64
 
 # homeassistant.components.icloud
 pyicloud==0.9.2
@@ -515,8 +518,11 @@ pyps4-2ndscreen==1.0.6
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
 
+# homeassistant.components.signal_messenger
+pysignalclirestapi==0.2.4
+
 # homeassistant.components.sma
-pysma==0.3.4
+pysma==0.3.5
 
 # homeassistant.components.smartthings
 pysmartapp==0.3.2
@@ -567,7 +573,7 @@ pyvera==0.3.7
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.16
+pyvizio==0.1.21
 
 # homeassistant.components.html5
 pywebpush==1.9.2
@@ -579,7 +585,7 @@ regenmaschine==1.5.1
 restrictedpython==5.0
 
 # homeassistant.components.rflink
-rflink==0.0.50
+rflink==0.0.51
 
 # homeassistant.components.ring
 ring_doorbell==0.6.0
@@ -660,6 +666,9 @@ url-normalize==1.4.1
 # homeassistant.components.uvc
 uvcclient==0.11.0
 
+# homeassistant.components.meteo_france
+vigilancemeteo==3.0.0
+
 # homeassistant.components.verisure
 vsure==1.5.4
 
@@ -696,7 +705,7 @@ yahooweather==0.10
 zeroconf==0.24.4
 
 # homeassistant.components.zha
-zha-quirks==0.0.31
+zha-quirks==0.0.32
 
 # homeassistant.components.zha
 zigpy-deconz==0.7.0

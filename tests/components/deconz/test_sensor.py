@@ -144,7 +144,7 @@ async def test_sensors(hass):
         "id": "1",
         "state": {"lightlevel": 2000},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
 
     state_changed_event = {
         "t": "event",
@@ -153,7 +153,7 @@ async def test_sensors(hass):
         "id": "4",
         "config": {"battery": 75},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     light_level_sensor = hass.states.get("sensor.light_level_sensor")
@@ -231,7 +231,7 @@ async def test_add_new_sensor(hass):
         "id": "1",
         "sensor": deepcopy(SENSORS["1"]),
     }
-    gateway.api.async_event_handler(state_added_event)
+    gateway.api.event_handler(state_added_event)
     await hass.async_block_till_done()
 
     assert "sensor.light_level_sensor" in gateway.deconz_ids
@@ -248,14 +248,14 @@ async def test_add_battery_later(hass):
     remote = gateway.api.sensors["1"]
     assert len(gateway.deconz_ids) == 0
     assert len(gateway.events) == 1
-    assert len(remote._async_callbacks) == 2
+    assert len(remote._callbacks) == 2
 
-    remote.async_update({"config": {"battery": 50}})
+    remote.update({"config": {"battery": 50}})
     await hass.async_block_till_done()
 
     assert len(gateway.deconz_ids) == 1
     assert len(gateway.events) == 1
-    assert len(remote._async_callbacks) == 2
+    assert len(remote._callbacks) == 2
 
     battery_sensor = hass.states.get("sensor.switch_1_battery_level")
     assert battery_sensor is not None

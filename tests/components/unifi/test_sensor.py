@@ -90,8 +90,8 @@ async def test_sensors(hass):
     clients[1]["rx_bytes"] = 2345000000
     clients[1]["tx_bytes"] = 6789000000
 
-    controller.mock_client_responses.append(clients)
-    await controller.async_update()
+    event = {"meta": {"message": "sta:sync"}, "data": clients}
+    controller.api.message_handler(event)
     await hass.async_block_till_done()
 
     wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
