@@ -177,12 +177,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     # their configuration.yaml or to proceed with config flow pairing. We
                     # will also provide contextual message to user explaining why
                     _LOGGER.warning(
-                        "Import couldn't be completed because '%s' key was missing. '%s' "
-                        "can be optionally be obtained by resuming config flow through "
-                        "Configuration > Integrations in the frontend, but the key will "
-                        "have to be manually added to your configuration.yaml if you "
-                        "decide to rebuild your Home Assistant setup in the future and "
-                        "don't want to repair your device",
+                        "Couldn't complete configuration.yaml import: '%s' key is missing. To "
+                        "complete setup, '%s' can be obtained by going through pairing process "
+                        "via frontend Integrations menu; to avoid re-pairing your device in the "
+                        "future, once you have finished pairing, it is recommended to add "
+                        "obtained value to your config ",
                         CONF_ACCESS_TOKEN,
                         CONF_ACCESS_TOKEN,
                     )
@@ -197,8 +196,8 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if errors and self.context["source"] == SOURCE_IMPORT:
             # Log an error message if import config flow fails since otherwise failure is silent
             _LOGGER.error(
-                "Import failure, check errors in paused config flow through Configuration "
-                "> Integrations in the frontend"
+                "configuration.yaml import failure: %s",
+                [error for error in errors.values()],
             )
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
