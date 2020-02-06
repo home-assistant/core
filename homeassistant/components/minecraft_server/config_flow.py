@@ -66,7 +66,7 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                     unique_id = f"{mac_address}-{port}"
                 else:
                     # Use host name in unique_id (host names should not change).
-                    unique_id = unique_id = f"{host}-{port}"
+                    unique_id = f"{host}-{port}"
 
                 # Abort in case the host was already configured before.
                 await self.async_set_unique_id(unique_id)
