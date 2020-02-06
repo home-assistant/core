@@ -1,9 +1,11 @@
 """Config flow for Samsung TV."""
+import os
 import socket
 from urllib.parse import urlparse
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
+from samsungtvws import SamsungTVWS
 import voluptuous as vol
 from websocket import WebSocketException
 
@@ -24,7 +26,13 @@ from homeassistant.const import (
 )
 
 # pylint:disable=unused-import
-from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER
+from .const import (
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    DOMAIN,
+    LOGGER,
+    PORTS,
+)
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 
@@ -46,6 +54,22 @@ def _get_ip(host):
     return socket.gethostbyname(host)
 
 
+def _get_token_file(host):
+    # path = os.path.dirname(os.path.realpath(__file__))
+    token_file = f"token-{host}.txt"
+
+    if os.path.isfile(token_file) is False:
+
+        # Create token file for catch possible errors
+        try:
+            handle = open(token_file, "w+")
+            handle.close()
+        except OSError:
+            LOGGER.error("Samsung TV - Error creating token file: %s", token_file)
+            token_file = None
+    return token_file
+
+
 class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
@@ -65,6 +89,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._port = None
         self._title = None
         self._id = None
+        self._token_file = None
 
     def _get_entry(self):
         return self.async_create_entry(
@@ -81,22 +106,24 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    def _try_connect(self):
-        """Try to connect and check auth."""
-        for cfg in SUPPORTED_METHODS:
+    def _try_connect_samsungctl(self, port):
+        if self._port is None or port == self._port:
             config = {
                 "name": "HomeAssistant",
                 "description": "HomeAssistant",
                 "id": "ha.component.samsung",
                 "host": self._host,
-                "port": self._port,
+                "method": "legacy" if port == 5500 else "websocket",
+                "port": port,
+                # We need this high timeout because waiting for auth popup is just an open socket
+                "timeout": 31,
             }
-            config.update(cfg)
+            # config.update(cfg)
             try:
                 LOGGER.debug("Try config: %s", config)
                 with Remote(config.copy()):
                     LOGGER.debug("Working config: %s", config)
-                    self._method = cfg["method"]
+                    self._method = config["method"]
                     return RESULT_SUCCESS
             except AccessDenied:
                 LOGGER.debug("Working but denied config: %s", config)
@@ -106,6 +133,68 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return RESULT_NOT_SUPPORTED
             except OSError as err:
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
+
+        return RESULT_NOT_SUCCESSFUL
+
+    def _try_connect_samsungtvws(self, port):
+        if self._port is None or port == self._port:
+            token_file = None
+            if port == 8002:
+                token_file = _get_token_file(self._host)
+            config = {
+                "name": "HomeAssistant",
+                "description": "HomeAssistant",
+                "host": self._host,
+                "method": "websocket",
+                "port": port,
+                # We need this high timeout because waiting for auth popup is just an open socket
+                "timeout": 31,
+                "token_file": token_file,
+            }
+            try:
+                LOGGER.debug("Try config: %s", config)
+                # with SamsungTVWS(
+                #     host=self._host,
+                #     port=port,
+                #     token_file=token_file,
+                #     timeout=config["timeout"],
+                #     name=config["name"],
+                # ) as remote:
+                remote = SamsungTVWS(
+                    host=self._host,
+                    port=port,
+                    token_file=token_file,
+                    timeout=config["timeout"],
+                    name=config["name"],
+                )
+                remote.open()
+                LOGGER.debug("Working config: %s", config)
+                self._method = "websocket"
+                self._port = port
+                self._token_file = token_file
+                return RESULT_SUCCESS
+            except AccessDenied:
+                LOGGER.debug("Working but denied config: %s", config)
+                return RESULT_AUTH_MISSING
+            except UnhandledResponse:
+                LOGGER.debug("Working but unsupported config: %s", config)
+                return RESULT_NOT_SUPPORTED
+            except OSError as err:
+                LOGGER.debug("Failing config: %s, error: %s", config, err)
+            except AttributeError as err:
+                LOGGER.debug("Failing config: %s, error: %s", config, err)
+
+        return RESULT_NOT_SUCCESSFUL
+
+    def _try_connect(self):
+        """Try to connect and check auth."""
+        for port in PORTS:
+            if port == 55000:
+                result = self._try_connect_samsungctl(port)
+            else:
+                result = self._try_connect_samsungtvws(port)
+            if result == RESULT_SUCCESS:
+                return result
 
         LOGGER.debug("No working config found")
         return RESULT_NOT_SUCCESSFUL
