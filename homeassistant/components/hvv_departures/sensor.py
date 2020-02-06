@@ -11,7 +11,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, MANUFACTURER
+from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 MAX_LIST = 20
@@ -19,6 +19,7 @@ MAX_TIME_OFFSET = 360
 ICON = "mdi:bus"
 UNIT_OF_MEASUREMENT = "min"
 
+ATTR_ATTRIBUTION = "attribution"
 ATTR_DEPARTURE = "departure"
 ATTR_LINE = "line"
 ATTR_ORIGIN = "origin"
@@ -61,7 +62,7 @@ class HVVDepartureSensor(Entity):
         self.hass = hass
         self.config_entry = config_entry
         self.station_name = self.config_entry.data["station"]["name"]
-        self.attr = {}
+        self.attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
         self._available = False
         self._state = None
         self._name = f"Departures at {self.station_name}"
@@ -145,7 +146,7 @@ class HVVDepartureSensor(Entity):
 
         except InvalidAuth as error:
             if self._last_error != InvalidAuth:
-                _LOGGER.error("Authentification failed: %r", error)
+                _LOGGER.error("Authentication failed: %r", error)
                 self._last_error = InvalidAuth
             self._available = False
         except ClientConnectorError as error:
