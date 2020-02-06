@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+import functools
 from unittest import mock
 from unittest.mock import patch
 
@@ -121,3 +122,43 @@ def zigpy_device_mock():
         return device
 
     return _mock_dev
+
+
+@pytest.fixture
+def _zha_device_restored_or_joined(hass, zha_gateway, config_entry):
+    """Make a restored or joined ZHA devices."""
+
+    async def _zha_device(is_new_join, zigpy_dev):
+        if is_new_join:
+            for cmp in COMPONENTS:
+                await hass.config_entries.async_forward_entry_setup(config_entry, cmp)
+            await hass.async_block_till_done()
+            await zha_gateway.async_device_initialized(zigpy_dev)
+        else:
+            await zha_gateway.async_device_restored(zigpy_dev)
+            for cmp in COMPONENTS:
+                await hass.config_entries.async_forward_entry_setup(config_entry, cmp)
+        await hass.async_block_till_done()
+        return zha_gateway.get_device(zigpy_dev.ieee)
+
+    return _zha_device
+
+
+@pytest.fixture
+def zha_device_joined(_zha_device_restored_or_joined):
+    """Return a newly joined ZHA device."""
+
+    return functools.partial(_zha_device_restored_or_joined, True)
+
+
+@pytest.fixture
+def zha_device_restored(_zha_device_restored_or_joined):
+    """Return a restored ZHA device."""
+
+    return functools.partial(_zha_device_restored_or_joined, False)
+
+
+@pytest.fixture(params=["zha_device_joined", "zha_device_restored"])
+def zha_device_joined_restored(request):
+    """Join or restore ZHA device."""
+    return request.getfixturevalue(request.param)
