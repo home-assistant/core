@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_API_KEY
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
@@ -26,19 +27,20 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up bunq sensors."""
     sensors = []
 
-    # setup api
-    api_context = ApiContext(
-        ApiEnvironmentType.PRODUCTION, config.get(CONF_API_KEY), "Home Assistant",
-    )
-    api_context.ensure_session_active()
-    BunqContext.load_api_context(api_context)
-
-    # create sensors
     try:
+        # setup api
+        api_context = ApiContext(
+            ApiEnvironmentType.PRODUCTION, config.get(CONF_API_KEY), "Home Assistant",
+        )
+        api_context.ensure_session_active()
+        BunqContext.load_api_context(api_context)
+
+        # create sensors
         for account in get_account_data():
             sensors.append(BunqBalanceSensor(account))
     except (ApiException, BunqException) as err:
         _LOGGER.error(err)
+        raise PlatformNotReady
 
     async_add_entities(sensors, True)
 
