@@ -1,4 +1,7 @@
 """Config flow for Minecraft Server integration."""
+import ipaddress
+
+import getmac
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -22,38 +25,68 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle the initial step."""
+        errors = {}
+
         if user_input is not None:
             # User inputs.
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
 
-            # Abort in case the host was already configured before.
-            unique_id = f"{host}-{port}"
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
+            unique_id = ""
 
-            errors = {}
+            # Check if 'host' is a valid IP address and if so, get the MAC address.
+            ip_address = None
+            mac_address = None
+            try:
+                ip_address = ipaddress.ip_address(host)
+            except ValueError:
+                # Host is not a valid IP address.
+                pass
+            else:
+                # Host is a valid IP address.
+                if ip_address.version == 4:
+                    # Address type is IPv4.
+                    mac_address = getmac.get_mac_address(ip=host)
+                else:
+                    # Address type is IPv6.
+                    mac_address = getmac.get_mac_address(ip6=host)
 
+            # Validate IP address via valid MAC address.
+            if ip_address is not None and mac_address is None:
+                errors["base"] = "invalid_ip"
             # Validate port configuration (limit to user and dynamic port range).
-            if (port < 1024) or (port > 65535):
+            elif (port < 1024) or (port > 65535):
                 errors["base"] = "invalid_port"
             # Validate host and port via ping request to server.
             else:
+                # Build unique_id.
+                if ip_address is not None:
+                    # Since IP addresses can change and therefore are not allowed in a
+                    # unique_id, fall back to the MAC address.
+                    unique_id = f"{mac_address}-{port}"
+                else:
+                    # Use host name in unique_id (host names should not change).
+                    unique_id = unique_id = f"{host}-{port}"
+
+                # Abort in case the host was already configured before.
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+
+                # Create server instance with configuration data and try pinging the server.
                 server = MinecraftServer(self.hass, unique_id, user_input)
                 await server.async_check_connection()
                 if not server.online:
+                    # Host or port invalid or server not reachable.
                     errors["base"] = "cannot_connect"
+                else:
+                    # Configuration data are available and no error was detected, create configuration entry.
+                    return self.async_create_entry(
+                        title=f"{host}:{port}", data=user_input
+                    )
 
-            # Configuration data are available, but an error was detected.
-            # Show configuration form with error message.
-            if "base" in errors:
-                return self._show_config_form(user_input, errors=errors)
-
-            # Configuration data are available and no error was detected, create configuration entry.
-            return self.async_create_entry(title=f"{host}:{port}", data=user_input)
-
-        # No configuration data available yet, show default configuration form.
-        return self._show_config_form()
+        # Show configuration form (default form in case of no user_input,
+        # form filled with user_input and eventually with errors otherwise).
+        return self._show_config_form(user_input, errors)
 
     def _show_config_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""

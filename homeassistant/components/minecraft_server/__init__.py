@@ -133,8 +133,10 @@ class MinecraftServer:
                 self._mc_status.ping, self._RETRIES_PING
             )
             self.online = True
-        except IOError as error:
-            _LOGGER.debug("Error occurred while trying to ping the server: %s", error)
+        except OSError as error:
+            _LOGGER.debug(
+                "Error occurred while trying to ping the server - OSError: %s", error
+            )
             self.online = False
 
     async def async_update(self, now: datetime = None) -> None:
@@ -152,12 +154,7 @@ class MinecraftServer:
 
         # Try to update the server data if server is online.
         if server_online:
-            try:
-                await self._async_status_request()
-            except OSError as error:
-                _LOGGER.debug(
-                    "Error occurred while trying to update the server data: %s", error
-                )
+            await self._async_status_request()
         else:
             # Set all properties except description and version information to
             # unknown until server connection is established again.
@@ -175,8 +172,11 @@ class MinecraftServer:
             status_response = await self._hass.async_add_executor_job(
                 self._mc_status.status, self._RETRIES_STATUS
             )
-        except IOError as error:
-            raise OSError(error)
+        except OSError as error:
+            _LOGGER.debug(
+                "Error occurred while trying to update the server properties - OSError: %s",
+                error,
+            )
         else:
             self.description = status_response.description["text"]
             self.version = status_response.version.name
