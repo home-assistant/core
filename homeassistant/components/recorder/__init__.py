@@ -59,13 +59,15 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
 
 DEFAULT_URL = "sqlite:///{hass_config_path}"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
+DEFAULT_DB_MAX_RETRIES = 10
+DEFAULT_DB_RETRY_WAIT = 3
 
 CONF_DB_URL = "db_url"
+CONF_DB_MAX_RETRIES = "db_max_retries"
+CONF_DB_RETRY_WAIT = "db_retry_wait"
 CONF_PURGE_KEEP_DAYS = "purge_keep_days"
 CONF_PURGE_INTERVAL = "purge_interval"
 CONF_EVENT_TYPES = "event_types"
-
-CONNECT_RETRY_WAIT = 3
 
 FILTER_SCHEMA = vol.Schema(
     {
@@ -96,6 +98,8 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Coerce(int), vol.Range(min=0)
                 ),
                 vol.Optional(CONF_DB_URL): cv.string,
+                vol.Optional(CONF_DB_MAX_RETRIES): cv.positive_int,
+                vol.Optional(CONF_DB_RETRY_WAIT): cv.positive_int,
             }
         )
     },
@@ -138,6 +142,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not db_url:
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
+    db_max_retries = conf.get(CONF_DB_MAX_RETRIES, None)
+    if not db_max_retries:
+        db_max_retries = DEFAULT_DB_MAX_RETRIES
+
+    db_retry_wait = conf.get(CONF_DB_RETRY_WAIT, None)
+    if not db_retry_wait:
+        db_retry_wait = DEFAULT_DB_RETRY_WAIT
+
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
     instance = hass.data[DATA_INSTANCE] = Recorder(
@@ -145,6 +157,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         keep_days=keep_days,
         purge_interval=purge_interval,
         uri=db_url,
+        db_max_retries=db_max_retries,
+        db_retry_wait=db_retry_wait,
         include=include,
         exclude=exclude,
     )
@@ -174,6 +188,8 @@ class Recorder(threading.Thread):
         keep_days: int,
         purge_interval: int,
         uri: str,
+        db_max_retries: int,
+        db_retry_wait: int,
         include: Dict,
         exclude: Dict,
     ) -> None:
@@ -186,6 +202,8 @@ class Recorder(threading.Thread):
         self.queue: Any = queue.Queue()
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
+        self.db_max_retries = db_max_retries
+        self.db_retry_wait = db_retry_wait
         self.async_db_ready = asyncio.Future()
         self.engine: Any = None
         self.run_info: Any = None
@@ -217,9 +235,9 @@ class Recorder(threading.Thread):
         tries = 1
         connected = False
 
-        while not connected and tries <= 10:
+        while not connected and tries <= self.db_max_retries:
             if tries != 1:
-                time.sleep(CONNECT_RETRY_WAIT)
+                time.sleep(self.db_retry_wait)
             try:
                 self._setup_connection()
                 migration.migrate_schema(self)
@@ -230,7 +248,7 @@ class Recorder(threading.Thread):
                 _LOGGER.error(
                     "Error during connection setup: %s (retrying in %s seconds)",
                     err,
-                    CONNECT_RETRY_WAIT,
+                    self.db_retry_wait,
                 )
                 tries += 1
 
@@ -337,9 +355,9 @@ class Recorder(threading.Thread):
 
             tries = 1
             updated = False
-            while not updated and tries <= 10:
+            while not updated and tries <= self.db_max_retries:
                 if tries != 1:
-                    time.sleep(CONNECT_RETRY_WAIT)
+                    time.sleep(self.db_retry_wait)
                 try:
                     with session_scope(session=self.get_session()) as session:
                         try:
@@ -367,7 +385,7 @@ class Recorder(threading.Thread):
                         "Error in database connectivity: %s. "
                         "(retrying in %s seconds)",
                         err,
-                        CONNECT_RETRY_WAIT,
+                        self.db_retry_wait,
                     )
                     tries += 1
 
