@@ -10,17 +10,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
+from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.setup import async_when_setup
 from homeassistant.util import slugify
 
 from .config_flow import CONF_SECRET
 from .const import DOMAIN
-from .messages import async_handle_message, encrypt_message, _parse_topic
+from .messages import _parse_topic, async_handle_message, encrypt_message
 
 _LOGGER = logging.getLogger(__name__)
 
