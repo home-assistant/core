@@ -99,7 +99,7 @@ class BunqBalanceSensor(Entity):
         try:
             old_balance = self._state
             self._state = data.get(self.id)
-            return False if self._state == old_balance else True
+            return self._state == old_balance
         except KeyError:
             self._state = None
             _LOGGER.warning("Count not find key in API results.")
