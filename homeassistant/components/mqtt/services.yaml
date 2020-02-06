@@ -30,7 +30,7 @@ dump:
   fields:
     topic:
       description: topic to listen to
-      example: "openzwave/#"
+      example: "OpenZWave/#"
     duration:
       description: how long we should listen for messages in seconds
       example: 5
