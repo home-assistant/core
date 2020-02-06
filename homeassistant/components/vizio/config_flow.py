@@ -126,6 +126,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             input_dict[CONF_HOST],
             input_dict.get(CONF_ACCESS_TOKEN),
             input_dict[CONF_DEVICE_CLASS],
+            session=async_get_clientsession(self.hass, False),
         )
 
         if await self.async_set_unique_id(unique_id=unique_id, raise_on_progress=True):
