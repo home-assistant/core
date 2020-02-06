@@ -264,7 +264,7 @@ async def test_user_start_pairing_failure(
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "start_pairing_failed"}
+    assert result["errors"] == {"base": "cant_connect"}
 
 
 async def test_user_invalid_pin(

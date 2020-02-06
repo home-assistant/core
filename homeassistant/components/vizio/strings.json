@@ -31,7 +31,6 @@
         "error": {
             "host_exists": "Vizio device with specified host already configured.",
             "name_exists": "Vizio device with specified name already configured.",
-            "begin_pairing_failed": "Unable to begin pairing process. [Review the docs](https://www.home-assistant.io/integrations/vizio/) and re-verify that:\n- The device is powered on\n- The device is connected to the network\n- The values you filled in are accurate\nbefore attempting to resubmit.",
             "complete_pairing failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
             "cant_connect": "Could not connect to the device. [Review the docs](https://www.home-assistant.io/integrations/vizio/) and re-verify that:\n- The device is powered on\n- The device is connected to the network\n- The values you filled in are accurate\nbefore attempting to resubmit."
         },

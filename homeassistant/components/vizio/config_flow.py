@@ -294,7 +294,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=_get_config_schema(self._data),
-                errors={"base": "start_pairing_failed"},
+                errors={"base": "cant_connect"},
             )
 
         # Complete pairing process if PIN has been provided
