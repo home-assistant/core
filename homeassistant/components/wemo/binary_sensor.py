@@ -3,41 +3,36 @@ import asyncio
 import logging
 
 import async_timeout
-from pywemo import discovery
-import requests
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import SUBSCRIPTION_REGISTRY
+from .const import DOMAIN as WEMO_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Register discovered WeMo binary sensors."""
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up WeMo binary sensors."""
 
-    if discovery_info is not None:
-        location = discovery_info["ssdp_description"]
-        mac = discovery_info["mac_address"]
+    async def _discovered_wemo(device):
+        """Handle a discovered Wemo device."""
+        async_add_entities([WemoBinarySensor(device)])
 
-        try:
-            device = discovery.device_from_description(location, mac)
-        except (
-            requests.exceptions.ConnectionError,
-            requests.exceptions.Timeout,
-        ) as err:
-            _LOGGER.error("Unable to access %s (%s)", location, err)
-            raise PlatformNotReady
+    async_dispatcher_connect(hass, f"{WEMO_DOMAIN}.binary_sensor", _discovered_wemo)
 
-        if device:
-            add_entities([WemoBinarySensor(hass, device)])
+    await asyncio.gather(
+        *[
+            _discovered_wemo(device)
+            for device in hass.data[WEMO_DOMAIN]["pending"].pop("binary_sensor")
+        ]
+    )
 
 
 class WemoBinarySensor(BinarySensorDevice):
     """Representation a WeMo binary sensor."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize the WeMo sensor."""
         self.wemo = device
         self._state = None
@@ -67,7 +62,7 @@ class WemoBinarySensor(BinarySensorDevice):
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 
-        registry = SUBSCRIPTION_REGISTRY
+        registry = self.hass.data[WEMO_DOMAIN]["registry"]
         await self.hass.async_add_executor_job(registry.register, self.wemo)
         registry.on(self.wemo, None, self._subscription_callback)
 
@@ -126,3 +121,13 @@ class WemoBinarySensor(BinarySensorDevice):
     def available(self):
         """Return true if sensor is available."""
         return self._available
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "name": self.wemo.name,
+            "identifiers": {(WEMO_DOMAIN, self.wemo.serialnumber)},
+            "model": self.wemo.model_name,
+            "manufacturer": "Belkin",
+        }

@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_DEVICE_REGISTER = "hlk_sw16_device_register"
 DEFAULT_RECONNECT_INTERVAL = 10
+DEFAULT_KEEP_ALIVE_INTERVAL = 3
 CONNECTION_TIMEOUT = 10
 DEFAULT_PORT = 8080
 
@@ -93,6 +94,7 @@ async def async_setup(hass, config):
                 loop=hass.loop,
                 timeout=CONNECTION_TIMEOUT,
                 reconnect_interval=DEFAULT_RECONNECT_INTERVAL,
+                keep_alive_interval=DEFAULT_KEEP_ALIVE_INTERVAL,
             )
 
             hass.data[DATA_DEVICE_REGISTER][device] = client

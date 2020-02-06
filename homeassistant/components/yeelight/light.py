@@ -134,6 +134,7 @@ MODEL_TO_DEVICE_TYPE = {
     "color2": BulbType.Color,
     "strip1": BulbType.Color,
     "bslamp1": BulbType.Color,
+    "bslamp2": BulbType.Color,
     "RGBW": BulbType.Color,
     "lamp1": BulbType.WhiteTemp,
     "ceiling1": BulbType.WhiteTemp,
@@ -281,7 +282,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if device_type == BulbType.White:
         _lights_setup_helper(YeelightGenericLight)
     elif device_type == BulbType.Color:
-        _lights_setup_helper(YeelightColorLight)
+        if nl_switch_light and device.is_nightlight_supported:
+            _lights_setup_helper(YeelightColorLightWithNightlightSwitch)
+            _lights_setup_helper(YeelightNightLightModeWithWithoutBrightnessControl)
+        else:
+            _lights_setup_helper(YeelightColorLightWithoutNightlightSwitch)
     elif device_type == BulbType.WhiteTemp:
         if nl_switch_light and device.is_nightlight_supported:
             _lights_setup_helper(YeelightWithNightLight)
@@ -290,7 +295,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _lights_setup_helper(YeelightWhiteTempWithoutNightlightSwitch)
     elif device_type == BulbType.WhiteTempMood:
         if nl_switch_light and device.is_nightlight_supported:
-            _lights_setup_helper(YeelightNightLightMode)
+            _lights_setup_helper(YeelightNightLightModeWithAmbientSupport)
             _lights_setup_helper(YeelightWithAmbientAndNightlight)
         else:
             _lights_setup_helper(YeelightWithAmbientWithoutNightlight)
@@ -808,8 +813,8 @@ class YeelightGenericLight(Light):
             _LOGGER.error("Unable to set scene: %s", ex)
 
 
-class YeelightColorLight(YeelightGenericLight):
-    """Representation of a Color Yeelight light."""
+class YeelightColorLightSupport:
+    """Representation of a Color Yeelight light support."""
 
     @property
     def supported_features(self) -> int:
@@ -821,7 +826,7 @@ class YeelightColorLight(YeelightGenericLight):
         return YEELIGHT_COLOR_EFFECT_LIST
 
 
-class YeelightWhiteTempLightsupport:
+class YeelightWhiteTempLightSupport:
     """Representation of a Color Yeelight light."""
 
     @property
@@ -834,18 +839,28 @@ class YeelightWhiteTempLightsupport:
         return YEELIGHT_TEMP_ONLY_EFFECT_LIST
 
 
-class YeelightWhiteTempWithoutNightlightSwitch(
-    YeelightWhiteTempLightsupport, YeelightGenericLight
+class YeelightNightLightSupport:
+    """Representation of a Yeelight nightlight support."""
+
+    @property
+    def _turn_on_power_mode(self):
+        return PowerMode.NORMAL
+
+
+class YeelightColorLightWithoutNightlightSwitch(
+    YeelightColorLightSupport, YeelightGenericLight
 ):
-    """White temp light, when nightlight switch is not set to light."""
+    """Representation of a Color Yeelight light."""
 
     @property
     def _brightness_property(self):
         return "current_brightness"
 
 
-class YeelightWithNightLight(YeelightWhiteTempLightsupport, YeelightGenericLight):
-    """Representation of a Yeelight with nightlight support.
+class YeelightColorLightWithNightlightSwitch(
+    YeelightNightLightSupport, YeelightColorLightSupport, YeelightGenericLight
+):
+    """Representation of a Yeelight with rgb support and nightlight.
 
     It represents case when nightlight switch is set to light.
     """
@@ -855,9 +870,29 @@ class YeelightWithNightLight(YeelightWhiteTempLightsupport, YeelightGenericLight
         """Return true if device is on."""
         return super().is_on and not self.device.is_nightlight_enabled
 
+
+class YeelightWhiteTempWithoutNightlightSwitch(
+    YeelightWhiteTempLightSupport, YeelightGenericLight
+):
+    """White temp light, when nightlight switch is not set to light."""
+
     @property
-    def _turn_on_power_mode(self):
-        return PowerMode.NORMAL
+    def _brightness_property(self):
+        return "current_brightness"
+
+
+class YeelightWithNightLight(
+    YeelightNightLightSupport, YeelightWhiteTempLightSupport, YeelightGenericLight
+):
+    """Representation of a Yeelight with temp only support and nightlight.
+
+    It represents case when nightlight switch is set to light.
+    """
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if device is on."""
+        return super().is_on and not self.device.is_nightlight_enabled
 
 
 class YeelightNightLightMode(YeelightGenericLight):
@@ -891,6 +926,26 @@ class YeelightNightLightMode(YeelightGenericLight):
         return YEELIGHT_TEMP_ONLY_EFFECT_LIST
 
 
+class YeelightNightLightModeWithAmbientSupport(YeelightNightLightMode):
+    """Representation of a Yeelight, with ambient support, when in nightlight mode."""
+
+    @property
+    def _power_property(self):
+        return "main_power"
+
+
+class YeelightNightLightModeWithWithoutBrightnessControl(YeelightNightLightMode):
+    """Representation of a Yeelight, when in nightlight mode.
+
+    It represents case when nightlight mode brightness control is not supported.
+    """
+
+    @property
+    def supported_features(self):
+        """Flag no supported features."""
+        return 0
+
+
 class YeelightWithAmbientWithoutNightlight(YeelightWhiteTempWithoutNightlightSwitch):
     """Representation of a Yeelight which has ambilight support.
 
@@ -913,7 +968,7 @@ class YeelightWithAmbientAndNightlight(YeelightWithNightLight):
         return "main_power"
 
 
-class YeelightAmbientLight(YeelightColorLight):
+class YeelightAmbientLight(YeelightColorLightWithoutNightlightSwitch):
     """Representation of a Yeelight ambient light."""
 
     PROPERTIES_MAPPING = {"color_mode": "bg_lmode"}
@@ -930,6 +985,10 @@ class YeelightAmbientLight(YeelightColorLight):
     def name(self) -> str:
         """Return the name of the device if any."""
         return f"{self.device.name} ambilight"
+
+    @property
+    def _brightness_property(self):
+        return "bright"
 
     def _get_property(self, prop, default=None):
         bg_prop = self.PROPERTIES_MAPPING.get(prop)

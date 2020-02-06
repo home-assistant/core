@@ -11,7 +11,7 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     smart_home as alexa_sh,
 )
-from homeassistant.components.google_assistant import smart_home as ga
+from homeassistant.components.google_assistant import const as gc, smart_home as ga
 from homeassistant.core import Context, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import HomeAssistantType
@@ -160,7 +160,7 @@ class CloudClient(Interface):
         gconf = await self.get_google_config()
 
         return await ga.async_handle_message(
-            self._hass, gconf, gconf.cloud_user, payload
+            self._hass, gconf, gconf.cloud_user, payload, gc.SOURCE_CLOUD
         )
 
     async def async_webhook_message(self, payload: Dict[Any, Any]) -> Dict[Any, Any]:

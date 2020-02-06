@@ -26,6 +26,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP,
 )
 from homeassistant.const import (
@@ -59,6 +60,7 @@ SUPPORT_ANDROIDTV = (
     | SUPPORT_SELECT_SOURCE
     | SUPPORT_STOP
     | SUPPORT_VOLUME_MUTE
+    | SUPPORT_VOLUME_SET
     | SUPPORT_VOLUME_STEP
 )
 
@@ -80,6 +82,7 @@ CONF_ADBKEY = "adbkey"
 CONF_ADB_SERVER_IP = "adb_server_ip"
 CONF_ADB_SERVER_PORT = "adb_server_port"
 CONF_APPS = "apps"
+CONF_EXCLUDE_UNNAMED_APPS = "exclude_unnamed_apps"
 CONF_GET_SOURCES = "get_sources"
 CONF_STATE_DETECTION_RULES = "state_detection_rules"
 CONF_TURN_ON_COMMAND = "turn_on_command"
@@ -132,12 +135,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ADB_SERVER_IP): cv.string,
         vol.Optional(CONF_ADB_SERVER_PORT, default=DEFAULT_ADB_SERVER_PORT): cv.port,
         vol.Optional(CONF_GET_SOURCES, default=DEFAULT_GET_SOURCES): cv.boolean,
-        vol.Optional(CONF_APPS, default=dict()): vol.Schema({cv.string: cv.string}),
+        vol.Optional(CONF_APPS, default=dict()): vol.Schema(
+            {cv.string: vol.Any(cv.string, None)}
+        ),
         vol.Optional(CONF_TURN_ON_COMMAND): cv.string,
         vol.Optional(CONF_TURN_OFF_COMMAND): cv.string,
         vol.Optional(CONF_STATE_DETECTION_RULES, default={}): vol.Schema(
             {cv.string: ha_state_detection_rules_validator(vol.Invalid)}
         ),
+        vol.Optional(CONF_EXCLUDE_UNNAMED_APPS, default=False): cv.boolean,
     }
 )
 
@@ -230,6 +236,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         config[CONF_GET_SOURCES],
         config.get(CONF_TURN_ON_COMMAND),
         config.get(CONF_TURN_OFF_COMMAND),
+        config[CONF_EXCLUDE_UNNAMED_APPS],
     ]
 
     if aftv.DEVICE_CLASS == DEVICE_ANDROIDTV:
@@ -365,7 +372,14 @@ class ADBDevice(MediaPlayerDevice):
     """Representation of an Android TV or Fire TV device."""
 
     def __init__(
-        self, aftv, name, apps, get_sources, turn_on_command, turn_off_command
+        self,
+        aftv,
+        name,
+        apps,
+        get_sources,
+        turn_on_command,
+        turn_off_command,
+        exclude_unnamed_apps,
     ):
         """Initialize the Android TV / Fire TV device."""
         self.aftv = aftv
@@ -373,7 +387,7 @@ class ADBDevice(MediaPlayerDevice):
         self._app_id_to_name = APPS.copy()
         self._app_id_to_name.update(apps)
         self._app_name_to_id = {
-            value: key for key, value in self._app_id_to_name.items()
+            value: key for key, value in self._app_id_to_name.items() if value
         }
         self._get_sources = get_sources
         self._keys = KEYS
@@ -384,12 +398,15 @@ class ADBDevice(MediaPlayerDevice):
         self.turn_on_command = turn_on_command
         self.turn_off_command = turn_off_command
 
+        self._exclude_unnamed_apps = exclude_unnamed_apps
+
         # ADB exceptions to catch
         if not self.aftv.adb_server_ip:
             # Using "adb_shell" (Python ADB implementation)
             self.exceptions = (
                 AttributeError,
                 BrokenPipeError,
+                ConnectionResetError,
                 TypeError,
                 ValueError,
                 InvalidChecksumError,
@@ -558,11 +575,24 @@ class AndroidTVDevice(ADBDevice):
     """Representation of an Android TV device."""
 
     def __init__(
-        self, aftv, name, apps, get_sources, turn_on_command, turn_off_command
+        self,
+        aftv,
+        name,
+        apps,
+        get_sources,
+        turn_on_command,
+        turn_off_command,
+        exclude_unnamed_apps,
     ):
         """Initialize the Android TV device."""
         super().__init__(
-            aftv, name, apps, get_sources, turn_on_command, turn_off_command
+            aftv,
+            name,
+            apps,
+            get_sources,
+            turn_on_command,
+            turn_off_command,
+            exclude_unnamed_apps,
         )
 
         self._is_volume_muted = None
@@ -600,9 +630,13 @@ class AndroidTVDevice(ADBDevice):
             self._available = False
 
         if running_apps:
-            self._sources = [
-                self._app_id_to_name.get(app_id, app_id) for app_id in running_apps
+            sources = [
+                self._app_id_to_name.get(
+                    app_id, app_id if not self._exclude_unnamed_apps else None
+                )
+                for app_id in running_apps
             ]
+            self._sources = [source for source in sources if source]
         else:
             self._sources = None
 
@@ -630,6 +664,11 @@ class AndroidTVDevice(ADBDevice):
     def mute_volume(self, mute):
         """Mute the volume."""
         self.aftv.mute_volume()
+
+    @adb_decorator()
+    def set_volume_level(self, volume):
+        """Set the volume level."""
+        self.aftv.set_volume_level(volume)
 
     @adb_decorator()
     def volume_down(self):
@@ -670,9 +709,13 @@ class FireTVDevice(ADBDevice):
             self._available = False
 
         if running_apps:
-            self._sources = [
-                self._app_id_to_name.get(app_id, app_id) for app_id in running_apps
+            sources = [
+                self._app_id_to_name.get(
+                    app_id, app_id if not self._exclude_unnamed_apps else None
+                )
+                for app_id in running_apps
             ]
+            self._sources = [source for source in sources if source]
         else:
             self._sources = None
 

@@ -30,11 +30,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up Ambient PWS binary sensors based on the old way."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Ambient PWS binary sensors based on a config entry."""
     ambient = hass.data[DOMAIN][DATA_CLIENT][entry.entry_id]

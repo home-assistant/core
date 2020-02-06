@@ -17,7 +17,7 @@
                     "allow_clip_sensor": "Till\u00e5t import av virtuella sensorer",
                     "allow_deconz_groups": "Till\u00e5t import av deCONZ-grupper"
                 },
-                "description": "Vill du konfigurera Home Assistant f\u00f6r att ansluta till deCONZ gateway som tillhandah\u00e5lls av hass.io till\u00e4gg {addon}?",
+                "description": "Vill du konfigurera Home Assistant att ansluta till den deCONZ-gateway som tillhandah\u00e5lls av Hass.io-till\u00e4gget {addon}?",
                 "title": "deCONZ Zigbee gateway via Hass.io till\u00e4gg"
             },
             "init": {

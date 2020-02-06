@@ -42,11 +42,6 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
 PARALLEL_UPDATES = 5
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation lights."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation light from config entry."""
 
@@ -175,6 +170,7 @@ class Light(ZhaEntity, light.Light):
         """Flag supported features."""
         return self._supported_features
 
+    @callback
     def async_set_state(self, state):
         """Set the state."""
         self._state = bool(state)

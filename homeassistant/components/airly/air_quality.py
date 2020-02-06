@@ -5,7 +5,7 @@ from homeassistant.components.air_quality import (
     ATTR_PM_10,
     AirQualityEntity,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_NAME
 
 from .const import (
     ATTR_API_ADVICE,
@@ -35,13 +35,10 @@ LABEL_PM_10_PERCENT = f"{ATTR_PM_10}_percent_of_limit"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Airly air_quality entity based on a config entry."""
     name = config_entry.data[CONF_NAME]
-    latitude = config_entry.data[CONF_LATITUDE]
-    longitude = config_entry.data[CONF_LONGITUDE]
-    unique_id = f"{latitude}-{longitude}"
 
     data = hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id]
 
-    async_add_entities([AirlyAirQuality(data, name, unique_id)], True)
+    async_add_entities([AirlyAirQuality(data, name, config_entry.unique_id)], True)
 
 
 def round_state(func):

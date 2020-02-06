@@ -91,7 +91,7 @@ class CommandCover(CoverDevice):
         """Execute the actual commands."""
         _LOGGER.info("Running command: %s", command)
 
-        success = subprocess.call(command, shell=True) == 0
+        success = subprocess.call(command, shell=True) == 0  # nosec # shell by design
 
         if not success:
             _LOGGER.error("Command failed: %s", command)
@@ -104,7 +104,9 @@ class CommandCover(CoverDevice):
         _LOGGER.info("Running state command: %s", command)
 
         try:
-            return_value = subprocess.check_output(command, shell=True)
+            return_value = subprocess.check_output(
+                command, shell=True  # nosec # shell by design
+            )
             return return_value.strip().decode("utf-8")
         except subprocess.CalledProcessError:
             _LOGGER.error("Command failed: %s", command)

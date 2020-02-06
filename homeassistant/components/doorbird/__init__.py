@@ -6,6 +6,7 @@ from doorbirdpy import DoorBird
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.logbook import log_entry
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -295,5 +296,7 @@ class DoorBirdRequestView(HomeAssistantView):
             return web.Response(status=200, text=message)
 
         hass.bus.async_fire(f"{DOMAIN}_{event}", event_data)
+
+        log_entry(hass, "Doorbird {}".format(event), "event was fired.", DOMAIN)
 
         return web.Response(status=200, text="OK")

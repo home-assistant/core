@@ -1,4 +1,6 @@
 """Test zha sensor."""
+from unittest import mock
+
 import pytest
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.clusters.homeautomation as homeautomation
@@ -179,8 +181,26 @@ async def async_test_metering(hass, device_info):
 
 async def async_test_electrical_measurement(hass, device_info):
     """Test electrical measurement sensor."""
-    await send_attribute_report(hass, device_info["cluster"], 1291, 100)
-    assert_state(hass, device_info, "100", "W")
+    with mock.patch(
+        (
+            "homeassistant.components.zha.core.channels.homeautomation"
+            ".ElectricalMeasurementChannel.divisor"
+        ),
+        new_callable=mock.PropertyMock,
+    ) as divisor_mock:
+        divisor_mock.return_value = 1
+        await send_attribute_report(hass, device_info["cluster"], 1291, 100)
+        assert_state(hass, device_info, "100", "W")
+
+        await send_attribute_report(hass, device_info["cluster"], 1291, 99)
+        assert_state(hass, device_info, "99", "W")
+
+        divisor_mock.return_value = 10
+        await send_attribute_report(hass, device_info["cluster"], 1291, 1000)
+        assert_state(hass, device_info, "100", "W")
+
+        await send_attribute_report(hass, device_info["cluster"], 1291, 99)
+        assert_state(hass, device_info, "9.9", "W")
 
 
 async def send_attribute_report(hass, cluster, attrid, value):

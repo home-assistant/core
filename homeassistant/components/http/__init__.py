@@ -3,7 +3,7 @@ from ipaddress import ip_network
 import logging
 import os
 import ssl
-from typing import Optional
+from typing import Optional, cast
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
@@ -14,7 +14,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     SERVER_PORT,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import storage
 import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import bind_hass
 import homeassistant.util as hass_util
 from homeassistant.util import ssl as ssl_util
 
@@ -56,6 +59,9 @@ NO_LOGIN_ATTEMPT_THRESHOLD = -1
 
 MAX_CLIENT_SIZE: int = 1024 ** 2 * 16
 
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
+
 
 HTTP_SCHEMA = vol.Schema(
     {
@@ -83,6 +89,13 @@ HTTP_SCHEMA = vol.Schema(
 )
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: HTTP_SCHEMA}, extra=vol.ALLOW_EXTRA)
+
+
+@bind_hass
+async def async_get_last_config(hass: HomeAssistant) -> Optional[dict]:
+    """Return the last known working config."""
+    store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    return cast(Optional[dict], await store.async_load())
 
 
 class ApiConfig:
@@ -150,6 +163,19 @@ async def async_setup(hass, config):
         """Start the server."""
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
         await server.start()
+
+        # If we are set up successful, we store the HTTP settings for safe mode.
+        store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
+
+        if CONF_TRUSTED_PROXIES in conf:
+            conf_to_save = dict(conf)
+            conf_to_save[CONF_TRUSTED_PROXIES] = [
+                str(ip.network_address) for ip in conf_to_save[CONF_TRUSTED_PROXIES]
+            ]
+        else:
+            conf_to_save = conf
+
+        await store.async_save(conf_to_save)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_server)
 

@@ -14,25 +14,16 @@ repos:
           - --safe
           - --quiet
         files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
-# -   repo: https://gitlab.com/pycqa/flake8
-#     rev: 3.7.9
+-   repo: https://github.com/PyCQA/bandit
+    rev: 1.6.2
 #     hooks:
 #     -   id: flake8
 #         additional_dependencies:
 #           - flake8-docstrings==1.5.0
-#           - pydocstyle==4.0.1
+#           - pydocstyle==5.0.2
 #         files: ^(homeassistant|script|tests)/.+\.py$
--   repo: https://github.com/PyCQA/bandit
-    rev: 1.6.2
-    hooks:
-      - id: bandit
-        args:
-          - --quiet
-          - --format=custom
-          - --configfile=tests/bandit.yaml
-        files: ^(homeassistant|script|tests)/.+\.py$
--   repo: https://github.com/PyCQA/bandit
-    rev: 1.6.2
+# -   repo: https://github.com/PyCQA/bandit
+#     rev: 1.6.2
     hooks:
     -   id: bandit
         args:
