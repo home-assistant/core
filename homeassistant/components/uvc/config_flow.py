@@ -4,6 +4,7 @@ from collections import OrderedDict
 import voluptuous as vol
 
 from homeassistant import config_entries
+
 from . import DOMAIN
 
 
