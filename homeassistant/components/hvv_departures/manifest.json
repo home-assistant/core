@@ -2,7 +2,7 @@
   "domain": "hvv_departures",
   "name": "HVV",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/hvv",
+  "documentation": "https://www.home-assistant.io/integrations/hvv_departures",
   "requirements": [
     "pygti==0.6.0"
   ],
