@@ -91,7 +91,7 @@ IO_SCHEMA = vol.Schema(
 
 BINARY_SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ZONE, "s_zone"): vol.In(ZONES),
+        vol.Required(CONF_ZONE): vol.In(ZONES),
         vol.Required(CONF_TYPE, default=DEVICE_CLASS_DOOR): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_INVERSE, default=False): cv.boolean,
@@ -100,7 +100,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
 
 SENSOR_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ZONE, "s_zone"): vol.In(ZONES),
+        vol.Required(CONF_ZONE): vol.In(ZONES),
         vol.Required(CONF_TYPE, default="dht"): vol.All(
             vol.Lower, vol.In(["dht", "ds18b20"])
         ),
@@ -113,7 +113,7 @@ SENSOR_SCHEMA = vol.Schema(
 
 SWITCH_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ZONE, "s_zone"): vol.In(ZONES),
+        vol.Required(CONF_ZONE): vol.In(ZONES),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_ACTIVATION, default=STATE_HIGH): vol.All(
             vol.Lower, vol.Any(STATE_HIGH, STATE_LOW)

@@ -96,21 +96,16 @@ def import_validator(config):
     config = copy.deepcopy(config)
     io_cfgs = {}
     # Replace pins with zones
-    for zone in config.get(CONF_BINARY_SENSORS, []):
-        if zone.get(CONF_PIN):
-            zone[CONF_ZONE] = PIN_TO_ZONE[zone[CONF_PIN]]
-            del zone[CONF_PIN]
-        io_cfgs[zone[CONF_ZONE]] = CONF_IO_BIN
-    for zone in config.get(CONF_SENSORS, []):
-        if zone.get(CONF_PIN):
-            zone[CONF_ZONE] = PIN_TO_ZONE[zone[CONF_PIN]]
-            del zone[CONF_PIN]
-        io_cfgs[zone[CONF_ZONE]] = CONF_IO_DIG
-    for zone in config.get(CONF_SWITCHES, []):
-        if zone.get(CONF_PIN):
-            zone[CONF_ZONE] = PIN_TO_ZONE[zone[CONF_PIN]]
-            del zone[CONF_PIN]
-        io_cfgs[zone[CONF_ZONE]] = CONF_IO_SWI
+    for conf_platform, conf_io in (
+        (CONF_BINARY_SENSORS, CONF_IO_BIN),
+        (CONF_SENSORS, CONF_IO_DIG),
+        (CONF_SWITCHES, CONF_IO_SWI),
+    ):
+        for zone in config.get(conf_platform, []):
+            if zone.get(CONF_PIN):
+                zone[CONF_ZONE] = PIN_TO_ZONE[zone[CONF_PIN]]
+                del zone[CONF_PIN]
+            io_cfgs[zone[CONF_ZONE]] = conf_io
 
     # Migrate config_entry data into default_options structure
     config[CONF_IO] = io_cfgs
@@ -130,8 +125,8 @@ def import_validator(config):
 BINARY_SENSOR_SCHEMA_YAML = vol.All(
     vol.Schema(
         {
-            vol.Exclusive(CONF_ZONE, "s_zone"): ensure_zone,
-            vol.Exclusive(CONF_PIN, "s_pin"): ensure_pin,
+            vol.Exclusive(CONF_ZONE, "s_io"): ensure_zone,
+            vol.Exclusive(CONF_PIN, "s_io"): ensure_pin,
             vol.Required(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_INVERSE, default=False): cv.boolean,
@@ -143,8 +138,8 @@ BINARY_SENSOR_SCHEMA_YAML = vol.All(
 SENSOR_SCHEMA_YAML = vol.All(
     vol.Schema(
         {
-            vol.Exclusive(CONF_ZONE, "s_zone"): ensure_zone,
-            vol.Exclusive(CONF_PIN, "s_pin"): ensure_pin,
+            vol.Exclusive(CONF_ZONE, "s_io"): ensure_zone,
+            vol.Exclusive(CONF_PIN, "s_io"): ensure_pin,
             vol.Required(CONF_TYPE): vol.All(vol.Lower, vol.In(["dht", "ds18b20"])),
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_POLL_INTERVAL, default=3): vol.All(
@@ -158,8 +153,8 @@ SENSOR_SCHEMA_YAML = vol.All(
 SWITCH_SCHEMA_YAML = vol.All(
     vol.Schema(
         {
-            vol.Exclusive(CONF_ZONE, "s_zone"): ensure_zone,
-            vol.Exclusive(CONF_PIN, "s_pin"): ensure_pin,
+            vol.Exclusive(CONF_ZONE, "s_io"): ensure_zone,
+            vol.Exclusive(CONF_PIN, "s_io"): ensure_pin,
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_ACTIVATION, default=STATE_HIGH): vol.All(
                 vol.Lower, vol.Any(STATE_HIGH, STATE_LOW)
