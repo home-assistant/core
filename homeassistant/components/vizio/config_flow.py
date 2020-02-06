@@ -314,6 +314,12 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if pair_data:
                 self._data[CONF_ACCESS_TOKEN] = pair_data.auth_token
                 self._must_show_form = True
+
+                # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
+                if self.context["source"] == SOURCE_IMPORT:
+                    # If user is pairing via config import, show different message
+                    return await self.async_step_pairing_complete_import()
+
                 return await self.async_step_pairing_complete()
 
             # If no data was retrieved, it's assumed that the pairing attempt was not
@@ -326,20 +332,29 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_pairing_complete(
-        self, user_input: Dict[str, Any] = None
-    ) -> Dict[str, Any]:
-        """Complete config flow by displaying final message to show user access token and give further instructions."""
-
+    async def _pairing_complete(self, step_id: str) -> Dict[str, Any]:
+        """Handle config flow completion."""
         if not self._must_show_form:
             return await self._create_entry_if_unique(self._data)
 
         self._must_show_form = False
         return self.async_show_form(
-            step_id="pairing_complete",
+            step_id=step_id,
             data_schema=vol.Schema({}),
             description_placeholders={
                 "access_token_value": self._data[CONF_ACCESS_TOKEN],
                 "access_token_key": CONF_ACCESS_TOKEN,
             },
         )
+
+    async def async_step_pairing_complete(
+        self, user_input: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """Complete non-import config flow by displaying final message to show user access token."""
+        return await self._pairing_complete("pairing_complete")
+
+    async def async_step_pairing_complete_import(
+        self, user_input: Dict[str, Any] = None
+    ) -> Dict[str, Any]:
+        """Complete import config flow by displaying final message to show user access token and give further instructions."""
+        return await self._pairing_complete("pairing_complete_import")

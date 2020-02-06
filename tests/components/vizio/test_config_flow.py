@@ -444,7 +444,7 @@ async def test_import_needs_pairing(
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "pairing_complete"
+    assert result["step_id"] == "pairing_complete_import"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 

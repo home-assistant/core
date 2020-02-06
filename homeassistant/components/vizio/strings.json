@@ -21,7 +21,11 @@
             },
             "pairing_complete": {
                 "title": "Pairing Complete",
-                "description": "Your Vizio SmartCast device is now connected to Home Assistant.\n\nYour Access Token is '**{access_token_value}**'.\n\nThe access token has been stored with your configuration so you will not have to go through this workflow again, but if this device was imported via configuration.yaml, you may want to add the token to your config using the '{access_token_key}' config key so that you don't have to go through this process again in the future. The token has also been stored in HA file storage in case you need access to it later."
+                "description": "Your Vizio SmartCast device is now connected to Home Assistant.\n\nYour Access Token is '**{access_token_value}**'."
+            },
+            "pairing_complete_import": {
+                "title": "Pairing Complete",
+                "description": "Your Vizio SmartCast device is now connected to Home Assistant.\n\nYour Access Token is '**{access_token_value}**'.\n\nThe access token has been stored with your configuration, but it is recommended that you add the token to your config so that you don't have to re-pair your device in the future."
             }
         },
         "error": {
