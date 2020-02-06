@@ -112,7 +112,7 @@ av==6.1.2
 axis==25
 
 # homeassistant.components.zha
-bellows-homeassistant==0.13.1
+bellows-homeassistant==0.13.2
 
 # homeassistant.components.bom
 bomradarloop==0.1.3
@@ -702,7 +702,7 @@ zha-quirks==0.0.32
 zigpy-deconz==0.7.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.13.0
+zigpy-homeassistant==0.13.1
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.9.0
