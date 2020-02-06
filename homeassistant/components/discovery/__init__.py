@@ -75,7 +75,6 @@ SERVICE_HANDLERS = {
     "logitech_mediaserver": ("media_player", "squeezebox"),
     "directv": ("media_player", "directv"),
     "denonavr": ("media_player", "denonavr"),
-    "samsung_tv": ("media_player", "samsungtv"),
     "frontier_silicon": ("media_player", "frontier_silicon"),
     "openhome": ("media_player", "openhome"),
     "harmony": ("remote", "harmony"),

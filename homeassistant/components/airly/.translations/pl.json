@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Integracja Airly dla tych wsp\u00f3\u0142rz\u0119dnych jest ju\u017c skonfigurowana."
+        },
         "error": {
             "auth": "Klucz API jest nieprawid\u0142owy.",
             "name_exists": "Nazwa ju\u017c istnieje.",

@@ -1,6 +1,6 @@
 """Service calling related helpers."""
 import asyncio
-from functools import wraps
+from functools import partial, wraps
 import logging
 from typing import Callable
 
@@ -109,12 +109,30 @@ def extract_entity_ids(hass, service_call, expand_group=True):
 
 
 @bind_hass
+async def async_extract_entities(hass, entities, service_call, expand_group=True):
+    """Extract a list of entity objects from a service call.
+
+    Will convert group entity ids to the entity ids it represents.
+    """
+    data_ent_id = service_call.data.get(ATTR_ENTITY_ID)
+
+    if data_ent_id == ENTITY_MATCH_ALL:
+        return [entity for entity in entities if entity.available]
+
+    entity_ids = await async_extract_entity_ids(hass, service_call, expand_group)
+
+    return [
+        entity
+        for entity in entities
+        if entity.available and entity.entity_id in entity_ids
+    ]
+
+
+@bind_hass
 async def async_extract_entity_ids(hass, service_call, expand_group=True):
     """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
-
-    Async friendly.
     """
     entity_ids = service_call.data.get(ATTR_ENTITY_ID)
     area_ids = service_call.data.get(ATTR_AREA_ID)
@@ -244,9 +262,7 @@ def async_set_service_schema(hass, domain, service, schema):
 
 
 @bind_hass
-async def entity_service_call(
-    hass, platforms, func, call, service_name="", required_features=None
-):
+async def entity_service_call(hass, platforms, func, call, required_features=None):
     """Handle an entity service call.
 
     Calls all platforms simultaneously.
@@ -267,7 +283,11 @@ async def entity_service_call(
 
     # If the service function is a string, we'll pass it the service call data
     if isinstance(func, str):
-        data = {key: val for key, val in call.data.items() if key != ATTR_ENTITY_ID}
+        data = {
+            key: val
+            for key, val in call.data.items()
+            if key not in cv.ENTITY_SERVICE_FIELDS
+        }
     # If the service function is not a string, we pass the service call
     else:
         data = call
@@ -307,6 +327,7 @@ async def entity_service_call(
         for platform in platforms:
             platform_entities = []
             for entity in platform.entities.values():
+
                 if entity.entity_id not in entity_ids:
                     continue
 
@@ -323,7 +344,7 @@ async def entity_service_call(
 
     tasks = [
         _handle_service_platform_call(
-            func, data, entities, call.context, required_features
+            hass, func, data, entities, call.context, required_features
         )
         for platform, entities in zip(platforms, platforms_entities)
     ]
@@ -336,7 +357,7 @@ async def entity_service_call(
 
 
 async def _handle_service_platform_call(
-    func, data, entities, context, required_features
+    hass, func, data, entities, context, required_features
 ):
     """Handle a function call."""
     tasks = []
@@ -354,9 +375,21 @@ async def _handle_service_platform_call(
         entity.async_set_context(context)
 
         if isinstance(func, str):
-            await getattr(entity, func)(**data)
+            result = hass.async_add_job(partial(getattr(entity, func), **data))
         else:
-            await func(entity, data)
+            result = hass.async_add_job(func, entity, data)
+
+        # Guard because callback functions do not return a task when passed to async_add_job.
+        if result is not None:
+            result = await result
+
+        if asyncio.iscoroutine(result):
+            _LOGGER.error(
+                "Service %s for %s incorrectly returns a coroutine object. Await result instead in service handler. Report bug to integration author.",
+                func,
+                entity.entity_id,
+            )
+            await result
 
         if entity.should_poll:
             tasks.append(entity.async_update_ha_state(True))

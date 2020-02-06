@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "username_exists": "El compte ja ha estat configurat"
+            "already_configured": "El compte ja ha estat configurat"
         },
         "error": {
             "login": "Error d\u2019inici de sessi\u00f3: comprova el correu electr\u00f2nic i la contrasenya",
             "send_verification_code": "No s'ha pogut enviar el codi de verificaci\u00f3",
-            "username_exists": "El compte ja ha estat configurat",
             "validate_verification_code": "No s'ha pogut verificar el codi de verificaci\u00f3, tria un dispositiu de confian\u00e7a i torna a iniciar el proc\u00e9s"
         },
         "step": {
@@ -23,7 +22,7 @@
                     "username": "Correu electr\u00f2nic"
                 },
                 "description": "Introdueix les teves credencials",
-                "title": "credencials d'iCloud"
+                "title": "Credencials d'iCloud"
             },
             "verification_code": {
                 "data": {

@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Die Airly-Integration ist f\u00fcr diese Koordinaten bereits konfiguriert."
+        },
         "error": {
             "auth": "Der API-Schl\u00fcssel ist nicht korrekt.",
             "name_exists": "Name existiert bereits",

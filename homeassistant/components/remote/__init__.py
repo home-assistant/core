@@ -119,12 +119,9 @@ class RemoteDevice(ToggleEntity):
         """Send a command to a device."""
         raise NotImplementedError()
 
-    def async_send_command(self, command, **kwargs):
-        """Send a command to a device.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(
+    async def async_send_command(self, command, **kwargs):
+        """Send a command to a device."""
+        await self.hass.async_add_executor_job(
             ft.partial(self.send_command, command, **kwargs)
         )
 
@@ -132,11 +129,6 @@ class RemoteDevice(ToggleEntity):
         """Learn a command from a device."""
         raise NotImplementedError()
 
-    def async_learn_command(self, **kwargs):
-        """Learn a command from a device.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(
-            ft.partial(self.learn_command, **kwargs)
-        )
+    async def async_learn_command(self, **kwargs):
+        """Learn a command from a device."""
+        await self.hass.async_add_executor_job(ft.partial(self.learn_command, **kwargs))

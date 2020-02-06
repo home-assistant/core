@@ -1,7 +1,6 @@
 """The ViCare integration."""
 import enum
 import logging
-import tempfile
 
 from PyViCare.PyViCareDevice import Device
 from PyViCare.PyViCareGazBoiler import GazBoiler
@@ -11,6 +10,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import STORAGE_DIR
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema(
 def setup(hass, config):
     """Create the ViCare component."""
     conf = config[DOMAIN]
-    params = {"token_file": tempfile.gettempdir() + "/vicare_token.save"}
+    params = {"token_file": hass.config.path(STORAGE_DIR, "vicare_token.save")}
     if conf.get(CONF_CIRCUIT) is not None:
         params["circuit"] = conf[CONF_CIRCUIT]
 

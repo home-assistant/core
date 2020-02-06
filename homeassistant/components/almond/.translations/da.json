@@ -6,6 +6,10 @@
             "missing_configuration": "Tjek venligst dokumentationen om, hvordan man indstiller Almond."
         },
         "step": {
+            "hassio_confirm": {
+                "description": "Vil du konfigurere Home Assistant til at oprette forbindelse til Almond leveret af Hass.io-tilf\u00f8jelsen: {addon}?",
+                "title": "Almond via Hass.io-tilf\u00f8jelse"
+            },
             "pick_implementation": {
                 "title": "V\u00e6lg godkendelsesmetode"
             }

@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
+    ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
@@ -118,6 +119,7 @@ async def async_setup_entry(hass, config_entry):
         controller = TeslaAPI(
             websession,
             refresh_token=config[CONF_TOKEN],
+            access_token=config[CONF_ACCESS_TOKEN],
             update_interval=config_entry.options.get(CONF_SCAN_INTERVAL, 300),
         )
         (refresh_token, access_token) = await controller.connect()
@@ -214,6 +216,7 @@ class TeslaDevice(Entity):
         attr = self._attributes
         if self.tesla_device.has_battery():
             attr[ATTR_BATTERY_LEVEL] = self.tesla_device.battery_level()
+            attr[ATTR_BATTERY_CHARGING] = self.tesla_device.battery_charging()
         return attr
 
     @property

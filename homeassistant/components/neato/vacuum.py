@@ -84,11 +84,6 @@ SERVICE_NEATO_CUSTOM_CLEANING_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Neato vacuum."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up Neato vacuum with config entry."""
     dev = []
@@ -208,6 +203,13 @@ class NeatoConnectedVacuum(StateVacuumDevice):
                     + " "
                     + ACTION.get(self._state["action"])
                 )
+                if (
+                    "boundary" in self._state["cleaning"]
+                    and "name" in self._state["cleaning"]["boundary"]
+                ):
+                    self._status_state += (
+                        " " + self._state["cleaning"]["boundary"]["name"]
+                    )
             else:
                 self._status_state = robot_alert
         elif self._state["state"] == 3:

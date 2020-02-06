@@ -156,11 +156,69 @@ class Script:
             ACTION_DEVICE_AUTOMATION: self._async_device_automation,
             ACTION_ACTIVATE_SCENE: self._async_activate_scene,
         }
+        self._referenced_entities: Optional[Set[str]] = None
+        self._referenced_devices: Optional[Set[str]] = None
 
     @property
     def is_running(self) -> bool:
         """Return true if script is on."""
         return self._cur != -1
+
+    @property
+    def referenced_devices(self):
+        """Return a set of referenced devices."""
+        if self._referenced_devices is not None:
+            return self._referenced_devices
+
+        referenced = set()
+
+        for step in self.sequence:
+            action = _determine_action(step)
+
+            if action == ACTION_CHECK_CONDITION:
+                referenced |= condition.async_extract_devices(step)
+
+            elif action == ACTION_DEVICE_AUTOMATION:
+                referenced.add(step[CONF_DEVICE_ID])
+
+        self._referenced_devices = referenced
+        return referenced
+
+    @property
+    def referenced_entities(self):
+        """Return a set of referenced entities."""
+        if self._referenced_entities is not None:
+            return self._referenced_entities
+
+        referenced = set()
+
+        for step in self.sequence:
+            action = _determine_action(step)
+
+            if action == ACTION_CALL_SERVICE:
+                data = step.get(service.CONF_SERVICE_DATA)
+                if not data:
+                    continue
+
+                entity_ids = data.get(ATTR_ENTITY_ID)
+
+                if entity_ids is None:
+                    continue
+
+                if isinstance(entity_ids, str):
+                    entity_ids = [entity_ids]
+
+                for entity_id in entity_ids:
+                    referenced.add(entity_id)
+
+            elif action == ACTION_CHECK_CONDITION:
+                referenced |= condition.async_extract_entities(step)
+
+            elif action == ACTION_ACTIVATE_SCENE:
+                referenced.add(step[CONF_SCENE])
+
+        self._referenced_entities = referenced
+        return referenced
 
     def run(self, variables=None, context=None):
         """Run script."""
@@ -214,6 +272,7 @@ class Script:
         """Stop running script."""
         run_callback_threadsafe(self.hass.loop, self.async_stop).result()
 
+    @callback
     def async_stop(self) -> None:
         """Stop running script."""
         if self._cur == -1:

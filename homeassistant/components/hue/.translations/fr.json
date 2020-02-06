@@ -22,7 +22,7 @@
                 "title": "Choisissez le pont Philips Hue"
             },
             "link": {
-                "description": "Appuyez sur le bouton du pont pour lier Philips Hue avec Home Assistant. \n\n ![Emplacement du bouton sur le pont] (/static/images/config_philips_hue.jpg)",
+                "description": "Appuyez sur le bouton du pont pour lier Philips Hue avec Home Assistant. \n\n ![Emplacement du bouton sur le pont](/static/images/config_philips_hue.jpg)",
                 "title": "Hub de liaison"
             }
         },

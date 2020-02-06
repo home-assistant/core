@@ -16,7 +16,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import collection, entity_registry
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -105,7 +105,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
 
     await yaml_collection.async_load(
-        [{CONF_ID: id_, **(conf or {})} for id_, conf in config[DOMAIN].items()]
+        [{CONF_ID: id_, **(conf or {})} for id_, conf in config.get(DOMAIN, {}).items()]
     )
     await storage_collection.async_load()
 
@@ -113,18 +113,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    async def _collection_changed(
-        change_type: str, item_id: str, config: typing.Optional[typing.Dict]
-    ) -> None:
-        """Handle a collection change: clean up entity registry on removals."""
-        if change_type != collection.CHANGE_REMOVED:
-            return
-
-        ent_reg = await entity_registry.async_get_registry(hass)
-        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
-
-    yaml_collection.async_add_listener(_collection_changed)
-    storage_collection.async_add_listener(_collection_changed)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Remove all input booleans and load new ones from config."""
@@ -132,7 +122,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         if conf is None:
             return
         await yaml_collection.async_load(
-            [{CONF_ID: id_, **(conf or {})} for id_, conf in conf[DOMAIN].items()]
+            [
+                {CONF_ID: id_, **(conf or {})}
+                for id_, conf in conf.get(DOMAIN, {}).items()
+            ]
         )
 
     homeassistant.helpers.service.async_register_admin_service(

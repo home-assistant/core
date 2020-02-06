@@ -251,73 +251,75 @@ class Volumio(MediaPlayerDevice):
         """Flag of media commands that are supported."""
         return SUPPORT_VOLUMIO
 
-    def async_media_next_track(self):
+    async def async_media_next_track(self):
         """Send media_next command to media player."""
-        return self.send_volumio_msg("commands", params={"cmd": "next"})
+        await self.send_volumio_msg("commands", params={"cmd": "next"})
 
-    def async_media_previous_track(self):
+    async def async_media_previous_track(self):
         """Send media_previous command to media player."""
-        return self.send_volumio_msg("commands", params={"cmd": "prev"})
+        await self.send_volumio_msg("commands", params={"cmd": "prev"})
 
-    def async_media_play(self):
+    async def async_media_play(self):
         """Send media_play command to media player."""
-        return self.send_volumio_msg("commands", params={"cmd": "play"})
+        await self.send_volumio_msg("commands", params={"cmd": "play"})
 
-    def async_media_pause(self):
+    async def async_media_pause(self):
         """Send media_pause command to media player."""
         if self._state["trackType"] == "webradio":
-            return self.send_volumio_msg("commands", params={"cmd": "stop"})
-        return self.send_volumio_msg("commands", params={"cmd": "pause"})
+            await self.send_volumio_msg("commands", params={"cmd": "stop"})
+        else:
+            await self.send_volumio_msg("commands", params={"cmd": "pause"})
 
-    def async_set_volume_level(self, volume):
+    async def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""
-        return self.send_volumio_msg(
+        await self.send_volumio_msg(
             "commands", params={"cmd": "volume", "volume": int(volume * 100)}
         )
 
-    def async_volume_up(self):
+    async def async_volume_up(self):
         """Service to send the Volumio the command for volume up."""
-        return self.send_volumio_msg(
+        await self.send_volumio_msg(
             "commands", params={"cmd": "volume", "volume": "plus"}
         )
 
-    def async_volume_down(self):
+    async def async_volume_down(self):
         """Service to send the Volumio the command for volume down."""
-        return self.send_volumio_msg(
+        await self.send_volumio_msg(
             "commands", params={"cmd": "volume", "volume": "minus"}
         )
 
-    def async_mute_volume(self, mute):
+    async def async_mute_volume(self, mute):
         """Send mute command to media player."""
         mutecmd = "mute" if mute else "unmute"
         if mute:
             # mute is implemented as 0 volume, do save last volume level
             self._lastvol = self._state["volume"]
-            return self.send_volumio_msg(
+            await self.send_volumio_msg(
                 "commands", params={"cmd": "volume", "volume": mutecmd}
             )
+            return
 
-        return self.send_volumio_msg(
+        await self.send_volumio_msg(
             "commands", params={"cmd": "volume", "volume": self._lastvol}
         )
 
-    def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
-        return self.send_volumio_msg(
+        await self.send_volumio_msg(
             "commands", params={"cmd": "random", "value": str(shuffle).lower()}
         )
 
-    def async_select_source(self, source):
+    async def async_select_source(self, source):
         """Choose a different available playlist and play it."""
         self._currentplaylist = source
-        return self.send_volumio_msg(
+        await self.send_volumio_msg(
             "commands", params={"cmd": "playplaylist", "name": source}
         )
 
-    def async_clear_playlist(self):
+    async def async_clear_playlist(self):
         """Clear players playlist."""
         self._currentplaylist = None
-        return self.send_volumio_msg("commands", params={"cmd": "clearQueue"})
+        await self.send_volumio_msg("commands", params={"cmd": "clearQueue"})
 
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
     async def _async_update_playlists(self, **kwargs):

@@ -26,13 +26,12 @@
             }
         },
         "error": {
-            "username_exists": "Account already configured",
             "login": "Login error: please check your email & password",
             "send_verification_code": "Failed to send verification code",
             "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
         },
         "abort": {
-            "username_exists": "Account already configured"
+            "already_configured": "Account already configured"
         }
     }
 }

@@ -527,6 +527,8 @@ class DysonPureCoolDevice(FanEntity):
     @property
     def carbon_filter(self):
         """Return the carbon filter state."""
+        if self._device.state.carbon_filter_state == "INV":
+            return self._device.state.carbon_filter_state
         return int(self._device.state.carbon_filter_state)
 
     @property

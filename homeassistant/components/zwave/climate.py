@@ -3,8 +3,6 @@
 import logging
 from typing import Optional, Tuple
 
-from typing import Optional
-
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
@@ -128,11 +126,6 @@ DEFAULT_HVAC_MODES = [
     HVAC_MODE_OFF,
     HVAC_MODE_AUTO,
 ]
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old method of setting up Z-Wave climate devices."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

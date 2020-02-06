@@ -89,8 +89,10 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
         if self._device.secondary_temperature is not None:
             attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
-        if self._device.type in Presence.ZHATYPE and self._device.dark is not None:
-            attr[ATTR_DARK] = self._device.dark
+        if self._device.type in Presence.ZHATYPE:
+
+            if self._device.dark is not None:
+                attr[ATTR_DARK] = self._device.dark
 
         elif self._device.type in Vibration.ZHATYPE:
             attr[ATTR_ORIENTATION] = self._device.orientation
