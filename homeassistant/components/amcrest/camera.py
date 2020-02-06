@@ -92,7 +92,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([AmcrestCam(name, device, hass.data[DATA_FFMPEG])], True)
 
 
-class _CannotSnapshot(Exception):
+class CannotSnapshot(Exception):
     pass
 
 
@@ -130,7 +130,7 @@ class AmcrestCam(Camera):
                 self.name,
                 "offline" if not available else "off",
             )
-            raise _CannotSnapshot
+            raise CannotSnapshot
 
     async def _async_get_image(self):
         try:
@@ -168,7 +168,7 @@ class AmcrestCam(Camera):
             # 2) someone will be around to catch any exceptions.
             self._snapshot_task = self.hass.async_create_task(self._async_get_image())
             return await asyncio.shield(self._snapshot_task)
-        except _CannotSnapshot:
+        except CannotSnapshot:
             return None
 
     async def handle_async_mjpeg_stream(self, request):
