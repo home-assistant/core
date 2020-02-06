@@ -5,7 +5,6 @@ from typing import Any, Awaitable, Callable, List, Optional, Set
 
 import voluptuous as vol
 
-from homeassistant.components import sun
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
@@ -578,6 +577,6 @@ def _trigger_extract_entities(trigger_conf: dict) -> List[str]:
         return [trigger_conf[CONF_ZONE]]
 
     if trigger_conf[CONF_PLATFORM] == "sun":
-        return [sun.ENTITY_ID]
+        return ["sun.sun"]
 
     return []
