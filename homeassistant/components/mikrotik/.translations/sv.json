@@ -1,0 +1,10 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Konfigurera Mikrotik-router"
+            }
+        },
+        "title": "Mikrotik"
+    }
+}
