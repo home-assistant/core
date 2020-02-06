@@ -26,18 +26,19 @@ class NetatmoFlowHandler(
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         scopes = [
-            "read_station",
             "read_camera",
-            "write_camera",
-            "read_presence",
             "read_homecoach",
+            "read_presence",
             "read_smokedetector",
+            "read_station",
             "read_thermostat",
+            "write_camera",
             "write_thermostat",
         ]
 
         if self.flow_impl.name != "Home Assistant Cloud":
             scopes.extend(["access_camera", "access_presence"])
+            scopes.sort()
 
         return {"scope": " ".join(scopes)}
 
