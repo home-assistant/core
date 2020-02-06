@@ -87,7 +87,6 @@ class AbodeSystem:
 
     def __init__(self, abode, polling):
         """Initialize the system."""
-
         self.abode = abode
         self.polling = polling
         self.entity_ids = set()
