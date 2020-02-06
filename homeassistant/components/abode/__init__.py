@@ -32,7 +32,7 @@ CONF_POLLING = "polling"
 
 SERVICE_SETTINGS = "change_setting"
 SERVICE_CAPTURE_IMAGE = "capture_image"
-SERVICE_TRIGGER = "trigger_quick_action"
+SERVICE_TRIGGER_AUTOMATION = "trigger_automation"
 
 ATTR_DEVICE_ID = "device_id"
 ATTR_DEVICE_NAME = "device_name"
@@ -68,7 +68,7 @@ CHANGE_SETTING_SCHEMA = vol.Schema(
 
 CAPTURE_IMAGE_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
-TRIGGER_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
+AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 ABODE_PLATFORMS = [
     "alarm_control_panel",
@@ -143,7 +143,7 @@ async def async_unload_entry(hass, config_entry):
     """Unload a config entry."""
     hass.services.async_remove(DOMAIN, SERVICE_SETTINGS)
     hass.services.async_remove(DOMAIN, SERVICE_CAPTURE_IMAGE)
-    hass.services.async_remove(DOMAIN, SERVICE_TRIGGER)
+    hass.services.async_remove(DOMAIN, SERVICE_TRIGGER_AUTOMATION)
 
     tasks = []
 
@@ -190,8 +190,8 @@ def setup_hass_services(hass):
             signal = f"abode_camera_capture_{entity_id}"
             dispatcher_send(hass, signal)
 
-    def trigger_quick_action(call):
-        """Trigger a quick action."""
+    def trigger_automation(call):
+        """Trigger an Abode automation."""
         entity_ids = call.data.get(ATTR_ENTITY_ID, None)
 
         target_entities = [
@@ -213,7 +213,7 @@ def setup_hass_services(hass):
     )
 
     hass.services.register(
-        DOMAIN, SERVICE_TRIGGER, trigger_quick_action, schema=TRIGGER_SCHEMA
+        DOMAIN, SERVICE_TRIGGER_AUTOMATION, trigger_automation, schema=AUTOMATION_SCHEMA
     )
 
 
@@ -384,10 +384,13 @@ class AbodeAutomation(Entity):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: ATTRIBUTION,
-            "automation_id": self._automation.automation_id,
-            "type": self._automation.type,
-            "sub_type": self._automation.sub_type,
+            "type": "CUE automation",
         }
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this automation."""
+        return self._automation.automation_id
 
     def _update_callback(self, device):
         """Update the automation state."""

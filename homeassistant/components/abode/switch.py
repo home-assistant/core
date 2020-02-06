@@ -5,9 +5,10 @@ import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import AbodeAutomation, AbodeDevice
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_TRIGGER_AUTOMATION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for device in data.abode.get_devices(generic_type=device_type):
             entities.append(AbodeSwitch(data, device))
 
-    for automation in data.abode.get_automations(generic_type=CONST.TYPE_AUTOMATION):
+    for automation in data.abode.get_automations():
         entities.append(
             AbodeAutomationSwitch(data, automation, TIMELINE.AUTOMATION_EDIT_GROUP)
         )
@@ -52,15 +53,28 @@ class AbodeSwitch(AbodeDevice, SwitchDevice):
 class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
     """A switch implementation for Abode automations."""
 
+    async def async_added_to_hass(self):
+        """Subscribe Abode events."""
+        await super().async_added_to_hass()
+
+        signal = SIGNAL_TRIGGER_AUTOMATION.format(self.entity_id)
+        async_dispatcher_connect(self.hass, signal, self.trigger)
+
     def turn_on(self, **kwargs):
-        """Turn on the device."""
-        self._automation.set_active(True)
+        """Enable the automation."""
+        if self._automation.enable(True):
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
-        """Turn off the device."""
-        self._automation.set_active(False)
+        """Disable the automation."""
+        if self._automation.enable(False):
+            self.schedule_update_ha_state()
+
+    def trigger(self):
+        """Trigger the automation."""
+        self._automation.trigger()
 
     @property
     def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._automation.is_active
+        """Return True if the automation is enabled."""
+        return self._automation.is_enabled
