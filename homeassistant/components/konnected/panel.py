@@ -146,7 +146,7 @@ class AlarmPanel:
                         zone, state, momentary, times, pause,
                     )
 
-                # device endpoint uses pin numver instead of zone
+                # device endpoint uses pin number instead of zone
                 return await self.client.put_device(
                     ZONE_TO_PIN[zone], state, momentary, times, pause,
                 )
