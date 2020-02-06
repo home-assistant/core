@@ -1,6 +1,7 @@
 """Support for the Brother service."""
 import logging
 
+from homeassistant.helpers import device_registry, entity_registry
 from homeassistant.helpers.entity import Entity
 
 from .const import (
@@ -22,9 +23,30 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add Brother entities from a config_entry."""
     brother = hass.data[DOMAIN][config_entry.entry_id]
 
-    sensors = []
+    if brother.available:
+        # list of sensors available for this printer model
+        printer_sensor_list = {item for item in brother.data.keys()}
 
-    name = brother.model
+    else:
+        _LOGGER.info("Printer is unavailable, reading device info from registry")
+
+        # read printer info from device registry
+        dev_reg = await device_registry.async_get_registry(hass)
+        device = device_registry.async_entries_for_config_entry(
+            dev_reg, config_entry.entry_id
+        )[0]
+
+        brother.model = device.model
+        brother.firmware = device.sw_version
+        brother.serial = next(iter(device.identifiers))[1]
+
+        # read list of sensors from entity registry
+        ent_reg = await entity_registry.async_get_registry(hass)
+        entities = entity_registry.async_entries_for_config_entry(
+            ent_reg, config_entry.entry_id
+        )
+        printer_sensor_list = {entity.unique_id.split("_", 1)[1] for entity in entities}
+
     device_info = {
         "identifiers": {(DOMAIN, brother.serial)},
         "name": brother.model,
@@ -33,14 +55,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         "sw_version": brother.firmware,
     }
 
+    sensors = []
     for sensor in SENSOR_TYPES:
-        if sensor in brother.data:
-            sensors.append(BrotherPrinterSensor(brother, name, sensor, device_info))
+        if sensor in printer_sensor_list:
+            sensors.append(
+                BrotherPrinterSensor(brother, brother.model, sensor, device_info)
+            )
     async_add_entities(sensors, True)
 
 
 class BrotherPrinterSensor(Entity):
-    """Define an Brother Printer sensor."""
+    """Define a Brother Printer sensor."""
 
     def __init__(self, printer, name, kind, device_info):
         """Initialize."""
