@@ -25,6 +25,7 @@ FLOWS = [
     "emulated_roku",
     "esphome",
     "garmin_connect",
+    "gdacs",
     "geofency",
     "geonetnz_quakes",
     "geonetnz_volcano",
