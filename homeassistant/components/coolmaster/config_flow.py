@@ -3,7 +3,7 @@
 from pycoolmasternet import CoolMasterNet
 import voluptuous as vol
 
-from homeassistant import core, config_entries
+from homeassistant import config_entries, core
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 # pylint: disable=unused-import

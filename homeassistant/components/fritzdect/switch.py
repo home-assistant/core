@@ -209,7 +209,7 @@ class FritzDectSwitchData:
         try:
             self.state = actor.get_state()
             self.current_consumption = (actor.get_power() or 0.0) / 1000
-            self.total_consumption = (actor.get_energy() or 0.0) / 100000
+            self.total_consumption = (actor.get_energy() or 0.0) / 1000
         except (RequestException, HTTPError):
             _LOGGER.error("Request to actor failed")
             self.state = None

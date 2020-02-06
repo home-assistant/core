@@ -4,27 +4,28 @@ import unittest
 from unittest import mock
 
 import asynctest
-from libpurecool.const import FanSpeed, FanMode, NightMode, Oscillation
+from libpurecool.const import FanMode, FanSpeed, NightMode, Oscillation
 from libpurecool.dyson_pure_cool import DysonPureCool
 from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 from libpurecool.dyson_pure_state import DysonPureCoolState
 from libpurecool.dyson_pure_state_v2 import DysonPureCoolV2State
 
-import homeassistant.components.dyson.fan as dyson
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import DYSON_DEVICES
+import homeassistant.components.dyson.fan as dyson
 from homeassistant.components.fan import (
-    DOMAIN,
-    ATTR_SPEED,
     ATTR_OSCILLATING,
+    ATTR_SPEED,
+    DOMAIN,
+    SERVICE_OSCILLATE,
+    SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
-    SPEED_HIGH,
-    SERVICE_OSCILLATE,
 )
-from homeassistant.const import SERVICE_TURN_ON, SERVICE_TURN_OFF, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
+
 from tests.common import get_test_home_assistant
 
 

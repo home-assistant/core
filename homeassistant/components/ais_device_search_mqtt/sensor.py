@@ -4,14 +4,14 @@ Support for MQTT sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt/
 """
-import logging
-import json
-from typing import Optional
 from datetime import timedelta
+import json
+import logging
+from typing import Optional
+
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.components import sensor
+from homeassistant.components import mqtt, sensor
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH,
     CONF_QOS,
@@ -28,21 +28,20 @@ from homeassistant.components.mqtt.discovery import (
 )
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
+    CONF_ICON,
     CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
-    CONF_UNIT_OF_MEASUREMENT,
-    CONF_ICON,
-    CONF_DEVICE_CLASS,
-    CONF_DEVICE,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.components import mqtt
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,7 +107,7 @@ def get_text_to_say():
     """Return the info about devices"""
     import time
 
-    # Wait for 5 seconds
+    # Wait for 10 seconds
     time.sleep(10)
     if len(MQTT_DEVICES) > 0 or len(NET_DEVICES) > 0:
         info = ""

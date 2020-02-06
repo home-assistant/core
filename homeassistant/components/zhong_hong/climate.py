@@ -161,9 +161,7 @@ class ZhongHongClimate(ClimateDevice):
     @property
     def unique_id(self):
         """Return the unique ID of the HVAC."""
-        return "zhong_hong_hvac_{}_{}".format(
-            self._device.addr_out, self._device.addr_in
-        )
+        return f"zhong_hong_hvac_{self._device.addr_out}_{self._device.addr_in}"
 
     @property
     def supported_features(self):

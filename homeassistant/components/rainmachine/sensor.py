@@ -72,7 +72,7 @@ class RainMachineSensor(RainMachineEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return "{0}_{1}".format(
             self.rainmachine.device_mac.replace(":", ""), self._sensor_type
         )
@@ -97,14 +97,14 @@ class RainMachineSensor(RainMachineEntity):
     async def async_update(self):
         """Update the sensor's state."""
         if self._sensor_type == TYPE_FLOW_SENSOR_CLICK_M3:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS].get(
+            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
                 "flowSensorClicksPerCubicMeter"
             )
         elif self._sensor_type == TYPE_FLOW_SENSOR_CONSUMED_LITERS:
-            clicks = self.rainmachine.data[PROVISION_SETTINGS].get(
+            clicks = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
                 "flowSensorWateringClicks"
             )
-            clicks_per_m3 = self.rainmachine.data[PROVISION_SETTINGS].get(
+            clicks_per_m3 = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
                 "flowSensorClicksPerCubicMeter"
             )
 
@@ -113,11 +113,11 @@ class RainMachineSensor(RainMachineEntity):
             else:
                 self._state = None
         elif self._sensor_type == TYPE_FLOW_SENSOR_START_INDEX:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS].get(
+            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
                 "flowSensorStartIndex"
             )
         elif self._sensor_type == TYPE_FLOW_SENSOR_WATERING_CLICKS:
-            self._state = self.rainmachine.data[PROVISION_SETTINGS].get(
+            self._state = self.rainmachine.data[PROVISION_SETTINGS]["system"].get(
                 "flowSensorWateringClicks"
             )
         elif self._sensor_type == TYPE_FREEZE_TEMP:

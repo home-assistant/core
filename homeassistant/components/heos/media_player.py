@@ -115,7 +115,6 @@ class HeosMediaPlayer(MediaPlayerDevice):
 
     async def async_added_to_hass(self):
         """Device added to hass."""
-        self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
         # Update state when attributes of the player change
         self._signals.append(
             self._player.heos.dispatcher.connect(
@@ -241,6 +240,9 @@ class HeosMediaPlayer(MediaPlayerDevice):
         controls = self._player.now_playing_media.supported_controls
         current_support = [CONTROL_TO_SUPPORT[control] for control in controls]
         self._supported_features = reduce(ior, current_support, BASE_SUPPORTED_FEATURES)
+
+        if self._source_manager is None:
+            self._source_manager = self.hass.data[HEOS_DOMAIN][DATA_SOURCE_MANAGER]
 
     async def async_will_remove_from_hass(self):
         """Disconnect the device when removed."""

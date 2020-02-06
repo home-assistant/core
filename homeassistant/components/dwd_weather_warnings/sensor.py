@@ -12,20 +12,20 @@ Unwetterwarnungen (Stufe 3)
 Warnungen vor markantem Wetter (Stufe 2)
 Wetterwarnungen (Stufe 1)
 """
-import logging
-import json
 from datetime import timedelta
+import json
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE as HA_USER_AGENT
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.rest.sensor import RestData
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_MONITORED_CONDITIONS
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, CONF_NAME
+from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE as HA_USER_AGENT
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt_util
-from homeassistant.components.rest.sensor import RestData
 
 _LOGGER = logging.getLogger(__name__)
 

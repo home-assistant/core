@@ -1,6 +1,12 @@
 """Tests for the NWS weather component."""
 from homeassistant.components.nws.weather import ATTR_FORECAST_PRECIP_PROB
 from homeassistant.components.weather import (
+    ATTR_FORECAST,
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
@@ -8,32 +14,23 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
 )
-from homeassistant.components.weather import (
-    ATTR_FORECAST,
-    ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TIME,
-    ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
-)
-
 from homeassistant.const import (
     LENGTH_KILOMETERS,
     LENGTH_METERS,
     LENGTH_MILES,
+    PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_PA,
-    PRESSURE_HPA,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.util.pressure import convert as convert_pressure
-from homeassistant.util.distance import convert as convert_distance
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.setup import async_setup_component
+from homeassistant.util.distance import convert as convert_distance
+from homeassistant.util.pressure import convert as convert_pressure
+from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 
-from tests.common import load_fixture, assert_setup_component
+from tests.common import assert_setup_component, load_fixture
 
 EXP_OBS_IMP = {
     ATTR_WEATHER_TEMPERATURE: round(

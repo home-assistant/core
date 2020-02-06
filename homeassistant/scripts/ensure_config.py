@@ -2,9 +2,8 @@
 import argparse
 import os
 
-from homeassistant.core import HomeAssistant
 import homeassistant.config as config_util
-
+from homeassistant.core import HomeAssistant
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -12,9 +11,7 @@ import homeassistant.config as config_util
 def run(args):
     """Handle ensure config commandline script."""
     parser = argparse.ArgumentParser(
-        description=(
-            "Ensure a Home Assistant config exists, " "creates one if necessary."
-        )
+        description=("Ensure a Home Assistant config exists, creates one if necessary.")
     )
     parser.add_argument(
         "-c",

@@ -1,19 +1,19 @@
 """The tests for Device tracker device conditions."""
 import pytest
 
+import homeassistant.components.automation as automation
 from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
-from homeassistant.setup import async_setup_component
-import homeassistant.components.automation as automation
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
 )
 
 

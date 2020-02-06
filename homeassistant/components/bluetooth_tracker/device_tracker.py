@@ -1,7 +1,7 @@
 """Tracking for bluetooth devices."""
 import asyncio
 import logging
-from typing import List, Set, Tuple, Optional
+from typing import List, Optional, Set, Tuple
 
 # pylint: disable=import-error
 import bluetooth

@@ -1,12 +1,8 @@
 {
   "domain": "uptimerobot",
-  "name": "Uptimerobot",
+  "name": "Uptime Robot",
   "documentation": "https://www.home-assistant.io/integrations/uptimerobot",
-  "requirements": [
-    "pyuptimerobot==0.0.5"
-  ],
+  "requirements": ["pyuptimerobot==0.0.5"],
   "dependencies": [],
-  "codeowners": [
-    "@ludeeus"
-  ]
+  "codeowners": ["@ludeeus"]
 }

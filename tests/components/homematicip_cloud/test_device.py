@@ -130,3 +130,30 @@ async def test_hap_with_name(hass, mock_connection, hmip_config_entry):
     assert hmip_device
     assert ha_state.state == STATE_ON
     assert ha_state.attributes["friendly_name"] == entity_name
+
+
+async def test_hmip_reset_energy_counter_services(hass, mock_hap_with_service):
+    """Test reset_energy_counter service."""
+    entity_id = "switch.pc"
+    entity_name = "Pc"
+    device_model = "HMIP-PSM"
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap_with_service, entity_id, entity_name, device_model
+    )
+    assert ha_state
+
+    await hass.services.async_call(
+        "homematicip_cloud",
+        "reset_energy_counter",
+        {"entity_id": "switch.pc"},
+        blocking=True,
+    )
+    assert hmip_device.mock_calls[-1][0] == "reset_energy_counter"
+    assert len(hmip_device._connection.mock_calls) == 2  # pylint: disable=W0212
+
+    await hass.services.async_call(
+        "homematicip_cloud", "reset_energy_counter", {"entity_id": "all"}, blocking=True
+    )
+    assert hmip_device.mock_calls[-1][0] == "reset_energy_counter"
+    assert len(hmip_device._connection.mock_calls) == 12  # pylint: disable=W0212

@@ -1,0 +1,11 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "armed_away": "{entity_name} Unterwegs",
+            "armed_home": "{entity_name} Zuhause",
+            "armed_night": "{entity_name} Nacht-Modus",
+            "disarmed": "{entity_name} deaktiviert",
+            "triggered": "{entity_name} ausgel\u00f6st"
+        }
+    }
+}

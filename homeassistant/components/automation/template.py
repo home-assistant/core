@@ -3,13 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import CONF_VALUE_TEMPLATE, CONF_PLATFORM, CONF_FOR
 from homeassistant import exceptions
-from homeassistant.helpers import condition
+from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
+from homeassistant.core import callback
+from homeassistant.helpers import condition, config_validation as cv, template
 from homeassistant.helpers.event import async_track_same_state, async_track_template
-from homeassistant.helpers import config_validation as cv, template
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

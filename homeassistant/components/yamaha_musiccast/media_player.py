@@ -1,11 +1,11 @@
 """Support for Yamaha MusicCast Receivers."""
 import logging
-
 import socket
+
 import pymusiccast
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
@@ -232,7 +232,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._zone.update_status()
 
     def update_hass(self):
-        """Push updates to HASS."""
+        """Push updates to Home Assistant."""
         if self.entity_id:
             _LOGGER.debug("update_hass: pushing updates")
             self.schedule_update_ha_state()

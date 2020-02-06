@@ -4,54 +4,53 @@ import base64
 import collections
 from contextlib import suppress
 from datetime import timedelta
-import logging
 import hashlib
+import logging
 from random import SystemRandom
 
-import attr
 from aiohttp import web
 import async_timeout
+import attr
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.media_player.const import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    DOMAIN as DOMAIN_MP,
+    SERVICE_PLAY_MEDIA,
+)
+from homeassistant.components.stream import request_stream
+from homeassistant.components.stream.const import (
+    CONF_DURATION,
+    CONF_LOOKBACK,
+    CONF_STREAM_SOURCE,
+    DOMAIN as DOMAIN_STREAM,
+    FORMAT_CONTENT_TYPE,
+    OUTPUT_FORMATS,
+    SERVICE_RECORD,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_FILENAME,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    CONF_FILENAME,
 )
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    SERVICE_PLAY_MEDIA,
-    DOMAIN as DOMAIN_MP,
-)
-from homeassistant.components.stream import request_stream
-from homeassistant.components.stream.const import (
-    OUTPUT_FORMATS,
-    FORMAT_CONTENT_TYPE,
-    CONF_STREAM_SOURCE,
-    CONF_LOOKBACK,
-    CONF_DURATION,
-    SERVICE_RECORD,
-    DOMAIN as DOMAIN_STREAM,
-)
-from homeassistant.components import websocket_api
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 from homeassistant.setup import async_when_setup
 
-from .const import DOMAIN, DATA_CAMERA_PREFS
+from .const import DATA_CAMERA_PREFS, DOMAIN
 from .prefs import CameraPreferences
-
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
@@ -169,7 +168,7 @@ async def async_get_still_stream(request, image_cb, content_type, interval):
     This method must be run in the event loop.
     """
     response = web.StreamResponse()
-    response.content_type = "multipart/x-mixed-replace; " "boundary=--frameboundary"
+    response.content_type = "multipart/x-mixed-replace; boundary=--frameboundary"
     await response.prepare(request)
 
     async def write_to_mjpeg_stream(img_bytes):

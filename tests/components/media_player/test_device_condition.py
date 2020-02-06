@@ -1,25 +1,25 @@
 """The tests for Media player device conditions."""
 import pytest
 
+import homeassistant.components.automation as automation
 from homeassistant.components.media_player import DOMAIN
 from homeassistant.const import (
-    STATE_ON,
-    STATE_OFF,
     STATE_IDLE,
+    STATE_OFF,
+    STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.setup import async_setup_component
-import homeassistant.components.automation as automation
 from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
     assert_lists_same,
+    async_get_device_automations,
     async_mock_service,
     mock_device_registry,
     mock_registry,
-    async_get_device_automations,
 )
 
 

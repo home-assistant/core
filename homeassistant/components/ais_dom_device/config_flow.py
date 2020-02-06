@@ -1,13 +1,16 @@
 """Config flow to configure the AIS Spotify Service component."""
 
-from homeassistant import config_entries
-from homeassistant.core import callback
-from .const import DOMAIN
-from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TYPE
-from homeassistant.components.ais_dom import ais_global
-import time
-import voluptuous as vol
 import logging
+import time
+
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.components.ais_dom import ais_global
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TYPE
+from homeassistant.core import callback
+
+from .const import DOMAIN
 
 G_IOT_DEV_TO_ADD = []
 _LOGGER = logging.getLogger(__name__)
@@ -106,7 +109,6 @@ class AisDomDeviceFlowHandler(config_entries.ConfigFlow):
             result = await self.hass.async_add_executor_job(
                 scan_for_new_device, self.hass, x
             )
-            _LOGGER.info("Wykryte urządzenia: " + str(result))
             if len(result) > 1:
                 return await self.async_step_add_device(user_input=None)
             else:
@@ -197,7 +199,6 @@ class AisDomDeviceFlowHandler(config_entries.ConfigFlow):
                     set_option_30 = 1
                 # unique req_id
                 ais_req_id = int(round(time.time() * 1000))
-                _LOGGER.info("add_new_device -> ais_req_id: " + str(ais_req_id))
                 ais_global.set_ais_gate_req(str(ais_req_id), None)
                 # send a request to frame to add the new device
                 network = (
@@ -216,7 +217,6 @@ class AisDomDeviceFlowHandler(config_entries.ConfigFlow):
                     ais_req_id,
                 )
                 # request was correctly send, now check and wait for the answer
-                _LOGGER.error("3. self.hass.async_add_executor_job ")
                 return self.async_abort(reason="add_executed")
 
         return self.async_show_form(

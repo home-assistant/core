@@ -5,28 +5,29 @@ from copy import deepcopy
 import unittest
 from unittest.mock import Mock, patch
 
-import voluptuous as vol
 import pytest
+import voluptuous as vol
 
 # To prevent circular import when running just this file
-import homeassistant.components  # noqa: F401
 from homeassistant import core as ha, exceptions
-from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ENTITY_ID, ENTITY_MATCH_ALL
-from homeassistant.setup import async_setup_component
-import homeassistant.helpers.config_validation as cv
 from homeassistant.auth.permissions import PolicyPermissions
+import homeassistant.components  # noqa: F401
+from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, STATE_OFF, STATE_ON
 from homeassistant.helpers import (
-    service,
-    template,
     device_registry as dev_reg,
     entity_registry as ent_reg,
+    service,
+    template,
 )
+import homeassistant.helpers.config_validation as cv
+from homeassistant.setup import async_setup_component
+
 from tests.common import (
     get_test_home_assistant,
-    mock_service,
     mock_coro,
-    mock_registry,
     mock_device_registry,
+    mock_registry,
+    mock_service,
 )
 
 
@@ -458,7 +459,7 @@ async def test_call_with_match_all(
         mock_entities["light.living_room"],
     ]
     assert (
-        "Not passing an entity ID to a service to target " "all entities is deprecated"
+        "Not passing an entity ID to a service to target all entities is deprecated"
     ) not in caplog.text
 
 

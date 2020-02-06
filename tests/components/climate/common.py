@@ -25,9 +25,9 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
+    ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    ENTITY_MATCH_ALL,
 )
 from homeassistant.loader import bind_hass
 

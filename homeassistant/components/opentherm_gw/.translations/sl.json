@@ -13,7 +13,7 @@
                     "floor_temperature": "Temperatura nadstropja",
                     "id": "ID",
                     "name": "Ime",
-                    "precision": "Natan\u010dnost temperature "
+                    "precision": "Natan\u010dnost temperature"
                 },
                 "title": "OpenTherm Prehod"
             }

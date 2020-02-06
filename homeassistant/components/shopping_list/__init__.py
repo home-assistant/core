@@ -5,13 +5,12 @@ import uuid
 
 import voluptuous as vol
 
-from homeassistant.const import HTTP_NOT_FOUND, HTTP_BAD_REQUEST
-from homeassistant.core import callback
-from homeassistant.components import http
+from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.const import HTTP_BAD_REQUEST, HTTP_NOT_FOUND
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
-from homeassistant.components import websocket_api
 
 ATTR_NAME = "name"
 

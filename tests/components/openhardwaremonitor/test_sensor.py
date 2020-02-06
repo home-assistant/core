@@ -1,8 +1,11 @@
 """The tests for the Open Hardware Monitor platform."""
 import unittest
+
 import requests_mock
+
 from homeassistant.setup import setup_component
-from tests.common import load_fixture, get_test_home_assistant
+
+from tests.common import get_test_home_assistant, load_fixture
 
 
 class TestOpenHardwareMonitorSetup(unittest.TestCase):

@@ -2,6 +2,7 @@
 import logging
 import re
 
+from libsoundtouch import soundtouch_device
 import voluptuous as vol
 
 from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
@@ -100,9 +101,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             return
 
         remote_config = {"id": "ha.component.soundtouch", "host": host, "port": port}
-        soundtouch_device = SoundTouchDevice(None, remote_config)
-        hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
-        add_entities([soundtouch_device])
+        bose_soundtouch_entity = SoundTouchDevice(None, remote_config)
+        hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
+        add_entities([bose_soundtouch_entity])
     else:
         name = config.get(CONF_NAME)
         remote_config = {
@@ -110,9 +111,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             "port": config.get(CONF_PORT),
             "host": config.get(CONF_HOST),
         }
-        soundtouch_device = SoundTouchDevice(name, remote_config)
-        hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
-        add_entities([soundtouch_device])
+        bose_soundtouch_entity = SoundTouchDevice(name, remote_config)
+        hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
+        add_entities([bose_soundtouch_entity])
 
     def service_handle(service):
         """Handle the applying of a service."""
@@ -184,7 +185,6 @@ class SoundTouchDevice(MediaPlayerDevice):
 
     def __init__(self, name, config):
         """Create Soundtouch Entity."""
-        from libsoundtouch import soundtouch_device
 
         self._device = soundtouch_device(config["host"], config["port"])
         if name is None:
@@ -304,7 +304,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         if self._status.station_name is not None:
             return self._status.station_name
         if self._status.artist is not None:
-            return self._status.artist + " - " + self._status.track
+            return f"{self._status.artist} - {self._status.track}"
 
         return None
 

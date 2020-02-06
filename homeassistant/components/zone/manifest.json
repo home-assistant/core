@@ -5,7 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/zone",
   "requirements": [],
   "dependencies": [],
-  "codeowners": [
-    "@home-assistant/core"
-  ]
+  "codeowners": ["@home-assistant/core"],
+  "quality_scale": "internal"
 }

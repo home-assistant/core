@@ -4,9 +4,9 @@ from unittest.mock import patch
 import pytest
 from zeroconf import ServiceInfo, ServiceStateChange
 
+from homeassistant.components import zeroconf
 from homeassistant.generated import zeroconf as zc_gen
 from homeassistant.setup import async_setup_component
-from homeassistant.components import zeroconf
 
 
 @pytest.fixture
@@ -18,9 +18,7 @@ def mock_zeroconf():
 
 def service_update_mock(zeroconf, service, handlers):
     """Call service update handler."""
-    handlers[0](
-        zeroconf, service, "{}.{}".format("name", service), ServiceStateChange.Added
-    )
+    handlers[0](zeroconf, service, f"name.{service}", ServiceStateChange.Added)
 
 
 def get_service_info_mock(service_type, name):

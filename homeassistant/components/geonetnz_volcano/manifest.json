@@ -3,11 +3,7 @@
   "name": "GeoNet NZ Volcano",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/components/geonetnz_volcano",
-  "requirements": [
-    "aio_geojson_geonetnz_volcano==0.5"
-  ],
+  "requirements": ["aio_geojson_geonetnz_volcano==0.5"],
   "dependencies": [],
-  "codeowners": [
-    "@exxamalte"
-  ]
+  "codeowners": ["@exxamalte"]
 }

@@ -10,6 +10,7 @@ from homematicip.aio.device import (
     AsyncMotionDetectorIndoor,
     AsyncMotionDetectorOutdoor,
     AsyncMotionDetectorPushButton,
+    AsyncPluggableMainsFailureSurveillance,
     AsyncPresenceDetectorIndoor,
     AsyncRotaryHandleSensor,
     AsyncShutterContact,
@@ -31,6 +32,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_MOVING,
     DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
@@ -105,6 +107,10 @@ async def async_setup_entry(
             ),
         ):
             entities.append(HomematicipMotionDetector(hap, device))
+        if isinstance(device, AsyncPluggableMainsFailureSurveillance):
+            entities.append(
+                HomematicipPluggableMainsFailureSurveillanceSensor(hap, device)
+            )
         if isinstance(device, AsyncPresenceDetectorIndoor):
             entities.append(HomematicipPresenceDetector(hap, device))
         if isinstance(device, AsyncSmokeDetector):
@@ -326,6 +332,26 @@ class HomematicipBatterySensor(HomematicipGenericDevice, BinarySensorDevice):
     def is_on(self) -> bool:
         """Return true if battery is low."""
         return self._device.lowBat
+
+
+class HomematicipPluggableMainsFailureSurveillanceSensor(
+    HomematicipGenericDevice, BinarySensorDevice
+):
+    """Representation of a HomematicIP Cloud pluggable mains failure surveillance sensor."""
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize pluggable mains failure surveillance sensor."""
+        super().__init__(hap, device)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_POWER
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if power mains fails."""
+        return not self._device.powerMainsFailure
 
 
 class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice, BinarySensorDevice):

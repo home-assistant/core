@@ -8,7 +8,6 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN, SENSOR_TYPES, STATE_ATTR_TORRENT_INFO
 
-
 _LOGGER = logging.getLogger(__name__)
 
 

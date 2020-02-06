@@ -8,8 +8,8 @@ from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensor
 from homeassistant.const import CONF_TIMEOUT
 from homeassistant.helpers import config_validation as cv
 
-from .const import DATA_NETATMO_AUTH
 from . import CameraData
+from .const import DATA_NETATMO_AUTH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -155,9 +155,9 @@ class NetatmoBinarySensor(BinarySensorDevice):
         else:
             self._name = camera_name
         if module_name:
-            self._name += " / " + module_name
+            self._name += f" / {module_name}"
         self._sensor_name = sensor
-        self._name += " " + sensor
+        self._name += f" {sensor}"
         self._cameratype = camera_type
         self._state = None
 

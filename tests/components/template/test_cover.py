@@ -1,5 +1,6 @@
 """The tests the cover command line platform."""
 import logging
+
 import pytest
 
 from homeassistant import setup
@@ -8,18 +9,18 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
-    SERVICE_TOGGLE,
-    SERVICE_TOGGLE_COVER_TILT,
     SERVICE_OPEN_COVER,
     SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
     STATE_CLOSED,
-    STATE_UNAVAILABLE,
-    STATE_OPEN,
-    STATE_ON,
     STATE_OFF,
+    STATE_ON,
+    STATE_OPEN,
+    STATE_UNAVAILABLE,
 )
 
 from tests.common import assert_setup_component, async_mock_service

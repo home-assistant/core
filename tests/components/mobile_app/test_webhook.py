@@ -1,6 +1,7 @@
 """Webhook tests for mobile_app."""
 
 import logging
+
 import pytest
 
 from homeassistant.components.mobile_app.const import CONF_SECRET
@@ -9,9 +10,9 @@ from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service
-
 from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE, UPDATE
+
+from tests.common import async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
 

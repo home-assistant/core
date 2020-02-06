@@ -175,6 +175,7 @@ def execute(hass, filename, source, data=None):
     builtins["sorted"] = sorted
     builtins["time"] = TimeWrapper()
     builtins["dt_util"] = dt_util
+    logger = logging.getLogger(f"{__name__}.{filename}")
     restricted_globals = {
         "__builtins__": builtins,
         "_print_": StubPrinter,
@@ -184,14 +185,15 @@ def execute(hass, filename, source, data=None):
         "_getitem_": default_guarded_getitem,
         "_iter_unpack_sequence_": guarded_iter_unpack_sequence,
         "_unpack_sequence_": guarded_unpack_sequence,
+        "hass": hass,
+        "data": data or {},
+        "logger": logger,
     }
-    logger = logging.getLogger(f"{__name__}.{filename}")
-    local = {"hass": hass, "data": data or {}, "logger": logger}
 
     try:
         _LOGGER.info("Executing %s: %s", filename, data)
         # pylint: disable=exec-used
-        exec(compiled.code, restricted_globals, local)
+        exec(compiled.code, restricted_globals)
     except ScriptError as err:
         logger.error("Error executing script: %s", err)
     except Exception as err:  # pylint: disable=broad-except
@@ -223,7 +225,7 @@ class TimeWrapper:
         if not TimeWrapper.warned:
             TimeWrapper.warned = True
             _LOGGER.warning(
-                "Using time.sleep can reduce the performance of " "Home Assistant"
+                "Using time.sleep can reduce the performance of Home Assistant"
             )
 
         time.sleep(*args, **kwargs)

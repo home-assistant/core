@@ -5,8 +5,8 @@ import logging
 from sqlalchemy.exc import SQLAlchemyError
 
 import homeassistant.util.dt as dt_util
-from .models import Events, States
 
+from .models import Events, States
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)

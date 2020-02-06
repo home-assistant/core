@@ -1,36 +1,37 @@
 """Test Alexa capabilities."""
 import pytest
 
-from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
-    TEMP_CELSIUS,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
-    STATE_UNKNOWN,
-    STATE_UNAVAILABLE,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-)
-from homeassistant.components.climate import const as climate
 from homeassistant.components.alexa import smart_home
 from homeassistant.components.alexa.errors import UnsupportedProperty
+from homeassistant.components.climate import const as climate
 from homeassistant.components.media_player.const import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_STOP,
 )
-from tests.common import async_mock_service
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_DISARMED,
+    STATE_LOCKED,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    STATE_UNLOCKED,
+    TEMP_CELSIUS,
+)
 
 from . import (
     DEFAULT_CONFIG,
-    get_new_request,
     assert_request_calls_service,
     assert_request_fails,
+    get_new_request,
     reported_properties,
 )
+
+from tests.common import async_mock_service
 
 
 @pytest.mark.parametrize("result,adjust", [(25, "-5"), (35, "5"), (0, "-80")])
@@ -410,14 +411,14 @@ async def test_report_fan_direction(hass):
     properties.assert_not_has_property("Alexa.ModeController", "mode")
 
     properties = await reported_properties(hass, "fan.reverse")
-    properties.assert_equal("Alexa.ModeController", "mode", "reverse")
+    properties.assert_equal("Alexa.ModeController", "mode", "direction.reverse")
 
     properties = await reported_properties(hass, "fan.forward")
-    properties.assert_equal("Alexa.ModeController", "mode", "forward")
+    properties.assert_equal("Alexa.ModeController", "mode", "direction.forward")
 
 
-async def test_report_cover_percentage_state(hass):
-    """Test PercentageController reports cover percentage correctly."""
+async def test_report_cover_range_value(hass):
+    """Test RangeController reports cover position correctly."""
     hass.states.async_set(
         "cover.fully_open",
         "open",
@@ -447,13 +448,13 @@ async def test_report_cover_percentage_state(hass):
     )
 
     properties = await reported_properties(hass, "cover.fully_open")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 100)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 100)
 
     properties = await reported_properties(hass, "cover.half_open")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 50)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 50)
 
     properties = await reported_properties(hass, "cover.closed")
-    properties.assert_equal("Alexa.PercentageController", "percentage", 0)
+    properties.assert_equal("Alexa.RangeController", "rangeValue", 0)
 
 
 async def test_report_climate_state(hass):
@@ -665,4 +666,46 @@ async def test_report_playback_state(hass):
 
     properties.assert_equal(
         "Alexa.PlaybackStateReporter", "playbackState", {"state": "STOPPED"}
+    )
+
+
+async def test_report_image_processing(hass):
+    """Test EventDetectionSensor implements humanPresenceDetectionState property."""
+    hass.states.async_set(
+        "image_processing.test_face",
+        0,
+        {
+            "friendly_name": "Test face",
+            "device_class": "face",
+            "faces": [],
+            "total_faces": 0,
+        },
+    )
+
+    properties = await reported_properties(hass, "image_processing#test_face")
+    properties.assert_equal(
+        "Alexa.EventDetectionSensor",
+        "humanPresenceDetectionState",
+        {"value": "NOT_DETECTED"},
+    )
+
+    hass.states.async_set(
+        "image_processing.test_classifier",
+        3,
+        {
+            "friendly_name": "Test classifier",
+            "device_class": "face",
+            "faces": [
+                {"confidence": 98.34, "name": "Hans", "age": 16.0, "gender": "male"},
+                {"name": "Helena", "age": 28.0, "gender": "female"},
+                {"confidence": 62.53, "name": "Luna"},
+            ],
+            "total_faces": 3,
+        },
+    )
+    properties = await reported_properties(hass, "image_processing#test_classifier")
+    properties.assert_equal(
+        "Alexa.EventDetectionSensor",
+        "humanPresenceDetectionState",
+        {"value": "DETECTED"},
     )

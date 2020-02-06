@@ -38,7 +38,7 @@ class EcoalSwitch(SwitchDevice):
         #   set_<attr>()
         # as attribute name in status instance:
         #   status.<attr>
-        self._contr_set_fun = getattr(self._ecoal_contr, "set_" + state_attr)
+        self._contr_set_fun = getattr(self._ecoal_contr, f"set_{state_attr}")
         # No value set, will be read from controller instead
         self._state = None
 

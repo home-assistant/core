@@ -110,7 +110,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         if not config_sensors:  # Use all sensors by default
             config_sensors = {s.name: [] for s in sensor_def}
 
-        # Prepare all HASS sensor entities
+        # Prepare all Home Assistant sensor entities
         for name, attr in config_sensors.items():
             sub_sensors = [sensor_def[s] for s in attr]
             hass_sensors.append(SMAsensor(sensor_def[name], sub_sensors))

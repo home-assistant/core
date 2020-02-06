@@ -2,11 +2,11 @@
 import asyncio
 from base64 import b64decode, b64encode
 from binascii import unhexlify
+from datetime import timedelta
 import logging
 import re
 import socket
 
-from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST

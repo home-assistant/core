@@ -1,4 +1,5 @@
 """Fans on Zigbee Home Automation networks."""
+import functools
 import logging
 
 from homeassistant.components.fan import (
@@ -20,6 +21,7 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
     ZHA_DISCOVERY_NEW,
 )
+from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +47,7 @@ SPEED_LIST = [
 
 VALUE_TO_SPEED = dict(enumerate(SPEED_LIST))
 SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -79,15 +82,20 @@ async def _async_setup_entities(
     """Set up the ZHA fans."""
     entities = []
     for discovery_info in discovery_infos:
-        entities.append(ZhaFan(**discovery_info))
+        zha_dev = discovery_info["zha_device"]
+        channels = discovery_info["channels"]
 
-    async_add_entities(entities, update_before_add=True)
+        entity = ZHA_ENTITIES.get_entity(DOMAIN, zha_dev, channels, ZhaFan)
+        if entity:
+            entities.append(entity(**discovery_info))
+
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
 
+@STRICT_MATCH(channel_names=CHANNEL_FAN)
 class ZhaFan(ZhaEntity, FanEntity):
     """Representation of a ZHA fan."""
-
-    _domain = DOMAIN
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Init this sensor."""

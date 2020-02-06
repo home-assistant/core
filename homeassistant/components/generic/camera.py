@@ -8,24 +8,24 @@ import requests
 from requests.auth import HTTPDigestAuth
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_AUTHENTICATION,
-    HTTP_BASIC_AUTHENTICATION,
-    HTTP_DIGEST_AUTHENTICATION,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.exceptions import TemplateError
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA,
     DEFAULT_CONTENT_TYPE,
+    PLATFORM_SCHEMA,
     SUPPORT_STREAM,
     Camera,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.const import (
+    CONF_AUTHENTICATION,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    HTTP_BASIC_AUTHENTICATION,
+    HTTP_DIGEST_AUTHENTICATION,
+)
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 

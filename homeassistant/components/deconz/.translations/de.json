@@ -55,10 +55,17 @@
             "left": "Links",
             "open": "Offen",
             "right": "Rechts",
+            "side_1": "Seite 1",
+            "side_2": "Seite 2",
+            "side_3": "Seite 3",
+            "side_4": "Seite 4",
+            "side_5": "Seite 5",
+            "side_6": "Seite 6",
             "turn_off": "Ausschalten",
             "turn_on": "Einschalten"
         },
         "trigger_type": {
+            "remote_awakened": "Ger\u00e4t aufgeweckt",
             "remote_button_double_press": "\"{subtype}\" Taste doppelt angeklickt",
             "remote_button_long_press": "\"{subtype}\" Taste kontinuierlich gedr\u00fcckt",
             "remote_button_long_release": "\"{subtype}\" Taste nach langem Dr\u00fccken losgelassen",
@@ -69,7 +76,15 @@
             "remote_button_short_press": "\"{subtype}\" Taste gedr\u00fcckt",
             "remote_button_short_release": "\"{subtype}\" Taste losgelassen",
             "remote_button_triple_press": "\"{subtype}\" Taste dreimal geklickt",
-            "remote_gyro_activated": "Ger\u00e4t ersch\u00fcttert"
+            "remote_double_tap": "Ger\u00e4t \"{subtype}\" doppelt getippt",
+            "remote_falling": "Ger\u00e4t im freien Fall",
+            "remote_gyro_activated": "Ger\u00e4t ersch\u00fcttert",
+            "remote_rotate_from_side_1": "Ger\u00e4t von \"Seite 1\" auf \"{subtype}\" gedreht",
+            "remote_rotate_from_side_2": "Ger\u00e4t von \"Seite 2\" auf \"{subtype}\" gedreht",
+            "remote_rotate_from_side_3": "Ger\u00e4t von \"Seite 3\" auf \"{subtype}\" gedreht",
+            "remote_rotate_from_side_4": "Ger\u00e4t von \"Seite 4\" auf \"{subtype}\" gedreht",
+            "remote_rotate_from_side_5": "Ger\u00e4t von \"Seite 5\" auf \"{subtype}\" gedreht",
+            "remote_rotate_from_side_6": "Ger\u00e4t von \"Seite 6\" auf \"{subtype}\" gedreht"
         }
     },
     "options": {

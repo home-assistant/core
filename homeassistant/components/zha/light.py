@@ -1,5 +1,6 @@
 """Lights on Zigbee Home Automation networks."""
 from datetime import timedelta
+import functools
 import logging
 
 from zigpy.zcl.foundation import Status
@@ -21,6 +22,7 @@ from .core.const import (
     SIGNAL_SET_LEVEL,
     ZHA_DISCOVERY_NEW,
 )
+from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,6 +38,7 @@ UPDATE_COLORLOOP_HUE = 0x8
 
 UNSUPPORTED_ATTRIBUTE = 0x86
 SCAN_INTERVAL = timedelta(minutes=60)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
 PARALLEL_UPDATES = 5
 
 
@@ -71,16 +74,20 @@ async def _async_setup_entities(
     """Set up the ZHA lights."""
     entities = []
     for discovery_info in discovery_infos:
-        zha_light = Light(**discovery_info)
-        entities.append(zha_light)
+        zha_dev = discovery_info["zha_device"]
+        channels = discovery_info["channels"]
 
-    async_add_entities(entities, update_before_add=True)
+        entity = ZHA_ENTITIES.get_entity(light.DOMAIN, zha_dev, channels, Light)
+        if entity:
+            entities.append(entity(**discovery_info))
+
+    if entities:
+        async_add_entities(entities, update_before_add=True)
 
 
+@STRICT_MATCH(channel_names=CHANNEL_ON_OFF)
 class Light(ZhaEntity, light.Light):
     """Representation of a ZHA or ZLL light."""
-
-    _domain = light.DOMAIN
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA light."""

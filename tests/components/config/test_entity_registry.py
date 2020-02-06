@@ -3,9 +3,10 @@ from collections import OrderedDict
 
 import pytest
 
-from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.components.config import entity_registry
-from tests.common import mock_registry, MockEntity, MockEntityPlatform
+from homeassistant.helpers.entity_registry import RegistryEntry
+
+from tests.common import MockEntity, MockEntityPlatform, mock_registry
 
 
 @pytest.fixture

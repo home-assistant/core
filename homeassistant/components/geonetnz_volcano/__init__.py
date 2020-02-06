@@ -1,27 +1,27 @@
 """The GeoNet NZ Volcano integration."""
 import asyncio
+from datetime import datetime, timedelta
 import logging
-from datetime import timedelta, datetime
 from typing import Optional
 
-import voluptuous as vol
 from aio_geojson_geonetnz_volcano import GeonetnzVolcanoFeedManager
+import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_RADIUS,
     CONF_SCAN_INTERVAL,
-    CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM,
+    CONF_UNIT_SYSTEM_IMPERIAL,
     LENGTH_MILES,
 )
-from homeassistant.helpers import config_validation as cv, aiohttp_client
+from homeassistant.core import callback
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .config_flow import configured_instances
 from .const import (

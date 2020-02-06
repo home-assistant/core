@@ -26,10 +26,10 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     DOMAIN,
-    SERVICE_SET_WIFI_LED_ON,
-    SERVICE_SET_WIFI_LED_OFF,
     SERVICE_SET_POWER_MODE,
     SERVICE_SET_POWER_PRICE,
+    SERVICE_SET_WIFI_LED_OFF,
+    SERVICE_SET_WIFI_LED_ON,
 )
 
 _LOGGER = logging.getLogger(__name__)

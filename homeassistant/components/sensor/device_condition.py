@@ -1,11 +1,11 @@
 """Provides device conditions for sensors."""
 from typing import Dict, List
+
 import voluptuous as vol
 
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -22,15 +22,15 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     DEVICE_CLASS_TIMESTAMP,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
     async_get_registry,
 )
-from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
-
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 

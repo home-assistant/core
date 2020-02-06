@@ -1,11 +1,12 @@
 """The tests for the cover platform."""
 
 from homeassistant.components.cover import (
-    SERVICE_OPEN_COVER,
     SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
     intent as cover_intent,
 )
 from homeassistant.helpers import intent
+
 from tests.common import async_mock_service
 
 

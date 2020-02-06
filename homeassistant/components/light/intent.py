@@ -3,19 +3,18 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
-import homeassistant.util.color as color_util
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 from . import (
-    ATTR_ENTITY_ID,
-    SUPPORT_COLOR,
-    ATTR_RGB_COLOR,
     ATTR_BRIGHTNESS_PCT,
-    SUPPORT_BRIGHTNESS,
+    ATTR_ENTITY_ID,
+    ATTR_RGB_COLOR,
     DOMAIN,
     SERVICE_TURN_ON,
+    SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
 )
-
 
 INTENT_SET = "HassLightSet"
 

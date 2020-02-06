@@ -9,9 +9,9 @@ from homeassistant.components.plex import config_flow
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN, CONF_URL
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
 from .mock_classes import MOCK_SERVERS, MockPlexAccount, MockPlexServer
+
+from tests.common import MockConfigEntry
 
 MOCK_TOKEN = "secret_token"
 MOCK_FILE_CONTENTS = {
@@ -462,13 +462,13 @@ async def test_option_flow(hass):
     entry = MockConfigEntry(domain=config_flow.DOMAIN, data={}, options=DEFAULT_OPTIONS)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.options.flow.async_init(
+    result = await hass.config_entries.options.async_init(
         entry.entry_id, context={"source": "test"}, data=None
     )
     assert result["type"] == "form"
     assert result["step_id"] == "plex_mp_settings"
 
-    result = await hass.config_entries.options.flow.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             config_flow.CONF_USE_EPISODE_ART: True,

@@ -1,18 +1,17 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
-import sys
 from ssl import SSLContext
-from typing import Any, Awaitable, Optional, cast
-from typing import Union
+import sys
+from typing import Any, Awaitable, Optional, Union, cast
 
 import aiohttp
-from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPGatewayTimeout, HTTPBadGateway
+from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
+from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 import async_timeout
 
-from homeassistant.core import callback, Event
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
+from homeassistant.core import Event, callback
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util

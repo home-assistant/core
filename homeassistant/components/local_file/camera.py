@@ -5,12 +5,12 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_NAME, ATTR_ENTITY_ID
 from homeassistant.components.camera import (
-    Camera,
     CAMERA_SERVICE_SCHEMA,
     PLATFORM_SCHEMA,
+    Camera,
 )
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME
 from homeassistant.helpers import config_validation as cv
 
 from .const import (

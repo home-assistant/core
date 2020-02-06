@@ -5,11 +5,11 @@ from airly.exceptions import AirlyError
 from asynctest import patch
 
 from homeassistant import data_entry_flow
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.components.airly import config_flow
 from homeassistant.components.airly.const import DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
-from tests.common import load_fixture, MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 CONFIG = {
     CONF_NAME: "abcd",

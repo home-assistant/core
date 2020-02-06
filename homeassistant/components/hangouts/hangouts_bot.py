@@ -86,15 +86,15 @@ class HangoutsBot:
                     conv_id = self._resolve_conversation_id(conversation)
                     if conv_id is not None:
                         conversations.append(conv_id)
-                data["_" + CONF_CONVERSATIONS] = conversations
+                data[f"_{CONF_CONVERSATIONS}"] = conversations
             elif self._default_conv_ids:
-                data["_" + CONF_CONVERSATIONS] = self._default_conv_ids
+                data[f"_{CONF_CONVERSATIONS}"] = self._default_conv_ids
             else:
-                data["_" + CONF_CONVERSATIONS] = [
+                data[f"_{CONF_CONVERSATIONS}"] = [
                     conv.id_ for conv in self._conversation_list.get_all()
                 ]
 
-            for conv_id in data["_" + CONF_CONVERSATIONS]:
+            for conv_id in data[f"_{CONF_CONVERSATIONS}"]:
                 if conv_id not in self._conversation_intents:
                     self._conversation_intents[conv_id] = {}
 

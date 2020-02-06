@@ -11,9 +11,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
 )
 from homeassistant.const import CONF_URL
+
 from . import HuaweiLteBaseEntity
 from .const import DOMAIN, KEY_MONITORING_STATUS
-
 
 _LOGGER = logging.getLogger(__name__)
 

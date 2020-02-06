@@ -3,15 +3,15 @@ import asyncio
 from datetime import timedelta
 import socket
 
-from samsungctl import exceptions as samsung_exceptions, Remote as SamsungRemote
+from samsungctl import Remote as SamsungRemote, exceptions as samsung_exceptions
 import voluptuous as vol
 import wakeonlan
 from websocket import WebSocketException
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice,
-    PLATFORM_SCHEMA,
     DEVICE_CLASS_TV,
+    PLATFORM_SCHEMA,
+    MediaPlayerDevice,
 )
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
@@ -344,7 +344,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             return
 
         for digit in media_id:
-            await self.hass.async_add_job(self.send_key, "KEY_" + digit)
+            await self.hass.async_add_job(self.send_key, f"KEY_{digit}")
             await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
         await self.hass.async_add_job(self.send_key, "KEY_ENTER")
 

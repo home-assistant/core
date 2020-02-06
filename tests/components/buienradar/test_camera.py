@@ -1,10 +1,10 @@
 """The tests for generic camera component."""
 import asyncio
+
 from aiohttp.client_exceptions import ClientResponseError
 
-from homeassistant.util import dt as dt_util
-
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 # An infinitesimally small time-delta.
 EPSILON_DELTA = 0.0000000001
@@ -12,7 +12,7 @@ EPSILON_DELTA = 0.0000000001
 
 def radar_map_url(dim: int = 512) -> str:
     """Build map url, defaulting to 512 wide (as in component)."""
-    return ("https://api.buienradar.nl/" "image/1.0/RadarMapNL?w={dim}&h={dim}").format(
+    return ("https://api.buienradar.nl/image/1.0/RadarMapNL?w={dim}&h={dim}").format(
         dim=dim
     )
 

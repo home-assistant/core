@@ -25,6 +25,7 @@ good-names=id,i,j,k,ex,Run,_,fp
 # unnecessary-pass - readability for functions which only contain pass
 # import-outside-toplevel - TODO
 # too-many-ancestors - it's too strict.
+# wrong-import-order - isort guards this
 disable=
   format,
   abstract-class-little-used,
@@ -49,7 +50,8 @@ disable=
   too-many-statements,
   too-many-boolean-expressions,
   unnecessary-pass,
-  unused-argument
+  unused-argument,
+  wrong-import-order
 enable=
   use-symbolic-message-instead
 
@@ -64,4 +66,4 @@ ignored-classes=_CountingAttr
 expected-line-ending-format=LF
 
 [EXCEPTIONS]
-overgeneral-exceptions=Exception,HomeAssistantError
+overgeneral-exceptions=BaseException,Exception,HomeAssistantError

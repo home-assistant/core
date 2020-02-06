@@ -3,7 +3,8 @@ from pymfy.api.devices.camera_protect import CameraProtect
 from pymfy.api.devices.category import Category
 
 from homeassistant.components.switch import SwitchDevice
-from . import DOMAIN, SomfyEntity, DEVICES, API
+
+from . import API, DEVICES, DOMAIN, SomfyEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):

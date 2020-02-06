@@ -261,11 +261,13 @@ class HueLight(Light):
         if is_group:
             self.is_osram = False
             self.is_philips = False
+            self.is_innr = False
             self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
             self.gamut = None
         else:
             self.is_osram = light.manufacturername == "OSRAM"
             self.is_philips = light.manufacturername == "Philips"
+            self.is_innr = light.manufacturername == "innr"
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
             _LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
@@ -277,7 +279,7 @@ class HueLight(Light):
                 _LOGGER.warning(err, self.name)
             if self.gamut:
                 if not color.check_valid_gamut(self.gamut):
-                    err = "Color gamut of %s: %s, not valid, " "setting gamut to None."
+                    err = "Color gamut of %s: %s, not valid, setting gamut to None."
                     _LOGGER.warning(err, self.name, str(self.gamut))
                     self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
                     self.gamut = None
@@ -420,7 +422,7 @@ class HueLight(Light):
         elif flash == FLASH_SHORT:
             command["alert"] = "select"
             del command["on"]
-        else:
+        elif not self.is_innr:
             command["alert"] = "none"
 
         if ATTR_EFFECT in kwargs:
@@ -453,7 +455,7 @@ class HueLight(Light):
         elif flash == FLASH_SHORT:
             command["alert"] = "select"
             del command["on"]
-        else:
+        elif not self.is_innr:
             command["alert"] = "none"
 
         if self.is_group:

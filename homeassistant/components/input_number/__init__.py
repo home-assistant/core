@@ -3,16 +3,18 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     ATTR_MODE,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ICON,
-    CONF_NAME,
     CONF_MODE,
+    CONF_NAME,
+    SERVICE_RELOAD,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+import homeassistant.helpers.service
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,12 +79,49 @@ CONFIG_SCHEMA = vol.Schema(
     required=True,
     extra=vol.ALLOW_EXTRA,
 )
+RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 async def async_setup(hass, config):
     """Set up an input slider."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
+    entities = await _async_process_config(config)
+
+    async def reload_service_handler(service_call):
+        """Remove all entities and load new ones from config."""
+        conf = await component.async_prepare_reload()
+        if conf is None:
+            return
+        new_entities = await _async_process_config(conf)
+        if new_entities:
+            await component.async_add_entities(new_entities)
+
+    homeassistant.helpers.service.async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_RELOAD,
+        reload_service_handler,
+        schema=RELOAD_SERVICE_SCHEMA,
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SET_VALUE,
+        {vol.Required(ATTR_VALUE): vol.Coerce(float)},
+        "async_set_value",
+    )
+
+    component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
+
+    component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
+
+    if entities:
+        await component.async_add_entities(entities)
+    return True
+
+
+async def _async_process_config(config):
+    """Process config and create list of entities."""
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
@@ -101,21 +140,7 @@ async def async_setup(hass, config):
             )
         )
 
-    if not entities:
-        return False
-
-    component.async_register_entity_service(
-        SERVICE_SET_VALUE,
-        {vol.Required(ATTR_VALUE): vol.Coerce(float)},
-        "async_set_value",
-    )
-
-    component.async_register_entity_service(SERVICE_INCREMENT, {}, "async_increment")
-
-    component.async_register_entity_service(SERVICE_DECREMENT, {}, "async_decrement")
-
-    await component.async_add_entities(entities)
-    return True
+    return entities
 
 
 class InputNumber(RestoreEntity):

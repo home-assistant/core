@@ -1,26 +1,25 @@
 """Support for exposing Home Assistant via Zeroconf."""
-
+import ipaddress
 import logging
 import socket
 
-import ipaddress
 import voluptuous as vol
-
 from zeroconf import (
+    NonUniqueNameException,
     ServiceBrowser,
     ServiceInfo,
     ServiceStateChange,
     Zeroconf,
-    NonUniqueNameException,
 )
 
 from homeassistant import util
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP,
+    ATTR_NAME,
     EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
     __version__,
 )
-from homeassistant.generated.zeroconf import ZEROCONF, HOMEKIT
+from homeassistant.generated.zeroconf import HOMEKIT, ZEROCONF
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +29,6 @@ ATTR_HOST = "host"
 ATTR_PORT = "port"
 ATTR_HOSTNAME = "hostname"
 ATTR_TYPE = "type"
-ATTR_NAME = "name"
 ATTR_PROPERTIES = "properties"
 
 ZEROCONF_TYPE = "_home-assistant._tcp.local."

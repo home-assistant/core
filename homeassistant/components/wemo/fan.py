@@ -1,24 +1,24 @@
 """Support for WeMo humidifier."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import async_timeout
 from pywemo import discovery
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (
-    SUPPORT_SET_SPEED,
-    FanEntity,
-    SPEED_OFF,
+    SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
-    SPEED_HIGH,
+    SPEED_OFF,
+    SUPPORT_SET_SPEED,
+    FanEntity,
 )
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 
 from . import SUBSCRIPTION_REGISTRY
 from .const import DOMAIN, SERVICE_RESET_FILTER_LIFE, SERVICE_SET_HUMIDITY
@@ -232,7 +232,7 @@ class WemoHumidifier(FanEntity):
         return SUPPORTED_FEATURES
 
     async def async_added_to_hass(self):
-        """Wemo humidifier added to HASS."""
+        """Wemo humidifier added to Home Assistant."""
         # Define inside async context so we know our event loop
         self._update_lock = asyncio.Lock()
 

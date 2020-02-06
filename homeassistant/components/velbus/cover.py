@@ -4,14 +4,14 @@ import logging
 from velbus.util import VelbusException
 
 from homeassistant.components.cover import (
-    CoverDevice,
     SUPPORT_CLOSE,
     SUPPORT_OPEN,
     SUPPORT_STOP,
+    CoverDevice,
 )
 
-from .const import DOMAIN
 from . import VelbusEntity
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

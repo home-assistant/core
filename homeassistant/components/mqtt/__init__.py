@@ -1,6 +1,5 @@
 """Support for MQTT message handling."""
 import asyncio
-import sys
 from functools import partial, wraps
 import inspect
 from itertools import groupby
@@ -10,6 +9,7 @@ from operator import attrgetter
 import os
 import socket
 import ssl
+import sys
 import time
 from typing import Any, Callable, List, Optional, Union
 
@@ -32,9 +32,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import (
+    ConfigEntryNotReady,
     HomeAssistantError,
     Unauthorized,
-    ConfigEntryNotReady,
 )
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -47,16 +47,16 @@ from homeassistant.util.logging import catch_log_exception
 # Loading the config flow file will register the flow
 from . import config_flow, discovery, server  # noqa: F401 pylint: disable=unused-import
 from .const import (
+    ATTR_DISCOVERY_HASH,
     CONF_BROKER,
     CONF_DISCOVERY,
-    DEFAULT_DISCOVERY,
     CONF_STATE_TOPIC,
-    ATTR_DISCOVERY_HASH,
-    PROTOCOL_311,
+    DEFAULT_DISCOVERY,
     DEFAULT_QOS,
+    PROTOCOL_311,
 )
 from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
-from .models import PublishPayloadType, Message, MessageCallbackType
+from .models import Message, MessageCallbackType, PublishPayloadType
 from .subscription import async_subscribe_topics, async_unsubscribe_topics
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,10 +136,10 @@ def valid_topic(value: Any) -> str:
         raise vol.Invalid("MQTT topic name/filter must not be empty.")
     if len(raw_value) > 65535:
         raise vol.Invalid(
-            "MQTT topic name/filter must not be longer than " "65535 encoded bytes."
+            "MQTT topic name/filter must not be longer than 65535 encoded bytes."
         )
     if "\0" in value:
-        raise vol.Invalid("MQTT topic name/filter must not contain null " "character.")
+        raise vol.Invalid("MQTT topic name/filter must not contain null character.")
     return value
 
 
@@ -151,7 +151,7 @@ def valid_subscribe_topic(value: Any) -> str:
             i < len(value) - 1 and value[i + 1] != "/"
         ):
             raise vol.Invalid(
-                "Single-level wildcard must occupy an entire " "level of the filter"
+                "Single-level wildcard must occupy an entire level of the filter"
             )
 
     index = value.find("#")
@@ -164,7 +164,7 @@ def valid_subscribe_topic(value: Any) -> str:
             )
         if len(value) > 1 and value[index - 1] != "/":
             raise vol.Invalid(
-                "Multi-level wildcard must be after a topic " "level separator."
+                "Multi-level wildcard must be after a topic level separator."
             )
 
     return value

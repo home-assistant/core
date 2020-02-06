@@ -37,7 +37,7 @@ CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
 
 CONFIGURATOR_DESCRIPTION = (
-    "To link your Spotify account, " "click the link, login, and authorize:"
+    "To link your Spotify account, click the link, login, and authorize:"
 )
 CONFIGURATOR_LINK_NAME = "Link Spotify account"
 CONFIGURATOR_SUBMIT_CAPTION = "I authorized successfully"

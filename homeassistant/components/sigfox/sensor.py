@@ -1,15 +1,15 @@
 """Sensor for SigFox devices."""
-import logging
 import datetime
 import json
+import logging
 from urllib.parse import urljoin
 
 import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)

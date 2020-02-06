@@ -6,6 +6,7 @@ import async_timeout
 import slugify as unicode_slug
 import voluptuous as vol
 
+from homeassistant import core
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
@@ -45,8 +46,15 @@ class HueBridge:
         host = self.host
         hass = self.hass
 
+        bridge = aiohue.Bridge(
+            host,
+            username=self.config_entry.data["username"],
+            websession=aiohttp_client.async_get_clientsession(hass),
+        )
+
         try:
-            self.api = await get_bridge(hass, host, self.config_entry.data["username"])
+            await authenticate_bridge(hass, bridge)
+
         except AuthenticationRequired:
             # Usernames can become invalid if hub is reset or user removed.
             # We are going to fail the config entry setup and initiate a new
@@ -62,6 +70,8 @@ class HueBridge:
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception("Unknown error connecting with Hue bridge at %s", host)
             return False
+
+        self.api = bridge
 
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(self.config_entry, "light")
@@ -175,16 +185,12 @@ class HueBridge:
         create_config_flow(self.hass, self.host)
 
 
-async def get_bridge(hass, host, username=None):
+async def authenticate_bridge(hass: core.HomeAssistant, bridge: aiohue.Bridge):
     """Create a bridge object and verify authentication."""
-    bridge = aiohue.Bridge(
-        host, username=username, websession=aiohttp_client.async_get_clientsession(hass)
-    )
-
     try:
         with async_timeout.timeout(10):
             # Create username if we don't have one
-            if not username:
+            if not bridge.username:
                 device_name = unicode_slug.slugify(
                     hass.config.location_name, max_length=19
                 )
@@ -193,7 +199,6 @@ async def get_bridge(hass, host, username=None):
             # Initialize bridge (and validate our username)
             await bridge.initialize()
 
-        return bridge
     except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized):
         raise AuthenticationRequired
     except (asyncio.TimeoutError, aiohue.RequestError):

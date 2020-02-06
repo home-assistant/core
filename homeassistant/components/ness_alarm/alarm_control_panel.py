@@ -2,6 +2,8 @@
 
 import logging
 
+from nessclient import ArmingState
+
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
@@ -91,7 +93,6 @@ class NessAlarmPanel(alarm.AlarmControlPanel):
     @callback
     def _handle_arming_state_change(self, arming_state):
         """Handle arming state update."""
-        from nessclient import ArmingState
 
         if arming_state == ArmingState.UNKNOWN:
             self._state = None

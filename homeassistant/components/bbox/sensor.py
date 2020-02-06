@@ -1,20 +1,19 @@
 """Support for Bbox Bouygues Modem Router."""
-import logging
 from datetime import timedelta
+import logging
 
-import requests
 import pybbox
-
+import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_MONITORED_VARIABLES,
     ATTR_ATTRIBUTION,
+    CONF_MONITORED_VARIABLES,
+    CONF_NAME,
     DEVICE_CLASS_TIMESTAMP,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow

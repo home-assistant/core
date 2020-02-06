@@ -6,8 +6,7 @@ from unittest.mock import Mock
 from homeassistant import setup
 from homeassistant.components import zone
 
-from tests.common import get_test_home_assistant
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_test_home_assistant
 
 
 async def test_setup_entry_successful(hass):

@@ -1,32 +1,32 @@
 """Support for Radio Thermostat wifi-enabled home thermostats."""
 import logging
 
-import voluptuous as vol
 import radiotherm
+import voluptuous as vol
 
-from homeassistant.components.climate import ClimateDevice, PLATFORM_SCHEMA
+from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateDevice
 from homeassistant.components.climate.const import (
+    CURRENT_HVAC_COOL,
+    CURRENT_HVAC_HEAT,
+    CURRENT_HVAC_IDLE,
+    FAN_OFF,
+    FAN_ON,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
-    FAN_ON,
-    FAN_OFF,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_COOL,
-    SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_HOST,
     PRECISION_HALVES,
-    TEMP_FAHRENHEIT,
     STATE_ON,
+    TEMP_FAHRENHEIT,
 )
-from homeassistant.util import dt as dt_util
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,9 +40,9 @@ OPERATION_LIST = [HVAC_MODE_AUTO, HVAC_MODE_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
 CT30_FAN_OPERATION_LIST = [STATE_ON, HVAC_MODE_AUTO]
 CT80_FAN_OPERATION_LIST = [STATE_ON, STATE_CIRCULATE, HVAC_MODE_AUTO]
 
-# Mappings from radiotherm json data codes to and from HASS state
+# Mappings from radiotherm json data codes to and from Home Assistant state
 # flags.  CODE is the thermostat integer code and these map to and
-# from HASS state flags.
+# from Home Assistant state flags.
 
 # Programmed temperature mode of the thermostat.
 CODE_TO_TEMP_MODE = {
@@ -220,7 +220,7 @@ class RadioThermostat(ClimateDevice):
         """Update and validate the data from the thermostat."""
         # Radio thermostats are very slow, and sometimes don't respond
         # very quickly.  So we need to keep the number of calls to them
-        # to a bare minimum or we'll hit the HASS 10 sec warning.  We
+        # to a bare minimum or we'll hit the Home Assistant 10 sec warning.  We
         # have to make one call to /tstat to get temps but we'll try and
         # keep the other calls to a minimum.  Even with this, these
         # thermostats tend to time out sometimes when they're actively

@@ -2,9 +2,7 @@
   "domain": "velbus",
   "name": "Velbus",
   "documentation": "https://www.home-assistant.io/integrations/velbus",
-  "requirements": [
-    "python-velbus==2.0.27"
-  ],
+  "requirements": ["python-velbus==2.0.35"],
   "config_flow": true,
   "dependencies": [],
   "codeowners": ["@cereal2nd"]

@@ -36,23 +36,6 @@ EVENT_LOVELACE_UPDATED = "lovelace_updated"
 
 LOVELACE_CONFIG_FILE = "ui-lovelace.yaml"
 
-WS_TYPE_GET_LOVELACE_UI = "lovelace/config"
-WS_TYPE_SAVE_CONFIG = "lovelace/config/save"
-
-SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_GET_LOVELACE_UI,
-        vol.Optional("force", default=False): bool,
-    }
-)
-
-SCHEMA_SAVE_CONFIG = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_SAVE_CONFIG,
-        vol.Required("config"): vol.Any(str, dict),
-    }
-)
-
 
 class ConfigNotFound(HomeAssistantError):
     """When no config available."""
@@ -72,12 +55,12 @@ async def async_setup(hass, config):
     else:
         hass.data[DOMAIN] = LovelaceStorage(hass)
 
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config, SCHEMA_GET_LOVELACE_UI
-    )
+    hass.components.websocket_api.async_register_command(websocket_lovelace_config)
+
+    hass.components.websocket_api.async_register_command(websocket_lovelace_save_config)
 
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_SAVE_CONFIG, websocket_lovelace_save_config, SCHEMA_SAVE_CONFIG
+        websocket_lovelace_delete_config
     )
 
     hass.components.system_health.async_register_info(DOMAIN, system_health_info)
@@ -113,31 +96,21 @@ class LovelaceStorage:
         config = self._data["config"]
         ais_dom_config = self._ais_dom_data["config"]
         if config is None:
-            if ais_dom_config is None:
-                raise ConfigNotFound
-            else:
-                config = ais_dom_config
-        # ais dom merge
-        if "resources" not in config:
-            config["resources"] = []
-        if "views" not in config:
-            config["views"] = []
-
-        for aisview in ais_dom_config["views"]:
-            _LOGGER.debug("---------------------------------")
-            _LOGGER.debug("Processing " + aisview["path"])
-            view_found = False
+            # use default ais dom config
+            config = ais_dom_config
+        else:
+            # ais dom merge
+            if "views" not in config:
+                config["views"] = []
+            # remove ais views from user config
             for idx, view in enumerate(config["views"]):
-                if "path" in view:
-                    if aisview["path"] == view["path"]:
-                        _LOGGER.debug(aisview["path"] + " -> COPY")
-                        config["views"][idx] = aisview
-                        view_found = True
-                        break
-            if not view_found:
-                _LOGGER.debug(aisview["path"] + " -> ADD")
-                config["views"].append(aisview)
-            _LOGGER.debug("---------------------------------")
+                if view["path"] in ("ais_audio", "ais_zigbee"):
+                    config["views"].remove(view)
+            # add hidden ais views on the end of the config
+            for aisview in ais_dom_config["views"]:
+                if "visible" in aisview:
+                    if not aisview["visible"]:
+                        config["views"].append(aisview)
         return config
 
     async def async_save(self, config):
@@ -147,6 +120,10 @@ class LovelaceStorage:
         self._data["config"] = config
         self._hass.bus.async_fire(EVENT_LOVELACE_UPDATED)
         await self._store.async_save(self._data)
+
+    async def async_delete(self):
+        """Delete config."""
+        await self.async_save(None)
 
     async def _load(self):
         """Load the config."""
@@ -218,6 +195,10 @@ class LovelaceYAML:
         """Save config."""
         raise HomeAssistantError("Not supported")
 
+    async def async_delete(self):
+        """Delete config."""
+        raise HomeAssistantError("Not supported")
+
 
 def handle_yaml_errors(func):
     """Handle error with WebSocket calls."""
@@ -245,6 +226,9 @@ def handle_yaml_errors(func):
 
 
 @websocket_api.async_response
+@websocket_api.websocket_command(
+    {"type": "lovelace/config", vol.Optional("force", default=False): bool}
+)
 @handle_yaml_errors
 async def websocket_lovelace_config(hass, connection, msg):
     """Send Lovelace UI config over WebSocket configuration."""
@@ -252,10 +236,21 @@ async def websocket_lovelace_config(hass, connection, msg):
 
 
 @websocket_api.async_response
+@websocket_api.websocket_command(
+    {"type": "lovelace/config/save", "config": vol.Any(str, dict)}
+)
 @handle_yaml_errors
 async def websocket_lovelace_save_config(hass, connection, msg):
     """Save Lovelace UI configuration."""
     await hass.data[DOMAIN].async_save(msg["config"])
+
+
+@websocket_api.async_response
+@websocket_api.websocket_command({"type": "lovelace/config/delete"})
+@handle_yaml_errors
+async def websocket_lovelace_delete_config(hass, connection, msg):
+    """Delete Lovelace UI configuration."""
+    await hass.data[DOMAIN].async_delete()
 
 
 async def system_health_info(hass):
@@ -269,5 +264,5 @@ def _config_info(mode, config):
         "mode": mode,
         "resources": len(config.get("resources", [])),
         "views": len(config.get("views", [])),
-        "ais views": 2,
+        "ais views": 1,
     }

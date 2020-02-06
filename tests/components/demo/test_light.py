@@ -1,8 +1,8 @@
 """The tests for the demo light component."""
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import light
+from homeassistant.setup import async_setup_component
 
 from tests.components.light import common
 

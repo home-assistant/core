@@ -1,40 +1,40 @@
 """Test to verify that Home Assistant core works."""
 # pylint: disable=protected-access
 import asyncio
+from datetime import datetime, timedelta
 import functools
 import logging
 import os
-import unittest
-from unittest.mock import patch, MagicMock
-from datetime import datetime, timedelta
 from tempfile import TemporaryDirectory
+import unittest
+from unittest.mock import MagicMock, patch
 
-import voluptuous as vol
-import pytz
 import pytest
+import pytz
+import voluptuous as vol
 
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    ATTR_NOW,
+    ATTR_SECONDS,
+    CONF_UNIT_SYSTEM,
+    EVENT_CALL_SERVICE,
+    EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_SERVICE_REGISTERED,
+    EVENT_SERVICE_REMOVED,
+    EVENT_STATE_CHANGED,
+    EVENT_TIME_CHANGED,
+    EVENT_TIMER_OUT_OF_SYNC,
+    __version__,
+)
 import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError, InvalidStateError
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
-from homeassistant.const import (
-    __version__,
-    EVENT_STATE_CHANGED,
-    ATTR_FRIENDLY_NAME,
-    CONF_UNIT_SYSTEM,
-    ATTR_NOW,
-    EVENT_TIME_CHANGED,
-    EVENT_TIMER_OUT_OF_SYNC,
-    ATTR_SECONDS,
-    EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_SERVICE_REGISTERED,
-    EVENT_SERVICE_REMOVED,
-    EVENT_CALL_SERVICE,
-    EVENT_CORE_CONFIG_UPDATE,
-)
 
-from tests.common import get_test_home_assistant, async_mock_service
+from tests.common import async_mock_service, get_test_home_assistant
 
 PST = pytz.timezone("America/Los_Angeles")
 
@@ -663,13 +663,12 @@ class TestStateMachine(unittest.TestCase):
 def test_service_call_repr():
     """Test ServiceCall repr."""
     call = ha.ServiceCall("homeassistant", "start")
-    assert str(call) == "<ServiceCall homeassistant.start (c:{})>".format(
-        call.context.id
-    )
+    assert str(call) == f"<ServiceCall homeassistant.start (c:{call.context.id})>"
 
     call2 = ha.ServiceCall("homeassistant", "start", {"fast": "yes"})
-    assert str(call2) == "<ServiceCall homeassistant.start (c:{}): fast=yes>".format(
-        call2.context.id
+    assert (
+        str(call2)
+        == f"<ServiceCall homeassistant.start (c:{call2.context.id}): fast=yes>"
     )
 
 

@@ -33,6 +33,7 @@
         "step": {
             "init": {
                 "data": {
+                    "name": "Nom del servei de notificacions",
                     "recipient": "Destinataris de notificacions SMS",
                     "track_new_devices": "Segueix dispositius nous"
                 }

@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components import camera, mqtt
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
-from homeassistant.const import CONF_NAME, CONF_DEVICE
+from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect

@@ -3,7 +3,6 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
     DOMAIN,
@@ -14,35 +13,37 @@ from homeassistant.components.vacuum import (
     SERVICE_SET_FAN_SPEED,
     SERVICE_START,
     SERVICE_STOP,
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE,
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
-    SUPPORT_STOP,
-    SUPPORT_STATE,
     SUPPORT_START,
+    SUPPORT_STATE,
+    SUPPORT_STOP,
     StateVacuumDevice,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_PAUSED,
-    STATE_IDLE,
-    STATE_RETURNING,
-    STATE_ERROR,
 )
 from homeassistant.const import (
+    CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_VALUE_TEMPLATE,
-    CONF_ENTITY_ID,
-    MATCH_ALL,
     EVENT_HOMEASSISTANT_START,
+    MATCH_ALL,
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
+
 from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 

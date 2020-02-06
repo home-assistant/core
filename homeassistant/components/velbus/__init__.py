@@ -1,13 +1,14 @@
 """Support for Velbus devices."""
 import asyncio
 import logging
+
 import velbus
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_PORT, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.exceptions import ConfigEntryNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -21,7 +22,7 @@ CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({vol.Required(CONF_PORT): cv.string})}, extra=vol.ALLOW_EXTRA
 )
 
-COMPONENT_TYPES = ["switch", "sensor", "binary_sensor", "cover", "climate"]
+COMPONENT_TYPES = ["switch", "sensor", "binary_sensor", "cover", "climate", "light"]
 
 
 async def async_setup(hass, config):
@@ -66,9 +67,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         hass.data[DOMAIN][entry.entry_id] = discovery_info
 
         for category in COMPONENT_TYPES:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, category)
-            )
+            hass.add_job(hass.config_entries.async_forward_entry_setup(entry, category))
 
     try:
         controller = velbus.Controller(entry.data[CONF_PORT])

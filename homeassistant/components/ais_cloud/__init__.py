@@ -1,14 +1,20 @@
 """Component to manage the AIS Cloud."""
 import asyncio
-import logging
-import requests
 import json
+import logging
 import os
 
+import requests
+
 from homeassistant.components.ais_dom import ais_global
-from homeassistant.const import EVENT_PLATFORM_DISCOVERED, EVENT_STATE_CHANGED
+from homeassistant.const import (
+    CONF_IP_ADDRESS,
+    CONF_NAME,
+    EVENT_PLATFORM_DISCOVERED,
+    EVENT_STATE_CHANGED,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.const import CONF_NAME, CONF_IP_ADDRESS, CONF_MAC
 from homeassistant.util import slugify
 
 DOMAIN = "ais_cloud"
@@ -38,7 +44,6 @@ def get_player_data(player_name):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Initialize the radio station list."""
-    _LOGGER.info("Initialize the radio station list.")
     data = hass.data[DOMAIN] = AisColudData(hass)
     yield from data.get_types_async()
     #
@@ -56,95 +61,69 @@ def async_setup(hass, config):
     hass.states.async_set("sensor.aisknowledgeanswer", "", {"text": ""})
 
     def get_radio_types(call):
-        _LOGGER.info("get_radio_types")
         data.get_radio_types(call)
 
     def get_radio_names(call):
-        _LOGGER.info("get_radio_names")
         data.get_radio_names(call)
 
     def get_players(call):
-        _LOGGER.info("get_players")
         data.get_players(call, hass)
 
     def play_audio(call):
-        _LOGGER.info("play_audio")
         data.process_play_audio(call)
 
     def delete_audio(call):
-        _LOGGER.info("delete_audio")
         data.process_delete_audio(call)
 
     def get_podcast_types(call):
-        _LOGGER.info("get_podcast_types")
         data.get_podcast_types(call)
 
     def get_podcast_names(call):
-        _LOGGER.info("get_podcast_names")
         data.get_podcast_names(call)
 
     def get_podcast_tracks(call):
-        _LOGGER.info("get_podcast_tracks")
         data.get_podcast_tracks(call)
 
-    def select_media_player(call):
-        _LOGGER.info("select_media_player")
-        data.select_media_player(call)
-
     def get_rss_news_category(call):
-        _LOGGER.info("get_rss_news_category")
         data.get_rss_news_category(call)
 
     def get_rss_news_channels(call):
-        _LOGGER.info("get_rss_news_channels")
         data.get_rss_news_channels(call)
 
     def get_rss_news_items(call):
-        _LOGGER.info("get_rss_news_items")
         data.get_rss_news_items(call)
 
     def select_rss_news_item(call):
-        _LOGGER.info("select_rss_news_item")
         data.select_rss_news_item(call)
 
     def get_backup_info(call):
-        _LOGGER.info("get_backup_info")
         data.get_backup_info(call)
 
     def set_backup_step(call):
-        _LOGGER.info("set_backup_step")
         data.set_backup_step(call)
 
     def restore_backup(call):
-        _LOGGER.info("restore_backup")
         data.restore_backup(call)
 
     def do_backup(call):
-        _LOGGER.info("do_backup")
         data.do_backup(call)
 
     def select_rss_help_item(call):
-        _LOGGER.info("select_rss_help_item")
         data.select_rss_help_item(call)
 
     def play_prev(call):
-        _LOGGER.info("play_prev")
         data.play_prev(call)
 
     def play_next(call):
-        _LOGGER.info("play_next")
         data.play_next(call)
 
     def change_audio_service(call):
-        _LOGGER.info("change_audio_service")
         data.change_audio_service(call)
 
     def send_audio_to_speaker(call):
-        _LOGGER.info("send_audio_to_speaker")
         data.send_audio_to_speaker(call)
 
     def enable_gate_pairing_by_pin(call):
-        _LOGGER.info("enable_gate_pairing_by_pin")
         data.enable_gate_pairing_by_pin(call)
 
     # register services
@@ -156,7 +135,6 @@ def async_setup(hass, config):
     hass.services.async_register(DOMAIN, "get_podcast_types", get_podcast_types)
     hass.services.async_register(DOMAIN, "get_podcast_names", get_podcast_names)
     hass.services.async_register(DOMAIN, "get_podcast_tracks", get_podcast_tracks)
-    hass.services.async_register(DOMAIN, "select_media_player", select_media_player)
     hass.services.async_register(DOMAIN, "get_rss_news_category", get_rss_news_category)
     hass.services.async_register(DOMAIN, "get_rss_news_channels", get_rss_news_channels)
     hass.services.async_register(DOMAIN, "get_rss_news_items", get_rss_news_items)
@@ -176,53 +154,47 @@ def async_setup(hass, config):
 
     def device_discovered(service):
         """ Called when a device has been discovered. """
-        _LOGGER.info("Discovered a new device type: " + str(service.as_dict()))
-        try:
-            d = service.as_dict().get("data")
-            s = d.get("service")
-            p = d.get("platform")
-            if s == "load_platform.sensor" and p == "mqtt":
-                i = d.get("discovered")
-                uid = i.get("unique_id")
-                if uid is not None:
-                    # search entity_id for this unique_id - add sensor to group
-                    if hass.services.has_service("group", "set"):
-                        hass.async_add_job(
-                            hass.services.async_call(
-                                "group",
-                                "set",
-                                {
-                                    "object_id": "all_ais_sensors",
-                                    "add_entities": ["sensor." + uid],
-                                },
+        if ais_global.G_AIS_START_IS_DONE:
+            _LOGGER.info("Discovered a new device type: " + str(service.as_dict()))
+            try:
+                d = service.as_dict().get("data")
+                s = d.get("service")
+                p = d.get("platform")
+                if s == "load_platform.sensor" and p == "mqtt":
+                    i = d.get("discovered")
+                    uid = i.get("unique_id")
+                    if uid is not None:
+                        # search entity_id for this unique_id - add sensor to group
+                        if hass.services.has_service("group", "set"):
+                            hass.async_add_job(
+                                hass.services.async_call(
+                                    "group",
+                                    "set",
+                                    {
+                                        "object_id": "all_ais_sensors",
+                                        "add_entities": ["sensor." + uid],
+                                    },
+                                )
                             )
-                        )
-            elif s == "load_platform.media_player":
-                hass.async_add_job(hass.services.async_call("ais_cloud", "get_players"))
+                elif s == "load_platform.media_player":
+                    hass.async_add_job(
+                        hass.services.async_call("ais_cloud", "get_players")
+                    )
 
-            _LOGGER.info("Discovered device prepare remote menu!")
-            # prepare menu
-            hass.async_add_job(
-                hass.services.async_call("ais_ai_service", "prepare_remote_menu")
-            )
-        except Exception as e:
-            _LOGGER.error("device_discovered: " + str(e))
+                _LOGGER.info("Discovered device prepare remote menu!")
+                # prepare menu
+                hass.async_add_job(
+                    hass.services.async_call("ais_ai_service", "prepare_remote_menu")
+                )
+            except Exception as e:
+                _LOGGER.error("device_discovered: " + str(e))
 
     hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED, device_discovered)
 
     def state_changed(state_event):
         """ Called on state change """
         entity_id = state_event.data.get("entity_id")
-        if entity_id.startswith("media_player."):
-            _new = state_event.data["new_state"].attributes
-            if state_event.data["old_state"] is None:
-                _old = {"friendly_name": "new ais dome device"}
-            else:
-                _old = state_event.data["old_state"].attributes
-            # check if name was changed
-            if _new["friendly_name"] != _old["friendly_name"]:
-                hass.async_add_job(hass.services.async_call("ais_cloud", "get_players"))
-        elif entity_id == "input_select.assistant_voice":
+        if entity_id == "input_select.assistant_voice":
             # old_voice = state_event.data["old_state"].state
             new_voice = state_event.data["new_state"].state
             if new_voice == "Jola online":
@@ -382,7 +354,7 @@ class AisCloudWS:
             ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER, timeout=5)
             return ws_resp
         except:
-            _LOGGER.error("Can't connect to AIS Cloud!!! " + rest_url)
+            _LOGGER.error("Can't connect to AIS WS!!! " + rest_url)
             ais_global.G_OFFLINE_MODE = True
 
     def audio_name(self, nature, a_type):
@@ -600,7 +572,6 @@ class AisColudData:
     def get_radio_names(self, call):
         """Load stations of the for the selected type."""
         if "radio_type" not in call.data:
-            _LOGGER.error("No radio_type")
             return []
 
         if call.data["radio_type"] == ais_global.G_FAVORITE_OPTION:
@@ -658,7 +629,6 @@ class AisColudData:
     def get_podcast_names(self, call):
         """Load podcasts names for the selected type."""
         if "podcast_type" not in call.data:
-            _LOGGER.error("No podcast_type")
             return []
         if call.data["podcast_type"] == ais_global.G_FAVORITE_OPTION:
             # get podcasts from favorites
@@ -712,7 +682,6 @@ class AisColudData:
         ):
             selected_by_remote = True
         if "podcast_name" not in call.data:
-            _LOGGER.error("No podcast_name")
             return
         if call.data["podcast_name"] == ais_global.G_FAVORITE_OPTION:
             # get podcasts from favorites
@@ -851,7 +820,6 @@ class AisColudData:
                 )
 
     def process_delete_audio(self, call):
-        _LOGGER.info("process_delete_audio")
         media_source = call.data["media_source"]
         if media_source == ais_global.G_AN_FAVORITE:
             self.hass.services.call(
@@ -901,7 +869,6 @@ class AisColudData:
             self.hass.states.async_set("sensor.spotifylist", state, new_attr)
 
     def process_play_audio(self, call):
-        _LOGGER.info("process_play_audio")
         media_source = call.data["media_source"]
         if "id" in call.data:
             if media_source == ais_global.G_AN_SPOTIFY_SEARCH:
@@ -1191,7 +1158,6 @@ class AisColudData:
     # send audio from AIS to play on selected speaker
     def send_audio_to_speaker(self, call):
         if "media_player" not in call.data:
-            _LOGGER.error("No media_player")
             return
         media_player = call.data["media_player"]
         state = self.hass.states.get(ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID)
@@ -1208,54 +1174,53 @@ class AisColudData:
                 },
             )
 
-    def select_media_player(self, call):
-        if "media_player_type" not in call.data:
-            _LOGGER.error("No media_player_type")
-            return
-        player_name = None
-        _url = None
-        _audio_info = {}
-        # TODO
-        if player_name is not None:
-            player = get_player_data(player_name)
-        if _url is not None:
-            # play media on selected device
-            _audio_info["media_content_id"] = check_url(_url)
-            # set stream image and title
-            self.hass.services.call(
-                "media_player",
-                "play_media",
-                {
-                    "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
-                    "media_content_type": "ais_content_info",
-                    "media_content_id": json.dumps(_audio_info),
-                },
-            )
-
     def get_players(self, call, hass):
         global G_PLAYERS
         G_PLAYERS = []
         players_lv = []
         if "device_name" in call.data:
+            unique_id = None
+            if "ais_gate_client_id" in call.data:
+                unique_id = call.data.get("ais_gate_client_id")
+            elif "MacWlan0" in call.data:
+                unique_id = call.data.get("MacWlan0")
+            elif "MacEth0" in call.data:
+                unique_id = call.data.get("MacEth0")
+            if unique_id is None:
+                return
             # check if this device already exists
-            name = slugify(call.data.get("device_name"))
-            m_player = hass.states.get("media_player." + name)
+            entity_id = slugify(call.data.get("device_name") + "_" + unique_id)
+            m_player = hass.states.get("media_player." + entity_id)
+            do_disco = False
             if m_player is None:
-                _LOGGER.info("Adding new ais dom player " + name)
+                do_disco = True
+            else:
+                if m_player.state == STATE_UNAVAILABLE:
+                    do_disco = True
+            if do_disco:
                 hass.async_run_job(
                     async_load_platform(
                         hass,
                         "media_player",
                         "ais_exo_player",
                         {
-                            CONF_NAME: call.data.get("device_name"),
+                            CONF_NAME: call.data.get("device_name") + "_" + unique_id,
                             CONF_IP_ADDRESS: call.data.get(CONF_IP_ADDRESS),
-                            CONF_MAC: call.data.get(CONF_MAC),
+                            "unique_id": unique_id,
                         },
                         hass.config,
                     )
                 )
-
+            else:
+                # update player info
+                self.hass.services.call(
+                    "ais_exo_player",
+                    "update_attributes",
+                    {
+                        "entity_id": entity_id,
+                        CONF_IP_ADDRESS: call.data.get(CONF_IP_ADDRESS),
+                    },
+                )
         # take the info about normal players
         entities = hass.states.async_all()
         for entity in entities:
@@ -1300,7 +1265,6 @@ class AisColudData:
     def get_rss_news_channels(self, call):
         """Load news channels of the for the selected category."""
         if "rss_news_category" not in call.data:
-            _LOGGER.error("No rss_news_category")
             return []
         if call.data["rss_news_category"] == ais_global.G_EMPTY_OPTION:
             # reset status for item below
@@ -1344,7 +1308,6 @@ class AisColudData:
         import io
 
         if "rss_news_channel" not in call.data:
-            _LOGGER.error("No rss_news_channel")
             return
         if call.data["rss_news_channel"] == ais_global.G_EMPTY_OPTION:
             # reset status for item below
@@ -1457,7 +1420,6 @@ class AisColudData:
                         ais_ai.set_curr_entity(self.hass, "sensor.rssnewslist")
 
             except Exception as e:
-                _LOGGER.error("Error: " + str(e))
                 self.hass.services.call(
                     "ais_ai_service",
                     "say_it",
@@ -1467,7 +1429,6 @@ class AisColudData:
     def select_rss_news_item(self, call):
         """Get text for the selected item."""
         if "id" not in call.data:
-            _LOGGER.error("No rss news id")
             return
         news_text = ""
         # find the url and read the text
@@ -1510,7 +1471,6 @@ class AisColudData:
         """Get text for the selected item."""
         rss_help_text = ""
         if "rss_help_topic" not in call.data:
-            _LOGGER.error("No rss_help_topic")
             return
         if call.data["rss_help_topic"] == ais_global.G_EMPTY_OPTION:
             # reset status for item below
@@ -1584,9 +1544,7 @@ class AisColudData:
             json_ws_resp["restore_error"] = restore_error
         if restore_info is not None:
             json_ws_resp["restore_info"] = restore_info
-        self.hass.states.async_set(
-            "sensor.aisbackupinfo", step, json_ws_resp,
-        )
+        self.hass.states.async_set("sensor.aisbackupinfo", step, json_ws_resp)
         info_text = ""
         if backup_error is not None:
             info_text = info_text + backup_error
@@ -1728,11 +1686,11 @@ class AisColudData:
         self.get_backup_info(call, 1, None, None, None, "Podmieniam konfigurację ")
         try:
             ret = subprocess.check_output(
-                "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS", shell=True,
+                "cp -fa " + home_dir + "AIS_BACKUP/. " + home_dir + "AIS", shell=True
             )
-            ret = subprocess.check_output("rm " + home_dir + "backup.zip", shell=True,)
+            ret = subprocess.check_output("rm " + home_dir + "backup.zip", shell=True)
             ret = subprocess.check_output(
-                "rm -rf " + home_dir + "AIS_BACKUP", shell=True,
+                "rm -rf " + home_dir + "AIS_BACKUP", shell=True
             )
 
         except Exception as e:
@@ -1741,7 +1699,7 @@ class AisColudData:
 
         # refresh
         self.get_backup_info(
-            call, 0, None, None, None, "OK, przywrucono konfigurację z  kopii"
+            call, 0, None, None, None, "OK, przywrócono konfigurację z  kopii"
         )
 
     def enable_gate_pairing_by_pin(self, call):

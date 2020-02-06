@@ -5,8 +5,8 @@ from unittest import mock
 
 import pytest
 
-from homeassistant.components.cover import DOMAIN
 import homeassistant.components.command_line.cover as cmd_rs
+from homeassistant.components.cover import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,

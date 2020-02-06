@@ -1,8 +1,8 @@
 """Support for switch sensor using I2C PCAL9535A chip."""
 import logging
 
-import voluptuous as vol
 from pcal9535a import PCAL9535A
+import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME

@@ -1,8 +1,9 @@
 """
 Support for functionality to cache some data for AI-Speaker.
 """
-import socket
 import logging
+import socket
+
 import requests
 
 # LV settings
@@ -60,6 +61,7 @@ G_NAME_FOR_AUDIO_NATURE = {
     G_AN_BOOKMARK: "Zakładki",
 }
 
+G_SPEAKERS_GROUP_LIST = ["media_player.wbudowany_glosnik"]
 
 # tokens
 G_OFFLINE_MODE = False
@@ -126,7 +128,7 @@ def say_direct(text):
             timeout=1,
         )
     except Exception as e:
-        _LOGGER.debug("problem to send the text to speech via http: " + str(e))
+        pass
 
 
 def get_sercure_android_id_dom():
@@ -140,7 +142,6 @@ def get_sercure_android_id_dom():
             )
             android_id = android_id.decode("utf-8").replace("\n", "")
         except Exception:
-            _LOGGER.info("Can't get secure gate id for the device!")
             from uuid import getnode as get_mac
 
             android_id = get_mac()

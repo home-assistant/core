@@ -1,59 +1,10 @@
 """Axis camera platform tests."""
 
-from unittest.mock import Mock
-
-from homeassistant import config_entries
 from homeassistant.components import axis
+import homeassistant.components.camera as camera
 from homeassistant.setup import async_setup_component
 
-import homeassistant.components.camera as camera
-
-
-ENTRY_CONFIG = {
-    axis.CONF_DEVICE: {
-        axis.config_flow.CONF_HOST: "1.2.3.4",
-        axis.config_flow.CONF_USERNAME: "user",
-        axis.config_flow.CONF_PASSWORD: "pass",
-        axis.config_flow.CONF_PORT: 80,
-    },
-    axis.config_flow.CONF_MAC: "1234ABCD",
-    axis.config_flow.CONF_MODEL: "model",
-    axis.config_flow.CONF_NAME: "model 0",
-}
-
-ENTRY_OPTIONS = {
-    axis.CONF_CAMERA: False,
-    axis.CONF_EVENTS: True,
-    axis.CONF_TRIGGER_TIME: 0,
-}
-
-
-async def setup_device(hass):
-    """Load the Axis binary sensor platform."""
-    from axis import AxisDevice
-
-    loop = Mock()
-
-    config_entry = config_entries.ConfigEntry(
-        1,
-        axis.DOMAIN,
-        "Mock Title",
-        ENTRY_CONFIG,
-        "test",
-        config_entries.CONN_CLASS_LOCAL_PUSH,
-        system_options={},
-        options=ENTRY_OPTIONS,
-    )
-    device = axis.AxisNetworkDevice(hass, config_entry)
-    device.api = AxisDevice(loop=loop, **config_entry.data[axis.CONF_DEVICE])
-    hass.data[axis.DOMAIN] = {device.serial: device}
-    device.api.enable_events(event_callback=device.async_event_callback)
-
-    await hass.config_entries.async_forward_entry_setup(config_entry, "camera")
-    # To flush out the service call to update the group
-    await hass.async_block_till_done()
-
-    return device
+from .test_device import NAME, setup_axis_integration
 
 
 async def test_platform_manually_configured(hass):
@@ -70,12 +21,10 @@ async def test_platform_manually_configured(hass):
 
 async def test_camera(hass):
     """Test that Axis camera platform is loaded properly."""
-    await setup_device(hass)
+    await setup_axis_integration(hass)
 
-    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids("camera")) == 1
 
-    assert len(hass.states.async_all()) == 1
-
-    cam = hass.states.get("camera.model_0")
+    cam = hass.states.get(f"camera.{NAME}")
     assert cam.state == "idle"
-    assert cam.name == "model 0"
+    assert cam.name == NAME

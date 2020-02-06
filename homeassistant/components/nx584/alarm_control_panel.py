@@ -1,6 +1,7 @@
 """Support for NX584 alarm control panels."""
 import logging
 
+from nx584 import client
 import requests
 import voluptuous as vol
 
@@ -56,7 +57,6 @@ class NX584Alarm(alarm.AlarmControlPanel):
 
     def __init__(self, hass, url, name):
         """Init the nx584 alarm panel."""
-        from nx584 import client
 
         self._hass = hass
         self._name = name

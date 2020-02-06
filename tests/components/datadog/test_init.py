@@ -1,16 +1,16 @@
 """The tests for the Datadog component."""
-from unittest import mock
 import unittest
+from unittest import mock
 
+import homeassistant.components.datadog as datadog
 from homeassistant.const import (
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.setup import setup_component
-import homeassistant.components.datadog as datadog
 import homeassistant.core as ha
+from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
 

@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
+from homematicip.aio.device import AsyncSwitchMeasuring
 from homematicip.aio.group import AsyncHeatingGroup
 from homematicip.aio.home import AsyncHome
 from homematicip.base.helpers import handle_config
@@ -47,6 +48,7 @@ SERVICE_ACTIVATE_VACATION = "activate_vacation"
 SERVICE_DEACTIVATE_ECO_MODE = "deactivate_eco_mode"
 SERVICE_DEACTIVATE_VACATION = "deactivate_vacation"
 SERVICE_DUMP_HAP_CONFIG = "dump_hap_config"
+SERVICE_RESET_ENERGY_COUNTER = "reset_energy_counter"
 SERVICE_SET_ACTIVE_CLIMATE_PROFILE = "set_active_climate_profile"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -114,6 +116,10 @@ SCHEMA_DUMP_HAP_CONFIG = vol.Schema(
         ): cv.string,
         vol.Optional(ATTR_ANONYMIZE, default=True): cv.boolean,
     }
+)
+
+SCHEMA_RESET_ENERGY_COUNTER = vol.Schema(
+    {vol.Required(ATTR_ENTITY_ID): comp_entity_ids}
 )
 
 
@@ -245,7 +251,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             if entity_id_list != "all":
                 for entity_id in entity_id_list:
                     group = hap.hmip_device_by_entity_id.get(entity_id)
-                    if group:
+                    if group and isinstance(group, AsyncHeatingGroup):
                         await group.set_active_profile(climate_profile_index)
             else:
                 for group in hap.home.groups:
@@ -287,6 +293,28 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         SERVICE_DUMP_HAP_CONFIG,
         _async_dump_hap_config,
         schema=SCHEMA_DUMP_HAP_CONFIG,
+    )
+
+    async def _async_reset_energy_counter(service):
+        """Service to reset the energy counter."""
+        entity_id_list = service.data[ATTR_ENTITY_ID]
+
+        for hap in hass.data[DOMAIN].values():
+            if entity_id_list != "all":
+                for entity_id in entity_id_list:
+                    device = hap.hmip_device_by_entity_id.get(entity_id)
+                    if device and isinstance(device, AsyncSwitchMeasuring):
+                        await device.reset_energy_counter()
+            else:
+                for device in hap.home.devices:
+                    if isinstance(device, AsyncSwitchMeasuring):
+                        await device.reset_energy_counter()
+
+    hass.helpers.service.async_register_admin_service(
+        DOMAIN,
+        SERVICE_RESET_ENERGY_COUNTER,
+        _async_reset_energy_counter,
+        schema=SCHEMA_RESET_ENERGY_COUNTER,
     )
 
     def _get_home(hapid: str) -> Optional[AsyncHome]:

@@ -3,7 +3,7 @@ import velbus
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PORT, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
 

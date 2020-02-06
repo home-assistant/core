@@ -1,15 +1,15 @@
 """The tests for the ASUSWRT device tracker platform."""
 from unittest.mock import patch
-from homeassistant.setup import async_setup_component
 
 from homeassistant.components.asuswrt import (
-    CONF_PROTOCOL,
     CONF_MODE,
-    DOMAIN,
     CONF_PORT,
+    CONF_PROTOCOL,
     DATA_ASUSWRT,
+    DOMAIN,
 )
-from homeassistant.const import CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME, CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro_func
 

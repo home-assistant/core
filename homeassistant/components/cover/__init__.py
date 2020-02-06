@@ -6,31 +6,29 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.loader import bind_hass
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    SERVICE_CLOSE_COVER,
+    SERVICE_CLOSE_COVER_TILT,
+    SERVICE_OPEN_COVER,
+    SERVICE_OPEN_COVER_TILT,
+    SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
+    SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
+    SERVICE_TOGGLE,
+    SERVICE_TOGGLE_COVER_TILT,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_OPEN,
+    STATE_OPENING,
+)
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
 )
-from homeassistant.components import group
-from homeassistant.const import (
-    SERVICE_OPEN_COVER,
-    SERVICE_CLOSE_COVER,
-    SERVICE_SET_COVER_POSITION,
-    SERVICE_STOP_COVER,
-    SERVICE_TOGGLE,
-    SERVICE_OPEN_COVER_TILT,
-    SERVICE_CLOSE_COVER_TILT,
-    SERVICE_STOP_COVER_TILT,
-    SERVICE_SET_COVER_TILT_POSITION,
-    SERVICE_TOGGLE_COVER_TILT,
-    STATE_OPEN,
-    STATE_CLOSED,
-    STATE_OPENING,
-    STATE_CLOSING,
-)
-
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -38,9 +36,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "cover"
 SCAN_INTERVAL = timedelta(seconds=15)
-
-GROUP_NAME_ALL_COVERS = "all covers"
-ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format("all_covers")
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
@@ -83,16 +78,15 @@ ATTR_TILT_POSITION = "tilt_position"
 
 
 @bind_hass
-def is_closed(hass, entity_id=None):
+def is_closed(hass, entity_id):
     """Return if the cover is closed based on the statemachine."""
-    entity_id = entity_id or ENTITY_ID_ALL_COVERS
     return hass.states.is_state(entity_id, STATE_CLOSED)
 
 
 async def async_setup(hass, config):
     """Track states and offer events for covers."""
     component = hass.data[DOMAIN] = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_COVERS
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
     await component.async_setup(config)

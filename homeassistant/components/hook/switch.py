@@ -1,13 +1,13 @@
 """Support Hook, available at hooksmarthome.com."""
-import logging
 import asyncio
+import logging
 
-import voluptuous as vol
-import async_timeout
 import aiohttp
+import async_timeout
+import voluptuous as vol
 
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_TOKEN
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -21,12 +21,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Exclusive(
             CONF_PASSWORD,
             "hook_secret",
-            msg="hook: provide " + "username/password OR token",
+            msg="hook: provide username/password OR token",
         ): cv.string,
         vol.Exclusive(
-            CONF_TOKEN,
-            "hook_secret",
-            msg="hook: provide " + "username/password OR token",
+            CONF_TOKEN, "hook_secret", msg="hook: provide username/password OR token",
         ): cv.string,
         vol.Inclusive(CONF_USERNAME, "hook_auth"): cv.string,
         vol.Inclusive(CONF_PASSWORD, "hook_auth"): cv.string,

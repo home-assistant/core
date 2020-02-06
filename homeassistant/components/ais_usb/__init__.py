@@ -6,12 +6,13 @@ https://www.ai-speaker.com
 """
 import asyncio
 import logging
-import pyinotify
-import re
 import os
+import re
 import subprocess
-import homeassistant.components.ais_dom.ais_global as ais_global
 
+import pyinotify
+
+import homeassistant.components.ais_dom.ais_global as ais_global
 
 DOMAIN = "ais_usb"
 _LOGGER = logging.getLogger(__name__)
@@ -38,8 +39,12 @@ def prepare_usb_device(hass, device_info):
     if device_info["id"] == G_ZIGBEE_ID:
         # Register the built-in zigbee panel
         hass.components.frontend.async_register_built_in_panel(
-            "lovelace/ais_zigbee", "Zigbee", "mdi:zigbee"
+            "lovelace/ais_zigbee",
+            require_admin=True,
+            sidebar_title="Zigbee",
+            sidebar_icon="mdi:zigbee",
         )
+
         # check if zigbee already exists
         if not os.path.isdir("/data/data/pl.sviete.dom/files/home/zigbee2mqtt"):
             # download

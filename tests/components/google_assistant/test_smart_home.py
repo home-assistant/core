@@ -1,39 +1,40 @@
 """Test Google Smart Home."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 import pytest
 
-from homeassistant.core import State, EVENT_CALL_SERVICE
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
-from homeassistant.setup import async_setup_component
 from homeassistant.components import camera
 from homeassistant.components.climate.const import (
-    ATTR_MIN_TEMP,
     ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     HVAC_MODE_HEAT,
-)
-from homeassistant.components.google_assistant import (
-    const,
-    trait,
-    smart_home as sh,
-    EVENT_COMMAND_RECEIVED,
-    EVENT_QUERY_RECEIVED,
-    EVENT_SYNC_RECEIVED,
 )
 from homeassistant.components.demo.binary_sensor import DemoBinarySensor
 from homeassistant.components.demo.cover import DemoCover
 from homeassistant.components.demo.light import DemoLight
 from homeassistant.components.demo.media_player import AbstractDemoPlayer
 from homeassistant.components.demo.switch import DemoSwitch
-
-from homeassistant.helpers import device_registry
-from tests.common import (
-    mock_device_registry,
-    mock_registry,
-    mock_area_registry,
-    mock_coro,
+from homeassistant.components.google_assistant import (
+    EVENT_COMMAND_RECEIVED,
+    EVENT_QUERY_RECEIVED,
+    EVENT_SYNC_RECEIVED,
+    const,
+    smart_home as sh,
+    trait,
 )
+from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, __version__
+from homeassistant.core import EVENT_CALL_SERVICE, State
+from homeassistant.helpers import device_registry
+from homeassistant.setup import async_setup_component
 
 from . import BASIC_CONFIG, MockConfig
+
+from tests.common import (
+    mock_area_registry,
+    mock_coro,
+    mock_device_registry,
+    mock_registry,
+)
 
 REQ_ID = "ff36a3cc-ec34-11e6-b1a0-64510650abcf"
 

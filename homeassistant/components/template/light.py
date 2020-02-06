@@ -3,30 +3,31 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ENTITY_ID_FORMAT,
-    Light,
     SUPPORT_BRIGHTNESS,
+    Light,
 )
 from homeassistant.const import (
-    CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE,
-    CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_ENTITY_ID,
+    CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
-    STATE_ON,
-    STATE_OFF,
-    EVENT_HOMEASSISTANT_START,
+    CONF_ICON_TEMPLATE,
     CONF_LIGHTS,
+    CONF_VALUE_TEMPLATE,
+    EVENT_HOMEASSISTANT_START,
+    STATE_OFF,
+    STATE_ON,
 )
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
+
 from . import extract_entities, initialise_templates
 from .const import CONF_AVAILABILITY_TEMPLATE
 
@@ -266,38 +267,10 @@ class LightTemplate(Light):
             self.async_schedule_update_ha_state()
 
     async def async_update(self):
-        """Update the state from the template."""
-        if self._template is not None:
-            try:
-                state = self._template.async_render().lower()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._state = None
+        """Update from templates."""
+        self.update_state()
 
-            if state in _VALID_STATES:
-                self._state = state in ("true", STATE_ON)
-            else:
-                _LOGGER.error(
-                    "Received invalid light is_on state: %s. Expected: %s",
-                    state,
-                    ", ".join(_VALID_STATES),
-                )
-                self._state = None
-
-        if self._level_template is not None:
-            try:
-                brightness = self._level_template.async_render()
-            except TemplateError as ex:
-                _LOGGER.error(ex)
-                self._state = None
-
-            if 0 <= int(brightness) <= 255:
-                self._brightness = int(brightness)
-            else:
-                _LOGGER.error(
-                    "Received invalid brightness : %s. Expected: 0-255", brightness
-                )
-                self._brightness = None
+        self.update_brightness()
 
         for property_name, template in (
             ("_icon", self._icon_template),
@@ -319,7 +292,7 @@ class LightTemplate(Light):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render %s template %s," " the state is unknown.",
+                        "Could not render %s template %s, the state is unknown.",
                         friendly_property_name,
                         self._name,
                     )
@@ -334,3 +307,39 @@ class LightTemplate(Light):
                         self._name,
                         ex,
                     )
+
+    @callback
+    def update_brightness(self):
+        """Update the brightness from the template."""
+        if self._level_template is not None:
+            try:
+                brightness = self._level_template.async_render()
+                if 0 <= int(brightness) <= 255:
+                    self._brightness = int(brightness)
+                else:
+                    _LOGGER.error(
+                        "Received invalid brightness : %s. Expected: 0-255", brightness
+                    )
+                    self._brightness = None
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                self._state = None
+
+    @callback
+    def update_state(self):
+        """Update the state from the template."""
+        if self._template is not None:
+            try:
+                state = self._template.async_render().lower()
+                if state in _VALID_STATES:
+                    self._state = state in ("true", STATE_ON)
+                else:
+                    _LOGGER.error(
+                        "Received invalid light is_on state: %s. Expected: %s",
+                        state,
+                        ", ".join(_VALID_STATES),
+                    )
+                    self._state = None
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                self._state = None

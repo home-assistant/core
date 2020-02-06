@@ -1,56 +1,115 @@
 """The tests for the LG webOS media player platform."""
-import unittest
-from unittest import mock
+import sys
 
-from homeassistant.components.webostv import media_player as webostv
+import pytest
+
+from homeassistant.components import media_player
+from homeassistant.components.media_player.const import (
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_VOLUME_MUTED,
+    SERVICE_SELECT_SOURCE,
+)
+from homeassistant.components.webostv import (
+    ATTR_BUTTON,
+    ATTR_COMMAND,
+    DOMAIN,
+    SERVICE_BUTTON,
+    SERVICE_COMMAND,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_NAME,
+    SERVICE_VOLUME_MUTE,
+    STATE_ON,
+)
+from homeassistant.setup import async_setup_component
+
+if sys.version_info >= (3, 8, 0):
+    from unittest.mock import patch
+else:
+    from asynctest import patch
 
 
-class FakeLgWebOSDevice(webostv.LgWebOSDevice):
-    """A fake device without the client setup required for the real one."""
-
-    def __init__(self, *args, **kwargs):
-        """Initialise parameters needed for tests with fake values."""
-        self._source_list = {}
-        self._client = mock.MagicMock()
-        self._name = "fake_device"
-        self._current_source = None
+NAME = "fake"
+ENTITY_ID = f"{media_player.DOMAIN}.{NAME}"
 
 
-class TestLgWebOSDevice(unittest.TestCase):
-    """Test the LgWebOSDevice class."""
+@pytest.fixture(name="client")
+def client_fixture():
+    """Patch of client library for tests."""
+    with patch(
+        "homeassistant.components.webostv.WebOsClient", autospec=True
+    ) as mock_client_class:
+        yield mock_client_class.return_value
 
-    def setUp(self):
-        """Configure a fake device for each test."""
-        self.device = FakeLgWebOSDevice()
 
-    def test_select_source_with_empty_source_list(self):
-        """Ensure we don't call client methods when we don't have sources."""
-        self.device.select_source("nonexistent")
-        assert 0 == self.device._client.launch_app.call_count
-        assert 0 == self.device._client.set_input.call_count
+async def setup_webostv(hass):
+    """Initialize webostv and media_player for tests."""
+    assert await async_setup_component(
+        hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake", CONF_NAME: NAME}},
+    )
+    await hass.async_block_till_done()
 
-    def test_select_source_with_titled_entry(self):
-        """Test that a titled source is treated as an app."""
-        self.device._source_list = {
-            "existent": {"id": "existent_id", "title": "existent_title"}
-        }
 
-        self.device.select_source("existent")
+async def test_mute(hass, client):
+    """Test simple service call."""
 
-        assert "existent_title" == self.device._current_source
-        assert [mock.call("existent_id")] == (
-            self.device._client.launch_app.call_args_list
-        )
+    await setup_webostv(hass)
 
-    def test_select_source_with_labelled_entry(self):
-        """Test that a labelled source is treated as an input source."""
-        self.device._source_list = {
-            "existent": {"id": "existent_id", "label": "existent_label"}
-        }
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_MEDIA_VOLUME_MUTED: True,
+    }
+    await hass.services.async_call(media_player.DOMAIN, SERVICE_VOLUME_MUTE, data)
+    await hass.async_block_till_done()
 
-        self.device.select_source("existent")
+    client.set_mute.assert_called_once()
 
-        assert "existent_label" == self.device._current_source
-        assert [mock.call("existent_id")] == (
-            self.device._client.set_input.call_args_list
-        )
+
+async def test_select_source_with_empty_source_list(hass, client):
+    """Ensure we don't call client methods when we don't have sources."""
+
+    await setup_webostv(hass)
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_INPUT_SOURCE: "nonexistent",
+    }
+    await hass.services.async_call(media_player.DOMAIN, SERVICE_SELECT_SOURCE, data)
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(ENTITY_ID, STATE_ON)
+    client.launch_app.assert_not_called()
+    client.set_input.assert_not_called()
+
+
+async def test_button(hass, client):
+    """Test generic button functionality."""
+
+    await setup_webostv(hass)
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_BUTTON: "test",
+    }
+    await hass.services.async_call(DOMAIN, SERVICE_BUTTON, data)
+    await hass.async_block_till_done()
+
+    client.button.assert_called_once()
+    client.button.assert_called_with("test")
+
+
+async def test_command(hass, client):
+    """Test generic button functionality."""
+
+    await setup_webostv(hass)
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_COMMAND: "test",
+    }
+    await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data)
+    await hass.async_block_till_done()
+
+    client.request.assert_called_with("test")

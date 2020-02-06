@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan kun konfigurere en Almond-konto.",
+            "cannot_connect": "Kan ikke oprette forbindelse til Almond-serveren.",
+            "missing_configuration": "Tjek venligst dokumentationen om, hvordan man indstiller Almond."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e6lg godkendelsesmetode"
+            }
+        },
+        "title": "Almond"
+    }
+}

@@ -4,9 +4,8 @@ from pathlib import Path
 import subprocess
 import sys
 
-from . import gather_info, generate, error, docs
+from . import docs, error, gather_info, generate
 from .const import COMPONENT_DIR
-
 
 TEMPLATES = [
     p.name for p in (Path(__file__).parent / "templates").glob("*") if p.is_dir()

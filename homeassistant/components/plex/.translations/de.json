@@ -6,6 +6,7 @@
             "already_in_progress": "Plex wird konfiguriert",
             "discovery_no_file": "Es wurde keine alte Konfigurationsdatei gefunden",
             "invalid_import": "Die importierte Konfiguration ist ung\u00fcltig",
+            "non-interactive": "Nicht interaktiver Import",
             "token_request_timeout": "Zeit\u00fcberschreitung beim Erhalt des Tokens",
             "unknown": "Aus unbekanntem Grund fehlgeschlagen"
         },

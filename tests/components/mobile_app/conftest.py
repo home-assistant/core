@@ -2,13 +2,12 @@
 # pylint: disable=redefined-outer-name,unused-import
 import pytest
 
-from tests.common import mock_device_registry
-
+from homeassistant.components.mobile_app.const import DOMAIN
 from homeassistant.setup import async_setup_component
 
-from homeassistant.components.mobile_app.const import DOMAIN
-
 from .const import REGISTER, REGISTER_CLEARTEXT
+
+from tests.common import mock_device_registry
 
 
 @pytest.fixture

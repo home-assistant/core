@@ -1,17 +1,22 @@
 """Test Google Assistant helpers."""
-from asynctest.mock import Mock, patch, call
 from datetime import timedelta
+
+from asynctest.mock import Mock, call, patch
 import pytest
-from homeassistant.setup import async_setup_component
+
 from homeassistant.components.google_assistant import helpers
-from homeassistant.components.google_assistant.const import EVENT_COMMAND_RECEIVED
+from homeassistant.components.google_assistant.const import (  # noqa: F401
+    EVENT_COMMAND_RECEIVED,
+)
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
+
 from . import MockConfig
 
 from tests.common import (
     async_capture_events,
-    async_mock_service,
     async_fire_time_changed,
+    async_mock_service,
 )
 
 

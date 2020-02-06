@@ -4,15 +4,15 @@ import subprocess
 
 import voluptuous as vol
 
-from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
 from homeassistant.const import (
     CONF_COMMAND_CLOSE,
     CONF_COMMAND_OPEN,
     CONF_COMMAND_STATE,
     CONF_COMMAND_STOP,
     CONF_COVERS,
-    CONF_VALUE_TEMPLATE,
     CONF_FRIENDLY_NAME,
+    CONF_VALUE_TEMPLATE,
 )
 import homeassistant.helpers.config_validation as cv
 

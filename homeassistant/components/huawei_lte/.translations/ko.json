@@ -33,6 +33,7 @@
         "step": {
             "init": {
                 "data": {
+                    "name": "\uc54c\ub9bc \uc11c\ube44\uc2a4 \uc774\ub984 (\ubcc0\uacbd \uc2dc \ub2e4\uc2dc \uc2dc\uc791\ud574\uc57c \ud568)",
                     "recipient": "SMS \uc54c\ub9bc \uc218\uc2e0\uc790",
                     "track_new_devices": "\uc0c8\ub85c\uc6b4 \uae30\uae30 \ucd94\uc801"
                 }

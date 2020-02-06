@@ -7,13 +7,13 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric " "Administration"
+ATTRIBUTION = "Data provided by the National Oceanic and Atmospheric Administration"
 CONF_THRESHOLD = "forecast_threshold"
 
 DEFAULT_DEVICE_CLASS = "visible"

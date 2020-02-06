@@ -3,62 +3,61 @@ Support for functionality to have conversations with AI-Speaker.
 
 """
 import asyncio
+import datetime
+import json
 import logging
 import re
-import warnings
-import json
-import voluptuous as vol
-import datetime
-import requests
-from homeassistant import core
-from homeassistant.loader import bind_hass
-from homeassistant.components import conversation
-from homeassistant.core import HomeAssistant, Context
 from typing import Optional
+import warnings
 
+from aiohttp.web import Response, json_response
+import requests
+import voluptuous as vol
 
+from homeassistant import core
+from homeassistant.components import ais_cloud, ais_drives_service, conversation
+import homeassistant.components.ais_dom.ais_global as ais_global
+import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_IP_ADDRESS,
+    SERVICE_CLOSE_COVER,
+    SERVICE_OPEN_COVER,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    SERVICE_OPEN_COVER,
-    SERVICE_CLOSE_COVER,
-    STATE_ON,
-    STATE_OFF,
-    STATE_HOME,
-    STATE_NOT_HOME,
-    STATE_UNKNOWN,
-    STATE_OPEN,
-    STATE_OPENING,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_PLAYING,
-    STATE_PAUSED,
-    STATE_IDLE,
-    STATE_STANDBY,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_NIGHT,
     STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
     STATE_ALARM_DISARMING,
     STATE_ALARM_TRIGGERED,
+    STATE_CLOSED,
+    STATE_CLOSING,
+    STATE_HOME,
+    STATE_IDLE,
     STATE_LOCKED,
-    STATE_UNLOCKED,
-    STATE_UNAVAILABLE,
+    STATE_NOT_HOME,
+    STATE_OFF,
     STATE_OK,
+    STATE_ON,
+    STATE_OPEN,
+    STATE_OPENING,
+    STATE_PAUSED,
+    STATE_PLAYING,
     STATE_PROBLEM,
-    ATTR_ASSUMED_STATE,
+    STATE_STANDBY,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    STATE_UNLOCKED,
 )
-from homeassistant.helpers import intent, config_validation as cv
-from homeassistant.components import ais_cloud
-import homeassistant.components.mqtt as mqtt
-import homeassistant.components.ais_dom.ais_global as ais_global
-from homeassistant.components import ais_drives_service
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers import config_validation as cv, event, intent
+from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
-from homeassistant.helpers import event
 
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -1756,7 +1755,6 @@ def set_focus_on_prev_entity(hass, long_press):
         if CURR_ENTITIE.startswith("media_player."):
             if long_press:
                 # seek back on remote
-                _LOGGER.info("seek back in the player - info from remote")
                 hass.services.call(
                     "media_player",
                     "media_seek",
@@ -1834,7 +1832,6 @@ def set_focus_on_next_entity(hass, long_press):
         if CURR_ENTITIE.startswith("media_player."):
             if long_press:
                 # seek next on remote
-                _LOGGER.info("seek next in the player - info from remote")
                 hass.services.call(
                     "media_player",
                     "media_seek",
@@ -2195,6 +2192,96 @@ def get_groups(hass):
             group["entities"] = all_unique_fans
 
 
+# new way to communicate with frame
+async def async_process_json_from_frame(hass, json_req):
+    res = {"ais": "ok"}
+    topic = json_req["topic"]
+    payload = json_req["payload"]
+    ais_gate_client_id = json_req["ais_gate_client_id"]
+    if "hot_word_on" in json_req:
+        hot_word_on = json_req["hot_word_on"]
+    else:
+        hot_word_on = False
+    if topic == "ais/player_auto_discovery":
+        # parse the json storing the result on the response object
+        model = payload["Model"]
+        manufacturer = payload["Manufacturer"]
+        ip = payload["IPAddressIPv4"]
+        # add the device to the speakers lists
+        hass.async_add_job(
+            hass.services.async_call(
+                "ais_cloud",
+                "get_players",
+                {
+                    "device_name": model + " " + manufacturer,
+                    CONF_IP_ADDRESS: ip,
+                    "ais_gate_client_id": ais_gate_client_id,
+                },
+            )
+        )
+    elif topic == "ais/player_status":
+        # try to get current volume
+        try:
+            ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL = (
+                payload.get("currentVolume", 0) / 100
+            )
+        except Exception:
+            _LOGGER.info(
+                "ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL: "
+                + str(ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
+            )
+        # find the correct player
+        for entity in hass.states.async_all():
+            if entity.entity_id.startswith("media_player."):
+                if "unique_id" in entity.attributes:
+                    if ais_gate_client_id == entity.attributes["unique_id"]:
+                        json_string = json.dumps(payload)
+                        hass.async_run_job(
+                            hass.services.async_call(
+                                "media_player",
+                                "play_media",
+                                {
+                                    "entity_id": entity.entity_id,
+                                    "media_content_type": "exo_info",
+                                    "media_content_id": json_string,
+                                },
+                            )
+                        )
+    elif topic == "ais/player_status_ask":
+        hass.async_add_job(
+            hass.services.async_call("ais_exo_player", "player_status_ask")
+        )
+    elif topic == "ais/speech_command":
+        try:
+            # TODO add info if the intent is media player type - to publish
+            intent_resp = await _process(hass, payload, ais_gate_client_id, hot_word_on)
+            resp_text = intent_resp.speech["plain"]["speech"]
+            res = {"ais": "ok", "say_it": resp_text}
+        except Exception as e:
+            _LOGGER.error("intent_resp " + str(e))
+
+    elif topic == "ais/media_player":
+        hass.async_run_job(
+            hass.services.async_call(
+                "media_player",
+                payload,
+                {ATTR_ENTITY_ID: "media_player.wbudowany_glosnik"},
+            )
+        )
+
+    # add player satus for some topics
+    if topic in ("ais/player_status", "ais/player_auto_discovery", "ais/media_player"):
+        attributes = hass.states.get("media_player.wbudowany_glosnik").attributes
+        j_media_info = {
+            "media_title": attributes.get("media_title", ""),
+            "media_source": attributes.get("source", ""),
+            "media_stream_image": attributes.get("media_stream_image", ""),
+            "media_album_name": attributes.get("media_album_name", ""),
+        }
+        res["player_status"] = j_media_info
+    return json_response(res)
+
+
 @asyncio.coroutine
 async def async_setup(hass, config):
     """Register the process service."""
@@ -2298,7 +2385,6 @@ async def async_setup(hass, config):
     @asyncio.coroutine
     def check_local_ip(service):
         """Set the local ip in app."""
-        _LOGGER.info("check_local_ip")
         ip = ais_global.get_my_global_ip()
         hass.states.async_set(
             "sensor.internal_ip_address",
@@ -2308,7 +2394,6 @@ async def async_setup(hass, config):
 
     @asyncio.coroutine
     def switch_ui(service):
-        _LOGGER.info("switch_ui")
         mode = service.data["mode"]
         if mode in ("YouTube", "Spotify"):
             hass.states.async_set("sensor.ais_player_mode", "music_player")
@@ -2332,6 +2417,7 @@ async def async_setup(hass, config):
                 ip = service.data["ip"]
         _publish_command_to_frame(hass, key, val, ip)
 
+    # old
     def process_command_from_frame(service):
         _process_command_from_frame(hass, service)
 
@@ -2495,10 +2581,8 @@ async def async_setup(hass, config):
                 qm_et = int(qm_et) + 86400
             # if we are more close to night - apply day mode
             if (int(qm_st) > int(qm_et)) and quiet_mode == "on":
-                _LOGGER.info("-> apply_night_mode")
                 apply_night_mode()
             else:
-                _LOGGER.info("-> apply_day_mode")
                 apply_day_mode()
         if timer and quiet_mode == "on":
             # call from timer
@@ -2876,15 +2960,7 @@ def _publish_command_to_frame(hass, key, val, ip):
         try:
             requests.post(url + "/command", json={key: val, "ip": ip}, timeout=2)
         except Exception as e:
-            _LOGGER.info(
-                "_publish_command_to_frame requests.post problem key: "
-                + str(key)
-                + " val: "
-                + str(val)
-                + " ip "
-                + str(ip)
-                + str(e)
-            )
+            pass
 
 
 def _wifi_rssi_to_info(rssi):
@@ -2942,11 +3018,13 @@ def _publish_wifi_status(hass, service):
 
 def _process_command_from_frame(hass, service):
     # process from frame
-    _LOGGER.debug("_process_command_from_frame: " + str(service.data))
     if "web_hook_json" in service.data:
         import ast
 
         service.data = ast.literal_eval(service.data["web_hook_json"])
+    if "topic" not in service.data:
+        return
+
     if service.data["topic"] == "ais/speech_command":
         hass.async_run_job(
             hass.services.async_call(
@@ -2965,7 +3043,6 @@ def _process_command_from_frame(hass, service):
         _LOGGER.info("speech_status: " + str(service.data["payload"]))
         return
     elif service.data["topic"] == "ais/add_bookmark":
-        _LOGGER.info("add_bookmark: " + str(service.data["payload"]))
         try:
             bookmark = json.loads(service.data["payload"])
             hass.async_run_job(
@@ -3179,10 +3256,15 @@ def _process_command_from_frame(hass, service):
                 message.get("currentVolume", 0) / 100
             )
         except Exception:
-            _LOGGER.warning(
+            _LOGGER.info(
                 "ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL: "
                 + str(ais_global.G_AIS_DAY_MEDIA_VOLUME_LEVEL)
             )
+        if "ais_gate_client_id" in service.data:
+            json_string = json.dumps(service.data["payload"])
+        else:
+            json_string = service.data["payload"]
+
         hass.async_run_job(
             hass.services.async_call(
                 "media_player",
@@ -3190,7 +3272,7 @@ def _process_command_from_frame(hass, service):
                 {
                     "entity_id": ais_global.G_LOCAL_EXO_PLAYER_ENTITY_ID,
                     "media_content_type": "exo_info",
-                    "media_content_id": service.data["payload"],
+                    "media_content_id": json_string,
                 },
             )
         )
@@ -3244,47 +3326,47 @@ def _process_command_from_frame(hass, service):
     return
 
 
-def _post_message(message, hass):
+def _post_message(message, hass, exclude_say_it=None):
     """Post the message to TTS service."""
-    message = message.replace("°C", "stopni Celsjusza")
-    message = message.replace("(Pobrane z Google)", "")
+    # message = message.replace("°C", "stopni Celsjusza")
+    # message = message.replace("(Pobrane z Google)", "")
     # replace emoticons
-    emoji_pattern = re.compile(
-        "["
-        "\U0001F600-\U0001F64F"  # emoticons
-        "\U0001F300-\U0001F5FF"  # symbols & pictographs
-        "\U0001F680-\U0001F6FF"  # transport & map symbols
-        "\U0001F1E0-\U0001F1FF"  # flags (iOS)
-        "\U0001F1F2-\U0001F1F4"  # Macau flag
-        "\U0001F1E6-\U0001F1FF"  # flags
-        "\U0001F600-\U0001F64F"
-        "\U00002702-\U000027B0"
-        "\U000024C2-\U0001F251"
-        "\U0001f926-\U0001f937"
-        "\U0001F1F2"
-        "\U0001F1F4"
-        "\U0001F620"
-        "\u200d"
-        "\u2640-\u2642"
-        "]+",
-        flags=re.UNICODE,
-    )
-
-    text = emoji_pattern.sub(r"", message)
+    # emoji_pattern = re.compile(
+    #     "["
+    #     "\U0001F600-\U0001F64F"  # emoticons
+    #     "\U0001F300-\U0001F5FF"  # symbols & pictographs
+    #     "\U0001F680-\U0001F6FF"  # transport & map symbols
+    #     "\U0001F1E0-\U0001F1FF"  # flags (iOS)
+    #     "\U0001F1F2-\U0001F1F4"  # Macau flag
+    #     "\U0001F1E6-\U0001F1FF"  # flags
+    #     "\U0001F600-\U0001F64F"
+    #     "\U00002702-\U000027B0"
+    #     "\U000024C2-\U0001F251"
+    #     "\U0001f926-\U0001f937"
+    #     "\U0001F1F2"
+    #     "\U0001F1F4"
+    #     "\U0001F620"
+    #     "\u200d"
+    #     "\u2640-\u2642"
+    #     "]+",
+    #     flags=re.UNICODE,
+    # )
+    #
+    # text = emoji_pattern.sub(r"", message)
     j_data = {
-        "text": text,
+        "text": message,
         "pitch": ais_global.GLOBAL_TTS_PITCH,
         "rate": ais_global.GLOBAL_TTS_RATE,
         "voice": ais_global.GLOBAL_TTS_VOICE,
     }
 
     tts_browser_text = message
-    if len(tts_browser_text) > 150:
-        space_position = tts_browser_text.find(" ", 150)
-        if space_position > 150:
+    if len(tts_browser_text) > 250:
+        space_position = tts_browser_text.find(" ", 250)
+        if space_position > 250:
             tts_browser_text = tts_browser_text[0:space_position]
         else:
-            tts_browser_text = tts_browser_text[0:150]
+            tts_browser_text = tts_browser_text[0:250]
 
     hass.async_add_job(
         hass.services.async_call(
@@ -3299,7 +3381,26 @@ def _post_message(message, hass):
             timeout=1,
         )
     except Exception as e:
-        _LOGGER.debug("problem to send the text to speech via http: " + str(e))
+        pass
+    # do the same for speakers in the group
+    for s in ais_global.G_SPEAKERS_GROUP_LIST:
+        if s != "media_player.wbudowany_glosnik":
+            attr = hass.states.get(s).attributes
+            if "unique_id" in attr and attr["unique_id"] not in (
+                str(exclude_say_it),
+                "1111111111111111111",
+            ):
+                try:
+                    requests.post(
+                        ais_global.G_HTTP_REST_SERVICE_BASE_URL.format(
+                            attr["device_ip"]
+                        )
+                        + "/text_to_speech",
+                        json=j_data,
+                        timeout=1,
+                    )
+                except Exception:
+                    pass
 
 
 def _beep_it(hass, tone):
@@ -3310,9 +3411,9 @@ def _beep_it(hass, tone):
     )
 
 
-def _say_it(hass, message, img=None):
+def _say_it(hass, message, img=None, exclude_say_it=None):
     # sent the tts message to the panel via http api
-    _post_message(message, hass)
+    _post_message(message, hass, exclude_say_it)
 
     if len(message) > 1999:
         tts_text = message[0:1999] + "..."
@@ -3481,9 +3582,8 @@ def get_context_suffix(hass):
 
 
 @asyncio.coroutine
-def _process(hass, text):
+def _process(hass, text, calling_client_id=None, hot_word_on=False):
     """Process a line of text."""
-    _LOGGER.info("Process text: " + text)
     global CURR_VIRTUAL_KEYBOARD_VALUE
     # clear text
     text = text.replace("&", "and")
@@ -3591,13 +3691,13 @@ def _process(hass, text):
                     # in case of youtube we need to ask cloud first
                     m = "Nie rozumiem " + text
                     ws_resp = aisCloudWS.ask(text, m)
-                    _LOGGER.debug("ws_resp: " + ws_resp.text)
                     m = ws_resp.text.split("---")[0]
                     if m != "Nie rozumiem " + text:
                         s = True
                         found_intent = "YT"
 
-        if found_intent is None:
+        # only if how word is disabled
+        if found_intent is None and hot_word_on is False:
             suffix = get_context_suffix(hass)
             if suffix is not None:
                 for intent_type, matchers in intents.items():
@@ -3625,7 +3725,8 @@ def _process(hass, text):
 
         # the was no match - try again but with player context
         # we should get media player source first
-        if found_intent is None:
+        # this is done only if the hot word is False
+        if calling_client_id is None and hot_word_on is False:
             if (
                 CURR_ENTITIE == "media_player.wbudowany_glosnik"
                 and CURR_ENTITIE_ENTERED
@@ -3645,7 +3746,6 @@ def _process(hass, text):
                             # in case of youtube we need to ask cloud first
                             m = "Nie rozumiem " + text
                             ws_resp = aisCloudWS.ask(text, m)
-                            _LOGGER.debug("ws_resp: " + ws_resp.text)
                             m = ws_resp.text.split("---")[0]
                             if not m.startswith("Nie rozumiem "):
                                 s = True
@@ -3682,19 +3782,18 @@ def _process(hass, text):
             # asking without the suffix
             if text != "":
                 ws_resp = aisCloudWS.ask(text, m)
-                _LOGGER.debug("ws_resp: " + ws_resp.text)
                 m = ws_resp.text.split("---")[0]
             else:
                 m = "Co proszę? Nic nie słyszę!"
 
     except Exception as e:
-        _LOGGER.warning("_process: " + str(e))
+        _LOGGER.info("_process: " + str(e))
         m = "Przepraszam, ale mam problem ze zrozumieniem: " + text
     # return response to the ais dom
     if m.startswith("DO_NOT_SAY"):
         m = m.replace("DO_NOT_SAY", "")
     else:
-        _say_it(hass, m)
+        _say_it(hass, m, exclude_say_it=calling_client_id)
     # return response to the hass conversation
     intent_resp = intent.IntentResponse()
     # intent_resp.async_set_card("Beer ordered", "You chose a XXX")
@@ -4055,7 +4154,6 @@ class ChangeContextIntent(intent.IntentHandler):
         if len(GROUP_ENTITIES) == 0:
             get_groups(hass)
         text = intent_obj.text_input.lower()
-        _LOGGER.debug("text: " + text)
         for idx, menu in enumerate(GROUP_ENTITIES, start=0):
             context_key_words = menu["context_key_words"]
             if context_key_words is not None:

@@ -9,8 +9,8 @@ from homeassistant.components.water_heater import (
     ATTR_OPERATION_MODE,
     DOMAIN,
     SERVICE_SET_AWAY_MODE,
-    SERVICE_SET_TEMPERATURE,
     SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, ENTITY_MATCH_ALL
 from homeassistant.loader import bind_hass
