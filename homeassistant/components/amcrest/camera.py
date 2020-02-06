@@ -93,7 +93,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
 
 class CannotSnapshot(Exception):
-    pass
+    """Conditions are not valid for taking a snapshot."""
 
 
 class AmcrestCam(Camera):
