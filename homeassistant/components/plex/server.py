@@ -132,6 +132,9 @@ class PlexServer:
                 _LOGGER.debug("New device: %s", device.machineIdentifier)
 
         for session in sessions:
+            if session.TYPE == "photo":
+                _LOGGER.debug("Photo session detected, skipping: %s", session)
+                continue
             for player in session.players:
                 self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
