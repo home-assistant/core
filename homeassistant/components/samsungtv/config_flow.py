@@ -113,7 +113,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "description": "HomeAssistant",
                 "id": "ha.component.samsung",
                 "host": self._host,
-                "method": "legacy" if port == 5500 else "websocket",
+                "method": "legacy" if port == 55000 else "websocket",
                 "port": port,
                 # We need this high timeout because waiting for auth popup is just an open socket
                 "timeout": 31,
