@@ -2,7 +2,7 @@
   "domain": "amcrest",
   "name": "Amcrest",
   "documentation": "https://www.home-assistant.io/integrations/amcrest",
-  "requirements": ["amcrest==1.5.3"],
+  "requirements": ["amcrest==1.5.6"],
   "dependencies": ["ffmpeg"],
   "codeowners": ["@pnbruckner"]
 }
