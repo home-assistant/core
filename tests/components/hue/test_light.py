@@ -703,7 +703,7 @@ def test_available():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        coordinator=Mock(failed_last_update=False),
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=False),
         is_group=False,
     )
@@ -717,7 +717,7 @@ def test_available():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        coordinator=Mock(failed_last_update=False),
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=True),
         is_group=False,
     )
@@ -731,7 +731,7 @@ def test_available():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        coordinator=Mock(failed_last_update=False),
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=False),
         is_group=True,
     )
@@ -748,7 +748,7 @@ def test_hs_color():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        coordinator=Mock(failed_last_update=False),
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
     )
@@ -762,7 +762,7 @@ def test_hs_color():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        coordinator=Mock(failed_last_update=False),
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
     )
@@ -776,7 +776,7 @@ def test_hs_color():
             colorgamuttype=LIGHT_GAMUT_TYPE,
             colorgamut=LIGHT_GAMUT,
         ),
-        coordinator=Mock(failed_last_update=False),
+        coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
     )

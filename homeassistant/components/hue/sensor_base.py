@@ -42,10 +42,12 @@ class SensorManager:
         self.coordinator = DataUpdateCoordinator(
             bridge.hass,
             _LOGGER,
-            "sensor",
-            self.async_update_data,
-            self.SCAN_INTERVAL,
-            debounce.Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
+            name="sensor",
+            update_method=self.async_update_data,
+            update_interval=self.SCAN_INTERVAL,
+            request_refresh_debouncer=debounce.Debouncer(
+                bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+            ),
         )
 
     async def async_update_data(self):
@@ -183,7 +185,7 @@ class GenericHueSensor(entity.Entity):
     @property
     def available(self):
         """Return if sensor is available."""
-        return not self.bridge.sensor_manager.coordinator.failed_last_update and (
+        return self.bridge.sensor_manager.coordinator.last_update_success and (
             self.bridge.allow_unreachable or self.sensor.config["reachable"]
         )
 
