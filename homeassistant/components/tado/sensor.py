@@ -6,7 +6,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
+from . import DATA, DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
 from .const import TYPE_AIR_CONDITIONING, TYPE_HEATING, TYPE_HOT_WATER
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,26 +40,29 @@ DEVICE_SENSORS = ["tado bridge status"]
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
-    tado = hass.data[DOMAIN]
+    api_list = hass.data[DOMAIN][DATA]
 
-    # Create zone sensors
     entities = []
-    for zone in tado.zones:
-        entities.extend(
-            [
-                create_zone_sensor(tado, zone["name"], zone["id"], variable)
-                for variable in ZONE_SENSORS.get(zone["type"])
-            ]
-        )
 
-    # Create device sensors
-    for home in tado.devices:
-        entities.extend(
-            [
-                create_device_sensor(tado, home["name"], home["id"], variable)
-                for variable in DEVICE_SENSORS
-            ]
-        )
+    for tado in api_list:
+        # Create zone sensors
+
+        for zone in tado.zones:
+            entities.extend(
+                [
+                    create_zone_sensor(tado, zone["name"], zone["id"], variable)
+                    for variable in ZONE_SENSORS.get(zone["type"])
+                ]
+            )
+
+        # Create device sensors
+        for home in tado.devices:
+            entities.extend(
+                [
+                    create_device_sensor(tado, home["name"], home["id"], variable)
+                    for variable in DEVICE_SENSORS
+                ]
+            )
 
     add_entities(entities, True)
 
@@ -86,7 +89,7 @@ class TadoSensor(Entity):
         self.zone_variable = zone_variable
         self.sensor_type = sensor_type
 
-        self._unique_id = f"{zone_variable} {zone_id}"
+        self._unique_id = f"{zone_variable} {zone_id} {tado.device_id}"
 
         self._state = None
         self._state_attributes = None

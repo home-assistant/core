@@ -25,7 +25,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import CONF_FALLBACK, DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
+from . import DATA, DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
 from .const import (
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
@@ -70,21 +70,22 @@ SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME]
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tado climate platform."""
-    tado = hass.data[DOMAIN]
-
+    #    if discovery_info is None:
+    #      return
+    api_list = hass.data[DOMAIN][DATA]
     entities = []
-    for zone in tado.zones:
-        entity = create_climate_entity(
-            tado, zone["name"], zone["id"], discovery_info[CONF_FALLBACK]
-        )
-        if entity:
-            entities.append(entity)
+
+    for tado in api_list:
+        for zone in tado.zones:
+            entity = create_climate_entity(tado, zone["name"], zone["id"])
+            if entity:
+                entities.append(entity)
 
     if entities:
         add_entities(entities, True)
 
 
-def create_climate_entity(tado, name: str, zone_id: int, fallback: bool):
+def create_climate_entity(tado, name: str, zone_id: int):
     """Create a Tado climate entity."""
     capabilities = tado.get_capabilities(zone_id)
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
@@ -112,15 +113,7 @@ def create_climate_entity(tado, name: str, zone_id: int, fallback: bool):
     step = temperatures["celsius"].get("step", PRECISION_TENTHS)
 
     entity = TadoClimate(
-        tado,
-        name,
-        zone_id,
-        zone_type,
-        min_temp,
-        max_temp,
-        step,
-        ac_support_heat,
-        fallback,
+        tado, name, zone_id, zone_type, min_temp, max_temp, step, ac_support_heat,
     )
     return entity
 
@@ -138,7 +131,6 @@ class TadoClimate(ClimateDevice):
         max_temp,
         step,
         ac_support_heat,
-        fallback,
     ):
         """Initialize of Tado climate entity."""
         self._tado = tado
@@ -162,7 +154,7 @@ class TadoClimate(ClimateDevice):
         self._step = step
         self._target_temp = None
 
-        if fallback:
+        if tado.fallback:
             _LOGGER.debug("Default overlay is set to TADO MODE")
             # Fallback to Smart Schedule at next Schedule switch
             self._default_overlay = CONST_OVERLAY_TADO_MODE
