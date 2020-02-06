@@ -104,8 +104,9 @@ class LovelaceStorage:
                 config["views"] = []
             # remove ais views from user config
             for idx, view in enumerate(config["views"]):
-                if view["path"] in ("ais_audio", "ais_zigbee"):
-                    config["views"].remove(view)
+                if "path" in view:
+                    if view["path"] in ("ais_audio", "ais_zigbee"):
+                        config["views"].remove(view)
             # add hidden ais views on the end of the config
             for aisview in ais_dom_config["views"]:
                 if "visible" in aisview:
