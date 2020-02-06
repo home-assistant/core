@@ -2,30 +2,30 @@
 import asyncio
 from contextlib import suppress
 import logging
+from typing import Optional
 
-from aiohttp import web, WSMsgType
+from aiohttp import WSMsgType, web
 import async_timeout
 
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
-from homeassistant.components.http import HomeAssistantView
 
+from .auth import AuthPhase, auth_required_message
 from .const import (
-    MAX_PENDING_MSG,
     CANCELLATION_ERRORS,
-    URL,
+    DATA_CONNECTIONS,
     ERR_UNKNOWN_ERROR,
+    JSON_DUMP,
+    MAX_PENDING_MSG,
     SIGNAL_WEBSOCKET_CONNECTED,
     SIGNAL_WEBSOCKET_DISCONNECTED,
-    DATA_CONNECTIONS,
-    JSON_DUMP,
+    URL,
 )
-from .auth import AuthPhase, auth_required_message
 from .error import Disconnect
 from .messages import error_message
 
-
-# mypy: allow-untyped-calls, allow-untyped-defs
+# mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 
 class WebsocketAPIView(HomeAssistantView):
@@ -47,7 +47,7 @@ class WebSocketHandler:
         """Initialize an active connection."""
         self.hass = hass
         self.request = request
-        self.wsock = None
+        self.wsock: Optional[web.WebSocketResponse] = None
         self._to_write: asyncio.Queue = asyncio.Queue(maxsize=MAX_PENDING_MSG)
         self._handle_task = None
         self._writer_task = None
@@ -115,7 +115,7 @@ class WebSocketHandler:
         # Py3.7+
         if hasattr(asyncio, "current_task"):
             # pylint: disable=no-member
-            self._handle_task = asyncio.current_task()  # type: ignore
+            self._handle_task = asyncio.current_task()
         else:
             self._handle_task = asyncio.Task.current_task()
 

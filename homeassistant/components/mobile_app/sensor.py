@@ -13,7 +13,6 @@ from .const import (
     DATA_DEVICES,
     DOMAIN,
 )
-
 from .entity import MobileAppEntity, sensor_id
 
 

@@ -3,24 +3,24 @@ import copy
 import unittest
 from unittest.mock import patch
 
+from homeassistant.components.reddit import sensor as reddit_sensor
 from homeassistant.components.reddit.sensor import (
-    DOMAIN,
-    ATTR_SUBREDDIT,
-    ATTR_POSTS,
-    CONF_SORT_BY,
-    ATTR_ID,
-    ATTR_URL,
-    ATTR_TITLE,
-    ATTR_SCORE,
+    ATTR_BODY,
     ATTR_COMMENTS_NUMBER,
     ATTR_CREATED,
-    ATTR_BODY,
+    ATTR_ID,
+    ATTR_POSTS,
+    ATTR_SCORE,
+    ATTR_SUBREDDIT,
+    ATTR_TITLE,
+    ATTR_URL,
+    CONF_SORT_BY,
+    DOMAIN,
 )
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_MAXIMUM
+from homeassistant.const import CONF_MAXIMUM, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, MockDependency
-
+from tests.common import MockDependency, get_test_home_assistant
 
 VALID_CONFIG = {
     "sensor": {
@@ -98,7 +98,7 @@ MOCK_RESULTS_LENGTH = len(MOCK_RESULTS["results"])
 
 
 class MockPraw:
-    """Mock class for tmdbsimple library."""
+    """Mock class for Reddit library."""
 
     def __init__(
         self,
@@ -112,7 +112,7 @@ class MockPraw:
         self._data = MOCK_RESULTS
 
     def subreddit(self, subreddit: str):
-        """Return an instance of a sunbreddit."""
+        """Return an instance of a subreddit."""
         return MockSubreddit(subreddit, self._data)
 
 
@@ -160,8 +160,9 @@ class TestRedditSetup(unittest.TestCase):
     @MockDependency("praw")
     @patch("praw.Reddit", new=MockPraw)
     def test_setup_with_valid_config(self, mock_praw):
-        """Test the platform setup with movie configuration."""
-        setup_component(self.hass, "sensor", VALID_CONFIG)
+        """Test the platform setup with Reddit configuration."""
+        with patch.object(reddit_sensor, "praw", mock_praw):
+            setup_component(self.hass, "sensor", VALID_CONFIG)
 
         state = self.hass.states.get("sensor.reddit_worldnews")
         assert int(state.state) == MOCK_RESULTS_LENGTH
@@ -186,6 +187,6 @@ class TestRedditSetup(unittest.TestCase):
     @MockDependency("praw")
     @patch("praw.Reddit", new=MockPraw)
     def test_setup_with_invalid_config(self, mock_praw):
-        """Test the platform setup with invalid movie configuration."""
+        """Test the platform setup with invalid Reddit configuration."""
         setup_component(self.hass, "sensor", INVALID_SORT_BY_CONFIG)
         assert not self.hass.states.get("sensor.reddit_worldnews")

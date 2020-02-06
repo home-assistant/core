@@ -1,5 +1,5 @@
 """The tests the for Locative device tracker platform."""
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 import pytest
 

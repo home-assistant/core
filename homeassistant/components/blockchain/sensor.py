@@ -1,12 +1,13 @@
 """Support for Blockchain.info sensors."""
-import logging
 from datetime import timedelta
+import logging
 
+from pyblockchain import get_balance, validate_address
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Blockchain.info sensors."""
-    from pyblockchain import validate_address
 
     addresses = config.get(CONF_ADDRESSES)
     name = config.get(CONF_NAME)
@@ -81,6 +81,5 @@ class BlockchainSensor(Entity):
 
     def update(self):
         """Get the latest state of the sensor."""
-        from pyblockchain import get_balance
 
         self._state = get_balance(self.addresses)

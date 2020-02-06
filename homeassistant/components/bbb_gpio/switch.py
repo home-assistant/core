@@ -3,11 +3,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.components import bbb_gpio
-from homeassistant.const import DEVICE_DEFAULT_NAME, CONF_NAME
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -189,3 +189,11 @@ class TfiacClimate(ClimateDevice):
     async def async_set_swing_mode(self, swing_mode):
         """Set new swing mode."""
         await self._client.set_swing(swing_mode.capitalize())
+
+    async def async_turn_on(self):
+        """Turn device on."""
+        await self._client.set_state(OPERATION_MODE)
+
+    async def async_turn_off(self):
+        """Turn device off."""
+        await self._client.set_state(ON_MODE, "off")

@@ -1,7 +1,7 @@
 """Utilities to help with aiohttp."""
 import json
-from urllib.parse import parse_qsl
 from typing import Any, Dict, Optional
+from urllib.parse import parse_qsl
 
 from multidict import CIMultiDict, MultiDict
 

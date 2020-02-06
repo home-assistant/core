@@ -1,12 +1,13 @@
 """Support for LIRC devices."""
 # pylint: disable=no-member, import-error
+import logging
 import threading
 import time
-import logging
 
+import lirc
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,8 +24,6 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 def setup(hass, config):
     """Set up the LIRC capability."""
-    import lirc
-
     # blocking=True gives unexpected behavior (multiple responses for 1 press)
     # also by not blocking, we allow hass to shut down the thread gracefully
     # on exit.
@@ -61,8 +60,6 @@ class LircInterface(threading.Thread):
 
     def run(self):
         """Run the loop of the LIRC interface thread."""
-        import lirc
-
         _LOGGER.debug("LIRC interface thread started")
         while not self.stopped.isSet():
             try:

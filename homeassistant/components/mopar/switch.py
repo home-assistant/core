@@ -3,7 +3,7 @@ import logging
 
 from homeassistant.components.mopar import DOMAIN as MOPAR_DOMAIN
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_OFF, STATE_ON
 
 _LOGGER = logging.getLogger(__name__)
 

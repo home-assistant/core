@@ -1,15 +1,15 @@
 """Test Z-Wave cover devices."""
 from unittest.mock import MagicMock
 
-from homeassistant.components.cover import SUPPORT_OPEN, SUPPORT_CLOSE
+from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN
 from homeassistant.components.zwave import (
-    const,
-    cover,
     CONF_INVERT_OPENCLOSE_BUTTONS,
     CONF_INVERT_PERCENT,
+    const,
+    cover,
 )
 
-from tests.mock.zwave import MockNode, MockValue, MockEntityValues, value_changed
+from tests.mock.zwave import MockEntityValues, MockNode, MockValue, value_changed
 
 
 def test_get_device_detects_none(hass, mock_openzwave):
@@ -130,17 +130,17 @@ def test_roller_commands(hass, mock_openzwave):
 
     device.open_cover()
     assert mock_network.manager.pressButton.called
-    value_id, = mock_network.manager.pressButton.mock_calls.pop(0)[1]
+    (value_id,) = mock_network.manager.pressButton.mock_calls.pop(0)[1]
     assert value_id == open_value.value_id
 
     device.close_cover()
     assert mock_network.manager.pressButton.called
-    value_id, = mock_network.manager.pressButton.mock_calls.pop(0)[1]
+    (value_id,) = mock_network.manager.pressButton.mock_calls.pop(0)[1]
     assert value_id == close_value.value_id
 
     device.stop_cover()
     assert mock_network.manager.releaseButton.called
-    value_id, = mock_network.manager.releaseButton.mock_calls.pop(0)[1]
+    (value_id,) = mock_network.manager.releaseButton.mock_calls.pop(0)[1]
     assert value_id == open_value.value_id
 
 
@@ -168,7 +168,7 @@ def test_roller_invert_percent(hass, mock_openzwave):
 
     device.open_cover()
     assert mock_network.manager.pressButton.called
-    value_id, = mock_network.manager.pressButton.mock_calls.pop(0)[1]
+    (value_id,) = mock_network.manager.pressButton.mock_calls.pop(0)[1]
     assert value_id == open_value.value_id
 
 
@@ -193,17 +193,17 @@ def test_roller_reverse_open_close(hass, mock_openzwave):
 
     device.open_cover()
     assert mock_network.manager.pressButton.called
-    value_id, = mock_network.manager.pressButton.mock_calls.pop(0)[1]
+    (value_id,) = mock_network.manager.pressButton.mock_calls.pop(0)[1]
     assert value_id == close_value.value_id
 
     device.close_cover()
     assert mock_network.manager.pressButton.called
-    value_id, = mock_network.manager.pressButton.mock_calls.pop(0)[1]
+    (value_id,) = mock_network.manager.pressButton.mock_calls.pop(0)[1]
     assert value_id == open_value.value_id
 
     device.stop_cover()
     assert mock_network.manager.releaseButton.called
-    value_id, = mock_network.manager.releaseButton.mock_calls.pop(0)[1]
+    (value_id,) = mock_network.manager.releaseButton.mock_calls.pop(0)[1]
     assert value_id == close_value.value_id
 
 

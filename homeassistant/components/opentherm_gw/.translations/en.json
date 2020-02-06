@@ -23,11 +23,11 @@
     "options": {
         "step": {
             "init": {
-                "description": "Options for the OpenTherm Gateway",
                 "data": {
-                      "floor_temperature": "Floor Temperature",
-                      "precision": "Precision"
-                }
+                    "floor_temperature": "Floor Temperature",
+                    "precision": "Precision"
+                },
+                "description": "Options for the OpenTherm Gateway"
             }
         }
     }

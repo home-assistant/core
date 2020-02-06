@@ -5,14 +5,13 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_RESOURCE, CONF_VERIFY_SSL
-import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.notify import (
     ATTR_DATA,
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_RESOURCE, CONF_VERIFY_SSL
+import homeassistant.helpers.config_validation as cv
 
 ATTR_FILE_URL = "file_url"
 

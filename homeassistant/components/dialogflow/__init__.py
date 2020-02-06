@@ -1,15 +1,14 @@
 """Support for Dialogflow webhook."""
 import logging
 
-import voluptuous as vol
 from aiohttp import web
+import voluptuous as vol
 
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent, template, config_entry_flow
+from homeassistant.helpers import config_entry_flow, intent, template
 
 from .const import DOMAIN
-
 
 _LOGGER = logging.getLogger(__name__)
 

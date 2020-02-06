@@ -1,23 +1,12 @@
 """Support for performing TensorFlow classification on images."""
+import io
 import logging
 import os
 import sys
-import io
-import voluptuous as vol
+
 from PIL import Image, ImageDraw
 import numpy as np
-
-try:
-    import cv2
-except ImportError:
-    cv2 = None
-
-try:
-    # Verify that the TensorFlow Object Detection API is pre-installed
-    import tensorflow as tf  # noqa
-    from object_detection.utils import label_map_util  # noqa
-except ImportError:
-    label_map_util = None
+import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
@@ -26,11 +15,11 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
-    draw_box,
 )
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,16 +87,25 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # append custom model path to sys.path
     sys.path.append(model_dir)
 
-    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
-    if label_map_util is None:
+    try:
+        # Verify that the TensorFlow Object Detection API is pre-installed
+        os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
+        # These imports shouldn't be moved to the top, because they depend on code from the model_dir.
+        # (The model_dir is created during the manual setup process. See integration docs.)
+        import tensorflow as tf
+        from object_detection.utils import label_map_util
+    except ImportError:
         _LOGGER.error(
             "No TensorFlow Object Detection library found! Install or compile "
             "for your system following instructions here: "
             "https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md"
-        )  # noqa
+        )
         return
 
-    if cv2 is None:
+    try:
+        # Display warning that PIL will be used if no OpenCV is found.
+        import cv2  # noqa: F401 pylint: disable=unused-import
+    except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "
             "PIL at reduced resolution"
@@ -282,7 +280,13 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
     def process_image(self, image):
         """Process the image."""
 
-        if cv2 is None:
+        try:
+            import cv2  # pylint: disable=import-error
+
+            img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
+            inp = img[:, :, [2, 1, 0]]  # BGR->RGB
+            inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
+        except ImportError:
             img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
             img.thumbnail((460, 460), Image.ANTIALIAS)
             img_width, img_height = img.size
@@ -292,10 +296,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
                 .astype(np.uint8)
             )
             inp_expanded = np.expand_dims(inp, axis=0)
-        else:
-            img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
-            inp = img[:, :, [2, 1, 0]]  # BGR->RGB
-            inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
 
         image_tensor = self._graph.get_tensor_by_name("image_tensor:0")
         boxes = self._graph.get_tensor_by_name("detection_boxes:0")

@@ -1,6 +1,6 @@
 """The tests for the IPMA weather component."""
-from unittest.mock import patch
 from collections import namedtuple
+from unittest.mock import patch
 
 from homeassistant.components import weather
 from homeassistant.components.weather import (
@@ -11,80 +11,106 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     DOMAIN as WEATHER_DOMAIN,
 )
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, mock_coro
-from homeassistant.setup import async_setup_component
 
 TEST_CONFIG = {"name": "HomeTown", "latitude": "40.00", "longitude": "-8.00"}
 
 
-class MockStation:
-    """Mock Station from pyipma."""
+class MockLocation:
+    """Mock Location from pyipma."""
 
-    async def observation(self):
+    async def observation(self, api):
         """Mock Observation."""
         Observation = namedtuple(
             "Observation",
             [
-                "temperature",
+                "accumulated_precipitation",
                 "humidity",
-                "windspeed",
-                "winddirection",
-                "precipitation",
                 "pressure",
-                "description",
+                "radiation",
+                "temperature",
+                "wind_direction",
+                "wind_intensity_km",
             ],
         )
 
-        return Observation(18, 71.0, 3.94, "NW", 0, 1000.0, "---")
+        return Observation(0.0, 71.0, 1000.0, 0.0, 18.0, "NW", 3.94)
 
-    async def forecast(self):
+    async def forecast(self, api):
         """Mock Forecast."""
         Forecast = namedtuple(
             "Forecast",
             [
-                "precipitaProb",
-                "tMin",
-                "tMax",
-                "predWindDir",
-                "idWeatherType",
-                "classWindSpeed",
-                "longitude",
-                "forecastDate",
-                "classPrecInt",
-                "latitude",
-                "description",
+                "feels_like_temperature",
+                "forecast_date",
+                "forecasted_hours",
+                "humidity",
+                "max_temperature",
+                "min_temperature",
+                "precipitation_probability",
+                "temperature",
+                "update_date",
+                "weather_type",
+                "wind_direction",
+                "wind_strength",
             ],
         )
 
         return [
             Forecast(
-                73.0,
-                13.7,
-                18.7,
-                "NW",
-                6,
-                2,
-                -8.64,
-                "2018-05-31",
-                2,
-                40.61,
-                "Aguaceiros, com vento Moderado de Noroeste",
-            )
+                None,
+                "2020-01-15T00:00:00",
+                24,
+                None,
+                16.2,
+                10.6,
+                "100.0",
+                13.4,
+                "2020-01-15T07:51:00",
+                9,
+                "S",
+                None,
+            ),
+            Forecast(
+                "7.7",
+                "2020-01-15T02:00:00",
+                1,
+                "86.9",
+                None,
+                None,
+                "-99.0",
+                10.6,
+                "2020-01-15T07:51:00",
+                10,
+                "S",
+                "32.7",
+            ),
         ]
 
     @property
-    def local(self):
+    def name(self):
         """Mock location."""
         return "HomeTown"
 
     @property
-    def latitude(self):
+    def station_latitude(self):
         """Mock latitude."""
         return 0
 
     @property
-    def longitude(self):
+    def global_id_local(self):
+        """Mock global identifier of the location."""
+        return 1130600
+
+    @property
+    def id_station(self):
+        """Mock identifier of the station."""
+        return 1200545
+
+    @property
+    def station_longitude(self):
         """Mock longitude."""
         return 0
 
@@ -92,8 +118,8 @@ class MockStation:
 async def test_setup_configuration(hass):
     """Test for successfully setting up the IPMA platform."""
     with patch(
-        "homeassistant.components.ipma.weather.async_get_station",
-        return_value=mock_coro(MockStation()),
+        "homeassistant.components.ipma.weather.async_get_location",
+        return_value=mock_coro(MockLocation()),
     ):
         assert await async_setup_component(
             hass, weather.DOMAIN, {"weather": {"name": "HomeTown", "platform": "ipma"}}
@@ -115,8 +141,8 @@ async def test_setup_configuration(hass):
 async def test_setup_config_flow(hass):
     """Test for successfully setting up the IPMA platform."""
     with patch(
-        "homeassistant.components.ipma.weather.async_get_station",
-        return_value=mock_coro(MockStation()),
+        "homeassistant.components.ipma.weather.async_get_location",
+        return_value=mock_coro(MockLocation()),
     ):
         entry = MockConfigEntry(domain="ipma", data=TEST_CONFIG)
         await hass.config_entries.async_forward_entry_setup(entry, WEATHER_DOMAIN)

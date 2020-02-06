@@ -4,15 +4,14 @@ import unittest
 from unittest.mock import patch
 
 import forecastio
+from requests.exceptions import ConnectionError
 import requests_mock
 
-from requests.exceptions import ConnectionError
-
 from homeassistant.components import weather
-from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.setup import setup_component
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from tests.common import load_fixture, get_test_home_assistant
+from tests.common import get_test_home_assistant, load_fixture
 
 
 class TestDarkSky(unittest.TestCase):

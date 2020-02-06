@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from logging import getLogger
 from typing import Dict, Optional
 
+from aioswitcher.api import SwitcherV2Api
+from aioswitcher.bridge import SwitcherV2Bridge
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import POLICY_EDIT
@@ -88,7 +90,6 @@ async def _validate_edit_permission(
 
 async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     """Set up the switcher component."""
-    from aioswitcher.bridge import SwitcherV2Bridge
 
     phone_id = config[DOMAIN][CONF_PHONE_ID]
     device_id = config[DOMAIN][CONF_DEVICE_ID]
@@ -99,7 +100,7 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
     await v2bridge.start()
 
     async def async_stop_bridge(event: EventType) -> None:
-        """On homeassistant stop, gracefully stop the bridge if running."""
+        """On Home Assistant stop, gracefully stop the bridge if running."""
         await v2bridge.stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_bridge)
@@ -122,7 +123,6 @@ async def async_setup(hass: HomeAssistantType, config: Dict) -> bool:
 
         async def async_set_auto_off_service(service: ServiceCallType) -> None:
             """Use for handling setting device auto-off service calls."""
-            from aioswitcher.api import SwitcherV2Api
 
             await _validate_edit_permission(
                 hass, service.context, service.data[CONF_ENTITY_ID]

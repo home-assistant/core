@@ -9,8 +9,8 @@ from homeassistant.components.iqvia import (
     DOMAIN,
     SENSORS,
     TYPE_ALLERGY_FORECAST,
-    TYPE_ALLERGY_OUTLOOK,
     TYPE_ALLERGY_INDEX,
+    TYPE_ALLERGY_OUTLOOK,
     TYPE_ALLERGY_TODAY,
     TYPE_ALLERGY_TOMORROW,
     TYPE_ASTHMA_FORECAST,
@@ -48,11 +48,6 @@ RATING_MAPPING = [
 TREND_FLAT = "Flat"
 TREND_INCREASING = "Increasing"
 TREND_SUBSIDING = "Subsiding"
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up IQVIA sensors based on the old way."""
-    pass
 
 
 async def async_setup_entry(hass, entry, async_add_entities):

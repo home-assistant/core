@@ -16,7 +16,7 @@
                 "data": {
                     "api_key": "API Key"
                 },
-                "description": "Bitte geben Sie den von ecobee.com erhaltenen API-Schl\u00fcssel ein.",
+                "description": "Bitte gib den von ecobee.com erhaltenen API-Schl\u00fcssel ein.",
                 "title": "ecobee API-Schl\u00fcssel"
             }
         },

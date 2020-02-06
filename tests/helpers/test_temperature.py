@@ -2,11 +2,11 @@
 import pytest
 
 from homeassistant.const import (
-    TEMP_CELSIUS,
-    PRECISION_WHOLE,
-    TEMP_FAHRENHEIT,
     PRECISION_HALVES,
     PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.helpers.temperature import display_temp
 
@@ -19,7 +19,7 @@ def test_temperature_not_a_number(hass):
     with pytest.raises(Exception) as exception:
         display_temp(hass, temp, TEMP_CELSIUS, PRECISION_HALVES)
 
-    assert "Temperature is not a number: {}".format(temp) in str(exception.value)
+    assert f"Temperature is not a number: {temp}" in str(exception.value)
 
 
 def test_celsius_halves(hass):

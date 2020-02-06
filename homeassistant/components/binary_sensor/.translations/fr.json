@@ -9,7 +9,7 @@
             "is_light": "{entity_name} d\u00e9tecte de la lumi\u00e8re",
             "is_locked": "{entity_name} est verrouill\u00e9",
             "is_moist": "{entity_name} est humide",
-            "is_motion": "{entity_name} d\u00e9tecte un mouvement",
+            "is_motion": "{entity_name} d\u00e9tecte du mouvement",
             "is_moving": "{entity_name} se d\u00e9place",
             "is_no_gas": "{entity_name} ne d\u00e9tecte pas de gaz",
             "is_no_light": "{entity_name} ne d\u00e9tecte pas de lumi\u00e8re",
@@ -85,8 +85,8 @@
             "problem": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter un probl\u00e8me",
             "smoke": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter la fum\u00e9e",
             "sound": "{entity_name} commenc\u00e9 \u00e0 d\u00e9tecter le son",
-            "turned_off": "{entity_name} d\u00e9sactiv\u00e9",
-            "turned_on": "{entity_name} activ\u00e9",
+            "turned_off": "{entity_name} est d\u00e9sactiv\u00e9",
+            "turned_on": "{entity_name} est activ\u00e9",
             "unsafe": "{entity_name} est devenu dangereux",
             "vibration": "{entity_name} a commenc\u00e9 \u00e0 d\u00e9tecter les vibrations"
         }

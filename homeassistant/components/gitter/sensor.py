@@ -1,6 +1,8 @@
 """Support for displaying details about a Gitter.im chat room."""
 import logging
 
+from gitterpy.client import GitterClient
+from gitterpy.errors import GitterRoomError, GitterTokenError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -30,8 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gitter sensor."""
-    from gitterpy.client import GitterClient
-    from gitterpy.errors import GitterTokenError
 
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
@@ -91,7 +91,6 @@ class GitterSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        from gitterpy.errors import GitterRoomError
 
         try:
             data = self._data.user.unread_items(self._room)

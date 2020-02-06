@@ -1,0 +1,16 @@
+onvif_ptz:
+  description: If your ONVIF camera supports PTZ, you will be able to pan, tilt or zoom your camera.
+  fields:
+    entity_id:
+      description: 'String or list of strings that point at entity_ids of cameras. Else targets all.'
+      example: 'camera.backyard'
+    tilt:
+      description: 'Tilt direction. Allowed values: UP, DOWN, NONE'
+      example: 'UP'
+    pan:
+      description: 'Pan direction. Allowed values: RIGHT, LEFT, NONE'
+      example: 'RIGHT'
+    zoom:
+      description: 'Zoom. Allowed values: ZOOM_IN, ZOOM_OUT, NONE'
+      example: 'NONE'
+

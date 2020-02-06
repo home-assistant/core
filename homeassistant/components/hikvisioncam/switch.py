@@ -1,19 +1,20 @@
 """Support turning on/off motion detection on Hikvision cameras."""
 import logging
 
+import hikvision.api
+from hikvision.error import HikvisionError, MissingParamError
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
-    CONF_NAME,
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
-    CONF_USERNAME,
     CONF_PORT,
+    CONF_USERNAME,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
 # This is the last working version, please test before updating
@@ -38,9 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hikvision camera."""
-    import hikvision.api
-    from hikvision.error import HikvisionError, MissingParamError
-
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
@@ -61,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([HikvisionMotionSwitch(name, hikvision_cam)])
 
 
-class HikvisionMotionSwitch(ToggleEntity):
+class HikvisionMotionSwitch(SwitchDevice):
     """Representation of a switch to toggle on/off motion detection."""
 
     def __init__(self, name, hikvision_cam):

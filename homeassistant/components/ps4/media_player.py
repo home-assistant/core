@@ -1,19 +1,18 @@
 """Support for PlayStation 4 consoles."""
-import logging
 import asyncio
+import logging
 
+from pyps4_2ndscreen.errors import NotReady, PSDataIncomplete
 import pyps4_2ndscreen.ps4 as pyps4
-from pyps4_2ndscreen.errors import NotReady
 
-from homeassistant.core import callback
 from homeassistant.components.media_player import ENTITY_IMAGE_URL, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_TITLE,
-    MEDIA_TYPE_GAME,
     MEDIA_TYPE_APP,
-    SUPPORT_SELECT_SOURCE,
+    MEDIA_TYPE_GAME,
     SUPPORT_PAUSE,
+    SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -26,9 +25,10 @@ from homeassistant.const import (
     CONF_REGION,
     CONF_TOKEN,
     STATE_IDLE,
-    STATE_OFF,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry, entity_registry
 
 from .const import (
@@ -67,11 +67,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         ps4 = pyps4.Ps4Async(host, creds, device_name=DEFAULT_ALIAS)
         device_list.append(PS4Device(config, name, host, region, ps4, creds))
     async_add_entities(device_list, update_before_add=True)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Not Implemented."""
-    pass
 
 
 class PS4Device(MediaPlayerDevice):
@@ -201,8 +196,8 @@ class PS4Device(MediaPlayerDevice):
                     if self._state != STATE_IDLE:
                         self.idle()
             else:
-                if self._state != STATE_OFF:
-                    self.state_off()
+                if self._state != STATE_STANDBY:
+                    self.state_standby()
 
         elif self._retry > DEFAULT_RETRIES:
             self.state_unknown()
@@ -230,10 +225,10 @@ class PS4Device(MediaPlayerDevice):
         self._state = STATE_IDLE
         self.schedule_update()
 
-    def state_off(self):
-        """Set states for state off."""
+    def state_standby(self):
+        """Set states for state standby."""
         self.reset_title()
-        self._state = STATE_OFF
+        self._state = STATE_STANDBY
         self.schedule_update()
 
     def state_unknown(self):
@@ -254,7 +249,6 @@ class PS4Device(MediaPlayerDevice):
 
     async def async_get_title_data(self, title_id, name):
         """Get PS Store Data."""
-        from pyps4_2ndscreen.errors import PSDataIncomplete
 
         app_name = None
         art = None
@@ -377,7 +371,7 @@ class PS4Device(MediaPlayerDevice):
             self._unique_id = format_unique_id(self._creds, status["host-id"])
 
     async def async_will_remove_from_hass(self):
-        """Remove Entity from Hass."""
+        """Remove Entity from Home Assistant."""
         # Close TCP Transport.
         if self._ps4.connected:
             await self._ps4.close()

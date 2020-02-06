@@ -1,14 +1,14 @@
 """Support for departure information for Rhein-Main public transport."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 from RMVtransport import RMVtransport
 from RMVtransport.rmvtransport import RMVtransportApiConnectionError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -233,7 +233,7 @@ class RMVDepartureData:
             )
         except RMVtransportApiConnectionError:
             self.departures = []
-            _LOGGER.warning("Could not retrive data from rmv.de")
+            _LOGGER.warning("Could not retrieve data from rmv.de")
             return
         self.station = _data.get("station")
         _deps = []

@@ -1,8 +1,8 @@
 """The tests for the weblink component."""
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.components import weblink
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 

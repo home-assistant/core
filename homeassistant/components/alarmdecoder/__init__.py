@@ -1,14 +1,17 @@
 """Support for AlarmDecoder devices."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
+from alarmdecoder import AlarmDecoder
+from alarmdecoder.devices import SerialDevice, SocketDevice, USBDevice
+from alarmdecoder.util import NoDeviceError
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_HOST
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.util import dt as dt_util
-from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +24,7 @@ CONF_DEVICE_BAUD = "baudrate"
 CONF_DEVICE_PATH = "path"
 CONF_DEVICE_PORT = "port"
 CONF_DEVICE_TYPE = "type"
+CONF_AUTO_BYPASS = "autobypass"
 CONF_PANEL_DISPLAY = "panel_display"
 CONF_ZONE_NAME = "name"
 CONF_ZONE_TYPE = "type"
@@ -36,6 +40,7 @@ DEFAULT_DEVICE_PORT = 10000
 DEFAULT_DEVICE_PATH = "/dev/ttyUSB0"
 DEFAULT_DEVICE_BAUD = 115200
 
+DEFAULT_AUTO_BYPASS = False
 DEFAULT_PANEL_DISPLAY = False
 
 DEFAULT_ZONE_TYPE = "opening"
@@ -99,6 +104,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(
                     CONF_PANEL_DISPLAY, default=DEFAULT_PANEL_DISPLAY
                 ): cv.boolean,
+                vol.Optional(CONF_AUTO_BYPASS, default=DEFAULT_AUTO_BYPASS): cv.boolean,
                 vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
             }
         )
@@ -109,17 +115,15 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up for the AlarmDecoder devices."""
-    from alarmdecoder import AlarmDecoder
-    from alarmdecoder.devices import SocketDevice, SerialDevice, USBDevice
-
     conf = config.get(DOMAIN)
 
     restart = False
-    device = conf.get(CONF_DEVICE)
-    display = conf.get(CONF_PANEL_DISPLAY)
+    device = conf[CONF_DEVICE]
+    display = conf[CONF_PANEL_DISPLAY]
+    auto_bypass = conf[CONF_AUTO_BYPASS]
     zones = conf.get(CONF_ZONES)
 
-    device_type = device.get(CONF_DEVICE_TYPE)
+    device_type = device[CONF_DEVICE_TYPE]
     host = DEFAULT_DEVICE_HOST
     port = DEFAULT_DEVICE_PORT
     path = DEFAULT_DEVICE_PATH
@@ -134,8 +138,6 @@ def setup(hass, config):
 
     def open_connection(now=None):
         """Open a connection to AlarmDecoder."""
-        from alarmdecoder.util import NoDeviceError
-
         nonlocal restart
         try:
             controller.open(baud)
@@ -203,7 +205,9 @@ def setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
 
-    load_platform(hass, "alarm_control_panel", DOMAIN, conf, config)
+    load_platform(
+        hass, "alarm_control_panel", DOMAIN, {CONF_AUTO_BYPASS: auto_bypass}, config
+    )
 
     if zones:
         load_platform(hass, "binary_sensor", DOMAIN, {CONF_ZONES: zones}, config)

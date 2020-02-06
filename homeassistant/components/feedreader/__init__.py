@@ -2,15 +2,15 @@
 from datetime import datetime, timedelta
 from logging import getLogger
 from os.path import exists
-from threading import Lock
 import pickle
+from threading import Lock
 
-import voluptuous as vol
 import feedparser
+import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START, CONF_SCAN_INTERVAL
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = getLogger(__name__)
 
@@ -131,7 +131,7 @@ class FeedManager:
         """Filter the entries provided and return the ones to keep."""
         if len(self._feed.entries) > self._max_entries:
             _LOGGER.debug(
-                "Processing only the first %s entries " "in feed %s",
+                "Processing only the first %s entries in feed %s",
                 self._max_entries,
                 self._url,
             )
@@ -139,9 +139,10 @@ class FeedManager:
 
     def _update_and_fire_entry(self, entry):
         """Update last_entry_timestamp and fire entry."""
-        # We are lucky, `published_parsed` data available, let's make use of
-        # it to publish only new available entries since the last run
-        if "published_parsed" in entry.keys():
+        # Check if the entry has a published date.
+        if "published_parsed" in entry.keys() and entry.published_parsed:
+            # We are lucky, `published_parsed` data available, let's make use of
+            # it to publish only new available entries since the last run
             self._has_published_parsed = True
             self._last_entry_timestamp = max(
                 entry.published_parsed, self._last_entry_timestamp

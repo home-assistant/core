@@ -3,7 +3,19 @@ import asyncio
 from concurrent import futures
 from functools import partial
 import json
+from typing import TYPE_CHECKING, Callable
+
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import JSONEncoder
+
+if TYPE_CHECKING:
+    from .connection import ActiveConnection  # noqa
+
+
+WebSocketCommandHandler = Callable[
+    [HomeAssistant, "ActiveConnection", dict], None
+]  # pylint: disable=invalid-name
+
 
 DOMAIN = "websocket_api"
 URL = "/api/websocket"

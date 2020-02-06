@@ -67,7 +67,7 @@ class TestNuHeat(unittest.TestCase):
         thermostat = mocked_thermostat(self.api, "12345", "F")
         thermostats = [thermostat]
 
-        self.hass.data[nuheat.NUHEAT_DOMAIN] = (self.api, ["12345"])
+        self.hass.data[nuheat.DOMAIN] = (self.api, ["12345"])
 
         config = {}
         add_entities = Mock()
@@ -85,12 +85,12 @@ class TestNuHeat(unittest.TestCase):
         thermostat.schedule_update_ha_state = Mock()
         thermostat.entity_id = "climate.master_bathroom"
 
-        self.hass.data[nuheat.NUHEAT_DOMAIN] = (self.api, ["12345"])
+        self.hass.data[nuheat.DOMAIN] = (self.api, ["12345"])
         nuheat.setup_platform(self.hass, {}, Mock(), {})
 
         # Explicit entity
         self.hass.services.call(
-            nuheat.NUHEAT_DOMAIN,
+            nuheat.DOMAIN,
             nuheat.SERVICE_RESUME_PROGRAM,
             {"entity_id": "climate.master_bathroom"},
             True,
@@ -103,9 +103,7 @@ class TestNuHeat(unittest.TestCase):
         thermostat.schedule_update_ha_state.reset_mock()
 
         # All entities
-        self.hass.services.call(
-            nuheat.NUHEAT_DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True
-        )
+        self.hass.services.call(nuheat.DOMAIN, nuheat.SERVICE_RESUME_PROGRAM, {}, True)
 
         thermostat.resume_program.assert_called_with()
         thermostat.schedule_update_ha_state.assert_called_with(True)

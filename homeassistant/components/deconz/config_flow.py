@@ -1,13 +1,20 @@
 """Config flow to configure deCONZ component."""
 import asyncio
+from pprint import pformat
+from urllib.parse import urlparse
 
 import async_timeout
+from pydeconz.errors import RequestError, ResponseError
+from pydeconz.utils import (
+    async_discovery,
+    async_get_api_key,
+    async_get_bridge_id,
+    normalize_bridge_id,
+)
 import voluptuous as vol
 
-from pydeconz.errors import ResponseError, RequestError
-from pydeconz.utils import async_discovery, async_get_api_key, async_get_gateway_config
-
 from homeassistant import config_entries
+from homeassistant.components import ssdp
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
@@ -15,26 +22,16 @@ from homeassistant.helpers import aiohttp_client
 from .const import (
     CONF_ALLOW_CLIP_SENSOR,
     CONF_ALLOW_DECONZ_GROUPS,
-    CONF_BRIDGEID,
-    CONF_UUID,
+    CONF_BRIDGE_ID,
     DEFAULT_ALLOW_CLIP_SENSOR,
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_PORT,
     DOMAIN,
+    LOGGER,
 )
 
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"
-ATTR_UUID = "udn"
-
-
-@callback
-def configured_gateways(hass):
-    """Return a set of all configured gateways."""
-    return {
-        entry.data[CONF_BRIDGEID]: entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    }
 
 
 @callback
@@ -61,6 +58,7 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self):
         """Initialize the deCONZ config flow."""
+        self.bridge_id = None
         self.bridges = []
         self.deconz_config = {}
 
@@ -78,7 +76,11 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             for bridge in self.bridges:
                 if bridge[CONF_HOST] == user_input[CONF_HOST]:
-                    self.deconz_config = bridge
+                    self.bridge_id = bridge[CONF_BRIDGE_ID]
+                    self.deconz_config = {
+                        CONF_HOST: bridge[CONF_HOST],
+                        CONF_PORT: bridge[CONF_PORT],
+                    }
                     return await self.async_step_link()
 
             self.deconz_config = user_input
@@ -93,9 +95,10 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except (asyncio.TimeoutError, ResponseError):
             self.bridges = []
 
+        LOGGER.debug("Discovered deCONZ gateways %s", pformat(self.bridges))
+
         if len(self.bridges) == 1:
-            self.deconz_config = self.bridges[0]
-            return await self.async_step_link()
+            return await self.async_step_user(self.bridges[0])
 
         if len(self.bridges) > 1:
             hosts = []
@@ -122,6 +125,10 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Attempt to link with the deCONZ bridge."""
         errors = {}
 
+        LOGGER.debug(
+            "Preparing linking with deCONZ gateway %s", pformat(self.deconz_config)
+        )
+
         if user_input is not None:
             session = aiohttp_client.async_get_clientsession(self.hass)
 
@@ -140,60 +147,56 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _create_entry(self):
         """Create entry for gateway."""
-        if CONF_BRIDGEID not in self.deconz_config:
+        if not self.bridge_id:
             session = aiohttp_client.async_get_clientsession(self.hass)
 
             try:
                 with async_timeout.timeout(10):
-                    gateway_config = await async_get_gateway_config(
+                    self.bridge_id = await async_get_bridge_id(
                         session, **self.deconz_config
                     )
-                    self.deconz_config[CONF_BRIDGEID] = gateway_config.bridgeid
-                    self.deconz_config[CONF_UUID] = gateway_config.uuid
+                    await self.async_set_unique_id(self.bridge_id)
+
+                    self._abort_if_unique_id_configured(
+                        updates={
+                            CONF_HOST: self.deconz_config[CONF_HOST],
+                            CONF_PORT: self.deconz_config[CONF_PORT],
+                            CONF_API_KEY: self.deconz_config[CONF_API_KEY],
+                        }
+                    )
 
             except asyncio.TimeoutError:
                 return self.async_abort(reason="no_bridges")
 
-        return self.async_create_entry(
-            title="deCONZ-" + self.deconz_config[CONF_BRIDGEID], data=self.deconz_config
-        )
-
-    async def _update_entry(self, entry, host):
-        """Update existing entry."""
-        if entry.data[CONF_HOST] == host:
-            return self.async_abort(reason="already_configured")
-
-        entry.data[CONF_HOST] = host
-        self.hass.config_entries.async_update_entry(entry)
-        return self.async_abort(reason="updated_instance")
+        return self.async_create_entry(title=self.bridge_id, data=self.deconz_config)
 
     async def async_step_ssdp(self, discovery_info):
         """Handle a discovered deCONZ bridge."""
-        from homeassistant.components.ssdp import ATTR_MANUFACTURERURL, ATTR_SERIAL
-
-        if discovery_info[ATTR_MANUFACTURERURL] != DECONZ_MANUFACTURERURL:
+        if (
+            discovery_info.get(ssdp.ATTR_UPNP_MANUFACTURER_URL)
+            != DECONZ_MANUFACTURERURL
+        ):
             return self.async_abort(reason="not_deconz_bridge")
 
-        uuid = discovery_info[ATTR_UUID].replace("uuid:", "")
+        LOGGER.debug("deCONZ SSDP discovery %s", pformat(discovery_info))
 
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if uuid == entry.data.get(CONF_UUID):
-                return await self._update_entry(entry, discovery_info[CONF_HOST])
+        self.bridge_id = normalize_bridge_id(discovery_info[ssdp.ATTR_UPNP_SERIAL])
+        parsed_url = urlparse(discovery_info[ssdp.ATTR_SSDP_LOCATION])
 
-        bridgeid = discovery_info[ATTR_SERIAL]
-        if any(
-            bridgeid == flow["context"][CONF_BRIDGEID]
-            for flow in self._async_in_progress()
-        ):
-            return self.async_abort(reason="already_in_progress")
+        entry = await self.async_set_unique_id(self.bridge_id)
+        if entry and entry.source == "hassio":
+            return self.async_abort(reason="already_configured")
+
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: parsed_url.hostname, CONF_PORT: parsed_url.port}
+        )
 
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
-        self.context[CONF_BRIDGEID] = bridgeid
-        self.context["title_placeholders"] = {"host": discovery_info[CONF_HOST]}
+        self.context["title_placeholders"] = {"host": parsed_url.hostname}
 
         self.deconz_config = {
-            CONF_HOST: discovery_info[CONF_HOST],
-            CONF_PORT: discovery_info[CONF_PORT],
+            CONF_HOST: parsed_url.hostname,
+            CONF_PORT: parsed_url.port,
         }
 
         return await self.async_step_link()
@@ -203,12 +206,18 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the discovery component.
         """
-        bridgeid = user_input[CONF_SERIAL]
-        gateway_entries = configured_gateways(self.hass)
+        LOGGER.debug("deCONZ HASSIO discovery %s", pformat(user_input))
 
-        if bridgeid in gateway_entries:
-            entry = gateway_entries[bridgeid]
-            return await self._update_entry(entry, user_input[CONF_HOST])
+        self.bridge_id = normalize_bridge_id(user_input[CONF_SERIAL])
+        await self.async_set_unique_id(self.bridge_id)
+
+        self._abort_if_unique_id_configured(
+            updates={
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: user_input[CONF_PORT],
+                CONF_API_KEY: user_input[CONF_API_KEY],
+            }
+        )
 
         self._hassio_discovery = user_input
 
@@ -220,7 +229,6 @@ class DeconzFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.deconz_config = {
                 CONF_HOST: self._hassio_discovery[CONF_HOST],
                 CONF_PORT: self._hassio_discovery[CONF_PORT],
-                CONF_BRIDGEID: self._hassio_discovery[CONF_SERIAL],
                 CONF_API_KEY: self._hassio_discovery[CONF_API_KEY],
             }
 

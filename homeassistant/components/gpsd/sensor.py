@@ -1,6 +1,8 @@
 """Support for GPSD."""
 import logging
+import socket
 
+from gps3.agps3threaded import AGPS3mechanism
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -9,11 +11,11 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     ATTR_MODE,
     CONF_HOST,
-    CONF_PORT,
     CONF_NAME,
+    CONF_PORT,
 )
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +52,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # except GPSError:
     #     _LOGGER.warning('Not able to connect to GPSD')
     #     return False
-    import socket
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -69,8 +70,6 @@ class GpsdSensor(Entity):
 
     def __init__(self, hass, name, host, port):
         """Initialize the GPSD sensor."""
-        from gps3.agps3threaded import AGPS3mechanism
-
         self.hass = hass
         self._name = name
         self._host = host

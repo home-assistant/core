@@ -9,6 +9,7 @@ https://home-assistant.io/components/light.lifx/
 """
 import logging
 
+import liffylights
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -16,19 +17,19 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP,
     SUPPORT_COLOR,
+    SUPPORT_COLOR_TEMP,
     SUPPORT_TRANSITION,
     Light,
-    PLATFORM_SCHEMA,
-)
-from homeassistant.helpers.event import track_time_change
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin,
-    color_temperature_kelvin_to_mired,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_time_change
+from homeassistant.util.color import (
+    color_temperature_kelvin_to_mired,
+    color_temperature_mired_to_kelvin,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,8 +72,6 @@ class LIFX:
 
     def __init__(self, add_entities_callback, server_addr=None, broadcast_addr=None):
         """Initialize the light."""
-        import liffylights
-
         self._devices = []
 
         self._add_entities_callback = add_entities_callback

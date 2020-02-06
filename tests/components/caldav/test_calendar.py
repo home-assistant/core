@@ -112,6 +112,19 @@ DESCRIPTION:Sunny day
 END:VEVENT
 END:VCALENDAR
 """,
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:8
+DTSTART:20171127T190000
+DTEND:20171127T200000
+SUMMARY:This is a floating Event
+LOCATION:Hamburg
+DESCRIPTION:What a day
+END:VEVENT
+END:VCALENDAR
+""",
 ]
 
 CALDAV_CONFIG = {
@@ -289,6 +302,29 @@ async def test_ongoing_event_different_tz(mock_now, hass, calendar):
         "description": "Sunny day",
         "end_time": "2017-11-27 17:30:00",
         "location": "San Francisco",
+    }
+
+
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(19, 10))
+async def test_ongoing_floating_event_returned(mock_now, hass, calendar):
+    """Test that floating events without timezones work."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.private")
+    print(dt.DEFAULT_TIME_ZONE)
+    print(state)
+    assert state.name == calendar.name
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": "Private",
+        "message": "This is a floating Event",
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": "2017-11-27 19:00:00",
+        "end_time": "2017-11-27 20:00:00",
+        "location": "Hamburg",
+        "description": "What a day",
     }
 
 

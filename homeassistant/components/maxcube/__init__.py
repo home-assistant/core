@@ -1,14 +1,16 @@
 """Support for the MAX! Cube LAN Gateway."""
 import logging
-import time
 from socket import timeout
 from threading import Lock
+import time
 
+from maxcube.connection import MaxCubeConnection
+from maxcube.cube import MaxCube
 import voluptuous as vol
 
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,8 +48,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Establish connection to MAX! Cube."""
-    from maxcube.connection import MaxCubeConnection
-    from maxcube.cube import MaxCube
 
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}

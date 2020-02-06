@@ -1,12 +1,12 @@
 """Support for VELUX KLF 200 devices."""
 import logging
-import voluptuous as vol
-from pyvlx import PyVLX
-from pyvlx import PyVLXException
 
+from pyvlx import PyVLX, PyVLXException
+import voluptuous as vol
+
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 
 DOMAIN = "velux"
 DATA_VELUX = "data_velux"
