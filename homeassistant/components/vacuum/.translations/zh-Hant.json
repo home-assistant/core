@@ -1,16 +1,16 @@
 {
     "device_automation": {
         "action_type": {
-            "clean": "\u555f\u52d5 {entity_name} \u6e05\u9664",
-            "dock": "\u555f\u52d5 {entity_name} \u56de\u5230\u5145\u96fb\u7ad9"
+            "clean": "\u555f\u52d5{entity_name}\u6e05\u9664",
+            "dock": "\u555f\u52d5{entity_name}\u56de\u5230\u5145\u96fb\u7ad9"
         },
         "condition_type": {
-            "is_cleaning": "{entity_name} \u6b63\u5728\u6e05\u6383",
-            "is_docked": "{entity_name} \u65bc\u5145\u96fb\u7ad9"
+            "is_cleaning": "{entity_name}\u6b63\u5728\u6e05\u6383",
+            "is_docked": "{entity_name}\u65bc\u5145\u96fb\u7ad9"
         },
         "trigger_type": {
-            "cleaning": "{entity_name} \u958b\u59cb\u6e05\u6383",
-            "docked": "{entity_name} \u5df2\u56de\u5145\u96fb\u7ad9"
+            "cleaning": "{entity_name}\u958b\u59cb\u6e05\u6383",
+            "docked": "{entity_name}\u5df2\u56de\u5145\u96fb\u7ad9"
         }
     }
 }
