@@ -26,6 +26,7 @@ from .const import (
     DEVICE_DISPLAY_NAME,
     DEVICE_ID,
     DEVICE_LOCATION,
+    DEVICE_LOCATION_HORIZONTAL_ACCURACY,
     DEVICE_LOCATION_LATITUDE,
     DEVICE_LOCATION_LONGITUDE,
     DEVICE_LOST_MODE_CAPABLE,
@@ -175,8 +176,9 @@ class IcloudAccount:
 
     def _determine_interval(self) -> int:
         """Calculate new interval between two API fetch (in minutes)."""
-        intervals = {}
+        intervals = {"default": self._max_interval}
         for device in self._devices.values():
+            # Max interval if no location
             if device.location is None:
                 continue
 
@@ -186,10 +188,11 @@ class IcloudAccount:
                 self.hass,
                 device.location[DEVICE_LOCATION_LATITUDE],
                 device.location[DEVICE_LOCATION_LONGITUDE],
+                device.location[DEVICE_LOCATION_HORIZONTAL_ACCURACY],
             ).result()
 
+            # Max interval if in zone
             if current_zone is not None:
-                intervals[device.name] = self._max_interval
                 continue
 
             zones = (
@@ -209,6 +212,7 @@ class IcloudAccount:
                 )
                 distances.append(round(zone_distance / 1000, 1))
 
+            # Max interval if no zone
             if not distances:
                 continue
             mindistance = min(distances)

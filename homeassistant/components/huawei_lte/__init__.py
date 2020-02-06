@@ -510,7 +510,7 @@ async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry
     """Migrate config entry to new version."""
     if config_entry.version == 1:
         options = config_entry.options
-        recipient = options[CONF_RECIPIENT]
+        recipient = options.get(CONF_RECIPIENT)
         if isinstance(recipient, str):
             options[CONF_RECIPIENT] = [x.strip() for x in recipient.split(",")]
         config_entry.version = 2
