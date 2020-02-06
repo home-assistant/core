@@ -230,23 +230,16 @@ class TadoSensor(Entity):
                 self._state = data["tadoMode"]
 
         elif self.zone_variable == "overlay":
-            if "overlay" in data and data["overlay"] is not None:
-                self._state = True
-                self._state_attributes = {
-                    "termination": data["overlay"]["termination"]["type"]
-                }
-            else:
-                self._state = False
-                self._state_attributes = {}
+            self._state = "overlay" in data and data["overlay"] is not None
+            self._state_attributes = (
+                {"termination": data["overlay"]["termination"]["type"]}
+                if self._state
+                else {}
+            )
 
         elif self.zone_variable == "early start":
-            if "preparation" in data and data["preparation"] is not None:
-                self._state = True
-            else:
-                self._state = False
+            self._state = "preparation" in data and data["preparation"] is not None
 
         elif self.zone_variable == "open window":
-            if "openWindowDetected" in data:
-                self._state = data["openWindowDetected"]
-            else:
-                self._state = False
+            self._state = "openWindow" in data and data["openWindow"] is not None
+            self._state_attributes = data["openWindow"] if self._state else {}
