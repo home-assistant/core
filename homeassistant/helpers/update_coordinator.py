@@ -26,6 +26,7 @@ class DataUpdateCoordinator:
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
+        *,
         name: str,
         update_method: Callable[[], Awaitable],
         update_interval: timedelta,
@@ -43,16 +44,20 @@ class DataUpdateCoordinator:
         self._listeners: List[CALLBACK_TYPE] = []
         self._unsub_refresh: Optional[CALLBACK_TYPE] = None
         self._request_refresh_task: Optional[asyncio.TimerHandle] = None
-        self.failed_last_update = False
+        self.last_update_success = True
+
         if request_refresh_debouncer is None:
             request_refresh_debouncer = Debouncer(
                 hass,
                 logger,
-                REQUEST_REFRESH_DEFAULT_COOLDOWN,
-                REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+                cooldown=REQUEST_REFRESH_DEFAULT_COOLDOWN,
+                immediate=REQUEST_REFRESH_DEFAULT_IMMEDIATE,
+                function=self.async_refresh,
             )
+        else:
+            request_refresh_debouncer.function = self.async_refresh
+
         self._debounced_refresh = request_refresh_debouncer
-        request_refresh_debouncer.function = self.async_refresh
 
     @callback
     def async_add_listener(self, update_callback: CALLBACK_TYPE) -> None:
@@ -110,19 +115,19 @@ class DataUpdateCoordinator:
             self.data = await self.update_method()
 
         except UpdateFailed as err:
-            if not self.failed_last_update:
+            if self.last_update_success:
                 self.logger.error("Error fetching %s data: %s", self.name, err)
-                self.failed_last_update = True
+                self.last_update_success = False
 
         except Exception as err:  # pylint: disable=broad-except
-            self.failed_last_update = True
+            self.last_update_success = False
             self.logger.exception(
                 "Unexpected error fetching %s data: %s", self.name, err
             )
 
         else:
-            if self.failed_last_update:
-                self.failed_last_update = False
+            if not self.last_update_success:
+                self.last_update_success = True
                 self.logger.info("Fetching %s data recovered")
 
         finally:
