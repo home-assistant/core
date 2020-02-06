@@ -1,82 +1,100 @@
 """Platform for light integration."""
 import logging
 
-from devolo_home_control_api.mprm_websocket import MprmWebsocket
-from devolo_home_control_api.mydevolo import Mydevolo
-import voluptuous as vol
+from devolo_home_control_api.homecontrol import get_sub_device_uid_from_element_uid
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 
-DEFAULT_MYDEVOLO = "https://mydevolo.com"
-DEFAULT_MPRM = "homecontrol.mydevolo.com"
+from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional("mydevolo", default=DEFAULT_MYDEVOLO): cv.string,
-        vol.Optional("mprm", default=DEFAULT_MPRM): cv.string,
-        vol.Required("gateway"): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-    }
-)
+_LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Get all devices and add them to hass."""
-    mprm_url = config.get("mprm")
-    user = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-
-    mydevolo = Mydevolo.get_instance()
-    mydevolo.user = user
-    mydevolo.password = password
-    mydevolo.url = config.get("mydevolo")
-
-    gateway_id = mydevolo.gateway_ids[0]
-    mprm_websocket = MprmWebsocket(gateway_id=gateway_id, url=mprm_url)
-
-    devices = mprm_websocket.binary_switch_devices
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Get all devices and setup the switch devices via config entry."""
+    devices = hass.data[DOMAIN]["homecontrol"].binary_switch_devices
 
     devices_list = []
     for device in devices:
-        devices_list.append(
-            DevoloSwitch(device_instance=device, web_socket=mprm_websocket)
-        )
-    add_entities(devices_list, True)
+        for i in range(len(device.binary_switch_property)):
+            devices_list.append(
+                DevoloSwitch(
+                    hass=hass,
+                    device_instance=device,
+                    sub_uid=get_sub_device_uid_from_element_uid(
+                        [*device.binary_switch_property][i]
+                    ),
+                )
+            )
+    async_add_entities(devices_list, False)
 
 
 class DevoloSwitch(SwitchDevice):
     """Representation of an Awesome Light."""
 
-    def __init__(self, device_instance, web_socket):
+    def __init__(self, hass, device_instance, sub_uid):
         """Initialize an devolo Switch."""
         self._device_instance = device_instance
-        self._api = web_socket
-        self._web_socket = web_socket
-        self._name = device_instance.name
-        self._is_on = None
-        self._consumption = None
-        self._subscriber_consumption = None
-        self._subscriber_binary_state = None
-        self.subscriber = Subscriber(self._device_instance.name, device=self)
-        self._web_socket.publisher.register(
-            self._device_instance.device_uid, self.subscriber
+
+        # Create the unique ID
+        if sub_uid is not None:
+            self._unique_id = self._device_instance.uid + "#" + str(sub_uid)
+        else:
+            self._unique_id = self._device_instance.uid
+
+        self._homecontrol = hass.data[DOMAIN]["homecontrol"]
+        self._name = self._device_instance.itemName
+        self._available = self._device_instance.is_online()
+
+        # Get the brand and model information
+        try:
+            self._brand = self._device_instance.brand
+            self._model = self._device_instance.name
+        except AttributeError:
+            self._brand = None
+            self._model = None
+
+        self._binary_switch_property = self._device_instance.binary_switch_property.get(
+            "devolo.BinarySwitch:" + self._unique_id
+        )
+        self._is_on = self._binary_switch_property.state
+
+        if hasattr(self._device_instance, "consumption_property"):
+            self._consumption = self._device_instance.consumption_property.get(
+                "devolo.Meter:" + self._unique_id
+            ).current
+        else:
+            self._consumption = None
+        self._subscriber = Subscriber(self._device_instance.itemName, device=self)
+        self._homecontrol.publisher.register(
+            self._device_instance.uid, self._subscriber
         )
 
     @property
     def unique_id(self):
-        """Return the unique ID of switch."""
-        return self._device_instance.device_uid
+        """Return the unique ID of the switch."""
+        return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": self._brand,
+            "model": self._model,
+        }
 
     @property
     def device_id(self):
         """Return the ID of this switch."""
-        return self._device_instance.device_uid
+        return self._unique_id
 
     @property
     def name(self):
@@ -98,54 +116,35 @@ class DevoloSwitch(SwitchDevice):
         """Return the current consumption."""
         return self._consumption
 
+    @property
+    def available(self):
+        """Return the online state."""
+        return self._available
+
     def turn_on(self, **kwargs):
         """Switch on the device."""
-        # TODO: Prepare for more than one switch
         self._is_on = True
-        self._api.set_binary_switch(
-            element_uid=[*self._device_instance.binary_switch_property][0], state=True
-        )
+        self._binary_switch_property.set_binary_switch(state=True)
 
     def turn_off(self, **kwargs):
         """Switch off the device."""
-        # TODO: Prepare for more than one switch
         self._is_on = False
-        self._api.set_binary_switch(
-            element_uid=[*self._device_instance.binary_switch_property][0], state=False
-        )
+        self._binary_switch_property.set_binary_switch(state=False)
 
-    def update(self, message=None, websocket_update=False):
+    def update(self, message=None):
         """Update the binary switch state and consumption."""
-        if websocket_update:
-            if message[0].startswith("devolo.BinarySwitch"):
-                self._is_on = self._device_instance.binary_switch_property[
-                    message[0]
-                ].state
-            elif message[0].startswith("devolo.Meter"):
-                self._consumption = self._device_instance.consumption_property[
-                    message[0]
-                ].current
-            else:
-                _LOGGER.info("No valid message received")
+        if message[0].startswith("devolo.BinarySwitch"):
+            self._is_on = self._device_instance.binary_switch_property[message[0]].state
+        elif message[0].startswith("devolo.Meter"):
+            self._consumption = self._device_instance.consumption_property[
+                message[0]
+            ].current
+        elif message[0].startswith("hdm"):
+            self._available = self._device_instance.is_online()
         else:
-            try:
-                for (
-                    binary_switch
-                ) in self._device_instance.binary_switch_property.keys():
-                    self._is_on = self._device_instance.binary_switch_property[
-                        binary_switch
-                    ].state
-                for (
-                    current_consumption
-                ) in self._device_instance.consumption_property.keys():
-                    self._consumption = self._device_instance.consumption_property[
-                        current_consumption
-                    ].current
-            except (IndexError, AttributeError):
-                # Not every binary switch device has a consumption
-                self._consumption = None
-        if websocket_update:
-            self.schedule_update_ha_state()
+            _LOGGER.debug("No valid message received")
+            _LOGGER.debug(message)
+        self.schedule_update_ha_state()
 
 
 class Subscriber:
@@ -158,6 +157,5 @@ class Subscriber:
 
     def update(self, message):
         """Trigger hass to update the device."""
-        # Make this message to DEBUG before PR
-        _LOGGER.info(f'{self.name} got message "{message}"')
-        self.device.update(websocket_update=True, message=message)
+        _LOGGER.debug('%s got message "%s"', self.name, message)
+        self.device.update(message)
