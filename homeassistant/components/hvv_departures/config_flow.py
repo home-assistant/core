@@ -87,6 +87,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             results = check_name.get("results")
 
+            if not results:
+                errors["base"] = "no_results"
+
+                return self.async_show_form(
+                    step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
+                )
+
             self.stations = dict(
                 [("{} ({})".format(x.get("name"), x.get("type")), x) for x in results]
             )

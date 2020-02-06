@@ -147,6 +147,41 @@ async def test_user_flow(hass):
         }
 
 
+async def test_user_flow_no_results(hass):
+    """Test that config flow works when there are no results."""
+    flow = config_flow.ConfigFlow()
+    flow.hass = hass
+
+    with patch(
+        "homeassistant.components.hvv_departures.config_flow.GTIHub.authenticate",
+        return_value=True,
+    ), patch(
+        "pygti.gti.GTI.checkName", return_value={"returnCode": "OK", "results": []},
+    ), patch(
+        "homeassistant.components.hvv_departures.async_setup", return_value=True
+    ), patch(
+        "homeassistant.components.hvv_departures.async_setup_entry", return_value=True,
+    ):
+
+        # step: user
+
+        result_user = await flow.async_step_user(
+            user_input={
+                "host": "api-test.geofox.de",
+                "username": "test-username",
+                "password": "test-password",
+            }
+        )
+
+        assert result_user["step_id"] == "station"
+
+        # step: station
+        result_station = await flow.async_step_station(user_input={"station": " "})
+
+        assert result_station["step_id"] == "station"
+        assert result_station["errors"]["base"] == "no_results"
+
+
 async def test_user_flow_invalid_auth(hass):
     """Test that config flow handles invalid auth."""
     flow = config_flow.ConfigFlow()
