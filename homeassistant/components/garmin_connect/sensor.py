@@ -165,9 +165,9 @@ class GarminConnectSensor(Entity):
             return
 
         data = self._data.data
-        if "Duration" in self._type:
+        if "Duration" in self._type and data[self._type]:
             self._state = data[self._type] // 60
-        elif "Seconds" in self._type:
+        elif "Seconds" in self._type and data[self._type]:
             self._state = data[self._type] // 60
         else:
             self._state = data[self._type]
