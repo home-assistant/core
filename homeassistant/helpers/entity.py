@@ -365,13 +365,17 @@ class Entity(ABC):
 
         if end - start > 0.4 and not self._slow_reported:
             self._slow_reported = True
+            url = "https://github.com/home-assistant/home-assistant/issues?q=is%3Aopen+is%3Aissue"
+            if self.platform:
+                url += f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
+
             _LOGGER.warning(
                 "Updating state for %s (%s) took %.3f seconds. "
-                "Please report platform to the developers at "
-                "https://goo.gl/Nvioub",
+                "Please create a bug report at %s",
                 self.entity_id,
                 type(self),
                 end - start,
+                url,
             )
 
         # Overwrite properties that have been set in the config file.
