@@ -195,10 +195,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         if errors and self.context["source"] == SOURCE_IMPORT:
             # Log an error message if import config flow fails since otherwise failure is silent
-            _LOGGER.error(
-                "configuration.yaml import failure: %s",
-                [error for error in errors.values()],
-            )
+            _LOGGER.error("configuration.yaml import failure: %s", errors.values())
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
