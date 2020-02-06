@@ -98,6 +98,8 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Coerce(int), vol.Range(min=0)
                 ),
                 vol.Optional(CONF_DB_URL): cv.string,
+                vol.Optional(CONF_DB_MAX_RETRIES): cv.positive_int,
+                vol.Optional(CONF_DB_RETRY_WAIT): cv.positive_int,
             }
         )
     },
@@ -200,8 +202,8 @@ class Recorder(threading.Thread):
         self.queue: Any = queue.Queue()
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
-        self.db_max_retries=db_max_retries,
-        self.db_retry_wait=db_retry_wait
+        self.db_max_retries = db_max_retries
+        self.db_retry_wait = db_retry_wait
         self.async_db_ready = asyncio.Future()
         self.engine: Any = None
         self.run_info: Any = None
