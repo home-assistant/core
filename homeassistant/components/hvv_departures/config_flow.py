@@ -94,9 +94,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
                 )
 
-            self.stations = dict(
-                [("{} ({})".format(x.get("name"), x.get("type")), x) for x in results]
-            )
+            self.stations = {
+                "{} ({})".format(x.get("name"), x.get("type")): x for x in results
+            }
 
             schema = vol.Schema(
                 {vol.Required("station"): vol.In(list(self.stations.keys()))}
@@ -180,12 +180,10 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     }
                 )
 
-                self.filters = dict(
-                    [
-                        ("{}, {}".format(x["serviceName"], x["label"]), x)
-                        for x in departure_list.get("filter")
-                    ]
-                )
+                self.filters = {
+                    "{}, {}".format(x["serviceName"], x["label"]): x
+                    for x in departure_list.get("filter")
+                }
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
