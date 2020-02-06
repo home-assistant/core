@@ -3,20 +3,33 @@
         "title": "Vizio SmartCast",
         "step": {
             "user": {
-                "title": "Setup Vizio SmartCast Device",
+                "title": "Setup Vizio SmartCast device",
+                "description": "All fields are required except Access Token. If you choose not to provide an Access Token, and your Device Type is 'tv', you will go through a pairing process with your device so an Access Token can be retrieved.\n\nTo go through the pairing process, before clicking Submit, ensure your TV is powered on and connected to the network. You also need to be able to see the screen.",
                 "data": {
                     "name": "Name",
                     "host": "<Host/IP>:<Port>",
                     "device_class": "Device Type",
                     "access_token": "Access Token"
                 }
+            },
+            "pair_tv": {
+                "title": "Complete Pairing Process",
+                "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
+                "data": {
+                    "pin": "PIN"
+                }
+            },
+            "pairing_complete": {
+                "title": "Pairing Complete",
+                "description": "Your Vizio SmartCast device is now connected to Home Assistant.\n\nYour Access Token is '**{access_token_value}**'.\n\nThe access token has been stored with your configuration so you will not have to go through this workflow again, but if this device was imported via configuration.yaml, you may want to add the token to your config using the '{access_token_key}' config key so that you don't have to go through this process again in the future. The token has also been stored in HA file storage in case you need access to it later."
             }
         },
         "error": {
             "host_exists": "Vizio device with specified host already configured.",
             "name_exists": "Vizio device with specified name already configured.",
-            "cant_connect": "Could not connect to the device. [Review the docs](https://www.home-assistant.io/integrations/vizio/) and re-verify that:\n- The device is powered on\n- The device is connected to the network\n- The values you filled in are accurate\nbefore attempting to resubmit.",
-            "tv_needs_token": "When Device Type is `tv` then a valid Access Token is needed."
+            "begin_pairing_failed": "Unable to begin pairing process. [Review the docs](https://www.home-assistant.io/integrations/vizio/) and re-verify that:\n- The device is powered on\n- The device is connected to the network\n- The values you filled in are accurate\nbefore attempting to resubmit.",
+            "complete_pairing failed": "Unable to complete pairing. Ensure the PIN you provided is correct and the TV is still powered and connected to the network before resubmitting.",
+            "cant_connect": "Could not connect to the device. [Review the docs](https://www.home-assistant.io/integrations/vizio/) and re-verify that:\n- The device is powered on\n- The device is connected to the network\n- The values you filled in are accurate\nbefore attempting to resubmit."
         },
         "abort": {
             "already_setup": "This entry has already been setup.",
