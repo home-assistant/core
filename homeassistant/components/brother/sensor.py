@@ -25,7 +25,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     if brother.available:
         # list of sensors available for this printer model
-        printer_sensor_list = {item for item in brother.data.keys()}
+        printer_sensor_list = set(brother.data.keys())
 
     else:
         _LOGGER.info("Printer is unavailable, reading device info from registry")
