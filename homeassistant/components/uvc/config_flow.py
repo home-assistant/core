@@ -9,10 +9,13 @@ from . import DOMAIN
 
 @config_entries.HANDLERS.register(DOMAIN)
 class UvcFlowHandler(config_entries.ConfigFlow):
+    """Flow handler"""
+
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     async def async_step_user(self, user_input=None):
+        """User step callback"""
         errors = {}
 
         fields = OrderedDict()
@@ -31,6 +34,7 @@ class UvcFlowHandler(config_entries.ConfigFlow):
         )
 
     async def async_step_import(self, import_info):
+        """Import callback"""
         return self.__finalize(import_info)
 
     def __finalize(self, info):
