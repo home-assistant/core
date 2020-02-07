@@ -14,8 +14,8 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 from . import (
-    CONF_NVR,
     CONF_KEY,
+    CONF_NVR,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
