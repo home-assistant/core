@@ -32,11 +32,11 @@ RESULT_SUCCESS = "success"
 RESULT_NOT_SUCCESSFUL = "not_successful"
 RESULT_NOT_SUPPORTED = "not_supported"
 
-SUPPORTED_METHOS = [
+SUPPORTED_METHOS = (
     {"method": "websocket", "timeout": 1},
     # We need this high timeout because waiting for auth popup is just an open socket
     {"method": "legacy", "timeout": 31},
-]
+)
 
 
 def _get_ip(host):
