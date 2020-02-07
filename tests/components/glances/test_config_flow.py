@@ -29,16 +29,8 @@ DEMO_USER_INPUT = {
 }
 
 
-# def init_config_flow(hass):
-#     """Init a configuration flow."""
-#     flow = config_flow.GlancesFlowHandler()
-#     flow.hass = hass
-#     return flow
-
-
 async def test_form(hass):
     """Test config entry configured successfully."""
-    # flow = init_config_flow(hass)
 
     result = await hass.config_entries.flow.async_init(
         glances.DOMAIN, context={"source": "user"}
@@ -61,7 +53,6 @@ async def test_form(hass):
 
 async def test_form_cannot_connect(hass):
     """Test to return error if we cannot connect."""
-    # flow = init_config_flow(hass)
 
     with patch("glances_api.Glances"):
         result = await hass.config_entries.flow.async_init(
@@ -77,7 +68,6 @@ async def test_form_cannot_connect(hass):
 
 async def test_form_wrong_version(hass):
     """Test to check if wrong version is entered."""
-    # flow = init_config_flow(hass)
 
     user_input = DEMO_USER_INPUT.copy()
     user_input.update(version=1)
