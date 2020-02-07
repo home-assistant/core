@@ -379,6 +379,11 @@ class AbodeAutomation(Entity):
         return self._automation.name
 
     @property
+    def icon(self):
+        """Return the robot icon to match Home Assistant automations."""
+        return "mdi:robot"
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
