@@ -907,13 +907,10 @@ async def test_option_flow_import(hass, mock_panel):
     assert result["step_id"] == "options_io"
 
     # confirm the defaults are set based on current config - we"ll spot check this throughout
-    schema = voluptuous_serialize.convert(result["data_schema"])
-    assert schema[0]["name"] == "1"
-    assert schema[0]["default"] == "Binary Sensor"
-    assert schema[1]["name"] == "2"
-    assert schema[1]["default"] == "Digital Sensor"
-    assert schema[2]["name"] == "3"
-    assert schema[2]["default"] == "Switchable Output"
+    schema = result["data_schema"]({})
+    assert schema["1"] == "Binary Sensor"
+    assert schema["2"] == "Digital Sensor"
+    assert schema["3"] == "Switchable Output"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
