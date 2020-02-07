@@ -2,19 +2,13 @@
 import logging
 
 from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from .const import (
-    DOMAIN,
-    PRAYER_TIMES_ICON,
-    SENSOR_TYPES,
-)
+
+from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import config from configuration.yaml."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -41,6 +35,7 @@ class IslamicPrayerTimeSensor(Entity):
         self.client = client
         self._name = self.sensor_type.capitalize()
         self._state = None
+        self.unsub_update = None
 
     @property
     def name(self):
@@ -77,8 +72,25 @@ class IslamicPrayerTimeSensor(Entity):
         """Return the device class."""
         return DEVICE_CLASS_TIMESTAMP
 
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        self.unsub_update = async_dispatcher_connect(
+            self.hass, DATA_UPDATED, self._schedule_immediate_update
+        )
+
+    @callback
+    def _schedule_immediate_update(self):
+        self.async_schedule_update_ha_state(True)
+
     async def async_update(self):
         """Update the sensor."""
-        prayer_time = self.client.prayer_times_info[self.name]
-        pt_dt = self.client.get_prayer_time_as_dt(prayer_time)
-        self._state = pt_dt.isoformat()
+        if self.client.prayer_times_info is not None:
+            prayer_time = self.client.prayer_times_info[self.name]
+            pt_dt = self.client.get_prayer_time_as_dt(prayer_time)
+            self._state = pt_dt.isoformat()
+
+    async def will_remove_from_hass(self):
+        """Unsubscribe from update dispatcher."""
+        if self.unsub_update:
+            self.unsub_update()
+            self.unsub_update = None
