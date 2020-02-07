@@ -8,8 +8,8 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_STOP,
-    TEMP_CELSIUS, 
-    PRESSURE_BAR
+    PRESSURE_BAR,
+    TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, asyncio, callback
 from homeassistant.exceptions import ConfigEntryNotReady

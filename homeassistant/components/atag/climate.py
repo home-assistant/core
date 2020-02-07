@@ -17,6 +17,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN, AtagEntity
 
+
 async def async_setup_platform(hass, _config, async_add_devices, _discovery_info=None):
     """Atag updated to use config entry."""
     pass
