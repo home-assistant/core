@@ -193,7 +193,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # save the data and confirm connection via user step
         await self.async_set_unique_id(device_config["id"])
         self.options = device_config[CONF_DEFAULT_OPTIONS]
-        if device_config.get(CONF_HOST) and device_config.get(CONF_PORT):
+
+        # config schema ensures we have port if we have host
+        if device_config.get(CONF_HOST):
             return await self.async_step_user(
                 user_input={
                     CONF_HOST: device_config[CONF_HOST],
