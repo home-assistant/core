@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.qvrpro
 """
 
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import SUPPORT_STREAM, Camera
 
 from .const import DOMAIN
 
@@ -63,3 +63,11 @@ class QVRProCamera(Camera):
     def camera_image(self):
         """Get image bytes from camera."""
         return self._client.get_snapshot(self._channel.guid)
+
+    def stream_source(self):
+        """Get stream source."""
+        return self._client.get_channel_live_stream(self._channel.guid)
+
+    def supported_features(self):
+        """Get supported features."""
+        return SUPPORT_STREAM
