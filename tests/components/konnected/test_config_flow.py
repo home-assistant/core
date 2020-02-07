@@ -1,7 +1,6 @@
 """Tests for Konnected Alarm Panel config flow."""
 from asynctest import patch
 import pytest
-import voluptuous_serialize
 
 from homeassistant.components import konnected
 from homeassistant.components.konnected import config_flow
@@ -922,9 +921,8 @@ async def test_option_flow_import(hass, mock_panel):
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_io_ext"
-    schema = voluptuous_serialize.convert(result["data_schema"])
-    assert schema[0]["name"] == "8"
-    assert schema[0]["default"] == "Disabled"
+    schema = result["data_schema"]({})
+    assert schema["8"] == "Disabled"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={},
@@ -933,10 +931,10 @@ async def test_option_flow_import(hass, mock_panel):
     assert result["step_id"] == "options_binary"
 
     # zone 1
-    schema = voluptuous_serialize.convert(result["data_schema"])
-    assert schema[0]["default"] == "window"  # type
-    assert schema[1]["default"] == "winder"  # name
-    assert schema[2]["default"] is True  # inverse
+    schema = result["data_schema"]({})
+    assert schema["type"] == "window"
+    assert schema["name"] == "winder"
+    assert schema["inverse"] is True
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "door"}
     )
@@ -944,9 +942,9 @@ async def test_option_flow_import(hass, mock_panel):
     assert result["step_id"] == "options_digital"
 
     # zone 2
-    schema = voluptuous_serialize.convert(result["data_schema"])
-    assert schema[0]["default"] == "ds18b20"  # type
-    assert schema[1]["default"] == "temper"  # name
+    schema = result["data_schema"]({})
+    assert schema["type"] == "ds18b20"
+    assert schema["name"] == "temper"
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"type": "dht"},
     )
@@ -954,20 +952,20 @@ async def test_option_flow_import(hass, mock_panel):
     assert result["step_id"] == "options_switch"
 
     # zone 3
-    schema = voluptuous_serialize.convert(result["data_schema"])
-    assert schema[0]["default"] == "switcher"  # name
-    assert schema[1]["default"] == "low"  # activation
-    assert schema[2]["default"] == 50  # momentary
-    assert schema[3]["default"] == 100  # pause
-    assert schema[4]["default"] == 4  # repeat
+    schema = result["data_schema"]({})
+    assert schema["name"] == "switcher"
+    assert schema["activation"] == "low"
+    assert schema["momentary"] == 50
+    assert schema["pause"] == 100
+    assert schema["repeat"] == 4
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"activation": "high"}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_misc"
 
-    schema = voluptuous_serialize.convert(result["data_schema"])
-    assert schema[0]["default"] is True  # blink
+    schema = result["data_schema"]({})
+    assert schema["blink"] is True
     result = await hass.config_entries.options.async_configure(
         result["flow_id"], user_input={"blink": False},
     )
@@ -1048,10 +1046,7 @@ async def test_option_flow_existing(hass, mock_panel):
     assert result["step_id"] == "options_io"
 
     # confirm the defaults are pulled in from the existing options
-    schema = voluptuous_serialize.convert(result["data_schema"])
-    assert schema[0]["name"] == "1"
-    assert schema[0]["default"] == "Binary Sensor"
-    assert schema[1]["name"] == "2"
-    assert schema[1]["default"] == "Digital Sensor"
-    assert schema[2]["name"] == "3"
-    assert schema[2]["default"] == "Switchable Output"
+    schema = result["data_schema"]({})
+    assert schema["1"] == "Binary Sensor"
+    assert schema["2"] == "Digital Sensor"
+    assert schema["3"] == "Switchable Output"
