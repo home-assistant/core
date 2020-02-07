@@ -843,6 +843,7 @@ omit =
     homeassistant/components/zoneminder/*
     homeassistant/components/supla/*
     homeassistant/components/zwave/util.py
+    homeassistant/components/uvc/*
 
 [report]
 # Regexes for lines to exclude from consideration

@@ -5,7 +5,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from . import DOMAIN
+from . import (
+    DOMAIN,
+    CONF_NVR,
+    CONF_KEY,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    DEFAULT_PASSWORD,
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -20,17 +30,17 @@ class UvcFlowHandler(config_entries.ConfigFlow):
         errors = {}
 
         fields = OrderedDict()
-        fields[vol.Required("nvr")] = str
-        fields[vol.Optional("port", default=7080)] = int
-        fields[vol.Required("key")] = str
-        fields[vol.Optional("password", default="ubnt")] = str
-        fields[vol.Optional("ssl", default=False)] = bool
+        fields[vol.Required(CONF_NVR)] = str
+        fields[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
+        fields[vol.Required(CONF_KEY)] = str
+        fields[vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD)] = str
+        fields[vol.Optional(CONF_SSL, default=DEFAULT_SSL)] = bool
 
         if user_input is not None:
             return self.__finalize(user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=vol.Schema(fields), errors=errors
+            step_id=CONF_NVR, data_schema=vol.Schema(fields), errors=errors
         )
 
     async def async_step_import(self, import_info):

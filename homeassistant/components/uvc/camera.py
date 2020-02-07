@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
-    """Setup camera entry."""
+    """Set up camera entry."""
     setup_platform(hass, entry.data, async_add_entities)
 
 
