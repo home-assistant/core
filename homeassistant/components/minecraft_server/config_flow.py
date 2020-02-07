@@ -1,4 +1,5 @@
 """Config flow for Minecraft Server integration."""
+from functools import partial
 import ipaddress
 
 import getmac
@@ -46,10 +47,13 @@ class MinecraftServerConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Host is a valid IP address.
                 if ip_address.version == 4:
                     # Address type is IPv4.
-                    mac_address = getmac.get_mac_address(ip=host)
+                    params = {"ip": host}
                 else:
                     # Address type is IPv6.
-                    mac_address = getmac.get_mac_address(ip6=host)
+                    params = {"ip6": host}
+                mac_address = await self.hass.async_add_executor_job(
+                    partial(getmac.get_mac_address, **params)
+                )
 
             # Validate IP address via valid MAC address.
             if ip_address is not None and mac_address is None:
