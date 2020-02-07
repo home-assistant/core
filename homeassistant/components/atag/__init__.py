@@ -8,6 +8,8 @@ from homeassistant.const import (
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_STOP,
+    TEMP_CELSIUS, 
+    PRESSURE_BAR
 )
 from homeassistant.core import HomeAssistant, asyncio, callback
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -17,11 +19,11 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 DOMAIN = "atag"
-DATA_LISTENER = "atag_listener"
+DATA_LISTENER = "listener"
 SIGNAL_UPDATE_ATAG = "atag_update"
 PLATFORMS = ["sensor", "climate", "water_heater"]
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
-UNIT_TO_CLASS = {"°C": DEVICE_CLASS_TEMPERATURE, "Bar": DEVICE_CLASS_PRESSURE}
+SCAN_INTERVAL = timedelta(seconds=30)
+UNIT_TO_CLASS = {TEMP_CELSIUS: DEVICE_CLASS_TEMPERATURE, PRESSURE_BAR: DEVICE_CLASS_PRESSURE}
 
 
 async def async_setup(hass: HomeAssistant, config):
@@ -59,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_session)
 
     hass.data.setdefault(DATA_LISTENER, {})[entry.entry_id] = async_track_time_interval(
-        hass, refresh, DEFAULT_SCAN_INTERVAL
+        hass, refresh, SCAN_INTERVAL
     )
 
     return True

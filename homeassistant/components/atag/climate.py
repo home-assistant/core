@@ -17,10 +17,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN, AtagEntity
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
-SUPPORT_PRESET = []
-
-
 async def async_setup_platform(hass, _config, async_add_devices, _discovery_info=None):
     """Atag updated to use config entry."""
     pass
@@ -51,7 +47,7 @@ class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        return SUPPORT_TARGET_TEMPERATURE
 
     @property
     def hvac_mode(self) -> Optional[str]:
