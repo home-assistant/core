@@ -90,11 +90,13 @@ async def async_setup_hass(
             clear_secret_cache()
 
     if safe_mode or config_dict is None:
-        _LOGGER.info("Starting in safe mode")
-
-        http_conf = (await http.async_get_last_config(hass)) or {}
-
-        await async_from_config_dict({"safe_mode": {}, "http": http_conf}, hass)
+        _LOGGER.info("Starting in AIS dom safe mode")
+        # pure AIS dom config in safe_mode
+        ais_conf = await conf_util.async_ais_config_yaml(hass)
+        ais_conf["safe_mode"] = {}
+        await async_from_config_dict(ais_conf, hass)
+        # http_conf = (await http.async_get_last_config(hass)) or {}
+        # await async_from_config_dict({"safe_mode": {}, "http": http_conf}, hass)
 
     return hass
 
@@ -146,65 +148,6 @@ async def async_from_config_dict(
         )
 
     return hass
-
-
-# TODO AIS dom 0.105.1 !!!
-# async def async_from_config_file(
-#     config_path: str,
-#     hass: core.HomeAssistant,
-#     verbose: bool = False,
-#     skip_pip: bool = True,
-#     log_rotate_days: Any = None,
-#     log_file: Any = None,
-#     log_no_color: bool = False,
-# ) -> Optional[core.HomeAssistant]:
-#     """Read the configuration file and try to start all the functionality.
-#
-#     Will add functionality to 'hass' parameter.
-#     This method is a coroutine.
-#     """
-#     # Set config dir to directory holding config file
-#     config_dir = os.path.abspath(os.path.dirname(config_path))
-#     hass.config.config_dir = config_dir
-#
-#     if not is_virtual_env():
-#         await async_mount_local_lib_path(config_dir)
-#
-#     async_enable_logging(hass, verbose, log_rotate_days, log_file, log_no_color)
-#
-#     await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
-#
-#     # ais config
-#     ais_config = str(os.path.dirname(__file__))
-#     ais_config += "/ais-dom-config/configuration.yaml"
-#
-#     try:
-#         config_dict = await hass.async_add_executor_job(
-#             conf_util.load_yaml_config_file, ais_config
-#         )
-#     except HomeAssistantError as err:
-#         _LOGGER.error("Error loading %s: %s", ais_config, err)
-#         return None
-#     try:
-#         user_config_dict = await hass.async_add_executor_job(
-#             conf_util.load_yaml_config_file, config_path
-#         )
-#     except HomeAssistantError as err:
-#         _LOGGER.error("Error loading %s: %s", config_path, err)
-#         # return None
-#     finally:
-#         clear_secret_cache()
-#
-#     try:
-#         import homeassistant.components.ais_dom.ais_utils as ais_utils
-#
-#         ais_utils.dict_merge(config_dict, user_config_dict)
-#     except:
-#         _LOGGER.error("Error loading user customize")
-#
-#     return await async_from_config_dict(
-#         config_dict, hass, enable_log=False, skip_pip=skip_pip
-#     )
 
 
 @core.callback

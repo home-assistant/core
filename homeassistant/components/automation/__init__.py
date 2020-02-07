@@ -222,7 +222,7 @@ async def async_setup(hass, config):
         await _async_process_config(hass, conf, component)
 
     async_register_admin_service(
-        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({}),
+        hass, DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
 
     return True
@@ -578,6 +578,6 @@ def _trigger_extract_entities(trigger_conf: dict) -> List[str]:
         return [trigger_conf[CONF_ZONE]]
 
     if trigger_conf[CONF_PLATFORM] == "sun":
-        return [sun.ENTITY_ID]
+        return ["sun.sun"]
 
     return []

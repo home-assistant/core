@@ -91,7 +91,6 @@
 - id: '201807081858006'
   alias: 'AIS Get RSS Help Items For Selected Topic'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_select.ais_rss_help_topic
@@ -103,7 +102,6 @@
 - id: '201807081905011'
   alias: 'AIS Ask The Question'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_text.ais_knowledge_query
@@ -118,7 +116,6 @@
 - id: '201807081905012'
   alias: 'AIS Search YouTube Tracks'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_text.ais_music_query
@@ -130,7 +127,6 @@
 - id: '2018070819050123'
   alias: 'AIS Search Spotify Tracks'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_text.ais_spotify_query
@@ -142,7 +138,6 @@
 - id: '201807081916015'
   alias: 'AIS Get RSS News Channels'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_select.rss_news_category
@@ -154,7 +149,6 @@
 - id: '201807081916016'
   alias: 'AIS Get RSS News Items'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_select.rss_news_channel
@@ -166,7 +160,6 @@
 - id: '201807081919019'
   alias: 'AIS Get Podcast Names'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_select.podcast_type
@@ -178,7 +171,6 @@
 - id: '201807081923022'
   alias: 'AIS Get Radio Names'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_select.radio_type
@@ -190,7 +182,6 @@
 - id: '201807081923025'
   alias: 'AIS Change Player Speed'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_number.media_player_speed
@@ -203,7 +194,6 @@
 - id: '201808231617123'
   alias: 'AIS Select Device To Add'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_select.ais_iot_devices_in_network
@@ -218,7 +208,6 @@
 - id: '201809171610123'
   alias: 'AIS Select Bookmark To Play'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_select.ais_bookmark_last_played
@@ -233,7 +222,6 @@
 - id: '201809291519123'
   alias: 'AIS Flush logs'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: time
     at: '21:35:00'
@@ -243,7 +231,6 @@
 - id: '20181205122942123'
   alias: 'AIS Execute process command web hook'
   initial_state: True
-  hide_entity: true
   trigger:
      platform: webhook
      webhook_id: aisdomprocesscommandfromframe
@@ -255,7 +242,6 @@
 - id: '201902030742123'
   alias: 'AIS Change remote web access'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_boolean.ais_remote_access
@@ -265,7 +251,6 @@
 - id: '201994281100123'
   alias: 'AIS Discovery info to dom devices'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: time_pattern
     minutes: '/30'
@@ -278,7 +263,6 @@
 - id: '201905201824123'
   alias: 'AIS Check WiFi Connection'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: time_pattern
     minutes: '/15'
@@ -291,7 +275,6 @@
 - id: '201906171602001'
   alias: 'AIS Get Books'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_select.book_autor
@@ -303,7 +286,6 @@
 - id: '201906251757001'
   alias: 'AIS Change Equalizer Mode'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_select.media_player_sound_mode
@@ -317,7 +299,6 @@
 - id: '20190810123'
   alias: 'AIS Change audio to mono'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: state
     entity_id: input_boolean.ais_audio_mono
@@ -327,7 +308,6 @@
 - id: '201911121415123'
   alias: 'AIS set WiFi config for devices'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: time
     at: '18:35:00'
@@ -340,7 +320,6 @@
 - id: '201911151800123'
   alias: 'AIS IFTTT info'
   initial_state: True
-  hide_entity: True
   trigger:
     platform: event
     event_type: ifttt_webhook_received

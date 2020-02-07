@@ -304,29 +304,42 @@ async def async_hass_config_yaml(hass: HomeAssistant) -> Dict:
     config = await hass.loop.run_in_executor(
         None, load_yaml_config_file, hass.config.path(YAML_CONFIG_FILE)
     )
+    ais_config = await async_ais_config_yaml(hass)
+    config = await async_ais_merge_configs(ais_config, config)
     core_config = config.get(CONF_CORE, {})
     await merge_packages_config(hass, config, core_config.get(CONF_PACKAGES, {}))
+    return config
 
-    # TODO AIS 0.105.1 !!!
-    # ais config load
-    # def _load_ais_yaml_config() -> Dict:
-    #     ais_config_path = str(os.path.dirname(__file__))
-    #     ais_config_path += "/ais-dom-config/configuration.yaml"
-    #     if ais_config_path is None:
-    #         raise HomeAssistantError(
-    #             "Config file not found in: {}".format(hass.config.config_dir)
-    #         )
-    #     config = load_yaml_config_file(ais_config_path)
-    #     return config
-    # ais config
+
+async def async_ais_config_yaml(hass: HomeAssistant) -> Dict:
+    """Load YAML from a Home Assistant configuration file.
+
+    This function allow a component inside the asyncio loop to reload its
+    configuration by itself. Include package merge.
+    """
+    # Not using async_add_executor_job because this is an internal method.
+    ais_config_path = str(os.path.dirname(__file__))
+    ais_config_path += "/ais-dom-config/configuration.yaml"
+    ais_config = await hass.loop.run_in_executor(
+        None, load_yaml_config_file, hass.config.path(ais_config_path)
+    )
+    return ais_config
+
+
+async def async_ais_merge_configs(ais_config, config) -> Dict:
+    """Load YAML from a Home Assistant configuration file.
+
+    This function allow a component inside the asyncio loop to reload its
+    configuration by itself. Include package merge.
+    """
+    # Not using async_add_executor_job because this is an internal method.
     try:
+        # AIS dom dict merge
         import homeassistant.components.ais_dom.ais_utils as ais_utils
 
-        ais_config = await hass.async_add_executor_job(_load_ais_yaml_config)
-        ais_utils.dict_merge(ais_config, config)
+        ais_config = ais_utils.dict_merge(ais_config, config)
     except:  # noqa: E722 pylint: disable=bare-except
         _LOGGER.error("Error loading user customize")
-        return config
     return ais_config
 
 
