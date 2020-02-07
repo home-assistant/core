@@ -10,4 +10,4 @@ change_setting:
 trigger_automation:
   description: Trigger an Abode automation.
   fields:
-    entity_id: {description: Entity id of the automation to trigger., example: binary_sensor.my_automation}
+    entity_id: {description: Entity id of the automation to trigger., example: switch.my_automation}
