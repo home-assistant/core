@@ -13,23 +13,14 @@ from homeassistant.helpers import config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CAMERAS = "cameras"
-CONF_SERIAL = "serial"
-CONF_DEFAULT_CAMERA_USERNAME = "admin"
+DEFAULT_CAMERA_USERNAME = "admin"
 
 DATA_FFMPEG = "ffmpeg"
-
-CAMERAS_CONFIG = vol.Schema(
-    {
-        vol.Optional(CONF_USERNAME, default=CONF_DEFAULT_CAMERA_USERNAME): cv.string,
-        vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SERIAL): cv.string,
-    }
-)
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_CAMERAS, default={}): vol.All(),
+        vol.Optional(CONF_CAMERAS, default={}): dict,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
     }
@@ -67,18 +58,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             cameras[device_serial] = {
                 "serial": device_serial,
                 "name": device["name"],
-                "deviceType": device["deviceType"],
+                "device_type": device["deviceType"],
                 "version": device["version"],
                 "status": device["status"],
-                "createTime": device["userDeviceCreateTime"],
+                "create_time": device["userDeviceCreateTime"],
                 "category": device["deviceCategory"],
-                "subCategory": device["deviceSubCategory"],
-                "customType": device["customType"],
-                "localIp": connections[device_serial]["localIp"],
-                "netIp": connections[device_serial]["netIp"],
-                "localRtspPort": local_rtsp_port,
-                "netType": connections[device_serial]["netType"],
-                "wanIp": connections[device_serial]["wanIp"],
+                "sub_category": device["deviceSubCategory"],
+                "custom_type": device["customType"],
+                "local_ip": connections[device_serial]["localIp"],
+                "net_ip": connections[device_serial]["netIp"],
+                "local_rtsp_port": local_rtsp_port,
+                "net_type": connections[device_serial]["netType"],
+                "wan_ip": connections[device_serial]["wanIp"],
             }
 
         # Add the cameras as devices in HASS
@@ -86,26 +77,21 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
             camera = cameras[camera_serial]
             _LOGGER.debug("CAMERA: %s", camera)
 
-            camera_username = CONF_DEFAULT_CAMERA_USERNAME
+            camera_username = DEFAULT_CAMERA_USERNAME
             camera_password = ""
             camera_rtsp_stream = ""
 
             if camera_serial in conf_cameras:
                 camera_username = conf_cameras[camera_serial]["username"]
                 camera_password = conf_cameras[camera_serial]["password"]
-                camera_rtsp_stream = "rtsp://{}:{}@{}:{}".format(
-                    camera_username,
-                    camera_password,
-                    camera["localIp"],
-                    camera["localRtspPort"],
-                )
+                camera_rtsp_stream = f"rtsp://{camera_username}:{camera_password}@{camera['local_ip']}:{camera['local_rtsp_port']}"
                 _LOGGER.debug(
                     "Camera %s source stream: %s", camera["serial"], camera_rtsp_stream
                 )
 
             else:
                 _LOGGER.error(
-                    "I found a camera (%s) but it is not configured. Please configure it if you wish to see the appropriate stream. Conf cameras: %s",
+                    "Found a camera (%s) but it is not configured. Please configure it if you wish to see the appropriate stream. Conf cameras: %s",
                     camera_serial,
                     conf_cameras,
                 )
@@ -119,18 +105,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                         camera_rtsp_stream,
                         camera["serial"],
                         camera["name"],
-                        camera["deviceType"],
+                        camera["device_type"],
                         camera["version"],
                         camera["status"],
-                        camera["createTime"],
+                        camera["create_time"],
                         camera["category"],
-                        camera["subCategory"],
-                        camera["customType"],
-                        camera["localIp"],
-                        camera["netIp"],
-                        camera["localRtspPort"],
-                        camera["wanIp"],
-                        camera["netType"],
+                        camera["sub_category"],
+                        camera["custom_type"],
+                        camera["local_ip"],
+                        camera["net_ip"],
+                        camera["local_rtsp_port"],
+                        camera["wan_ip"],
+                        camera["net_type"],
                     )
                 ]
             )
@@ -205,17 +191,16 @@ class EzvizCamera(Camera):
         attr["serial"] = self._serial
         attr["type"] = self._type
         attr["version"] = self._version
-        # attr['status'] = self._status
-        attr["createTime"] = self._create_time
+        attr["create_time"] = self._create_time
         attr["category"] = self._category
-        attr["subCategory"] = self._sub_category
-        attr["customType"] = self._custom_type
-        attr["localIp"] = self._local_ip
-        attr["netIp"] = self._net_ip
-        attr["localRtspPort"] = self._local_rtsp_port
-        attr["wanIp"] = self._wan_ip
-        attr["netType"] = self._net_type
-        attr["rtspStream"] = self._rtsp_stream
+        attr["sub_category"] = self._sub_category
+        attr["custom_type"] = self._custom_type
+        attr["local_ip"] = self._local_ip
+        attr["net_ip"] = self._net_ip
+        attr["local_rtsp_port"] = self._local_rtsp_port
+        attr["wan_ip"] = self._wan_ip
+        attr["net_type"] = self._net_type
+        attr["rtsp_stream"] = self._rtsp_stream
 
         _LOGGER.debug("Attributes of '%s' = %s", self._name, attr)
 
