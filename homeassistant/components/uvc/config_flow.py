@@ -6,15 +6,15 @@ import voluptuous as vol
 from homeassistant import config_entries
 
 from . import (
-    DOMAIN,
-    CONF_NVR,
     CONF_KEY,
+    CONF_NVR,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
     DEFAULT_PASSWORD,
     DEFAULT_PORT,
     DEFAULT_SSL,
+    DOMAIN,
 )
 
 
