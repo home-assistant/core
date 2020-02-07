@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import Throttle, dt as dt_util
 
-from .const import DOMAIN
+from .const import ATTR_DEFAULT_HOST, DOMAIN
 
 PLATFORMS = ["sensor"]
 
@@ -84,6 +84,10 @@ class VilfoRouterData:
         """Get the unique_id for the Vilfo Router."""
         if self.mac_address:
             return self.mac_address
+
+        if self.host == ATTR_DEFAULT_HOST:
+            return self.host
+
         return self.host
 
     @Throttle(DEFAULT_SCAN_INTERVAL)
