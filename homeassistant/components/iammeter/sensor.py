@@ -44,7 +44,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 devices.append(
                     IamMeter(uid, api.iammeter.serial_number, sensor, unit, config[CONF_NAME])
                 )
-            endpoint.ready.set()
             endpoint.sensors = devices
             async_add_entities(devices)
             async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
