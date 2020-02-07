@@ -2,7 +2,7 @@
   "domain": "qvrpro",
   "name": "QVR Pro",
   "documentation": "https://www.home-assistant.io/integrations/qvrpro",
-  "requirements": ["pyqvrpro==0.44"],
+  "requirements": ["pyqvrpro==0.49"],
   "dependencies": [],
   "codeowners": ["@oblogic7"]
 }

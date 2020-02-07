@@ -3,7 +3,7 @@
 import logging
 
 from pyqvrpro import Client
-from pyqvrpro.client import AuthenticationError
+from pyqvrpro.client import AuthenticationError, InsufficientPermissionsError
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -40,16 +40,15 @@ def setup(hass, config):
 
     try:
         qvrpro = Client(user, password, host)
+
+        channel_resp = qvrpro.get_channel_list()
+
+    except InsufficientPermissionsError:
+        _LOGGER.error("User must have Surveillance Management permission")
+        return False
     except AuthenticationError:
         _LOGGER.error("Authentication failed")
         return False
-
-    channel_resp = qvrpro.get_channel_list()
-
-    if "message" in channel_resp.keys():
-        if channel_resp["message"] == "Insufficient permission.":
-            _LOGGER.error("User must have Surveillance Management permission")
-            return False
 
     channels = []
 
