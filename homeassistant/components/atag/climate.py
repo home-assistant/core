@@ -29,7 +29,6 @@ async def async_setup_entry(hass, entry, async_add_devices):
     async_add_devices([AtagThermostat(atag, "Thermostat")])
 
 
-# pylint: disable=abstract-method
 class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):
     """Atag climate device."""
 
