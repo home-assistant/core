@@ -15,10 +15,6 @@
        key: getAudioStatus
        val: true
    - delay: '1'
-   - service: ais_ai_service.check_night_mode
-     data:
-       timer: false
-   - delay: '1'
    - service: ais_ai_service.publish_command_to_frame
      data:
        key: getTtsVoice
@@ -76,6 +72,10 @@
      data:
        payload: 0
        topic: dom/cmnd/state
+   - delay: '1'
+   - service: ais_ai_service.check_night_mode
+     data:
+       timer: false
    - delay: '1'
    - service: ais_ai_service.prepare_remote_menu
    - service: ais_ai_service.welcome_home
