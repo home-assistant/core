@@ -40,7 +40,7 @@ class UvcFlowHandler(config_entries.ConfigFlow):
             return self.__finalize(user_input)
 
         return self.async_show_form(
-            step_id=CONF_NVR, data_schema=vol.Schema(fields), errors=errors
+            step_id="user", data_schema=vol.Schema(fields), errors=errors
         )
 
     async def async_step_import(self, import_info):
@@ -49,5 +49,5 @@ class UvcFlowHandler(config_entries.ConfigFlow):
 
     def __finalize(self, info):
         return self.async_create_entry(
-            title=info["nvr"], data={**info, "platform": DOMAIN}
+            title=info[CONF_NVR], data={**info, "platform": DOMAIN}
         )

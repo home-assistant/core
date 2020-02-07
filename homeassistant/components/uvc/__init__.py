@@ -1,13 +1,12 @@
 """The uvc component."""
-from homeassistant.const import CONF_PORT, CONF_SSL
 
 DOMAIN = "uvc"
 
 CONF_NVR = "nvr"
 CONF_KEY = "key"
 CONF_PASSWORD = "password"
-CONF_PORT = CONF_PORT
-CONF_SSL = CONF_SSL
+CONF_PORT = "port"
+CONF_SSL = "ssl"
 
 DEFAULT_PASSWORD = "ubnt"
 DEFAULT_PORT = 7080
