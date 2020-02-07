@@ -33,7 +33,7 @@ RESULT_SUCCESS = "success"
 RESULT_NOT_SUCCESSFUL = "not_successful"
 RESULT_NOT_SUPPORTED = "not_supported"
 
-SUPPORTED_METHOS = (
+SUPPORTED_METHODS = (
     {"method": "websocket", "timeout": 1},
     # We need this high timeout because waiting for auth popup is just an open socket
     {"method": "legacy", "timeout": 31},
@@ -83,7 +83,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _try_connect(self):
         """Try to connect and check auth."""
-        for cfg in SUPPORTED_METHOS:
+        for cfg in SUPPORTED_METHODS:
             config = {
                 "name": "HomeAssistant",
                 "description": "HomeAssistant",
