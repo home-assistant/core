@@ -28,6 +28,7 @@ UNIT_TO_CLASS = {
     TEMP_CELSIUS: DEVICE_CLASS_TEMPERATURE,
 }
 
+
 async def async_setup(hass: HomeAssistant, config):
     """Set up the Atag component."""
     return True
