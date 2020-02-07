@@ -82,8 +82,8 @@ class MinecraftServer:
     """Representation of a Minecraft server."""
 
     # Private constants
-    _RETRIES_PING = 3
-    _RETRIES_STATUS = 3
+    _MAX_RETRIES_PING = 3
+    _MAX_RETRIES_STATUS = 3
 
     def __init__(
         self, hass: HomeAssistantType, unique_id: str, config_data: ConfigType
@@ -97,6 +97,7 @@ class MinecraftServer:
         self.host = config_data[CONF_HOST]
         self.port = config_data[CONF_PORT]
         self.online = False
+        self._last_status_request_failed = False
 
         # 3rd party library instance
         self._mc_status = MCStatus(self.host, self.port)
@@ -130,7 +131,7 @@ class MinecraftServer:
         """Check server connection using a 'ping' request and store result."""
         try:
             await self._hass.async_add_executor_job(
-                self._mc_status.ping, self._RETRIES_PING
+                self._mc_status.ping, self._MAX_RETRIES_PING
             )
             self.online = True
         except OSError as error:
@@ -152,16 +153,9 @@ class MinecraftServer:
         elif not server_online_old and server_online:
             _LOGGER.info("Connection to server (re-)established")
 
-        # Try to update the server data if server is online.
+        # Update the server properties if server is online.
         if server_online:
             await self._async_status_request()
-        else:
-            # Set all properties except description and version information to
-            # unknown until server connection is established again.
-            self.players_online = None
-            self.players_max = None
-            self.players_list = None
-            self.latency_time = None
 
         # Notify sensors about new data.
         async_dispatcher_send(self._hass, self.signal_name)
@@ -170,14 +164,10 @@ class MinecraftServer:
         """Request server status and update properties."""
         try:
             status_response = await self._hass.async_add_executor_job(
-                self._mc_status.status, self._RETRIES_STATUS
+                self._mc_status.status, self._MAX_RETRIES_STATUS
             )
-        except OSError as error:
-            _LOGGER.debug(
-                "Error occurred while trying to update the server properties - OSError: %s",
-                error,
-            )
-        else:
+
+            # Got answer to request, update properties.
             self.description = status_response.description["text"]
             self.version = status_response.version.name
             self.protocol_version = status_response.version.protocol
@@ -188,6 +178,27 @@ class MinecraftServer:
             if status_response.players.sample is not None:
                 for player in status_response.players.sample:
                     self.players_list.append(player.name)
+
+            # Inform user once about successful update if necessary.
+            if self._last_status_request_failed:
+                _LOGGER.info("Updating the server properties succeeded again")
+            self._last_status_request_failed = False
+        except OSError as error:
+            # No answer to request, set all properties to unknown.
+            self.description = None
+            self.version = None
+            self.protocol_version = None
+            self.players_online = None
+            self.players_max = None
+            self.latency_time = None
+            self.players_list = None
+
+            # Inform user once about failed update if necessary.
+            if not self._last_status_request_failed:
+                _LOGGER.warning(
+                    "Updating the server properties failed - OSError: %s", error,
+                )
+            self._last_status_request_failed = True
 
 
 class MinecraftServerEntity(Entity):

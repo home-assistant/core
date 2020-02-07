@@ -66,6 +66,11 @@ class MinecraftServerSensorEntity(MinecraftServerEntity):
         self._unit = unit
 
     @property
+    def available(self) -> bool:
+        """Return sensor availability."""
+        return self._server.online
+
+    @property
     def state(self) -> Any:
         """Return sensor state."""
         return self._state
