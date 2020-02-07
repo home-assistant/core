@@ -5,7 +5,6 @@ from typing import Any, Awaitable, Callable, List, Optional, Set
 
 import voluptuous as vol
 
-from homeassistant.components import sun
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
