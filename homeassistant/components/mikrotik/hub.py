@@ -126,7 +126,7 @@ class MikrotikData:
     def get_info(self, param):
         """Return device model name."""
         cmd = IDENTITY if param == NAME else INFO
-        data = list(self.command(MIKROTIK_SERVICES[cmd]))
+        data = self.command(MIKROTIK_SERVICES[cmd])
         return data[0].get(param) if data else None
 
     def get_hub_details(self):
@@ -148,7 +148,7 @@ class MikrotikData:
 
     def get_list_from_interface(self, interface):
         """Get devices from interface."""
-        result = list(self.command(MIKROTIK_SERVICES[interface]))
+        result = self.command(MIKROTIK_SERVICES[interface])
         return self.load_mac(result) if result else {}
 
     def restore_device(self, mac):
@@ -224,7 +224,7 @@ class MikrotikData:
             "address": ip_address,
         }
         cmd = "/ping"
-        data = list(self.command(cmd, params))
+        data = self.command(cmd, params)
         if data is not None:
             status = 0
             for result in data:
@@ -242,9 +242,9 @@ class MikrotikData:
         try:
             _LOGGER.info("Running command %s", cmd)
             if params:
-                response = self.api(cmd=cmd, **params)
+                response = list(self.api(cmd=cmd, **params))
             else:
-                response = self.api(cmd=cmd)
+                response = list(self.api(cmd=cmd))
         except (
             librouteros.exceptions.ConnectionClosed,
             socket.error,
