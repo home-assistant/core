@@ -40,7 +40,7 @@ SERVICE_TRIGGER_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(DOMAIN): vol.Schema(
-            {vol.Required(CONF_KEY): vol.Any({cv.slug: cv.string}, cv.string)}
+            {vol.Required(CONF_KEY): vol.Any({cv.string: cv.string}, cv.string)}
         )
     },
     extra=vol.ALLOW_EXTRA,

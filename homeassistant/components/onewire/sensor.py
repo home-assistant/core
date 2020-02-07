@@ -74,7 +74,7 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_NAMES): {cv.slug: cv.string},
+        vol.Optional(CONF_NAMES): {cv.string: cv.string},
         vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR): cv.string,
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=4304): cv.port,
