@@ -9,6 +9,7 @@
                 "data": {
                     "city": "Stadt"
                 },
+                "description": "Geben Sie die Postleitzahl (nur f\u00fcr Frankreich empfohlen) oder den St\u00e4dtenamen ein",
                 "title": "M\u00e9t\u00e9o-France"
             }
         },
