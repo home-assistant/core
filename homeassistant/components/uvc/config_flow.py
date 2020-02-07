@@ -27,7 +27,6 @@ class UvcFlowHandler(config_entries.ConfigFlow):
         fields[vol.Optional("ssl", default=False)] = bool
 
         if user_input is not None:
-            self.handler = "camera"
             return self.__finalize(user_input)
 
         return self.async_show_form(
@@ -39,7 +38,6 @@ class UvcFlowHandler(config_entries.ConfigFlow):
         return self.__finalize(import_info)
 
     def __finalize(self, info):
-        self.handler = "camera"  # is later used to specify domain
         return self.async_create_entry(
             title=info["nvr"], data={**info, "platform": DOMAIN}
         )

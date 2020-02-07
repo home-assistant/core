@@ -7,19 +7,24 @@ from uvcclient import camera as uvc_camera, nvr
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
-from homeassistant.const import CONF_PORT, CONF_SSL
+from homeassistant.config_entries import ConfigEntry
+
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
+from . import (
+    CONF_NVR,
+    CONF_KEY,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    DEFAULT_PASSWORD,
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-CONF_NVR = "nvr"
-CONF_KEY = "key"
-CONF_PASSWORD = "password"
-
-DEFAULT_PASSWORD = "ubnt"
-DEFAULT_PORT = 7080
-DEFAULT_SSL = False
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -30,6 +35,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+):
+    """Setup camera entry."""
+    setup_platform(hass, entry.data, async_add_entities)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):

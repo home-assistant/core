@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "key": "Integrations key",
+                    "nvr": "Host",
+                    "password": "Camera password",
+                    "port": "Port",
+                    "ssl": "SSL connection"
+                },
+                "title": "Set up UniFi Video Controller"
+            }
+        },
+        "title": "UniFi Video Controller"
+    }
+}
