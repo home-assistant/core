@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 import voluptuous as vol
+from websocket import WebSocketException
 
 from homeassistant import config_entries
 from homeassistant.components.ssdp import (
@@ -100,7 +101,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except AccessDenied:
                 LOGGER.debug("Working but denied config: %s", config)
                 return RESULT_AUTH_MISSING
-            except UnhandledResponse:
+            except (UnhandledResponse, WebSocketException):
                 LOGGER.debug("Working but unsupported config: %s", config)
                 return RESULT_NOT_SUPPORTED
             except OSError as err:
