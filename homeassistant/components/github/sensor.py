@@ -132,7 +132,7 @@ class GitHubSensor(Entity):
         self._github_data.update()
 
         self._name = self._github_data.name
-        self._state = self._github_data.latest_commit_sha
+        self._state = self._github_data.latest_release_url
         self._repository_path = self._github_data.repository_path
         self._available = self._github_data.available
         self._latest_commit_message = self._github_data.latest_commit_message
