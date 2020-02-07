@@ -23,8 +23,10 @@ DATA_LISTENER = "listener"
 SIGNAL_UPDATE_ATAG = "atag_update"
 PLATFORMS = ["sensor", "climate", "water_heater"]
 SCAN_INTERVAL = timedelta(seconds=30)
-UNIT_TO_CLASS = {TEMP_CELSIUS: DEVICE_CLASS_TEMPERATURE, PRESSURE_BAR: DEVICE_CLASS_PRESSURE}
-
+UNIT_TO_CLASS = {
+    PRESSURE_BAR: DEVICE_CLASS_PRESSURE,
+    TEMP_CELSIUS: DEVICE_CLASS_TEMPERATURE,
+}
 
 async def async_setup(hass: HomeAssistant, config):
     """Set up the Atag component."""
