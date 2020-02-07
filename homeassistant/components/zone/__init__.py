@@ -66,7 +66,7 @@ UPDATE_FIELDS = {
 
 
 CONFIG_SCHEMA = vol.Schema(
-    {vol.Optional(DOMAIN): vol.All(cv.ensure_list, [vol.Schema(CREATE_FIELDS)])},
+    {vol.Optional(DOMAIN): vol.Optional(cv.ensure_list, [vol.Schema(CREATE_FIELDS)])},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -241,7 +241,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     if component.get_entity("zone.home"):
         return True
 
-    home_zone = Zone(_home_conf(hass), True,)
+    home_zone = Zone(_home_conf(hass), True)
     home_zone.entity_id = ENTITY_ID_HOME
     await component.async_add_entities([home_zone])  # type: ignore
 
@@ -337,6 +337,9 @@ class Zone(entity.Entity):
     @callback
     def _generate_attrs(self) -> None:
         """Generate new attrs based on config."""
+        # ais config can be empty
+        if len(self._config) == 0:
+            return
         self._attrs = {
             ATTR_HIDDEN: True,
             ATTR_LATITUDE: self._config[CONF_LATITUDE],
