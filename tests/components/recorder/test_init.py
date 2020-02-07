@@ -205,7 +205,7 @@ def test_recorder_setup_failure():
             db_max_retries=10,
             db_retry_wait=3,
             include={},
-            exclude={}
+            exclude={},
         )
         rec.start()
         rec.join()
