@@ -3,22 +3,20 @@ from datetime import datetime, timedelta
 import logging
 
 from prayer_times_calculator import PrayerTimesCalculator, exceptions
-
-
 import voluptuous as vol
-import homeassistant.util.dt as dt_util
 
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_point_in_time
+import homeassistant.util.dt as dt_util
 
 from .const import (
-    DOMAIN,
-    CONF_CALC_METHOD,
-    DEFAULT_CALC_METHOD,
     CALC_METHODS,
+    CONF_CALC_METHOD,
     DATA_UPDATED,
+    DEFAULT_CALC_METHOD,
+    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,12 +49,12 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, config_entry):
     """Set up the Islamic Prayer Component."""
     client = IslamicPrayerClient(hass, config_entry)
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN] = client
 
     if not await client.async_setup():
         return False
 
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN] = client
     return True
 
 
@@ -155,7 +153,7 @@ class IslamicPrayerClient:
             await self.get_new_prayer_times()
             await self.schedule_future_update()
             self.available = True
-            _LOGGER.debug("New prayer times retrieved.  Updating sensors.")
+            _LOGGER.debug("New prayer times retrieved. Updating sensors.")
 
         except exceptions.InvalidResponseError:
             self.available = False
@@ -173,6 +171,7 @@ class IslamicPrayerClient:
             raise ConfigEntryNotReady
 
         await self.async_update()
+        self.config_entry.add_update_listener(self.async_options_updated)
 
         self.hass.async_create_task(
             self.hass.config_entries.async_forward_entry_setup(
@@ -200,3 +199,8 @@ class IslamicPrayerClient:
         date_time_str = "{} {}".format(str(today), prayer_time)
         pt_dt = dt_util.parse_datetime(date_time_str)
         return pt_dt
+
+    @staticmethod
+    async def async_options_updated(hass, entry):
+        """Triggered by config entry options updates."""
+        await hass.data[DOMAIN].async_update()

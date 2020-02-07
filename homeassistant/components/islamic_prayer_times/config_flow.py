@@ -2,10 +2,9 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-
 from homeassistant.core import callback
 
-from .const import CONF_CALC_METHOD, DEFAULT_CALC_METHOD, DOMAIN, CALC_METHODS, NAME
+from .const import CALC_METHODS, CONF_CALC_METHOD, DEFAULT_CALC_METHOD, DOMAIN, NAME
 
 
 class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -49,8 +48,8 @@ class IslamicPrayerOptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None:
             if user_input[CONF_CALC_METHOD] in CALC_METHODS:
                 return self.async_create_entry(title="", data=user_input)
-            else:
-                errors[CONF_CALC_METHOD] = "wrong_method"
+
+            errors[CONF_CALC_METHOD] = "wrong_method"
 
         options = {
             vol.Optional(

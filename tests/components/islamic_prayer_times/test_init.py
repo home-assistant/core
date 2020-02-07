@@ -2,17 +2,26 @@
 
 from unittest.mock import patch
 
-import pytest
 import prayer_times_calculator
-
-from tests.common import MockConfigEntry, mock_coro
+import pytest
 
 from homeassistant.components import islamic_prayer_times
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry, mock_coro
 
-MOCK_ENTRY = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
+MOCK_OPTIONS = {islamic_prayer_times.CONF_CALC_METHOD: "makkah"}
+
+PRAYER_TIMES = {
+    "Fajr": "06:10",
+    "Sunrise": "07:25",
+    "Dhuhr": "12:30",
+    "Asr": "15:32",
+    "Maghrib": "17:35",
+    "Isha": "18:53",
+    "Midnight": "00:45",
+}
 
 
 async def test_setup_with_no_config(hass):
@@ -34,7 +43,7 @@ async def test_setup_with_config(hass):
 async def test_successful_config_entry(hass):
     """Test that Islamic Prayer Times is configured successfully."""
 
-    entry = MOCK_ENTRY
+    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
     entry.add_to_hass(hass)
 
     assert await islamic_prayer_times.async_setup_entry(hass, entry) is True
@@ -46,7 +55,7 @@ async def test_successful_config_entry(hass):
 async def test_setup_failed(hass):
     """Test Islamic Prayer Times failed due to an error."""
 
-    entry = MOCK_ENTRY
+    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
     entry.add_to_hass(hass)
 
     # test request error raising ConfigEntryNotReady
@@ -60,7 +69,7 @@ async def test_setup_failed(hass):
 
 async def test_unload_entry(hass):
     """Test removing Islamic Prayer Times."""
-    entry = MOCK_ENTRY
+    entry = MockConfigEntry(domain=islamic_prayer_times.DOMAIN, data={},)
     entry.add_to_hass(hass)
 
     with patch.object(
@@ -71,3 +80,21 @@ async def test_unload_entry(hass):
         assert await islamic_prayer_times.async_unload_entry(hass, entry)
         assert unload_entry.call_count == 1
         assert islamic_prayer_times.DOMAIN not in hass.data
+
+
+async def test_islamic_prayer_times_data_get_prayer_times(hass):
+    """Test Islamic prayer times data fetcher."""
+    with patch(
+        "prayer_times_calculator.PrayerTimesCalculator.fetch_prayer_times",
+        return_value=PRAYER_TIMES,
+    ):
+        config_entry = MockConfigEntry(
+            domain=islamic_prayer_times.DOMAIN, data={}, options=MOCK_OPTIONS
+        )
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        pt_data = islamic_prayer_times.IslamicPrayerClient(hass, config_entry)
+        await pt_data.async_setup()
+        assert pt_data.prayer_times_info == PRAYER_TIMES
