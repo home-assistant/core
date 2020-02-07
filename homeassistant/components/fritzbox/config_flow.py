@@ -25,9 +25,9 @@ DATA_SCHEMA_CONFIRM = vol.Schema(
     {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
 )
 
-RESULT_AUTH_MISSING = "auth_missing"
-RESULT_SUCCESS = "success"
+RESULT_AUTH_FAILED = "auth_failed"
 RESULT_NOT_FOUND = "not_found"
+RESULT_SUCCESS = "success"
 
 
 class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -69,7 +69,7 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except OSError:
             return RESULT_NOT_FOUND
         except LoginError:
-            return RESULT_AUTH_MISSING
+            return RESULT_AUTH_FAILED
 
     async def async_step_import(self, user_input=None):
         """Handle configuration by yaml file."""
@@ -77,6 +77,8 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
+        errors = {}
+
         if user_input is not None:
             ip_address = await self.hass.async_add_executor_job(
                 socket.gethostbyname, user_input[CONF_HOST]
@@ -92,11 +94,16 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             result = await self.hass.async_add_executor_job(self._try_connect)
 
-            if result != RESULT_SUCCESS:
+            if result == RESULT_AUTH_FAILED:
+                errors["base"] = result
+            elif result != RESULT_SUCCESS:
                 return self.async_abort(reason=result)
-            return self._get_entry()
+            else:
+                return self._get_entry()
 
-        return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA_USER)
+        return self.async_show_form(
+            step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
+        )
 
     async def async_step_ssdp(self, user_input):
         """Handle a flow initialized by discovery."""
@@ -114,16 +121,23 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_confirm(self, user_input=None):
         """Handle user-confirmation of discovered node."""
+        errors = {}
+
         if user_input is not None:
             self._password = user_input[CONF_PASSWORD]
             self._username = user_input[CONF_USERNAME]
             result = await self.hass.async_add_executor_job(self._try_connect)
 
-            if result == RESULT_SUCCESS:
+            if result == RESULT_AUTH_FAILED:
+                errors["base"] = result
+            elif result != RESULT_SUCCESS:
+                return self.async_abort(reason=result)
+            else:
                 return self._get_entry()
 
         return self.async_show_form(
             step_id="confirm",
             data_schema=DATA_SCHEMA_CONFIRM,
             description_placeholders={"name": self._name},
+            errors=errors,
         )

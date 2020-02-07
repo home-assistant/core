@@ -74,4 +74,6 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unloading the AVM Fritz!Box platforms."""
     fritz = hass.data[DOMAIN][CONF_CONNECTIONS][entry.entry_id]
-    return await hass.async_add_executor_job(fritz.logout)
+    await hass.async_add_executor_job(fritz.logout)
+
+    return True
