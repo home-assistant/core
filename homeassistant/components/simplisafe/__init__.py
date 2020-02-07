@@ -349,8 +349,6 @@ class SimpliSafeWebsocket:
         self._websocket_watchdog_listener = None
         self.last_events = {}
 
-        hass.loop.create_task(self.async_websocket_connect())
-
     async def _async_attempt_websocket_connect(self):
         """Attempt to connect to the websocket (retrying later on fail)."""
         try:
@@ -429,6 +427,8 @@ class SimpliSafe:
 
     async def async_init(self):
         """Initialize the data class."""
+        asyncio.create_task(self.websocket.async_websocket_connect())
+
         self.systems = await self._api.get_systems()
         for system in self.systems.values():
             self._hass.async_create_task(
