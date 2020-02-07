@@ -54,7 +54,7 @@ class SolarEdgeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return True
 
     async def async_step_user(self, user_input=None):
-        """Step when user intializes a integration."""
+        """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
             name = slugify(user_input.get(CONF_NAME, DEFAULT_NAME))

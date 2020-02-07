@@ -281,12 +281,9 @@ class SqueezeBoxDevice(MediaPlayerDevice):
                 return STATE_IDLE
         return None
 
-    def async_query(self, *parameters):
-        """Send a command to the LMS.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._lms.async_query(*parameters, player=self._id)
+    async def async_query(self, *parameters):
+        """Send a command to the LMS."""
+        return await self._lms.async_query(*parameters, player=self._id)
 
     async def async_update(self):
         """Retrieve the current state of the player."""
@@ -420,121 +417,85 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """Flag media player features that are supported."""
         return SUPPORT_SQUEEZEBOX
 
-    def async_turn_off(self):
-        """Turn off media player.
+    async def async_turn_off(self):
+        """Turn off media player."""
+        await self.async_query("power", "0")
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("power", "0")
+    async def async_volume_up(self):
+        """Volume up media player."""
+        await self.async_query("mixer", "volume", "+5")
 
-    def async_volume_up(self):
-        """Volume up media player.
+    async def async_volume_down(self):
+        """Volume down media player."""
+        await self.async_query("mixer", "volume", "-5")
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("mixer", "volume", "+5")
-
-    def async_volume_down(self):
-        """Volume down media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("mixer", "volume", "-5")
-
-    def async_set_volume_level(self, volume):
-        """Set volume level, range 0..1.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
         volume_percent = str(int(volume * 100))
-        return self.async_query("mixer", "volume", volume_percent)
+        await self.async_query("mixer", "volume", volume_percent)
 
-    def async_mute_volume(self, mute):
-        """Mute (true) or unmute (false) media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_mute_volume(self, mute):
+        """Mute (true) or unmute (false) media player."""
         mute_numeric = "1" if mute else "0"
-        return self.async_query("mixer", "muting", mute_numeric)
+        await self.async_query("mixer", "muting", mute_numeric)
 
-    def async_media_play_pause(self):
-        """Send pause command to media player.
+    async def async_media_play_pause(self):
+        """Send pause command to media player."""
+        await self.async_query("pause")
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("pause")
+    async def async_media_play(self):
+        """Send play command to media player."""
+        await self.async_query("play")
 
-    def async_media_play(self):
-        """Send play command to media player.
+    async def async_media_pause(self):
+        """Send pause command to media player."""
+        await self.async_query("pause", "1")
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("play")
+    async def async_media_next_track(self):
+        """Send next track command."""
+        await self.async_query("playlist", "index", "+1")
 
-    def async_media_pause(self):
-        """Send pause command to media player.
+    async def async_media_previous_track(self):
+        """Send next track command."""
+        await self.async_query("playlist", "index", "-1")
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("pause", "1")
+    async def async_media_seek(self, position):
+        """Send seek command."""
+        await self.async_query("time", position)
 
-    def async_media_next_track(self):
-        """Send next track command.
+    async def async_turn_on(self):
+        """Turn the media player on."""
+        await self.async_query("power", "1")
 
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("playlist", "index", "+1")
-
-    def async_media_previous_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("playlist", "index", "-1")
-
-    def async_media_seek(self, position):
-        """Send seek command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("time", position)
-
-    def async_turn_on(self):
-        """Turn the media player on.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.async_query("power", "1")
-
-    def async_play_media(self, media_type, media_id, **kwargs):
+    async def async_play_media(self, media_type, media_id, **kwargs):
         """
         Send the play_media command to the media player.
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the current playlist.
-        This method must be run in the event loop and returns a coroutine.
         """
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
-            return self._add_uri_to_playlist(media_id)
+            await self._add_uri_to_playlist(media_id)
+            return
 
-        return self._play_uri(media_id)
+        await self._play_uri(media_id)
 
-    def _play_uri(self, media_id):
+    async def _play_uri(self, media_id):
         """Replace the current play list with the uri."""
-        return self.async_query("playlist", "play", media_id)
+        await self.async_query("playlist", "play", media_id)
 
-    def _add_uri_to_playlist(self, media_id):
+    async def _add_uri_to_playlist(self, media_id):
         """Add an item to the existing playlist."""
-        return self.async_query("playlist", "add", media_id)
+        await self.async_query("playlist", "add", media_id)
 
-    def async_set_shuffle(self, shuffle):
+    async def async_set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
-        return self.async_query("playlist", "shuffle", int(shuffle))
+        await self.async_query("playlist", "shuffle", int(shuffle))
 
-    def async_clear_playlist(self):
+    async def async_clear_playlist(self):
         """Send the media player the command for clear playlist."""
-        return self.async_query("playlist", "clear")
+        await self.async_query("playlist", "clear")
 
-    def async_call_method(self, command, parameters=None):
+    async def async_call_method(self, command, parameters=None):
         """
         Call Squeezebox JSON/RPC method.
 
@@ -545,4 +506,4 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         if parameters:
             for parameter in parameters:
                 all_params.append(parameter)
-        return self.async_query(*all_params)
+        await self.async_query(*all_params)

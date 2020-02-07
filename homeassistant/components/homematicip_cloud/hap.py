@@ -81,6 +81,7 @@ class HomematicipHAP:
         self._tries = 0
         self._accesspoint_connected = True
         self.hmip_device_by_entity_id = {}
+        self.reset_connection_listener = None
 
     async def async_setup(self, tries: int = 0) -> bool:
         """Initialize connection."""
@@ -222,6 +223,17 @@ class HomematicipHAP:
             )
         self.hmip_device_by_entity_id = {}
         return True
+
+    @callback
+    def shutdown(self, event) -> None:
+        """Wrap the call to async_reset.
+
+        Used as an argument to EventBus.async_listen_once.
+        """
+        self.hass.async_create_task(self.async_reset())
+        _LOGGER.debug(
+            "Reset connection to access point id %s", self.config_entry.unique_id
+        )
 
     async def get_hap(
         self, hass: HomeAssistantType, hapid: str, authtoken: str, name: str

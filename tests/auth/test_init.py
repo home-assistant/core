@@ -453,7 +453,7 @@ async def test_refresh_token_type_long_lived_access_token(hass):
 
 
 async def test_cannot_deactive_owner(mock_hass):
-    """Test that we cannot deactive the owner."""
+    """Test that we cannot deactivate the owner."""
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     owner = MockUser(is_owner=True).add_to_auth_manager(manager)
 

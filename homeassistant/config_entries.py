@@ -947,7 +947,7 @@ class SystemOptions:
         self.disable_new_entities = disable_new_entities
 
     def as_dict(self) -> Dict[str, Any]:
-        """Return dictionary version of this config entrys system options."""
+        """Return dictionary version of this config entries system options."""
         return {"disable_new_entities": self.disable_new_entities}
 
 

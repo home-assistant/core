@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "error_auth_app": "Helytelen alkalmaz\u00e1sazonos\u00edt\u00f3 vagy jelsz\u00f3",
+            "error_auth_mfa": "Helytelen k\u00f3d",
+            "error_auth_user": "Helytelen felhaszn\u00e1l\u00f3n\u00e9v vagy jelsz\u00f3"
+        },
+        "step": {
+            "auth_app": {
+                "data": {
+                    "app_id": "App ID"
+                }
+            }
+        }
+    }
+}

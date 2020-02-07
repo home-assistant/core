@@ -248,7 +248,6 @@ omit =
     homeassistant/components/fritzbox/*
     homeassistant/components/fritzbox_callmonitor/sensor.py
     homeassistant/components/fritzbox_netmonitor/sensor.py
-    homeassistant/components/fritzdect/switch.py
     homeassistant/components/fronius/sensor.py
     homeassistant/components/frontier_silicon/media_player.py
     homeassistant/components/futurenow/light.py
@@ -387,7 +386,6 @@ omit =
     homeassistant/components/linode/*
     homeassistant/components/linux_battery/sensor.py
     homeassistant/components/lirc/*
-    homeassistant/components/liveboxplaytv/media_player.py
     homeassistant/components/llamalab_automate/notify.py
     homeassistant/components/lockitron/lock.py
     homeassistant/components/logi_circle/__init__.py
@@ -414,13 +412,17 @@ omit =
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
-    homeassistant/components/meteo_france/*
+    homeassistant/components/meteo_france/__init__.py
+    homeassistant/components/meteo_france/const.py
+    homeassistant/components/meteo_france/sensor.py
+    homeassistant/components/meteo_france/weather.py
     homeassistant/components/meteoalarm/*
     homeassistant/components/metoffice/sensor.py
     homeassistant/components/metoffice/weather.py
     homeassistant/components/microsoft/tts.py
     homeassistant/components/miflora/sensor.py
-    homeassistant/components/mikrotik/*
+    homeassistant/components/mikrotik/hub.py
+    homeassistant/components/mikrotik/device_tracker.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/const.py
     homeassistant/components/minio/*
@@ -508,6 +510,7 @@ omit =
     homeassistant/components/openuv/sensor.py
     homeassistant/components/openweathermap/sensor.py
     homeassistant/components/openweathermap/weather.py
+    homeassistant/components/opnsense/*
     homeassistant/components/opple/light.py
     homeassistant/components/orangepi_gpio/*
     homeassistant/components/oru/*
@@ -601,6 +604,7 @@ omit =
     homeassistant/components/russound_rnet/media_player.py
     homeassistant/components/sabnzbd/*
     homeassistant/components/saj/sensor.py
+    homeassistant/components/salt/device_tracker.py
     homeassistant/components/satel_integra/*
     homeassistant/components/scrape/sensor.py
     homeassistant/components/scsgate/*
@@ -620,8 +624,6 @@ omit =
     homeassistant/components/shodan/sensor.py
     homeassistant/components/sht31/sensor.py
     homeassistant/components/sigfox/sensor.py
-    homeassistant/components/signal_messenger/__init__.py
-    homeassistant/components/signal_messenger/notify.py
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/simplisafe/alarm_control_panel.py
@@ -638,6 +640,7 @@ omit =
     homeassistant/components/smappee/*
     homeassistant/components/smarty/*
     homeassistant/components/smarthab/*
+    homeassistant/components/sms/*
     homeassistant/components/smtp/notify.py
     homeassistant/components/snapcast/media_player.py
     homeassistant/components/snmp/*
@@ -779,9 +782,6 @@ omit =
     homeassistant/components/viaggiatreno/sensor.py
     homeassistant/components/vicare/*
     homeassistant/components/vivotek/camera.py
-    homeassistant/components/vizio/__init__.py
-    homeassistant/components/vizio/const.py
-    homeassistant/components/vizio/media_player.py
     homeassistant/components/vlc/media_player.py
     homeassistant/components/vlc_telnet/media_player.py
     homeassistant/components/volkszaehler/sensor.py

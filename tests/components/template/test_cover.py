@@ -885,7 +885,7 @@ async def test_availability_template(hass, calls):
 
 
 async def test_availability_without_availability_template(hass, calls):
-    """Test that component is availble if there is no."""
+    """Test that component is available if there is no."""
     assert await setup.async_setup_component(
         hass,
         "cover",

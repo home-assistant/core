@@ -1,4 +1,5 @@
 """Support for the Asterisk Voicemail interface."""
+from functools import partial
 import logging
 
 from asterisk_mbox import ServerError
@@ -55,7 +56,9 @@ class AsteriskMailbox(Mailbox):
 
         client = self.hass.data[ASTERISK_DOMAIN].client
         try:
-            return client.mp3(msgid, sync=True)
+            return await self.hass.async_add_executor_job(
+                partial(client.mp3, msgid, sync=True)
+            )
         except ServerError as err:
             raise StreamError(err)
 
@@ -63,9 +66,9 @@ class AsteriskMailbox(Mailbox):
         """Return a list of the current messages."""
         return self.hass.data[ASTERISK_DOMAIN].messages
 
-    def async_delete(self, msgid):
+    async def async_delete(self, msgid):
         """Delete the specified messages."""
         client = self.hass.data[ASTERISK_DOMAIN].client
         _LOGGER.info("Deleting: %s", msgid)
-        client.delete(msgid)
+        await self.hass.async_add_executor_job(client.delete, msgid)
         return True

@@ -300,13 +300,17 @@ async def test_new_client_discovered_on_block_control(hass):
     assert len(controller.mock_requests) == 3
     assert len(hass.states.async_all()) == 2
 
-    controller.mock_client_all_responses.append([BLOCKED])
+    controller.api.websocket._data = {
+        "meta": {"message": "sta:sync"},
+        "data": [BLOCKED],
+    }
+    controller.api.session_handler("data")
 
     # Calling a service will trigger the updates to run
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 7
+    assert len(controller.mock_requests) == 4
     assert len(hass.states.async_all()) == 2
     assert controller.mock_requests[3] == {
         "json": {"mac": "00:00:00:00:01:01", "cmd": "block-sta"},
@@ -317,8 +321,8 @@ async def test_new_client_discovered_on_block_control(hass):
     await hass.services.async_call(
         "switch", "turn_on", {"entity_id": "switch.block_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 11
-    assert controller.mock_requests[7] == {
+    assert len(controller.mock_requests) == 5
+    assert controller.mock_requests[4] == {
         "json": {"mac": "00:00:00:00:01:01", "cmd": "unblock-sta"},
         "method": "post",
         "path": "s/{site}/cmd/stamgr/",
@@ -340,14 +344,17 @@ async def test_new_client_discovered_on_poe_control(hass):
     assert len(controller.mock_requests) == 3
     assert len(hass.states.async_all()) == 2
 
-    controller.mock_client_responses.append([CLIENT_1, CLIENT_2])
-    controller.mock_device_responses.append([DEVICE_1])
+    controller.api.websocket._data = {
+        "meta": {"message": "sta:sync"},
+        "data": [CLIENT_2],
+    }
+    controller.api.session_handler("data")
 
     # Calling a service will trigger the updates to run
     await hass.services.async_call(
         "switch", "turn_off", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 6
+    assert len(controller.mock_requests) == 4
     assert len(hass.states.async_all()) == 3
     assert controller.mock_requests[3] == {
         "json": {
@@ -360,7 +367,7 @@ async def test_new_client_discovered_on_poe_control(hass):
     await hass.services.async_call(
         "switch", "turn_on", {"entity_id": "switch.poe_client_1"}, blocking=True
     )
-    assert len(controller.mock_requests) == 9
+    assert len(controller.mock_requests) == 5
     assert controller.mock_requests[3] == {
         "json": {
             "port_overrides": [

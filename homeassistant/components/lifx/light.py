@@ -39,6 +39,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
@@ -374,6 +375,9 @@ class LIFXManager:
 
     async def async_service_to_entities(self, service):
         """Return the known entities that a service call mentions."""
+        if service.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_NONE:
+            return []
+
         if service.data.get(ATTR_ENTITY_ID) == ENTITY_MATCH_ALL:
             return self.entities.values()
 

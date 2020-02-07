@@ -1,6 +1,6 @@
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 105
+MINOR_VERSION = 106
 PATCH_VERSION = "0.dev0"
 __short_version__ = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__ = f"{__short_version__}.{PATCH_VERSION}"
@@ -16,6 +16,7 @@ PLATFORM_FORMAT = "{platform}.{domain}"
 MATCH_ALL = "*"
 
 # Entity target all constant
+ENTITY_MATCH_NONE = "none"
 ENTITY_MATCH_ALL = "all"
 
 # If no name is specified

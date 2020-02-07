@@ -143,11 +143,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT, {}, lambda entity, call: entity.async_offset_index(1)
+        SERVICE_SELECT_NEXT,
+        {},
+        callback(lambda entity, call: entity.async_offset_index(1)),
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS, {}, lambda entity, call: entity.async_offset_index(-1)
+        SERVICE_SELECT_PREVIOUS,
+        {},
+        callback(lambda entity, call: entity.async_offset_index(-1)),
     )
 
     component.async_register_entity_service(
@@ -248,7 +252,8 @@ class InputSelect(RestoreEntity):
         """Return unique id for the entity."""
         return self._config[CONF_ID]
 
-    async def async_select_option(self, option):
+    @callback
+    def async_select_option(self, option):
         """Select new option."""
         if option not in self._options:
             _LOGGER.warning(
@@ -260,14 +265,16 @@ class InputSelect(RestoreEntity):
         self._current_option = option
         self.async_write_ha_state()
 
-    async def async_offset_index(self, offset):
+    @callback
+    def async_offset_index(self, offset):
         """Offset current index."""
         current_index = self._options.index(self._current_option)
         new_index = (current_index + offset) % len(self._options)
         self._current_option = self._options[new_index]
         self.async_write_ha_state()
 
-    async def async_set_options(self, options):
+    @callback
+    def async_set_options(self, options):
         """Set options."""
         self._current_option = options[0]
         self._config[CONF_OPTIONS] = options

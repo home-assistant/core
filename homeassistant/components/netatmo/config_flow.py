@@ -25,24 +25,22 @@ class NetatmoFlowHandler(
     @property
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
-        return {
-            "scope": (
-                " ".join(
-                    [
-                        "read_station",
-                        "read_camera",
-                        "access_camera",
-                        "write_camera",
-                        "read_presence",
-                        "access_presence",
-                        "read_homecoach",
-                        "read_smokedetector",
-                        "read_thermostat",
-                        "write_thermostat",
-                    ]
-                )
-            )
-        }
+        scopes = [
+            "read_camera",
+            "read_homecoach",
+            "read_presence",
+            "read_smokedetector",
+            "read_station",
+            "read_thermostat",
+            "write_camera",
+            "write_thermostat",
+        ]
+
+        if self.flow_impl.name != "Home Assistant Cloud":
+            scopes.extend(["access_camera", "access_presence"])
+            scopes.sort()
+
+        return {"scope": " ".join(scopes)}
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""

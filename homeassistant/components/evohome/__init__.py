@@ -148,7 +148,7 @@ def _handle_exception(err) -> bool:
         return False
 
     except aiohttp.ClientConnectionError:
-        # this appears to be a common occurance with the vendor's servers
+        # this appears to be a common occurrence with the vendor's servers
         _LOGGER.warning(
             "Unable to connect with the vendor's server. "
             "Check your network and the vendor's service status page. "
@@ -184,7 +184,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         tokens = dict(app_storage if app_storage else {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
-            # any tokens wont be valid, and store might be be corrupt
+            # any tokens won't be valid, and store might be be corrupt
             await store.async_save({})
             return ({}, None)
 
@@ -266,7 +266,7 @@ def setup_service_functions(hass: HomeAssistantType, broker):
 
     Not all Honeywell TCC-compatible systems support all operating modes. In addition,
     each mode will require any of four distinct service schemas. This has to be
-    enumerated before registering the approperiate handlers.
+    enumerated before registering the appropriate handlers.
 
     It appears that all TCC-compatible systems support the same three zones modes.
     """

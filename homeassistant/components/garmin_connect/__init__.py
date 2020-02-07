@@ -43,13 +43,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         GarminConnectAuthenticationError,
         GarminConnectTooManyRequestsError,
     ) as err:
-        _LOGGER.error("Error occured during Garmin Connect login: %s", err)
+        _LOGGER.error("Error occurred during Garmin Connect login: %s", err)
         return False
     except (GarminConnectConnectionError) as err:
-        _LOGGER.error("Error occured during Garmin Connect login: %s", err)
+        _LOGGER.error("Error occurred during Garmin Connect login: %s", err)
         raise ConfigEntryNotReady
     except Exception:  # pylint: disable=broad-except
-        _LOGGER.error("Unknown error occured during Garmin Connect login")
+        _LOGGER.error("Unknown error occurred during Garmin Connect login")
         return False
 
     garmin_data = GarminConnectData(hass, garmin_client)
@@ -98,11 +98,11 @@ class GarminConnectData:
             GarminConnectAuthenticationError,
             GarminConnectTooManyRequestsError,
         ) as err:
-            _LOGGER.error("Error occured during Garmin Connect get stats: %s", err)
+            _LOGGER.error("Error occurred during Garmin Connect get stats: %s", err)
             return
         except (GarminConnectConnectionError) as err:
-            _LOGGER.error("Error occured during Garmin Connect get stats: %s", err)
+            _LOGGER.error("Error occurred during Garmin Connect get stats: %s", err)
             return
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.error("Unknown error occured during Garmin Connect get stats")
+            _LOGGER.error("Unknown error occurred during Garmin Connect get stats")
             return
