@@ -18,13 +18,12 @@ from homeassistant.components import (
     media_player,
     script,
 )
-from homeassistant.components.emulated_hue import Config
+from homeassistant.components.emulated_hue import DEFAULT_HUE_API_USERNAME, Config
 from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_BRI,
     HUE_API_STATE_HUE,
     HUE_API_STATE_ON,
     HUE_API_STATE_SAT,
-    HUE_API_USERNAME,
     HueAllGroupsStateView,
     HueAllLightsStateView,
     HueFullStateView,
@@ -52,6 +51,9 @@ BRIDGE_SERVER_PORT = get_test_instance_port()
 
 BRIDGE_URL_BASE = "http://127.0.0.1:{}".format(BRIDGE_SERVER_PORT) + "{}"
 JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
+
+LINK_BUTTON_ENTITY_ID = "input_boolean.hue_link_button"
+SECURE_CLIENT_USERNAME = "30197ed87b6fb3d7c2a8c1fcdcdb3291"
 
 
 @pytest.fixture
@@ -193,7 +195,34 @@ def hue_client(loop, hass_hue, aiohttp_client):
         },
     )
 
-    HueUsernameView().register(web_app, web_app.router)
+    HueUsernameView(config).register(web_app, web_app.router)
+    HueAllLightsStateView(config).register(web_app, web_app.router)
+    HueOneLightStateView(config).register(web_app, web_app.router)
+    HueOneLightChangeView(config).register(web_app, web_app.router)
+    HueAllGroupsStateView(config).register(web_app, web_app.router)
+    HueFullStateView(config).register(web_app, web_app.router)
+
+    return loop.run_until_complete(aiohttp_client(web_app))
+
+
+@pytest.fixture
+def hue_client_secure(loop, hass_hue, aiohttp_client):
+    """Create web client for emulated hue api."""
+    web_app = hass_hue.http.app
+    config = Config(
+        None,
+        {
+            emulated_hue.CONF_TYPE: emulated_hue.TYPE_ALEXA,
+            emulated_hue.CONF_ENTITIES: {
+                "light.bed_light": {emulated_hue.CONF_ENTITY_HIDDEN: True},
+                "cover.living_room_window": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+            },
+            emulated_hue.CONF_LINK_BUTTON_ENTITY: LINK_BUTTON_ENTITY_ID,
+            emulated_hue.CONF_CLIENT_USERNAME: SECURE_CLIENT_USERNAME,
+        },
+    )
+
+    HueUsernameView(config).register(web_app, web_app.router)
     HueAllLightsStateView(config).register(web_app, web_app.router)
     HueOneLightStateView(config).register(web_app, web_app.router)
     HueOneLightChangeView(config).register(web_app, web_app.router)
@@ -320,7 +349,7 @@ async def test_reachable_for_state(hass_hue, hue_client, state, is_reachable):
 
 async def test_discover_full_state(hue_client):
     """Test the discovery of full state."""
-    result = await hue_client.get("/api/" + HUE_API_USERNAME)
+    result = await hue_client.get("/api/" + DEFAULT_HUE_API_USERNAME)
 
     assert result.status == 200
     assert "application/json" in result.headers["content-type"]
@@ -351,9 +380,9 @@ async def test_discover_full_state(hue_client):
 
     # Make sure the correct username in config
     assert "whitelist" in config_json
-    assert HUE_API_USERNAME in config_json["whitelist"]
-    assert "name" in config_json["whitelist"][HUE_API_USERNAME]
-    assert "HASS BRIDGE" in config_json["whitelist"][HUE_API_USERNAME]["name"]
+    assert DEFAULT_HUE_API_USERNAME in config_json["whitelist"]
+    assert "name" in config_json["whitelist"][DEFAULT_HUE_API_USERNAME]
+    assert "HASS BRIDGE" in config_json["whitelist"][DEFAULT_HUE_API_USERNAME]["name"]
 
     # Make sure the correct ip in config
     assert "ipaddress" in config_json
@@ -875,3 +904,40 @@ async def test_external_ip_blocked(hue_client):
         for putUrl in putUrls:
             result = await hue_client.put(putUrl)
             assert result.status == 401
+
+
+async def test_link_button_not_exist(hue_client_secure):
+    """Test client registration when link button entity is set but doesn't exist."""
+
+    data = {"devicetype": "hass#test"}
+    result = await hue_client_secure.post("/api", data=json.dumps(data).encode())
+    assert result.status == 200
+
+    result_json = await result.json()
+    assert result_json[0]["error"]["type"] == "101"
+    assert result_json[0]["error"]["description"] == "link button not pressed"
+
+
+async def test_link_button_not_pressed(hass_hue, hue_client_secure):
+    """Test client registration when link button entity is set and is not pressed."""
+    hass_hue.states.async_set(LINK_BUTTON_ENTITY_ID, STATE_OFF, attributes=[])
+
+    data = {"devicetype": "hass#test"}
+    result = await hue_client_secure.post("/api", data=json.dumps(data).encode())
+    assert result.status == 200
+
+    result_json = await result.json()
+    assert result_json[0]["error"]["type"] == "101"
+    assert result_json[0]["error"]["description"] == "link button not pressed"
+
+
+async def test_link_button_pressed(hass_hue, hue_client_secure):
+    """Test client registration when link button entity is set and is pressed."""
+    hass_hue.states.async_set(LINK_BUTTON_ENTITY_ID, STATE_ON, attributes=[])
+
+    data = {"devicetype": "hass#test"}
+    result = await hue_client_secure.post("/api", data=json.dumps(data).encode())
+    assert result.status == 200
+
+    result_json = await result.json()
+    assert result_json[0]["success"]["username"] == SECURE_CLIENT_USERNAME

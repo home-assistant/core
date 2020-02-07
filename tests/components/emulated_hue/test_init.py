@@ -1,7 +1,12 @@
 """Test the Emulated Hue component."""
 from unittest.mock import MagicMock, Mock, patch
 
-from homeassistant.components.emulated_hue import Config
+from homeassistant.components.emulated_hue import (
+    CONF_CLIENT_USERNAME,
+    CONF_LINK_BUTTON_ENTITY,
+    DEFAULT_HUE_API_USERNAME,
+    Config,
+)
 
 
 def test_config_google_home_entity_id_to_number():
@@ -115,3 +120,21 @@ def test_config_alexa_entity_id_to_number():
 
     entity_id = conf.number_to_entity_id("light.test")
     assert entity_id == "light.test"
+
+
+def test_config_client_username_has_default():
+    """Test config adheres to the type."""
+    conf = Config(None, {})
+    assert conf.client_username == DEFAULT_HUE_API_USERNAME
+
+
+def test_config_client_username():
+    """Test config adheres to the type."""
+    conf = Config(None, {CONF_CLIENT_USERNAME: "test_value"})
+    assert conf.client_username == "test_value"
+
+
+def test_config_link_button_entity():
+    """Test config adheres to the type."""
+    conf = Config(None, {CONF_LINK_BUTTON_ENTITY: "input_boolean.some_button"})
+    assert conf.link_button_entity_id == "input_boolean.some_button"

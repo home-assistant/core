@@ -89,9 +89,12 @@ HUE_API_STATE_SAT_MAX = 254
 HUE_API_STATE_CT_MIN = 153  # Color temp
 HUE_API_STATE_CT_MAX = 500
 
-HUE_API_USERNAME = "12345678901234567890"
+
 UNAUTHORIZED_USER = [
     {"error": {"address": "/", "description": "unauthorized user", "type": "1"}}
+]
+LINK_NOT_PRESSED = [
+    {"error": {"address": "", "description": "link button not pressed", "type": "101"}}
 ]
 
 
@@ -116,6 +119,10 @@ class HueUsernameView(HomeAssistantView):
     extra_urls = ["/api/"]
     requires_auth = False
 
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
     async def post(self, request):
         """Handle a POST request."""
         if not is_local(request[KEY_REAL_IP]):
@@ -129,7 +136,21 @@ class HueUsernameView(HomeAssistantView):
         if "devicetype" not in data:
             return self.json_message("devicetype not specified", HTTP_BAD_REQUEST)
 
-        return self.json([{"success": {"username": HUE_API_USERNAME}}])
+        hass = request.app["hass"]
+        link_button_id = self.config.link_button_entity_id
+        if link_button_id is not None:
+            # Link button defined, let's check whether it exists and is ON
+
+            link_button = hass.states.get(link_button_id)
+            if link_button is None:
+                _LOGGER.error("Entity not exposed: %s", link_button_id)
+                return self.json(LINK_NOT_PRESSED)
+            if link_button.state == STATE_OFF:
+                _LOGGER.debug("Link button not pressed: %s", link_button_id)
+                return self.json(LINK_NOT_PRESSED)
+
+        # Link button not defined or is in ON state, let's return the username
+        return self.json([{"success": {"username": self.config.client_username}}])
 
 
 class HueAllGroupsStateView(HomeAssistantView):
@@ -218,7 +239,7 @@ class HueFullStateView(HomeAssistantView):
         """Process a request to get the list of available lights."""
         if not is_local(request[KEY_REAL_IP]):
             return self.json_message("only local IPs allowed", HTTP_UNAUTHORIZED)
-        if username != HUE_API_USERNAME:
+        if username != self.config.client_username:
             return self.json(UNAUTHORIZED_USER)
 
         json_response = {
@@ -226,7 +247,7 @@ class HueFullStateView(HomeAssistantView):
             "config": {
                 "mac": "00:00:00:00:00:00",
                 "swversion": "01003542",
-                "whitelist": {HUE_API_USERNAME: {"name": "HASS BRIDGE"}},
+                "whitelist": {self.config.client_username: {"name": "HASS BRIDGE"}},
                 "ipaddress": f"{self.config.advertise_ip}:{self.config.advertise_port}",
             },
         }

@@ -42,6 +42,8 @@ CONF_LISTEN_PORT = "listen_port"
 CONF_OFF_MAPS_TO_ON_DOMAINS = "off_maps_to_on_domains"
 CONF_TYPE = "type"
 CONF_UPNP_BIND_MULTICAST = "upnp_bind_multicast"
+CONF_LINK_BUTTON_ENTITY = "link_button_entity"
+CONF_CLIENT_USERNAME = "client_username"
 
 TYPE_ALEXA = "alexa"
 TYPE_GOOGLE = "google_home"
@@ -59,6 +61,7 @@ DEFAULT_EXPOSED_DOMAINS = [
     "fan",
 ]
 DEFAULT_TYPE = TYPE_GOOGLE
+DEFAULT_HUE_API_USERNAME = "12345678901234567890"
 
 CONFIG_ENTITY_SCHEMA = vol.Schema(
     {
@@ -85,6 +88,8 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_ENTITIES): vol.Schema(
                     {cv.entity_id: CONFIG_ENTITY_SCHEMA}
                 ),
+                vol.Optional(CONF_LINK_BUTTON_ENTITY): cv.string,
+                vol.Optional(CONF_CLIENT_USERNAME): cv.string,
             }
         )
     },
@@ -114,7 +119,7 @@ async def async_setup(hass, yaml_config):
     site = None
 
     DescriptionXmlView(config).register(app, app.router)
-    HueUsernameView().register(app, app.router)
+    HueUsernameView(config).register(app, app.router)
     HueUnauthorizedUser().register(app, app.router)
     HueAllLightsStateView(config).register(app, app.router)
     HueOneLightStateView(config).register(app, app.router)
@@ -228,6 +233,12 @@ class Config:
         self.advertise_port = conf.get(CONF_ADVERTISE_PORT) or self.listen_port
 
         self.entities = conf.get(CONF_ENTITIES, {})
+
+        self.link_button_entity_id = conf.get(CONF_LINK_BUTTON_ENTITY, None)
+
+        self.client_username = (
+            conf.get(CONF_CLIENT_USERNAME) or DEFAULT_HUE_API_USERNAME
+        )
 
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""
