@@ -54,22 +54,6 @@ def _get_ip(host):
     return socket.gethostbyname(host)
 
 
-def _get_token_file(host):
-    # path = os.path.dirname(os.path.realpath(__file__))
-    token_file = f"token-{host}.txt"
-
-    if os.path.isfile(token_file) is False:
-
-        # Create token file for catch possible errors
-        try:
-            handle = open(token_file, "w+")
-            handle.close()
-        except OSError:
-            LOGGER.error("Samsung TV - Error creating token file: %s", token_file)
-            token_file = None
-    return token_file
-
-
 class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Samsung TV config flow."""
 
@@ -90,6 +74,21 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._title = None
         self._id = None
         self._token_file = None
+
+    def _get_token_file(self):
+        path = self.hass.config.path()
+        token_file = f"{path}/token-{self._host}.txt"
+
+        if os.path.isfile(token_file) is False:
+
+            # Create token file for catch possible errors
+            try:
+                handle = open(token_file, "w+")
+                handle.close()
+            except OSError:
+                LOGGER.error("Samsung TV - Error creating token file: %s", token_file)
+                token_file = None
+        return token_file
 
     def _get_entry(self):
         return self.async_create_entry(
@@ -140,7 +139,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._port is None or port == self._port:
             token_file = None
             if port == 8002:
-                token_file = _get_token_file(self._host)
+                token_file = self._get_token_file()
             config = {
                 "name": "HomeAssistant",
                 "description": "HomeAssistant",
