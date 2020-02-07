@@ -199,7 +199,7 @@ def setup(hass, config):
     except (ConnectTimeout, HTTPError, WirelessTagsException) as ex:
         _LOGGER.error("Unable to connect to wirelesstag.net service: %s", str(ex))
         hass.components.persistent_notification.create(
-            "Error: {}<br />" "Please restart hass after fixing this." "".format(ex),
+            "Error: {}<br />Please restart hass after fixing this.".format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,
         )

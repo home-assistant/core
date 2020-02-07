@@ -663,13 +663,12 @@ class TestStateMachine(unittest.TestCase):
 def test_service_call_repr():
     """Test ServiceCall repr."""
     call = ha.ServiceCall("homeassistant", "start")
-    assert str(call) == "<ServiceCall homeassistant.start (c:{})>".format(
-        call.context.id
-    )
+    assert str(call) == f"<ServiceCall homeassistant.start (c:{call.context.id})>"
 
     call2 = ha.ServiceCall("homeassistant", "start", {"fast": "yes"})
-    assert str(call2) == "<ServiceCall homeassistant.start (c:{}): fast=yes>".format(
-        call2.context.id
+    assert (
+        str(call2)
+        == f"<ServiceCall homeassistant.start (c:{call2.context.id}): fast=yes>"
     )
 
 
@@ -882,17 +881,17 @@ class TestConfig(unittest.TestCase):
 
     def test_path_with_file(self):
         """Test get_config_path method."""
-        self.config.config_dir = "/tmp/ha-config"
-        assert "/tmp/ha-config/test.conf" == self.config.path("test.conf")
+        self.config.config_dir = "/test/ha-config"
+        assert "/test/ha-config/test.conf" == self.config.path("test.conf")
 
     def test_path_with_dir_and_file(self):
         """Test get_config_path method."""
-        self.config.config_dir = "/tmp/ha-config"
-        assert "/tmp/ha-config/dir/test.conf" == self.config.path("dir", "test.conf")
+        self.config.config_dir = "/test/ha-config"
+        assert "/test/ha-config/dir/test.conf" == self.config.path("dir", "test.conf")
 
     def test_as_dict(self):
         """Test as dict."""
-        self.config.config_dir = "/tmp/ha-config"
+        self.config.config_dir = "/test/ha-config"
         expected = {
             "latitude": 0,
             "longitude": 0,
@@ -901,7 +900,7 @@ class TestConfig(unittest.TestCase):
             "location_name": "Home",
             "time_zone": "UTC",
             "components": set(),
-            "config_dir": "/tmp/ha-config",
+            "config_dir": "/test/ha-config",
             "whitelist_external_dirs": set(),
             "version": __version__,
             "config_source": "default",

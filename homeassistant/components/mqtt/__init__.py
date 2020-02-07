@@ -36,7 +36,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
@@ -68,6 +68,7 @@ DATA_MQTT_CONFIG = "mqtt_config"
 DATA_MQTT_HASS_CONFIG = "mqtt_hass_config"
 
 SERVICE_PUBLISH = "publish"
+SERVICE_DUMP = "dump"
 
 CONF_EMBEDDED = "embedded"
 
@@ -136,10 +137,10 @@ def valid_topic(value: Any) -> str:
         raise vol.Invalid("MQTT topic name/filter must not be empty.")
     if len(raw_value) > 65535:
         raise vol.Invalid(
-            "MQTT topic name/filter must not be longer than " "65535 encoded bytes."
+            "MQTT topic name/filter must not be longer than 65535 encoded bytes."
         )
     if "\0" in value:
-        raise vol.Invalid("MQTT topic name/filter must not contain null " "character.")
+        raise vol.Invalid("MQTT topic name/filter must not contain null character.")
     return value
 
 
@@ -151,7 +152,7 @@ def valid_subscribe_topic(value: Any) -> str:
             i < len(value) - 1 and value[i + 1] != "/"
         ):
             raise vol.Invalid(
-                "Single-level wildcard must occupy an entire " "level of the filter"
+                "Single-level wildcard must occupy an entire level of the filter"
             )
 
     index = value.find("#")
@@ -164,7 +165,7 @@ def valid_subscribe_topic(value: Any) -> str:
             )
         if len(value) > 1 and value[index - 1] != "/":
             raise vol.Invalid(
-                "Multi-level wildcard must be after a topic " "level separator."
+                "Multi-level wildcard must be after a topic level separator."
             )
 
     return value
@@ -651,7 +652,7 @@ async def async_setup_entry(hass, entry):
     if result == CONNECTION_FAILED_RECOVERABLE:
         raise ConfigEntryNotReady
 
-    async def async_stop_mqtt(event: Event):
+    async def async_stop_mqtt(_event: Event):
         """Stop MQTT component."""
         await hass.data[DATA_MQTT].async_disconnect()
 
@@ -681,6 +682,40 @@ async def async_setup_entry(hass, entry):
 
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
+    )
+
+    async def async_dump_service(call: ServiceCall):
+        """Handle MQTT dump service calls."""
+        messages = []
+
+        @callback
+        def collect_msg(msg):
+            messages.append((msg.topic, msg.payload.replace("\n", "")))
+
+        unsub = await async_subscribe(hass, call.data["topic"], collect_msg)
+
+        def write_dump():
+            with open(hass.config.path("mqtt_dump.txt"), "wt") as fp:
+                for msg in messages:
+                    fp.write(",".join(msg) + "\n")
+
+        async def finish_dump(_):
+            """Write dump to file."""
+            unsub()
+            await hass.async_add_executor_job(write_dump)
+
+        event.async_call_later(hass, call.data["duration"], finish_dump)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DUMP,
+        async_dump_service,
+        schema=vol.Schema(
+            {
+                vol.Required("topic"): valid_subscribe_topic,
+                vol.Optional("duration", default=5): int,
+            }
+        ),
     )
 
     if conf.get(CONF_DISCOVERY):
@@ -774,27 +809,21 @@ class MQTT:
     async def async_publish(
         self, topic: str, payload: PublishPayloadType, qos: int, retain: bool
     ) -> None:
-        """Publish a MQTT message.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Publish a MQTT message."""
         async with self._paho_lock:
             _LOGGER.debug("Transmitting message on %s: %s", topic, payload)
-            await self.hass.async_add_job(
+            await self.hass.async_add_executor_job(
                 self._mqttc.publish, topic, payload, qos, retain
             )
 
     async def async_connect(self) -> str:
-        """Connect to the host. Does process messages yet.
-
-        This method is a coroutine.
-        """
+        """Connect to the host. Does process messages yet."""
         # pylint: disable=import-outside-toplevel
         import paho.mqtt.client as mqtt
 
         result: int = None
         try:
-            result = await self.hass.async_add_job(
+            result = await self.hass.async_add_executor_job(
                 self._mqttc.connect, self.broker, self.port, self.keepalive
             )
         except OSError as err:
@@ -808,19 +837,15 @@ class MQTT:
         self._mqttc.loop_start()
         return CONNECTION_SUCCESS
 
-    @callback
-    def async_disconnect(self):
-        """Stop the MQTT client.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_disconnect(self):
+        """Stop the MQTT client."""
 
         def stop():
             """Stop the MQTT client."""
             self._mqttc.disconnect()
             self._mqttc.loop_stop()
 
-        return self.hass.async_add_job(stop)
+        await self.hass.async_add_executor_job(stop)
 
     async def async_subscribe(
         self,
@@ -865,7 +890,9 @@ class MQTT:
         """
         async with self._paho_lock:
             result: int = None
-            result, _ = await self.hass.async_add_job(self._mqttc.unsubscribe, topic)
+            result, _ = await self.hass.async_add_executor_job(
+                self._mqttc.unsubscribe, topic
+            )
             _raise_on_error(result)
 
     async def _async_perform_subscription(self, topic: str, qos: int) -> None:
@@ -874,7 +901,9 @@ class MQTT:
 
         async with self._paho_lock:
             result: int = None
-            result, _ = await self.hass.async_add_job(self._mqttc.subscribe, topic, qos)
+            result, _ = await self.hass.async_add_executor_job(
+                self._mqttc.subscribe, topic, qos
+            )
             _raise_on_error(result)
 
     def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code: int) -> None:
@@ -1010,10 +1039,7 @@ class MqttAttributes(Entity):
         self._attributes_config = config
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe MQTT events.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Subscribe MQTT events."""
         await super().async_added_to_hass()
         await self._attributes_subscribe_topics()
 
@@ -1080,10 +1106,7 @@ class MqttAvailability(Entity):
         self._avail_config = config
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe MQTT events.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Subscribe MQTT events."""
         await super().async_added_to_hass()
         await self._availability_subscribe_topics()
 

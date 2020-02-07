@@ -214,7 +214,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                     else:
                         self._target_temp = self.min_temp
                     _LOGGER.warning(
-                        "Undefined target temperature," "falling back to %s",
+                        "Undefined target temperature, falling back to %s",
                         self._target_temp,
                     )
                 else:
@@ -416,6 +416,10 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                     await self._async_heater_turn_off()
                 elif time is not None:
                     # The time argument is passed only in keep-alive case
+                    _LOGGER.info(
+                        "Keep-alive - Turning on heater heater %s",
+                        self.heater_entity_id,
+                    )
                     await self._async_heater_turn_on()
             else:
                 if (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
@@ -423,6 +427,9 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
                     await self._async_heater_turn_on()
                 elif time is not None:
                     # The time argument is passed only in keep-alive case
+                    _LOGGER.info(
+                        "Keep-alive - Turning off heater %s", self.heater_entity_id
+                    )
                     await self._async_heater_turn_off()
 
     @property
@@ -446,10 +453,7 @@ class GenericThermostat(ClimateDevice, RestoreEntity):
         await self.hass.services.async_call(HA_DOMAIN, SERVICE_TURN_OFF, data)
 
     async def async_set_preset_mode(self, preset_mode: str):
-        """Set new preset mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+        """Set new preset mode."""
         if preset_mode == PRESET_AWAY and not self._is_away:
             self._is_away = True
             self._saved_target_temp = self._target_temp

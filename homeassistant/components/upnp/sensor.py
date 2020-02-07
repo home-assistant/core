@@ -126,6 +126,9 @@ class RawUPnPIGDSensor(UpnpSensor):
     @property
     def state(self) -> str:
         """Return the state of the device."""
+        if self._state is None:
+            return None
+
         return format(self._state, "d")
 
     @property

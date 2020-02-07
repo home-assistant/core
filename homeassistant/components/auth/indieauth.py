@@ -99,7 +99,7 @@ async def fetch_redirect_uris(hass, url):
         pass
     except aiohttp.client_exceptions.ClientConnectionError:
         _LOGGER.error(
-            ("Low level connection error while looking up " "redirect_uri %s"), url
+            "Low level connection error while looking up redirect_uri %s", url
         )
         pass
     except aiohttp.client_exceptions.ClientError:

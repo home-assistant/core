@@ -3,6 +3,7 @@ import enum
 import logging
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
+from homeassistant.components.cover import DOMAIN as COVER
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.components.fan import DOMAIN as FAN
 from homeassistant.components.light import DOMAIN as LIGHT
@@ -17,6 +18,7 @@ ATTR_CLUSTER_ID = "cluster_id"
 ATTR_CLUSTER_TYPE = "cluster_type"
 ATTR_COMMAND = "command"
 ATTR_COMMAND_TYPE = "command_type"
+ATTR_DEVICE_TYPE = "device_type"
 ATTR_ENDPOINT_ID = "endpoint_id"
 ATTR_IEEE = "ieee"
 ATTR_LAST_SEEN = "last_seen"
@@ -42,11 +44,13 @@ ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE = "duty_cycle"
 ATTR_WARNING_DEVICE_STROBE_INTENSITY = "intensity"
 
 BAUD_RATES = [2400, 4800, 9600, 14400, 19200, 38400, 57600, 115200, 128000, 256000]
+BINDINGS = "bindings"
 
 CHANNEL_ACCELEROMETER = "accelerometer"
 CHANNEL_ATTRIBUTE = "attribute"
 CHANNEL_BASIC = "basic"
 CHANNEL_COLOR = "light_color"
+CHANNEL_COVER = "window_covering"
 CHANNEL_DOORLOCK = "door_lock"
 CHANNEL_ELECTRICAL_MEASUREMENT = "electrical_measurement"
 CHANNEL_EVENT_RELAY = "event_relay"
@@ -55,6 +59,7 @@ CHANNEL_HUMIDITY = "humidity"
 CHANNEL_IAS_WD = "ias_wd"
 CHANNEL_ILLUMINANCE = "illuminance"
 CHANNEL_LEVEL = ATTR_LEVEL
+CHANNEL_MULTISTATE_INPUT = "multistate_input"
 CHANNEL_OCCUPANCY = "occupancy"
 CHANNEL_ON_OFF = "on_off"
 CHANNEL_POWER_CONFIGURATION = "power"
@@ -70,7 +75,7 @@ CLUSTER_COMMANDS_SERVER = "server_commands"
 CLUSTER_TYPE_IN = "in"
 CLUSTER_TYPE_OUT = "out"
 
-COMPONENTS = (BINARY_SENSOR, DEVICE_TRACKER, FAN, LIGHT, LOCK, SENSOR, SWITCH)
+COMPONENTS = (BINARY_SENSOR, COVER, DEVICE_TRACKER, FAN, LIGHT, LOCK, SENSOR, SWITCH)
 
 CONF_BAUDRATE = "baudrate"
 CONF_DATABASE = "database_path"
@@ -220,13 +225,18 @@ WARNING_DEVICE_SQUAWK_MODE_ARMED = 0
 WARNING_DEVICE_SQUAWK_MODE_DISARMED = 1
 
 ZHA_DISCOVERY_NEW = "zha_discovery_new_{}"
-ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
 ZHA_GW_MSG = "zha_gateway_message"
-ZHA_GW_MSG_DEVICE_REMOVED = "device_removed"
-ZHA_GW_MSG_DEVICE_INFO = "device_info"
 ZHA_GW_MSG_DEVICE_FULL_INIT = "device_fully_initialized"
+ZHA_GW_MSG_DEVICE_INFO = "device_info"
 ZHA_GW_MSG_DEVICE_JOINED = "device_joined"
-ZHA_GW_MSG_LOG_OUTPUT = "log_output"
+ZHA_GW_MSG_DEVICE_REMOVED = "device_removed"
+ZHA_GW_MSG_GROUP_ADDED = "group_added"
+ZHA_GW_MSG_GROUP_INFO = "group_info"
+ZHA_GW_MSG_GROUP_MEMBER_ADDED = "group_member_added"
+ZHA_GW_MSG_GROUP_MEMBER_REMOVED = "group_member_removed"
+ZHA_GW_MSG_GROUP_REMOVED = "group_removed"
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
+ZHA_GW_MSG_LOG_OUTPUT = "log_output"
+ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
 ZHA_GW_RADIO = "radio"
 ZHA_GW_RADIO_DESCRIPTION = "radio_description"

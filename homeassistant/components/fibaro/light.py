@@ -68,7 +68,7 @@ class FibaroLight(FibaroDevice, Light):
         supports_dimming = "levelChange" in fibaro_device.interfaces
         supports_white_v = "setW" in fibaro_device.actions
 
-        # Configuration can overrride default capability detection
+        # Configuration can override default capability detection
         if devconf.get(CONF_DIMMING, supports_dimming):
             self._supported_flags |= SUPPORT_BRIGHTNESS
         if devconf.get(CONF_COLOR, supports_color):

@@ -263,7 +263,7 @@ class ZigbeeChannel(LogMixin):
 
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = "[%s:%s]: " + msg
+        msg = f"[%s:%s]: {msg}"
         args = (self.device.nwk, self._id,) + args
         _LOGGER.log(level, msg, *args)
 
@@ -357,7 +357,7 @@ class ZDOChannel(LogMixin):
 
     def log(self, level, msg, *args):
         """Log a message."""
-        msg = "[%s:ZDO](%s): " + msg
+        msg = f"[%s:ZDO](%s): {msg}"
         args = (self._zha_device.nwk, self._zha_device.model) + args
         _LOGGER.log(level, msg, *args)
 

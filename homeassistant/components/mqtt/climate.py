@@ -307,7 +307,7 @@ class MqttClimate(
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
-        """Handle being added to home assistant."""
+        """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
         await self._subscribe_topics()
 

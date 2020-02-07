@@ -25,7 +25,6 @@ COMMENT_REQUIREMENTS = (
     "envirophat",
     "evdev",
     "face_recognition",
-    "fritzconnection",
     "i2csense",
     "opencv-python-headless",
     "py_noaa",
@@ -34,6 +33,7 @@ COMMENT_REQUIREMENTS = (
     "PySwitchbot",
     "pySwitchmate",
     "python-eq3bt",
+    "python-gammu",
     "python-lirc",
     "pyuserinput",
     "raspihats",
@@ -182,7 +182,7 @@ def gather_requirements_from_modules(errors, reqs):
         try:
             module = importlib.import_module(package)
         except ImportError as err:
-            print("{}: {}".format(package.replace(".", "/") + ".py", err))
+            print("{}.py: {}".format(package.replace(".", "/"), err))
             errors.append(package)
             continue
 
@@ -253,7 +253,7 @@ def requirements_test_output(reqs):
 
 def requirements_pre_commit_output():
     """Generate output for pre-commit dependencies."""
-    source = ".pre-commit-config-all.yaml"
+    source = ".pre-commit-config.yaml"
     pre_commit_conf = load_yaml(source)
     reqs = []
     for repo in (x for x in pre_commit_conf["repos"] if x.get("rev")):
@@ -288,8 +288,8 @@ def diff_file(filename, content):
     """Diff a file."""
     return list(
         difflib.context_diff(
-            [line + "\n" for line in Path(filename).read_text().split("\n")],
-            [line + "\n" for line in content.split("\n")],
+            [f"{line}\n" for line in Path(filename).read_text().split("\n")],
+            [f"{line}\n" for line in content.split("\n")],
             filename,
             "generated",
         )

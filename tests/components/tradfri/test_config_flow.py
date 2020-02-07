@@ -13,17 +13,9 @@ from tests.common import MockConfigEntry, mock_coro
 def mock_auth():
     """Mock authenticate."""
     with patch(
-        "homeassistant.components.tradfri.config_flow." "authenticate"
+        "homeassistant.components.tradfri.config_flow.authenticate"
     ) as mock_auth:
         yield mock_auth
-
-
-@pytest.fixture
-def mock_entry_setup():
-    """Mock entry setup."""
-    with patch("homeassistant.components.tradfri." "async_setup_entry") as mock_setup:
-        mock_setup.return_value = mock_coro(True)
-        yield mock_setup
 
 
 async def test_user_connection_successful(hass, mock_auth, mock_entry_setup):

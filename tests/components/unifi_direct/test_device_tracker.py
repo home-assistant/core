@@ -25,9 +25,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, load_fixture, mock_component
 
-scanner_path = (
-    "homeassistant.components.unifi_direct.device_tracker." + "UnifiDeviceScanner"
-)
+scanner_path = "homeassistant.components.unifi_direct.device_tracker.UnifiDeviceScanner"
 
 
 @pytest.fixture(autouse=True)

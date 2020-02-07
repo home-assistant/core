@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             except KeyError:
                 _LOGGER.error(
-                    "Unable to detect data type for %s sensor, " "try a custom type",
+                    "Unable to detect data type for %s sensor, try a custom type",
                     register.get(CONF_NAME),
                 )
                 continue
@@ -119,7 +119,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         if register.get(CONF_COUNT) * 2 != size:
             _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers count " "(%d words)",
+                "Structure size (%d bytes) mismatch registers count (%d words)",
                 size,
                 register.get(CONF_COUNT),
             )

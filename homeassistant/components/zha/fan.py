@@ -50,11 +50,6 @@ SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation fans."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation fan from config entry."""
 
@@ -141,6 +136,7 @@ class ZhaFan(ZhaEntity, FanEntity):
         """Return state attributes."""
         return self.state_attributes
 
+    @callback
     def async_set_state(self, state):
         """Handle state update from channel."""
         self._state = VALUE_TO_SPEED.get(state, self._state)

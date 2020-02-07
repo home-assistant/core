@@ -34,8 +34,8 @@ class OnlineStatus(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the UPS is online, else false."""
-        return self._state == apcupsd.VALUE_ONLINE
+        return self._state & apcupsd.VALUE_ONLINE > 0
 
     def update(self):
         """Get the status report from APCUPSd and set this entity's state."""
-        self._state = self._data.status[apcupsd.KEY_STATUS]
+        self._state = int(self._data.status[apcupsd.KEY_STATUS], 16)

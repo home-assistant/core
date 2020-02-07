@@ -111,7 +111,7 @@ class TestShellCommand(unittest.TestCase):
             shell_command.DOMAIN,
             {
                 shell_command.DOMAIN: {
-                    "test_service": ("ls /bin {{ states.sensor" ".test_state.state }}")
+                    "test_service": ("ls /bin {{ states.sensor.test_state.state }}")
                 }
             },
         )

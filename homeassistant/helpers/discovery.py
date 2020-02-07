@@ -65,7 +65,7 @@ def discover(hass, service, discovered, component, hass_config):
 async def async_discover(hass, service, discovered, component, hass_config):
     """Fire discovery event. Can ensure a component is loaded."""
     if component in DEPENDENCY_BLACKLIST:
-        raise HomeAssistantError("Cannot discover the {} component.".format(component))
+        raise HomeAssistantError(f"Cannot discover the {component} component.")
 
     if component is not None and component not in hass.config.components:
         await setup.async_setup_component(hass, component, hass_config)
@@ -151,7 +151,7 @@ async def async_load_platform(hass, component, platform, discovered, hass_config
     assert hass_config, "You need to pass in the real hass config"
 
     if component in DEPENDENCY_BLACKLIST:
-        raise HomeAssistantError("Cannot discover the {} component.".format(component))
+        raise HomeAssistantError(f"Cannot discover the {component} component.")
 
     setup_success = True
 

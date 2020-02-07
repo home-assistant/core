@@ -55,7 +55,7 @@ class TestPlant(unittest.TestCase):
     """Tests for component "plant"."""
 
     def setUp(self):
-        """Create test instance of home assistant."""
+        """Create test instance of Home Assistant."""
         self.hass = get_test_home_assistant()
         self.hass.start()
 

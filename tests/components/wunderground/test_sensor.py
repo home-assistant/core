@@ -49,11 +49,9 @@ URL = (
     "http://api.wunderground.com/api/foo/alerts/conditions/forecast/lang"
     ":EN/q/32.87336,-117.22743.json"
 )
-PWS_URL = (
-    "http://api.wunderground.com/api/foo/alerts/conditions/" "lang:EN/q/pws:bar.json"
-)
+PWS_URL = "http://api.wunderground.com/api/foo/alerts/conditions/lang:EN/q/pws:bar.json"
 INVALID_URL = (
-    "http://api.wunderground.com/api/BOB/alerts/conditions/" "lang:foo/q/pws:bar.json"
+    "http://api.wunderground.com/api/BOB/alerts/conditions/lang:foo/q/pws:bar.json"
 )
 
 

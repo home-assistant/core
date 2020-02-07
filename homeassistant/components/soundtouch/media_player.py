@@ -304,7 +304,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         if self._status.station_name is not None:
             return self._status.station_name
         if self._status.artist is not None:
-            return self._status.artist + " - " + self._status.track
+            return f"{self._status.artist} - {self._status.track}"
 
         return None
 

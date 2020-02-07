@@ -17,7 +17,7 @@ from tests.common import async_mock_service
 
 @pytest.fixture
 def mock_api_client(hass, hass_client):
-    """Start the Hass HTTP component and return admin API client."""
+    """Start the Home Assistant HTTP component and return admin API client."""
     hass.loop.run_until_complete(async_setup_component(hass, "api", {}))
     return hass.loop.run_until_complete(hass_client())
 
@@ -541,7 +541,7 @@ async def test_rendering_template_legacy_user(
 
 
 async def test_api_call_service_not_found(hass, mock_api_client):
-    """Test if the API failes 400 if unknown service."""
+    """Test if the API fails 400 if unknown service."""
     resp = await mock_api_client.post(
         const.URL_API_SERVICES_SERVICE.format("test_domain", "test_service")
     )
@@ -549,7 +549,7 @@ async def test_api_call_service_not_found(hass, mock_api_client):
 
 
 async def test_api_call_service_bad_data(hass, mock_api_client):
-    """Test if the API failes 400 if unknown service."""
+    """Test if the API fails 400 if unknown service."""
     test_value = []
 
     @ha.callback

@@ -223,7 +223,7 @@ async def test_hassio_confirm(hass, aioclient_mock):
 
 
 async def test_hassio_connection_error(hass, aioclient_mock):
-    """Test we show hassio confirm form on AdGuard Home connection error."""
+    """Test we show Hass.io confirm form on AdGuard Home connection error."""
     aioclient_mock.get(
         "http://mock-adguard:3000/control/status", exc=aiohttp.ClientError
     )

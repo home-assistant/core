@@ -1,13 +1,14 @@
 """deCONZ services."""
+from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 
 from .config_flow import get_master_gateway
 from .const import (
-    _LOGGER,
-    CONF_BRIDGEID,
+    CONF_BRIDGE_ID,
     DOMAIN,
+    LOGGER,
     NEW_GROUP,
     NEW_LIGHT,
     NEW_SCENE,
@@ -27,14 +28,14 @@ SERVICE_CONFIGURE_DEVICE_SCHEMA = vol.All(
             vol.Optional(SERVICE_ENTITY): cv.entity_id,
             vol.Optional(SERVICE_FIELD): cv.matches_regex("/.*"),
             vol.Required(SERVICE_DATA): dict,
-            vol.Optional(CONF_BRIDGEID): str,
+            vol.Optional(CONF_BRIDGE_ID): str,
         }
     ),
     cv.has_at_least_one_key(SERVICE_ENTITY, SERVICE_FIELD),
 )
 
 SERVICE_DEVICE_REFRESH = "device_refresh"
-SERVICE_DEVICE_REFRESH_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGEID): str}))
+SERVICE_DEVICE_REFRESH_SCHEMA = vol.All(vol.Schema({vol.Optional(CONF_BRIDGE_ID): str}))
 
 
 async def async_setup_services(hass):
@@ -97,20 +98,19 @@ async def async_configure_service(hass, data):
     See Dresden Elektroniks REST API documentation for details:
     http://dresden-elektronik.github.io/deconz-rest-doc/rest/
     """
-    bridgeid = data.get(CONF_BRIDGEID)
+    gateway = get_master_gateway(hass)
+    if CONF_BRIDGE_ID in data:
+        gateway = hass.data[DOMAIN][normalize_bridge_id(data[CONF_BRIDGE_ID])]
+
     field = data.get(SERVICE_FIELD, "")
     entity_id = data.get(SERVICE_ENTITY)
     data = data[SERVICE_DATA]
-
-    gateway = get_master_gateway(hass)
-    if bridgeid:
-        gateway = hass.data[DOMAIN][bridgeid]
 
     if entity_id:
         try:
             field = gateway.deconz_ids[entity_id] + field
         except KeyError:
-            _LOGGER.error("Could not find the entity %s", entity_id)
+            LOGGER.error("Could not find the entity %s", entity_id)
             return
 
     await gateway.api.request("put", field, json=data)
@@ -119,15 +119,15 @@ async def async_configure_service(hass, data):
 async def async_refresh_devices_service(hass, data):
     """Refresh available devices from deCONZ."""
     gateway = get_master_gateway(hass)
-    if CONF_BRIDGEID in data:
-        gateway = hass.data[DOMAIN][data[CONF_BRIDGEID]]
+    if CONF_BRIDGE_ID in data:
+        gateway = hass.data[DOMAIN][normalize_bridge_id(data[CONF_BRIDGE_ID])]
 
     groups = set(gateway.api.groups.keys())
     lights = set(gateway.api.lights.keys())
     scenes = set(gateway.api.scenes.keys())
     sensors = set(gateway.api.sensors.keys())
 
-    await gateway.api.refresh_state()
+    await gateway.api.refresh_state(ignore_update=True)
 
     gateway.async_add_device_callback(
         NEW_GROUP,

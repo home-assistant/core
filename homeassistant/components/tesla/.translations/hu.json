@@ -17,5 +17,14 @@
             }
         },
         "title": "Tesla"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Szkennel\u00e9sek k\u00f6z\u00f6tti m\u00e1sodpercek"
+                }
+            }
+        }
     }
 }

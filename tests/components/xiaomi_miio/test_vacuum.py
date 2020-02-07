@@ -174,7 +174,7 @@ async def test_xiaomi_exceptions(hass, caplog, mock_mirobo_errors):
 async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_1"
-    entity_id = "{}.{}".format(DOMAIN, entity_name)
+    entity_id = f"{DOMAIN}.{entity_name}"
 
     await async_setup_component(
         hass,
@@ -204,12 +204,12 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-80"
     assert state.attributes.get(ATTR_CLEANING_TIME) == 155
     assert state.attributes.get(ATTR_CLEANED_AREA) == 123
-    assert state.attributes.get(ATTR_FAN_SPEED) == "Quiet"
+    assert state.attributes.get(ATTR_FAN_SPEED) == "Silent"
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == [
-        "Quiet",
-        "Balanced",
+        "Silent",
+        "Standard",
+        "Medium",
         "Turbo",
-        "Max",
         "Gentle",
     ]
     assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 12
@@ -273,7 +273,7 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_FAN_SPEED,
-        {"entity_id": entity_id, "fan_speed": "turbo"},
+        {"entity_id": entity_id, "fan_speed": "Medium"},
         blocking=True,
     )
     mock_mirobo_is_got_error.assert_has_calls(
@@ -319,7 +319,7 @@ async def test_xiaomi_vacuum_services(hass, caplog, mock_mirobo_is_got_error):
 async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     """Test vacuum supported features."""
     entity_name = "test_vacuum_cleaner_2"
-    entity_id = "{}.{}".format(DOMAIN, entity_name)
+    entity_id = f"{DOMAIN}.{entity_name}"
 
     await async_setup_component(
         hass,
@@ -348,10 +348,10 @@ async def test_xiaomi_specific_services(hass, caplog, mock_mirobo_is_on):
     assert state.attributes.get(ATTR_CLEANED_AREA) == 133
     assert state.attributes.get(ATTR_FAN_SPEED) == 99
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == [
-        "Quiet",
-        "Balanced",
+        "Silent",
+        "Standard",
+        "Medium",
         "Turbo",
-        "Max",
         "Gentle",
     ]
     assert state.attributes.get(ATTR_MAIN_BRUSH_LEFT) == 11

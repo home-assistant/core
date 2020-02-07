@@ -153,7 +153,7 @@ class MinMaxSensor(Entity):
                 self.last = float(new_state.state)
             except ValueError:
                 _LOGGER.warning(
-                    "Unable to store state. " "Only numerical states are supported"
+                    "Unable to store state. Only numerical states are supported"
                 )
 
             hass.async_add_job(self.async_update_ha_state, True)

@@ -1,1 +1,1 @@
-"""Plugwise Climate (current only Anna) component for HomeAssistant."""
+"""Plugwise Climate (current only Anna) component for Home Assistant."""

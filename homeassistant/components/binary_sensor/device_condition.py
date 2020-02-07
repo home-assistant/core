@@ -1,11 +1,11 @@
-"""Implemenet device conditions for binary sensor."""
+"""Implement device conditions for binary sensor."""
 from typing import Dict, List
 
 import voluptuous as vol
 
 from homeassistant.components.device_automation.const import CONF_IS_OFF, CONF_IS_ON
 from homeassistant.const import ATTR_DEVICE_CLASS, CONF_ENTITY_ID, CONF_FOR, CONF_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import condition, config_validation as cv
 from homeassistant.helpers.entity_registry import (
     async_entries_for_device,
@@ -90,7 +90,7 @@ IS_ON = [
     CONF_IS_GAS,
     CONF_IS_HOT,
     CONF_IS_LIGHT,
-    CONF_IS_LOCKED,
+    CONF_IS_NOT_LOCKED,
     CONF_IS_MOIST,
     CONF_IS_MOTION,
     CONF_IS_MOVING,
@@ -112,7 +112,7 @@ IS_OFF = [
     CONF_IS_NOT_COLD,
     CONF_IS_NOT_CONNECTED,
     CONF_IS_NOT_HOT,
-    CONF_IS_NOT_LOCKED,
+    CONF_IS_LOCKED,
     CONF_IS_NOT_MOIST,
     CONF_IS_NOT_MOVING,
     CONF_IS_NOT_OCCUPIED,
@@ -232,6 +232,7 @@ async def async_get_conditions(
     return conditions
 
 
+@callback
 def async_condition_from_config(
     config: ConfigType, config_validation: bool
 ) -> condition.ConditionCheckerType:

@@ -6,6 +6,7 @@ from aiohue.util import normalize_bridge_id
 import voluptuous as vol
 
 from homeassistant import config_entries, core
+from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
@@ -36,6 +37,7 @@ BRIDGE_CONFIG_SCHEMA = vol.Schema(
         vol.Optional(
             CONF_ALLOW_HUE_GROUPS, default=DEFAULT_ALLOW_HUE_GROUPS
         ): cv.boolean,
+        vol.Optional("filename"): str,
     }
 )
 
@@ -44,7 +46,13 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_BRIDGES): vol.All(
-                    cv.ensure_list, [BRIDGE_CONFIG_SCHEMA]
+                    cv.ensure_list,
+                    [
+                        vol.All(
+                            cv.deprecated("filename", invalidation_version="0.106.0"),
+                            BRIDGE_CONFIG_SCHEMA,
+                        ),
+                    ],
                 )
             }
         )
@@ -69,7 +77,7 @@ async def async_setup(hass, config):
     bridges = conf[CONF_BRIDGES]
 
     configured_hosts = set(
-        entry.data["host"] for entry in hass.config_entries.async_entries(DOMAIN)
+        entry.data.get("host") for entry in hass.config_entries.async_entries(DOMAIN)
     )
 
     for bridge_conf in bridges:
@@ -115,7 +123,7 @@ async def async_setup_entry(
     if not await bridge.async_setup():
         return False
 
-    hass.data[DOMAIN][host] = bridge
+    hass.data[DOMAIN][entry.entry_id] = bridge
     config = bridge.api.config
 
     # For backwards compat
@@ -135,9 +143,19 @@ async def async_setup_entry(
         sw_version=config.swversion,
     )
 
-    if config.swupdate2_bridge_state == "readytoinstall":
+    if config.modelid == "BSB002" and config.swversion < "1935144040":
+        persistent_notification.async_create(
+            hass,
+            "Your Hue hub has a known security vulnerability ([CVE-2020-6007](https://cve.circl.lu/cve/CVE-2020-6007)). Go to the Hue app and check for software updates.",
+            "Signify Hue",
+            "hue_hub_firmware",
+        )
+
+    elif config.swupdate2_bridge_state == "readytoinstall":
         err = (
-            "Please check for software updates of the bridge " "in the Philips Hue App."
+            "Please check for software updates of the bridge in the Philips Hue App.",
+            "Signify Hue",
+            "hue_hub_firmware",
         )
         _LOGGER.warning(err)
 
@@ -146,5 +164,5 @@ async def async_setup_entry(
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    bridge = hass.data[DOMAIN].pop(entry.data["host"])
+    bridge = hass.data[DOMAIN].pop(entry.entry_id)
     return await bridge.async_reset()

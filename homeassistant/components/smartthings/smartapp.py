@@ -88,7 +88,7 @@ async def validate_installed_app(api, installed_app_id: str):
 
 
 def validate_webhook_requirements(hass: HomeAssistantType) -> bool:
-    """Ensure HASS is setup properly to receive webhooks."""
+    """Ensure Home Assistant is setup properly to receive webhooks."""
     if hass.components.cloud.async_active_subscription():
         return True
     if hass.data[DOMAIN][CONF_CLOUDHOOK_URL] is not None:
@@ -109,7 +109,7 @@ def get_webhook_url(hass: HomeAssistantType) -> str:
 
 
 def _get_app_template(hass: HomeAssistantType):
-    endpoint = "at " + hass.config.api.base_url
+    endpoint = f"at {hass.config.api.base_url}"
     cloudhook_url = hass.data[DOMAIN][CONF_CLOUDHOOK_URL]
     if cloudhook_url is not None:
         endpoint = "via Nabu Casa"
@@ -339,7 +339,7 @@ async def smartapp_sync_subscriptions(
             )
         except Exception as error:  # pylint:disable=broad-except
             _LOGGER.error(
-                "Failed to remove subscription for '%s' under app " "'%s': %s",
+                "Failed to remove subscription for '%s' under app '%s': %s",
                 sub.capability,
                 installed_app_id,
                 error,

@@ -1,4 +1,4 @@
-"""Test homeassistant volume utility functions."""
+"""Test Home Assistant volume utility functions."""
 
 import pytest
 

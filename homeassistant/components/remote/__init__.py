@@ -5,7 +5,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import group
 from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -38,10 +37,7 @@ ATTR_TIMEOUT = "timeout"
 DOMAIN = "remote"
 SCAN_INTERVAL = timedelta(seconds=30)
 
-ENTITY_ID_ALL_REMOTES = group.ENTITY_ID_FORMAT.format("all_remotes")
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
-
-GROUP_NAME_ALL_REMOTES = "all remotes"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -61,17 +57,14 @@ REMOTE_SERVICE_ACTIVITY_SCHEMA = make_entity_service_schema(
 
 
 @bind_hass
-def is_on(hass, entity_id=None):
+def is_on(hass, entity_id):
     """Return if the remote is on based on the statemachine."""
-    entity_id = entity_id or ENTITY_ID_ALL_REMOTES
     return hass.states.is_state(entity_id, STATE_ON)
 
 
 async def async_setup(hass, config):
     """Track states and offer events for remotes."""
-    component = EntityComponent(
-        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_REMOTES
-    )
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
 
     component.async_register_entity_service(
@@ -126,12 +119,9 @@ class RemoteDevice(ToggleEntity):
         """Send a command to a device."""
         raise NotImplementedError()
 
-    def async_send_command(self, command, **kwargs):
-        """Send a command to a device.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(
+    async def async_send_command(self, command, **kwargs):
+        """Send a command to a device."""
+        await self.hass.async_add_executor_job(
             ft.partial(self.send_command, command, **kwargs)
         )
 
@@ -139,11 +129,6 @@ class RemoteDevice(ToggleEntity):
         """Learn a command from a device."""
         raise NotImplementedError()
 
-    def async_learn_command(self, **kwargs):
-        """Learn a command from a device.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_executor_job(
-            ft.partial(self.learn_command, **kwargs)
-        )
+    async def async_learn_command(self, **kwargs):
+        """Learn a command from a device."""
+        await self.hass.async_add_executor_job(ft.partial(self.learn_command, **kwargs))

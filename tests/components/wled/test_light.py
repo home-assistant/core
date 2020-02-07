@@ -90,7 +90,7 @@ async def test_switch_change_state(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.wled_rgb_light"},
+        {ATTR_ENTITY_ID: "light.wled_rgb_light", ATTR_TRANSITION: 5},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -192,4 +192,21 @@ async def test_rgbw_light(
     state = hass.states.get("light.wled_rgbw_light")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_HS_COLOR) == (28.874, 72.522)
+    assert state.attributes.get(ATTR_WHITE_VALUE) == 100
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.wled_rgbw_light",
+            ATTR_RGB_COLOR: (255, 255, 255),
+            ATTR_WHITE_VALUE: 100,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.wled_rgbw_light")
+    assert state.state == STATE_ON
+    assert state.attributes.get(ATTR_HS_COLOR) == (0, 0)
     assert state.attributes.get(ATTR_WHITE_VALUE) == 100

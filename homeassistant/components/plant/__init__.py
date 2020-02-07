@@ -5,7 +5,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components import group
 from homeassistant.components.recorder.models import States
 from homeassistant.components.recorder.util import execute, session_scope
 from homeassistant.const import (
@@ -44,15 +43,15 @@ ATTR_MAX_BRIGHTNESS_HISTORY = "max_brightness"
 # to have a separate literal for it to avoid confusion.
 ATTR_DICT_OF_UNITS_OF_MEASUREMENT = "unit_of_measurement_dict"
 
-CONF_MIN_BATTERY_LEVEL = "min_" + READING_BATTERY
-CONF_MIN_TEMPERATURE = "min_" + READING_TEMPERATURE
-CONF_MAX_TEMPERATURE = "max_" + READING_TEMPERATURE
-CONF_MIN_MOISTURE = "min_" + READING_MOISTURE
-CONF_MAX_MOISTURE = "max_" + READING_MOISTURE
-CONF_MIN_CONDUCTIVITY = "min_" + READING_CONDUCTIVITY
-CONF_MAX_CONDUCTIVITY = "max_" + READING_CONDUCTIVITY
-CONF_MIN_BRIGHTNESS = "min_" + READING_BRIGHTNESS
-CONF_MAX_BRIGHTNESS = "max_" + READING_BRIGHTNESS
+CONF_MIN_BATTERY_LEVEL = f"min_{READING_BATTERY}"
+CONF_MIN_TEMPERATURE = f"min_{READING_TEMPERATURE}"
+CONF_MAX_TEMPERATURE = f"max_{READING_TEMPERATURE}"
+CONF_MIN_MOISTURE = f"min_{READING_MOISTURE}"
+CONF_MAX_MOISTURE = f"max_{READING_MOISTURE}"
+CONF_MIN_CONDUCTIVITY = f"min_{READING_CONDUCTIVITY}"
+CONF_MAX_CONDUCTIVITY = f"max_{READING_CONDUCTIVITY}"
+CONF_MIN_BRIGHTNESS = f"min_{READING_BRIGHTNESS}"
+CONF_MAX_BRIGHTNESS = f"max_{READING_BRIGHTNESS}"
 CONF_CHECK_DAYS = "check_days"
 
 CONF_SENSOR_BATTERY_LEVEL = READING_BATTERY
@@ -101,8 +100,6 @@ PLANT_SCHEMA = vol.Schema(
 )
 
 DOMAIN = "plant"
-GROUP_NAME_ALL_PLANTS = "all plants"
-ENTITY_ID_ALL_PLANTS = group.ENTITY_ID_FORMAT.format("all_plants")
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
@@ -114,7 +111,7 @@ ENABLE_LOAD_HISTORY = False
 
 async def async_setup(hass, config):
     """Set up the Plant component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_PLANTS)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():

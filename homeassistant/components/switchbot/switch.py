@@ -78,7 +78,7 @@ class SwitchBot(SwitchDevice, RestoreEntity):
 
     @property
     def unique_id(self) -> str:
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._mac.replace(":", "")
 
     @property

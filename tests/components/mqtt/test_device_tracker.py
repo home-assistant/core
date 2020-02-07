@@ -27,7 +27,7 @@ async def test_ensure_device_tracker_platform_validation(hass):
         assert "qos" in config
 
     with patch(
-        "homeassistant.components.mqtt.device_tracker." "async_setup_scanner",
+        "homeassistant.components.mqtt.device_tracker.async_setup_scanner",
         autospec=True,
         side_effect=mock_setup_scanner,
     ) as mock_sp:

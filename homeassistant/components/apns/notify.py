@@ -150,7 +150,7 @@ class ApnsNotificationService(BaseNotificationService):
         self.app_name = app_name
         self.sandbox = sandbox
         self.certificate = cert_file
-        self.yaml_path = hass.config.path(app_name + "_" + APNS_DEVICES)
+        self.yaml_path = hass.config.path(f"{app_name}_{APNS_DEVICES}")
         self.devices = {}
         self.device_states = {}
         self.topic = topic
@@ -177,7 +177,7 @@ class ApnsNotificationService(BaseNotificationService):
 
     def device_state_changed_listener(self, entity_id, from_s, to_s):
         """
-        Listen for sate change.
+        Listen for state change.
 
         Track device state change if a device has a tracking id specified.
         """

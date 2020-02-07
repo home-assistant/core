@@ -54,7 +54,7 @@ class ComponentFactory:
 
         self.init_controller_mock.side_effect = init_controller
 
-        # Setup home assistant.
+        # Setup Home Assistant.
         assert await async_setup_component(hass, DOMAIN, hass_config)
         await hass.async_block_till_done()
 

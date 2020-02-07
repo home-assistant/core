@@ -137,7 +137,7 @@ class ToonData:
 
     def update(self, now=None):
         """Update all Toon data and notify entities."""
-        # Ignore the TTL meganism from client library
+        # Ignore the TTL mechanism from client library
         # It causes a lots of issues, hence we take control over caching
         self._toon._clear_cache()  # pylint: disable=protected-access
 

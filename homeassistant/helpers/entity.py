@@ -284,7 +284,7 @@ class Entity(ABC):
         self._async_write_ha_state()
 
     @callback
-    def async_write_ha_state(self):
+    def async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
         if self.hass is None:
             raise RuntimeError(f"Attribute hass is None for {self}")
@@ -294,7 +294,7 @@ class Entity(ABC):
                 f"No entity id specified for entity {self.name}"
             )
 
-        self._async_write_ha_state()
+        self._async_write_ha_state()  # type: ignore
 
     @callback
     def _async_write_ha_state(self):
@@ -365,13 +365,17 @@ class Entity(ABC):
 
         if end - start > 0.4 and not self._slow_reported:
             self._slow_reported = True
+            url = "https://github.com/home-assistant/home-assistant/issues?q=is%3Aopen+is%3Aissue"
+            if self.platform:
+                url += f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
+
             _LOGGER.warning(
                 "Updating state for %s (%s) took %.3f seconds. "
-                "Please report platform to the developers at "
-                "https://goo.gl/Nvioub",
+                "Please create a bug report at %s",
                 self.entity_id,
                 type(self),
                 end - start,
+                url,
             )
 
         # Overwrite properties that have been set in the config file.
@@ -473,8 +477,9 @@ class Entity(ABC):
             self._on_remove = []
         self._on_remove.append(func)
 
-    async def async_remove(self):
+    async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
+        assert self.hass is not None
         await self.async_internal_will_remove_from_hass()
         await self.async_will_remove_from_hass()
 
@@ -562,12 +567,11 @@ class Entity(ABC):
 
     def __repr__(self) -> str:
         """Return the representation."""
-        return "<Entity {}: {}>".format(self.name, self.state)
+        return f"<Entity {self.name}: {self.state}>"
 
     # call an requests
     async def async_request_call(self, coro):
         """Process request batched."""
-
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 
@@ -595,23 +599,17 @@ class ToggleEntity(Entity):
         """Turn the entity on."""
         raise NotImplementedError()
 
-    def async_turn_on(self, **kwargs):
-        """Turn the entity on.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        await self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         raise NotImplementedError()
 
-    def async_turn_off(self, **kwargs):
-        """Turn the entity off.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        await self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
@@ -620,11 +618,9 @@ class ToggleEntity(Entity):
         else:
             self.turn_on(**kwargs)
 
-    def async_toggle(self, **kwargs):
-        """Toggle the entity.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_toggle(self, **kwargs):
+        """Toggle the entity."""
         if self.is_on:
-            return self.async_turn_off(**kwargs)
-        return self.async_turn_on(**kwargs)
+            await self.async_turn_off(**kwargs)
+        else:
+            await self.async_turn_on(**kwargs)

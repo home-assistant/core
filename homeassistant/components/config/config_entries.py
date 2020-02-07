@@ -23,12 +23,8 @@ async def async_setup(hass):
     hass.http.register_view(ConfigManagerFlowResourceView(hass.config_entries.flow))
     hass.http.register_view(ConfigManagerAvailableFlowView)
 
-    hass.http.register_view(
-        OptionManagerFlowIndexView(hass.config_entries.options.flow)
-    )
-    hass.http.register_view(
-        OptionManagerFlowResourceView(hass.config_entries.options.flow)
-    )
+    hass.http.register_view(OptionManagerFlowIndexView(hass.config_entries.options))
+    hass.http.register_view(OptionManagerFlowResourceView(hass.config_entries.options))
 
     hass.components.websocket_api.async_register_command(config_entries_progress)
     hass.components.websocket_api.async_register_command(system_options_list)

@@ -9,7 +9,13 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_MUTED,
     SERVICE_SELECT_SOURCE,
 )
-from homeassistant.components.webostv import DOMAIN
+from homeassistant.components.webostv import (
+    ATTR_BUTTON,
+    ATTR_COMMAND,
+    DOMAIN,
+    SERVICE_BUTTON,
+    SERVICE_COMMAND,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -72,6 +78,36 @@ async def test_select_source_with_empty_source_list(hass, client):
     await hass.services.async_call(media_player.DOMAIN, SERVICE_SELECT_SOURCE, data)
     await hass.async_block_till_done()
 
-    assert hass.states.is_state(ENTITY_ID, "playing")
     client.launch_app.assert_not_called()
     client.set_input.assert_not_called()
+
+
+async def test_button(hass, client):
+    """Test generic button functionality."""
+
+    await setup_webostv(hass)
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_BUTTON: "test",
+    }
+    await hass.services.async_call(DOMAIN, SERVICE_BUTTON, data)
+    await hass.async_block_till_done()
+
+    client.button.assert_called_once()
+    client.button.assert_called_with("test")
+
+
+async def test_command(hass, client):
+    """Test generic button functionality."""
+
+    await setup_webostv(hass)
+
+    data = {
+        ATTR_ENTITY_ID: ENTITY_ID,
+        ATTR_COMMAND: "test",
+    }
+    await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data)
+    await hass.async_block_till_done()
+
+    client.request.assert_called_with("test")

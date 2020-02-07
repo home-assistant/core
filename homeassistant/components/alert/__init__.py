@@ -213,7 +213,7 @@ class Alert(ToggleEntity):
 
     @property
     def should_poll(self):
-        """HASS need not poll these entities."""
+        """Home Assistant need not poll these entities."""
         return False
 
     @property
