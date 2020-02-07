@@ -1,5 +1,6 @@
 """Support for iammeter via local API."""
 import asyncio
+import async_timeout
 from datetime import timedelta
 import logging
 
@@ -17,34 +18,38 @@ from homeassistant.helpers.event import async_track_time_interval
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 80
+DEFAULT_DEVICE_NAME = "IamMeter"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default="IamMeter"): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_DEVICE_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
 SCAN_INTERVAL = timedelta(seconds=30)
+PLATFORM_TIMEOUT = 8
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Platform setup."""
-    api = await real_time_api(config[CONF_HOST], config[CONF_PORT])
-    endpoint = RealTimeDataEndpoint(hass, api)
-    devices = []
-    for sensor, (row, idx, unit) in api.iammeter.sensor_map().items():
-        uid = f"{config[CONF_NAME]}-{api.iammeter.mac}-{api.iammeter.serial_number}-{row}-{idx}"
-        devices.append(
-            IamMeter(uid, api.iammeter.serial_number, sensor, unit, config[CONF_NAME])
-        )
-    endpoint = RealTimeDataEndpoint(hass, api)
-    endpoint.ready.set()
-    hass.async_add_job(endpoint.async_refresh)
-    async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
-    endpoint.sensors = devices
-    async_add_entities(devices)
+    try:
+        with async_timeout.timeout(PLATFORM_TIMEOUT):
+            api = await real_time_api(config[CONF_HOST], config[CONF_PORT])
+            endpoint = RealTimeDataEndpoint(hass, api)
+            devices = []
+            for sensor, (row, idx, unit) in api.iammeter.sensor_map().items():
+                uid = f"{config[CONF_NAME]}-{api.iammeter.mac}-{api.iammeter.serial_number}-{row}-{idx}"
+                devices.append(
+                    IamMeter(uid, api.iammeter.serial_number, sensor, unit, config[CONF_NAME])
+                )
+            endpoint.ready.set()
+            endpoint.sensors = devices
+            async_add_entities(devices)
+            async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
+    except asyncio.TimeoutError:
+        raise PlatformNotReady
 
 
 class RealTimeDataEndpoint:
@@ -59,14 +64,8 @@ class RealTimeDataEndpoint:
 
     async def async_refresh(self, now=None):
         """Fetch new state data for the sensor.This is the only method that should fetch new data for Home Assistant."""
-        try:
-            api_response = await self.api.get_data()
-            self.ready.set()
-        except IamMeterError:
-            if now is not None:
-                self.ready.clear()
-                return
-            raise PlatformNotReady
+        api_response = await self.api.get_data()
+        self.ready.set()
         data = api_response.data
         for sensor in self.sensors:
             if sensor.key in data:
