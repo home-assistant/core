@@ -249,6 +249,7 @@ class OneWire(Entity):
         """Return a unique ID."""
         return self._device_file
 
+
 class OneWireProxy(OneWire):
     """Implementation of a One wire Sensor through owserver."""
 
