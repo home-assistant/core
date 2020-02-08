@@ -1,9 +1,4 @@
-"""
-Support for viewing camera streams from QVR Pro.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.qvrpro
-"""
+"""Support for QVR Pro streams."""
 
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 
