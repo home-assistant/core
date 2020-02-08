@@ -23,8 +23,8 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 
 from . import extract_entities, initialise_templates
