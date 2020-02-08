@@ -38,7 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the connection to the modem."""
-    _LOGGER.debug("Added for prehook test")
     insteon_modem = None
 
     conf = config[DOMAIN]
