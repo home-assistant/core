@@ -1,10 +1,12 @@
 """Validate manifests."""
 import pathlib
 import sys
+from time import monotonic
 
 from . import (
     codeowners,
     config_flow,
+    coverage,
     dependencies,
     json,
     manifest,
@@ -18,6 +20,7 @@ PLUGINS = [
     json,
     codeowners,
     config_flow,
+    coverage,
     dependencies,
     manifest,
     services,
@@ -48,7 +51,17 @@ def main():
     integrations = Integration.load_dir(pathlib.Path("homeassistant/components"))
 
     for plugin in PLUGINS:
-        plugin.validate(integrations, config)
+        try:
+            start = monotonic()
+            print(f"Validating {plugin.__name__.split('.')[-1]}...", end="", flush=True)
+            plugin.validate(integrations, config)
+            print(" done in {:.2f}s".format(monotonic() - start))
+        except RuntimeError as err:
+            print()
+            print()
+            print("Error!")
+            print(err)
+            return 1
 
     # When we generate, all errors that are fixable will be ignored,
     # as generating them will be fixed.

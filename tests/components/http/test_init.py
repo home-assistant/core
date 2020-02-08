@@ -1,4 +1,5 @@
 """The tests for the Home Assistant HTTP component."""
+from ipaddress import ip_network
 import logging
 import unittest
 from unittest.mock import patch
@@ -244,12 +245,16 @@ async def test_cors_defaults(hass):
 
 async def test_storing_config(hass, aiohttp_client, aiohttp_unused_port):
     """Test that we store last working config."""
-    config = {http.CONF_SERVER_PORT: aiohttp_unused_port()}
+    config = {
+        http.CONF_SERVER_PORT: aiohttp_unused_port(),
+        "use_x_forwarded_for": True,
+        "trusted_proxies": ["192.168.1.100"],
+    }
 
-    await async_setup_component(hass, http.DOMAIN, {http.DOMAIN: config})
+    assert await async_setup_component(hass, http.DOMAIN, {http.DOMAIN: config})
 
     await hass.async_start()
+    restored = await hass.components.http.async_get_last_config()
+    restored["trusted_proxies"][0] = ip_network(restored["trusted_proxies"][0])
 
-    assert await hass.components.http.async_get_last_config() == http.HTTP_SCHEMA(
-        config
-    )
+    assert restored == http.HTTP_SCHEMA(config)

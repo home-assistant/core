@@ -246,7 +246,7 @@ async def test_linked_battery_sensor(hass, hk_driver, caplog):
 
 
 async def test_missing_linked_battery_sensor(hass, hk_driver, caplog):
-    """Test battery service with mising linked_battery_sensor."""
+    """Test battery service with missing linked_battery_sensor."""
     entity_id = "homekit.accessory"
     linked_battery = "sensor.battery"
     hass.states.async_set(entity_id, "open")

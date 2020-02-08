@@ -279,7 +279,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
     name = "api:ios:identify"
 
     def __init__(self, config_path):
-        """Initiliaze the view."""
+        """Initialize the view."""
         self._config_path = config_path
 
     async def post(self, request):

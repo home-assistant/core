@@ -1,13 +1,12 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Kontoen er allerede konfigurert"
+            "already_configured": "Kontoen er allerede konfigurert"
         },
         "error": {
             "access": "Kunne ikke f\u00e5 tilgang til Enedis.fr, vennligst sjekk internettforbindelsen din",
             "enedis": "Enedis.fr svarte med en feil: vennligst pr\u00f8v p\u00e5 nytt senere (vanligvis ikke mellom 23:00 og 02:00)",
             "unknown": "Ukjent feil: pr\u00f8v p\u00e5 nytt senere (vanligvis ikke mellom 23:00 og 02:00)",
-            "username_exists": "Kontoen er allerede konfigurert",
             "wrong_login": "Innloggingsfeil: vennligst sjekk e-postadressen og passordet ditt"
         },
         "step": {

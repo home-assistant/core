@@ -1,10 +1,11 @@
 {
   "config": {
+    "flow_title": "Samsung TV: {model}",
     "title": "Samsung TV",
     "step": {
       "user": {
         "title": "Samsung TV",
-        "description": "Enter your Samsung TV information. If you never connected Home Assistant before you should see a popup on your TV asking for authentication.",
+        "description": "Enter your Samsung TV information. If you never connected Home Assistant before you should see a popup on your TV asking for authorization.",
         "data": {
             "host": "Host or IP address",
             "name": "Name"
@@ -12,15 +13,15 @@
       },
       "confirm": {
         "title": "Samsung TV",
-        "description": "Do you want to set up Samsung TV {model}? If you never connected Home Assistant before you should see a popup on your TV asking for authentication. Manual configurations for this TV will be overwritten."
+        "description": "Do you want to set up Samsung TV {model}? If you never connected Home Assistant before you should see a popup on your TV asking for authorization. Manual configurations for this TV will be overwritten."
       }
     },
     "abort": {
       "already_in_progress": "Samsung TV configuration is already in progress.",
       "already_configured": "This Samsung TV is already configured.",
-      "auth_missing": "Home Assistant is not authenticated to connect to this Samsung TV.",
-      "not_found": "No supported Samsung TV devices found on the network.",
-      "not_supported": "This Samsung TV devices is currently not supported."
+      "auth_missing": "Home Assistant is not authorized to connect to this Samsung TV. Please check your TV's settings to authorize Home Assistant.",
+      "not_successful": "Unable to connect to this Samsung TV device.",
+      "not_supported": "This Samsung TV device is currently not supported."
     }
   }
 }

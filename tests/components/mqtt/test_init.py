@@ -1,4 +1,5 @@
 """The tests for the MQTT component."""
+from datetime import timedelta
 import ssl
 import unittest
 from unittest import mock
@@ -16,10 +17,12 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
+    async_fire_time_changed,
     async_mock_mqtt_component,
     fire_mqtt_message,
     get_test_home_assistant,
@@ -803,3 +806,25 @@ async def test_mqtt_ws_subscription(hass, hass_ws_client):
     await client.send_json({"id": 8, "type": "unsubscribe_events", "subscription": 5})
     response = await client.receive_json()
     assert response["success"]
+
+
+async def test_dump_service(hass):
+    """Test that we can dump a topic."""
+    await async_mock_mqtt_component(hass)
+
+    mock_open = mock.mock_open()
+
+    await hass.services.async_call(
+        "mqtt", "dump", {"topic": "bla/#", "duration": 3}, blocking=True
+    )
+    async_fire_mqtt_message(hass, "bla/1", "test1")
+    async_fire_mqtt_message(hass, "bla/2", "test2")
+
+    with mock.patch("homeassistant.components.mqtt.open", mock_open):
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=3))
+        await hass.async_block_till_done()
+
+    writes = mock_open.return_value.write.mock_calls
+    assert len(writes) == 2
+    assert writes[0][1][0] == "bla/1,test1\n"
+    assert writes[1][1][0] == "bla/2,test2\n"

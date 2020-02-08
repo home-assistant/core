@@ -193,7 +193,7 @@ def async_enable_logging(
             pass
 
     # If the above initialization failed for any reason, setup the default
-    # formatting.  If the above succeeds, this wil result in a no-op.
+    # formatting.  If the above succeeds, this will result in a no-op.
     logging.basicConfig(format=fmt, datefmt=datefmt, level=logging.INFO)
 
     # Suppress overly verbose logs from libraries that aren't helpful

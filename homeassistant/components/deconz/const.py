@@ -1,7 +1,7 @@
 """Constants for the deCONZ component."""
 import logging
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "deconz"
 
@@ -47,7 +47,7 @@ DAMPERS = ["Level controllable output"]
 WINDOW_COVERS = ["Window covering device"]
 COVER_TYPES = DAMPERS + WINDOW_COVERS
 
-POWER_PLUGS = ["On/Off plug-in unit", "Smart plug"]
+POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]
 SIRENS = ["Warning device"]
 SWITCH_TYPES = POWER_PLUGS + SIRENS
 

@@ -1,5 +1,7 @@
 """Test Hue setup process."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
+
+from asynctest import CoroutineMock, patch
 
 from homeassistant.components import hue
 from homeassistant.setup import async_setup_component
@@ -184,3 +186,33 @@ async def test_setting_unique_id(hass):
         assert await async_setup_component(hass, hue.DOMAIN, {}) is True
 
     assert entry.unique_id == "mock-id"
+
+
+async def test_security_vuln_check(hass):
+    """Test that we report security vulnerabilities."""
+    assert await async_setup_component(hass, "persistent_notification", {})
+    entry = MockConfigEntry(domain=hue.DOMAIN, data={"host": "0.0.0.0"})
+    entry.add_to_hass(hass)
+
+    with patch.object(
+        hue,
+        "HueBridge",
+        Mock(
+            return_value=Mock(
+                async_setup=CoroutineMock(return_value=True),
+                api=Mock(
+                    config=Mock(
+                        bridgeid="", mac="", modelid="BSB002", swversion="1935144020"
+                    )
+                ),
+            )
+        ),
+    ):
+
+        assert await async_setup_component(hass, "hue", {})
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("persistent_notification.hue_hub_firmware")
+    assert state is not None
+    assert "CVE-2020-6007" in state.attributes["message"]

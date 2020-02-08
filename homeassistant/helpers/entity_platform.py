@@ -62,22 +62,42 @@ class EntityPlatform:
         # Platform is None for the EntityComponent "catch-all" EntityPlatform
         # which powers entity_component.add_entities
         if platform is None:
-            self.parallel_updates = None
-            self.parallel_updates_semaphore: Optional[asyncio.Semaphore] = None
+            self.parallel_updates_created = True
+            self.parallel_updates: Optional[asyncio.Semaphore] = None
             return
 
-        self.parallel_updates = getattr(platform, "PARALLEL_UPDATES", None)
-        # semaphore will be created on demand
-        self.parallel_updates_semaphore = None
+        self.parallel_updates_created = False
+        self.parallel_updates = None
 
-    def _get_parallel_updates_semaphore(self) -> asyncio.Semaphore:
-        """Get or create a semaphore for parallel updates."""
-        if self.parallel_updates_semaphore is None:
-            self.parallel_updates_semaphore = asyncio.Semaphore(
-                self.parallel_updates if self.parallel_updates else 1,
-                loop=self.hass.loop,
-            )
-        return self.parallel_updates_semaphore
+    @callback
+    def _get_parallel_updates_semaphore(
+        self, entity_has_async_update: bool
+    ) -> Optional[asyncio.Semaphore]:
+        """Get or create a semaphore for parallel updates.
+
+        Semaphore will be created on demand because we base it off if update method is async or not.
+
+        If parallel updates is set to 0, we skip the semaphore.
+        If parallel updates is set to a number, we initialize the semaphore to that number.
+        Default for entities with `async_update` method is 1. Otherwise it's 0.
+        """
+        if self.parallel_updates_created:
+            return self.parallel_updates
+
+        self.parallel_updates_created = True
+
+        parallel_updates = getattr(self.platform, "PARALLEL_UPDATES", None)
+
+        if parallel_updates is None and not entity_has_async_update:
+            parallel_updates = 1
+
+        if parallel_updates == 0:
+            parallel_updates = None
+
+        if parallel_updates is not None:
+            self.parallel_updates = asyncio.Semaphore(parallel_updates)
+
+        return self.parallel_updates
 
     async def async_setup(self, platform_config, discovery_info=None):
         """Set up the platform from a config file."""
@@ -282,21 +302,9 @@ class EntityPlatform:
 
         entity.hass = self.hass
         entity.platform = self
-
-        # Async entity
-        # PARALLEL_UPDATES == None: entity.parallel_updates = None
-        # PARALLEL_UPDATES == 0:    entity.parallel_updates = None
-        # PARALLEL_UPDATES > 0:     entity.parallel_updates = Semaphore(p)
-        # Sync entity
-        # PARALLEL_UPDATES == None: entity.parallel_updates = Semaphore(1)
-        # PARALLEL_UPDATES == 0:    entity.parallel_updates = None
-        # PARALLEL_UPDATES > 0:     entity.parallel_updates = Semaphore(p)
-        if hasattr(entity, "async_update") and not self.parallel_updates:
-            entity.parallel_updates = None
-        elif not hasattr(entity, "async_update") and self.parallel_updates == 0:
-            entity.parallel_updates = None
-        else:
-            entity.parallel_updates = self._get_parallel_updates_semaphore()
+        entity.parallel_updates = self._get_parallel_updates_semaphore(
+            hasattr(entity, "async_update")
+        )
 
         # Update properties before we generate the entity_id
         if update_before_add:

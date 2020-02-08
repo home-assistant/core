@@ -18,7 +18,7 @@
                 "title": "\u00c4ren Elgato Key Light verbannen"
             },
             "zeroconf_confirm": {
-                "description": "W\u00ebllt dir den Elgato Key Light mat der Seriennummer  `{serial_number}` am 'Home Assistant dob\u00e4isetzen?",
+                "description": "W\u00ebllt dir den Elgato Key Light mat der Seriennummer  `{serial_number}` am Home Assistant dob\u00e4isetzen?",
                 "title": "Entdeckten Elgato Key Light Apparat"
             }
         },

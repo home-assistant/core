@@ -13,6 +13,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from .const import DOMAIN, LOGGER
 from .errors import AuthenticationRequired, CannotConnect
 from .helpers import create_config_flow
+from .sensor_base import SensorManager
 
 SERVICE_HUE_SCENE = "hue_activate_scene"
 ATTR_GROUP_NAME = "group_name"
@@ -35,6 +36,9 @@ class HueBridge:
         self.authorized = False
         self.api = None
         self.parallel_updates_semaphore = None
+        # Jobs to be executed when API is reset.
+        self.reset_jobs = []
+        self.sensor_manager = None
 
     @property
     def host(self):
@@ -72,6 +76,7 @@ class HueBridge:
             return False
 
         self.api = bridge
+        self.sensor_manager = SensorManager(self)
 
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(self.config_entry, "light")
@@ -118,6 +123,9 @@ class HueBridge:
 
         self.hass.services.async_remove(DOMAIN, SERVICE_HUE_SCENE)
 
+        while self.reset_jobs:
+            self.reset_jobs.pop()()
+
         # If setup was successful, we set api variable, forwarded entry and
         # register service
         results = await asyncio.gather(
@@ -131,6 +139,7 @@ class HueBridge:
                 self.config_entry, "sensor"
             ),
         )
+
         # None and True are OK
         return False not in results
 
