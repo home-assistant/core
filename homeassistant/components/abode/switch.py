@@ -1,6 +1,4 @@
 """Support for Abode Security System switches."""
-import logging
-
 import abodepy.helpers.constants as CONST
 import abodepy.helpers.timeline as TIMELINE
 
@@ -9,8 +7,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import AbodeAutomation, AbodeDevice
 from .const import DOMAIN, SIGNAL_TRIGGER_AUTOMATION
-
-_LOGGER = logging.getLogger(__name__)
 
 DEVICE_TYPES = [CONST.TYPE_SWITCH, CONST.TYPE_VALVE]
 
