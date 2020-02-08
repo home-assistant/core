@@ -1,8 +1,10 @@
 """Support for interface with an Samsung TV."""
 import asyncio
 from datetime import timedelta
+import os
 
 from samsungctl import Remote as SamsungRemote, exceptions as samsung_exceptions
+from samsungtvws import SamsungTVWS
 import voluptuous as vol
 from websocket import WebSocketException
 
@@ -103,7 +105,26 @@ class SamsungTVDevice(MediaPlayerDevice):
             "port": config_entry.data.get(CONF_PORT),
             "host": config_entry.data[CONF_HOST],
             "timeout": 1,
+            "token_file": None,
         }
+        if config_entry.data[CONF_PORT] == 8002:
+            self._config["token_file"] = self._get_token_file()
+
+    def _get_token_file(self):
+        path = self.hass.config.path()
+        host = self._config_entry.data[CONF_HOST]
+        token_file = f"{path}/.samsungtv-token-{host}.dat"
+
+        if os.path.isfile(token_file) is False:
+
+            # Create token file for catch possible errors
+            try:
+                handle = open(token_file, "w+")
+                handle.close()
+            except OSError:
+                LOGGER.error("Samsung TV - Error creating token file: %s", token_file)
+                token_file = None
+        return token_file
 
     def update(self):
         """Update state of device."""
@@ -134,7 +155,17 @@ class SamsungTVDevice(MediaPlayerDevice):
         if self._remote is None:
             # We need to create a new instance to reconnect.
             try:
-                self._remote = SamsungRemote(self._config.copy())
+                if self._config["method"] == "legacy":
+                    self._remote = SamsungRemote(self._config.copy())
+                else:
+                    self._remote = SamsungTVWS(
+                        host=self._config["host"],
+                        port=self._config["port"],
+                        token_file=self._config["token_file"],
+                        timeout=self._config["timeout"],
+                        name=self._config["name"],
+                    )
+                    self._remote.open()
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
             except samsung_exceptions.AccessDenied:
