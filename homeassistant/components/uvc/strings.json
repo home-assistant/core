@@ -8,7 +8,6 @@
           "nvr": "Host",
           "port": "Port",
           "key": "Integrations key",
-          "password": "Camera password",
           "ssl": "SSL connection"
         }
       }

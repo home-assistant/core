@@ -8,10 +8,8 @@ from homeassistant import config_entries
 from . import (
     CONF_KEY,
     CONF_NVR,
-    CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
-    DEFAULT_PASSWORD,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DOMAIN,
@@ -33,7 +31,6 @@ class UvcFlowHandler(config_entries.ConfigFlow):
         fields[vol.Required(CONF_NVR)] = str
         fields[vol.Optional(CONF_PORT, default=DEFAULT_PORT)] = int
         fields[vol.Required(CONF_KEY)] = str
-        fields[vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD)] = str
         fields[vol.Optional(CONF_SSL, default=DEFAULT_SSL)] = bool
 
         if user_input is not None:

@@ -5,7 +5,6 @@
                 "data": {
                     "key": "Integrations key",
                     "nvr": "Host",
-                    "password": "Camera password",
                     "port": "Port",
                     "ssl": "SSL connection"
                 },

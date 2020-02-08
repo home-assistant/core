@@ -4,11 +4,9 @@ DOMAIN = "uvc"
 
 CONF_NVR = "nvr"
 CONF_KEY = "key"
-CONF_PASSWORD = "password"
 CONF_PORT = "port"
 CONF_SSL = "ssl"
 
-DEFAULT_PASSWORD = "ubnt"
 DEFAULT_PORT = 7080
 DEFAULT_SSL = False
 
@@ -23,3 +21,4 @@ async def async_setup_entry(hass, config_entry):
     hass.async_add_job(
         hass.config_entries.async_forward_entry_setup(config_entry, "camera")
     )
+    return True
