@@ -63,6 +63,7 @@ class QVRProCamera(Camera):
         """Get stream source."""
         return self._client.get_channel_live_stream(self._channel.guid)
 
+    @property
     def supported_features(self):
         """Get supported features."""
         return SUPPORT_STREAM
