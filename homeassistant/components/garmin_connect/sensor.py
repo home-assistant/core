@@ -173,7 +173,7 @@ class GarminConnectSensor(Entity):
             else:
                 self._state = data[self._type]
         except KeyError:
-            _LOGGER.info("Entity type %s not found in fetched data.", self._type)
+            _LOGGER.debug("Entity type %s not found in fetched data", self._type)
             return
 
         _LOGGER.debug(
