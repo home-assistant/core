@@ -188,8 +188,20 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
                     self._must_show_form = False
                 else:
-                    self._data = copy.deepcopy(user_input)
-                    return await self.async_step_pair_tv()
+                    # Check that device host is valid and SmartCast API can be reached
+                    if not await VizioAsync(
+                        "",
+                        user_input[CONF_HOST],
+                        "",
+                        "fake_token",
+                        user_input[CONF_DEVICE_CLASS],
+                        session=async_get_clientsession(self.hass, False),
+                    ).can_connect_no_auth_check():
+                        errors["base"] = "cant_connect"
+
+                    if not errors:
+                        self._data = copy.deepcopy(user_input)
+                        return await self.async_step_pair_tv()
 
         schema = self._user_schema or _get_config_schema()
 

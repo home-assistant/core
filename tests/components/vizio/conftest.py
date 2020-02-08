@@ -40,11 +40,14 @@ def skip_notifications_fixture():
         yield
 
 
-@pytest.fixture(name="vizio_connect")
-def vizio_connect_fixture():
+@pytest.fixture(name="vizio_connect_with_valid_auth")
+def vizio_connect_with_valid_auth_fixture():
     """Mock valid vizio device and entry setup."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.vizio.config_flow.VizioAsync.can_connect_no_auth_check",
         return_value=True,
     ), patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.get_unique_id",
@@ -120,6 +123,9 @@ def vizio_cant_connect_fixture():
     """Mock vizio device can't connect with valid auth."""
     with patch(
         "homeassistant.components.vizio.config_flow.VizioAsync.validate_ha_config",
+        return_value=False,
+    ), patch(
+        "homeassistant.components.vizio.config_flow.VizioAsync.can_connect_no_auth_check",
         return_value=False,
     ):
         yield
