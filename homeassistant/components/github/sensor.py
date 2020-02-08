@@ -132,18 +132,20 @@ class GitHubSensor(Entity):
         self._github_data.update()
 
         self._name = self._github_data.name
-        self._state = self._github_data.latest_release_url.split("tag/")[1]
         self._repository_path = self._github_data.repository_path
         self._available = self._github_data.available
         self._latest_commit_message = self._github_data.latest_commit_message
         self._latest_commit_sha = self._github_data.latest_commit_sha
         self._latest_release_url = self._github_data.latest_release_url
+        if self._latest_release_url is not None:
+            self._state = self._latest_release_url.split("tag/")[1]
+        else:
+            self._state = None
         self._open_issue_count = self._github_data.open_issue_count
         self._latest_open_issue_url = self._github_data.latest_open_issue_url
         self._pull_request_count = self._github_data.pull_request_count
         self._latest_open_pr_url = self._github_data.latest_open_pr_url
         self._stargazers = self._github_data.stargazers
-
 
 class GitHubData:
     """GitHub Data object."""
