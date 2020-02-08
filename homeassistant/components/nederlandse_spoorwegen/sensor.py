@@ -58,11 +58,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
     except Exception as error:
         _LOGGER.error("NS integration crashed, please check configuration: %s", error)
-        hass.components.persistent_notification.create(
-            'The Nederlandse Spoorwegen component is not working, please check if your configuration is correct using the <a href="https://www.home-assistant.io/integrations/nederlandse_spoorwegen/">documentation</a>.',
-            title="NS configuration error",
-            notification_id="nederlandse_spoorwegen_config_error",
-        )
         return
 
     sensors = []
