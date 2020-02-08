@@ -1,7 +1,7 @@
 """Support for MelCloud device sensors."""
 import logging
 
-from pymelcloud import AtaDevice
+from pymelcloud import DEVICE_TYPE_ATA, AtaDevice
 
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
@@ -42,8 +42,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
         [
             MelCloudSensor(mel_device, definition, hass.config.units)
             for definition in SENSORS
-            for mel_device in mel_devices
-            if isinstance(mel_device.device, AtaDevice)
+            for mel_device in mel_devices[DEVICE_TYPE_ATA]
         ],
         True,
     )

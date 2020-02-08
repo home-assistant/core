@@ -147,4 +147,7 @@ async def mel_api_setup(hass, token) -> Optional[List[MelCloudDevice]]:
     except (asyncio.TimeoutError, ClientConnectionError) as ex:
         raise ConfigEntryNotReady() from ex
 
-    return [MelCloudDevice(device) for device in devices]
+    wrapped_devices = {}
+    for k, value in devices.items():
+        wrapped_devices[k] = [MelCloudDevice(device) for device in value]
+    return wrapped_devices

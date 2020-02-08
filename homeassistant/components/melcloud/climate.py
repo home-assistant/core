@@ -3,7 +3,7 @@ from datetime import timedelta
 import logging
 from typing import List, Optional
 
-from pymelcloud import AtaDevice
+from pymelcloud import DEVICE_TYPE_ATA
 
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.climate.const import (
@@ -33,11 +33,7 @@ async def async_setup_entry(
     """Set up MelCloud device climate based on config_entry."""
     mel_devices = hass.data[DOMAIN].get(entry.entry_id)
     async_add_entities(
-        [
-            AtaDeviceClimate(mel_device)
-            for mel_device in mel_devices
-            if isinstance(mel_device.device, AtaDevice)
-        ],
+        [AtaDeviceClimate(mel_device) for mel_device in mel_devices[DEVICE_TYPE_ATA]],
         True,
     )
 

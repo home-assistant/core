@@ -3,6 +3,7 @@ import asyncio
 
 from aiohttp import ClientError, ClientResponseError
 from asynctest import patch as async_patch
+import pymelcloud
 import pytest
 
 from homeassistant import config_entries
@@ -23,7 +24,9 @@ def mock_login():
 def mock_get_devices():
     """Mock pymelcloud get_devices."""
     with async_patch("pymelcloud.get_devices") as mock:
-        mock.return_value = mock_coro([])
+        mock.return_value = mock_coro(
+            {pymelcloud.DEVICE_TYPE_ATA: [], pymelcloud.DEVICE_TYPE_ATW: []}
+        )
         yield mock
 
 
