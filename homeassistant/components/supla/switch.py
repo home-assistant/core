@@ -1,4 +1,4 @@
-"""Support for Supla cover - curtains, rollershutters etc."""
+"""Support for Supla switch."""
 import logging
 from pprint import pformat
 
@@ -34,5 +34,5 @@ class SuplaSwitch(SuplaChannel, SwitchDevice):
         """Return true if switch is on."""
         state = self.channel_data.get("state")
         if state:
-            return state["on"]
+            return state.get("on")
         return False
