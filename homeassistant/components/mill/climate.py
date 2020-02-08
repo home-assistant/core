@@ -173,7 +173,7 @@ class MillHeater(ClimateDevice):
 
         Need to be one of HVAC_MODE_*.
         """
-        if self._heater.is_gen1 or self._heater.power_status == 1:
+        if self._heater.is_gen1 or self._heater.is_heating == 1:
             return HVAC_MODE_HEAT
         return HVAC_MODE_OFF
 

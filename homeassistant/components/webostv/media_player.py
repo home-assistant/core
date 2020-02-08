@@ -29,6 +29,7 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     STATE_OFF,
     STATE_ON,
 )
@@ -36,11 +37,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.script import Script
 
 from . import CONF_ON_ACTION, CONF_SOURCES, DOMAIN
+from .const import ATTR_SOUND_OUTPUT, LIVE_TV_APP_ID
 
 _LOGGER = logging.getLogger(__name__)
-
-
-LIVETV_APP_ID = "com.webos.app.livetv"
 
 
 SUPPORT_WEBOSTV = (
@@ -58,8 +57,6 @@ SUPPORT_WEBOSTV = (
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-
-LIVE_TV_APP_ID = "com.webos.app.livetv"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -141,6 +138,9 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     async def async_signal_handler(self, data):
         """Handle domain-specific signal by calling appropriate method."""
         entity_ids = data[ATTR_ENTITY_ID]
+        if entity_ids == ENTITY_MATCH_NONE:
+            return
+
         if entity_ids == ENTITY_MATCH_ALL or self.entity_id in entity_ids:
             params = {
                 key: value
@@ -227,11 +227,10 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        client_state = self._client.power_state.get("state")
-        if client_state in [None, "Power Off", "Suspend", "Active Standby"]:
-            return STATE_OFF
+        if self._client.is_on:
+            return STATE_ON
 
-        return STATE_ON
+        return STATE_OFF
 
     @property
     def is_volume_muted(self):
@@ -290,6 +289,14 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
             return SUPPORT_WEBOSTV | SUPPORT_TURN_ON
         return SUPPORT_WEBOSTV
 
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        attributes = {}
+        if self._client.sound_output is not None and self.state != STATE_OFF:
+            attributes[ATTR_SOUND_OUTPUT] = self._client.sound_output
+        return attributes
+
     @cmd
     async def async_turn_off(self):
         """Turn off media player."""
@@ -313,13 +320,18 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     @cmd
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        tv_volume = volume * 100
+        tv_volume = int(round(volume * 100))
         await self._client.set_volume(tv_volume)
 
     @cmd
     async def async_mute_volume(self, mute):
         """Send mute command."""
         await self._client.set_mute(mute)
+
+    @cmd
+    async def async_select_sound_output(self, sound_output):
+        """Select the sound output."""
+        await self._client.change_sound_output(sound_output)
 
     @cmd
     async def async_media_play_pause(self):
@@ -397,7 +409,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     async def async_media_next_track(self):
         """Send next track command."""
         current_input = self._client.get_input()
-        if current_input == LIVETV_APP_ID:
+        if current_input == LIVE_TV_APP_ID:
             await self._client.channel_up()
         else:
             await self._client.fast_forward()
@@ -406,7 +418,7 @@ class LgWebOSMediaPlayerEntity(MediaPlayerDevice):
     async def async_media_previous_track(self):
         """Send the previous track command."""
         current_input = self._client.get_input()
-        if current_input == LIVETV_APP_ID:
+        if current_input == LIVE_TV_APP_ID:
             await self._client.channel_down()
         else:
             await self._client.rewind()

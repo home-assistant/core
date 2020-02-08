@@ -115,6 +115,7 @@ class RestoreStateData:
         self.last_states: Dict[str, StoredState] = {}
         self.entity_ids: Set[str] = set()
 
+    @callback
     def async_get_stored_states(self) -> List[StoredState]:
         """Get the set of states which should be stored.
 

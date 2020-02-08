@@ -1,8 +1,20 @@
 {
     "config": {
+        "abort": {
+            "already_in_progress": "El flux de configuraci\u00f3 pel component Vizio ja est\u00e0 en curs.",
+            "already_setup": "Aquesta entrada ja ha estat configurada.",
+            "already_setup_with_diff_host_and_name": "Sembla que aquesta entrada ja s'ha configurat amb un amfitri\u00f3 i nom diferents a partir del n\u00famero de s\u00e8rie. Elimina les entrades antigues de configuraction.yaml i del men\u00fa d'integracions abans de provar d'afegir el dispositiu novament.",
+            "host_exists": "Ja existeix un component Vizio configurat amb el host.",
+            "name_exists": "Ja existeix un component Vizio configurat amb el nom.",
+            "updated_entry": "Aquesta entrada ja s'ha configurat per\u00f2 el nom i les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, s'han actualitzat.",
+            "updated_options": "Aquesta entrada ja s'ha configurat per\u00f2 les opcions definides a la configuraci\u00f3 no coincideixen amb els valors importats anteriorment, en conseq\u00fc\u00e8ncia, s'han actualitzat.",
+            "updated_volume_step": "Aquesta entrada ja s'ha configurat per\u00f2 la mida de l'increment de volum definit a la configuraci\u00f3 no coincideix, en conseq\u00fc\u00e8ncia, s'ha actualitzat."
+        },
         "error": {
+            "cant_connect": "No s'ha pogut connectar amb el dispositiu. [Comprova la documentaci\u00f3](https://www.home-assistant.io/integrations/vizio/) i torna a verificar que: \n - El dispositiu est\u00e0 engegat \n - El dispositiu est\u00e0 connectat a la xarxa \n - Els valors que has intridu\u00eft s\u00f3n correctes\n   abans d\u2019intentar tornar a presentar.",
             "host_exists": "L'amfitri\u00f3 ja est\u00e0 configurat.",
-            "name_exists": "El nom ja est\u00e0 configurat."
+            "name_exists": "El nom ja est\u00e0 configurat.",
+            "tv_needs_token": "Si el tipus de dispositiu \u00e9s 'tv', cal un testimoni d'acc\u00e9s v\u00e0lid (token)."
         },
         "step": {
             "user": {
@@ -21,9 +33,12 @@
         "step": {
             "init": {
                 "data": {
+                    "timeout": "Temps d'espera de les sol\u00b7licituds API (en segons)",
                     "volume_step": "Mida del pas de volum"
-                }
+                },
+                "title": "Actualitzaci\u00f3 de les opcions de Vizo SmartCast"
             }
-        }
+        },
+        "title": "Actualitzaci\u00f3 de les opcions de Vizo SmartCast"
     }
 }

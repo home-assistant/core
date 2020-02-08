@@ -28,6 +28,7 @@ from .const import (
     DOMAIN,
     DOMAIN_TO_GOOGLE_TYPES,
     ERR_FUNCTION_NOT_SUPPORTED,
+    SOURCE_LOCAL,
     STORE_AGENT_USER_IDS,
 )
 from .error import SmartHomeError
@@ -121,6 +122,7 @@ class AbstractConfig(ABC):
         ]
         await gather(*jobs)
 
+    @callback
     def async_enable_report_state(self):
         """Enable proactive mode."""
         # Circular dep
@@ -130,6 +132,7 @@ class AbstractConfig(ABC):
         if self._unsub_report_state is None:
             self._unsub_report_state = async_enable_report_state(self.hass, self)
 
+    @callback
     def async_disable_report_state(self):
         """Disable report state."""
         if self._unsub_report_state is not None:
@@ -232,7 +235,7 @@ class AbstractConfig(ABC):
             return json_response(smart_home.turned_off_response(payload))
 
         result = await smart_home.async_handle_message(
-            self.hass, self, self.local_sdk_user_id, payload
+            self.hass, self, self.local_sdk_user_id, payload, SOURCE_LOCAL
         )
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -286,14 +289,21 @@ class RequestData:
         self,
         config: AbstractConfig,
         user_id: str,
+        source: str,
         request_id: str,
         devices: Optional[List[dict]],
     ):
         """Initialize the request data."""
         self.config = config
+        self.source = source
         self.request_id = request_id
         self.context = Context(user_id=user_id)
         self.devices = devices
+
+    @property
+    def is_local_request(self):
+        """Return if this is a local request."""
+        return self.source == SOURCE_LOCAL
 
 
 def get_google_type(domain, device_class):
@@ -354,6 +364,9 @@ class GoogleEntity:
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
+        if not self.config.should_2fa(state):
+            return False
+
         return any(
             trait.might_2fa(domain, features, device_class) for trait in self.traits()
         )
@@ -386,7 +399,7 @@ class GoogleEntity:
         # use aliases
         aliases = entity_config.get(CONF_ALIASES)
         if aliases:
-            device["name"]["nicknames"] = aliases
+            device["name"]["nicknames"] = [name] + aliases
 
         if self.config.is_local_sdk_active:
             device["otherDeviceIds"] = [{"deviceId": self.entity_id}]

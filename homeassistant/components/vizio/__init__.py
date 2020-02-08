@@ -50,22 +50,24 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistantType, config_entry: ConfigEntry) -> bool:
     """Load the saved entities."""
     for platform in PLATFORMS:
         hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
+            hass.config_entries.async_forward_entry_setup(config_entry, platform)
         )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistantType, config_entry: ConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
             *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
+                hass.config_entries.async_forward_entry_unload(config_entry, platform)
                 for platform in PLATFORMS
             ]
         )

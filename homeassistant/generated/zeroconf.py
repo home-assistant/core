@@ -27,6 +27,9 @@ ZEROCONF = {
     "_printer._tcp.local.": [
         "brother"
     ],
+    "_spotify-connect._tcp.local.": [
+        "spotify"
+    ],
     "_viziocast._tcp.local.": [
         "vizio"
     ],

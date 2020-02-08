@@ -104,7 +104,17 @@ class ZHADevice(LogMixin):
         self._available_check = async_track_time_interval(
             self.hass, self._check_available, _UPDATE_ALIVE_INTERVAL
         )
+        self._ha_device_id = None
         self.status = DeviceStatus.CREATED
+
+    @property
+    def device_id(self):
+        """Return the HA device registry device id."""
+        return self._ha_device_id
+
+    def set_device_id(self, device_id):
+        """Set the HA device registry device id."""
+        self._ha_device_id = device_id
 
     @property
     def name(self):
@@ -405,6 +415,25 @@ class ZHADevice(LogMixin):
     def async_update_last_seen(self, last_seen):
         """Set last seen on the zigpy device."""
         self._zigpy_device.last_seen = last_seen
+
+    @callback
+    def async_get_info(self):
+        """Get ZHA device information."""
+        device_info = {}
+        device_info.update(self.device_info)
+        device_info["entities"] = [
+            {
+                "entity_id": entity_ref.reference_id,
+                ATTR_NAME: entity_ref.device_info[ATTR_NAME],
+            }
+            for entity_ref in self.gateway.device_registry[self.ieee]
+        ]
+        reg_device = self.gateway.ha_device_registry.async_get(self.device_id)
+        if reg_device is not None:
+            device_info["user_given_name"] = reg_device.name_by_user
+            device_info["device_reg_id"] = reg_device.id
+            device_info["area_id"] = reg_device.area_id
+        return device_info
 
     @callback
     def async_get_clusters(self):

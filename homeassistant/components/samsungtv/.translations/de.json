@@ -5,8 +5,10 @@
             "already_in_progress": "Der Konfigurationsablauf f\u00fcr Samsung TV wird bereits ausgef\u00fchrt.",
             "auth_missing": "Home Assistant ist nicht authentifiziert, um eine Verbindung zu diesem Samsung TV herzustellen.",
             "not_found": "Keine unterst\u00fctzten Samsung TV-Ger\u00e4te im Netzwerk gefunden.",
+            "not_successful": "Es kann keine Verbindung zu diesem Samsung-Fernsehger\u00e4t hergestellt werden.",
             "not_supported": "Dieses Samsung TV-Ger\u00e4t wird derzeit nicht unterst\u00fctzt."
         },
+        "flow_title": "Samsung TV: {model}",
         "step": {
             "confirm": {
                 "description": "M\u00f6chtest du Samsung TV {model} einrichten? Wenn du noch nie eine Verbindung zum Home Assistant hergestellt hast, solltest du ein Popup-Fenster auf deinem Fernseher sehen, das nach einer Authentifizierung fragt. Manuelle Konfigurationen f\u00fcr dieses Fernsehger\u00e4t werden \u00fcberschrieben.",

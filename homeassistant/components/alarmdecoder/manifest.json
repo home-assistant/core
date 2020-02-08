@@ -2,7 +2,9 @@
   "domain": "alarmdecoder",
   "name": "AlarmDecoder",
   "documentation": "https://www.home-assistant.io/integrations/alarmdecoder",
-  "requirements": ["alarmdecoder==1.13.9"],
+  "requirements": [
+    "alarmdecoder==1.13.2"
+  ],
   "dependencies": [],
   "codeowners": []
 }

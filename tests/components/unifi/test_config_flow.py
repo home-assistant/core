@@ -16,14 +16,22 @@ from homeassistant.const import (
 from tests.common import MockConfigEntry
 
 
-async def test_flow_works(hass, aioclient_mock):
+async def test_flow_works(hass, aioclient_mock, mock_discovery):
     """Test config flow."""
+    mock_discovery.return_value = "1"
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] == "form"
     assert result["step_id"] == "user"
+    assert result["data_schema"]({CONF_USERNAME: "", CONF_PASSWORD: ""}) == {
+        CONF_HOST: "unifi",
+        CONF_USERNAME: "",
+        CONF_PASSWORD: "",
+        CONF_PORT: 8443,
+        CONF_VERIFY_SSL: False,
+    }
 
     aioclient_mock.post(
         "https://1.2.3.4:1234/api/login",
