@@ -1,5 +1,6 @@
 """Support for Supla devices."""
 import logging
+from pprint import pformat
 from typing import Optional
 
 from pysupla import SuplaAPI
@@ -18,8 +19,10 @@ CONF_SERVERS = "servers"
 
 SUPLA_FUNCTION_HA_CMP_MAP = {
     "CONTROLLINGTHEROLLERSHUTTER": "cover",
+    "CONTROLLINGTHEGATE": "cover",
     "LIGHTSWITCH": "switch",
 }
+SUPLA_FUNCTION_NONE = "NONE"
 SUPLA_CHANNELS = "supla_channels"
 SUPLA_SERVERS = "supla_servers"
 
@@ -86,6 +89,14 @@ def discover_devices(hass, hass_config):
 
         for channel in server.get_channels(include=["iodevice"]):
             channel_function = channel["function"]["name"]
+            if channel_function == SUPLA_FUNCTION_NONE:
+                _LOGGER.debug(
+                    "Ignored function: %s, channel id: %s",
+                    channel_function,
+                    channel["id"],
+                )
+                continue
+
             component_name = SUPLA_FUNCTION_HA_CMP_MAP.get(channel_function)
 
             if component_name is None:
@@ -129,6 +140,11 @@ class SuplaChannel(Entity):
     def name(self) -> Optional[str]:
         """Return the name of the device."""
         return self.channel_data["caption"]
+
+    @property
+    def hidden(self) -> bool:
+        """Return True if the entity should be hidden from UIs."""
+        return self.channel_data["hidden"]
 
     def action(self, action, **add_pars):
         """

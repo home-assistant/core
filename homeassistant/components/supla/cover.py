@@ -1,11 +1,19 @@
-"""Support for Supla cover - curtains, rollershutters etc."""
+"""Support for Supla cover - curtains, rollershutters, entry gate etc."""
 import logging
 from pprint import pformat
 
-from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+from homeassistant.components.cover import (
+    DEVICE_CLASS_GARAGE,
+    ATTR_POSITION,
+    CoverDevice
+)
 from homeassistant.components.supla import SuplaChannel
 
 _LOGGER = logging.getLogger(__name__)
+
+SUPLA_SHUTTER = "CONTROLLINGTHEROLLERSHUTTER"
+SUPLA_GATE = "CONTROLLINGTHEGATE"
+SUPLA_GATE_SENSOR = "OPENINGSENSOR_GATE"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -15,7 +23,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     _LOGGER.debug("Discovery: %s", pformat(discovery_info))
 
-    add_entities([SuplaCover(device) for device in discovery_info])
+    entities = []
+    for device in discovery_info:
+        device_name = device.get("function").get("name")
+        if device_name == SUPLA_SHUTTER:
+            entities.append(SuplaCover(device))
+        elif device_name == SUPLA_GATE:
+            entities.append(SuplaGateDoor(device))
+    add_entities(entities)
 
 
 class SuplaCover(SuplaChannel, CoverDevice):
@@ -51,3 +66,33 @@ class SuplaCover(SuplaChannel, CoverDevice):
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         self.action("STOP")
+
+
+class SuplaGateDoor(SuplaChannel, CoverDevice):
+    """Representation of a Supla gate door."""
+
+    @property
+    def is_closed(self):
+        state = self.channel_data.get("state")
+        if state and "hi" in state:
+            return state.get("hi")
+        return None
+
+    def open_cover(self, **kwargs):
+        if self.is_closed:
+            self.action("OPEN_CLOSE")
+
+    def close_cover(self, **kwargs):
+        if not self.is_closed:
+            self.action("OPEN_CLOSE")
+
+    def stop_cover(self, **kwargs):
+        self.action("OPEN_CLOSE")
+
+    def toggle(self, **kwargs):
+        self.action("OPEN_CLOSE")
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return DEVICE_CLASS_GARAGE
