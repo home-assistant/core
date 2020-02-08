@@ -5,12 +5,19 @@ import concurrent.futures
 from datetime import datetime, timedelta
 import logging
 import queue
+from sqlite3 import Connection
 import threading
 import time
 from typing import Any, Dict, Optional
 
+from sqlalchemy import create_engine, exc
+from sqlalchemy.engine import Engine
+from sqlalchemy.event import listens_for
+from sqlalchemy.orm import scoped_session, sessionmaker
+from sqlalchemy.pool import StaticPool
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DOMAINS,
@@ -31,6 +38,7 @@ import homeassistant.util.dt as dt_util
 
 from . import migration, purge
 from .const import DATA_INSTANCE
+from .models import Base, Events, RecorderRuns, States
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,11 +108,9 @@ def run_information(hass, point_in_time: Optional[datetime] = None):
 
     There is also the run that covers point_in_time.
     """
-    from . import models
-
     ins = hass.data[DATA_INSTANCE]
 
-    recorder_runs = models.RecorderRuns
+    recorder_runs = RecorderRuns
     if point_in_time is None or point_in_time > ins.recording_start:
         return ins.run_info
 
@@ -208,10 +214,6 @@ class Recorder(threading.Thread):
 
     def run(self):
         """Start processing events to save."""
-        from .models import States, Events
-        from homeassistant.components import persistent_notification
-        from sqlalchemy import exc
-
         tries = 1
         connected = False
 
@@ -226,7 +228,7 @@ class Recorder(threading.Thread):
                 _LOGGER.debug("Connected to recorder database")
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error(
-                    "Error during connection setup: %s (retrying " "in %s seconds)",
+                    "Error during connection setup: %s (retrying in %s seconds)",
                     err,
                     CONNECT_RETRY_WAIT,
                 )
@@ -393,18 +395,10 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        from sqlalchemy import create_engine, event
-        from sqlalchemy.engine import Engine
-        from sqlalchemy.orm import scoped_session
-        from sqlalchemy.orm import sessionmaker
-        from sqlite3 import Connection
-
-        from . import models
-
         kwargs = {}
 
         # pylint: disable=unused-variable
-        @event.listens_for(Engine, "connect")
+        @listens_for(Engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
             """Set sqlite's WAL mode."""
             if isinstance(dbapi_connection, Connection):
@@ -416,8 +410,6 @@ class Recorder(threading.Thread):
                 dbapi_connection.isolation_level = old_isolation
 
         if self.db_url == "sqlite://" or ":memory:" in self.db_url:
-            from sqlalchemy.pool import StaticPool
-
             kwargs["connect_args"] = {"check_same_thread": False}
             kwargs["poolclass"] = StaticPool
             kwargs["pool_reset_on_return"] = None
@@ -428,7 +420,7 @@ class Recorder(threading.Thread):
             self.engine.dispose()
 
         self.engine = create_engine(self.db_url, **kwargs)
-        models.Base.metadata.create_all(self.engine)
+        Base.metadata.create_all(self.engine)
         self.get_session = scoped_session(sessionmaker(bind=self.engine))
 
     def _close_connection(self):
@@ -439,8 +431,6 @@ class Recorder(threading.Thread):
 
     def _setup_run(self):
         """Log the start of the current run."""
-        from .models import RecorderRuns
-
         with session_scope(session=self.get_session()) as session:
             for run in session.query(RecorderRuns).filter_by(end=None):
                 run.closed_incorrect = True

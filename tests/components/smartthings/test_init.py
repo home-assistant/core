@@ -6,7 +6,6 @@ from asynctest import Mock, patch
 from pysmartthings import InstalledAppStatus, OAuthToken
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.components import cloud, smartthings
 from homeassistant.components.smartthings.const import (
     CONF_CLOUDHOOK_URL,
@@ -20,6 +19,7 @@ from homeassistant.components.smartthings.const import (
 )
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -268,6 +268,7 @@ async def test_remove_entry(hass, config_entry, smartthings_mock):
 
 async def test_remove_entry_cloudhook(hass, config_entry, smartthings_mock):
     """Test that the installed app, app, and cloudhook are removed up."""
+    hass.config.components.add("cloud")
     # Arrange
     config_entry.add_to_hass(hass)
     hass.data[DOMAIN][CONF_CLOUDHOOK_URL] = "https://test.cloud"

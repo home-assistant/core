@@ -1,5 +1,6 @@
 """Support for KNX/IP binary sensors."""
 import voluptuous as vol
+from xknx.devices import BinarySensor
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
@@ -70,9 +71,8 @@ def async_add_entities_discovery(hass, discovery_info, async_add_entities):
 def async_add_entities_config(hass, config, async_add_entities):
     """Set up binary senor for KNX platform configured within platform."""
     name = config[CONF_NAME]
-    import xknx
 
-    binary_sensor = xknx.devices.BinarySensor(
+    binary_sensor = BinarySensor(
         hass.data[DATA_KNX].xknx,
         name=name,
         group_address_state=config[CONF_STATE_ADDRESS],

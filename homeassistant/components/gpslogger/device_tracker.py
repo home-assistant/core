@@ -1,15 +1,15 @@
 """Support for the GPSLogger device tracking."""
 import logging
 
-from homeassistant.core import callback
+from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
 )
-from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.core import callback
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import RestoreEntity

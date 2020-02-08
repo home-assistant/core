@@ -10,10 +10,12 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     ImageProcessingFaceEntity,
 )
+from homeassistant.core import split_entity_id
 
 # pylint: disable=unused-import
-from homeassistant.components.image_processing import PLATFORM_SCHEMA  # noqa
-from homeassistant.core import split_entity_id
+from homeassistant.components.image_processing import (  # noqa: F401, isort:skip
+    PLATFORM_SCHEMA,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

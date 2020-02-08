@@ -19,5 +19,16 @@
             }
         },
         "title": "OpenTherm Gateway"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "floor_temperature": "Etasje Temperatur",
+                    "precision": "Presisjon"
+                },
+                "description": "Alternativer for OpenTherm Gateway"
+            }
+        }
     }
 }

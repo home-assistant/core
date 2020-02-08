@@ -22,6 +22,7 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     SIGNAL_MOVE_LEVEL,
     SIGNAL_SET_LEVEL,
+    SIGNAL_STATE_ATTR,
 )
 from ..helpers import get_attr_id_by_name
 
@@ -355,6 +356,14 @@ class PowerConfigurationChannel(ZigbeeChannel):
             async_dispatcher_send(
                 self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
             )
+            return
+        attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
+        async_dispatcher_send(
+            self._zha_device.hass,
+            f"{self.unique_id}_{SIGNAL_STATE_ATTR}",
+            attr_name,
+            value,
+        )
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""

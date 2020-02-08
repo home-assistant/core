@@ -1,9 +1,9 @@
 """Binary sensor platform for mobile_app."""
 from functools import partial
 
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
-from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
@@ -13,7 +13,6 @@ from .const import (
     DATA_DEVICES,
     DOMAIN,
 )
-
 from .entity import MobileAppEntity, sensor_id
 
 

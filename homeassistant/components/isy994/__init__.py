@@ -3,6 +3,8 @@ from collections import namedtuple
 import logging
 from urllib.parse import urlparse
 
+import PyISY
+from PyISY.Nodes import Group
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -54,13 +56,13 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# Do not use the Hass consts for the states here - we're matching exact API
-# responses, not using them for Hass states
+# Do not use the Home Assistant consts for the states here - we're matching
+# exact API responses, not using them for Home Assistant states
 NODE_FILTERS = {
     "binary_sensor": {
         "uom": [],
         "states": [],
-        "node_def_id": ["BinaryAlarm"],
+        "node_def_id": ["BinaryAlarm", "BinaryAlarm_ADV"],
         "insteon_type": ["16."],  # Does a startswith() match; include the dot
     },
     "sensor": {
@@ -110,6 +112,8 @@ NODE_FILTERS = {
             "BallastRelayLampSwitch_ADV",
             "RemoteLinc2",
             "RemoteLinc2_ADV",
+            "KeypadDimmer",
+            "KeypadDimmer_ADV",
         ],
         "insteon_type": ["1."],
     },
@@ -153,7 +157,7 @@ SUPPORTED_DOMAINS = [
 ]
 SUPPORTED_PROGRAM_DOMAINS = ["binary_sensor", "lock", "fan", "cover", "switch"]
 
-# ISY Scenes are more like Switches than Hass Scenes
+# ISY Scenes are more like Switches than Home Assistant Scenes
 # (they can turn off, and report their state)
 SCENE_DOMAIN = "switch"
 
@@ -312,8 +316,6 @@ def _categorize_nodes(
             # Don't import this node as a device at all
             continue
 
-        from PyISY.Nodes import Group
-
         if isinstance(node, Group):
             hass.data[ISY994_NODES][SCENE_DOMAIN].append(node)
             continue
@@ -418,8 +420,6 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     else:
         _LOGGER.error("isy994 host value in configuration is invalid")
         return False
-
-    import PyISY
 
     # Connect to ISY controller.
     isy = PyISY.ISY(

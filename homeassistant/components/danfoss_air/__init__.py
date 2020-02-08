@@ -2,6 +2,8 @@
 from datetime import timedelta
 import logging
 
+from pydanfossair.commands import ReadCommand
+from pydanfossair.danfossclient import DanfossClient
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
@@ -40,8 +42,6 @@ class DanfossAir:
         """Initialize the Danfoss Air CCM connection."""
         self._data = {}
 
-        from pydanfossair.danfossclient import DanfossClient
-
         self._client = DanfossClient(host)
 
     def get_value(self, item):
@@ -56,7 +56,6 @@ class DanfossAir:
     def update(self):
         """Use the data from Danfoss Air API."""
         _LOGGER.debug("Fetching data from Danfoss Air CCM module")
-        from pydanfossair.commands import ReadCommand
 
         self._data[ReadCommand.exhaustTemperature] = self._client.command(
             ReadCommand.exhaustTemperature

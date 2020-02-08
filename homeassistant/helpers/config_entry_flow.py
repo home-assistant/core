@@ -1,9 +1,11 @@
 """Helpers for data entry flows for config entries."""
-from typing import Callable, Awaitable, Union
+from typing import Awaitable, Callable, Union
+
 from homeassistant import config_entries
+
 from .typing import HomeAssistantType
 
-# mypy: allow-untyped-defs
+# mypy: allow-untyped-defs, no-check-untyped-defs
 
 DiscoveryFunctionType = Callable[[], Union[Awaitable[bool], bool]]
 
@@ -24,7 +26,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
         self._domain = domain
         self._title = title
         self._discovery_function = discovery_function
-        self.CONNECTION_CLASS = connection_class  # pylint: disable=C0103
+        self.CONNECTION_CLASS = connection_class  # pylint: disable=invalid-name
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -124,7 +126,10 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
 
         webhook_id = self.hass.components.webhook.async_generate_id()
 
-        if self.hass.components.cloud.async_active_subscription():
+        if (
+            "cloud" in self.hass.config.components
+            and self.hass.components.cloud.async_active_subscription()
+        ):
             webhook_url = await self.hass.components.cloud.async_create_cloudhook(
                 webhook_id
             )

@@ -1,10 +1,12 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Verten er allerede konfigurert.",
             "one_instance_allowed": "Bare en enkel instans er n\u00f8dvendig."
         },
         "error": {
             "cannot_connect": "Kan ikke koble til vert",
+            "name_exists": "Navnet eksisterer allerede",
             "wrong_credentials": "Ugyldig brukernavn eller passord"
         },
         "step": {
@@ -33,7 +35,8 @@
                 "data": {
                     "scan_interval": "Oppdater frekvens"
                 },
-                "description": "Konfigurer alternativer for Transmission"
+                "description": "Konfigurer alternativer for Transmission",
+                "title": "Konfigurer alternativer for Transmission"
             }
         }
     }

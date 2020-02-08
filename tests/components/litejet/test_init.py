@@ -3,6 +3,7 @@ import logging
 import unittest
 
 from homeassistant.components import litejet
+
 from tests.common import get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)

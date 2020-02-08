@@ -2,10 +2,12 @@
 import logging
 import unittest
 from unittest import mock
-from libsoundtouch.device import SoundTouchDevice as STD, Status, Volume, Preset, Config
+
+from libsoundtouch.device import Config, Preset, SoundTouchDevice as STD, Status, Volume
 
 from homeassistant.components.soundtouch import media_player as soundtouch
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
+
 from tests.common import get_test_home_assistant
 
 
@@ -148,7 +150,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         logging.disable(logging.NOTSET)
         self.hass.stop()
 
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=None)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=None,
+    )
     def test_ensure_setup_config(self, mocked_soundtouch_device):
         """Test setup OK with custom config."""
         soundtouch.setup_platform(self.hass, default_component(), mock.MagicMock())
@@ -158,7 +163,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         assert all_devices[0].config["port"] == 8090
         assert mocked_soundtouch_device.call_count == 1
 
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=None)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=None,
+    )
     def test_ensure_setup_discovery(self, mocked_soundtouch_device):
         """Test setup with discovery."""
         new_device = {
@@ -174,7 +182,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         assert all_devices[0].config["host"] == "192.168.1.1"
         assert mocked_soundtouch_device.call_count == 1
 
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=None)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=None,
+    )
     def test_ensure_setup_discovery_no_duplicate(self, mocked_soundtouch_device):
         """Test setup OK if device already exists."""
         soundtouch.setup_platform(self.hass, default_component(), mock.MagicMock())
@@ -203,7 +214,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
 
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_update(self, mocked_soundtouch_device, mocked_status, mocked_volume):
         """Test update device state."""
         soundtouch.setup_platform(self.hass, default_component(), mock.MagicMock())
@@ -218,7 +232,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch(
         "libsoundtouch.device.SoundTouchDevice.status", side_effect=MockStatusPlaying
     )
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_playing_media(
         self, mocked_soundtouch_device, mocked_status, mocked_volume
     ):
@@ -240,7 +257,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch(
         "libsoundtouch.device.SoundTouchDevice.status", side_effect=MockStatusUnknown
     )
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_playing_unknown_media(
         self, mocked_soundtouch_device, mocked_status, mocked_volume
     ):
@@ -257,7 +277,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         "libsoundtouch.device.SoundTouchDevice.status",
         side_effect=MockStatusPlayingRadio,
     )
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_playing_radio(
         self, mocked_soundtouch_device, mocked_status, mocked_volume
     ):
@@ -277,7 +300,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
 
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume", side_effect=MockVolume)
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_get_volume_level(
         self, mocked_soundtouch_device, mocked_status, mocked_volume
     ):
@@ -293,7 +319,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch(
         "libsoundtouch.device.SoundTouchDevice.status", side_effect=MockStatusStandby
     )
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_get_state_off(
         self, mocked_soundtouch_device, mocked_status, mocked_volume
     ):
@@ -309,7 +338,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch(
         "libsoundtouch.device.SoundTouchDevice.status", side_effect=MockStatusPause
     )
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_get_state_pause(
         self, mocked_soundtouch_device, mocked_status, mocked_volume
     ):
@@ -325,7 +357,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         "libsoundtouch.device.SoundTouchDevice.volume", side_effect=MockVolumeMuted
     )
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_is_muted(self, mocked_soundtouch_device, mocked_status, mocked_volume):
         """Test device volume is muted."""
         soundtouch.setup_platform(self.hass, default_component(), mock.MagicMock())
@@ -335,7 +370,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         assert all_devices[0].is_volume_muted is True
 
-    @mock.patch("libsoundtouch.soundtouch_device")
+    @mock.patch("homeassistant.components.soundtouch.media_player.soundtouch_device")
     def test_media_commands(self, mocked_soundtouch_device):
         """Test supported media commands."""
         soundtouch.setup_platform(self.hass, default_component(), mock.MagicMock())
@@ -346,7 +381,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.power_off")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_should_turn_off(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_power_off
     ):
@@ -362,7 +400,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.power_on")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_should_turn_on(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_power_on
     ):
@@ -378,7 +419,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume_up")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_volume_up(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_volume_up
     ):
@@ -394,7 +438,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume_down")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_volume_down(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_volume_down
     ):
@@ -410,7 +457,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.set_volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_set_volume_level(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_set_volume
     ):
@@ -426,7 +476,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.mute")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_mute(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_mute
     ):
@@ -442,7 +495,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.play")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_play(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_play
     ):
@@ -458,7 +514,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.pause")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_pause(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_pause
     ):
@@ -474,7 +533,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.play_pause")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_play_pause_play(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_play_pause
     ):
@@ -491,7 +553,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.next_track")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_next_previous_track(
         self,
         mocked_soundtouch_device,
@@ -519,7 +584,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     )
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_play_media(
         self,
         mocked_soundtouch_device,
@@ -544,7 +612,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.play_url")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_play_media_url(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_play_url
     ):
@@ -560,7 +631,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.create_zone")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_play_everywhere(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_create_zone
     ):
@@ -605,7 +679,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.create_zone")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_create_zone(
         self, mocked_soundtouch_device, mocked_status, mocked_volume, mocked_create_zone
     ):
@@ -649,7 +726,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.remove_zone_slave")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_remove_zone_slave(
         self,
         mocked_soundtouch_device,
@@ -697,7 +777,10 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch("libsoundtouch.device.SoundTouchDevice.add_zone_slave")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.volume")
     @mock.patch("libsoundtouch.device.SoundTouchDevice.status")
-    @mock.patch("libsoundtouch.soundtouch_device", side_effect=_mock_soundtouch_device)
+    @mock.patch(
+        "homeassistant.components.soundtouch.media_player.soundtouch_device",
+        side_effect=_mock_soundtouch_device,
+    )
     def test_add_zone_slave(
         self,
         mocked_soundtouch_device,

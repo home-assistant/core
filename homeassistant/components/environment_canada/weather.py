@@ -20,8 +20,8 @@ from homeassistant.components.weather import (
     WeatherEntity,
 )
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS
-import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt
 
 _LOGGER = logging.getLogger(__name__)
 

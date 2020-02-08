@@ -1,13 +1,14 @@
 """Provides device actions for lights."""
 from typing import List
+
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, Context
 from homeassistant.components.device_automation import toggle_entity
 from homeassistant.const import CONF_DOMAIN
-from homeassistant.helpers.typing import TemplateVarsType, ConfigType
-from . import DOMAIN
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
+from . import DOMAIN
 
 ACTION_SCHEMA = toggle_entity.ACTION_SCHEMA.extend({vol.Required(CONF_DOMAIN): DOMAIN})
 

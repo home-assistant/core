@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/integrations/zha/
 """
 import logging
+from typing import Optional
 
 import zigpy.zcl.clusters.homeautomation as homeautomation
 
@@ -65,6 +66,12 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
 
     REPORT_CONFIG = ({"attr": "active_power", "config": REPORT_CONFIG_DEFAULT},)
 
+    def __init__(self, cluster, device):
+        """Initialize Metering."""
+        super().__init__(cluster, device)
+        self._divisor = None
+        self._multiplier = None
+
     async def async_update(self):
         """Retrieve latest state."""
         self.debug("async_update")
@@ -78,7 +85,38 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
     async def async_initialize(self, from_cache):
         """Initialize channel."""
         await self.get_attribute_value("active_power", from_cache=from_cache)
+        await self.fetch_config(from_cache)
         await super().async_initialize(from_cache)
+
+    async def fetch_config(self, from_cache):
+        """Fetch config from device and updates format specifier."""
+        divisor = await self.get_attribute_value(
+            "ac_power_divisor", from_cache=from_cache
+        )
+        if divisor is None:
+            divisor = await self.get_attribute_value(
+                "power_divisor", from_cache=from_cache
+            )
+        self._divisor = divisor
+
+        mult = await self.get_attribute_value(
+            "ac_power_multiplier", from_cache=from_cache
+        )
+        if mult is None:
+            mult = await self.get_attribute_value(
+                "power_multiplier", from_cache=from_cache
+            )
+        self._multiplier = mult
+
+    @property
+    def divisor(self) -> Optional[int]:
+        """Return active power divisor."""
+        return self._divisor or 1
+
+    @property
+    def multiplier(self) -> Optional[int]:
+        """Return active power divisor."""
+        return self._multiplier or 1
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(

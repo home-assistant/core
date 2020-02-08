@@ -1,1 +1,1 @@
-"""The discord component."""
+"""The discord integration."""

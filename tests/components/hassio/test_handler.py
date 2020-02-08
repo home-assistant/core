@@ -31,7 +31,7 @@ async def test_api_ping_exeption(hassio_handler, aioclient_mock):
 
 
 async def test_api_homeassistant_info(hassio_handler, aioclient_mock):
-    """Test setup with API homeassistant info."""
+    """Test setup with API Home Assistant info."""
     aioclient_mock.get(
         "http://127.0.0.1/homeassistant/info",
         json={"result": "ok", "data": {"last_version": "10.0"}},
@@ -43,7 +43,7 @@ async def test_api_homeassistant_info(hassio_handler, aioclient_mock):
 
 
 async def test_api_homeassistant_info_error(hassio_handler, aioclient_mock):
-    """Test setup with API homeassistant info error."""
+    """Test setup with API Home Assistant info error."""
     aioclient_mock.get(
         "http://127.0.0.1/homeassistant/info", json={"result": "error", "message": None}
     )
@@ -55,7 +55,7 @@ async def test_api_homeassistant_info_error(hassio_handler, aioclient_mock):
 
 
 async def test_api_homeassistant_stop(hassio_handler, aioclient_mock):
-    """Test setup with API HomeAssistant stop."""
+    """Test setup with API Home Assistant stop."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/stop", json={"result": "ok"})
 
     assert await hassio_handler.stop_homeassistant()
@@ -63,7 +63,7 @@ async def test_api_homeassistant_stop(hassio_handler, aioclient_mock):
 
 
 async def test_api_homeassistant_restart(hassio_handler, aioclient_mock):
-    """Test setup with API HomeAssistant restart."""
+    """Test setup with API Home Assistant restart."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/restart", json={"result": "ok"})
 
     assert await hassio_handler.restart_homeassistant()

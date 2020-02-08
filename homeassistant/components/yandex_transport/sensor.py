@@ -1,16 +1,16 @@
 """Service for obtaining information about closer bus from Transport Yandex Service."""
 
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 from ya_ma import YandexMapsRequester
 
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 

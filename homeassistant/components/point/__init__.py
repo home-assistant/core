@@ -2,6 +2,7 @@
 import asyncio
 import logging
 
+from pypoint import PointSession
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,7 +18,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.dt import as_local, parse_datetime, utc_from_timestamp
 
-from . import config_flow  # noqa  pylint_disable=unused-import
+from . import config_flow
 from .const import (
     CONF_WEBHOOK_URL,
     DOMAIN,
@@ -71,7 +72,6 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Point from a config entry."""
-    from pypoint import PointSession
 
     def token_saver(token):
         _LOGGER.debug("Saving updated token")

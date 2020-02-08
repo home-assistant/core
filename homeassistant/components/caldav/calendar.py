@@ -278,6 +278,10 @@ class WebDavCalendarData:
     def to_datetime(obj):
         """Return a datetime."""
         if isinstance(obj, datetime):
+            if obj.tzinfo is None:
+                # floating value, not bound to any time zone in particular
+                # represent same time regardless of which time zone is currently being observed
+                return obj.replace(tzinfo=dt.DEFAULT_TIME_ZONE)
             return obj
         return dt.as_local(dt.dt.datetime.combine(obj, dt.dt.time.min))
 

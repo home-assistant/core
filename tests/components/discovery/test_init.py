@@ -1,6 +1,5 @@
 """The tests for the discovery component."""
-import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -9,7 +8,7 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
 from homeassistant.util.dt import utcnow
 
-from tests.common import mock_coro, async_fire_time_changed
+from tests.common import async_fire_time_changed, mock_coro
 
 # One might consider to "mock" services, but it's easy enough to just use
 # what is already available.
@@ -55,29 +54,27 @@ async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
     return mock_discover, mock_platform
 
 
-@asyncio.coroutine
-def test_unknown_service(hass):
+async def test_unknown_service(hass):
     """Test that unknown service is ignored."""
 
     def discover(netdisco):
         """Fake discovery."""
         return [("this_service_will_never_be_supported", {"info": "some"})]
 
-    mock_discover, mock_platform = yield from mock_discovery(hass, discover)
+    mock_discover, mock_platform = await mock_discovery(hass, discover)
 
     assert not mock_discover.called
     assert not mock_platform.called
 
 
-@asyncio.coroutine
-def test_load_platform(hass):
+async def test_load_platform(hass):
     """Test load a platform."""
 
     def discover(netdisco):
         """Fake discovery."""
         return [(SERVICE, SERVICE_INFO)]
 
-    mock_discover, mock_platform = yield from mock_discovery(hass, discover)
+    mock_discover, mock_platform = await mock_discovery(hass, discover)
 
     assert not mock_discover.called
     assert mock_platform.called
@@ -86,15 +83,14 @@ def test_load_platform(hass):
     )
 
 
-@asyncio.coroutine
-def test_load_component(hass):
+async def test_load_component(hass):
     """Test load a component."""
 
     def discover(netdisco):
         """Fake discovery."""
         return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
 
-    mock_discover, mock_platform = yield from mock_discovery(hass, discover)
+    mock_discover, mock_platform = await mock_discovery(hass, discover)
 
     assert mock_discover.called
     assert not mock_platform.called
@@ -107,24 +103,20 @@ def test_load_component(hass):
     )
 
 
-@asyncio.coroutine
-def test_ignore_service(hass):
+async def test_ignore_service(hass):
     """Test ignore service."""
 
     def discover(netdisco):
         """Fake discovery."""
         return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
 
-    mock_discover, mock_platform = yield from mock_discovery(
-        hass, discover, IGNORE_CONFIG
-    )
+    mock_discover, mock_platform = await mock_discovery(hass, discover, IGNORE_CONFIG)
 
     assert not mock_discover.called
     assert not mock_platform.called
 
 
-@asyncio.coroutine
-def test_discover_duplicates(hass):
+async def test_discover_duplicates(hass):
     """Test load a component."""
 
     def discover(netdisco):
@@ -134,7 +126,7 @@ def test_discover_duplicates(hass):
             (SERVICE_NO_PLATFORM, SERVICE_INFO),
         ]
 
-    mock_discover, mock_platform = yield from mock_discovery(hass, discover)
+    mock_discover, mock_platform = await mock_discovery(hass, discover)
 
     assert mock_discover.called
     assert mock_discover.call_count == 1

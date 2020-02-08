@@ -1,26 +1,26 @@
 """The tests for the Alert component."""
-import unittest
-
 # pylint: disable=protected-access
 from copy import deepcopy
+import unittest
 
 import homeassistant.components.alert as alert
-import homeassistant.components.notify as notify
 from homeassistant.components.alert import DOMAIN
+import homeassistant.components.notify as notify
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ENTITY_ID,
-    STATE_IDLE,
     CONF_NAME,
     CONF_STATE,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    STATE_ON,
+    STATE_IDLE,
     STATE_OFF,
+    STATE_ON,
 )
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant
 
 NAME = "alert_test"

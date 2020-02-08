@@ -2,8 +2,8 @@
 from asynctest.mock import Mock, patch as patch
 import pytest
 
-from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components.sonos import DOMAIN
 from homeassistant.const import CONF_HOSTS
 
 from tests.common import MockConfigEntry
@@ -33,7 +33,7 @@ def soco_fixture(music_library, speaker_info, dummy_soco_service):
         yield mock_soco
 
 
-@pytest.fixture(name="discover")
+@pytest.fixture(name="discover", autouse=True)
 def discover_fixture(soco):
     """Create a mock pysonos discover fixture."""
 

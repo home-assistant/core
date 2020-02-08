@@ -1,0 +1,18 @@
+{
+    "device_automation": {
+        "action_type": {
+            "arm_away": "Vklju\u010di {entity_name} zdoma",
+            "arm_home": "Vklju\u010di {entity_name} doma",
+            "arm_night": "Vklju\u010di {entity_name} no\u010d",
+            "disarm": "Razoro\u017ei {entity_name}",
+            "trigger": "Spro\u017ei {entity_name}"
+        },
+        "trigger_type": {
+            "armed_away": "{entity_name} oboro\u017een - zdoma",
+            "armed_home": "{entity_name} oboro\u017een - dom",
+            "armed_night": "{entity_name} oboro\u017een - no\u010d",
+            "disarmed": "{entity_name} razoro\u017een",
+            "triggered": "{entity_name} spro\u017een"
+        }
+    }
+}

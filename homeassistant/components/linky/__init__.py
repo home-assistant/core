@@ -47,6 +47,12 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up Linky sensors."""
+    # For backwards compat
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=entry.data[CONF_USERNAME]
+        )
+
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "sensor")
     )
@@ -55,7 +61,4 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload Linky sensors."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_unload(entry, "sensor")
-    )
-    return True
+    return await hass.config_entries.async_forward_entry_unload(entry, "sensor")

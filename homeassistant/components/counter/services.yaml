@@ -33,3 +33,9 @@ configure:
     step:
       description: New value for step
       example: 2
+    initial:
+      description: New value for initial
+      example: 6
+    value:
+      description: New state value
+      example: 3

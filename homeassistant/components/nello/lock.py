@@ -2,11 +2,12 @@
 from itertools import filterfalse
 import logging
 
+from pynello.private import Nello
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
+from homeassistant.components.lock import PLATFORM_SCHEMA, LockDevice
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +22,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nello lock platform."""
-    from pynello.private import Nello
 
     nello = Nello(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
     add_entities([NelloLock(lock) for lock in nello.locations], True)
