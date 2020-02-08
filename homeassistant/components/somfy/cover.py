@@ -24,11 +24,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         devices = hass.data[DOMAIN][DEVICES]
 
-        if CONF_SHADOW in hass.data[DOMAIN].keys():
-            shadow = hass.data[DOMAIN][CONF_SHADOW]
-        else:
-            shadow = False
-
         return [
             SomfyCover(
                 cover, hass.data[DOMAIN][API], hass.data[DOMAIN][CONF_OPTIMISTIC]
