@@ -26,13 +26,7 @@ from homeassistant.const import (
 )
 
 # pylint:disable=unused-import
-from .const import (
-    CONF_MANUFACTURER,
-    CONF_MODEL,
-    DOMAIN,
-    LOGGER,
-    PORTS,
-)
+from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, PORTS
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 
@@ -112,12 +106,11 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "description": "HomeAssistant",
                 "id": "ha.component.samsung",
                 "host": self._host,
-                "method": "legacy" if port == 55000 else "websocket",
+                "method": "legacy",
                 "port": port,
                 # We need this high timeout because waiting for auth popup is just an open socket
                 "timeout": 31,
             }
-            # config.update(cfg)
             try:
                 LOGGER.debug("Try config: %s", config)
                 with Remote(config.copy()):
@@ -146,41 +139,28 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "host": self._host,
                 "method": "websocket",
                 "port": port,
-                # We need this high timeout because waiting for auth popup is just an open socket
-                "timeout": 31,
+                "timeout": 1,
                 "token_file": token_file,
             }
             try:
                 LOGGER.debug("Try config: %s", config)
-                # with SamsungTVWS(
-                #     host=self._host,
-                #     port=port,
-                #     token_file=token_file,
-                #     timeout=config["timeout"],
-                #     name=config["name"],
-                # ) as remote:
-                remote = SamsungTVWS(
+                with SamsungTVWS(
                     host=self._host,
                     port=port,
                     token_file=token_file,
                     timeout=config["timeout"],
                     name=config["name"],
-                )
-                remote.open()
+                ) as remote:
+                    remote.open()
                 LOGGER.debug("Working config: %s", config)
                 self._method = "websocket"
                 self._port = port
                 self._token_file = token_file
                 return RESULT_SUCCESS
-            except AccessDenied:
-                LOGGER.debug("Working but denied config: %s", config)
-                return RESULT_AUTH_MISSING
-            except UnhandledResponse:
+            except WebSocketException:
                 LOGGER.debug("Working but unsupported config: %s", config)
                 return RESULT_NOT_SUPPORTED
-            except OSError as err:
-                LOGGER.debug("Failing config: %s, error: %s", config, err)
-            except AttributeError as err:
+            except (OSError, Exception) as err:  # pylint: disable=broad-except
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
 
         return RESULT_NOT_SUCCESSFUL

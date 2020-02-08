@@ -9,9 +9,4 @@ DEFAULT_NAME = "Samsung TV"
 CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
 CONF_ON_ACTION = "turn_on_action"
-<<<<<<< HEAD
-=======
-
-METHODS = ("websocket", "legacy")
 PORTS = (55000, 8001, 8002)
->>>>>>> Added support for newer SamsungTV models

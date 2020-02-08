@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/samsungtv",
   "requirements": [
     "samsungctl[websocket]==0.7.1",
-    "samsungtvws[websocket]==1.1.4"
+    "samsungtvws[websocket]==1.1.5"
   ],
   "ssdp": [
     {
