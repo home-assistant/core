@@ -148,8 +148,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not db_url:
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
-
-
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
     instance = hass.data[DATA_INSTANCE] = Recorder(
