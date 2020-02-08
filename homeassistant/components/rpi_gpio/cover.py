@@ -4,9 +4,9 @@ from time import sleep
 
 import voluptuous as vol
 
-from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
 from homeassistant.components import rpi_gpio
+from homeassistant.components.cover import PLATFORM_SCHEMA, CoverDevice
+from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

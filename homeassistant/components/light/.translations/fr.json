@@ -10,7 +10,7 @@
             "is_on": "{entity_name} est allum\u00e9"
         },
         "trigger_type": {
-            "turned_off": "{entity_name} d\u00e9sactiv\u00e9",
+            "turned_off": "{entity_name} est d\u00e9sactiv\u00e9",
             "turned_on": "{entity_name} activ\u00e9"
         }
     }

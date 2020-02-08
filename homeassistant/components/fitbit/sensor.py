@@ -1,21 +1,22 @@
 """Support for the Fitbit API."""
-import os
-import logging
 import datetime
+import logging
+import os
 import time
 
+from fitbit import Fitbit
+from fitbit.api import FitbitOauth2Client
+from oauthlib.oauth2.rfc6749.errors import MismatchingStateError, MissingTokenError
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.const import CONF_UNIT_SYSTEM
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
-
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -234,13 +235,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if "fitbit" in _CONFIGURING:
         hass.components.configurator.request_done(_CONFIGURING.pop("fitbit"))
 
-    import fitbit
-
     access_token = config_file.get(ATTR_ACCESS_TOKEN)
     refresh_token = config_file.get(ATTR_REFRESH_TOKEN)
     expires_at = config_file.get(ATTR_LAST_SAVED_AT)
     if None not in (access_token, refresh_token):
-        authd_client = fitbit.Fitbit(
+        authd_client = Fitbit(
             config_file.get(ATTR_CLIENT_ID),
             config_file.get(ATTR_CLIENT_SECRET),
             access_token=access_token,
@@ -294,7 +293,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         add_entities(dev, True)
 
     else:
-        oauth = fitbit.api.FitbitOauth2Client(
+        oauth = FitbitOauth2Client(
             config_file.get(ATTR_CLIENT_ID), config_file.get(ATTR_CLIENT_SECRET)
         )
 
@@ -337,9 +336,6 @@ class FitbitAuthCallbackView(HomeAssistantView):
     @callback
     def get(self, request):
         """Finish OAuth callback request."""
-        from oauthlib.oauth2.rfc6749.errors import MismatchingStateError
-        from oauthlib.oauth2.rfc6749.errors import MissingTokenError
-
         hass = request.app["hass"]
         data = request.query
 

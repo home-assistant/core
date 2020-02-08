@@ -1,23 +1,24 @@
 """Email sensor support."""
-import logging
+from collections import deque
 import datetime
 import email
-from collections import deque
+import imaplib
+import logging
 
 import voluptuous as vol
 
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_DATE,
     CONF_NAME,
+    CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_VALUE_TEMPLATE,
     CONTENT_TYPE_TEXT_PLAIN,
-    ATTR_DATE,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,8 +89,6 @@ class EmailReader:
 
     def connect(self):
         """Login and setup the connection."""
-        import imaplib
-
         try:
             self.connection = imaplib.IMAP4_SSL(self._server, self._port)
             self.connection.login(self._user, self._password)
@@ -110,8 +109,6 @@ class EmailReader:
 
     def read_next(self):
         """Read the next email from the email server."""
-        import imaplib
-
         try:
             self.connection.select(self._folder, readonly=True)
 

@@ -1,9 +1,11 @@
 """Support for the DirecTV receivers."""
 import logging
+
+from DirectPy import DIRECTV
 import requests
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MOVIE,
@@ -99,8 +101,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # Attempt to discover additional RVU units
         _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
 
-        from DirectPy import DIRECTV
-
         dtv = DIRECTV(host, DEFAULT_PORT)
         try:
             resp = dtv.get_locations()
@@ -129,7 +129,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             else:
                 _LOGGER.debug(
-                    "Adding discovered device %s with" " client address %s",
+                    "Adding discovered device %s with client address %s",
                     str.title(loc["locationName"]),
                     loc["clientAddr"],
                 )
@@ -156,7 +156,6 @@ class DirecTvDevice(MediaPlayerDevice):
 
     def __init__(self, name, host, port, device):
         """Initialize the device."""
-        from DirectPy import DIRECTV
 
         self.dtv = DIRECTV(host, port, device)
         self._name = name
@@ -215,7 +214,7 @@ class DirecTvDevice(MediaPlayerDevice):
 
         except requests.RequestException as ex:
             _LOGGER.error(
-                "%s: Request error trying to update current status: " "%s",
+                "%s: Request error trying to update current status: %s",
                 self.entity_id,
                 ex,
             )

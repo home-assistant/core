@@ -7,9 +7,7 @@
         "data": {
           "name": "Name",
           "device": "Path or URL",
-          "id": "ID",
-          "precision": "Climate temperature precision",
-          "floor_temperature": "Floor climate temperature"
+          "id": "ID"
         }
       }
     },
@@ -19,5 +17,16 @@
       "serial_error": "Error connecting to device",
       "timeout": "Connection attempt timed out"
 	}
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Options for the OpenTherm Gateway",
+        "data": {
+          "floor_temperature": "Floor Temperature",
+          "precision": "Precision"
+        }
+      }
+    }
   }
 }

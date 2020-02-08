@@ -1,34 +1,35 @@
 """Support for Android IP Webcam."""
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
+from pydroid_ipcam import PyDroidIPCam
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.components.mjpeg.camera import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL
 from homeassistant.const import (
-    CONF_NAME,
     CONF_HOST,
-    CONF_PORT,
-    CONF_USERNAME,
+    CONF_NAME,
     CONF_PASSWORD,
+    CONF_PLATFORM,
+    CONF_PORT,
+    CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SWITCHES,
     CONF_TIMEOUT,
-    CONF_SCAN_INTERVAL,
-    CONF_PLATFORM,
+    CONF_USERNAME,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.core import callback
 from homeassistant.helpers import discovery
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_send,
     async_dispatcher_connect,
+    async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
-from homeassistant.components.mjpeg.camera import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,7 +188,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the IP Webcam component."""
-    from pydroid_ipcam import PyDroidIPCam
 
     webcams = hass.data[DATA_IP_WEBCAM] = {}
     websession = async_get_clientsession(hass)

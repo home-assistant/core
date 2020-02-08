@@ -2,8 +2,8 @@
 import logging
 from pprint import pformat
 
-from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.supla import SuplaChannel
+from homeassistant.components.switch import SwitchDevice
 
 _LOGGER = logging.getLogger(__name__)
 

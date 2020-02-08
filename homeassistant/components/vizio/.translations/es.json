@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Configurar el flujo para el componente vizio que ya est\u00e1 en marcha.",
+            "already_setup": "Esta entrada ya ha sido configurada.",
+            "already_setup_with_diff_host_and_name": "Esta entrada parece haber sido ya configurada con un host y un nombre diferentes basados en su n\u00famero de serie. Elimine las entradas antiguas de su archivo configuration.yaml y del men\u00fa Integraciones antes de volver a intentar agregar este dispositivo.",
+            "host_exists": "Host ya configurado del componente de Vizio",
+            "name_exists": "Nombre ya configurado del componente de Vizio",
+            "updated_entry": "Esta entrada ya ha sido configurada pero el nombre y/o las opciones definidas en la configuraci\u00f3n no coinciden con la configuraci\u00f3n previamente importada, por lo que la entrada de la configuraci\u00f3n ha sido actualizada en consecuencia.",
+            "updated_options": "Esta entrada ya ha sido configurada pero las opciones definidas en la configuraci\u00f3n no coinciden con los valores de las opciones importadas previamente, por lo que la entrada de la configuraci\u00f3n ha sido actualizada en consecuencia.",
+            "updated_volume_step": "Esta entrada ya ha sido configurada pero el tama\u00f1o del paso de volumen en la configuraci\u00f3n no coincide con la entrada de la configuraci\u00f3n, por lo que la entrada de la configuraci\u00f3n ha sido actualizada en consecuencia."
+        },
+        "error": {
+            "cant_connect": "No se pudo conectar al dispositivo. [Revise los documentos] (https://www.home-assistant.io/integrations/vizio/) y vuelva a verificar que:\n- El dispositivo est\u00e1 encendido\n- El dispositivo est\u00e1 conectado a la red\n- Los valores que ha rellenado son precisos\nantes de intentar volver a enviar.",
+            "host_exists": "El host ya est\u00e1 configurado.",
+            "name_exists": "Nombre ya configurado.",
+            "tv_needs_token": "Cuando el tipo de dispositivo es `tv`, se necesita un token de acceso v\u00e1lido."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Token de acceso",
+                    "device_class": "Tipo de dispositivo",
+                    "host": "< Host / IP > : <Port>",
+                    "name": "Nombre"
+                },
+                "title": "Configurar el cliente de Vizio SmartCast"
+            }
+        },
+        "title": "Vizio SmartCast"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Tiempo de espera de solicitud de API (segundos)",
+                    "volume_step": "Tama\u00f1o del paso de volumen"
+                },
+                "title": "Actualizar las opciones de SmartCast de Vizo"
+            }
+        },
+        "title": "Actualizar las opciones de SmartCast de Vizo"
+    }
+}

@@ -8,6 +8,11 @@
         "create_entry": {
             "default": "Uspe\u0161no overjen s Somfy-jem."
         },
+        "step": {
+            "pick_implementation": {
+                "title": "Izberite na\u010din preverjanja pristnosti"
+            }
+        },
         "title": "Somfy"
     }
 }

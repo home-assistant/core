@@ -1,14 +1,15 @@
 """Support for LG soundbars."""
 import logging
 
+import temescal
+
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
+    SUPPORT_SELECT_SOUND_MODE,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOUND_MODE,
 )
-
 from homeassistant.const import STATE_ON
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,8 +33,6 @@ class LGDevice(MediaPlayerDevice):
 
     def __init__(self, discovery_info):
         """Initialize the LG speakers."""
-        import temescal
-
         host = discovery_info.get("host")
         port = discovery_info.get("port")
 
@@ -140,7 +139,6 @@ class LGDevice(MediaPlayerDevice):
     @property
     def sound_mode(self):
         """Return the current sound mode."""
-        import temescal
 
         if self._equaliser == -1:
             return ""
@@ -149,8 +147,6 @@ class LGDevice(MediaPlayerDevice):
     @property
     def sound_mode_list(self):
         """Return the available sound modes."""
-        import temescal
-
         modes = []
         for equaliser in self._equalisers:
             modes.append(temescal.equalisers[equaliser])
@@ -159,8 +155,6 @@ class LGDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Return the current input source."""
-        import temescal
-
         if self._function == -1:
             return ""
         return temescal.functions[self._function]
@@ -168,8 +162,6 @@ class LGDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        import temescal
-
         sources = []
         for function in self._functions:
             sources.append(temescal.functions[function])
@@ -191,12 +183,8 @@ class LGDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select input source."""
-        import temescal
-
         self._device.set_func(temescal.functions.index(source))
 
     def select_sound_mode(self, sound_mode):
         """Set Sound Mode for Receiver.."""
-        import temescal
-
         self._device.set_eq(temescal.equalisers.index(sound_mode))

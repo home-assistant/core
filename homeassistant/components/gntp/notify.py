@@ -2,10 +2,9 @@
 import logging
 import os
 
+import gntp.errors
+import gntp.notifier
 import voluptuous as vol
-
-from homeassistant.const import CONF_PASSWORD, CONF_PORT
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
@@ -13,6 +12,8 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.const import CONF_PASSWORD, CONF_PORT
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,9 +70,6 @@ class GNTPNotificationService(BaseNotificationService):
 
     def __init__(self, app_name, app_icon, hostname, password, port):
         """Initialize the service."""
-        import gntp.notifier
-        import gntp.errors
-
         self.gntp = gntp.notifier.GrowlNotifier(
             applicationName=app_name,
             notifications=["Notification"],

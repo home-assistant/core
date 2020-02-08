@@ -1,7 +1,8 @@
 """Support for APCUPSd via its Network Information Server (NIS)."""
-import logging
 from datetime import timedelta
+import logging
 
+from apcaccess import status
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -17,11 +18,11 @@ DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 3551
 DOMAIN = "apcupsd"
 
-KEY_STATUS = "STATUS"
+KEY_STATUS = "STATFLAG"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
-VALUE_ONLINE = "ONLINE"
+VALUE_ONLINE = 8
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -64,7 +65,6 @@ class APCUPSdData:
 
     def __init__(self, host, port):
         """Initialize the data object."""
-        from apcaccess import status
 
         self._host = host
         self._port = port

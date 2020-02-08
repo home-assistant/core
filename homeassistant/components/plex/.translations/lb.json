@@ -6,6 +6,7 @@
             "already_in_progress": "Plex g\u00ebtt konfigur\u00e9iert",
             "discovery_no_file": "Kee Konfiguratioun Fichier am ale Format fonnt.",
             "invalid_import": "D\u00e9i importiert Konfiguratioun ass ong\u00eblteg",
+            "non-interactive": "Net interaktiven Import",
             "token_request_timeout": "Z\u00e4it Iwwerschreidung beim kr\u00e9ien vum Jeton",
             "unknown": "Onbekannte Feeler opgetrueden"
         },

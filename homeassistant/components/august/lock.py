@@ -2,6 +2,9 @@
 from datetime import timedelta
 import logging
 
+from august.activity import ActivityType
+from august.lock import LockStatus
+
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
 
@@ -9,7 +12,7 @@ from . import DATA_AUGUST
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -51,8 +54,6 @@ class AugustLock(LockDevice):
 
         self._lock_detail = self._data.get_lock_detail(self._lock.device_id)
 
-        from august.activity import ActivityType
-
         activity = self._data.get_latest_device_activity(
             self._lock.device_id, ActivityType.LOCK_OPERATION
         )
@@ -73,7 +74,6 @@ class AugustLock(LockDevice):
     @property
     def is_locked(self):
         """Return true if device is on."""
-        from august.lock import LockStatus
 
         return self._lock_status is LockStatus.LOCKED
 
@@ -88,7 +88,12 @@ class AugustLock(LockDevice):
         if self._lock_detail is None:
             return None
 
-        return {ATTR_BATTERY_LEVEL: self._lock_detail.battery_level}
+        attributes = {ATTR_BATTERY_LEVEL: self._lock_detail.battery_level}
+
+        if self._lock_detail.keypad is not None:
+            attributes["keypad_battery_level"] = self._lock_detail.keypad.battery_level
+
+        return attributes
 
     @property
     def unique_id(self) -> str:

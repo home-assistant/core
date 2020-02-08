@@ -81,6 +81,7 @@ def setup(hass, config):
     _LOGGER.debug("Successfully validated NZBGet API connection")
 
     nzbget_data = hass.data[DATA_NZBGET] = NZBGetData(hass, nzbget_api)
+    nzbget_data.init_download_list()
     nzbget_data.update()
 
     def service_handler(service):
@@ -127,17 +128,49 @@ class NZBGetData:
         self.status = None
         self.available = True
         self._api = api
+        self.downloads = None
+        self.completed_downloads = set()
 
     def update(self):
         """Get the latest data from NZBGet instance."""
 
         try:
             self.status = self._api.status()
+            self.downloads = self._api.history()
+
+            self.check_completed_downloads()
+
             self.available = True
             dispatcher_send(self.hass, DATA_UPDATED)
         except pynzbgetapi.NZBGetAPIException as err:
             self.available = False
             _LOGGER.error("Unable to refresh NZBGet data: %s", err)
+
+    def init_download_list(self):
+        """Initialize download list."""
+        self.downloads = self._api.history()
+        self.completed_downloads = {
+            (x["Name"], x["Category"], x["Status"]) for x in self.downloads
+        }
+
+    def check_completed_downloads(self):
+        """Check history for newly completed downloads."""
+
+        actual_completed_downloads = {
+            (x["Name"], x["Category"], x["Status"]) for x in self.downloads
+        }
+
+        tmp_completed_downloads = list(
+            actual_completed_downloads.difference(self.completed_downloads)
+        )
+
+        for download in tmp_completed_downloads:
+            self.hass.bus.fire(
+                "nzbget_download_complete",
+                {"name": download[0], "category": download[1], "status": download[2]},
+            )
+
+        self.completed_downloads = actual_completed_downloads
 
     def pause_download(self):
         """Pause download queue."""

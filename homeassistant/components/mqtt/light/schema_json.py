@@ -59,7 +59,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
 
-from . import MQTT_LIGHT_SCHEMA_SCHEMA
+from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import CONF_BRIGHTNESS_SCALE
 
 _LOGGER = logging.getLogger(__name__)

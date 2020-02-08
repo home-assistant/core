@@ -1,19 +1,19 @@
 """Track devices using UniFi controllers."""
 import logging
 
-from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import SOURCE_TYPE_ROUTER
+from homeassistant.components.unifi.config_flow import get_controller_from_config_entry
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import DISABLED_CONFIG_ENTRY
-
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_MANUFACTURER
+from .unifi_client import UniFiClient
 
 LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     @callback
     def update_controller():
         """Update the values of the controller."""
-        update_items(controller, async_add_entities, tracked)
+        add_entities(controller, async_add_entities, tracked)
 
     controller.listeners.append(
         async_dispatcher_connect(hass, controller.signal_update, update_controller)
@@ -75,6 +75,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     def update_disable_on_entities():
         """Update the values of the controller."""
         for entity in tracked.values():
+
+            if entity.entity_registry_enabled_default == entity.enabled:
+                continue
 
             disabled_by = None
             if not entity.entity_registry_enabled_default and entity.enabled:
@@ -94,8 +97,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 @callback
-def update_items(controller, async_add_entities, tracked):
-    """Update tracked device state from the controller."""
+def add_entities(controller, async_add_entities, tracked):
+    """Add new tracker entities from the controller."""
     new_tracked = []
 
     for items, tracker_class in (
@@ -106,8 +109,6 @@ def update_items(controller, async_add_entities, tracked):
         for item_id in items:
 
             if item_id in tracked:
-                if tracked[item_id].enabled:
-                    tracked[item_id].async_schedule_update_ha_state()
                 continue
 
             tracked[item_id] = tracker_class(items[item_id], controller)
@@ -117,14 +118,16 @@ def update_items(controller, async_add_entities, tracked):
         async_add_entities(new_tracked)
 
 
-class UniFiClientTracker(ScannerEntity):
+class UniFiClientTracker(UniFiClient, ScannerEntity):
     """Representation of a network client."""
 
     def __init__(self, client, controller):
         """Set up tracked client."""
-        self.client = client
-        self.controller = controller
-        self.is_wired = self.client.mac not in controller.wireless_clients
+        super().__init__(client, controller)
+
+        self.wired_bug = None
+        if self.is_wired != self.client.is_wired:
+            self.wired_bug = dt_util.utcnow() - self.controller.option_detection_time
 
     @property
     def entity_registry_enabled_default(self):
@@ -144,36 +147,24 @@ class UniFiClientTracker(ScannerEntity):
 
         return True
 
-    async def async_added_to_hass(self):
-        """Client entity created."""
-        LOGGER.debug("New UniFi client tracker %s (%s)", self.name, self.client.mac)
-
-    async def async_update(self):
-        """Synchronize state with controller.
-
-        Make sure to update self.is_wired if client is wireless, there is an issue when clients go offline that they get marked as wired.
-        """
-        LOGGER.debug(
-            "Updating UniFi tracked client %s (%s)", self.entity_id, self.client.mac
-        )
-        await self.controller.request_update()
-
-        if self.is_wired and self.client.mac in self.controller.wireless_clients:
-            self.is_wired = False
-
     @property
     def is_connected(self):
         """Return true if the client is connected to the network.
 
         If is_wired and client.is_wired differ it means that the device is offline and UniFi bug shows device as wired.
         """
-        if self.is_wired == self.client.is_wired and (
-            (
-                dt_util.utcnow()
-                - dt_util.utc_from_timestamp(float(self.client.last_seen))
+        if self.is_wired != self.client.is_wired:
+            if not self.wired_bug:
+                self.wired_bug = dt_util.utcnow()
+            since_last_seen = dt_util.utcnow() - self.wired_bug
+
+        else:
+            self.wired_bug = None
+            since_last_seen = dt_util.utcnow() - dt_util.utc_from_timestamp(
+                float(self.client.last_seen)
             )
-            < self.controller.option_detection_time
-        ):
+
+        if since_last_seen < self.controller.option_detection_time:
             return True
 
         return False
@@ -184,24 +175,9 @@ class UniFiClientTracker(ScannerEntity):
         return SOURCE_TYPE_ROUTER
 
     @property
-    def name(self) -> str:
-        """Return the name of the client."""
-        return self.client.name or self.client.hostname
-
-    @property
     def unique_id(self) -> str:
         """Return a unique identifier for this client."""
         return f"{self.client.mac}-{self.controller.site}"
-
-    @property
-    def available(self) -> bool:
-        """Return if controller is available."""
-        return self.controller.available
-
-    @property
-    def device_info(self):
-        """Return a client description for device registry."""
-        return {"connections": {(CONNECTION_NETWORK_MAC, self.client.mac)}}
 
     @property
     def device_state_attributes(self):
@@ -224,25 +200,37 @@ class UniFiDeviceTracker(ScannerEntity):
         """Set up tracked device."""
         self.device = device
         self.controller = controller
+        self.listeners = []
 
     @property
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
-        if not self.controller.option_track_devices:
-            return False
-
-        return True
+        if self.controller.option_track_devices:
+            return True
+        return False
 
     async def async_added_to_hass(self):
         """Subscribe to device events."""
         LOGGER.debug("New UniFi device tracker %s (%s)", self.name, self.device.mac)
-
-    async def async_update(self):
-        """Synchronize state with controller."""
-        LOGGER.debug(
-            "Updating UniFi tracked device %s (%s)", self.entity_id, self.device.mac
+        self.device.register_callback(self.async_update_callback)
+        self.listeners.append(
+            async_dispatcher_connect(
+                self.hass, self.controller.signal_reachable, self.async_update_callback
+            )
         )
-        await self.controller.request_update()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect device object when removed."""
+        self.device.remove_callback(self.async_update_callback)
+        for unsub_dispatcher in self.listeners:
+            unsub_dispatcher()
+
+    @callback
+    def async_update_callback(self):
+        """Update the sensor's state."""
+        LOGGER.debug("Updating UniFi tracked device %s", self.entity_id)
+
+        self.async_schedule_update_ha_state()
 
     @property
     def is_connected(self):
@@ -308,3 +296,8 @@ class UniFiDeviceTracker(ScannerEntity):
             attributes["upgradable"] = self.device.upgradable
 
         return attributes
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False

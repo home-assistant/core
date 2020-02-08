@@ -25,6 +25,7 @@
             "already_in_progress": "Plex is being configured",
             "discovery_no_file": "No legacy config file found",
             "invalid_import": "Imported configuration is invalid",
+            "non-interactive": "Non-interactive import",
             "token_request_timeout": "Timed out obtaining token",
             "unknown": "Failed for unknown reason"
         }

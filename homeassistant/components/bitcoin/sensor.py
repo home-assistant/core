@@ -1,17 +1,18 @@
-"""Bitcoin information service that uses blockchain.info."""
-import logging
+"""Bitcoin information service that uses blockchain.com."""
 from datetime import timedelta
+import logging
 
+from blockchain import exchangerates, statistics
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_DISPLAY_OPTIONS, ATTR_ATTRIBUTION, CONF_CURRENCY
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_CURRENCY, CONF_DISPLAY_OPTIONS
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by blockchain.info"
+ATTRIBUTION = "Data provided by blockchain.com"
 
 DEFAULT_CURRENCY = "USD"
 
@@ -55,7 +56,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bitcoin sensors."""
-    from blockchain import exchangerates
 
     currency = config.get(CONF_CURRENCY)
 
@@ -148,7 +148,7 @@ class BitcoinSensor(Entity):
         elif self.type == "total_btc":
             self._state = "{0:.2f}".format(stats.total_btc * 0.00000001)
         elif self.type == "total_blocks":
-            self._state = "{0:.2f}".format(stats.total_blocks)
+            self._state = "{0:.0f}".format(stats.total_blocks)
         elif self.type == "next_retarget":
             self._state = "{0:.2f}".format(stats.next_retarget)
         elif self.type == "estimated_transaction_volume_usd":
@@ -168,8 +168,7 @@ class BitcoinData:
         self.ticker = None
 
     def update(self):
-        """Get the latest data from blockchain.info."""
-        from blockchain import statistics, exchangerates
+        """Get the latest data from blockchain.com."""
 
         self.stats = statistics.get()
         self.ticker = exchangerates.get_ticker()

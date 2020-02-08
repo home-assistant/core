@@ -1,11 +1,23 @@
 """Test Google Assistant helpers."""
-from unittest.mock import Mock
-from homeassistant.setup import async_setup_component
+from datetime import timedelta
+
+from asynctest.mock import Mock, call, patch
+import pytest
+
 from homeassistant.components.google_assistant import helpers
-from homeassistant.components.google_assistant.const import EVENT_COMMAND_RECEIVED
+from homeassistant.components.google_assistant.const import (  # noqa: F401
+    EVENT_COMMAND_RECEIVED,
+)
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
+
 from . import MockConfig
 
-from tests.common import async_capture_events, async_mock_service
+from tests.common import (
+    async_capture_events,
+    async_fire_time_changed,
+    async_mock_service,
+)
 
 
 async def test_google_entity_sync_serialize_with_local_sdk(hass):
@@ -19,13 +31,13 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
     )
     entity = helpers.GoogleEntity(hass, config, hass.states.get("light.ceiling_lights"))
 
-    serialized = await entity.sync_serialize()
+    serialized = await entity.sync_serialize(None)
     assert "otherDeviceIds" not in serialized
     assert "customData" not in serialized
 
     config.async_enable_local_sdk()
 
-    serialized = await entity.sync_serialize()
+    serialized = await entity.sync_serialize(None)
     assert serialized["otherDeviceIds"] == [{"deviceId": "light.ceiling_lights"}]
     assert serialized["customData"] == {
         "httpPort": 1234,
@@ -128,3 +140,84 @@ async def test_config_local_sdk_if_disabled(hass, hass_client):
     resp = await client.post("/api/webhook/mock-webhook-id")
     assert resp.status == 200
     assert await resp.read() == b""
+
+
+async def test_agent_user_id_storage(hass, hass_storage):
+    """Test a disconnect message."""
+
+    hass_storage["google_assistant"] = {
+        "version": 1,
+        "key": "google_assistant",
+        "data": {"agent_user_ids": {"agent_1": {}}},
+    }
+
+    store = helpers.GoogleConfigStore(hass)
+    await store.async_load()
+
+    assert hass_storage["google_assistant"] == {
+        "version": 1,
+        "key": "google_assistant",
+        "data": {"agent_user_ids": {"agent_1": {}}},
+    }
+
+    async def _check_after_delay(data):
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done()
+
+        assert hass_storage["google_assistant"] == {
+            "version": 1,
+            "key": "google_assistant",
+            "data": data,
+        }
+
+    store.add_agent_user_id("agent_2")
+    await _check_after_delay({"agent_user_ids": {"agent_1": {}, "agent_2": {}}})
+
+    store.pop_agent_user_id("agent_1")
+    await _check_after_delay({"agent_user_ids": {"agent_2": {}}})
+
+
+async def test_agent_user_id_connect():
+    """Test the connection and disconnection of users."""
+    config = MockConfig()
+    store = config._store
+
+    await config.async_connect_agent_user("agent_2")
+    assert store.add_agent_user_id.call_args == call("agent_2")
+
+    await config.async_connect_agent_user("agent_1")
+    assert store.add_agent_user_id.call_args == call("agent_1")
+
+    await config.async_disconnect_agent_user("agent_2")
+    assert store.pop_agent_user_id.call_args == call("agent_2")
+
+    await config.async_disconnect_agent_user("agent_1")
+    assert store.pop_agent_user_id.call_args == call("agent_1")
+
+
+@pytest.mark.parametrize("agents", [{}, {"1"}, {"1", "2"}])
+async def test_report_state_all(agents):
+    """Test a disconnect message."""
+    config = MockConfig(agent_user_ids=agents)
+    data = {}
+    with patch.object(config, "async_report_state") as mock:
+        await config.async_report_state_all(data)
+        assert sorted(mock.mock_calls) == sorted(
+            [call(data, agent) for agent in agents]
+        )
+
+
+@pytest.mark.parametrize(
+    "agents, result", [({}, 204), ({"1": 200}, 200), ({"1": 200, "2": 300}, 300)],
+)
+async def test_sync_entities_all(agents, result):
+    """Test sync entities ."""
+    config = MockConfig(agent_user_ids=set(agents.keys()))
+    with patch.object(
+        config,
+        "async_sync_entities",
+        side_effect=lambda agent_user_id: agents[agent_user_id],
+    ) as mock:
+        res = await config.async_sync_entities_all()
+        assert sorted(mock.mock_calls) == sorted([call(agent) for agent in agents])
+        assert res == result

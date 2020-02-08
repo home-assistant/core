@@ -1,27 +1,39 @@
 """Support for a State MQTT vacuum."""
-import logging
 import json
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt import (
+    CONF_COMMAND_TOPIC,
+    CONF_QOS,
+    CONF_RETAIN,
+    CONF_STATE_TOPIC,
+    CONF_UNIQUE_ID,
+    MqttAttributes,
+    MqttAvailability,
+    MqttDiscoveryUpdate,
+    MqttEntityDeviceInfo,
+    subscription,
+)
 from homeassistant.components.vacuum import (
+    STATE_CLEANING,
+    STATE_DOCKED,
+    STATE_ERROR,
+    STATE_IDLE,
+    STATE_PAUSED,
+    STATE_RETURNING,
     SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED,
-    SUPPORT_START,
     SUPPORT_LOCATE,
     SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME,
     SUPPORT_SEND_COMMAND,
+    SUPPORT_START,
     SUPPORT_STATUS,
     SUPPORT_STOP,
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_PAUSED,
-    STATE_IDLE,
-    STATE_RETURNING,
-    STATE_ERROR,
     StateVacuumDevice,
 )
 from homeassistant.const import (
@@ -33,20 +45,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.mqtt import (
-    CONF_UNIQUE_ID,
-    MqttAttributes,
-    MqttAvailability,
-    MqttDiscoveryUpdate,
-    MqttEntityDeviceInfo,
-    subscription,
-    CONF_COMMAND_TOPIC,
-    CONF_RETAIN,
-    CONF_STATE_TOPIC,
-    CONF_QOS,
-)
-
-from . import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
+from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
 _LOGGER = logging.getLogger(__name__)
 

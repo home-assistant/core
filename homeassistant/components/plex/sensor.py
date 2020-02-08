@@ -1,18 +1,20 @@
 """Support for Plex media server monitoring."""
-from datetime import timedelta
 import logging
 
-import plexapi.exceptions
-import requests.exceptions
-
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
-from .const import CONF_SERVER_IDENTIFIER, DOMAIN as PLEX_DOMAIN, SERVERS
+from .const import (
+    CONF_SERVER_IDENTIFIER,
+    DISPATCHERS,
+    DOMAIN as PLEX_DOMAIN,
+    NAME_FORMAT,
+    PLEX_UPDATE_SENSOR_SIGNAL,
+    SERVERS,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -26,8 +28,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Plex sensor from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    sensor = PlexSensor(hass.data[PLEX_DOMAIN][SERVERS][server_id])
-    async_add_entities([sensor], True)
+    plexserver = hass.data[PLEX_DOMAIN][SERVERS][server_id]
+    sensor = PlexSensor(plexserver)
+    async_add_entities([sensor])
 
 
 class PlexSensor(Entity):
@@ -35,11 +38,28 @@ class PlexSensor(Entity):
 
     def __init__(self, plex_server):
         """Initialize the sensor."""
+        self.sessions = []
         self._state = None
         self._now_playing = []
         self._server = plex_server
-        self._name = f"Plex ({plex_server.friendly_name})"
+        self._name = NAME_FORMAT.format(plex_server.friendly_name)
         self._unique_id = f"sensor-{plex_server.machine_identifier}"
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        server_id = self._server.machine_identifier
+        unsub = async_dispatcher_connect(
+            self.hass,
+            PLEX_UPDATE_SENSOR_SIGNAL.format(server_id),
+            self.async_refresh_sensor,
+        )
+        self.hass.data[PLEX_DOMAIN][DISPATCHERS][server_id].append(unsub)
+
+    @callback
+    def async_refresh_sensor(self, sessions):
+        """Set instance object and trigger an entity state update."""
+        self.sessions = sessions
+        self.async_schedule_update_ha_state(True)
 
     @property
     def name(self):
@@ -52,6 +72,11 @@ class PlexSensor(Entity):
         return self._unique_id
 
     @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return False
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
@@ -62,28 +87,23 @@ class PlexSensor(Entity):
         return "Watching"
 
     @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return "mdi:plex"
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {content[0]: content[1] for content in self._now_playing}
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update method for Plex sensor."""
-        try:
-            sessions = self._server.sessions()
-        except plexapi.exceptions.BadRequest:
-            _LOGGER.error(
-                "Error listing current Plex sessions on %s", self._server.friendly_name
-            )
-            return
-        except requests.exceptions.RequestException as ex:
-            _LOGGER.warning(
-                "Temporary error connecting to %s (%s)", self._server.friendly_name, ex
-            )
-            return
-
+        _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
         now_playing = []
-        for sess in sessions:
+        for sess in self.sessions:
+            if sess.TYPE == "photo":
+                _LOGGER.debug("Photo session detected, skipping: %s", sess)
+                continue
             user = sess.usernames[0]
             device = sess.players[0].title
             now_playing_user = f"{user} - {device}"
@@ -120,5 +140,5 @@ class PlexSensor(Entity):
                     now_playing_title += f" ({sess.year})"
 
             now_playing.append((now_playing_user, now_playing_title))
-        self._state = len(sessions)
+        self._state = len(self.sessions)
         self._now_playing = now_playing

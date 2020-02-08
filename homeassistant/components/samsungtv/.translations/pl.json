@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ten telewizor Samsung jest ju\u017c skonfigurowany.",
+            "already_in_progress": "Konfiguracja telewizora Samsung jest ju\u017c w toku.",
+            "auth_missing": "Home Assistant nie jest uwierzytelniony, aby po\u0142\u0105czy\u0107 si\u0119 z tym telewizorem Samsung.",
+            "not_found": "W sieci nie znaleziono obs\u0142ugiwanych telewizor\u00f3w Samsung.",
+            "not_successful": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 urz\u0105dzeniem Samsung TV.",
+            "not_supported": "Ten telewizor Samsung nie jest obecnie obs\u0142ugiwany."
+        },
+        "flow_title": "Samsung TV: {model}",
+        "step": {
+            "confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 telewizor Samsung {model}? Je\u015bli nigdy wcze\u015bniej ten telewizor nie by\u0142 \u0142\u0105czony z Home Assistant'em na jego ekranie powinna pojawi\u0107 si\u0119 pro\u015bba o uwierzytelnienie. R\u0119czne konfiguracje tego telewizora zostan\u0105 zast\u0105pione.",
+                "title": "Samsung TV"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa"
+                },
+                "description": "Wprowad\u017a informacje o telewizorze Samsung. Je\u015bli nigdy wcze\u015bniej ten telewizor nie by\u0142 \u0142\u0105czony z Home Assistant'em na jego ekranie powinna pojawi\u0107 si\u0119 pro\u015bba o uwierzytelnienie.",
+                "title": "Samsung TV"
+            }
+        },
+        "title": "Samsung TV"
+    }
+}

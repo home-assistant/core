@@ -3,17 +3,17 @@ import logging
 
 from pyotgw import vars as gw_vars
 
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateDevice
 from homeassistant.components.climate.const import (
     CURRENT_HVAC_COOL,
     CURRENT_HVAC_HEAT,
     CURRENT_HVAC_IDLE,
     HVAC_MODE_COOL,
     HVAC_MODE_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
     PRESET_AWAY,
     PRESET_NONE,
     SUPPORT_PRESET_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -25,11 +25,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import async_generate_entity_id
 
+from . import DOMAIN
 from .const import CONF_FLOOR_TEMP, CONF_PRECISION, DATA_GATEWAYS, DATA_OPENTHERM_GW
 
-
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_FLOOR_TEMP = False
+DEFAULT_PRECISION = None
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
 
@@ -39,7 +43,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ents = []
     ents.append(
         OpenThermClimate(
-            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
+            hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]],
+            config_entry.options,
         )
     )
 
@@ -49,12 +54,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class OpenThermClimate(ClimateDevice):
     """Representation of a climate device."""
 
-    def __init__(self, gw_dev):
+    def __init__(self, gw_dev, options):
         """Initialize the device."""
         self._gateway = gw_dev
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, gw_dev.gw_id, hass=gw_dev.hass
+        )
         self.friendly_name = gw_dev.name
-        self.floor_temp = gw_dev.climate_config.get(CONF_FLOOR_TEMP)
-        self.temp_precision = gw_dev.climate_config.get(CONF_PRECISION)
+        self.floor_temp = options.get(CONF_FLOOR_TEMP, DEFAULT_FLOOR_TEMP)
+        self.temp_precision = options.get(CONF_PRECISION, DEFAULT_PRECISION)
         self._current_operation = None
         self._current_temperature = None
         self._hvac_mode = HVAC_MODE_HEAT
@@ -64,13 +72,31 @@ class OpenThermClimate(ClimateDevice):
         self._away_mode_b = None
         self._away_state_a = False
         self._away_state_b = False
+        self._unsub_options = None
+        self._unsub_updates = None
+
+    @callback
+    def update_options(self, entry):
+        """Update climate entity options."""
+        self.floor_temp = entry.options[CONF_FLOOR_TEMP]
+        self.temp_precision = entry.options[CONF_PRECISION]
+        self.async_schedule_update_ha_state()
 
     async def async_added_to_hass(self):
         """Connect to the OpenTherm Gateway device."""
         _LOGGER.debug("Added OpenTherm Gateway climate device %s", self.friendly_name)
-        async_dispatcher_connect(
+        self._unsub_updates = async_dispatcher_connect(
             self.hass, self._gateway.update_signal, self.receive_report
         )
+        self._unsub_options = async_dispatcher_connect(
+            self.hass, self._gateway.options_update_signal, self.update_options
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Unsubscribe from updates from the component."""
+        _LOGGER.debug("Removing OpenTherm Gateway climate %s", self.friendly_name)
+        self._unsub_options()
+        self._unsub_updates()
 
     @callback
     def receive_report(self, status):
@@ -124,6 +150,17 @@ class OpenThermClimate(ClimateDevice):
     def name(self):
         """Return the friendly name."""
         return self.friendly_name
+
+    @property
+    def device_info(self):
+        """Return device info."""
+        return {
+            "identifiers": {(DOMAIN, self._gateway.gw_id)},
+            "name": self._gateway.name,
+            "manufacturer": "Schelte Bron",
+            "model": "OpenTherm Gateway",
+            "sw_version": self._gateway.gw_version,
+        }
 
     @property
     def unique_id(self):

@@ -1,15 +1,17 @@
 """Support for ClearPass Policy Manager."""
-import logging
 from datetime import timedelta
+import logging
 
+from clearpasspy import ClearPass
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
+
 from homeassistant.components.device_tracker import (
+    DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
-    DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_HOST
+import homeassistant.helpers.config_validation as cv
 
 SCAN_INTERVAL = timedelta(seconds=120)
 
@@ -30,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def get_scanner(hass, config):
     """Initialize Scanner."""
-    from clearpasspy import ClearPass
 
     data = {
         "server": config[DOMAIN][CONF_HOST],

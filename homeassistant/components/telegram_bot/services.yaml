@@ -21,6 +21,9 @@ send_message:
     disable_web_page_preview:
       description: Disables link previews for links in the message.
       example: true
+    timeout:
+      description: Timeout for send message. Will help with timeout errors (poor internet connection, etc)
+      example: '1000'
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard. Empty list clears a previously set keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -55,6 +58,9 @@ send_photo:
     verify_ssl:
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
       example: false
+    timeout:
+      description: Timeout for send photo. Will help with timeout errors (poor internet connection, etc)
+      example: '1000'
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -86,6 +92,9 @@ send_sticker:
     verify_ssl:
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
       example: false
+    timeout:
+      description: Timeout for send sticker. Will help with timeout errors (poor internet connection, etc)
+      example: '1000'
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -120,6 +129,9 @@ send_video:
     verify_ssl:
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
       example: false
+    timeout:
+      description: Timeout for send video. Will help with timeout errors (poor internet connection, etc)
+      example: '1000'
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -154,6 +166,9 @@ send_document:
     verify_ssl:
       description: Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server.
       example: false
+    timeout:
+      description: Timeout for send document. Will help with timeout errors (poor internet connection, etc)
+      example: '1000'
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'
@@ -176,6 +191,9 @@ send_location:
     disable_notification:
       description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
       example: true
+    timeout:
+      description: Timeout for send photo. Will help with timeout errors (poor internet connection, etc)
+      example: '1000'
     keyboard:
       description: List of rows of commands, comma-separated, to make a custom keyboard.
       example: '["/command1, /command2", "/command3"]'

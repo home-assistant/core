@@ -2,17 +2,18 @@
 import datetime
 from typing import Union
 
-import pytest
 import mock
 from py17track.package import Package
+import pytest
 
 from homeassistant.components.seventeentrack.sensor import (
     CONF_SHOW_ARCHIVED,
     CONF_SHOW_DELIVERED,
 )
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 from homeassistant.util import utcnow
+
 from tests.common import MockDependency, async_fire_time_changed
 
 VALID_CONFIG_MINIMAL = {
@@ -119,7 +120,10 @@ def fixture_mock_py17track():
 @pytest.fixture(autouse=True, name="mock_client")
 def fixture_mock_client(mock_py17track):
     """Mock py17track client."""
-    with mock.patch("py17track.Client", new=ClientMock):
+    with mock.patch(
+        "homeassistant.components.seventeentrack.sensor.SeventeenTrackClient",
+        new=ClientMock,
+    ):
         yield
     ProfileMock.reset()
 

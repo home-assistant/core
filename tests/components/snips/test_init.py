@@ -9,11 +9,12 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.mqtt import MQTT_PUBLISH_SCHEMA
 import homeassistant.components.snips as snips
 from homeassistant.helpers.intent import ServiceIntentHandler, async_register
+
 from tests.common import (
     async_fire_mqtt_message,
     async_mock_intent,
-    async_mock_service,
     async_mock_mqtt_component,
+    async_mock_service,
 )
 
 

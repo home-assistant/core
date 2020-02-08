@@ -6,7 +6,7 @@ from homeassistant.const import CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DEFAULT_NAME, DOMAIN, CONF_SITE_ID
+from .const import CONF_SITE_ID, DEFAULT_NAME, DOMAIN
 
 CONFIG_SCHEMA = vol.Schema(
     {

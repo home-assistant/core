@@ -8,7 +8,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -16,29 +15,12 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_WHITE_VALUE,
-    Light,
     SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
     SUPPORT_EFFECT,
-    SUPPORT_COLOR,
     SUPPORT_WHITE_VALUE,
-)
-from homeassistant.const import (
-    CONF_BRIGHTNESS,
-    CONF_COLOR_TEMP,
-    CONF_DEVICE,
-    CONF_EFFECT,
-    CONF_HS,
-    CONF_NAME,
-    CONF_OPTIMISTIC,
-    CONF_PAYLOAD_OFF,
-    CONF_PAYLOAD_ON,
-    STATE_ON,
-    CONF_RGB,
-    CONF_STATE,
-    CONF_VALUE_TEMPLATE,
-    CONF_WHITE_VALUE,
-    CONF_XY,
+    Light,
 )
 from homeassistant.components.mqtt import (
     CONF_COMMAND_TOPIC,
@@ -52,11 +34,29 @@ from homeassistant.components.mqtt import (
     MqttEntityDeviceInfo,
     subscription,
 )
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.const import (
+    CONF_BRIGHTNESS,
+    CONF_COLOR_TEMP,
+    CONF_DEVICE,
+    CONF_EFFECT,
+    CONF_HS,
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    CONF_PAYLOAD_OFF,
+    CONF_PAYLOAD_ON,
+    CONF_RGB,
+    CONF_STATE,
+    CONF_VALUE_TEMPLATE,
+    CONF_WHITE_VALUE,
+    CONF_XY,
+    STATE_ON,
+)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
-from . import MQTT_LIGHT_SCHEMA_SCHEMA
+from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
 

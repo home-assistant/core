@@ -1,13 +1,14 @@
 """Support for ANEL PwrCtrl switches."""
+from datetime import timedelta
 import logging
 import socket
-from datetime import timedelta
 
+from anel_pwrctrl import DeviceMaster
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,8 +36,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     port_recv = config.get(CONF_PORT_RECV)
     port_send = config.get(CONF_PORT_SEND)
-
-    from anel_pwrctrl import DeviceMaster
 
     try:
         master = DeviceMaster(
