@@ -5,7 +5,7 @@ from pprint import pformat
 from homeassistant.components.cover import (
     DEVICE_CLASS_GARAGE,
     ATTR_POSITION,
-    CoverDevice
+    CoverDevice,
 )
 from homeassistant.components.supla import SuplaChannel
 
