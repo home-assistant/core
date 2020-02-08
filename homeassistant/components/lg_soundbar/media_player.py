@@ -26,15 +26,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the LG platform."""
     if discovery_info is not None:
         async_add_entities([LGDevice(discovery_info)], True)
+    if config.get("host") and config.get("port"):
+        async_add_entities([LGDevice(config)], True)
         
 
 class LGDevice(MediaPlayerDevice):
     """Representation of an LG soundbar device."""
 
-    def __init__(self, discovery_info):
+    def __init__(self, config):
         """Initialize the LG speakers."""
-        host = discovery_info.get("host")
-        port = discovery_info.get("port")
+        host = config.get("host")
+        port = config.get("port")
 
         self._name = ""
         self._volume = 0
