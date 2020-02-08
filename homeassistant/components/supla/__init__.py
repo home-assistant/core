@@ -1,6 +1,5 @@
 """Support for Supla devices."""
 import logging
-from pprint import pformat
 from typing import Optional
 
 from pysupla import SuplaAPI
