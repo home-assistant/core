@@ -23,6 +23,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.script import Script
 
@@ -37,7 +38,7 @@ OFF_ACTION = "turn_off"
 
 SWITCH_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
         vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
         vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
@@ -59,7 +60,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for device, device_config in config[CONF_SWITCHES].items():
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        state_template = device_config[CONF_VALUE_TEMPLATE]
+        state_template = device_config.get(CONF_VALUE_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(CONF_ENTITY_PICTURE_TEMPLATE)
         availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
@@ -96,7 +97,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities(switches)
 
 
-class SwitchTemplate(SwitchEntity):
+class SwitchTemplate(SwitchEntity, RestoreEntity):
     """Representation of a Template switch."""
 
     def __init__(
@@ -141,11 +142,18 @@ class SwitchTemplate(SwitchEntity):
         @callback
         def template_switch_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_switch_state_listener
-            )
+            if (self._template is not None):
+                async_track_state_change(
+                    self.hass, self._entities, template_switch_state_listener
+                )
 
             self.async_schedule_update_ha_state(True)
+
+        # restore state after startup
+        await super().async_added_to_hass()
+        state = await self.async_get_last_state()
+        if state:
+            self._state = state.state in ("true", STATE_ON)
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_switch_startup
@@ -184,13 +192,21 @@ class SwitchTemplate(SwitchEntity):
     async def async_turn_on(self, **kwargs):
         """Fire the on action."""
         await self._on_script.async_run(context=self._context)
+        if self._template is None:
+            self._state = True
+            self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Fire the off action."""
         await self._off_script.async_run(context=self._context)
-
+        if self._template is None:
+            self._state = False
+            self.async_schedule_update_ha_state()
+            
     async def async_update(self):
         """Update the state from the template."""
+        if self._template is None:
+            return
         try:
             state = self._template.async_render().lower()
 
@@ -243,3 +259,8 @@ class SwitchTemplate(SwitchEntity):
                         self._name,
                         ex,
                     )
+
+    @property
+    def assumed_state(self):
+       """State is assumed, if no template given"""
+       return (self._template is None)
