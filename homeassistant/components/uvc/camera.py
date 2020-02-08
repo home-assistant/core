@@ -3,7 +3,6 @@ import logging
 from typing import Optional
 
 import requests
-from uvcclient.nvr import NotAuthorized, NvrError, UVCRemote
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
@@ -35,44 +34,36 @@ async def async_setup_entry(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Discover cameras on a Unifi NVR."""
-    addr = config[CONF_NVR]
-    key = config[CONF_KEY]
-    port = config[CONF_PORT]
-    ssl = config[CONF_SSL]
-
     try:
-        # Exceptions may be raised in all method calls to the nvr library.
-        nvrconn = UVCRemote(addr, port, key, ssl=ssl)
+        cameras = [
+            camera
+            for camera in requests.get(
+                f"{'http' if not config[CONF_SSL] else 'https'}://{config[CONF_NVR]}:{config[CONF_PORT]}/api/2.0/camera/?apiKey={config[CONF_KEY]}"
+            ).json()["data"]
+            if camera["managed"]
+        ]
 
-        cameras = [camera["id"] for camera in nvrconn.index()]
-    except NotAuthorized:
-        _LOGGER.error("Authorization failure while connecting to NVR")
-        return False
-    except NvrError as ex:
-        _LOGGER.error("NVR refuses to talk to me: %s", str(ex))
-        raise PlatformNotReady
-    except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error("Unable to connect to NVR: %s", str(ex))
+    except requests.exceptions.RequestException as ex:
+        _LOGGER.error("Connection error: %s", str(ex))
         raise PlatformNotReady
 
-    add_entities([UnifiVideoCamera(nvrconn, camera) for camera in cameras])
+    add_entities([UnifiVideoCamera(config, camera) for camera in cameras])
     return True
 
 
 class UnifiVideoCamera(Camera):
     """A Ubiquiti Unifi Video Camera."""
 
-    def __init__(self, nvr, uuid):
+    def __init__(self, config, camera):
         """Initialize an Unifi camera."""
         super().__init__()
-        self._nvr = nvr
-        self._uuid = uuid
-        self.update()
+        self._config = config
+        self._camera = camera
 
     @property
     def name(self):
         """Return the name of this camera."""
-        return self._caminfo["name"]
+        return self._camera["name"]
 
     @property
     def should_poll(self):
@@ -82,17 +73,18 @@ class UnifiVideoCamera(Camera):
     @property
     def unique_id(self) -> Optional[str]:
         """Return camera UUID."""
-        return self._uuid
+        return self._camera["_id"]
 
     def update(self):
         """Fetch latest state from the API."""
-        self._caminfo = self._nvr.get_camera(self._uuid)
+        self._camera = requests.get(
+            f"{'http' if not self._config[CONF_SSL] else 'https'}://{self._config[CONF_NVR]}:{self._config[CONF_PORT]}/api/2.0/camera/{self.unique_id}?apiKey={self._config[CONF_KEY]}"
+        ).json()["data"][0]
 
     @property
     def supported_features(self):
         """Return supported features."""
-        channels = self._caminfo["channels"]
-        for channel in channels:
+        for channel in self._camera["channels"]:
             if channel["isRtspEnabled"]:
                 return SUPPORT_STREAM
 
@@ -101,12 +93,12 @@ class UnifiVideoCamera(Camera):
     @property
     def is_recording(self):
         """Return true if the camera is recording."""
-        return self._caminfo["recordingSettings"]["fullTimeRecordEnabled"]
+        return self._camera["recordingSettings"]["fullTimeRecordEnabled"]
 
     @property
     def is_streaming(self):
         """Return true if the camera is recording."""
-        for channel in self._caminfo["channels"]:
+        for channel in self._camera["channels"]:
             if channel["isRtspEnabled"]:
                 return True
         return False
@@ -118,7 +110,7 @@ class UnifiVideoCamera(Camera):
     @property
     def motion_detection_enabled(self):
         """Camera Motion Detection Status."""
-        return self._caminfo["recordingSettings"]["motionRecordEnabled"]
+        return self._camera["recordingSettings"]["motionRecordEnabled"]
 
     @property
     def brand(self):
@@ -128,16 +120,17 @@ class UnifiVideoCamera(Camera):
     @property
     def model(self):
         """Return the model of this camera."""
-        return self._caminfo["model"]
+        return self._camera["model"]
 
     def camera_image(self):
         """Return the image of this camera."""
-        return self._nvr.get_snapshot(self._uuid)
+        return requests.get(
+            f"{'http' if not self._config[CONF_SSL] else 'https'}://{self._config[CONF_NVR]}:{self._config[CONF_PORT]}/api/2.0/snapshot/camera/{self.unique_id}?force=true&apiKey={self._config[CONF_KEY]}"
+        ).content
 
     async def stream_source(self):
         """Return the source of the stream."""
-        channels = self._caminfo["channels"]
-        for channel in channels:
+        for channel in self._camera["channels"]:
             if channel["isRtspEnabled"]:
                 return channel["rtspUris"][0]
 
