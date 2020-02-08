@@ -47,13 +47,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
 
     nsapi = ns_api.NSAPI(config[CONF_API_KEY])
+
     try:
         stations = nsapi.get_stations()
     except (
         requests.exceptions.ConnectionError,
         requests.exceptions.HTTPError,
     ) as error:
-        _LOGGER.error("Couldn't fetch stations, API key correct?: %s", error)
+        _LOGGER.error("NS integration could not connect to the internet: %s", error)
+        return
+    except Exception as error:
+        _LOGGER.error("NS integration crashed, please check configuration: %s", error)
+        hass.components.persistent_notification.create(
+            'The Nederlandse Spoorwegen component is not working, please check if your configuration is correct using the <a href="https://www.home-assistant.io/integrations/nederlandse_spoorwegen/">documentation</a>.',
+            title="NS configuration error",
+            notification_id="nederlandse_spoorwegen_config_error",
+        )
         return
 
     sensors = []
@@ -223,7 +232,7 @@ class NSDepartureSensor(Entity):
 
         try:
             self._trips = self._nsapi.get_trips(
-                trip_time, self._departure, self._via, self._heading, True, 0, 2,
+                trip_time, self._departure, self._via, self._heading, True, 0, 2
             )
             if self._trips:
                 if self._trips[0].departure_time_actual is None:
