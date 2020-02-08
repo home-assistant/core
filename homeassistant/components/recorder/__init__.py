@@ -98,8 +98,12 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Coerce(int), vol.Range(min=0)
                 ),
                 vol.Optional(CONF_DB_URL): cv.string,
-                vol.Optional(CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES): cv.positive_int,
-                vol.Optional(CONF_DB_RETRY_WAIT, default=DEFAULT_DB_RETRY_WAIT): cv.positive_int,
+                vol.Optional(
+                    CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES
+                ): cv.positive_int,
+                vol.Optional(
+                    CONF_DB_RETRY_WAIT, default=DEFAULT_DB_RETRY_WAIT
+                ): cv.positive_int,
             }
         )
     },
