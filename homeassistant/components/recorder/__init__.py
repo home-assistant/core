@@ -98,8 +98,8 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Coerce(int), vol.Range(min=0)
                 ),
                 vol.Optional(CONF_DB_URL): cv.string,
-                vol.Optional(CONF_DB_MAX_RETRIES): cv.positive_int,
-                vol.Optional(CONF_DB_RETRY_WAIT): cv.positive_int,
+                vol.Optional(CONF_DB_MAX_RETRIES, default=DEFAULT_DB_MAX_RETRIES): cv.positive_int,
+                vol.Optional(CONF_DB_RETRY_WAIT, default=DEFAULT_DB_RETRY_WAIT): cv.positive_int,
             }
         )
     },
@@ -142,13 +142,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if not db_url:
         db_url = DEFAULT_URL.format(hass_config_path=hass.config.path(DEFAULT_DB_FILE))
 
-    db_max_retries = conf.get(CONF_DB_MAX_RETRIES, None)
-    if not db_max_retries:
-        db_max_retries = DEFAULT_DB_MAX_RETRIES
-
-    db_retry_wait = conf.get(CONF_DB_RETRY_WAIT, None)
-    if not db_retry_wait:
-        db_retry_wait = DEFAULT_DB_RETRY_WAIT
+    db_max_retries = conf.get(CONF_DB_MAX_RETRIES)
+    db_retry_wait = conf.get(CONF_DB_RETRY_WAIT)
 
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
