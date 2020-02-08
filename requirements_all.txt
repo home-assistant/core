@@ -1605,9 +1605,6 @@ python-nest==4.1.0
 # homeassistant.components.nmap_tracker
 python-nmap==0.6.1
 
-# homeassistant.components.pushover
-python-pushover==0.4
-
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.1
 
@@ -1862,6 +1859,9 @@ snapcast==2.0.10
 
 # homeassistant.components.socialblade
 socialbladeclient==0.2
+
+# homeassistant.components.pushover
+softxperience-pushover==1.0
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.0

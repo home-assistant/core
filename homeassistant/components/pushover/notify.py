@@ -1,7 +1,7 @@
 """Pushover platform for notify component."""
 import logging
 
-from pushover import Client, InitError, RequestError
+from pushover import Pushover, RequestError
 import requests
 import voluptuous as vol
 
@@ -29,13 +29,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def get_service(hass, config, discovery_info=None):
     """Get the Pushover notification service."""
-    try:
-        return PushoverNotificationService(
-            hass, config[CONF_USER_KEY], config[CONF_API_KEY]
-        )
-    except InitError:
-        _LOGGER.error("Wrong API key supplied")
-        return None
+    return PushoverNotificationService(
+        hass, config[CONF_USER_KEY], config[CONF_API_KEY]
+    )
 
 
 class PushoverNotificationService(BaseNotificationService):
@@ -46,7 +42,7 @@ class PushoverNotificationService(BaseNotificationService):
         self._hass = hass
         self._user_key = user_key
         self._api_token = api_token
-        self.pushover = Client(self._user_key, api_token=self._api_token)
+        self.pushover = Pushover(self._api_token)
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
@@ -105,7 +101,7 @@ class PushoverNotificationService(BaseNotificationService):
                 data["device"] = target
 
             try:
-                self.pushover.send_message(message, **data)
+                self.pushover.message(self._user_key, message, **data)
             except ValueError as val_err:
                 _LOGGER.error(val_err)
             except RequestError:
