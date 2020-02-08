@@ -228,7 +228,7 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
         conf = await component.async_prepare_reload(skip_reset=True)
         if conf is None:
             return
-        await yaml_collection.async_load(conf[DOMAIN])
+        await yaml_collection.async_load(conf.get(DOMAIN, []))
 
     service.async_register_admin_service(
         hass,

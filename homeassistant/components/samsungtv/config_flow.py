@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, UnhandledResponse
 import voluptuous as vol
+from websocket import WebSocketException
 
 from homeassistant import config_entries
 from homeassistant.components.ssdp import (
@@ -23,7 +24,7 @@ from homeassistant.const import (
 )
 
 # pylint:disable=unused-import
-from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, METHODS
+from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 
@@ -31,6 +32,12 @@ RESULT_AUTH_MISSING = "auth_missing"
 RESULT_SUCCESS = "success"
 RESULT_NOT_SUCCESSFUL = "not_successful"
 RESULT_NOT_SUPPORTED = "not_supported"
+
+SUPPORTED_METHODS = (
+    {"method": "websocket", "timeout": 1},
+    # We need this high timeout because waiting for auth popup is just an open socket
+    {"method": "legacy", "timeout": 31},
+)
 
 
 def _get_ip(host):
@@ -76,27 +83,25 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _try_connect(self):
         """Try to connect and check auth."""
-        for method in METHODS:
+        for cfg in SUPPORTED_METHODS:
             config = {
                 "name": "HomeAssistant",
                 "description": "HomeAssistant",
                 "id": "ha.component.samsung",
                 "host": self._host,
-                "method": method,
                 "port": self._port,
-                # We need this high timeout because waiting for auth popup is just an open socket
-                "timeout": 31,
             }
+            config.update(cfg)
             try:
                 LOGGER.debug("Try config: %s", config)
                 with Remote(config.copy()):
                     LOGGER.debug("Working config: %s", config)
-                    self._method = method
+                    self._method = cfg["method"]
                     return RESULT_SUCCESS
             except AccessDenied:
                 LOGGER.debug("Working but denied config: %s", config)
                 return RESULT_AUTH_MISSING
-            except UnhandledResponse:
+            except (UnhandledResponse, WebSocketException):
                 LOGGER.debug("Working but unsupported config: %s", config)
                 return RESULT_NOT_SUPPORTED
             except OSError as err:

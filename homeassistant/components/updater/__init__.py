@@ -123,7 +123,11 @@ async def async_setup(hass, config):
         return Updater(update_available, newest, release_notes)
 
     coordinator = hass.data[DOMAIN] = update_coordinator.DataUpdateCoordinator(
-        hass, _LOGGER, "Home Assistant update", check_new_version, timedelta(days=1)
+        hass,
+        _LOGGER,
+        name="Home Assistant update",
+        update_method=check_new_version,
+        update_interval=timedelta(days=1),
     )
 
     await coordinator.async_refresh()

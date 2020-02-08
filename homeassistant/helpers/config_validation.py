@@ -52,6 +52,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
     CONF_VALUE_TEMPLATE,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
     TEMP_CELSIUS,
@@ -231,7 +232,9 @@ def entity_ids(value: Union[str, List]) -> List[str]:
     return [entity_id(ent_id) for ent_id in value]
 
 
-comp_entity_ids = vol.Any(vol.All(vol.Lower, ENTITY_MATCH_ALL), entity_ids)
+comp_entity_ids = vol.Any(
+    vol.All(vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)), entity_ids
+)
 
 
 def entity_domain(domain: str) -> Callable[[Any], str]:
@@ -736,7 +739,9 @@ def make_entity_service_schema(
             {
                 **schema,
                 vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-                vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
+                vol.Optional(ATTR_AREA_ID): vol.Any(
+                    ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
+                ),
             },
             extra=extra,
         ),

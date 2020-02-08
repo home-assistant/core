@@ -101,6 +101,9 @@ class PlexSensor(Entity):
         _LOGGER.debug("Refreshing sensor [%s]", self.unique_id)
         now_playing = []
         for sess in self.sessions:
+            if sess.TYPE == "photo":
+                _LOGGER.debug("Photo session detected, skipping: %s", sess)
+                continue
             user = sess.usernames[0]
             device = sess.players[0].title
             now_playing_user = f"{user} - {device}"

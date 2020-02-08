@@ -38,7 +38,7 @@ class UpdaterBinary(BinarySensorDevice):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return not self.coordinator.failed_last_update
+        return self.coordinator.last_update_success
 
     @property
     def should_poll(self) -> bool:

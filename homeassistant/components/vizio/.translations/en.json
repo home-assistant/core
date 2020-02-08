@@ -6,6 +6,7 @@
             "already_setup_with_diff_host_and_name": "This entry appears to have already been setup with a different host and name based on its serial number. Please remove any old entries from your configuration.yaml and from the Integrations menu before reattempting to add this device.",
             "host_exists": "Vizio component with host already configured.",
             "name_exists": "Vizio component with name already configured.",
+            "updated_entry": "This entry has already been setup but the name and/or options defined in the config do not match the previously imported config so the config entry has been updated accordingly.",
             "updated_options": "This entry has already been setup but the options defined in the config do not match the previously imported options values so the config entry has been updated accordingly.",
             "updated_volume_step": "This entry has already been setup but the volume step size in the config does not match the config entry so the config entry has been updated accordingly."
         },

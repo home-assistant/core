@@ -277,7 +277,6 @@ class UniFiController:
             (CONF_SSID_FILTER, CONF_SSID_FILTER),
         ):
             if config in import_config:
-                print(config)
                 if config == option and import_config[
                     config
                 ] != self.config_entry.options.get(option):

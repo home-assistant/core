@@ -79,17 +79,19 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     light_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        "light",
-        partial(async_safe_fetch, bridge, bridge.api.lights.update),
-        SCAN_INTERVAL,
-        Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
+        name="light",
+        update_method=partial(async_safe_fetch, bridge, bridge.api.lights.update),
+        update_interval=SCAN_INTERVAL,
+        request_refresh_debouncer=Debouncer(
+            bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+        ),
     )
 
     # First do a refresh to see if we can reach the hub.
     # Otherwise we will declare not ready.
     await light_coordinator.async_refresh()
 
-    if light_coordinator.failed_last_update:
+    if not light_coordinator.last_update_success:
         raise PlatformNotReady
 
     update_lights = partial(
@@ -122,10 +124,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     group_coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
-        "group",
-        partial(async_safe_fetch, bridge, bridge.api.groups.update),
-        SCAN_INTERVAL,
-        Debouncer(bridge.hass, _LOGGER, REQUEST_REFRESH_DELAY, True),
+        name="group",
+        update_method=partial(async_safe_fetch, bridge, bridge.api.groups.update),
+        update_interval=SCAN_INTERVAL,
+        request_refresh_debouncer=Debouncer(
+            bridge.hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
+        ),
     )
 
     update_groups = partial(
@@ -277,7 +281,7 @@ class HueLight(Light):
     @property
     def available(self):
         """Return if light is available."""
-        return not self.coordinator.failed_last_update and (
+        return self.coordinator.last_update_success and (
             self.is_group
             or self.bridge.allow_unreachable
             or self.light.state["reachable"]

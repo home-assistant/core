@@ -9,6 +9,9 @@
         },
         "step": {
             "2fa": {
+                "data": {
+                    "2fa": "Twee-factor code"
+                },
                 "title": "Tweestapsverificatie"
             },
             "user": {

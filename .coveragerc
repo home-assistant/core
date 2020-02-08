@@ -386,7 +386,6 @@ omit =
     homeassistant/components/linode/*
     homeassistant/components/linux_battery/sensor.py
     homeassistant/components/lirc/*
-    homeassistant/components/liveboxplaytv/media_player.py
     homeassistant/components/llamalab_automate/notify.py
     homeassistant/components/lockitron/lock.py
     homeassistant/components/logi_circle/__init__.py
@@ -413,7 +412,10 @@ omit =
     homeassistant/components/mediaroom/media_player.py
     homeassistant/components/message_bird/notify.py
     homeassistant/components/met/weather.py
-    homeassistant/components/meteo_france/*
+    homeassistant/components/meteo_france/__init__.py
+    homeassistant/components/meteo_france/const.py
+    homeassistant/components/meteo_france/sensor.py
+    homeassistant/components/meteo_france/weather.py
     homeassistant/components/meteoalarm/*
     homeassistant/components/metoffice/sensor.py
     homeassistant/components/metoffice/weather.py
@@ -423,6 +425,10 @@ omit =
     homeassistant/components/mikrotik/device_tracker.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/const.py
+    homeassistant/components/minecraft_server/__init__.py
+    homeassistant/components/minecraft_server/binary_sensor.py
+    homeassistant/components/minecraft_server/const.py
+    homeassistant/components/minecraft_server/sensor.py
     homeassistant/components/minio/*
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py
