@@ -30,7 +30,7 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 DEFAULT_DURATION = 0
 DEFAULT_RESTORE = False
-DEFAULT_RESTORE_GRACE_PERIOD = timedelta(minutes=15)
+DEFAULT_RESTORE_GRACE_PERIOD = 0
 ATTR_DURATION = "duration"
 ATTR_REMAINING = "remaining"
 ATTR_RESTORE = "restore"
@@ -65,11 +65,15 @@ CREATE_FIELDS = {
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DURATION, default=DEFAULT_DURATION): cv.time_period,
+    vol.Optional(CONF_RESTORE, default=DEFAULT_RESTORE): cv.boolean,
+    vol.Optional(CONF_RESTORE_GRACE_PERIOD, default=DEFAULT_RESTORE_GRACE_PERIOD): cv.time_period,
 }
 UPDATE_FIELDS = {
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DURATION): cv.time_period,
+    vol.Optional(CONF_RESTORE): cv.boolean,
+    vol.Optional(CONF_RESTORE_GRACE_PERIOD): cv.time_period,
 }
 
 
@@ -78,16 +82,6 @@ def _none_to_empty_dict(value):
         return {}
     return value
 
-def _time_str(time_value):
-    time_value = str(time_value)
-    if "day" in time_value:
-        part0 = str(time_value).split(",")
-        part1 = str(part0[0]).split(" ")
-        part0[0] = int(part1[0]) * 24
-        times = part0[1].split(":")
-        hour = part0[0] + int(times[0])
-        time_value = "{:02}:{:02}:{:02}".format(int(hour),int(times[1]),int(times[2]))
-    return time_value
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -186,7 +180,7 @@ class TimerStorageCollection(collection.StorageCollection):
         data = self.CREATE_SCHEMA(data)
         # make duration JSON serializeable
         data[CONF_DURATION] = str(data[CONF_DURATION])
-        data[CONF_RESTORE] = str(data[CONF_RESTORE])
+        data[CONF_RESTORE] = data[CONF_RESTORE]
         data[CONF_RESTORE_GRACE_PERIOD] = str(data[CONF_RESTORE_GRACE_PERIOD])
         return data
 
@@ -200,7 +194,7 @@ class TimerStorageCollection(collection.StorageCollection):
         data = {**data, **self.UPDATE_SCHEMA(update_data)}
         # make duration JSON serializeable
         data[CONF_DURATION] = str(data[CONF_DURATION])
-        data[CONF_RESTORE] = str(data[CONF_RESTORE])
+        data[CONF_RESTORE] = data[CONF_RESTORE]
         data[CONF_RESTORE_GRACE_PERIOD] = str(data[CONF_RESTORE_GRACE_PERIOD])
         return data
 
@@ -213,13 +207,11 @@ class Timer(RestoreEntity):
         self._config = config
         self.editable = True
         self._state = STATUS_IDLE
-        self._remaining = config[CONF_DURATION]
-        self._restore = config[CONF_RESTORE] if config[CONF_RESTORE] is not None \
-                        else DEFAULT_RESTORE
+        self._remaining = self._config[CONF_DURATION]
+        self._restore = self._config.get(CONF_RESTORE, DEFAULT_RESTORE)
         if self._restore:
-            self._restore_grace_period = config[CONF_RESTORE_GRACE_PERIOD] \
-                                    if config[CONF_RESTORE_GRACE_PERIOD] is not None \
-                                    else DEFAULT_RESTORE_GRACE_PERIOD
+            self._restore_grace_period = config.get(CONF_RESTORE_GRACE_PERIOD,
+                                                    DEFAULT_RESTORE_GRACE_PERIOD)
         else:
             self._restore_grace_period = None
         
@@ -257,15 +249,18 @@ class Timer(RestoreEntity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
+        if self._end is None:
+            attr_end = None
+        else:
+            attr_end = str(self._end.replace(tzinfo=timezone.utc).astimezone(tz=None))
+
         return {
-            ATTR_DURATION: _time_str(self._config[CONF_DURATION]),
+            ATTR_DURATION: str(self._config[CONF_DURATION]),
             ATTR_EDITABLE: self.editable,
-            ATTR_REMAINING: _time_str(self._remaining),
+            ATTR_REMAINING: str(self._remaining),
             ATTR_RESTORE: str(self._restore),
             ATTR_RESTORE_GRACE_PERIOD: str(self._restore_grace_period),
-            ATTR_END: str(self._end.replace(tzinfo=timezone.utc).astimezone(tz=None)) \
-                      if self._end is not None \
-                      else None,
+            ATTR_END: attr_end
         }
 
     @property
@@ -281,52 +276,58 @@ class Timer(RestoreEntity):
         
         # Check for previous recorded state
         state = await self.async_get_last_state()
-        if state is not None:
+        if state is None:
+            self._state = STATUS_IDLE
+            return
+        else:
             for check_status in VIABLE_STATUSES:
-                if state.state == check_status:
-                    self._state = state.state
-                    # restore last duration if config doesn't have a default
-                    if not self._config[CONF_DURATION] and not state.attributes.get(ATTR_DURATION) == "None":
-                        try:
-                            duration_data = list(map(int, str(state.attributes.get(ATTR_DURATION)).split(":")))
-                            self._config[CONF_DURATION] = timedelta(hours=duration_data[0], 
-                                                                    minutes=duration_data[1], 
-                                                                    seconds=duration_data[2])
-                        except:
-                            break
-                    # restore remaining (needed for paused state)
-                    if self._state == STATUS_PAUSED \
-                       and not state.attributes.get(ATTR_REMAINING) == "None" \
-                       and not state.attributes.get(ATTR_REMAINING) == str(timedelta()):
-                        try:
-                            remaining_dt = list(map(int, str(state.attributes.get(ATTR_REMAINING)).split(":")))
-                            self._remaining = timedelta(hours=remaining_dt[0],
-                                                        minutes=remaining_dt[1],
-                                                        seconds=remaining_dt[2])
-                        except:
-                            break
-                    else:
-                        self._remaining = timedelta()
+                if state.state != check_status:
+                    continue
+
+                self._state = state.state
+                # restore last duration if config doesn't have a default
+                if not self._config[CONF_DURATION] and not state.attributes.get(ATTR_DURATION) == "None":
                     try:
-                        self._end = datetime.strptime(state.attributes.get(ATTR_END), "%Y-%m-%d %H:%M:%S%z") \
-                                    if not state.attributes.get(ATTR_END) == "None" \
-                                       and state.attributes.get(ATTR_END) is not None \
-                                    else None
-                    except:
+                        duration_data = list(map(int, str(state.attributes.get(ATTR_DURATION)).split(":")))
+                        self._config[CONF_DURATION] = timedelta(hours=duration_data[0],
+                                                                minutes=duration_data[1],
+                                                                seconds=duration_data[2])
+                    except ValueError:
                         break
-                    if self._state == STATUS_ACTIVE:
-                        try:
-                            self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
-                            # Only restore if restore_grace_period not exceeded
-                            if self._remaining + self._restore_grace_period >= timedelta():
-                                self._state = STATUS_PAUSED
-                                self._end = None
-                                await self.async_start(None)
-                            else:
-                                self._state = STATUS_IDLE
-                        except:
-                            break
-                    return
+                # restore remaining (needed for paused state)
+                if self._state == STATUS_PAUSED \
+                   and not state.attributes.get(ATTR_REMAINING) == "None" \
+                   and not state.attributes.get(ATTR_REMAINING) == str(timedelta()):
+                    try:
+                        remaining_dt = list(map(int, str(state.attributes.get(ATTR_REMAINING)).split(":")))
+                        self._remaining = timedelta(hours=remaining_dt[0],
+                                                    minutes=remaining_dt[1],
+                                                    seconds=remaining_dt[2])
+                    except ValueError:
+                        break
+                else:
+                    self._remaining = timedelta()
+                # restore end time
+                try:
+                    if state.attributes.get(ATTR_END) is not None:
+                        self._end = datetime.strptime(state.attributes.get(ATTR_END), "%Y-%m-%d %H:%M:%S%z")
+                    else:
+                        self._end = None
+                except ValueError:
+                    break
+                if self._state == STATUS_ACTIVE:
+                    try:
+                        self._remaining = self._end - dt_util.utcnow().replace(microsecond=0)
+                        # Only restore if restore_grace_period not exceeded
+                        if self._remaining + self._restore_grace_period >= timedelta():
+                            self._state = STATUS_PAUSED
+                            self._end = None
+                            await self.async_start(None)
+                        else:
+                            self._state = STATUS_IDLE
+                    except ValueError:
+                        break
+                return
         # Set state to IDLE if no recorded state, or invalid
         self._state = STATUS_IDLE
 
