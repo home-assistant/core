@@ -73,23 +73,28 @@ class SuplaGateDoor(SuplaChannel, CoverDevice):
 
     @property
     def is_closed(self):
+        """Return if the gate is closed or not."""
         state = self.channel_data.get("state")
         if state and "hi" in state:
             return state.get("hi")
         return None
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs) -> None:
+        """Open the gate."""
         if self.is_closed:
             self.action("OPEN_CLOSE")
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs) -> None:
+        """Close the gate."""
         if not self.is_closed:
             self.action("OPEN_CLOSE")
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs) -> None:
+        """Stop the gate."""
         self.action("OPEN_CLOSE")
 
-    def toggle(self, **kwargs):
+    def toggle(self, **kwargs) -> None:
+        """Toggle the gate."""
         self.action("OPEN_CLOSE")
 
     @property
