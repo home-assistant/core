@@ -5,15 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 
-from . import (
-    CONF_KEY,
-    CONF_NVR,
-    CONF_PORT,
-    CONF_SSL,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
-    DOMAIN,
-)
+from . import CONF_KEY, CONF_NVR, CONF_PORT, CONF_SSL, DEFAULT_PORT, DEFAULT_SSL, DOMAIN
 
 
 @config_entries.HANDLERS.register(DOMAIN)

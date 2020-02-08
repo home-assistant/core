@@ -3,22 +3,16 @@ import logging
 from typing import Optional
 
 import requests
+from uvcclient.nvr import NotAuthorized, NvrError, UVCRemote
 import voluptuous as vol
-from uvcclient.nvr import UVCRemote, NotAuthorized, NvrError
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-from . import (
-    CONF_KEY,
-    CONF_NVR,
-    CONF_PORT,
-    CONF_SSL,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
-)
+import homeassistant.helpers.config_validation as cv
+
+from . import CONF_KEY, CONF_NVR, CONF_PORT, CONF_SSL, DEFAULT_PORT, DEFAULT_SSL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 async def async_setup_entry(
-        hass: HomeAssistant, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
 ):
     """Set up camera entry."""
     return setup_platform(hass, entry.data, async_add_entities)
@@ -50,10 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # Exceptions may be raised in all method calls to the nvr library.
         nvrconn = UVCRemote(addr, port, key, ssl=ssl)
 
-        cameras = [
-            camera["id"]
-            for camera in nvrconn.index()
-        ]
+        cameras = [camera["id"] for camera in nvrconn.index()]
     except NotAuthorized:
         _LOGGER.error("Authorization failure while connecting to NVR")
         return False
@@ -64,12 +55,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error("Unable to connect to NVR: %s", str(ex))
         raise PlatformNotReady
 
-    add_entities(
-        [
-            UnifiVideoCamera(nvrconn, camera)
-            for camera in cameras
-        ]
-    )
+    add_entities([UnifiVideoCamera(nvrconn, camera) for camera in cameras])
     return True
 
 
@@ -90,6 +76,7 @@ class UnifiVideoCamera(Camera):
 
     @property
     def should_poll(self):
+        """Order HA to pull the state."""
         return True
 
     @property
