@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from aiohttp import ClientConnectionError
 from async_timeout import timeout
@@ -46,10 +46,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigEntry):
 async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Establish connection with MELClooud."""
     conf = entry.data
-    mel_api = await mel_api_setup(hass, conf[CONF_TOKEN])
-    if not mel_api:
-        return False
-    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_api})
+    mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
+    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})
     for platform in PLATFORMS:
         hass.async_create_task(
             hass.config_entries.async_forward_entry_setup(entry, platform)
@@ -130,8 +128,8 @@ class MelCloudDevice:
         return _device_info
 
 
-async def mel_api_setup(hass, token) -> Optional[List[MelCloudDevice]]:
-    """Create a MELCloud instance only once."""
+async def mel_devices_setup(hass, token) -> List[MelCloudDevice]:
+    """Query connected devices from MELCloud."""
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
         with timeout(10):
