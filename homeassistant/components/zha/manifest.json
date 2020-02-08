@@ -7,7 +7,7 @@
     "bellows-homeassistant==0.13.2",
     "zha-quirks==0.0.32",
     "zigpy-deconz==0.7.0",
-    "zigpy-homeassistant==0.13.1",
+    "zigpy-homeassistant==0.13.2",
     "zigpy-xbee-homeassistant==0.9.0",
     "zigpy-zigate==0.5.1"
   ],
