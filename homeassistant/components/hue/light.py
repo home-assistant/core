@@ -153,7 +153,7 @@ async def async_safe_fetch(bridge, fetch_method):
     """Safely fetch data."""
     try:
         with async_timeout.timeout(4):
-            return await bridge.async_request_call(fetch_method())
+            return await bridge.async_request_call(fetch_method)
     except aiohue.Unauthorized:
         await bridge.handle_unauthorized_error()
         raise UpdateFailed
@@ -376,9 +376,13 @@ class HueLight(Light):
                 command["effect"] = "none"
 
         if self.is_group:
-            await self.bridge.async_request_call(self.light.set_action(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_action, **command)
+            )
         else:
-            await self.bridge.async_request_call(self.light.set_state(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_state, **command)
+            )
 
         await self.coordinator.async_request_refresh()
 
@@ -401,9 +405,13 @@ class HueLight(Light):
             command["alert"] = "none"
 
         if self.is_group:
-            await self.bridge.async_request_call(self.light.set_action(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_action, **command)
+            )
         else:
-            await self.bridge.async_request_call(self.light.set_state(**command))
+            await self.bridge.async_request_call(
+                partial(self.light.set_state, **command)
+            )
 
         await self.coordinator.async_request_refresh()
 
