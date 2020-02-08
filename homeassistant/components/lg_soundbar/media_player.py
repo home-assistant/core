@@ -22,11 +22,11 @@ SUPPORT_LG = (
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the LG platform."""
     if discovery_info is not None:
-        add_entities([LGDevice(discovery_info)], True)
-
+        async_add_entities([LGDevice(discovery_info)], True)
+        
 
 class LGDevice(MediaPlayerDevice):
     """Representation of an LG soundbar device."""
@@ -55,7 +55,7 @@ class LGDevice(MediaPlayerDevice):
         self._treble = 0
 
         self._device = temescal.temescal(host, port=port, callback=self.handle_event)
-        self.update()
+        self.async_update()
 
     def handle_event(self, response):
         """Handle responses from the speakers."""
@@ -106,7 +106,7 @@ class LGDevice(MediaPlayerDevice):
                 self._name = data["s_user_name"]
         self.schedule_update_ha_state()
 
-    def update(self):
+    async def async_update(self):
         """Trigger updates from the device."""
         self._device.get_eq()
         self._device.get_info()
