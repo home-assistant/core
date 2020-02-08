@@ -31,9 +31,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistantType, config: ConfigEntry):
     """Establish connection with MELCloud."""
-    if DOMAIN not in config:
-        return True
-
     email = config[DOMAIN].get(CONF_EMAIL)
     token = config[DOMAIN].get(CONF_TOKEN)
     hass.async_create_task(
