@@ -123,7 +123,7 @@ class MelCloudDevice:
         unit_infos = self.device.units
         if unit_infos is not None:
             _device_info["model"] = ", ".join(
-                [x["model"] for x in unit_infos if len(x["model"]) > 0]
+                [x["model"] for x in unit_infos if x["model"]]
             )
         return _device_info
 
