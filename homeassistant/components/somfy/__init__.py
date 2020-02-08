@@ -43,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
-                vol.Optional(CONF_OPTIMISTIC): cv.boolean,
+                vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
             }
         )
     },
@@ -61,7 +61,7 @@ async def async_setup(hass, config):
         return True
 
     hass.data[DOMAIN][CONF_OPTIMISTIC] = False
-    if CONF_OPTIMISTIC in config[DOMAIN].keys():
+    if CONF_OPTIMISTIC in config[DOMAIN]:
         hass.data[DOMAIN][CONF_OPTIMISTIC] = config[DOMAIN][CONF_OPTIMISTIC]
 
     config_flow.SomfyFlowHandler.async_register_implementation(
