@@ -585,6 +585,7 @@ georss_qld_bushfire_alert_client==0.3
 # homeassistant.components.braviatv
 # homeassistant.components.huawei_lte
 # homeassistant.components.kef
+# homeassistant.components.minecraft_server
 # homeassistant.components.nmap_tracker
 getmac==0.8.1
 
@@ -836,6 +837,9 @@ maxcube-api==0.1.0
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
+
+# homeassistant.components.minecraft_server
+mcstatus==2.3.0
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
