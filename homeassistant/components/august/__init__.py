@@ -36,8 +36,15 @@ AUGUST_CONFIG_FILE = ".august.conf"
 DATA_AUGUST = "august"
 DOMAIN = "august"
 DEFAULT_ENTITY_NAMESPACE = "august"
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
+
+# Limit battery and hardware updates to 1800 seconds
+# in order to reduce the number of api requests and
+# avoid hitting rate limits
+MIN_TIME_BETWEEN_LOCK_DETAIL_UPDATES = timedelta(seconds=1800)
+
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+
 LOGIN_METHODS = ["phone", "email"]
 
 CONFIG_SCHEMA = vol.Schema(
@@ -180,7 +187,9 @@ class AugustData:
         self._access_token = access_token
         self._doorbells = self._api.get_doorbells(self._access_token) or []
         self._locks = self._api.get_operable_locks(self._access_token) or []
-        self._house_ids = [d.house_id for d in self._doorbells + self._locks]
+        self._house_ids = set()
+        for device in self._doorbells + self._locks:
+            self._house_ids.add(device.house_id)
 
         self._doorbell_detail_by_id = {}
         self._lock_status_by_id = {}
@@ -284,58 +293,51 @@ class AugustData:
 
         This is the status from the door sensor.
         """
-        self._update_doors()
+        self._update_locks_status()
         return self._door_state_by_id.get(lock_id)
 
+    def _update_locks(self):
+        self._update_locks_status()
+        self._update_locks_detail()
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _update_doors(self):
+    def _update_locks_status(self):
+        status_by_id = {}
         state_by_id = {}
 
-        _LOGGER.debug("Start retrieving door status")
+        _LOGGER.debug("Start retrieving lock and door status")
         for lock in self._locks:
-            _LOGGER.debug("Updating door status for %s", lock.device_name)
-
+            _LOGGER.debug("Updating lock and door status for %s", lock.device_name)
             try:
-                state_by_id[lock.device_id] = self._api.get_lock_door_status(
-                    self._access_token, lock.device_id
+                (
+                    status_by_id[lock.device_id],
+                    state_by_id[lock.device_id],
+                ) = self._api.get_lock_status(
+                    self._access_token, lock.device_id, door_status=True
                 )
             except RequestException as ex:
                 _LOGGER.error(
-                    "Request error trying to retrieve door status for %s. %s",
+                    "Request error trying to retrieve lock and door status for %s. %s",
                     lock.device_name,
                     ex,
                 )
+                status_by_id[lock.device_id] = None
                 state_by_id[lock.device_id] = None
             except Exception:
+                status_by_id[lock.device_id] = None
                 state_by_id[lock.device_id] = None
                 raise
 
-        _LOGGER.debug("Completed retrieving door status")
+        _LOGGER.debug("Completed retrieving lock and door status")
+        self._lock_status_by_id = status_by_id
         self._door_state_by_id = state_by_id
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _update_locks(self):
-        status_by_id = {}
+    @Throttle(MIN_TIME_BETWEEN_LOCK_DETAIL_UPDATES)
+    def _update_locks_detail(self):
         detail_by_id = {}
 
-        _LOGGER.debug("Start retrieving locks status")
+        _LOGGER.debug("Start retrieving locks detail")
         for lock in self._locks:
-            _LOGGER.debug("Updating lock status for %s", lock.device_name)
-            try:
-                status_by_id[lock.device_id] = self._api.get_lock_status(
-                    self._access_token, lock.device_id
-                )
-            except RequestException as ex:
-                _LOGGER.error(
-                    "Request error trying to retrieve door status for %s. %s",
-                    lock.device_name,
-                    ex,
-                )
-                status_by_id[lock.device_id] = None
-            except Exception:
-                status_by_id[lock.device_id] = None
-                raise
-
             try:
                 detail_by_id[lock.device_id] = self._api.get_lock_detail(
                     self._access_token, lock.device_id
@@ -351,8 +353,7 @@ class AugustData:
                 detail_by_id[lock.device_id] = None
                 raise
 
-        _LOGGER.debug("Completed retrieving locks status")
-        self._lock_status_by_id = status_by_id
+        _LOGGER.debug("Completed retrieving locks detail")
         self._lock_detail_by_id = detail_by_id
 
     def lock(self, device_id):
