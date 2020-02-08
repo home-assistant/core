@@ -167,8 +167,8 @@ class HueBridge:
 
         # If we can't find it, fetch latest info.
         if not updated and (group is None or scene is None):
-            await self.api.groups.update()
-            await self.api.scenes.update()
+            await self.async_request_call(self.api.groups.update())
+            await self.async_request_call(self.api.scenes.update())
             await self.hue_activate_scene(call, updated=True)
             return
 
@@ -180,7 +180,7 @@ class HueBridge:
             LOGGER.warning("Unable to find scene %s", scene_name)
             return
 
-        await group.set_action(scene=scene.id)
+        await self.async_request_call(group.set_action(scene=scene.id))
 
     async def handle_unauthorized_error(self):
         """Create a new config flow when the authorization is no longer valid."""
