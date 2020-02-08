@@ -32,7 +32,7 @@ DOMAIN = "somfy"
 
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
-CONF_SHADOW = "shadow_cover"
+CONF_OPTIMISTIC = "optimisitic"
 
 SOMFY_AUTH_CALLBACK_PATH = "/auth/somfy/callback"
 SOMFY_AUTH_START = "/auth/somfy"
@@ -43,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_CLIENT_ID): cv.string,
                 vol.Required(CONF_CLIENT_SECRET): cv.string,
-                vol.Optional(CONF_SHADOW): cv.boolean,
+                vol.Optional(CONF_OPTIMISTIC): cv.boolean,
             }
         )
     },
@@ -60,9 +60,9 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    hass.data[DOMAIN][CONF_SHADOW] = False
-    if CONF_SHADOW in config[DOMAIN].keys():
-        hass.data[DOMAIN][CONF_SHADOW] = config[DOMAIN][CONF_SHADOW]
+    hass.data[DOMAIN][CONF_OPTIMISTIC] = False
+    if CONF_OPTIMISTIC in config[DOMAIN].keys():
+        hass.data[DOMAIN][CONF_OPTIMISTIC] = config[DOMAIN][CONF_OPTIMISTIC]
 
     config_flow.SomfyFlowHandler.async_register_implementation(
         hass,
