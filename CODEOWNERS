@@ -366,6 +366,7 @@ homeassistant/components/tts/* @robbiet480
 homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twilio_call/* @robbiet480
 homeassistant/components/twilio_sms/* @robbiet480
+homeassistant/components/twitch/* @timmo001
 homeassistant/components/ubee/* @mzdrale
 homeassistant/components/unifi/* @kane610
 homeassistant/components/unifiled/* @florisvdk

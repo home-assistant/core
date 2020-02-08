@@ -1,0 +1,13 @@
+{
+  "config": {
+    "title": "Twitch",
+    "step": {
+      "user": {
+        "title": "Add a streamer",
+        "data": {
+          "user": "User"
+        }
+      }
+    }
+  }
+}

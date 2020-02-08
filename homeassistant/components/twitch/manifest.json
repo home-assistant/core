@@ -1,8 +1,16 @@
 {
   "domain": "twitch",
-  "name": "Twitch",
+  "name": "twitch",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/twitch",
-  "requirements": ["python-twitch-client==0.6.0"],
+  "requirements": [
+    "twitch-python===0.0.17"
+  ],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
   "dependencies": [],
-  "codeowners": []
+  "codeowners": [
+    "@timmo001"
+  ]
 }

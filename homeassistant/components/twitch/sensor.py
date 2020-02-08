@@ -1,108 +1,187 @@
-"""Support for the Twitch stream status."""
+"""Support for Twitch sensors."""
 import logging
+from typing import Callable, List, Union
 
-from requests.exceptions import HTTPError
-from twitch import TwitchClient
-import voluptuous as vol
+from twitch import Helix
+from twitch.helix import StreamNotFound, User
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import HomeAssistantType
+
+from . import TwitchEntity
+from .const import (
+    DATA_BOX_ART_URL,
+    DATA_CHANNEL_VIEWS,
+    DATA_GAME,
+    DATA_LIVE,
+    DATA_THUMBNAIL_URL,
+    DATA_TWITCH_CLIENT,
+    DATA_USER,
+    DATA_VIEWERS,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_GAME = "game"
-ATTR_TITLE = "title"
 
-CONF_CHANNELS = "channels"
-CONF_CLIENT_ID = "client_id"
+async def async_setup_entry(
+    hass: HomeAssistantType,
+    entry: ConfigEntry,
+    async_add_entities: Callable[[List[Entity], bool], None],
+) -> None:
+    """Set up Twitch sensor based on a config entry."""
+    twitch: Helix = hass.data[DOMAIN][entry.entry_id][DATA_TWITCH_CLIENT]
 
-ICON = "mdi:twitch"
+    user = twitch.user(entry.data[DATA_USER])
 
-STATE_OFFLINE = "offline"
-STATE_STREAMING = "streaming"
+    sensors = [
+        TwitchUserLiveSensor(entry.entry_id, user, twitch),
+        TwitchUserViewersSensor(entry.entry_id, user, twitch),
+        TwitchUserGameSensor(entry.entry_id, user, twitch),
+    ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_CLIENT_ID): cv.string,
-        vol.Required(CONF_CHANNELS): vol.All(cv.ensure_list, [cv.string]),
-    }
-)
-
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Twitch platform."""
-    channels = config[CONF_CHANNELS]
-    client_id = config[CONF_CLIENT_ID]
-    client = TwitchClient(client_id=client_id)
-
-    try:
-        client.ingests.get_server_list()
-    except HTTPError:
-        _LOGGER.error("Client ID is not valid")
-        return
-
-    users = client.users.translate_usernames_to_ids(channels)
-
-    add_entities([TwitchSensor(user, client) for user in users], True)
+    async_add_entities(sensors, True)
 
 
-class TwitchSensor(Entity):
-    """Representation of an Twitch channel."""
+class TwitchSensor(TwitchEntity):
+    """Defines a Twitch sensor."""
 
-    def __init__(self, user, client):
-        """Initialize the sensor."""
-        self._client = client
-        self._user = user
-        self._channel = self._user.name
-        self._id = self._user.id
-        self._state = self._preview = self._game = self._title = None
+    def __init__(
+        self,
+        entry_id: str,
+        twitch: Helix,
+        user: User,
+        name: str,
+        icon: str,
+        key: str,
+        unit_of_measurement: str = "",
+        enabled_default: bool = True,
+    ) -> None:
+        """Initialize Twitch sensor."""
+        self._state = None
+        self._entity_picture = None
+        self._unit_of_measurement = unit_of_measurement
+        self._key = key
+
+        super().__init__(entry_id, twitch, user, name, icon, enabled_default)
 
     @property
-    def should_poll(self):
-        """Device should be polled."""
-        return True
+    def unique_id(self) -> str:
+        """Return the unique ID for this sensor."""
+        return f"{self.id}_{self._key}"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._channel
-
-    @property
-    def state(self):
+    def state(self) -> Union[None, str, int, float]:
         """Return the state of the sensor."""
         return self._state
 
     @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit this state is expressed in."""
+        return self._unit_of_measurement
+
+    @property
     def entity_picture(self):
         """Return preview of current game."""
-        return self._preview
+        return self._entity_picture
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        if self._state == STATE_STREAMING:
-            return {ATTR_GAME: self._game, ATTR_TITLE: self._title}
 
-    @property
-    def unique_id(self):
-        """Return unique ID for this sensor."""
-        return self._id
+class TwitchUserLiveSensor(TwitchSensor):
+    """Defines a Twitch User Live sensor."""
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return ICON
+    def __init__(self, entry_id: str, user: User, twitch: Helix) -> None:
+        """Initialize Twitch User Live sensor."""
+        self.user = user
+        self.id = self.user.id
+        self._entity_picture = self.user.profile_image_url
+        super().__init__(
+            entry_id,
+            twitch,
+            user,
+            f"{self.user.display_name} Live",
+            "mdi:twitch",
+            DATA_LIVE,
+            enabled_default=True,
+        )
 
-    # pylint: disable=no-member
-    def update(self):
-        """Update device state."""
-        stream = self._client.streams.get_stream_by_user(self._id)
-        if stream:
-            self._game = stream.get("channel").get("game")
-            self._title = stream.get("channel").get("status")
-            self._preview = stream.get("preview").get("medium")
-            self._state = STATE_STREAMING
-        else:
-            self._preview = self._client.users.get_by_id(self._id).get("logo")
-            self._state = STATE_OFFLINE
+    async def _twitch_update(self) -> None:
+        """Update Twitch User Live sensor."""
+        try:
+            stream = self.twitch.stream(user_id=self.user.id)
+            self._state = stream.title
+            thumbnail_url = stream.thumbnail_url.format(width="0", height="0")
+            self._attributes = {
+                DATA_CHANNEL_VIEWS: self.user.view_count,
+                DATA_THUMBNAIL_URL: thumbnail_url,
+            }
+            self._entity_picture = thumbnail_url
+        except StreamNotFound:
+            self._state = "Offline"
+            self._entity_picture = self.user.profile_image_url
+
+
+class TwitchUserViewersSensor(TwitchSensor):
+    """Defines a Twitch User Viewers sensor."""
+
+    def __init__(self, entry_id: str, user: User, twitch: Helix) -> None:
+        """Initialize Twitch User Viewers sensor."""
+        self.user = user
+        self.id = self.user.id
+        self._entity_picture = self.user.profile_image_url
+        super().__init__(
+            entry_id,
+            twitch,
+            user,
+            f"{self.user.display_name} Viewers",
+            "mdi:twitch",
+            DATA_VIEWERS,
+            enabled_default=True,
+        )
+
+    async def _twitch_update(self) -> None:
+        """Update Twitch User Viewers sensor."""
+        try:
+            stream = self.twitch.stream(user_id=self.user.id)
+            self._state = stream.viewer_count
+            thumbnail_url = stream.thumbnail_url.format(width="0", height="0")
+            self._entity_picture = thumbnail_url
+        except StreamNotFound:
+            self._state = 0
+            self._entity_picture = self.user.profile_image_url
+
+
+class TwitchUserGameSensor(TwitchSensor):
+    """Defines a Twitch User Game sensor."""
+
+    def __init__(self, entry_id: str, user: User, twitch: Helix) -> None:
+        """Initialize Twitch User Game sensor."""
+        self.user = user
+        self.id = self.user.id
+        self._entity_picture = self.user.profile_image_url
+        super().__init__(
+            entry_id,
+            twitch,
+            user,
+            f"{self.user.display_name} Current Game",
+            "mdi:twitch",
+            DATA_GAME,
+            enabled_default=True,
+        )
+
+    async def _twitch_update(self) -> None:
+        """Update Twitch User Game sensor."""
+        try:
+            stream = self.twitch.stream(user_id=self.user.id)
+            game = self.twitch.game(id=stream.game_id)
+            if game is None:
+                self._state = "Unknown"
+                self._entity_picture = self.user.profile_image_url
+            else:
+                self._state = game.name
+                box_art_url = game.box_art_url.format(width="0", height="0")
+                self._attributes = {DATA_BOX_ART_URL: box_art_url}
+                self._entity_picture = box_art_url
+        except StreamNotFound:
+            self._state = "Unknown"
+            self._entity_picture = self.user.profile_image_url

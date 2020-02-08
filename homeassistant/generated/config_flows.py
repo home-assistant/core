@@ -94,6 +94,7 @@ FLOWS = [
     "transmission",
     "twentemilieu",
     "twilio",
+    "twitch",
     "unifi",
     "upnp",
     "velbus",
