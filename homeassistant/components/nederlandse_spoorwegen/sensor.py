@@ -54,10 +54,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         requests.exceptions.ConnectionError,
         requests.exceptions.HTTPError,
     ) as error:
-        _LOGGER.error("NS integration could not connect to the internet: %s", error)
+        _LOGGER.error("Could not connect to the internet: %s", error)
         return
     except Exception as error:
-        _LOGGER.error("NS integration crashed, please check configuration: %s", error)
+        _LOGGER.error("Could not fetch stations, please check configuration: %s", error)
         return
 
     sensors = []
