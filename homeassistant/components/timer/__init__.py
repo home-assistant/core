@@ -200,6 +200,13 @@ class Timer(RestoreEntity):
     def should_poll(self):
         """If entity should be polled."""
         return False
+    
+    @property
+    def force_update(self) -> bool:
+        """Return True to get last_changed attribute updated
+        when active timer restarted.
+        """
+        return True
 
     @property
     def name(self):
