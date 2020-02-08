@@ -3,8 +3,8 @@ import logging
 from pprint import pformat
 
 from homeassistant.components.cover import (
-    DEVICE_CLASS_GARAGE,
     ATTR_POSITION,
+    DEVICE_CLASS_GARAGE,
     CoverDevice,
 )
 from homeassistant.components.supla import SuplaChannel
