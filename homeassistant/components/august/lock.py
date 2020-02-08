@@ -12,7 +12,7 @@ from . import DATA_AUGUST
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -88,7 +88,12 @@ class AugustLock(LockDevice):
         if self._lock_detail is None:
             return None
 
-        return {ATTR_BATTERY_LEVEL: self._lock_detail.battery_level}
+        attributes = {ATTR_BATTERY_LEVEL: self._lock_detail.battery_level}
+
+        if self._lock_detail.keypad is not None:
+            attributes["keypad_battery_level"] = self._lock_detail.keypad.battery_level
+
+        return attributes
 
     @property
     def unique_id(self) -> str:
