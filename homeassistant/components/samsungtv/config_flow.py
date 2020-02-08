@@ -77,7 +77,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _get_token_file(self):
         path = self.hass.config.path()
-        token_file = f"{path}/token-{self._host}.txt"
+        token_file = f"{path}/.samsungtv-token-{self._host}.dat"
 
         if os.path.isfile(token_file) is False:
 
