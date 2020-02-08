@@ -202,7 +202,7 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
         if self._template is None:
             self._state = False
             self.async_schedule_update_ha_state()
-            
+
     async def async_update(self):
         """Update the state from the template."""
         if self._template is None:
@@ -262,5 +262,5 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
 
     @property
     def assumed_state(self):
-       """State is assumed, if no template given"""
-       return (self._template is None)
+        """State is assumed, if no template given"""
+        return (self._template is None)
