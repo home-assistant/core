@@ -287,6 +287,7 @@ class MqttClimate(
         self._away = False
         self._current_fan_mode = None
         self._current_operation = None
+        self._current_power_state = None
         self._current_swing_mode = None
         self._current_temp = None
         self._hold = None
@@ -346,6 +347,8 @@ class MqttClimate(
             self._current_swing_mode = HVAC_MODE_OFF
         if self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._current_operation = HVAC_MODE_OFF
+        if self._topic[CONF_POWER_STATE_TOPIC] is None:
+            self._current_power_state = False
         self._action = None
         self._away = False
         self._hold = None
@@ -464,6 +467,9 @@ class MqttClimate(
             handle_mode_received(
                 msg, CONF_MODE_STATE_TEMPLATE, "_current_operation", CONF_MODE_LIST
             )
+            if self._topic[CONF_POWER_STATE_TOPIC] is None:
+                self._current_power_state = self._current_operation != HVAC_MODE_OFF
+                self.async_write_ha_state()
 
         add_subscription(topics, CONF_MODE_STATE_TOPIC, handle_current_mode_received)
 
@@ -513,6 +519,15 @@ class MqttClimate(
                 _LOGGER.error("Invalid %s mode: %s", attr, payload)
 
             self.async_write_ha_state()
+
+        @callback
+        def handle_power_state_received(msg):
+            """Handle receiving away mode via MQTT."""
+            handle_onoff_mode_received(
+                msg, CONF_POWER_STATE_TEMPLATE, "_current_power_state"
+            )
+
+        add_subscription(topics, CONF_POWER_STATE_TOPIC, handle_power_state_received)
 
         @callback
         def handle_away_mode_received(msg):
@@ -601,7 +616,9 @@ class MqttClimate(
     @property
     def hvac_mode(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
+        if self._current_power_state:
+            return self._current_operation
+        return HVAC_MODE_OFF
 
     @property
     def hvac_modes(self):
@@ -670,10 +687,7 @@ class MqttClimate(
                 # optimistic mode
                 setattr(self, attr, temp)
 
-            if (
-                self._config[CONF_SEND_IF_OFF]
-                or self._current_operation != HVAC_MODE_OFF
-            ):
+            if self._config[CONF_SEND_IF_OFF] or self._current_power_state:
                 self._publish(cmnd_topic, temp)
 
     async def async_set_temperature(self, **kwargs):
@@ -708,7 +722,7 @@ class MqttClimate(
 
     async def async_set_swing_mode(self, swing_mode):
         """Set new swing mode."""
-        if self._config[CONF_SEND_IF_OFF] or self._current_operation != HVAC_MODE_OFF:
+        if self._config[CONF_SEND_IF_OFF] or self._current_power_state:
             self._publish(CONF_SWING_MODE_COMMAND_TOPIC, swing_mode)
 
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
@@ -717,7 +731,7 @@ class MqttClimate(
 
     async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
-        if self._config[CONF_SEND_IF_OFF] or self._current_operation != HVAC_MODE_OFF:
+        if self._config[CONF_SEND_IF_OFF] or self._current_power_state:
             self._publish(CONF_FAN_MODE_COMMAND_TOPIC, fan_mode)
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
@@ -726,15 +740,17 @@ class MqttClimate(
 
     async def async_set_hvac_mode(self, hvac_mode) -> None:
         """Set new operation mode."""
-        if self._current_operation == HVAC_MODE_OFF and hvac_mode != HVAC_MODE_OFF:
+        if self._current_power_state is False and hvac_mode != HVAC_MODE_OFF:
             self._publish(CONF_POWER_COMMAND_TOPIC, self._config[CONF_PAYLOAD_ON])
-        elif self._current_operation != HVAC_MODE_OFF and hvac_mode == HVAC_MODE_OFF:
+        elif self._current_power_state is True and hvac_mode == HVAC_MODE_OFF:
             self._publish(CONF_POWER_COMMAND_TOPIC, self._config[CONF_PAYLOAD_OFF])
 
         self._publish(CONF_MODE_COMMAND_TOPIC, hvac_mode)
 
         if self._topic[CONF_MODE_STATE_TOPIC] is None:
             self._current_operation = hvac_mode
+            if self._topic[CONF_POWER_STATE_TOPIC] is None:
+                self._current_power_state = hvac_mode != HVAC_MODE_OFF
             self.async_write_ha_state()
 
     @property
