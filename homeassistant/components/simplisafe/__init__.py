@@ -517,23 +517,12 @@ class SimpliSafe:
 class SimpliSafeEntity(Entity):
     """Define a base SimpliSafe entity."""
 
-    def __init__(
-        self,
-        simplisafe,
-        system,
-        name,
-        *,
-        serial=None,
-        respond_to_rest_api=True,
-        respond_to_websocket_api=True,
-    ):
+    def __init__(self, simplisafe, system, name, *, serial=None):
         """Initialize."""
         self._async_unsub_dispatcher_connect = None
         self._last_used_websocket_event = None
         self._name = name
         self._online = True
-        self._respond_to_rest_api = respond_to_rest_api
-        self._respond_to_websocket_api = respond_to_websocket_api
         self._simplisafe = simplisafe
         self._state = None
         self._system = system
@@ -609,29 +598,28 @@ class SimpliSafeEntity(Entity):
 
     async def async_update(self):
         """Update the entity."""
-        if self._respond_to_rest_api:
-            self.async_update_from_rest_api()
+        self.async_update_from_rest_api()
 
-        if self._respond_to_websocket_api:
-            # Since the REST API triggers this coroutine, we don't want old websocket
-            # events to unnecessarily overwrite things; so, we return if the last
-            # websocket event is one the entity has already responded to:
-            last_websocket_event = self._simplisafe.websocket.last_events.get(
-                self._system.system_id
-            )
-            if self._last_used_websocket_event == last_websocket_event:
-                return
+        # Since the REST API triggers this coroutine, we don't want old websocket events
+        # to unnecessarily overwrite things; so, we return if the last websocket event
+        # is one the entity has already responded to:
+        last_websocket_event = self._simplisafe.websocket.last_events.get(
+            self._system.system_id
+        )
 
-            self._last_used_websocket_event = last_websocket_event
-            self._attrs.update(
-                {
-                    ATTR_LAST_EVENT_INFO: last_websocket_event.info,
-                    ATTR_LAST_EVENT_SENSOR_NAME: last_websocket_event.sensor_name,
-                    ATTR_LAST_EVENT_SENSOR_TYPE: last_websocket_event.sensor_type,
-                    ATTR_LAST_EVENT_TIMESTAMP: last_websocket_event.timestamp,
-                }
-            )
-            self.async_update_from_websocket_event(last_websocket_event)
+        if self._last_used_websocket_event == last_websocket_event:
+            return
+
+        self._last_used_websocket_event = last_websocket_event
+        self._attrs.update(
+            {
+                ATTR_LAST_EVENT_INFO: last_websocket_event.info,
+                ATTR_LAST_EVENT_SENSOR_NAME: last_websocket_event.sensor_name,
+                ATTR_LAST_EVENT_SENSOR_TYPE: last_websocket_event.sensor_type,
+                ATTR_LAST_EVENT_TIMESTAMP: last_websocket_event.timestamp,
+            }
+        )
+        self.async_update_from_websocket_event(last_websocket_event)
 
     @callback
     def async_update_from_rest_api(self):
