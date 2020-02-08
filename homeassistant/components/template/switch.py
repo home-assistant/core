@@ -142,7 +142,7 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
         @callback
         def template_switch_startup(event):
             """Update template on startup."""
-            if (self._template is not None):
+            if self._template is not None:
                 async_track_state_change(
                     self.hass, self._entities, template_switch_state_listener
                 )
@@ -262,5 +262,5 @@ class SwitchTemplate(SwitchEntity, RestoreEntity):
 
     @property
     def assumed_state(self):
-        """State is assumed, if no template given"""
-        return (self._template is None)
+        """State is assumed, if no template given."""
+        return self._template is None
