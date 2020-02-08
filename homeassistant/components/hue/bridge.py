@@ -236,7 +236,7 @@ async def authenticate_bridge(hass: core.HomeAssistant, bridge: aiohue.Bridge):
 
     except (aiohue.LinkButtonNotPressed, aiohue.Unauthorized):
         raise AuthenticationRequired
-    except (asyncio.TimeoutError, client_exceptions.ClientError):
+    except (asyncio.TimeoutError, client_exceptions.ClientOSError):
         raise CannotConnect
     except aiohue.AiohueException:
         LOGGER.exception("Unknown Hue linking error occurred")
