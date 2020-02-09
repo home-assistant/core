@@ -73,14 +73,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ):
         turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
         on_script = Script(hass, turn_on_action)
-    async_add_entities([SamsungTVDevice(config_entry, on_script)])
+    async_add_entities([SamsungTVDevice(hass, config_entry, on_script)])
 
 
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, config_entry, on_script):
+    def __init__(self, hass, config_entry, on_script):
         """Initialize the Samsung device."""
+        self.hass = hass
         self._config_entry = config_entry
         self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
         self._model = config_entry.data.get(CONF_MODEL)
