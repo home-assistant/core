@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "identifier_exists": "Lokalizacja ju\u017c zarejestrowana"
+            "identifier_exists": "Lokalizacja jest ju\u017c zarejestrowana."
         },
         "step": {
             "user": {
