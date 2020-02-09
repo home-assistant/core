@@ -47,6 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_STATE_VALUE_TEMPLATE = "state_value_template"
 CONF_SPEED_STATE_TOPIC = "speed_state_topic"
 CONF_SPEED_COMMAND_TOPIC = "speed_command_topic"
+CONF_SPEED_COMMAND_TEMPLATE = "speed_command_template"
 CONF_SPEED_VALUE_TEMPLATE = "speed_value_template"
 CONF_OSCILLATION_STATE_TOPIC = "oscillation_state_topic"
 CONF_OSCILLATION_COMMAND_TOPIC = "oscillation_command_topic"
@@ -91,6 +92,7 @@ PLATFORM_SCHEMA = (
                 CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
             ): cv.string,
             vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_SPEED_COMMAND_TEMPLATE): cv.template,
             vol.Optional(
                 CONF_SPEED_LIST,
                 default=[SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
@@ -209,6 +211,7 @@ class MqttFan(
         self._templates = {
             CONF_STATE: config.get(CONF_STATE_VALUE_TEMPLATE),
             ATTR_SPEED: config.get(CONF_SPEED_VALUE_TEMPLATE),
+            CONF_SPEED_COMMAND_TEMPLATE: config.get(CONF_SPEED_COMMAND_TEMPLATE),
             OSCILLATION: config.get(CONF_OSCILLATION_VALUE_TEMPLATE),
         }
         self._payload = {
@@ -401,7 +404,11 @@ class MqttFan(
         if self._topic[CONF_SPEED_COMMAND_TOPIC] is None:
             return
 
-        if speed == SPEED_LOW:
+        tpl = self._templates[CONF_SPEED_COMMAND_TEMPLATE]
+
+        if tpl:
+            mqtt_payload = tpl.async_render({"value": speed})
+        elif speed == SPEED_LOW:
             mqtt_payload = self._payload["SPEED_LOW"]
         elif speed == SPEED_MEDIUM:
             mqtt_payload = self._payload["SPEED_MEDIUM"]
