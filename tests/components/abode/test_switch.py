@@ -8,6 +8,7 @@ from .common import setup_platform
 from tests.common import load_fixture
 
 AUTOMATION_ID = "47fae27488f74f55b964a81a066c3a01"
+DEVICE_ID = "0012a4d3614cb7e2b8c9abea31d2fb2a"
 
 
 async def test_entity_registry(hass, requests_mock):
@@ -17,6 +18,17 @@ async def test_entity_registry(hass, requests_mock):
 
     entry = entity_registry.async_get("switch.test_automation")
     assert entry.unique_id == AUTOMATION_ID
+
+    entry = entity_registry.async_get("switch.test_switch")
+    assert entry.unique_id == DEVICE_ID
+
+
+async def test_switch_attributes(hass, requests_mock):
+    """Test the switch attributes are correct."""
+    await setup_platform(hass, SWITCH_DOMAIN)
+
+    state = hass.states.get("switch.test_switch")
+    assert state.state == "off"
 
 
 async def test_automation_attributes(hass, requests_mock):
@@ -43,3 +55,20 @@ async def test_turn_automation_off(hass, requests_mock):
 
     state = hass.states.get("switch.test_automation")
     assert state.state == "off"
+
+
+async def test_turn_automation_on(hass, requests_mock):
+    """Test the automation can be turned on."""
+    await setup_platform(hass, SWITCH_DOMAIN)
+    requests_mock.patch(
+        str.replace(CONST.AUTOMATION_ID_URL, "$AUTOMATIONID$", AUTOMATION_ID),
+        text=load_fixture("abode_automation.json"),
+    )
+
+    await hass.services.async_call(
+        "switch", "turn_on", {"entity_id": "switch.test_automation"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.test_automation")
+    assert state.state == "on"

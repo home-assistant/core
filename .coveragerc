@@ -8,7 +8,6 @@ omit =
     homeassistant/scripts/*.py
 
     # omit pieces of code that rely on external devices being present
-    homeassistant/components/abode/alarm_control_panel.py
     homeassistant/components/abode/camera.py
     homeassistant/components/abode/cover.py
     homeassistant/components/abode/light.py

@@ -410,5 +410,125 @@
         "status_icons": [],
         "icon": "assets\/icons\/occupancy-sensor.svg",
         "statusEx": "1"
+    },
+    {
+        "id": "ZW:0000000b",
+        "type_tag": "device_type.power_switch_sensor",
+        "type": "Power Switch Sensor",
+        "name": "Test Switch",
+        "area": "1",
+        "zone": "23",
+        "sort_order": "",
+        "is_window": "",
+        "bypass": "0",
+        "schar_24hr": "0",
+        "sresp_24hr": "0",
+        "sresp_mode_0": "0",
+        "sresp_entry_0": "0",
+        "sresp_exit_0": "0",
+        "group_name": "Lighting",
+        "group_id": "377075",
+        "default_group_id": "1",
+        "sort_id": "7",
+        "sresp_mode_1": "0",
+        "sresp_entry_1": "0",
+        "sresp_exit_1": "0",
+        "sresp_mode_2": "0",
+        "sresp_entry_2": "0",
+        "sresp_exit_2": "0",
+        "sresp_mode_3": "0",
+        "uuid": "0012a4d3614cb7e2b8c9abea31d2fb2a",
+        "sresp_entry_3": "0",
+        "sresp_exit_3": "0",
+        "sresp_mode_4": "0",
+        "sresp_entry_4": "0",
+        "sresp_exit_4": "0",
+        "version": "006349523032",
+        "origin": "abode",
+        "has_subscription": null,
+        "onboard": "0",
+        "s2_grnt_keys": "",
+        "s2_dsk": "",
+        "s2_propty": "",
+        "s2_keys_valid": "",
+        "zwave_secure_protocol": "",
+        "control_url": "api\/v1\/control\/power_switch\/ZW:0000000b",
+        "deep_link": null,
+        "status_color": "#5cb85c",
+        "faults": {
+            "low_battery": 0,
+            "tempered": 0,
+            "supervision": 0,
+            "out_of_order": 0,
+            "no_response": 0,
+            "jammed": 0,
+            "zwave_fault": 0
+        },
+        "status": "Off",
+        "status_display": "OFF",
+        "statuses": {
+            "switch": "0"
+        },
+        "status_ex": "",
+        "actions": [
+            {
+                "label": "Switch off",
+                "value": "a=1&z=23&sw=off;"
+            },
+            {
+                "label": "Switch on",
+                "value": "a=1&z=23&sw=on;"
+            },
+            {
+                "label": "Toggle",
+                "value": "a=1&z=23&sw=toggle;"
+            },
+            {
+                "label": "Switch on for 5 min",
+                "value": "a=1&z=23&sw=on&pd=5;"
+            },
+            {
+                "label": "Switch on for 10 min",
+                "value": "a=1&z=23&sw=on&pd=10;"
+            },
+            {
+                "label": "Switch on for 15 min",
+                "value": "a=1&z=23&sw=on&pd=15;"
+            },
+            {
+                "label": "Switch on for 20 min",
+                "value": "a=1&z=23&sw=on&pd=20;"
+            },
+            {
+                "label": "Switch on for 25 min",
+                "value": "a=1&z=23&sw=on&pd=25;"
+            },
+            {
+                "label": "Switch on for 30 min",
+                "value": "a=1&z=23&sw=on&pd=30;"
+            },
+            {
+                "label": "Switch on for 45 min",
+                "value": "a=1&z=23&sw=on&pd=45;"
+            },
+            {
+                "label": "Switch on for 1 hour",
+                "value": "a=1&z=23&sw=on&pd=60;"
+            },
+            {
+                "label": "Switch on for 2 hours",
+                "value": "a=1&z=23&sw=on&pd=120;"
+            },
+            {
+                "label": "Switch on for 5 hours",
+                "value": "a=1&z=23&sw=on&pd=300;"
+            },
+            {
+                "label": "Switch on for 8 hours",
+                "value": "a=1&z=23&sw=on&pd=480;"
+            }
+        ],
+        "status_icons": [],
+        "icon": "assets\/icons\/plug.svg"
     }
 ]

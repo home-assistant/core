@@ -51,6 +51,11 @@ class AbodeAlarm(AbodeDevice, alarm.AlarmControlPanel):
         return state
 
     @property
+    def code_arm_required(self):
+        """Whether the code is required for arm actions."""
+        return False
+
+    @property
     def supported_features(self) -> int:
         """Return the list of supported features."""
         return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
