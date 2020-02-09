@@ -1,6 +1,6 @@
 """Service calling related helpers."""
 import asyncio
-from functools import partial
+from functools import partial, wraps
 import logging
 from typing import Callable
 
@@ -26,8 +26,6 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
-
-from .functools import wraps
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
