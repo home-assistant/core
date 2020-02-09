@@ -360,19 +360,14 @@ class SoundTouchDevice(MediaPlayerEntity):
                 _LOGGER.warning("Unable to find preset with id %s", media_id)
 
     def select_source(self, source):
-        """
-        Select the source to play audio from.
-
-        :param source:source to select
-        """
         if source == "AUX":
-            _LOGGER.info("Selecting source AUX")
+            _LOGGER.debug("Selecting source AUX")
             self._device.select_source_aux()
         elif source == "Bluetooth":
-            _LOGGER.info("Selecting source Bluetooth")
+            _LOGGER.debug("Selecting source Bluetooth")
             self._device.select_source_bluetooth()
         else:
-            _LOGGER.warning("Source not supported")
+            _LOGGER.warning("Source %s is not supported", source)
 
     def create_zone(self, slaves):
         """
