@@ -1,6 +1,6 @@
 """Common test objects."""
 import time
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from asynctest import CoroutineMock
 import zigpy.profiles.zha
@@ -17,8 +17,6 @@ from homeassistant.components.zha.core.const import (
     DATA_ZHA_DISPATCHERS,
 )
 from homeassistant.util import slugify
-
-from tests.common import mock_coro
 
 
 class FakeApplication:
@@ -100,66 +98,6 @@ class FakeDevice:
         self.node_desc = zigpy.zdo.types.NodeDescriptor.deserialize(node_desc)[0]
 
 
-def make_device(endpoints, ieee, manufacturer, model):
-    """Make a fake device using the specified cluster classes."""
-    device = FakeDevice(ieee, manufacturer, model)
-    for epid, ep in endpoints.items():
-        endpoint = FakeEndpoint(manufacturer, model, epid)
-        endpoint.device = device
-        device.endpoints[epid] = endpoint
-        endpoint.device_type = ep["device_type"]
-        profile_id = ep.get("profile_id")
-        if profile_id:
-            endpoint.profile_id = profile_id
-
-        for cluster_id in ep.get("in_clusters", []):
-            endpoint.add_input_cluster(cluster_id)
-
-        for cluster_id in ep.get("out_clusters", []):
-            endpoint.add_output_cluster(cluster_id)
-
-    return device
-
-
-async def async_init_zigpy_device(
-    hass,
-    in_cluster_ids,
-    out_cluster_ids,
-    device_type,
-    gateway,
-    ieee="00:0d:6f:00:0a:90:69:e7",
-    manufacturer="FakeManufacturer",
-    model="FakeModel",
-    is_new_join=False,
-):
-    """Create and initialize a device.
-
-    This creates a fake device and adds it to the "network". It can be used to
-    test existing device functionality and new device pairing functionality.
-    The is_new_join parameter influences whether or not the device will go
-    through cluster binding and zigbee cluster configure reporting. That only
-    happens when the device is paired to the network for the first time.
-    """
-    device = make_device(
-        {
-            1: {
-                "in_clusters": in_cluster_ids,
-                "out_clusters": out_cluster_ids,
-                "device_type": device_type,
-            }
-        },
-        ieee,
-        manufacturer,
-        model,
-    )
-    if is_new_join:
-        await gateway.async_device_initialized(device)
-    else:
-        await gateway.async_device_restored(device)
-    await hass.async_block_till_done()
-    return device
-
-
 def make_attribute(attrid, value, status=0):
     """Make an attribute."""
     attr = zcl_f.Attribute()
@@ -200,36 +138,6 @@ async def async_enable_traffic(hass, zha_gateway, zha_devices):
     for zha_device in zha_devices:
         zha_device.update_available(True)
     await hass.async_block_till_done()
-
-
-async def async_test_device_join(
-    hass, zha_gateway, cluster_id, entity_id, device_type=None
-):
-    """Test a newly joining device.
-
-    This creates a new fake device and adds it to the network. It is meant to
-    simulate pairing a new device to the network so that code pathways that
-    only trigger during device joins can be tested.
-    """
-    # create zigpy device mocking out the zigbee network operations
-    with patch(
-        "zigpy.zcl.Cluster.configure_reporting",
-        return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
-    ):
-        with patch(
-            "zigpy.zcl.Cluster.bind",
-            return_value=mock_coro([zcl_f.Status.SUCCESS, zcl_f.Status.SUCCESS]),
-        ):
-            await async_init_zigpy_device(
-                hass,
-                [cluster_id, zigpy.zcl.clusters.general.Basic.cluster_id],
-                [],
-                device_type,
-                zha_gateway,
-                ieee="00:0d:6f:00:0a:90:69:f7",
-                is_new_join=True,
-            )
-            assert hass.states.get(entity_id) is not None
 
 
 def make_zcl_header(command_id: int, global_command: bool = True) -> zcl_f.ZCLHeader:
