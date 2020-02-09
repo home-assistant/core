@@ -228,7 +228,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
     @property
     def available(self) -> bool:
         """Return true if entity is available."""
-        return bool(self._state["online"])
+        return bool(self._state)
 
     @property
     def is_on(self) -> bool:
