@@ -147,7 +147,7 @@ class GitHubSensor(Entity):
         self._latest_open_pr_url = self._github_data.latest_open_pr_url
         self._stargazers = self._github_data.stargazers
 
-        
+
 class GitHubData:
     """GitHub Data object."""
 
