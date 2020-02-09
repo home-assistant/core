@@ -17,7 +17,7 @@
       "unknown": "Unexpected error"
     },
     "abort": {
-      "already_configured": "MELCloud integration already configured for {email}. Existing access token has been refreshed."
+      "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed."
     }
   }
 }
