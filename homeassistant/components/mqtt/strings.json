@@ -27,5 +27,27 @@
     "error": {
       "cannot_connect": "Unable to connect to the broker."
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "button_short_press": "\"{subtype}\" button pressed",
+      "button_short_release": "\"{subtype}\" button released",
+      "button_long_press": "\"{subtype}\" button continuously pressed",
+      "button_long_release": "\"{subtype}\" button released after long press",
+      "button_double_press": "\"{subtype}\" button double clicked",
+      "button_triple_press": "\"{subtype}\" button triple clicked",
+      "button_quadruple_press": "\"{subtype}\" button quadruple clicked",
+      "button_quintuple_press": "\"{subtype}\" button quintuple clicked"
+    },
+    "trigger_subtype": {
+      "turn_on": "Turn on",
+      "turn_off": "Turn off",
+      "button_1": "First button",
+      "button_2": "Second button",
+      "button_3": "Third button",
+      "button_4": "Fourth button",
+      "button_5": "Fifth button",
+      "button_6": "Sixth button"
+    }
   }
 }

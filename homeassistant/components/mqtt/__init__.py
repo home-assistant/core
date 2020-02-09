@@ -1194,6 +1194,34 @@ class MqttDiscoveryUpdate(Entity):
             )
 
 
+def device_info_from_config(config):
+    """Return a device description for device registry."""
+    if not config:
+        return None
+
+    info = {
+        "identifiers": {(DOMAIN, id_) for id_ in config[CONF_IDENTIFIERS]},
+        "connections": {tuple(x) for x in config[CONF_CONNECTIONS]},
+    }
+
+    if CONF_MANUFACTURER in config:
+        info["manufacturer"] = config[CONF_MANUFACTURER]
+
+    if CONF_MODEL in config:
+        info["model"] = config[CONF_MODEL]
+
+    if CONF_NAME in config:
+        info["name"] = config[CONF_NAME]
+
+    if CONF_SW_VERSION in config:
+        info["sw_version"] = config[CONF_SW_VERSION]
+
+    if CONF_VIA_DEVICE in config:
+        info["via_device"] = (DOMAIN, config[CONF_VIA_DEVICE])
+
+    return info
+
+
 class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
@@ -1216,32 +1244,7 @@ class MqttEntityDeviceInfo(Entity):
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        if not self._device_config:
-            return None
-
-        info = {
-            "identifiers": {
-                (DOMAIN, id_) for id_ in self._device_config[CONF_IDENTIFIERS]
-            },
-            "connections": {tuple(x) for x in self._device_config[CONF_CONNECTIONS]},
-        }
-
-        if CONF_MANUFACTURER in self._device_config:
-            info["manufacturer"] = self._device_config[CONF_MANUFACTURER]
-
-        if CONF_MODEL in self._device_config:
-            info["model"] = self._device_config[CONF_MODEL]
-
-        if CONF_NAME in self._device_config:
-            info["name"] = self._device_config[CONF_NAME]
-
-        if CONF_SW_VERSION in self._device_config:
-            info["sw_version"] = self._device_config[CONF_SW_VERSION]
-
-        if CONF_VIA_DEVICE in self._device_config:
-            info["via_device"] = (DOMAIN, self._device_config[CONF_VIA_DEVICE])
-
-        return info
+        return device_info_from_config(self._device_config)
 
 
 @websocket_api.async_response
