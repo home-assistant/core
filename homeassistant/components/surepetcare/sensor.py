@@ -53,7 +53,7 @@ class SurePetcareSensor(Entity):
     """A binary sensor implementation for Sure Petcare Entities."""
 
     def __init__(
-        self: Entity, _id: int, sure_type: SureProductID, spc: SurePetcareAPI,
+        self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI,
     ):
         """Initialize a Sure Petcare sensor."""
 
@@ -126,9 +126,7 @@ class SurePetcareSensor(Entity):
 class Flap(SurePetcareSensor):
     """Sure Petcare Flap."""
 
-    def __init__(
-        self: SurePetcareSensor, _id: int, sure_type: SureProductID, spc: SurePetcareAPI
-    ):
+    def __init__(self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI):
         """Initialize a Sure Petcare Flap."""
         super().__init__(_id, sure_type, spc)
 
@@ -152,9 +150,7 @@ class Flap(SurePetcareSensor):
 class SureBattery(SurePetcareSensor):
     """Sure Petcare Flap."""
 
-    def __init__(
-        self: SurePetcareSensor, _id: int, sure_type: SureProductID, spc: SurePetcareAPI
-    ):
+    def __init__(self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI):
         """Initialize a Sure Petcare battery sensor."""
         super().__init__(_id, sure_type, spc)
 

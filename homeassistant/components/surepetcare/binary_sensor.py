@@ -63,7 +63,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
     """A binary sensor implementation for Sure Petcare Entities."""
 
     def __init__(
-        self: BinarySensorDevice,
+        self,
         _id: int,
         spc: SurePetcareAPI,
         device_class: str,
@@ -140,7 +140,7 @@ class SurePetcareBinarySensor(BinarySensorDevice):
 class Hub(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
-    def __init__(self: BinarySensorDevice, _id: int, spc: SurePetcareAPI) -> None:
+    def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare Hub."""
         super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, SureProductID.HUB)
 
@@ -170,7 +170,7 @@ class Hub(SurePetcareBinarySensor):
 class Pet(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
-    def __init__(self: BinarySensorDevice, _id: int, spc: SurePetcareAPI) -> None:
+    def __init__(self, _id: int, spc: SurePetcareAPI) -> None:
         """Initialize a Sure Petcare Pet."""
         super().__init__(_id, spc, DEVICE_CLASS_PRESENCE, SureProductID.PET)
 
@@ -207,10 +207,7 @@ class DeviceConnectivity(SurePetcareBinarySensor):
     """Sure Petcare Pet."""
 
     def __init__(
-        self: BinarySensorDevice,
-        _id: int,
-        sure_type: SureProductID,
-        spc: SurePetcareAPI,
+        self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI,
     ) -> None:
         """Initialize a Sure Petcare Device."""
         super().__init__(_id, spc, DEVICE_CLASS_CONNECTIVITY, sure_type)
