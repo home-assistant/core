@@ -81,7 +81,7 @@ class HMLight(HMDevice, Light):
             return None
         hm_color_temp = self._hmdevice.get_color_temp(self._channel)
         return self.max_mireds - \
-               (self.max_mireds - self.min_mireds) * hm_color_temp
+            (self.max_mireds - self.min_mireds) * hm_color_temp
 
     @property
     def effect_list(self):
@@ -105,9 +105,9 @@ class HMLight(HMDevice, Light):
         if ATTR_BRIGHTNESS in kwargs and self._state == "LEVEL":
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
             self._hmdevice.set_level(percent_bright, self._channel)
-        elif (ATTR_HS_COLOR not in kwargs
-         and ATTR_COLOR_TEMP not in kwargs
-         and ATTR_EFFECT not in kwargs):
+        elif (ATTR_HS_COLOR not in kwargs and
+              ATTR_COLOR_TEMP not in kwargs and
+              ATTR_EFFECT not in kwargs):
             self._hmdevice.on(self._channel)
 
         if ATTR_HS_COLOR in kwargs:
@@ -118,7 +118,7 @@ class HMLight(HMDevice, Light):
             )
         if ATTR_COLOR_TEMP in kwargs:
             hm_temp = (self.max_mireds - kwargs[ATTR_COLOR_TEMP]) \
-                      / (self.max_mireds - self.min_mireds)
+                / (self.max_mireds - self.min_mireds)
             self._hmdevice.set_color_temp(hm_temp)
         if ATTR_EFFECT in kwargs:
             self._hmdevice.set_effect(kwargs[ATTR_EFFECT])
