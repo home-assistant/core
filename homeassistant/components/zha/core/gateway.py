@@ -41,6 +41,7 @@ from .const import (
     DEBUG_COMP_BELLOWS,
     DEBUG_COMP_ZHA,
     DEBUG_COMP_ZIGPY,
+    DEBUG_COMP_ZIGPY_CC,
     DEBUG_COMP_ZIGPY_DECONZ,
     DEBUG_COMP_ZIGPY_XBEE,
     DEBUG_COMP_ZIGPY_ZIGATE,
@@ -555,11 +556,12 @@ def async_capture_log_levels():
         DEBUG_COMP_BELLOWS: logging.getLogger(DEBUG_COMP_BELLOWS).getEffectiveLevel(),
         DEBUG_COMP_ZHA: logging.getLogger(DEBUG_COMP_ZHA).getEffectiveLevel(),
         DEBUG_COMP_ZIGPY: logging.getLogger(DEBUG_COMP_ZIGPY).getEffectiveLevel(),
-        DEBUG_COMP_ZIGPY_XBEE: logging.getLogger(
-            DEBUG_COMP_ZIGPY_XBEE
-        ).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_CC: logging.getLogger(DEBUG_COMP_ZIGPY_CC).getEffectiveLevel(),
         DEBUG_COMP_ZIGPY_DECONZ: logging.getLogger(
             DEBUG_COMP_ZIGPY_DECONZ
+        ).getEffectiveLevel(),
+        DEBUG_COMP_ZIGPY_XBEE: logging.getLogger(
+            DEBUG_COMP_ZIGPY_XBEE
         ).getEffectiveLevel(),
         DEBUG_COMP_ZIGPY_ZIGATE: logging.getLogger(
             DEBUG_COMP_ZIGPY_ZIGATE
@@ -573,8 +575,9 @@ def async_set_logger_levels(levels):
     logging.getLogger(DEBUG_COMP_BELLOWS).setLevel(levels[DEBUG_COMP_BELLOWS])
     logging.getLogger(DEBUG_COMP_ZHA).setLevel(levels[DEBUG_COMP_ZHA])
     logging.getLogger(DEBUG_COMP_ZIGPY).setLevel(levels[DEBUG_COMP_ZIGPY])
-    logging.getLogger(DEBUG_COMP_ZIGPY_XBEE).setLevel(levels[DEBUG_COMP_ZIGPY_XBEE])
+    logging.getLogger(DEBUG_COMP_ZIGPY_CC).setLevel(levels[DEBUG_COMP_ZIGPY_CC])
     logging.getLogger(DEBUG_COMP_ZIGPY_DECONZ).setLevel(levels[DEBUG_COMP_ZIGPY_DECONZ])
+    logging.getLogger(DEBUG_COMP_ZIGPY_XBEE).setLevel(levels[DEBUG_COMP_ZIGPY_XBEE])
     logging.getLogger(DEBUG_COMP_ZIGPY_ZIGATE).setLevel(levels[DEBUG_COMP_ZIGPY_ZIGATE])
 
 
