@@ -362,6 +362,7 @@ class SoundTouchDevice(MediaPlayerEntity):
     def select_source(self, source):
         """
         Select the source to play audio from.
+
         :param source:source to select
         """
         if source == "AUX":
