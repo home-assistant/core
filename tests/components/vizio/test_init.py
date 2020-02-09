@@ -13,7 +13,7 @@ from tests.common import MockConfigEntry
 
 async def test_setup_component(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_update: pytest.fixture,
 ) -> None:
     """Test component setup."""
@@ -26,7 +26,7 @@ async def test_setup_component(
 
 async def test_load_and_unload(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_update: pytest.fixture,
 ) -> None:
     """Test loading and unloading entry."""

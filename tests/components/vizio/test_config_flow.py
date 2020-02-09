@@ -49,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def test_user_flow_minimum_fields(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
     """Test user config flow with minimum fields."""
@@ -73,7 +73,7 @@ async def test_user_flow_minimum_fields(
 
 async def test_user_flow_all_fields(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
     """Test user config flow with all fields."""
@@ -120,7 +120,7 @@ async def test_options_flow(hass: HomeAssistantType) -> None:
 
 async def test_user_host_already_configured(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
     """Test host is already configured during user setup."""
@@ -141,7 +141,7 @@ async def test_user_host_already_configured(
 
 async def test_user_host_already_configured_no_port(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
     """Test host is already configured during user setup when existing entry has no port."""
@@ -165,7 +165,7 @@ async def test_user_host_already_configured_no_port(
 
 async def test_user_name_already_configured(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
     """Test name is already configured during user setup."""
@@ -187,7 +187,7 @@ async def test_user_name_already_configured(
 
 async def test_user_esn_already_exists(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
     """Test ESN is already configured with different host and name during user setup."""
@@ -223,7 +223,7 @@ async def test_user_error_on_could_not_connect(
 
 async def test_user_tv_pairing(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_complete_pairing: pytest.fixture,
 ) -> None:
@@ -251,22 +251,9 @@ async def test_user_tv_pairing(
     assert result["data"][CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
 
 
-async def test_user_tv_pairing_cant_connect(
-    hass: HomeAssistantType, vizio_cant_connect: pytest.fixture,
-) -> None:
-    """Test failure to start pairing from user config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=MOCK_TV_CONFIG_NO_TOKEN
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cant_connect"}
-
-
 async def test_user_start_pairing_failure(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_start_pairing_failure: pytest.fixture,
 ) -> None:
@@ -282,7 +269,7 @@ async def test_user_start_pairing_failure(
 
 async def test_user_invalid_pin(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_invalid_pin_failure: pytest.fixture,
 ) -> None:
@@ -305,7 +292,7 @@ async def test_user_invalid_pin(
 
 async def test_import_flow_minimum_fields(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
     """Test import config flow with minimum fields."""
@@ -327,7 +314,7 @@ async def test_import_flow_minimum_fields(
 
 async def test_import_flow_all_fields(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
     """Test import config flow with all fields."""
@@ -348,7 +335,7 @@ async def test_import_flow_all_fields(
 
 async def test_import_entity_already_configured(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
     """Test entity is already configured during import setup."""
@@ -370,7 +357,7 @@ async def test_import_entity_already_configured(
 
 async def test_import_flow_update_options(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_update: pytest.fixture,
 ) -> None:
     """Test import config flow with updated options."""
@@ -403,7 +390,7 @@ async def test_import_flow_update_options(
 
 async def test_import_flow_update_name(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_update: pytest.fixture,
 ) -> None:
     """Test import config flow with updated name."""
@@ -433,7 +420,7 @@ async def test_import_flow_update_name(
 
 async def test_import_needs_pairing(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_complete_pairing: pytest.fixture,
 ) -> None:
@@ -470,7 +457,7 @@ async def test_import_needs_pairing(
 
 async def test_import_error(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     caplog: pytest.fixture,
 ) -> None:
@@ -503,7 +490,7 @@ async def test_import_error(
 
 async def test_zeroconf_flow(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
     vizio_guess_device_type: pytest.fixture,
 ) -> None:
@@ -534,7 +521,7 @@ async def test_zeroconf_flow(
 
 async def test_zeroconf_flow_already_configured(
     hass: HomeAssistantType,
-    vizio_connect_with_valid_auth: pytest.fixture,
+    vizio_connect: pytest.fixture,
     vizio_bypass_setup: pytest.fixture,
 ) -> None:
     """Test entity is already configured during zeroconf setup."""
