@@ -72,3 +72,20 @@ async def test_turn_automation_on(hass, requests_mock):
 
     state = hass.states.get("switch.test_automation")
     assert state.state == "on"
+
+
+async def test_trigger_automation(hass, requests_mock):
+    """Test the automation can be turned on."""
+    await setup_platform(hass, SWITCH_DOMAIN)
+    requests_mock.patch(
+        str.replace(CONST.AUTOMATION_APPLY_URL, "$AUTOMATIONID$", AUTOMATION_ID),
+        text="",
+    )
+
+    await hass.services.async_call(
+        "abode",
+        "trigger_automation",
+        {"entity_id": "switch.test_automation"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
