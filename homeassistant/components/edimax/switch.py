@@ -55,17 +55,6 @@ class SmartPlugSwitch(SwitchDevice):
         return self._mac
 
     @property
-    def device_info(self):
-        """Return the device info."""
-        return {
-            "identifiers": {(DOMAIN, self._mac)},
-            "name": self.name,
-            "manufacturer": self._info["vendor"],
-            "model": self._info["model"],
-            "sw_version": self._info["version"],
-        }
-
-    @property
     def name(self):
         """Return the name of the Smart Plug, if any."""
         return self._name
