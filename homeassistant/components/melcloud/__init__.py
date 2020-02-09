@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_TOKEN
 from homeassistant.exceptions import ConfigEntryNotReady
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util import Throttle
 
@@ -25,14 +26,22 @@ PLATFORMS = ["climate", "sensor"]
 
 CONF_LANGUAGE = "language"
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_TOKEN): str})}, extra=vol.ALLOW_EXTRA,
+    {
+        DOMAIN: vol.Schema(
+            {vol.Required(CONF_EMAIL): cv.string, vol.Required(CONF_TOKEN): cv.string}
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigEntry):
     """Establish connection with MELCloud."""
-    email = config[DOMAIN].get(CONF_EMAIL)
-    token = config[DOMAIN].get(CONF_TOKEN)
+    if DOMAIN not in config:
+        return True
+
+    email = config[DOMAIN][CONF_EMAIL]
+    token = config[DOMAIN][CONF_TOKEN]
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
