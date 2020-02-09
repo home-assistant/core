@@ -133,16 +133,15 @@ async def test_import_with_token(hass, mock_login, mock_get_devices):
 
 async def test_token_refresh(hass, mock_login, mock_get_devices):
     """Re-configuration with existing username should refresh token."""
-    await hass.config_entries.async_add(
-        MockConfigEntry(
-            domain=DOMAIN,
-            data={
-                "username": "test-email@test-domain.com",
-                "token": "test-original-token",
-            },
-            unique_id="test-email@test-domain.com",
-        )
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "username": "test-email@test-domain.com",
+            "token": "test-original-token",
+        },
+        unique_id="test-email@test-domain.com",
     )
+    mock_entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.melcloud.async_setup", return_value=True

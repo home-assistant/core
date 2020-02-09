@@ -9,8 +9,9 @@ import pymelcloud
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.melcloud.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

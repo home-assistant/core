@@ -13,12 +13,12 @@ from homeassistant.components.climate.const import (
     SUPPORT_FAN_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
-from homeassistant.components.melcloud import MelCloudDevice
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.temperature import convert as convert_temperature
 
+from . import MelCloudDevice
 from .const import DOMAIN, HVAC_MODE_LOOKUP, HVAC_MODE_REVERSE_LOOKUP, TEMP_UNIT_LOOKUP
 
 SCAN_INTERVAL = timedelta(seconds=60)
