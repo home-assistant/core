@@ -360,6 +360,7 @@ class SoundTouchDevice(MediaPlayerEntity):
                 _LOGGER.warning("Unable to find preset with id %s", media_id)
 
     def select_source(self, source):
+        """Select input source."""
         if source == "AUX":
             _LOGGER.debug("Selecting source AUX")
             self._device.select_source_aux()
