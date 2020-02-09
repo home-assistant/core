@@ -74,7 +74,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 ),
             )
         username = user_input[CONF_USERNAME]
-        return await self._create_client(username, password=user_input[CONF_PASSWORD],)
+        return await self._create_client(username, password=user_input[CONF_PASSWORD])
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
