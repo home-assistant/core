@@ -43,10 +43,6 @@ async def async_setup_platform(
         ]:
             entities.append(DeviceConnectivity(sure_id, sure_type, spc))
 
-        # devices
-        # if sure_type in [SureProductID.CAT_FLAP, SureProductID.PET_FLAP]:
-        #     entity = Flap(sure_id, spc)
-        # el
         if sure_type == SureProductID.PET:
             entity = Pet(sure_id, spc)
         elif sure_type == SureProductID.HUB:
