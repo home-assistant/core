@@ -3,14 +3,14 @@ import asyncio
 import datetime
 import logging
 
-from homekit.controller.ip_implementation import IpPairing
-from homekit.exceptions import (
+from aiohomekit.controller.ip import IpPairing
+from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
     EncryptionError,
 )
-from homekit.model.characteristics import CharacteristicsTypes
-from homekit.model.services import ServicesTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_time_interval
@@ -186,10 +186,7 @@ class HKDevice:
     async def async_refresh_entity_map(self, config_num):
         """Handle setup of a HomeKit accessory."""
         try:
-            async with self.pairing_lock:
-                self.accessories = await self.hass.async_add_executor_job(
-                    self.pairing.list_accessories_and_characteristics
-                )
+            self.accessories = await self.pairing.list_accessories_and_characteristics()
         except AccessoryDisconnectedError:
             # If we fail to refresh this data then we will naturally retry
             # later when Bonjour spots c# is still not up to date.
@@ -305,10 +302,7 @@ class HKDevice:
     async def get_characteristics(self, *args, **kwargs):
         """Read latest state from homekit accessory."""
         async with self.pairing_lock:
-            chars = await self.hass.async_add_executor_job(
-                self.pairing.get_characteristics, *args, **kwargs
-            )
-        return chars
+            return await self.pairing.get_characteristics(*args, **kwargs)
 
     async def put_characteristics(self, characteristics):
         """Control a HomeKit device state from Home Assistant."""
@@ -317,9 +311,7 @@ class HKDevice:
             chars.append((row["aid"], row["iid"], row["value"]))
 
         async with self.pairing_lock:
-            results = await self.hass.async_add_executor_job(
-                self.pairing.put_characteristics, chars
-            )
+            results = await self.pairing.put_characteristics(chars)
 
         # Feed characteristics back into HA and update the current state
         # results will only contain failures, so anythin in characteristics

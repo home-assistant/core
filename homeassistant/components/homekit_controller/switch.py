@@ -1,7 +1,7 @@
 """Support for Homekit switches."""
 import logging
 
-from homekit.model.characteristics import CharacteristicsTypes
+from aiohomekit.model.characteristics import CharacteristicsTypes
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
