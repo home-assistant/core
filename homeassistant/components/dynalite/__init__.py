@@ -1,18 +1,15 @@
 """Support for the Dynalite networks."""
+from dynalite_devices_lib import BRIDGE_CONFIG_SCHEMA
 import voluptuous as vol
 
-from dynalite_devices_lib import BRIDGE_CONFIG_SCHEMA
-
 from homeassistant import config_entries
-from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_HOST
-
-from .const import DOMAIN, CONF_BRIDGES, DATA_CONFIGS, LOGGER
-from .bridge import DynaliteBridge
+from homeassistant.helpers import config_validation as cv
 
 # Loading the config flow file will register the flow
+from .bridge import DynaliteBridge
 from .config_flow import configured_hosts
-
+from .const import CONF_BRIDGES, DATA_CONFIGS, DOMAIN, LOGGER
 
 CONFIG_SCHEMA = vol.Schema(
     {

@@ -3,10 +3,10 @@
 from dynalite_devices_lib import DynaliteDevices
 from dynalite_lib import CONF_ALL
 
-from homeassistant.core import callback
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 
-from .const import DOMAIN, DATA_CONFIGS, LOGGER
+from .const import DATA_CONFIGS, DOMAIN, LOGGER
 from .light import DynaliteLight
 
 

@@ -1,6 +1,7 @@
 """Support for Dynalite channels as lights."""
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
 from homeassistant.core import callback
+
 from .const import DOMAIN, LOGGER
 
 

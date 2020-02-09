@@ -1,5 +1,5 @@
 """Test Dynalite config flow."""
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, call, patch
 
 from homeassistant.components.dynalite import config_flow
 

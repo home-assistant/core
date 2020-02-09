@@ -2,8 +2,8 @@
 import asyncio
 
 from homeassistant import config_entries
-from homeassistant.core import callback
 from homeassistant.const import CONF_HOST
+from homeassistant.core import callback
 
 from .const import DOMAIN, LOGGER
 

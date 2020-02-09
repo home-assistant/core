@@ -1,7 +1,7 @@
 """Test Dynalite __init__."""
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, call, patch
 
-from homeassistant.components.dynalite import DOMAIN, DATA_CONFIGS, LOGGER
+from homeassistant.components.dynalite import DATA_CONFIGS, DOMAIN, LOGGER
 from homeassistant.components.dynalite.__init__ import (
     async_setup,
     async_setup_entry,

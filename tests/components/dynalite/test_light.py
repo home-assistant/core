@@ -1,5 +1,5 @@
 """Test Dynalite light."""
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, call, patch
 
 from homeassistant.components.dynalite import DOMAIN
 from homeassistant.components.dynalite.light import DynaliteLight, async_setup_entry

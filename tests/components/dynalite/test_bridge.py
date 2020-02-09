@@ -1,10 +1,12 @@
 """Test Dynalite bridge."""
-from unittest.mock import Mock, patch, call
-import pytest
+from unittest.mock import Mock, call, patch
 
 from dynalite_lib import CONF_ALL
-from homeassistant.components.dynalite import DOMAIN, DATA_CONFIGS
-from homeassistant.components.dynalite.bridge import DynaliteBridge, BridgeError
+import pytest
+
+from homeassistant.components.dynalite import DATA_CONFIGS, DOMAIN
+from homeassistant.components.dynalite.bridge import BridgeError, DynaliteBridge
+
 from tests.common import mock_coro
 
 
