@@ -1,6 +1,6 @@
 """Service calling related helpers."""
 import asyncio
-from functools import partial, wraps
+from functools import partial
 import logging
 from typing import Callable
 
@@ -26,6 +26,8 @@ from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.util.yaml import load_yaml
 from homeassistant.util.yaml.loader import JSON_TYPE
+
+from .functools import wraps
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -461,7 +463,9 @@ def async_register_admin_service(
             if not user.is_admin:
                 raise Unauthorized(context=call.context)
 
-        await hass.async_add_job(service_func, call)
+        result = hass.async_add_job(service_func, call)
+        if result is not None:
+            await result
 
     hass.services.async_register(domain, service, admin_handler, schema)
 
