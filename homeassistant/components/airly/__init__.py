@@ -127,8 +127,8 @@ class AirlyData:
             _LOGGER.error(error)
             self.data = {}
 
-        # Airly allows 100 requests per day. We check how many Airly config entries are
-        # and calculate interval to not exceed allowed numbers of requests.
+        # We check how many Airly config entries are and calculate interval to not
+        # exceed allowed numbers of requests.
         instances = len(self._hass.config_entries.async_entries(DOMAIN))
         interval = ceil(24 * 60 / MAX_REQUESTS_PER_DAY) * instances
         _LOGGER.debug("Next update in %i minutes", interval)
