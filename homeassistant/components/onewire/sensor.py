@@ -242,7 +242,7 @@ class OneWire(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
-        return {"device_file": self.unique_id, "raw_value": self._value_raw}
+        return {"device_file": self._device_file, "raw_value": self._value_raw}
 
     @property
     def unique_id(self) -> str:
