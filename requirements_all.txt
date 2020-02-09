@@ -837,7 +837,7 @@ libpyvivotek==0.4.0
 librouteros==3.0.0
 
 # homeassistant.components.soundtouch
-libsoundtouch==0.7.2
+libsoundtouch==0.8
 
 # homeassistant.components.life360
 life360==4.1.1
