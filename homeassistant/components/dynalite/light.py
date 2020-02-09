@@ -4,11 +4,6 @@ from homeassistant.core import callback
 from .const import DOMAIN, LOGGER
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Record the async_add_entities function to add them later when received from Dynalite."""
     LOGGER.debug("async_setup_entry light entry = %s", config_entry.data)
@@ -49,7 +44,6 @@ class DynaliteLight(Light):
         """Return true if this entity should be hidden from UI."""
         return self._device.hidden
 
-    @callback
     async def async_update(self):
         """Update the entity."""
         return

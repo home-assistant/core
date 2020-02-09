@@ -1,9 +1,9 @@
 {
     "domain": "dynalite",
-    "name": "Direct Integration for Philips Dynalite",
+    "name": "Philips Dynalite",
     "config_flow": true,
     "documentation": "",
     "dependencies": [],
     "codeowners": ["@ziv1234"],
-    "requirements": ["dynalite_devices==0.1.10"]
+    "requirements": ["dynalite_devices==0.1.16"]
 }

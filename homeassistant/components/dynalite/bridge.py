@@ -1,5 +1,4 @@
 """Code to handle a Dynalite bridge."""
-import pprint
 
 from dynalite_devices_lib import DynaliteDevices
 from dynalite_lib import CONF_ALL
@@ -35,21 +34,17 @@ class DynaliteBridge:
         self.host = config_entry.data[CONF_HOST]
         if self.host not in hass.data[DOMAIN][DATA_CONFIGS]:
             LOGGER.info("invalid host - %s", self.host)
-            raise BridgeError("invalid host - " + self.host)
+            raise BridgeError(f"invalid host - {self.host}")
         self.config = hass.data[DOMAIN][DATA_CONFIGS][self.host]
         # Configure the dynalite devices
         self.dynalite_devices = DynaliteDevices(
             config=self.config,
-            loop=hass.loop,
             newDeviceFunc=self.add_devices,
             updateDeviceFunc=self.update_device,
         )
 
     async def async_setup(self, tries=0):
         """Set up a Dynalite bridge."""
-        LOGGER.debug(
-            "component bridge async_setup - %s", pprint.pformat(self.config_entry.data)
-        )
         # Configure the dynalite devices
         await self.dynalite_devices.async_setup()
 
