@@ -1,5 +1,5 @@
 """Constants for Glances component."""
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import DATA_GIBIBYTES, DATA_MEBIBYTES, TEMP_CELSIUS
 
 DOMAIN = "glances"
 CONF_VERSION = "version"
@@ -15,14 +15,14 @@ SUPPORTED_VERSIONS = [2, 3]
 
 SENSOR_TYPES = {
     "disk_use_percent": ["fs", "used percent", "%", "mdi:harddisk"],
-    "disk_use": ["fs", "used", "GiB", "mdi:harddisk"],
-    "disk_free": ["fs", "free", "GiB", "mdi:harddisk"],
+    "disk_use": ["fs", "used", DATA_GIBIBYTES, "mdi:harddisk"],
+    "disk_free": ["fs", "free", DATA_GIBIBYTES, "mdi:harddisk"],
     "memory_use_percent": ["mem", "RAM used percent", "%", "mdi:memory"],
-    "memory_use": ["mem", "RAM used", "MiB", "mdi:memory"],
-    "memory_free": ["mem", "RAM free", "MiB", "mdi:memory"],
+    "memory_use": ["mem", "RAM used", DATA_MEBIBYTES, "mdi:memory"],
+    "memory_free": ["mem", "RAM free", DATA_MEBIBYTES, "mdi:memory"],
     "swap_use_percent": ["memswap", "Swap used percent", "%", "mdi:memory"],
-    "swap_use": ["memswap", "Swap used", "GiB", "mdi:memory"],
-    "swap_free": ["memswap", "Swap free", "GiB", "mdi:memory"],
+    "swap_use": ["memswap", "Swap used", DATA_GIBIBYTES, "mdi:memory"],
+    "swap_free": ["memswap", "Swap free", DATA_GIBIBYTES, "mdi:memory"],
     "processor_load": ["load", "CPU load", "15 min", "mdi:memory"],
     "process_running": ["processcount", "Running", "Count", "mdi:memory"],
     "process_total": ["processcount", "Total", "Count", "mdi:memory"],
@@ -32,5 +32,10 @@ SENSOR_TYPES = {
     "sensor_temp": ["sensors", "Temp", TEMP_CELSIUS, "mdi:thermometer"],
     "docker_active": ["docker", "Containers active", "", "mdi:docker"],
     "docker_cpu_use": ["docker", "Containers CPU used", "%", "mdi:docker"],
-    "docker_memory_use": ["docker", "Containers RAM used", "MiB", "mdi:docker"],
+    "docker_memory_use": [
+        "docker",
+        "Containers RAM used",
+        DATA_MEBIBYTES,
+        "mdi:docker",
+    ],
 }
