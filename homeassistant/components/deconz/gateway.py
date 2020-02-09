@@ -149,12 +149,12 @@ class DeconzGateway:
             if self.option_allow_clip_sensor:
                 self.async_add_device_callback(NEW_SENSOR, sensors)
             else:
-                deconz_ids += [sensor.deconz_id for sensor in self.api.sensors.values()]
+                deconz_ids += [sensor.deconz_id for sensor in sensors]
 
         if self._current_option_allow_deconz_groups != self.option_allow_deconz_groups:
             self._current_option_allow_deconz_groups = self.option_allow_deconz_groups
 
-            groups = [group for group in self.api.groups.values()]
+            groups = list(self.api.groups.values())
 
             if self.option_allow_deconz_groups:
                 self.async_add_device_callback(NEW_GROUP, groups)
