@@ -40,6 +40,11 @@ class Helper:
                 char_name = CharacteristicsTypes.get_short(char.type)
                 self.characteristics[(service_name, char_name)] = char
 
+    async def update_named_service(self, service, characteristics):
+        """Update a service."""
+        self.pairing.testing.update_named_service(service, characteristics)
+        await self.hass.async_block_till_done()
+
     async def poll_and_get_state(self):
         """Trigger a time based poll and return the current entity state."""
         await time_changed(self.hass, 60)

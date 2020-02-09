@@ -46,10 +46,12 @@ class HomeKitEntity(Entity):
         )
 
         self._accessory.add_pollable_characteristics(self.pollable_characteristics)
+        self._accessory.add_watchable_characteristics(self.watchable_characteristics)
 
     async def async_will_remove_from_hass(self):
         """Prepare to be removed from hass."""
         self._accessory.remove_pollable_characteristics(self._aid)
+        self._accessory.remove_watchable_characteristics(self._aid)
 
         for signal_remove in self._signals:
             signal_remove()
@@ -71,6 +73,7 @@ class HomeKitEntity(Entity):
         characteristic_types = [get_uuid(c) for c in self.get_characteristic_types()]
 
         self.pollable_characteristics = []
+        self.watchable_characteristics = []
         self._chars = {}
         self._char_names = {}
 
@@ -97,6 +100,10 @@ class HomeKitEntity(Entity):
         # Build up a list of (aid, iid) tuples to poll on update()
         if "pr" in char["perms"]:
             self.pollable_characteristics.append((self._aid, char["iid"]))
+
+        # Build up a list of (aid, iid) tuples to subscribe to
+        if "ev" in char["perms"]:
+            self.watchable_characteristics.append((self._aid, char["iid"]))
 
         # Build a map of ctype -> iid
         short_name = CharacteristicsTypes.get_short(char["type"])
