@@ -8,7 +8,7 @@ from homeassistant.components.cover import (
     CoverDevice,
 )
 
-from . import API, CONF_SHADOW, DEVICES, DOMAIN, SomfyEntity
+from . import API, DEVICES, DOMAIN, SomfyEntity
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -23,11 +23,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         }
 
         devices = hass.data[DOMAIN][DEVICES]
-
-        if CONF_SHADOW in hass.data[DOMAIN].keys():
-            shadow = hass.data[DOMAIN][CONF_SHADOW]
-        else:
-            shadow = False
 
         return [
             SomfyCover(
