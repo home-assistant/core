@@ -118,10 +118,6 @@ class SurePetcareSensor(Entity):
 class Flap(SurePetcareSensor):
     """Sure Petcare Flap."""
 
-    def __init__(self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI):
-        """Initialize a Sure Petcare Flap."""
-        super().__init__(_id, sure_type, spc)
-
     @property
     def state(self) -> Optional[int]:
         """Return battery level in percent."""
@@ -141,10 +137,6 @@ class Flap(SurePetcareSensor):
 
 class SureBattery(SurePetcareSensor):
     """Sure Petcare Flap."""
-
-    def __init__(self, _id: int, sure_type: SureProductID, spc: SurePetcareAPI):
-        """Initialize a Sure Petcare battery sensor."""
-        super().__init__(_id, sure_type, spc)
 
     @property
     def name(self) -> str:
