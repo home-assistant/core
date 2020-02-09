@@ -1065,7 +1065,7 @@ pushbullet.py==0.11.0
 pushetta==1.0.15
 
 # homeassistant.components.rpi_gpio_pwm
-pwmled==1.4.1
+pwmled==1.5.0
 
 # homeassistant.components.august
 py-august==0.8.1
