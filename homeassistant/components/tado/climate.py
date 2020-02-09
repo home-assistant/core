@@ -138,6 +138,7 @@ class TadoClimate(ClimateDevice):
         self.zone_name = zone_name
         self.zone_id = zone_id
         self.zone_type = zone_type
+        self._unique_id = f"{zone_type} {zone_id} {tado.device_id}"
 
         self._ac_device = zone_type == TYPE_AIR_CONDITIONING
         self._ac_support_heat = ac_support_heat
@@ -190,6 +191,11 @@ class TadoClimate(ClimateDevice):
     def name(self):
         """Return the name of the entity."""
         return self.zone_name
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def should_poll(self) -> bool:
