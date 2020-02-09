@@ -137,13 +137,11 @@ class AtaDeviceClimate(ClimateDevice):
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        if not self._device.power:
-            await self._device.set({"power": True})
+        await self._device.set({"power": True})
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
-        if self._device.power:
-            await self._device.set({"power": False})
+        await self._device.set({"power": False})
 
     @property
     def supported_features(self) -> int:
