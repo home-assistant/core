@@ -9,13 +9,13 @@ import pymelcloud
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.melcloud.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register("melcloud")
-class FlowHandler(config_entries.ConfigFlow):
+class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
     VERSION = 1

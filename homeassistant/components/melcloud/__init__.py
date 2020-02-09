@@ -2,7 +2,7 @@
 import asyncio
 from datetime import timedelta
 import logging
-from typing import Dict, List
+from typing import Any, Dict, List
 
 from aiohttp import ClientConnectionError
 from async_timeout import timeout
@@ -100,7 +100,7 @@ class MelCloudDevice:
             _LOGGER.warning("Connection failed for %s", self.name)
             self._available = False
 
-    async def async_set(self, properties: Dict[str, any]):
+    async def async_set(self, properties: Dict[str, Any]):
         """Write state changes to the MELCloud API."""
         try:
             await self.device.set(properties)
@@ -145,7 +145,7 @@ async def mel_devices_setup(hass, token) -> List[MelCloudDevice]:
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     try:
         with timeout(10):
-            devices = await get_devices(
+            all_devices = await get_devices(
                 token,
                 session,
                 conf_update_interval=timedelta(minutes=5),
@@ -155,6 +155,6 @@ async def mel_devices_setup(hass, token) -> List[MelCloudDevice]:
         raise ConfigEntryNotReady() from ex
 
     wrapped_devices = {}
-    for k, value in devices.items():
-        wrapped_devices[k] = [MelCloudDevice(device) for device in value]
+    for device_type, devices in all_devices.items():
+        wrapped_devices[device_type] = [MelCloudDevice(device) for device in devices]
     return wrapped_devices

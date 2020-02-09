@@ -15,13 +15,12 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.components.melcloud import MelCloudDevice
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DOMAIN, HVAC_MODE_LOOKUP, HVAC_MODE_REVERSE_LOOKUP, TEMP_UNIT_LOOKUP
 
-ENTITY_ID_FORMAT = f"{DOMAIN}.{{}}"
 SCAN_INTERVAL = timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +30,7 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ):
     """Set up MelCloud device climate based on config_entry."""
-    mel_devices = hass.data[DOMAIN].get(entry.entry_id)
+    mel_devices = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [AtaDeviceClimate(mel_device) for mel_device in mel_devices[DEVICE_TYPE_ATA]],
         True,
@@ -41,18 +40,16 @@ async def async_setup_entry(
 class AtaDeviceClimate(ClimateDevice):
     """Air-to-Air climate device."""
 
-    def __init__(self, device: MelCloudDevice, name=None):
+    def __init__(self, device: MelCloudDevice):
         """Initialize the climate."""
         self._api = device
         self._device = self._api.device
-        if name is None:
-            name = device.name
-        self._name = name
+        self._name = device.name
 
     @property
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
-        return f"{self._device.serial}-{self._device.mac}-climate"
+        return f"{self._device.serial}-{self._device.mac}"
 
     @property
     def name(self):
@@ -67,18 +64,6 @@ class AtaDeviceClimate(ClimateDevice):
     def device_info(self):
         """Return a device description for device registry."""
         return self._api.device_info
-
-    @property
-    def state(self) -> str:
-        """Return the current state."""
-        return self.hvac_mode
-
-    @property
-    def precision(self) -> float:
-        """Return the precision of the system."""
-        if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
-            return PRECISION_TENTHS
-        return PRECISION_WHOLE
 
     @property
     def temperature_unit(self) -> str:
@@ -99,7 +84,7 @@ class AtaDeviceClimate(ClimateDevice):
             await self._device.set({"power": False})
             return
 
-        operation_mode = HVAC_MODE_REVERSE_LOOKUP.get(hvac_mode, None)
+        operation_mode = HVAC_MODE_REVERSE_LOOKUP.get(hvac_mode)
         if operation_mode is None:
             raise ValueError(f"Invalid hvac_mode [{hvac_mode}]")
 

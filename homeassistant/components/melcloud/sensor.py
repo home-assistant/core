@@ -9,28 +9,25 @@ from homeassistant.util.unit_system import UnitSystem
 
 from .const import DOMAIN, TEMP_UNIT_LOOKUP
 
-ATTR_MEASUREMENT = "measurement"
 ATTR_ICON = "icon"
 ATTR_UNIT_FN = "unit_fn"
 ATTR_DEVICE_CLASS = "device_class"
 ATTR_VALUE_FN = "value_fn"
 
-SENSORS = [
-    {
-        ATTR_MEASUREMENT: "Room Temperature",
+SENSORS = {
+    "Room Temperature": {
         ATTR_ICON: "mdi:thermometer",
         ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(x.device.temp_unit, TEMP_CELSIUS),
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_VALUE_FN: lambda x: x.device.room_temperature,
     },
-    {
-        ATTR_MEASUREMENT: "Energy",
+    "Energy": {
         ATTR_ICON: "mdi:factory",
         ATTR_UNIT_FN: lambda x: "kWh",
         ATTR_DEVICE_CLASS: None,
         ATTR_VALUE_FN: lambda x: x.device.total_energy_consumed,
     },
-]
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,8 +37,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
     mel_devices = hass.data[DOMAIN].get(entry.entry_id)
     async_add_entities(
         [
-            MelCloudSensor(mel_device, definition, hass.config.units)
-            for definition in SENSORS
+            MelCloudSensor(mel_device, measurement, definition, hass.config.units)
+            for measurement, definition in SENSORS.items()
             for mel_device in mel_devices[DEVICE_TYPE_ATA]
         ],
         True,
@@ -51,20 +48,17 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class MelCloudSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, device: AtaDevice, definition, units: UnitSystem, name=None):
+    def __init__(self, device: AtaDevice, measurement, definition, units: UnitSystem):
         """Initialize the sensor."""
         self._api = device
-        if name is None:
-            self._name_slug = device.name
-        else:
-            self._name_slug = name
-
+        self._name_slug = device.name
+        self._measurement = measurement
         self._def = definition
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        normalized = self._def[ATTR_MEASUREMENT].lower().replace(" ", "_")
+        normalized = self._measurement.lower().replace(" ", "_")
         return f"{self._api.device.serial}-{self._api.device.mac}-{normalized}"
 
     @property
@@ -75,7 +69,7 @@ class MelCloudSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return f"{self._name_slug} {self._def[ATTR_MEASUREMENT]}"
+        return f"{self._name_slug} {self._measurement}"
 
     @property
     def state(self):
