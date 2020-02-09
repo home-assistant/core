@@ -87,14 +87,6 @@ class SurePetcareSensor(Entity):
         return bool(self._state)
 
     @property
-    def is_on(self) -> Optional[bool]:
-        """Return true if entity is on/unlocked."""
-        try:
-            return SureLockStateID(self._state["online"])
-        except (KeyError, TypeError):
-            return None
-
-    @property
     def should_poll(self) -> bool:
         """Return true."""
         return False
