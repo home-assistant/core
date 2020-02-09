@@ -6,7 +6,7 @@
         "title": "Connect to MELCloud",
         "description": "Connect using your MELCloud account.",
         "data": {
-          "email": "Email used to login to MELCloud.",
+          "username": "Email used to login to MELCloud.",
           "password": "MELCloud password."
         }
       }

@@ -10,7 +10,7 @@ from pymelcloud import Device, get_devices
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_TOKEN
+from homeassistant.const import CONF_TOKEN, CONF_USERNAME
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType
@@ -28,7 +28,10 @@ CONF_LANGUAGE = "language"
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {vol.Required(CONF_EMAIL): cv.string, vol.Required(CONF_TOKEN): cv.string}
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_TOKEN): cv.string,
+            }
         )
     },
     extra=vol.ALLOW_EXTRA,
@@ -40,13 +43,13 @@ async def async_setup(hass: HomeAssistantType, config: ConfigEntry):
     if DOMAIN not in config:
         return True
 
-    email = config[DOMAIN][CONF_EMAIL]
+    username = config[DOMAIN][CONF_USERNAME]
     token = config[DOMAIN][CONF_TOKEN]
     hass.async_create_task(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data={CONF_EMAIL: email, CONF_TOKEN: token},
+            data={CONF_USERNAME: username, CONF_TOKEN: token},
         )
     )
     return True

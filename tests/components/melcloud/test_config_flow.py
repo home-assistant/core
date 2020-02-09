@@ -54,13 +54,13 @@ async def test_form(hass, mock_login, mock_get_devices):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"email": "test-email@test-domain.com", "password": "test-password"},
+            {"username": "test-email@test-domain.com", "password": "test-password"},
         )
 
     assert result2["type"] == "create_entry"
     assert result2["title"] == "test-email@test-domain.com"
     assert result2["data"] == {
-        "email": "test-email@test-domain.com",
+        "username": "test-email@test-domain.com",
         "token": "test-token",
     }
     await hass.async_block_till_done()
@@ -88,7 +88,7 @@ async def test_form_errors(hass, mock_login, mock_get_devices, error, reason):
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"email": "test-email@test-domain.com", "password": "test-password"},
+            {"username": "test-email@test-domain.com", "password": "test-password"},
         )
 
     assert len(mock_login.mock_calls) == 1
@@ -120,20 +120,11 @@ async def test_form_response_errors(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"email": "test-email@test-domain.com", "password": "test-password"},
+            {"username": "test-email@test-domain.com", "password": "test-password"},
         )
 
     assert result2["type"] == "abort"
     assert result2["reason"] == message
-
-
-async def test_failed_import_form(hass, mock_login, mock_get_devices):
-    """Test we get the form if imported without token."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}, data={},
-    )
-    assert result["type"] == "form"
-    assert result["errors"] is None
 
 
 async def test_import_with_token(hass, mock_login, mock_get_devices):
@@ -147,13 +138,13 @@ async def test_import_with_token(hass, mock_login, mock_get_devices):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={"email": "test-email@test-domain.com", "token": "test-token"},
+            data={"username": "test-email@test-domain.com", "token": "test-token"},
         )
 
     assert result["type"] == "create_entry"
     assert result["title"] == "test-email@test-domain.com"
     assert result["data"] == {
-        "email": "test-email@test-domain.com",
+        "username": "test-email@test-domain.com",
         "token": "test-token",
     }
     await hass.async_block_till_done()
@@ -162,13 +153,13 @@ async def test_import_with_token(hass, mock_login, mock_get_devices):
 
 
 async def test_token_refresh(hass, mock_login, mock_get_devices):
-    """Re-configuration with existing email should refresh token."""
+    """Re-configuration with existing username should refresh token."""
     await hass.config_entries.async_add(
         config_entries.ConfigEntry(
             1,
             DOMAIN,
             "",
-            {"email": "test-email@test-domain.com", "token": "test-original-token"},
+            {"username": "test-email@test-domain.com", "token": "test-original-token"},
             config_entries.SOURCE_USER,
             config_entries.CONN_CLASS_CLOUD_POLL,
             {},
@@ -187,7 +178,7 @@ async def test_token_refresh(hass, mock_login, mock_get_devices):
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"email": "test-email@test-domain.com", "password": "test-password"},
+            {"username": "test-email@test-domain.com", "password": "test-password"},
         )
 
     assert result2["type"] == "abort"
@@ -200,5 +191,5 @@ async def test_token_refresh(hass, mock_login, mock_get_devices):
     assert len(entries) == 1
 
     entry = entries[0]
-    assert entry.data["email"] == "test-email@test-domain.com"
+    assert entry.data["username"] == "test-email@test-domain.com"
     assert entry.data["token"] == "test-token"

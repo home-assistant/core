@@ -9,7 +9,7 @@ import pymelcloud
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,26 +21,26 @@ class FlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    async def _create_entry(self, email: str, token: str):
+    async def _create_entry(self, username: str, token: str):
         """Register new entry."""
         for entry in self._async_current_entries():
-            if entry.data.get(CONF_EMAIL, entry.title) == email:
+            if entry.data[CONF_USERNAME] == username:
                 entry.connection_class = self.CONNECTION_CLASS
                 self.hass.config_entries.async_update_entry(
-                    entry, data={CONF_EMAIL: email, CONF_TOKEN: token}
+                    entry, data={CONF_USERNAME: username, CONF_TOKEN: token}
                 )
                 return self.async_abort(
                     reason="already_configured",
-                    description_placeholders={"email": email},
+                    description_placeholders={"email": username},
                 )
 
         return self.async_create_entry(
-            title=email, data={CONF_EMAIL: email, CONF_TOKEN: token},
+            title=username, data={CONF_USERNAME: username, CONF_TOKEN: token},
         )
 
     async def _create_client(
         self,
-        email: str,
+        username: str,
         *,
         password: Optional[str] = None,
         token: Optional[str] = None,
@@ -56,7 +56,7 @@ class FlowHandler(config_entries.ConfigFlow):
                 acquired_token = token
                 if acquired_token is None:
                     acquired_token = await pymelcloud.login(
-                        email,
+                        username,
                         password,
                         self.hass.helpers.aiohttp_client.async_get_clientsession(),
                     )
@@ -71,7 +71,7 @@ class FlowHandler(config_entries.ConfigFlow):
         except (asyncio.TimeoutError, ClientError):
             return self.async_abort(reason="cannot_connect")
 
-        return await self._create_entry(email, acquired_token)
+        return await self._create_entry(username, acquired_token)
 
     async def async_step_user(self, user_input=None):
         """User initiated config flow."""
@@ -79,16 +79,14 @@ class FlowHandler(config_entries.ConfigFlow):
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
-                    {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}
+                    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
                 ),
             )
-        email = user_input[CONF_EMAIL]
-        return await self._create_client(email, password=user_input[CONF_PASSWORD],)
+        username = user_input[CONF_USERNAME]
+        return await self._create_client(username, password=user_input[CONF_PASSWORD],)
 
     async def async_step_import(self, user_input):
         """Import a config entry."""
-        email = user_input.get(CONF_EMAIL)
-        token = user_input.get(CONF_TOKEN)
-        if not token:
-            return await self.async_step_user()
-        return await self._create_client(email, token=token,)
+        return await self._create_client(
+            user_input[CONF_USERNAME], token=user_input[CONF_TOKEN]
+        )
