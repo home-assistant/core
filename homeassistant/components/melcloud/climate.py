@@ -59,14 +59,6 @@ class AtaDeviceClimate(ClimateDevice):
         """Return the display name of this light."""
         return self._name
 
-    @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-
-        False if entity pushes its state to HA.
-        """
-        return True
-
     async def async_update(self):
         """Update state from MELCloud."""
         await self._api.async_update()
