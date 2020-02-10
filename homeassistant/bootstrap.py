@@ -132,6 +132,13 @@ async def async_from_config_dict(
 
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
+    from homeassistant.components.ais_dom import ais_global
+
+    ais_global.say_direct(
+        "Asystent domowy, inicjalizacja: %.2f sekundy"
+        + str(stop - start)
+        + ". Trwa uruchamianie; poczekaj."
+    )
 
     if REQUIRED_NEXT_PYTHON_DATE and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER:
         msg = (

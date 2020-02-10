@@ -193,6 +193,9 @@ def async_setup(hass, config):
 
     def state_changed(state_event):
         """ Called on state change """
+        if ais_global.G_AIS_START_IS_DONE is False:
+            return
+
         entity_id = state_event.data.get("entity_id")
         if entity_id == "input_select.assistant_voice":
             # old_voice = state_event.data["old_state"].state
