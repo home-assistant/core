@@ -71,7 +71,7 @@ class PushoverNotificationService(BaseNotificationService):
         image = data.get(ATTR_ATTACHMENT, None)
         # Check for attachment
         if image is not None:
-            # Not a URL, check valid path first
+            # Only allow attachments from whitelisted paths, check valid path
             if self._hass.config.is_allowed_path(data[ATTR_ATTACHMENT]):
                 # try to open it as a normal file.
                 try:
