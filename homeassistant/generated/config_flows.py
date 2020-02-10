@@ -20,6 +20,7 @@ FLOWS = [
     "daikin",
     "deconz",
     "dialogflow",
+    "dynalite",
     "ecobee",
     "elgato",
     "emulated_roku",
