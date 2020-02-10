@@ -217,7 +217,7 @@ class NetatmoSensor(Entity):
 
         if data is None:
             _LOGGER.info("No data found for %s (%s)", self.module_name, self._module_id)
-            _LOGGER.error("data: %s", self.netatmo_data.data)
+            _LOGGER.debug("data: %s", self.netatmo_data.data)
             self._state = None
             return
 
