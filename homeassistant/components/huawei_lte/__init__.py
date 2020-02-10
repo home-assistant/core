@@ -140,6 +140,7 @@ class Router:
         init=False,
         factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
     )
+    inflight_gets: Set[str] = attr.ib(init=False, factory=set)
     unload_handlers: List[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
     client: Client
     suspended = attr.ib(init=False, default=False)
@@ -170,6 +171,10 @@ class Router:
     def _get_data(self, key: str, func: Callable[[None], Any]) -> None:
         if not self.subscriptions.get(key):
             return
+        if key in self.inflight_gets:
+            _LOGGER.debug("Skipping already inflight get for %s", key)
+            return
+        self.inflight_gets.add(key)
         _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
         try:
             self.data[key] = func()
@@ -206,6 +211,7 @@ class Router:
             else:
                 raise
         finally:
+            self.inflight_gets.discard(key)
             _LOGGER.debug("%s=%s", key, self.data.get(key))
 
     def update(self) -> None:
