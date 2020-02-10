@@ -74,10 +74,12 @@ ENTITY_TRIGGERS = [
     },
 ]
 
+DEVICE_ACTION_TYPES = [CONF_TOGGLE, CONF_TURN_OFF, CONF_TURN_ON]
+
 ACTION_SCHEMA = cv.DEVICE_ACTION_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
-        vol.Required(CONF_TYPE): vol.In([CONF_TOGGLE, CONF_TURN_OFF, CONF_TURN_ON]),
+        vol.Required(CONF_TYPE): vol.In(DEVICE_ACTION_TYPES),
     }
 )
 
