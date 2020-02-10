@@ -40,7 +40,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     ncm = NextcloudMonitor(
         config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
     )
-
     hass.data[DOMAIN] = get_sensors(ncm.data)
 
     def nextcloud_update(event_time):
@@ -55,7 +54,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     sensors = []
     for name, _ in hass.data[DOMAIN].items():
         sensors.append(NextcloudSensor(name))
-    print(sensors)
     add_entities(sensors, True)
 
 
