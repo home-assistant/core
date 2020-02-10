@@ -117,7 +117,7 @@ adafruit-circuitpython-mcp230xx==1.1.2
 adb-shell==0.1.1
 
 # homeassistant.components.adguard
-adguardhome==0.4.0
+adguardhome==0.4.1
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
@@ -299,7 +299,7 @@ beautifulsoup4==4.8.2
 beewi_smartclim==0.0.7
 
 # homeassistant.components.zha
-bellows-homeassistant==0.13.1
+bellows-homeassistant==0.13.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.6.2
@@ -1067,7 +1067,7 @@ pushetta==1.0.15
 pwmled==1.4.1
 
 # homeassistant.components.august
-py-august==0.7.0
+py-august==0.8.1
 
 # homeassistant.components.canary
 py-canary==0.5.0
@@ -1399,7 +1399,7 @@ pynuki==1.3.3
 pynut2==2.1.2
 
 # homeassistant.components.nws
-pynws==0.10.1
+pynws==0.10.4
 
 # homeassistant.components.nx584
 pynx584==0.4
@@ -2130,7 +2130,7 @@ ziggo-mediabox-xl==1.1.0
 zigpy-deconz==0.7.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.13.0
+zigpy-homeassistant==0.13.2
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.9.0
