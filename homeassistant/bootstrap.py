@@ -135,9 +135,8 @@ async def async_from_config_dict(
     from homeassistant.components.ais_dom import ais_global
 
     ais_global.say_direct(
-        "Asystent domowy, inicjalizacja: %.2f sekundy"
-        + str(stop - start)
-        + ". Trwa uruchamianie; poczekaj."
+        "Asystent domowy, inicjalizacja: %.2f sekundy. Trwa uruchamianie konfiguracji. Poczekaj..."
+        % (stop - start)
     )
 
     if REQUIRED_NEXT_PYTHON_DATE and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER:
