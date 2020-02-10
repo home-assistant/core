@@ -3,6 +3,8 @@
 from datetime import timedelta
 import logging
 
+from sml import SmlGetListResponse
+from sml.asyncio import SmlProtocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -33,8 +35,6 @@ class EDL21:
 
     def __init__(self, hass, config, async_add_entities) -> None:
         """Initialize an EDL21 object."""
-        from sml.asyncio import SmlProtocol
-
         self._cache = {}
         self._hass = hass
         self._async_add_entities = async_add_entities
@@ -47,8 +47,6 @@ class EDL21:
 
     def event(self, message_body) -> None:
         """Handle events from pysml."""
-        from sml import SmlGetListResponse
-
         assert isinstance(message_body, SmlGetListResponse)
 
         new_devices = []
