@@ -1,8 +1,8 @@
 """The test for the bayesian sensor platform."""
 import unittest
 
-from homeassistant.setup import setup_component
 from homeassistant.components.bayesian import binary_sensor as bayesian
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -67,8 +67,8 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
         assert [
-            "sensor.test_monitored",
-            "sensor.test_monitored1",
+            {"prob_false": 0.4, "prob_true": 0.6},
+            {"prob_false": 0.1, "prob_true": 0.9},
         ] == state.attributes.get("observations")
         assert round(abs(0.77 - state.attributes.get("probability")), 7) == 0
 
@@ -131,7 +131,9 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert ["sensor.test_monitored"] == state.attributes.get("observations")
+        assert [{"prob_true": 0.8, "prob_false": 0.4}] == state.attributes.get(
+            "observations"
+        )
         assert round(abs(0.33 - state.attributes.get("probability")), 7) == 0
 
         assert state.state == "on"
@@ -147,7 +149,7 @@ class TestBayesianBinarySensor(unittest.TestCase):
         assert state.state == "off"
 
     def test_threshold(self):
-        """Test sensor on probabilty threshold limits."""
+        """Test sensor on probability threshold limits."""
         config = {
             "binary_sensor": {
                 "name": "Test_Binary",
@@ -221,7 +223,9 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert ["sensor.test_monitored"] == state.attributes.get("observations")
+        assert [{"prob_true": 0.8, "prob_false": 0.4}] == state.attributes.get(
+            "observations"
+        )
         assert round(abs(0.33 - state.attributes.get("probability")), 7) == 0
 
         assert state.state == "on"
@@ -255,3 +259,37 @@ class TestBayesianBinarySensor(unittest.TestCase):
             prior = bayesian.update_probability(prior, pt, pf)
 
         assert round(abs(0.9130434782608695 - prior), 7) == 0
+
+    def test_observed_entities(self):
+        """Test sensor on observed entities."""
+        config = {
+            "binary_sensor": {
+                "name": "Test_Binary",
+                "platform": "bayesian",
+                "observations": [
+                    {
+                        "platform": "state",
+                        "entity_id": "sensor.test_monitored",
+                        "to_state": "off",
+                        "prob_given_true": 0.8,
+                        "prob_given_false": 0.4,
+                    }
+                ],
+                "prior": 0.2,
+                "probability_threshold": 0.32,
+            }
+        }
+
+        assert setup_component(self.hass, "binary_sensor", config)
+
+        self.hass.states.set("sensor.test_monitored", "on")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert [] == state.attributes.get("observed_entities")
+
+        self.hass.states.set("sensor.test_monitored", "off")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert ["sensor.test_monitored"] == state.attributes.get("observed_entities")
