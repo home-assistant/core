@@ -14,8 +14,8 @@ repos:
           - --safe
           - --quiet
         files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
--   repo: https://github.com/PyCQA/bandit
-    rev: 1.6.2
+# -   repo: https://github.com/PyCQA/bandit
+#     rev: 1.6.2
 #     hooks:
 #     -   id: flake8
 #         additional_dependencies:
@@ -24,18 +24,18 @@ repos:
 #         files: ^(homeassistant|script|tests)/.+\.py$
 # -   repo: https://github.com/PyCQA/bandit
 #     rev: 1.6.2
-    hooks:
-    -   id: bandit
-        args:
-          - --quiet
-          - --format=custom
-          - --configfile=tests/bandit.yaml
-        files: ^(homeassistant|script|tests)/.+\.py$
--   repo: https://github.com/pre-commit/mirrors-isort
-    rev: v4.3.21
-    hooks:
-    -   id: isort
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.4.0
-    hooks:
-    -   id: check-json
+#    hooks:
+#    -   id: bandit
+#        args:
+#          - --quiet
+#          - --format=custom
+#          - --configfile=tests/bandit.yaml
+#        files: ^(homeassistant|script|tests)/.+\.py$
+#-   repo: https://github.com/pre-commit/mirrors-isort
+#    rev: v4.3.21
+#     hooks:
+#     -   id: isort
+# -   repo: https://github.com/pre-commit/pre-commit-hooks
+#     rev: v2.4.0
+    # hooks:
+    # -   id: check-json

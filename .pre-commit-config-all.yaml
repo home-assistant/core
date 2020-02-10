@@ -26,15 +26,15 @@ repos:
           - flake8-docstrings==1.5.0
           - pydocstyle==5.0.2
         files: ^(homeassistant|script|tests)/.+\.py$
--   repo: https://github.com/PyCQA/bandit
-    rev: 1.6.2
-    hooks:
-      - id: bandit
-        args:
-          - --quiet
-          - --format=custom
-          - --configfile=tests/bandit.yaml
-        files: ^(homeassistant|script|tests)/.+\.py$
+#-   repo: https://github.com/PyCQA/bandit
+#    rev: 1.6.2
+#    hooks:
+#      - id: bandit
+#        args:
+#          - --quiet
+#          - --format=custom
+#          - --configfile=tests/bandit.yaml
+#        files: ^(homeassistant|script|tests)/.+\.py$
 -   repo: https://github.com/pre-commit/mirrors-isort
     rev: v4.3.21
     hooks:
