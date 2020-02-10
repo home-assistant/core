@@ -24,12 +24,12 @@ from . import (
     CONF_QOS,
     DOMAIN,
 )
+from .const import DEFAULT_QOS
 from .discovery import MQTT_DISCOVERY_UPDATED, clear_discovery_hash
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_AUTOMATION_TYPE = "automation_type"
-CONF_ENCODING = "encoding"
 CONF_SUBTYPE = "subtype"
 CONF_TOPIC = "topic"
 DEFAULT_ENCODING = "utf-8"
@@ -48,7 +48,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
         vol.Optional(CONF_DEVICE_ID): str,
         vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
         vol.Optional(CONF_PAYLOAD, default=None): vol.Any(None, cv.string),
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
+        vol.Optional(CONF_QOS, default=DEFAULT_QOS): vol.Coerce(int),
         vol.Required(CONF_TYPE): cv.string,
         vol.Required(CONF_SUBTYPE): cv.string,
     }
@@ -60,11 +60,10 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
         vol.Required(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
         vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
         vol.Optional(CONF_PAYLOAD, default=None): vol.Any(None, cv.string),
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): cv.string,
         vol.Required(CONF_TYPE): cv.string,
         vol.Required(CONF_SUBTYPE): cv.string,
     },
-    mqtt.validate_device_has_at_least_one_identifier,  # Why here?
+    mqtt.validate_device_has_at_least_one_identifier,
 )
 
 DEVICE_TRIGGERS = "mqtt_device_triggers"
@@ -79,7 +78,6 @@ class Trigger:
     subtype = attr.ib(type=str)
     topic = attr.ib(type=str)
     payload = attr.ib(type=str)
-    encoding = attr.ib(type=str)
     qos = attr.ib(type=int)
     discovery_hash = attr.ib(type=str)
 
@@ -93,7 +91,6 @@ def _update_trigger(hass, discovery_hash, config):
                 subtype=config[CONF_SUBTYPE],
                 topic=config[CONF_TOPIC],
                 payload=config[CONF_PAYLOAD],
-                encoding=config[CONF_ENCODING],
                 qos=config[CONF_QOS],
                 discovery_hash=discovery_hash,
             )
@@ -158,7 +155,6 @@ async def async_setup_trigger(
             subtype=config[CONF_SUBTYPE],
             topic=config[CONF_TOPIC],
             payload=config[CONF_PAYLOAD],
-            encoding=config[CONF_ENCODING],
             qos=config[CONF_QOS],
             discovery_hash=discovery_hash,
         )
@@ -175,11 +171,11 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
         trigger = dict(MQTT_TRIGGER)
         trigger.update(
             device_id=device_id,
-            topic=auto.topic,
-            payload=auto.payload,
-            encoding=auto.encoding,
             type=auto.type,
             subtype=auto.subtype,
+            topic=auto.topic,
+            payload=auto.payload,
+            qos=auto.qos,
         )
         triggers.append(trigger)
 
@@ -197,7 +193,8 @@ async def async_attach_trigger(
 
     mqtt_config = {
         automation_mqtt.CONF_TOPIC: config[CONF_TOPIC],
-        automation_mqtt.CONF_ENCODING: config[CONF_ENCODING],
+        automation_mqtt.CONF_ENCODING: DEFAULT_ENCODING,
+        automation_mqtt.CONF_QOS: config[CONF_QOS],
     }
     if CONF_PAYLOAD in config:
         mqtt_config[CONF_PAYLOAD] = config[CONF_PAYLOAD]

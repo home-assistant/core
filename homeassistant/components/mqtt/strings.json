@@ -30,14 +30,14 @@
   },
   "device_automation": {
     "trigger_type": {
-      "button_short_press": "\"{subtype}\" button pressed",
-      "button_short_release": "\"{subtype}\" button released",
-      "button_long_press": "\"{subtype}\" button continuously pressed",
-      "button_long_release": "\"{subtype}\" button released after long press",
-      "button_double_press": "\"{subtype}\" button double clicked",
-      "button_triple_press": "\"{subtype}\" button triple clicked",
-      "button_quadruple_press": "\"{subtype}\" button quadruple clicked",
-      "button_quintuple_press": "\"{subtype}\" button quintuple clicked"
+      "button_short_press": "\"{subtype}\" pressed",
+      "button_short_release": "\"{subtype}\" released",
+      "button_long_press": "\"{subtype}\" continuously pressed",
+      "button_long_release": "\"{subtype}\" released after long press",
+      "button_double_press": "\"{subtype}\" double clicked",
+      "button_triple_press": "\"{subtype}\" triple clicked",
+      "button_quadruple_press": "\"{subtype}\" quadruple clicked",
+      "button_quintuple_press": "\"{subtype}\" quintuple clicked"
     },
     "trigger_subtype": {
       "turn_on": "Turn on",
