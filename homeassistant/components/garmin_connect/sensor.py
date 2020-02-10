@@ -165,12 +165,16 @@ class GarminConnectSensor(Entity):
             return
 
         data = self._data.data
-        if "Duration" in self._type and data[self._type]:
-            self._state = data[self._type] // 60
-        elif "Seconds" in self._type and data[self._type]:
-            self._state = data[self._type] // 60
-        else:
-            self._state = data[self._type]
+        try:
+            if "Duration" in self._type and data[self._type]:
+                self._state = data[self._type] // 60
+            elif "Seconds" in self._type and data[self._type]:
+                self._state = data[self._type] // 60
+            else:
+                self._state = data[self._type]
+        except KeyError:
+            _LOGGER.debug("Entity type %s not found in fetched data", self._type)
+            return
 
         _LOGGER.debug(
             "Entity %s set to state %s %s", self._type, self._state, self._unit
