@@ -24,7 +24,11 @@ PRESENCE_SENSOR_TYPES = {
 }
 TAG_SENSOR_TYPES = {"Tag Vibration": "vibration", "Tag Open": "opening"}
 
-SENSOR_TYPES = {"NACamera": WELCOME_SENSOR_TYPES, "NOC": PRESENCE_SENSOR_TYPES}
+SENSOR_TYPES = {
+    "NACamera": WELCOME_SENSOR_TYPES,
+    "NOC": PRESENCE_SENSOR_TYPES,
+    "NACamDoorTag": TAG_SENSOR_TYPES,
+}
 
 CONF_HOME = "home"
 CONF_CAMERAS = "cameras"
