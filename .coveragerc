@@ -301,7 +301,6 @@ omit =
     homeassistant/components/hive/*
     homeassistant/components/hlk_sw16/*
     homeassistant/components/home_panel/*
-    homeassistant/components/home_panel/sensor.py
     homeassistant/components/homematic/*
     homeassistant/components/homematic/climate.py
     homeassistant/components/homematic/cover.py
