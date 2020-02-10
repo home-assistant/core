@@ -3,13 +3,14 @@ from homeassistant.helpers.entity import Entity
 
 from .const import (
     ATTR_API_DATA_FIELD,
+    ATTR_DEVICE_CLASS,
     ATTR_ICON,
     ATTR_LABEL,
-    ATTR_ROUTER_MANUFACTURER,
-    ATTR_ROUTER_MODEL,
-    ATTR_ROUTER_NAME,
     ATTR_UNIT,
     DOMAIN,
+    ROUTER_DEFAULT_MODEL,
+    ROUTER_DEFAULT_NAME,
+    ROUTER_MANUFACTURER,
     SENSOR_TYPES,
 )
 
@@ -22,9 +23,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     device_info = {
         "identifiers": {(DOMAIN, vilfo.host, vilfo.mac_address)},
-        "name": ATTR_ROUTER_NAME,
-        "manufacturer": ATTR_ROUTER_MANUFACTURER,
-        "model": ATTR_ROUTER_MODEL,
+        "name": ROUTER_DEFAULT_NAME,
+        "manufacturer": ROUTER_MANUFACTURER,
+        "model": ROUTER_DEFAULT_MODEL,
         "sw_version": vilfo.firmware_version,
     }
 
@@ -49,6 +50,11 @@ class VilfoRouterSensor(Entity):
     def device_info(self):
         """Return the device info."""
         return self._device_info
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return SENSOR_TYPES[self.sensor_type].get(ATTR_DEVICE_CLASS, None)
 
     @property
     def icon(self):

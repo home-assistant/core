@@ -11,9 +11,9 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
-from homeassistant.util import Throttle, dt as dt_util
+from homeassistant.util import Throttle
 
-from .const import ATTR_DEFAULT_HOST, DOMAIN
+from .const import DOMAIN, ROUTER_DEFAULT_HOST
 
 PLATFORMS = ["sensor"]
 
@@ -85,7 +85,7 @@ class VilfoRouterData:
         if self.mac_address:
             return self.mac_address
 
-        if self.host == ATTR_DEFAULT_HOST:
+        if self.host == ROUTER_DEFAULT_HOST:
             return self.host
 
         return self.host
@@ -96,12 +96,6 @@ class VilfoRouterData:
         try:
             board_information = self._vilfo.get_board_information()
             self.firmware_version = board_information["version"]
-            boot_time = dt_util.parse_datetime(board_information["bootTime"])
-            uptime = dt_util.now() - boot_time
-            uptime_seconds = round(uptime.total_seconds(), 0)
-            uptime_minutes = round(uptime_seconds / 60, 0)
-
-            self.data["uptime_minutes"] = uptime_minutes
             self.data["boot_time"] = board_information["bootTime"]
             self.data["load"] = self._vilfo.get_load()
 

@@ -1,35 +1,38 @@
 """Constants for the Vilfo Router integration."""
+from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+
 DOMAIN = "vilfo"
 
 ATTR_API_DATA_FIELD = "api_data_field"
 ATTR_API_DATA_FIELD_LOAD = "load"
-ATTR_API_DATA_FIELD_UPTIME = "uptime_minutes"
-ATTR_DEFAULT_HOST = "admin.vilfo.com"
+ATTR_API_DATA_FIELD_BOOT_TIME = "boot_time"
+ATTR_DEVICE_CLASS = "device_class"
 ATTR_ICON = "icon"
-ATTR_GENERIC = "generic"
 ATTR_LABEL = "label"
 ATTR_LOAD = "load"
-ATTR_ROUTER_NAME = "Vilfo Router"
-ATTR_ROUTER_MANUFACTURER = "Vilfo AB"
-ATTR_ROUTER_MODEL = "Vilfo Router"
-
 ATTR_UNIT = "unit"
-ATTR_UPTIME = "uptime"
+ATTR_BOOT_TIME = "boot_time"
 
-UNIT_MINUTES = "m"
+ROUTER_DEFAULT_HOST = "admin.vilfo.com"
+ROUTER_DEFAULT_MODEL = "Vilfo Router"
+ROUTER_DEFAULT_NAME = "Vilfo Router"
+ROUTER_MANUFACTURER = "Vilfo AB"
+
 UNIT_PERCENT = "%"
+UNIT_ISO8601 = "ISO8601"
 
 SENSOR_TYPES = {
     "load": {
-        ATTR_LABEL: ATTR_LOAD.title(),
+        ATTR_LABEL: ATTR_LOAD.replace("_", " ").title(),
         ATTR_UNIT: UNIT_PERCENT,
         ATTR_ICON: "mdi:memory",
         ATTR_API_DATA_FIELD: ATTR_API_DATA_FIELD_LOAD,
     },
-    "uptime": {
-        ATTR_LABEL: ATTR_UPTIME.title(),
-        ATTR_UNIT: UNIT_MINUTES,
+    "boot_time": {
+        ATTR_LABEL: ATTR_BOOT_TIME.replace("_", " ").title(),
+        ATTR_UNIT: UNIT_ISO8601,
         ATTR_ICON: "mdi:timer",
-        ATTR_API_DATA_FIELD: ATTR_API_DATA_FIELD_UPTIME,
+        ATTR_API_DATA_FIELD: ATTR_API_DATA_FIELD_BOOT_TIME,
+        ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
     },
 }

@@ -20,9 +20,8 @@ async def test_form(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.vilfo.config_flow.validate_input",
-        return_value=mock_coro({"title": "Test Title", CONF_ID: "testadmin.vilfo.com"}),
+    with patch("vilfo.Client.ping", return_value=None), patch(
+        "vilfo.Client.get_board_information", return_value=None,
     ), patch(
         "homeassistant.components.vilfo.async_setup", return_value=mock_coro(True)
     ) as mock_setup, patch(
@@ -35,7 +34,7 @@ async def test_form(hass):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "Test Title"
+    assert result2["title"] == "testadmin.vilfo.com"
     assert result2["data"] == {
         "host": "testadmin.vilfo.com",
         "access_token": "test-token",

@@ -13,16 +13,21 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_MAC
 
-from .const import ATTR_DEFAULT_HOST, DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN  # pylint:disable=unused-import
+from .const import ROUTER_DEFAULT_HOST
 
 _LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=ATTR_DEFAULT_HOST): str,
+        vol.Required(CONF_HOST, default=ROUTER_DEFAULT_HOST): str,
         vol.Required(CONF_ACCESS_TOKEN, default=""): str,
     }
 )
+
+RESULT_SUCCESS = "success"
+RESULT_CANNOT_CONNECT = "cannot_connect"
+RESULT_INVALID_AUTH = "invalid_auth"
 
 
 def host_valid(host):
@@ -33,6 +38,40 @@ def host_valid(host):
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
         return all(x and not disallowed.search(x) for x in host.split("."))
+
+
+def _try_connect_and_fetch_basic_info(host, token):
+    """Attempt to connect and call the ping endpoint and, if successful, fetch basic information."""
+
+    # Perform the ping. This doesn't validate authentication.
+    controller = VilfoClient(host=host, token=token)
+    result = {"type": None, "data": {}}
+
+    try:
+        controller.ping()
+    except VilfoException:
+        result["type"] = RESULT_CANNOT_CONNECT
+        result["data"] = CannotConnect
+        return result
+
+    # Perform a call that requires authentication.
+    try:
+        controller.get_board_information()
+    except VilfoAuthenticationException:
+        result["type"] = RESULT_INVALID_AUTH
+        result["data"] = InvalidAuth
+        return result
+
+    if controller.mac:
+        result["data"][CONF_ID] = controller.mac
+        result["data"][CONF_MAC] = controller.mac
+    else:
+        result["data"][CONF_ID] = host
+        result["data"][CONF_MAC] = None
+
+    result["type"] = RESULT_SUCCESS
+
+    return result
 
 
 async def validate_input(hass: core.HomeAssistant, data):
@@ -47,29 +86,19 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     config = {}
 
-    # Attempt to connect and call the ping endpoint.
-    # This doesn't validate authentication.
-    controller = VilfoClient(host=data[CONF_HOST], token=data[CONF_ACCESS_TOKEN])
-    try:
-        controller.ping()
-    except VilfoException:
-        raise CannotConnect
+    result = await hass.async_add_executor_job(
+        _try_connect_and_fetch_basic_info, data[CONF_HOST], data[CONF_ACCESS_TOKEN]
+    )
 
-    # Perform a call that requires authentication.
-    try:
-        controller.get_board_information()
-    except VilfoAuthenticationException:
-        raise InvalidAuth
+    if result["type"] != RESULT_SUCCESS:
+        raise result["data"]
 
     # Return some info we want to store in the config entry.
+    result_data = result["data"]
     config["title"] = f"{data[CONF_HOST]}"
-    config[CONF_MAC] = controller.mac
+    config[CONF_MAC] = result_data[CONF_MAC]
     config[CONF_HOST] = data[CONF_HOST]
-
-    if controller.mac:
-        config[CONF_ID] = controller.mac
-    else:
-        config[CONF_ID] = data[CONF_HOST]
+    config[CONF_ID] = result_data[CONF_ID]
 
     return config
 
