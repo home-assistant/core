@@ -1,9 +1,9 @@
 """Support for iammeter via local API."""
 import asyncio
-import async_timeout
 from datetime import timedelta
 import logging
 
+import async_timeout
 from iammeter import real_time_api
 from iammeter.power_meter import IamMeterError
 import voluptuous as vol
