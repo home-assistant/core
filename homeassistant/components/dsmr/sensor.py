@@ -1,6 +1,5 @@
 """Support for Dutch Smart Meter (also known as Smartmeter or P1 port)."""
 import asyncio
-from datetime import timedelta
 from functools import partial
 import logging
 
@@ -32,9 +31,6 @@ ICON_POWER = "mdi:flash"
 ICON_POWER_FAILURE = "mdi:flash-off"
 ICON_SWELL_SAG = "mdi:pulse"
 
-# Smart meter sends telegram every 10 seconds
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
-
 RECONNECT_INTERVAL = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -42,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
-            cv.string, vol.In(["5", "4", "2.2"])
+            cv.string, vol.In(["5B", "5", "4", "2.2"])
         ),
         vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
         vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
@@ -62,17 +58,18 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ["Power Consumption", obis_ref.CURRENT_ELECTRICITY_USAGE],
         ["Power Production", obis_ref.CURRENT_ELECTRICITY_DELIVERY],
         ["Power Tariff", obis_ref.ELECTRICITY_ACTIVE_TARIFF],
-        ["Power Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL],
-        ["Power Consumption (low)", obis_ref.ELECTRICITY_USED_TARIFF_1],
-        ["Power Consumption (normal)", obis_ref.ELECTRICITY_USED_TARIFF_2],
-        ["Power Production (low)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],
-        ["Power Production (normal)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_2],
+        ["Energy Consumption (total)", obis_ref.ELECTRICITY_IMPORTED_TOTAL],
+        ["Energy Consumption (tarif 1)", obis_ref.ELECTRICITY_USED_TARIFF_1],
+        ["Energy Consumption (tarif 2)", obis_ref.ELECTRICITY_USED_TARIFF_2],
+        ["Energy Production (tarif 1)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_1],
+        ["Energy Production (tarif 2)", obis_ref.ELECTRICITY_DELIVERED_TARIFF_2],
         ["Power Consumption Phase L1", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE],
         ["Power Consumption Phase L2", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE],
         ["Power Consumption Phase L3", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE],
         ["Power Production Phase L1", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE],
         ["Power Production Phase L2", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE],
         ["Power Production Phase L3", obis_ref.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE],
+        ["Short Power Failure Count", obis_ref.SHORT_POWER_FAILURE_COUNT],
         ["Long Power Failure Count", obis_ref.LONG_POWER_FAILURE_COUNT],
         ["Voltage Sags Phase L1", obis_ref.VOLTAGE_SAG_L1_COUNT],
         ["Voltage Sags Phase L2", obis_ref.VOLTAGE_SAG_L2_COUNT],
@@ -83,6 +80,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         ["Voltage Phase L1", obis_ref.INSTANTANEOUS_VOLTAGE_L1],
         ["Voltage Phase L2", obis_ref.INSTANTANEOUS_VOLTAGE_L2],
         ["Voltage Phase L3", obis_ref.INSTANTANEOUS_VOLTAGE_L3],
+        ["Current Phase L1", obis_ref.INSTANTANEOUS_CURRENT_L1],
+        ["Current Phase L2", obis_ref.INSTANTANEOUS_CURRENT_L2],
+        ["Current Phase L3", obis_ref.INSTANTANEOUS_CURRENT_L3],
     ]
 
     # Generate device entities
@@ -91,6 +91,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     # Protocol version specific obis
     if dsmr_version in ("4", "5"):
         gas_obis = obis_ref.HOURLY_GAS_METER_READING
+    elif dsmr_version in ("5B"):
+        gas_obis = obis_ref.BELGIUM_HOURLY_GAS_METER_READING
     else:
         gas_obis = obis_ref.GAS_METER_READING
 
@@ -214,7 +216,7 @@ class DSMREntity(Entity):
         value = self.get_dsmr_object_attr("value")
 
         if self._obis == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
-            return self.translate_tariff(value)
+            return self.translate_tariff(value, self._config[CONF_DSMR_VERSION])
 
         try:
             value = round(float(value), self._config[CONF_PRECISION])
@@ -232,8 +234,15 @@ class DSMREntity(Entity):
         return self.get_dsmr_object_attr("unit")
 
     @staticmethod
-    def translate_tariff(value):
-        """Convert 2/1 to normal/low."""
+    def translate_tariff(value, dsmr_version):
+        """Convert 2/1 to normal/low depending on DSMR version."""
+        # DSMR V5B: Note: In Belgium values are swapped:
+        # Rate code 2 is used for low rate and rate code 1 is used for normal rate.
+        if dsmr_version in ("5B"):
+            if value == "0001":
+                value = "0002"
+            elif value == "0002":
+                value = "0001"
         # DSMR V2.2: Note: Rate code 1 is used for low rate and rate code 2 is
         # used for normal rate.
         if value == "0002":

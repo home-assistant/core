@@ -16,6 +16,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP,
 )
 import homeassistant.components.vacuum as vacuum
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
@@ -669,7 +670,7 @@ async def test_fan_range(hass):
         {
             "friendly_name": "Test fan 5",
             "supported_features": 1,
-            "speed_list": ["off", "low", "medium", "high", "turbo", "warp_speed"],
+            "speed_list": ["off", "low", "medium", "high", "turbo", 5, "warp_speed"],
             "speed": "medium",
         },
     )
@@ -705,7 +706,7 @@ async def test_fan_range(hass):
 
     supported_range = configuration["supportedRange"]
     assert supported_range["minimumValue"] == 0
-    assert supported_range["maximumValue"] == 5
+    assert supported_range["maximumValue"] == 6
     assert supported_range["precision"] == 1
 
     presets = configuration["presets"]
@@ -737,8 +738,10 @@ async def test_fan_range(hass):
         },
     } in presets
 
+    assert {"rangeValue": 5} not in presets
+
     assert {
-        "rangeValue": 5,
+        "rangeValue": 6,
         "presetResources": {
             "friendlyNames": [
                 {"@type": "text", "value": {"text": "warp speed", "locale": "en-US"}},
@@ -765,6 +768,17 @@ async def test_fan_range(hass):
         "fan.set_speed",
         hass,
         payload={"rangeValue": 5},
+        instance="fan.speed",
+    )
+    assert call.data["speed"] == 5
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.RangeController",
+        "SetRangeValue",
+        "fan#test_5",
+        "fan.set_speed",
+        hass,
+        payload={"rangeValue": 6},
         instance="fan.speed",
     )
     assert call.data["speed"] == "warp_speed"
@@ -873,6 +887,7 @@ async def test_media_player(hass):
             | SUPPORT_VOLUME_MUTE
             | SUPPORT_VOLUME_SET,
             "volume_level": 0.75,
+            "source_list": ["hdmi", "tv"],
         },
     )
     appliance = await discovery_test(device, hass)
@@ -891,7 +906,6 @@ async def test_media_player(hass):
         "Alexa.PlaybackStateReporter",
         "Alexa.PowerController",
         "Alexa.Speaker",
-        "Alexa.StepSpeaker",
     )
 
     playback_capability = get_capability(capabilities, "Alexa.PlaybackController")
@@ -945,93 +959,6 @@ async def test_media_player(hass):
         hass,
     )
 
-    call, _ = await assert_request_calls_service(
-        "Alexa.Speaker",
-        "SetVolume",
-        "media_player#test",
-        "media_player.volume_set",
-        hass,
-        payload={"volume": 50},
-    )
-    assert call.data["volume_level"] == 0.5
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.Speaker",
-        "SetMute",
-        "media_player#test",
-        "media_player.volume_mute",
-        hass,
-        payload={"mute": True},
-    )
-    assert call.data["is_volume_muted"]
-
-    call, _, = await assert_request_calls_service(
-        "Alexa.Speaker",
-        "SetMute",
-        "media_player#test",
-        "media_player.volume_mute",
-        hass,
-        payload={"mute": False},
-    )
-    assert not call.data["is_volume_muted"]
-
-    await assert_percentage_changes(
-        hass,
-        [(0.7, "-5"), (0.8, "5"), (0, "-80")],
-        "Alexa.Speaker",
-        "AdjustVolume",
-        "media_player#test",
-        "volume",
-        "media_player.volume_set",
-        "volume_level",
-    )
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.StepSpeaker",
-        "SetMute",
-        "media_player#test",
-        "media_player.volume_mute",
-        hass,
-        payload={"mute": True},
-    )
-    assert call.data["is_volume_muted"]
-
-    call, _, = await assert_request_calls_service(
-        "Alexa.StepSpeaker",
-        "SetMute",
-        "media_player#test",
-        "media_player.volume_mute",
-        hass,
-        payload={"mute": False},
-    )
-    assert not call.data["is_volume_muted"]
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.StepSpeaker",
-        "AdjustVolume",
-        "media_player#test",
-        "media_player.volume_up",
-        hass,
-        payload={"volumeSteps": 1, "volumeStepsDefault": False},
-    )
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.StepSpeaker",
-        "AdjustVolume",
-        "media_player#test",
-        "media_player.volume_down",
-        hass,
-        payload={"volumeSteps": -1, "volumeStepsDefault": False},
-    )
-
-    call, _ = await assert_request_calls_service(
-        "Alexa.StepSpeaker",
-        "AdjustVolume",
-        "media_player#test",
-        "media_player.volume_up",
-        hass,
-        payload={"volumeSteps": 10, "volumeStepsDefault": True},
-    )
     call, _ = await assert_request_calls_service(
         "Alexa.ChannelController",
         "ChangeChannel",
@@ -1121,13 +1048,11 @@ async def test_media_player_power(hass):
         "Alexa",
         "Alexa.ChannelController",
         "Alexa.EndpointHealth",
-        "Alexa.InputController",
         "Alexa.PlaybackController",
         "Alexa.PlaybackStateReporter",
         "Alexa.PowerController",
         "Alexa.SeekController",
         "Alexa.Speaker",
-        "Alexa.StepSpeaker",
     )
 
     await assert_request_calls_service(
@@ -1251,23 +1176,177 @@ async def test_media_player_inputs(hass):
     assert call.data["source"] == "tv"
 
 
-async def test_media_player_speaker(hass):
-    """Test media player discovery with device class speaker."""
+async def test_media_player_no_supported_inputs(hass):
+    """Test media player discovery with no supported inputs."""
     device = (
-        "media_player.test",
+        "media_player.test_no_inputs",
         "off",
         {
             "friendly_name": "Test media player",
-            "supported_features": 51765,
+            "supported_features": SUPPORT_SELECT_SOURCE,
+            "volume_level": 0.75,
+            "source_list": [
+                "foo",
+                "foo_2",
+                "vcr",
+                "betamax",
+                "record_player",
+                "f.m.",
+                "a.m.",
+                "tape_deck",
+                "laser_disc",
+                "hd_dvd",
+            ],
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "media_player#test_no_inputs"
+    assert appliance["displayCategories"][0] == "TV"
+    assert appliance["friendlyName"] == "Test media player"
+
+    # Assert Alexa.InputController is not in capabilities list.
+    assert_endpoint_capabilities(
+        appliance, "Alexa", "Alexa.EndpointHealth", "Alexa.PowerController"
+    )
+
+
+async def test_media_player_speaker(hass):
+    """Test media player with speaker interface."""
+    device = (
+        "media_player.test_speaker",
+        "off",
+        {
+            "friendly_name": "Test media player speaker",
+            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET,
             "volume_level": 0.75,
             "device_class": "speaker",
         },
     )
     appliance = await discovery_test(device, hass)
 
-    assert appliance["endpointId"] == "media_player#test"
+    assert appliance["endpointId"] == "media_player#test_speaker"
     assert appliance["displayCategories"][0] == "SPEAKER"
-    assert appliance["friendlyName"] == "Test media player"
+    assert appliance["friendlyName"] == "Test media player speaker"
+
+    capabilities = assert_endpoint_capabilities(
+        appliance,
+        "Alexa",
+        "Alexa.EndpointHealth",
+        "Alexa.PowerController",
+        "Alexa.Speaker",
+    )
+
+    speaker_capability = get_capability(capabilities, "Alexa.Speaker")
+    properties = speaker_capability["properties"]
+    assert {"name": "volume"} in properties["supported"]
+    assert {"name": "muted"} in properties["supported"]
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.Speaker",
+        "SetVolume",
+        "media_player#test_speaker",
+        "media_player.volume_set",
+        hass,
+        payload={"volume": 50},
+    )
+    assert call.data["volume_level"] == 0.5
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.Speaker",
+        "SetMute",
+        "media_player#test_speaker",
+        "media_player.volume_mute",
+        hass,
+        payload={"mute": True},
+    )
+    assert call.data["is_volume_muted"]
+
+    call, _, = await assert_request_calls_service(
+        "Alexa.Speaker",
+        "SetMute",
+        "media_player#test_speaker",
+        "media_player.volume_mute",
+        hass,
+        payload={"mute": False},
+    )
+    assert not call.data["is_volume_muted"]
+
+    await assert_percentage_changes(
+        hass,
+        [(0.7, "-5"), (0.8, "5"), (0, "-80")],
+        "Alexa.Speaker",
+        "AdjustVolume",
+        "media_player#test_speaker",
+        "volume",
+        "media_player.volume_set",
+        "volume_level",
+    )
+
+
+async def test_media_player_step_speaker(hass):
+    """Test media player with step speaker interface."""
+    device = (
+        "media_player.test_step_speaker",
+        "off",
+        {
+            "friendly_name": "Test media player step speaker",
+            "supported_features": SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP,
+            "device_class": "speaker",
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "media_player#test_step_speaker"
+    assert appliance["displayCategories"][0] == "SPEAKER"
+    assert appliance["friendlyName"] == "Test media player step speaker"
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "SetMute",
+        "media_player#test_step_speaker",
+        "media_player.volume_mute",
+        hass,
+        payload={"mute": True},
+    )
+    assert call.data["is_volume_muted"]
+
+    call, _, = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "SetMute",
+        "media_player#test_step_speaker",
+        "media_player.volume_mute",
+        hass,
+        payload={"mute": False},
+    )
+    assert not call.data["is_volume_muted"]
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "AdjustVolume",
+        "media_player#test_step_speaker",
+        "media_player.volume_up",
+        hass,
+        payload={"volumeSteps": 1, "volumeStepsDefault": False},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "AdjustVolume",
+        "media_player#test_step_speaker",
+        "media_player.volume_down",
+        hass,
+        payload={"volumeSteps": -1, "volumeStepsDefault": False},
+    )
+
+    call, _ = await assert_request_calls_service(
+        "Alexa.StepSpeaker",
+        "AdjustVolume",
+        "media_player#test_step_speaker",
+        "media_player.volume_up",
+        hass,
+        payload={"volumeSteps": 10, "volumeStepsDefault": True},
+    )
 
 
 async def test_media_player_seek(hass):

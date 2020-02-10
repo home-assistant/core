@@ -1,12 +1,17 @@
 {
     "config": {
         "abort": {
+            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
+            "missing_configuration": "De Withings integratie is niet geconfigureerd. Gelieve de documentatie te volgen.",
             "no_flows": "U moet Withings configureren voordat u zich ermee kunt verifi\u00ebren. [Gelieve de documentatie te lezen]"
         },
         "create_entry": {
             "default": "Succesvol geverifieerd met Withings voor het geselecteerde profiel."
         },
         "step": {
+            "pick_implementation": {
+                "title": "Kies Authenticatiemethode"
+            },
             "profile": {
                 "data": {
                     "profile": "Profiel"

@@ -6,6 +6,7 @@
             "already_setup_with_diff_host_and_name": "Sembra che questa voce sia gi\u00e0 stata configurata con un host e un nome diversi in base al suo numero seriale. Rimuovere eventuali voci precedenti da configuration.yaml e dal menu Integrazioni prima di tentare nuovamente di aggiungere questo dispositivo.",
             "host_exists": "Componente Vizio con host gi\u00e0 configurato.",
             "name_exists": "Componente Vizio con nome gi\u00e0 configurato.",
+            "updated_entry": "Questa voce \u00e8 gi\u00e0 stata configurata, ma il nome e/o le opzioni definite nella configurazione non corrispondono alla configurazione importata in precedenza, pertanto la voce di configurazione \u00e8 stata aggiornata di conseguenza.",
             "updated_options": "Questa voce \u00e8 gi\u00e0 stata impostata, ma le opzioni definite nella configurazione non corrispondono ai valori delle opzioni importate in precedenza, quindi la voce di configurazione \u00e8 stata aggiornata di conseguenza.",
             "updated_volume_step": "Questa voce \u00e8 gi\u00e0 stata impostata, ma la dimensione del passo del volume nella configurazione non corrisponde alla voce di configurazione, quindi \u00e8 stata aggiornata di conseguenza."
         },

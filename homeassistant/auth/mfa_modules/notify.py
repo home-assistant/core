@@ -317,7 +317,7 @@ class NotifySetupFlow(SetupFlow):
     async def async_step_setup(
         self, user_input: Optional[Dict[str, str]] = None
     ) -> Dict[str, Any]:
-        """Verify user can recevie one-time password."""
+        """Verify user can receive one-time password."""
         errors: Dict[str, str] = {}
 
         hass = self._auth_module.hass

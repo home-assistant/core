@@ -36,7 +36,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
@@ -68,6 +68,7 @@ DATA_MQTT_CONFIG = "mqtt_config"
 DATA_MQTT_HASS_CONFIG = "mqtt_hass_config"
 
 SERVICE_PUBLISH = "publish"
+SERVICE_DUMP = "dump"
 
 CONF_EMBEDDED = "embedded"
 
@@ -651,7 +652,7 @@ async def async_setup_entry(hass, entry):
     if result == CONNECTION_FAILED_RECOVERABLE:
         raise ConfigEntryNotReady
 
-    async def async_stop_mqtt(event: Event):
+    async def async_stop_mqtt(_event: Event):
         """Stop MQTT component."""
         await hass.data[DATA_MQTT].async_disconnect()
 
@@ -681,6 +682,40 @@ async def async_setup_entry(hass, entry):
 
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
+    )
+
+    async def async_dump_service(call: ServiceCall):
+        """Handle MQTT dump service calls."""
+        messages = []
+
+        @callback
+        def collect_msg(msg):
+            messages.append((msg.topic, msg.payload.replace("\n", "")))
+
+        unsub = await async_subscribe(hass, call.data["topic"], collect_msg)
+
+        def write_dump():
+            with open(hass.config.path("mqtt_dump.txt"), "wt") as fp:
+                for msg in messages:
+                    fp.write(",".join(msg) + "\n")
+
+        async def finish_dump(_):
+            """Write dump to file."""
+            unsub()
+            await hass.async_add_executor_job(write_dump)
+
+        event.async_call_later(hass, call.data["duration"], finish_dump)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DUMP,
+        async_dump_service,
+        schema=vol.Schema(
+            {
+                vol.Required("topic"): valid_subscribe_topic,
+                vol.Optional("duration", default=5): int,
+            }
+        ),
     )
 
     if conf.get(CONF_DISCOVERY):

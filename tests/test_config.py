@@ -576,7 +576,7 @@ async def test_merge(merge_log_err, hass):
 
 
 async def test_merge_try_falsy(merge_log_err, hass):
-    """Ensure we dont add falsy items like empty OrderedDict() to list."""
+    """Ensure we don't add falsy items like empty OrderedDict() to list."""
     packages = {
         "pack_falsy_to_lst": {"automation": OrderedDict()},
         "pack_list2": {"light": OrderedDict()},

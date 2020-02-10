@@ -111,9 +111,12 @@ async def setup_unifi_integration(
             return mock_client_all_responses.popleft()
         return {}
 
+    # "aiounifi.Controller.start_websocket", return_value=True
     with patch("aiounifi.Controller.login", return_value=True), patch(
         "aiounifi.Controller.sites", return_value=sites
-    ), patch("aiounifi.Controller.request", new=mock_request):
+    ), patch("aiounifi.Controller.request", new=mock_request), patch.object(
+        aiounifi.websocket.WSClient, "start", return_value=True
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -233,47 +236,28 @@ async def test_reset_after_successful_setup(hass):
     assert len(controller.listeners) == 0
 
 
-async def test_failed_update_failed_login(hass):
-    """Running update can handle a failed login."""
+async def test_wireless_client_event_calls_update_wireless_devices(hass):
+    """Call update_wireless_devices method when receiving wireless client event."""
     controller = await setup_unifi_integration(hass)
 
-    with patch.object(
-        controller.api.clients, "update", side_effect=aiounifi.LoginRequired
-    ), patch.object(controller.api, "login", side_effect=aiounifi.AiounifiException):
-        await controller.async_update()
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.unifi.controller.UniFiController.update_wireless_clients",
+        return_value=None,
+    ) as wireless_clients_mock:
+        controller.api.websocket._data = {
+            "meta": {"rc": "ok", "message": "events"},
+            "data": [
+                {
+                    "datetime": "2020-01-20T19:37:04Z",
+                    "key": aiounifi.events.WIRELESS_CLIENT_CONNECTED,
+                    "msg": "User[11:22:33:44:55:66] has connected to WLAN",
+                    "time": 1579549024893,
+                }
+            ],
+        }
+        controller.api.session_handler("data")
 
-    assert controller.available is False
-
-
-async def test_failed_update_successful_login(hass):
-    """Running update can login when requested."""
-    controller = await setup_unifi_integration(hass)
-
-    with patch.object(
-        controller.api.clients, "update", side_effect=aiounifi.LoginRequired
-    ), patch.object(controller.api, "login", return_value=Mock(True)):
-        await controller.async_update()
-    await hass.async_block_till_done()
-
-    assert controller.available is True
-
-
-async def test_failed_update(hass):
-    """Running update can login when requested."""
-    controller = await setup_unifi_integration(hass)
-
-    with patch.object(
-        controller.api.clients, "update", side_effect=aiounifi.AiounifiException
-    ):
-        await controller.async_update()
-    await hass.async_block_till_done()
-
-    assert controller.available is False
-
-    await controller.async_update()
-    await hass.async_block_till_done()
-    assert controller.available is True
+        assert wireless_clients_mock.assert_called_once
 
 
 async def test_get_controller(hass):
@@ -307,7 +291,7 @@ async def test_get_controller_controller_unavailable(hass):
 
 
 async def test_get_controller_unknown_error(hass):
-    """Check that get_controller can handle unkown errors."""
+    """Check that get_controller can handle unknown errors."""
     with patch(
         "aiounifi.Controller.login", side_effect=aiounifi.AiounifiException
     ), pytest.raises(unifi.errors.AuthenticationRequired):
