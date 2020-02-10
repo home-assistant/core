@@ -7,6 +7,5 @@ DATA_CONFIGS = "dynalite_configs"
 
 CONF_BRIDGES = "bridges"
 
-ENTITY_CATEGORIES = ["light", "switch", "cover"]
 DEFAULT_NAME = "dynalite"
 DEFAULT_PORT = 12345
