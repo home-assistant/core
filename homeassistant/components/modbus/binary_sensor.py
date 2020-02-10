@@ -1,4 +1,4 @@
-"""Support for Modbus Coil sensors."""
+"""Support for Modbus Coil and Discrete Input sensors."""
 import logging
 from typing import Optional
 
@@ -16,52 +16,72 @@ from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_COIL = "coil"
-CONF_COILS = "coils"
+CONF_DEPRECATED_COIL = "coil"
+CONF_DEPRECATED_COILS = "coils"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_COILS): [
-            {
-                vol.Required(CONF_COIL): cv.positive_int,
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-                vol.Optional(CONF_SLAVE): cv.positive_int,
-            }
-        ]
-    }
+CONF_INPUTS = "inputs"
+CONF_INPUT_TYPE = "input_type"
+CONF_ADDRESS = "address"
+
+INPUT_TYPE_COIL = "coil"
+INPUT_TYPE_DISCRETE = "discrete_input"
+
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_DEPRECATED_COILS, CONF_INPUTS),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_INPUTS): [
+                vol.All(
+                    cv.deprecated(CONF_DEPRECATED_COIL, CONF_ADDRESS),
+                    vol.Schema(
+                        {
+                            vol.Required(CONF_ADDRESS): cv.positive_int,
+                            vol.Required(CONF_NAME): cv.string,
+                            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+                            vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+                            vol.Optional(CONF_SLAVE): cv.positive_int,
+                            vol.Optional(
+                                CONF_INPUT_TYPE, default=INPUT_TYPE_COIL
+                            ): vol.In([INPUT_TYPE_COIL, INPUT_TYPE_DISCRETE]),
+                        }
+                    ),
+                )
+            ]
+        }
+    ),
 )
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
-    for coil in config.get(CONF_COILS):
-        hub = hass.data[MODBUS_DOMAIN][coil.get(CONF_HUB)]
+    for entry in config.get(CONF_INPUTS):
+        hub = hass.data[MODBUS_DOMAIN][entry.get(CONF_HUB)]
         sensors.append(
-            ModbusCoilSensor(
+            ModbusBinarySensor(
                 hub,
-                coil.get(CONF_NAME),
-                coil.get(CONF_SLAVE),
-                coil.get(CONF_COIL),
-                coil.get(CONF_DEVICE_CLASS),
+                entry.get(CONF_NAME),
+                entry.get(CONF_SLAVE),
+                entry.get(CONF_ADDRESS),
+                entry.get(CONF_DEVICE_CLASS),
+                entry.get(CONF_INPUT_TYPE),
             )
         )
 
     add_entities(sensors)
 
 
-class ModbusCoilSensor(BinarySensorDevice):
-    """Modbus coil sensor."""
+class ModbusBinarySensor(BinarySensorDevice):
+    """Modbus binary sensor."""
 
-    def __init__(self, hub, name, slave, coil, device_class):
-        """Initialize the Modbus coil sensor."""
+    def __init__(self, hub, name, slave, address, device_class, input_type):
+        """Initialize the Modbus binary sensor."""
         self._hub = hub
         self._name = name
         self._slave = int(slave) if slave else None
-        self._coil = int(coil)
+        self._address = int(address)
         self._device_class = device_class
+        self._input_type = input_type
         self._value = None
 
     @property
@@ -81,13 +101,16 @@ class ModbusCoilSensor(BinarySensorDevice):
 
     def update(self):
         """Update the state of the sensor."""
-        result = self._hub.read_coils(self._slave, self._coil, 1)
+        if self._input_type == INPUT_TYPE_COIL:
+            result = self._hub.read_coils(self._slave, self._address, 1)
+        else:
+            result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
         try:
             self._value = result.bits[0]
         except AttributeError:
             _LOGGER.error(
-                "No response from hub %s, slave %s, coil %s",
+                "No response from hub %s, slave %s, address %s",
                 self._hub.name,
                 self._slave,
-                self._coil,
+                self._address,
             )
