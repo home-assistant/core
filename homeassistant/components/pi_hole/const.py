@@ -44,6 +44,7 @@ SENSOR_DICT = {
     ],
     "unique_clients": ["DNS Unique Clients", "clients", "mdi:account-outline"],
     "unique_domains": ["DNS Unique Domains", "domains", "mdi:domain"],
+    "status": ["Status", "", "mdi:power"],
 }
 
 SENSOR_LIST = list(SENSOR_DICT)
