@@ -426,7 +426,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.7.11
+denonavr==0.7.12
 
 # homeassistant.components.directv
 directpy==0.5
@@ -585,6 +585,7 @@ georss_qld_bushfire_alert_client==0.3
 # homeassistant.components.braviatv
 # homeassistant.components.huawei_lte
 # homeassistant.components.kef
+# homeassistant.components.minecraft_server
 # homeassistant.components.nmap_tracker
 getmac==0.8.1
 
@@ -730,7 +731,7 @@ incomfort-client==0.4.0
 influxdb==5.2.3
 
 # homeassistant.components.insteon
-insteonplm==0.16.6
+insteonplm==0.16.7
 
 # homeassistant.components.iperf3
 iperf3==0.1.11
@@ -836,6 +837,9 @@ maxcube-api==0.1.0
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
+
+# homeassistant.components.minecraft_server
+mcstatus==2.3.0
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
@@ -1064,7 +1068,7 @@ pushetta==1.0.15
 pwmled==1.4.1
 
 # homeassistant.components.august
-py-august==0.7.0
+py-august==0.8.1
 
 # homeassistant.components.canary
 py-canary==0.5.0
@@ -1212,7 +1216,7 @@ pyebox==1.1.4
 pyeconet==0.0.11
 
 # homeassistant.components.edimax
-pyedimax==0.1
+pyedimax==0.2.1
 
 # homeassistant.components.eight_sleep
 pyeight==0.1.2
@@ -1924,7 +1928,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.1.10
+surepy==0.2.3
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.0.3
@@ -2124,10 +2128,13 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
+zigpy-cc==0.1.0
+
+# homeassistant.components.zha
 zigpy-deconz==0.7.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.13.1
+zigpy-homeassistant==0.13.2
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.9.0

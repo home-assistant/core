@@ -425,6 +425,10 @@ omit =
     homeassistant/components/mikrotik/device_tracker.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/const.py
+    homeassistant/components/minecraft_server/__init__.py
+    homeassistant/components/minecraft_server/binary_sensor.py
+    homeassistant/components/minecraft_server/const.py
+    homeassistant/components/minecraft_server/sensor.py
     homeassistant/components/minio/*
     homeassistant/components/mitemp_bt/sensor.py
     homeassistant/components/mjpeg/camera.py

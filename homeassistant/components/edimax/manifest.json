@@ -2,7 +2,7 @@
   "domain": "edimax",
   "name": "Edimax",
   "documentation": "https://www.home-assistant.io/integrations/edimax",
-  "requirements": ["pyedimax==0.1"],
+  "requirements": ["pyedimax==0.2.1"],
   "dependencies": [],
   "codeowners": []
 }

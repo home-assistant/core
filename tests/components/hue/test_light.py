@@ -206,8 +206,8 @@ def mock_bridge(hass):
             return bridge.mock_group_responses.popleft()
         return None
 
-    async def async_request_call(coro):
-        await coro
+    async def async_request_call(task):
+        await task()
 
     bridge.async_request_call = async_request_call
     bridge.api.config.apiversion = "9.9.9"

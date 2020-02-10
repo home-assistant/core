@@ -1,9 +1,10 @@
 """Test zha cover."""
 from unittest.mock import MagicMock, call, patch
 
+import asynctest
+import pytest
 import zigpy.types
 import zigpy.zcl.clusters.closures as closures
-import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.cover import DOMAIN
@@ -11,8 +12,6 @@ from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE
 
 from .common import (
     async_enable_traffic,
-    async_init_zigpy_device,
-    async_test_device_join,
     find_entity_id,
     make_attribute,
     make_zcl_header,
@@ -21,17 +20,27 @@ from .common import (
 from tests.common import mock_coro
 
 
-async def test_cover(hass, config_entry, zha_gateway):
-    """Test zha cover platform."""
+@pytest.fixture
+def zigpy_cover_device(zigpy_device_mock):
+    """Zigpy cover device."""
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass,
-        [closures.WindowCovering.cluster_id, general.Basic.cluster_id],
-        [],
-        None,
-        zha_gateway,
-    )
+    endpoints = {
+        1: {
+            "device_type": 1026,
+            "in_clusters": [closures.WindowCovering.cluster_id],
+            "out_clusters": [],
+        }
+    }
+    return zigpy_device_mock(endpoints)
+
+
+@asynctest.patch(
+    "homeassistant.components.zha.core.channels.closures.WindowCovering.async_initialize"
+)
+async def test_cover(
+    m1, hass, zha_gateway, zha_device_joined_restored, zigpy_cover_device
+):
+    """Test zha cover platform."""
 
     async def get_chan_attr(*args, **kwargs):
         return 100
@@ -41,13 +50,11 @@ async def test_cover(hass, config_entry, zha_gateway):
         new=MagicMock(side_effect=get_chan_attr),
     ) as get_attr_mock:
         # load up cover domain
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-        await hass.async_block_till_done()
+        zha_device = await zha_device_joined_restored(zigpy_cover_device)
         assert get_attr_mock.call_count == 2
         assert get_attr_mock.call_args[0][0] == "current_position_lift_percentage"
 
-    cluster = zigpy_device.endpoints.get(1).window_covering
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
+    cluster = zigpy_cover_device.endpoints.get(1).window_covering
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
@@ -124,6 +131,13 @@ async def test_cover(hass, config_entry, zha_gateway):
             False, 0x2, (), expect_reply=True, manufacturer=None
         )
 
-    await async_test_device_join(
-        hass, zha_gateway, closures.WindowCovering.cluster_id, entity_id
-    )
+    # test rejoin
+    cluster.bind.reset_mock()
+    cluster.configure_reporting.reset_mock()
+    await zha_gateway.async_device_initialized(zigpy_cover_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_OPEN
+    assert cluster.bind.call_count == 1
+    assert cluster.bind.await_count == 1
+    assert cluster.configure_reporting.call_count == 1
+    assert cluster.configure_reporting.await_count == 1
