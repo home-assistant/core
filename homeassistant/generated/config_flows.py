@@ -19,6 +19,7 @@ FLOWS = [
     "coolmaster",
     "daikin",
     "deconz",
+    "devolo_home_control",
     "dialogflow",
     "dynalite",
     "ecobee",
