@@ -1,5 +1,5 @@
 """Support for August lock."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from august.activity import ActivityType
@@ -41,11 +41,22 @@ class AugustLock(LockDevice):
 
     def lock(self, **kwargs):
         """Lock the device."""
-        self._data.lock(self._lock.device_id)
+        update_start_time = datetime.now()
+        lock_status = self._data.lock(self._lock.device_id)
+        self._update_lock_status(lock_status, update_start_time)
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        self._data.unlock(self._lock.device_id)
+        update_start_time = datetime.now()
+        lock_status = self._data.unlock(self._lock.device_id)
+        self._update_lock_status(lock_status, update_start_time)
+
+    def _update_lock_status(self, lock_status, update_start_time):
+        self._lock_status = lock_status
+        self._data.update_lock_status(
+            self._lock.device_id, lock_status, update_start_time
+        )
+        self.schedule_update_ha_state()
 
     def update(self):
         """Get the latest state of the sensor."""
@@ -60,6 +71,40 @@ class AugustLock(LockDevice):
 
         if activity is not None:
             self._changed_by = activity.operated_by
+            self._sync_lock_activity(activity)
+
+    def _sync_lock_activity(self, activity):
+        """Check the activity for the latest lock/unlock activity (events).
+
+        We use this to determine the lock state in between calls to the lock
+        api as we update it more frequently
+        """
+        last_lock_status_update_time = self._data.get_last_lock_status_update_time(
+            self._lock.device_id
+        )
+
+        if activity.activity_end_time > last_lock_status_update_time:
+            _LOGGER.debug(
+                "The activity log has new events for %s: [action=%s] [activity_end_time=%s] > [last_lock_status_update_time=%s]",
+                self.name,
+                activity.action,
+                activity.activity_end_time,
+                last_lock_status_update_time,
+            )
+            if activity.action == "lock" or activity.action == "onetouchlock":
+                self._update_lock_status(
+                    LockStatus.LOCKED, activity.activity_start_time
+                )
+            elif activity.action == "unlock":
+                self._update_lock_status(
+                    LockStatus.UNLOCKED, activity.activity_start_time
+                )
+            else:
+                _LOGGER.info(
+                    "Unhandled lock activity action %s for %s",
+                    activity.action,
+                    self.name,
+                )
 
     @property
     def name(self):
