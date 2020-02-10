@@ -1,10 +1,11 @@
 """Support for iammeter via local API."""
 import asyncio
+import async_timeout
 from datetime import timedelta
 import logging
 
-import async_timeout
 from iammeter import real_time_api
+from iammeter.power_meter import IamMeterError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -36,20 +37,19 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     try:
         with async_timeout.timeout(PLATFORM_TIMEOUT):
             api = await real_time_api(config[CONF_HOST], config[CONF_PORT])
-            endpoint = RealTimeDataEndpoint(hass, api)
-            devices = []
-            for sensor, (row, idx, unit) in api.iammeter.sensor_map().items():
-                uid = f"{config[CONF_NAME]}-{api.iammeter.mac}-{api.iammeter.serial_number}-{row}-{idx}"
-                devices.append(
-                    IamMeter(
-                        uid, api.iammeter.serial_number, sensor, unit, config[CONF_NAME]
-                    )
-                )
-            endpoint.sensors = devices
-            async_add_entities(devices)
-            async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
     except asyncio.TimeoutError:
+        _LOGGER.error(f"IamMeter device {config[CONF_NAME]} not ready.")
         raise PlatformNotReady
+    endpoint = RealTimeDataEndpoint(hass, api)
+    devices = []
+    for sensor, (row, idx, unit) in api.iammeter.sensor_map().items():
+        uid = f"{config[CONF_NAME]}-{api.iammeter.mac}-{api.iammeter.serial_number}-{row}-{idx}"
+        devices.append(
+            IamMeter(uid, api.iammeter.serial_number, sensor, unit, config[CONF_NAME])
+        )
+    endpoint.sensors = devices
+    async_add_entities(devices)
+    async_track_time_interval(hass, endpoint.async_refresh, SCAN_INTERVAL)
 
 
 class RealTimeDataEndpoint:
@@ -64,7 +64,14 @@ class RealTimeDataEndpoint:
 
     async def async_refresh(self, now=None):
         """Fetch new state data for the sensor.This is the only method that should fetch new data for Home Assistant."""
-        api_response = await self.api.get_data()
+        try:
+            api_response = await self.api.get_data()
+        except IamMeterError:
+            if now is not None:
+                self.ready.clear()
+                _LOGGER.error("data refresh timeout.")
+                return
+            raise PlatformNotReady
         self.ready.set()
         data = api_response.data
         for sensor in self.sensors:
@@ -84,7 +91,6 @@ class IamMeter(Entity):
         self.value = None
         self.unit = unit
         self.dev_name = dev_name
-        self.dev_type = "WEM3080"
 
     @property
     def state(self):
