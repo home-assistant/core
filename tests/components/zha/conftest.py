@@ -1,4 +1,5 @@
 """Test configuration for the ZHA component."""
+import functools
 from unittest import mock
 from unittest.mock import patch
 
@@ -7,7 +8,6 @@ import pytest
 import zigpy
 from zigpy.application import ControllerApplication
 
-from homeassistant import config_entries
 from homeassistant.components.zha.core.const import COMPONENTS, DATA_ZHA, DOMAIN
 from homeassistant.components.zha.core.gateway import ZHAGateway
 from homeassistant.components.zha.core.store import async_get_registry
@@ -15,27 +15,39 @@ from homeassistant.helpers.device_registry import async_get_registry as get_dev_
 
 from .common import FakeDevice, FakeEndpoint, async_setup_entry
 
+from tests.common import MockConfigEntry
+
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass):
+async def config_entry_fixture(hass):
     """Fixture representing a config entry."""
-    config_entry = config_entries.ConfigEntry(
-        1,
-        DOMAIN,
-        "Mock Title",
-        {},
-        "test",
-        config_entries.CONN_CLASS_LOCAL_PUSH,
-        system_options={},
-    )
+    config_entry = MockConfigEntry(domain=DOMAIN)
+    config_entry.add_to_hass(hass)
     return config_entry
 
 
+@pytest.fixture
+async def setup_zha(hass, config_entry):
+    """Load the ZHA component.
+
+    This will init the ZHA component. It loads the component in HA so that
+    we can test the domains that ZHA supports without actually having a zigbee
+    network running.
+    """
+    # this prevents needing an actual radio and zigbee network available
+    with patch("homeassistant.components.zha.async_setup_entry", async_setup_entry):
+        hass.data[DATA_ZHA] = {}
+
+        # init ZHA
+        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
+        await hass.async_block_till_done()
+
+
 @pytest.fixture(name="zha_gateway")
-async def zha_gateway_fixture(hass, config_entry):
+async def zha_gateway_fixture(hass, config_entry, setup_zha):
     """Fixture representing a zha gateway.
 
     Create a ZHAGateway object that can be used to interact with as if we
@@ -55,23 +67,6 @@ async def zha_gateway_fixture(hass, config_entry):
     gateway.application_controller.configure_mock(groups=groups)
     gateway._initialize_groups()
     return gateway
-
-
-@pytest.fixture(autouse=True)
-async def setup_zha(hass, config_entry):
-    """Load the ZHA component.
-
-    This will init the ZHA component. It loads the component in HA so that
-    we can test the domains that ZHA supports without actually having a zigbee
-    network running.
-    """
-    # this prevents needing an actual radio and zigbee network available
-    with patch("homeassistant.components.zha.async_setup_entry", async_setup_entry):
-        hass.data[DATA_ZHA] = {}
-
-        # init ZHA
-        await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-        await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -121,3 +116,43 @@ def zigpy_device_mock():
         return device
 
     return _mock_dev
+
+
+@pytest.fixture
+def _zha_device_restored_or_joined(hass, zha_gateway, config_entry):
+    """Make a restored or joined ZHA devices."""
+
+    async def _zha_device(is_new_join, zigpy_dev):
+        if is_new_join:
+            for cmp in COMPONENTS:
+                await hass.config_entries.async_forward_entry_setup(config_entry, cmp)
+            await hass.async_block_till_done()
+            await zha_gateway.async_device_initialized(zigpy_dev)
+        else:
+            await zha_gateway.async_device_restored(zigpy_dev)
+            for cmp in COMPONENTS:
+                await hass.config_entries.async_forward_entry_setup(config_entry, cmp)
+        await hass.async_block_till_done()
+        return zha_gateway.get_device(zigpy_dev.ieee)
+
+    return _zha_device
+
+
+@pytest.fixture
+def zha_device_joined(_zha_device_restored_or_joined):
+    """Return a newly joined ZHA device."""
+
+    return functools.partial(_zha_device_restored_or_joined, True)
+
+
+@pytest.fixture
+def zha_device_restored(_zha_device_restored_or_joined):
+    """Return a restored ZHA device."""
+
+    return functools.partial(_zha_device_restored_or_joined, False)
+
+
+@pytest.fixture(params=["zha_device_joined", "zha_device_restored"])
+def zha_device_joined_restored(request):
+    """Join or restore ZHA device."""
+    return request.getfixturevalue(request.param)
