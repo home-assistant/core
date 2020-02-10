@@ -57,11 +57,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     hass.data.setdefault(DOMAIN, {})[DATA_USERNAME] = entry.data[CONF_USERNAME]
     hass.data.setdefault(DOMAIN, {})[DATA_PASSWORD] = entry.data[CONF_PASSWORD]
 
-    # Setup sensors
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "sensor")
-    )
-
     async def send_command(call) -> None:
         """Service call to send a command to Home Panel."""
         authenticated = await home_panel_api.async_authenticate(
@@ -88,9 +83,6 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigType) -> bool:
     """Unload Home Panel config entry."""
     hass.services.async_remove(DOMAIN, SERVICE_SEND_COMMAND)
-
-    # Unload sensors
-    await hass.config_entries.async_forward_entry_unload(entry, "sensor")
 
     del hass.data[DOMAIN]
 
@@ -133,7 +125,7 @@ class HomePanelEntity(Entity):
         else:
             if self._available:
                 _LOGGER.debug(
-                    "An error occurred while updating Home Panel sensor.", exc_info=True
+                    "An error occurred while updating Home Panel entity.", exc_info=True
                 )
             self._available = False
 
