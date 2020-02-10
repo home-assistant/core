@@ -50,6 +50,7 @@ class AuroraABBSolarPVMonitorSensor(Entity):
     def __init__(self, client, name, typename):
         """Initialize the sensor."""
         self._name = f"{name} {typename}"
+        self._unique_id = f"{client.serial_number()}-{typename}"
         self.client = client
         self._state = None
 
@@ -57,6 +58,11 @@ class AuroraABBSolarPVMonitorSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this sensor."""
+        return self._unique_id
 
     @property
     def state(self):
