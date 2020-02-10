@@ -16,6 +16,9 @@ from . import CONF_HUB, DEFAULT_HUB, DOMAIN as MODBUS_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_DEPRECATED_COIL = "coil"
+CONF_DEPRECATED_COILS = "coils"
+
 CONF_INPUTS = "inputs"
 CONF_INPUT_TYPE = "input_type"
 CONF_ADDRESS = "address"
@@ -23,21 +26,29 @@ CONF_ADDRESS = "address"
 INPUT_TYPE_COIL = "coil"
 INPUT_TYPE_DISCRETE = "discrete_input"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_INPUTS): [
-            {
-                vol.Required(CONF_ADDRESS): cv.positive_int,
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-                vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-                vol.Optional(CONF_SLAVE): cv.positive_int,
-                vol.Optional(CONF_INPUT_TYPE, default=INPUT_TYPE_COIL): vol.In(
-                    [INPUT_TYPE_COIL, INPUT_TYPE_DISCRETE]
-                ),
-            }
-        ]
-    }
+PLATFORM_SCHEMA = vol.All(
+    cv.deprecated(CONF_DEPRECATED_COILS, CONF_INPUTS),
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_INPUTS): [
+                vol.All(
+                    cv.deprecated(CONF_DEPRECATED_COIL, CONF_ADDRESS),
+                    vol.Schema(
+                        {
+                            vol.Required(CONF_ADDRESS): cv.positive_int,
+                            vol.Required(CONF_NAME): cv.string,
+                            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+                            vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
+                            vol.Optional(CONF_SLAVE): cv.positive_int,
+                            vol.Optional(
+                                CONF_INPUT_TYPE, default=INPUT_TYPE_COIL
+                            ): vol.In([INPUT_TYPE_COIL, INPUT_TYPE_DISCRETE]),
+                        }
+                    ),
+                )
+            ]
+        }
+    ),
 )
 
 
