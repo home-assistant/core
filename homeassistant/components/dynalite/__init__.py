@@ -82,12 +82,12 @@ async def async_setup_entry(hass, entry):
     if not await bridge.async_setup():
         LOGGER.error("bridge.async_setup failed")
         return False
-    hass.data[DOMAIN][host] = bridge
+    hass.data[DOMAIN][entry.entry_id] = bridge
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     LOGGER.error("async_unload_entry %s", entry.data)
-    bridge = hass.data[DOMAIN].pop(entry.data[CONF_HOST])
+    bridge = hass.data[DOMAIN].pop(entry.entry_id)
     return await bridge.async_reset()

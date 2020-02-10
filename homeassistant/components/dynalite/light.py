@@ -8,7 +8,7 @@ from .const import DOMAIN, LOGGER
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Record the async_add_entities function to add them later when received from Dynalite."""
     LOGGER.debug("async_setup_entry light entry = %s", config_entry.data)
-    bridge = hass.data[DOMAIN][config_entry.data["host"]]
+    bridge = hass.data[DOMAIN][config_entry.entry_id]
     bridge.register_add_entities(async_add_entities)
 
 
