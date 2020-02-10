@@ -61,9 +61,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
 def get_sensors(api_data):
     """Use Recursion to discover sensors and values.
 
-    Get list of sensors by recursing through dictionary returned by api until
+    Get dictionary of sensors by recursing through dict returned by api until
     the dictionary value does not contain another dictionary and use the
     resulting key/value as the name/value for the sensor.
+
+    returns: dictionary of sensors/values
     """
     result = {}
     for key, value in api_data.items():
