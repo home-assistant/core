@@ -461,7 +461,9 @@ def async_register_admin_service(
             if not user.is_admin:
                 raise Unauthorized(context=call.context)
 
-        await hass.async_add_job(service_func, call)
+        result = hass.async_add_job(service_func, call)
+        if result is not None:
+            await result
 
     hass.services.async_register(domain, service, admin_handler, schema)
 
