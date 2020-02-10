@@ -2,7 +2,6 @@
 import logging
 
 from pushover_complete import PushoverAPI
-import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -72,43 +71,21 @@ class PushoverNotificationService(BaseNotificationService):
         image = data.get(ATTR_ATTACHMENT, None)
         # Check for attachment
         if image is not None:
-            # If attachment is a URL, use requests to open it as a stream.
-            if image.startswith("http"):
+            # Not a URL, check valid path first
+            if self._hass.config.is_allowed_path(data[ATTR_ATTACHMENT]):
+                # try to open it as a normal file.
                 try:
-                    response = requests.get(
-                        data[ATTR_ATTACHMENT], stream=True, timeout=5
-                    )
-                    if response.status_code == 200:
-                        # Replace the attachment identifier with file object.
-                        image = response.content
-                    else:
-                        _LOGGER.error(
-                            "Failed to download image %s, response code: %d",
-                            data[ATTR_ATTACHMENT],
-                            response.status_code,
-                        )
-                        # Remove attachment key to send without attachment.
-                        image = None
-                except requests.exceptions.RequestException as ex_val:
+                    file_handle = open(data[ATTR_ATTACHMENT], "rb")
+                    # Replace the attachment identifier with file object.
+                    image = file_handle
+                except OSError as ex_val:
                     _LOGGER.error(ex_val)
                     # Remove attachment key to send without attachment.
                     image = None
             else:
-                # Not a URL, check valid path first
-                if self._hass.config.is_allowed_path(data[ATTR_ATTACHMENT]):
-                    # try to open it as a normal file.
-                    try:
-                        file_handle = open(data[ATTR_ATTACHMENT], "rb")
-                        # Replace the attachment identifier with file object.
-                        image = file_handle
-                    except OSError as ex_val:
-                        _LOGGER.error(ex_val)
-                        # Remove attachment key to send without attachment.
-                        image = None
-                else:
-                    _LOGGER.error("Path is not whitelisted")
-                    # Remove attachment key to send without attachment.
-                    image = None
+                _LOGGER.error("Path is not whitelisted")
+                # Remove attachment key to send without attachment.
+                image = None
 
         targets = kwargs.get(ATTR_TARGET)
 
