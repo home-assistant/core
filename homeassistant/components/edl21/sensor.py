@@ -8,7 +8,6 @@ from sml.asyncio import SmlProtocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import STATE_UNKNOWN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import Optional
@@ -123,10 +122,7 @@ class EDL21Entity(Entity):
     @property
     def state(self) -> str:
         """Return the value of the last received telegram."""
-        value = self._telegram.get("value")
-        if value is None:
-            return STATE_UNKNOWN
-        return value
+        return self._telegram.get("value")
 
     @property
     def device_state_attributes(self):
