@@ -105,9 +105,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     owport = config[CONF_PORT]
     owhost = config.get(CONF_HOST)
     if owhost:
-        _LOGGER.info("Initializing using %s:%s", owhost, owport)
+        _LOGGER.debug("Initializing using %s:%s", owhost, owport)
     else:
-        _LOGGER.info("Initializing using %s", base_dir)
+        _LOGGER.debug("Initializing using %s", base_dir)
 
     devs = []
     device_names = {}
