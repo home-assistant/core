@@ -64,9 +64,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
                 if camera["type"] == "NACamera" and data.get_modules(camera["id"]):
                     sensor_types.update(TAG_SENSOR_TYPES)
 
-                for sensor_name in sensor_types:
+                for sensor_type in sensor_types:
                     entities.append(
-                        NetatmoBinarySensor(data, camera["id"], home_id, sensor_name)
+                        NetatmoBinarySensor(data, camera["id"], home_id, sensor_type)
                     )
         except pyatmo.NoDevice:
             _LOGGER.debug("No camera entities to add")
@@ -114,6 +114,15 @@ class NetatmoBinarySensor(BinarySensorDevice):
     def unique_id(self):
         """Return the unique ID for this sensor."""
         return self._unique_id
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        if self._camera_type == "NACamera":
+            return WELCOME_SENSOR_TYPES.get(self._sensor_type)
+        if self._camera_type == "NOC":
+            return PRESENCE_SENSOR_TYPES.get(self._sensor_type)
+        return TAG_SENSOR_TYPES.get(self._sensor_type)
 
     @property
     def device_info(self):
