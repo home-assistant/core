@@ -40,16 +40,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     _LOGGER.debug("Intitialising com port=%s address=%s", comport, address)
     client = AuroraSerialClient(address, comport, parity="N", timeout=1)
 
-    devices.append(AuroraABBSolarPVMonitorSensor(client, name))
+    devices.append(AuroraABBSolarPVMonitorSensor(client, name, "Power"))
     add_entities(devices, True)
 
 
 class AuroraABBSolarPVMonitorSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, client, name):
+    def __init__(self, client, name, typename):
         """Initialize the sensor."""
-        self._name = name
+        self._name = f"{name} {typename}"
         self.client = client
         self._state = None
 
