@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
 
     # Setup sensors
     sensors = []
-    for name, _ in hass.data[DOMAIN].items():
+    for name in hass.data[DOMAIN]:
         sensors.append(NextcloudSensor(name))
     add_entities(sensors, True)
 
