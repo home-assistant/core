@@ -5,6 +5,7 @@ from datetime import timedelta
 from functools import partial
 import ipaddress
 import logging
+import time
 from typing import Any, Callable, Dict, List, Set, Tuple
 from urllib.parse import urlparse
 
@@ -65,6 +66,7 @@ from .const import (
     KEY_MONITORING_STATUS,
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_WLAN_HOST_LIST,
+    NOTIFY_SUPPRESS_TIMEOUT,
     SERVICE_CLEAR_TRAFFIC_STATISTICS,
     SERVICE_REBOOT,
     SERVICE_RESUME_INTEGRATION,
@@ -141,6 +143,7 @@ class Router:
     unload_handlers: List[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
     client: Client
     suspended = attr.ib(init=False, default=False)
+    notify_last_attempt: float = attr.ib(init=False, default=-1)
 
     def __attrs_post_init__(self):
         """Set up internal state on init."""
@@ -189,6 +192,19 @@ class Router:
                 "%s requires authorization, excluding from future updates", key
             )
             self.subscriptions.pop(key)
+        except Timeout:
+            grace_left = (
+                self.notify_last_attempt - time.monotonic() + NOTIFY_SUPPRESS_TIMEOUT
+            )
+            if grace_left > 0:
+                _LOGGER.debug(
+                    "%s timed out, %.1fs notify timeout suppress grace remaining",
+                    key,
+                    grace_left,
+                    exc_info=True,
+                )
+            else:
+                raise
         finally:
             _LOGGER.debug("%s=%s", key, self.data.get(key))
 
