@@ -1788,7 +1788,7 @@ saltbox==0.1.3
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
-samsungtvws[websocket]==1.1.5
+samsungtvws[websocket]==1.1.6
 
 # homeassistant.components.satel_integra
 satel_integra==0.3.4

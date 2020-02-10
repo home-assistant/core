@@ -112,6 +112,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             self._config["token_file"] = self._get_token_file()
 
     def _get_token_file(self):
+        LOGGER.debug("Samsung TV - Creating token file")
         path = self.hass.config.path()
         host = self._config_entry.data[CONF_HOST]
         token_file = f"{path}/.samsungtv-token-{host}.dat"
@@ -150,6 +151,9 @@ class SamsungTVDevice(MediaPlayerDevice):
             except (OSError, WebSocketException):
                 # Different reasons, e.g. hostname not resolveable
                 self._state = STATE_OFF
+            except Exception:  # pylint: disable=broad-except
+                # Different reasons, e.g. hostname not resolveable
+                self._state = STATE_OFF
 
     def get_remote(self):
         """Create or return a remote control instance."""
@@ -157,8 +161,10 @@ class SamsungTVDevice(MediaPlayerDevice):
             # We need to create a new instance to reconnect.
             try:
                 if self._config["method"] == "legacy":
+                    LOGGER.debug("Create SamsungRemote")
                     self._remote = SamsungRemote(self._config.copy())
                 else:
+                    LOGGER.debug("Create SamsungTVWS")
                     self._remote = SamsungTVWS(
                         host=self._config["host"],
                         port=self._config["port"],
@@ -191,7 +197,11 @@ class SamsungTVDevice(MediaPlayerDevice):
             retry_count = 1
             for _ in range(retry_count + 1):
                 try:
-                    self.get_remote().control(key)
+                    remote = self.get_remote()
+                    if self._config["method"] == "legacy":
+                        remote.control(key)
+                    else:
+                        remote.send_key(key)
                     break
                 except (
                     samsung_exceptions.ConnectionClosed,
