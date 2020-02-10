@@ -1067,6 +1067,9 @@ pushbullet.py==0.11.0
 # homeassistant.components.pushetta
 pushetta==1.0.15
 
+# homeassistant.components.pushover
+pushover_complete==1.1.1
+
 # homeassistant.components.rpi_gpio_pwm
 pwmled==1.4.1
 
@@ -1610,9 +1613,6 @@ python-nest==4.1.0
 
 # homeassistant.components.nmap_tracker
 python-nmap==0.6.1
-
-# homeassistant.components.pushover
-python-pushover==0.4
 
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.1
