@@ -75,9 +75,9 @@ set_node_value:
     node_id:
       description: Node id of the device to set the value on (integer).
     value_id:
-      description: Value id of the value to set (integer).
+      description: Value id of the value to set (integer or string).
     value:
-      description: Value to set (integer).
+      description: Value to set (integer or string).
 
 refresh_node_value:
   description: Refresh the value for a given value_id on a Z-Wave device.
