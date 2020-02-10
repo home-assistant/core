@@ -369,6 +369,8 @@ class EntityPlatform:
                 supported_features=entity.supported_features,
                 device_class=entity.device_class,
                 unit_of_measurement=entity.unit_of_measurement,
+                original_name=entity.name,
+                original_icon=entity.icon,
             )
 
             entity.registry_entry = entry
