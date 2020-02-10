@@ -1,5 +1,4 @@
 """The devolo_home_control integration."""
-# from devolo_home_control_api.mprm_rest import ConnectionError
 from devolo_home_control_api.mprm_websocket import MprmWebsocket
 from devolo_home_control_api.mydevolo import (
     Mydevolo,
@@ -9,9 +8,10 @@ from devolo_home_control_api.mydevolo import (
 import voluptuous as vol
 
 from homeassistant.components import switch as ha_switch
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DEFAULT_MPRM, DEFAULT_MYDEVOLO, DOMAIN, PLATFORMS
 
@@ -50,8 +50,15 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_EXTRA
 
 def setup(hass, config):
     """Get all devices and add them to hass."""
-    hass.data[DOMAIN] = {}
-    conf = config.get(DOMAIN)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+    """Set up the devolo account from a config entry."""
+    conf = entry.data
+
+    hass.data.setdefault(DOMAIN, {})
 
     try:
         mydevolo = Mydevolo.get_instance()
@@ -74,6 +81,7 @@ def setup(hass, config):
         return False
 
     for platform in PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
-
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
     return True

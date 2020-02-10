@@ -1,9 +1,14 @@
 """Platform for light integration."""
 import logging
 
-from devolo_home_control_api.mprm_rest import get_sub_device_uid_from_element_uid
+from devolo_home_control_api.mprm_rest import (
+    get_device_uid_from_element_uid,
+    get_sub_device_uid_from_element_uid,
+)
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.typing import HomeAssistantType
 
 from .const import DOMAIN
 
@@ -34,6 +39,31 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(devices_list, False)
 
 
+async def async_setup_entry(
+    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+) -> None:
+    """Get all devices and setup the switch devices via config entry."""
+    devices = hass.data[DOMAIN]["mprm"].binary_switch_devices
+
+    devices_list = []
+    for device in devices:
+        if (
+            get_sub_device_uid_from_element_uid([*device.binary_switch_property][0])
+            is None
+        ):
+            # Normal binary switch device with one binary switch
+            devices_list.append(
+                DevoloSwitch(hass=hass, device_instance=device, sub_uid=None)
+            )
+        else:
+            # Device with more than one binary switch
+            for i in range(1, len(device.binary_switch_property) + 1):
+                devices_list.append(
+                    DevoloSwitch(hass=hass, device_instance=device, sub_uid=i)
+                )
+    async_add_entities(devices_list, False)
+
+
 class DevoloSwitch(SwitchDevice):
     """Representation of an Awesome Light."""
 
@@ -53,7 +83,7 @@ class DevoloSwitch(SwitchDevice):
         else:
             binary_switch = "devolo.BinarySwitch:" + self._device_instance.device_uid
             consumption_property = "devolo.Meter:" + self._device_instance.device_uid
-        self._unique_id = binary_switch
+        self._unique_id = get_device_uid_from_element_uid(binary_switch)
         self._mprm = hass.data[DOMAIN]["mprm"]
         self._name = self._device_instance.name
         self._binary_switch_property = self._device_instance.binary_switch_property.get(
@@ -75,6 +105,17 @@ class DevoloSwitch(SwitchDevice):
     def unique_id(self):
         """Return the unique ID of switch."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device infos."""
+        return {
+            "identifiers": {
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, self.unique_id)
+            },
+            "name": self.name,
+        }
 
     @property
     def device_id(self):
