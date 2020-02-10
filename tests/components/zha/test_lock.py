@@ -1,6 +1,8 @@
 """Test zha lock."""
 from unittest.mock import patch
 
+import pytest
+import zigpy.profiles.zha
 import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
@@ -10,7 +12,6 @@ from homeassistant.const import STATE_LOCKED, STATE_UNAVAILABLE, STATE_UNLOCKED
 
 from .common import (
     async_enable_traffic,
-    async_init_zigpy_device,
     find_entity_id,
     make_attribute,
     make_zcl_header,
@@ -22,24 +23,29 @@ LOCK_DOOR = 0
 UNLOCK_DOOR = 1
 
 
-async def test_lock(hass, config_entry, zha_gateway):
-    """Test zha lock platform."""
+@pytest.fixture(params=["zha_device_joined", "zha_device_restored"])
+async def lock(hass, zha_gateway, zigpy_device_mock, request):
+    """Lock cluster fixture."""
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass,
-        [closures.DoorLock.cluster_id, general.Basic.cluster_id],
-        [],
-        None,
-        zha_gateway,
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                "in_clusters": [closures.DoorLock.cluster_id, general.Basic.cluster_id],
+                "out_clusters": [],
+                "device_type": zigpy.profiles.zha.DeviceType.DOOR_LOCK,
+            }
+        },
     )
 
-    # load up lock domain
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
+    join_or_restore = request.getfixturevalue(request.param)
+    zha_device = await join_or_restore(zigpy_device)
+    return zha_device, zigpy_device.endpoints[1].door_lock
 
-    cluster = zigpy_device.endpoints.get(1).door_lock
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
+
+async def test_lock(hass, zha_gateway, lock):
+    """Test zha lock platform."""
+
+    zha_device, cluster = lock
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
