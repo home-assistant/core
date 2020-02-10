@@ -204,6 +204,7 @@ homeassistant/components/mastodon/* @fabaff
 homeassistant/components/matrix/* @tinloaf
 homeassistant/components/mcp23017/* @jardiamj
 homeassistant/components/mediaroom/* @dgomes
+homeassistant/components/melcloud/* @vilppuvuorinen
 homeassistant/components/melissa/* @kennedyshead
 homeassistant/components/met/* @danielhiversen
 homeassistant/components/meteo_france/* @victorcerutti @oncleben31 @Quentame
