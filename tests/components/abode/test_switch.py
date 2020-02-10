@@ -75,7 +75,7 @@ async def test_turn_automation_on(hass, requests_mock):
 
 
 async def test_trigger_automation(hass, requests_mock):
-    """Test the automation can be turned on."""
+    """Test the trigger automation service."""
     await setup_platform(hass, SWITCH_DOMAIN)
     requests_mock.patch(
         str.replace(CONST.AUTOMATION_APPLY_URL, "$AUTOMATIONID$", AUTOMATION_ID),
