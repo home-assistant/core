@@ -20,7 +20,7 @@ SERVICE_ENABLE_ATTR_NAME = SERVICE_DISABLE_ATTR_NAME
 
 ATTR_BLOCKED_DOMAINS = "domains_blocked"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 SENSOR_DICT = {
     "ads_blocked_today": ["Ads Blocked Today", "ads", "mdi:close-octagon-outline"],
