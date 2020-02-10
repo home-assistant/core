@@ -133,7 +133,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "host": self._host,
                 "method": "websocket",
                 "port": port,
-                "timeout": 1,
+                # We need this high timeout because waiting for auth popup is just an open socket
+                "timeout": 31,
                 "token_file": token_file,
             }
             try:

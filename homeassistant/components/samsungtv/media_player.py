@@ -105,7 +105,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             "method": config_entry.data[CONF_METHOD],
             "port": config_entry.data.get(CONF_PORT),
             "host": config_entry.data[CONF_HOST],
-            "timeout": 1,
+            "timeout": 31,
             "token_file": None,
         }
         if config_entry.data[CONF_PORT] == 8002:
