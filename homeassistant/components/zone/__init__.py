@@ -201,7 +201,9 @@ async def async_setup(hass: HomeAssistant, config: Dict) -> bool:
     )
 
     if DOMAIN in config:
-        await yaml_collection.async_load(config[DOMAIN])
+        # AIS dom config can be empty
+        if config[DOMAIN] != [{}]:
+            await yaml_collection.async_load(config[DOMAIN])
 
     await storage_collection.async_load()
 
@@ -337,9 +339,6 @@ class Zone(entity.Entity):
     @callback
     def _generate_attrs(self) -> None:
         """Generate new attrs based on config."""
-        # ais config can be empty
-        if len(self._config) == 0:
-            return
         self._attrs = {
             ATTR_HIDDEN: True,
             ATTR_LATITUDE: self._config[CONF_LATITUDE],
