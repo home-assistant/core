@@ -59,7 +59,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
 
 # Use recursion to create list of sensors & values based on nextcloud api data
 def get_sensors(api_data):
-    """Use Recursion to discover sensors and values."""
+    """Use Recursion to discover sensors and values.
+
+    Get list of sensors by recursing through dictionary returned by api until
+    the dictionary value does not contain another dictionary and use the
+    resulting key/value as the name/value for the sensor.
+    """
     result = {}
     for key, value in api_data.items():
         if isinstance(value, dict):
