@@ -680,3 +680,24 @@ async def test_warn_slow_write_state(hass, caplog):
         "https://github.com/home-assistant/home-assistant/issues?"
         "q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+hue%22"
     ) in caplog.text
+
+
+async def test_warn_slow_write_state_custom_component(hass, caplog):
+    """Check that we log a warning if reading properties takes too long."""
+
+    class CustomComponentEntity(entity.Entity):
+        __module__ = "custom_components.bla.sensor"
+
+    mock_entity = CustomComponentEntity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = "comp_test.test_entity"
+    mock_entity.platform = MagicMock(platform_name="hue")
+
+    with patch("homeassistant.helpers.entity.timer", side_effect=[0, 10]):
+        mock_entity.async_write_ha_state()
+
+    assert (
+        "Updating state for comp_test.test_entity "
+        "(<class 'custom_components.bla.sensor.test_warn_slow_write_state_custom_component.<locals>.CustomComponentEntity'>) "
+        "took 10.000 seconds. Please report it to the custom component author."
+    ) in caplog.text
