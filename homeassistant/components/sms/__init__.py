@@ -4,7 +4,7 @@ import logging
 import gammu  # pylint: disable=import-error, no-member
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICE
+from homeassistant.const import CONF_FILE_PATH
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -12,7 +12,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({vol.Required(CONF_DEVICE): cv.isdevice})},
+    {DOMAIN: vol.Schema({vol.Required(CONF_FILE_PATH): cv.isfile})},
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -20,11 +20,10 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Configure Gammu state machine."""
     conf = config[DOMAIN]
-    device = conf.get(CONF_DEVICE)
-    gateway = gammu.StateMachine()  # pylint: disable=no-member
+    device = conf.get(CONF_FILE_PATH)
+   
     try:
-        gateway.SetConfig(0, dict(Device=device, Connection="at"))
-        gateway.Init()
+        gateway = gammu.smsd.SMSD(gammu_conf)
     except gammu.GSMError as exc:  # pylint: disable=no-member
         _LOGGER.error("Failed to initialize, error %s", exc)
         return False
