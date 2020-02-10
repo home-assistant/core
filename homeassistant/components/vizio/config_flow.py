@@ -107,6 +107,11 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
 
+        if await self.async_set_unique_id(
+            unique_id=user_input[CONF_HOST].split(":")[0], raise_on_progress=True
+        ):
+            return self.async_abort(reason="already_setup")
+
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
             self._user_schema = _get_config_flow_schema(user_input)
