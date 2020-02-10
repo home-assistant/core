@@ -3,6 +3,9 @@
         "abort": {
             "already_configured": "Verten er allerede konfigurert."
         },
+        "error": {
+            "invalid_port": "Porten m\u00e5 v\u00e6re i omr\u00e5det 1024 til 65535. Vennligst korriger den og pr\u00f8v p\u00e5 nytt."
+        },
         "step": {
             "user": {
                 "data": {
