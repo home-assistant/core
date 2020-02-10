@@ -13,9 +13,7 @@ async def test_light_setup():
     entry = Mock()
     async_add = Mock()
     bridge = Mock()
-    host = "1.2.3.4"
-    entry.data = {"host": host}
-    hass.data = {DOMAIN: {host: bridge}}
+    hass.data = {DOMAIN: {entry.entry_id: bridge}}
     await async_setup_entry(hass, entry, async_add)
     bridge.register_add_entities.assert_called_once()
     assert bridge.register_add_entities.mock_calls[0] == call(async_add)

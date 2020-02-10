@@ -61,15 +61,13 @@ async def test_async_setup_entry():
 
 async def test_async_unload_entry():
     """Test unloading of an entry."""
-    host = "1.2.3.4"
     hass = Mock()
     mock_bridge = Mock()
     mock_bridge.async_reset.return_value = mock_coro(True)
+    entry = Mock()
     hass.data = {}
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][host] = mock_bridge
-    entry = Mock()
-    entry.data = {"host": host}
+    hass.data[DOMAIN][entry.entry_id] = mock_bridge
     await async_unload_entry(hass, entry)
     LOGGER.error("XXX calls=%s", mock_bridge.mock_calls)
     mock_bridge.async_reset.assert_called_once()
