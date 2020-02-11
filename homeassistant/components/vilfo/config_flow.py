@@ -144,7 +144,3 @@ class InvalidAuth(exceptions.HomeAssistantError):
 
 class InvalidHost(exceptions.HomeAssistantError):
     """Error to indicate that hostname/IP address is invalid."""
-
-
-class AlreadyConfigured(exceptions.HomeAssistantError):
-    """Error to indicate that a configuration already has been set up for the host."""
