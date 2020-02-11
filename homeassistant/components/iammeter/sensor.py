@@ -38,7 +38,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         with async_timeout.timeout(PLATFORM_TIMEOUT):
             api = await real_time_api(config[CONF_HOST], config[CONF_PORT])
     except asyncio.TimeoutError:
-        _LOGGER.error(f"IamMeter device {config[CONF_NAME]} not ready.")
+        _LOGGER.error("IamMeter device not ready.")
         raise PlatformNotReady
     endpoint = RealTimeDataEndpoint(hass, api)
     devices = []
