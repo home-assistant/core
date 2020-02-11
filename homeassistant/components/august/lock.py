@@ -7,6 +7,7 @@ from august.lock import LockStatus
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.util import dt
 
 from . import DATA_AUGUST
 
@@ -41,11 +42,23 @@ class AugustLock(LockDevice):
 
     def lock(self, **kwargs):
         """Lock the device."""
-        self._data.lock(self._lock.device_id)
+        update_start_time_utc = dt.utcnow()
+        lock_status = self._data.lock(self._lock.device_id)
+        self._update_lock_status(lock_status, update_start_time_utc)
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        self._data.unlock(self._lock.device_id)
+        update_start_time_utc = dt.utcnow()
+        lock_status = self._data.unlock(self._lock.device_id)
+        self._update_lock_status(lock_status, update_start_time_utc)
+
+    def _update_lock_status(self, lock_status, update_start_time_utc):
+        if self._lock_status != lock_status:
+            self._lock_status = lock_status
+            self._data.update_lock_status(
+                self._lock.device_id, lock_status, update_start_time_utc
+            )
+            self.schedule_update_ha_state()
 
     def update(self):
         """Get the latest state of the sensor."""
@@ -60,6 +73,38 @@ class AugustLock(LockDevice):
 
         if activity is not None:
             self._changed_by = activity.operated_by
+            self._sync_lock_activity(activity)
+
+    def _sync_lock_activity(self, activity):
+        """Check the activity for the latest lock/unlock activity (events).
+
+        We use this to determine the lock state in between calls to the lock
+        api as we update it more frequently
+        """
+        last_lock_status_update_time_utc = self._data.get_last_lock_status_update_time_utc(
+            self._lock.device_id
+        )
+        activity_end_time_utc = dt.as_utc(activity.activity_end_time)
+
+        if activity_end_time_utc > last_lock_status_update_time_utc:
+            _LOGGER.debug(
+                "The activity log has new events for %s: [action=%s] [activity_end_time_utc=%s] > [last_lock_status_update_time_utc=%s]",
+                self.name,
+                activity.action,
+                activity_end_time_utc,
+                last_lock_status_update_time_utc,
+            )
+            activity_start_time_utc = dt.as_utc(activity.activity_start_time)
+            if activity.action == "lock" or activity.action == "onetouchlock":
+                self._update_lock_status(LockStatus.LOCKED, activity_start_time_utc)
+            elif activity.action == "unlock":
+                self._update_lock_status(LockStatus.UNLOCKED, activity_start_time_utc)
+            else:
+                _LOGGER.info(
+                    "Unhandled lock activity action %s for %s",
+                    activity.action,
+                    self.name,
+                )
 
     @property
     def name(self):
