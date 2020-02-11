@@ -24,7 +24,7 @@ DEFAULT_COUNTRY_CODE = "NL"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_POSTCODE): cv.string,
-        vol.Required(CONF_HOUSE_NUMBER): cv.positive_int,
+        vol.Required(CONF_HOUSE_NUMBER): cv.string,
         vol.Optional(CONF_HOUSE_NUMBER_EXTENSION): cv.string,
         vol.Optional(CONF_COUNTRY_CODE, default=DEFAULT_COUNTRY_CODE): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -97,10 +97,10 @@ class AvriWasteUpcoming(Entity):
             )
             self._state = None
         else:
-            if not pickup_events:
+            matched_events = list(
+                filter(lambda event: event.name == self._waste_type, pickup_events)
+            )
+            if not matched_events:
                 self._state = None
                 return
-            for event in pickup_events:
-                if event.name == self._waste_type:
-                    self._state = event.day.date()
-                    break
+            self._state = matched_events[0].day.date()
