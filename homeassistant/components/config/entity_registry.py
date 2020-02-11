@@ -152,4 +152,6 @@ def _entry_dict(entry):
         "name": entry.name,
         "icon": entry.icon,
         "platform": entry.platform,
+        "original_name": entry.original_name,
+        "original_icon": entry.original_icon,
     }
