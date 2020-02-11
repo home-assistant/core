@@ -337,7 +337,7 @@ class Entity(ABC):
         if name is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
-        icon = self.icon
+        icon = (entry and entry.icon) or self.icon
         if icon is not None:
             attr[ATTR_ICON] = icon
 
