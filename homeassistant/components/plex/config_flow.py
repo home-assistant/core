@@ -20,6 +20,7 @@ from .const import (  # pylint: disable=unused-import
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
     CONF_CLIENT_IDENTIFIER,
+    CONF_IGNORE_SHARED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     CONF_SHOW_ALL_CONTROLS,
@@ -268,6 +269,9 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS] = user_input[
                 CONF_SHOW_ALL_CONTROLS
             ]
+            self.options[MP_DOMAIN][CONF_IGNORE_SHARED_USERS] = user_input[
+                CONF_IGNORE_SHARED_USERS
+            ]
             return self.async_create_entry(title="", data=self.options)
 
         return self.async_show_form(
@@ -281,6 +285,12 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_SHOW_ALL_CONTROLS,
                         default=self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS],
+                    ): bool,
+                    vol.Required(
+                        CONF_IGNORE_SHARED_USERS,
+                        default=self.options[MP_DOMAIN].get(
+                            CONF_IGNORE_SHARED_USERS, False
+                        ),
                     ): bool,
                 }
             ),

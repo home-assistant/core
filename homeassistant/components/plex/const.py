@@ -29,6 +29,7 @@ CONF_SERVER = "server"
 CONF_SERVER_IDENTIFIER = "server_id"
 CONF_USE_EPISODE_ART = "use_episode_art"
 CONF_SHOW_ALL_CONTROLS = "show_all_controls"
+CONF_IGNORE_SHARED_USERS = "ignore_shared_users"
 
 AUTH_CALLBACK_PATH = "/auth/plex/callback"
 AUTH_CALLBACK_NAME = "auth:plex:callback"

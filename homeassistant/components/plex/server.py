@@ -13,6 +13,7 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
     CONF_CLIENT_IDENTIFIER,
+    CONF_IGNORE_SHARED_USERS,
     CONF_SERVER,
     CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
@@ -121,6 +122,7 @@ class PlexServer:
         _LOGGER.debug("Updating devices")
 
         available_clients = {}
+        ignored_clients = set()
         new_clients = set()
 
         try:
@@ -147,7 +149,12 @@ class PlexServer:
             if session.TYPE == "photo":
                 _LOGGER.debug("Photo session detected, skipping: %s", session)
                 continue
+            session_username = session.usernames[0]
             for player in session.players:
+                if self.ignore_shared_users and session_username != self.owner:
+                    ignored_clients.add(player.machineIdentifier)
+                    _LOGGER.debug("Ignoring Plex client owned by %s", session_username)
+                    continue
                 self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
                     player.machineIdentifier, {"device": player}
@@ -160,6 +167,8 @@ class PlexServer:
 
         new_entity_configs = []
         for client_id, client_data in available_clients.items():
+            if client_id in ignored_clients:
+                continue
             if client_id in new_clients:
                 new_entity_configs.append(client_data)
             else:
@@ -167,11 +176,11 @@ class PlexServer:
                     client_id, client_data["device"], client_data.get("session")
                 )
 
-        self._known_clients.update(new_clients)
+        self._known_clients.update(new_clients | ignored_clients)
 
-        idle_clients = (self._known_clients - self._known_idle).difference(
-            available_clients
-        )
+        idle_clients = (
+            self._known_clients - self._known_idle - ignored_clients
+        ).difference(available_clients)
         for client_id in idle_clients:
             self.refresh_entity(client_id, None, None)
             self._known_idle.add(client_id)
@@ -218,6 +227,11 @@ class PlexServer:
     def url_in_use(self):
         """Return URL used for connected Plex server."""
         return self._plex_server._baseurl  # pylint: disable=protected-access
+
+    @property
+    def ignore_shared_users(self):
+        """Return ignore_shared_users option."""
+        return self.options[MP_DOMAIN].get(CONF_IGNORE_SHARED_USERS, False)
 
     @property
     def use_episode_art(self):
