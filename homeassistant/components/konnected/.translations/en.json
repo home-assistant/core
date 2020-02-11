@@ -3,17 +3,15 @@
         "abort": {
             "already_configured": "Device is already configured",
             "already_in_progress": "Config flow for device is already in progress.",
-            "cannot_connect": "Unable to connect to the Konnected Panel",
             "not_konn_panel": "Not a recognized Konnected.io device",
-            "unknown": "Unknown error occurred",
-            "wrong_device": "MAC address of device at host does not match config entry"
+            "unknown": "Unknown error occurred"
         },
         "error": {
             "cannot_connect": "Unable to connect to a Konnected Panel at {host}:{port}"
         },
         "step": {
             "confirm": {
-                "description": "Model: {model}\nHost: {host}\nPort: {port}\n\nUse config options to configure the IO and panel behavior.",
+                "description": "Model: {model}\nHost: {host}\nPort: {port}\n\nYou can configure the IO and panel behavior in the Konnected Alarm Panel settings.",
                 "title": "Konnected Device Ready"
             },
             "user": {
@@ -28,7 +26,9 @@
         "title": "Konnected.io"
     },
     "options": {
-        "abort": {},
+        "abort": {
+            "not_konn_panel": "Not a recognized Konnected.io device"
+        },
         "error": {},
         "step": {
             "options_binary": {

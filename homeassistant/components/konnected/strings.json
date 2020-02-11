@@ -20,8 +20,6 @@
     },
     "abort": {
       "unknown": "Unknown error occurred",
-      "cannot_connect": "Unable to connect to the Konnected Panel",
-      "wrong_device": "MAC address of device at host does not match config entry",
       "already_configured": "Device is already configured",
       "already_in_progress": "Config flow for device is already in progress.",
       "not_konn_panel": "Not a recognized Konnected.io device"
@@ -96,6 +94,8 @@
       }
     },
     "error": {},
-    "abort": {}
+    "abort": {
+      "not_konn_panel": "Not a recognized Konnected.io device"
+    }
   }
 }
