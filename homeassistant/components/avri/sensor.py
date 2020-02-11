@@ -97,7 +97,7 @@ class AvriWasteUpcoming(Entity):
             )
             self._state = None
         else:
-            if len(pickup_events) == 0:
+            if not pickup_events:
                 self._state = None
                 return
             for event in pickup_events:
