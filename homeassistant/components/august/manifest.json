@@ -2,7 +2,7 @@
   "domain": "august",
   "name": "August",
   "documentation": "https://www.home-assistant.io/integrations/august",
-  "requirements": ["py-august==0.7.0"],
+  "requirements": ["py-august==0.8.1"],
   "dependencies": ["configurator"],
   "codeowners": []
 }

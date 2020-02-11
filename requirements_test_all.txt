@@ -32,7 +32,7 @@ abodepy==0.17.0
 adb-shell==0.1.1
 
 # homeassistant.components.adguard
-adguardhome==0.4.0
+adguardhome==0.4.1
 
 # homeassistant.components.geonetnz_quakes
 aio_geojson_geonetnz_quakes==0.11
@@ -112,7 +112,7 @@ av==6.1.2
 axis==25
 
 # homeassistant.components.zha
-bellows-homeassistant==0.13.1
+bellows-homeassistant==0.13.2
 
 # homeassistant.components.bom
 bomradarloop==0.1.3
@@ -487,7 +487,7 @@ pymodbus==1.5.2
 pymonoprice==0.3
 
 # homeassistant.components.nws
-pynws==0.10.1
+pynws==0.10.4
 
 # homeassistant.components.nx584
 pynx584==0.4
@@ -702,7 +702,7 @@ zha-quirks==0.0.32
 zigpy-deconz==0.7.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.13.0
+zigpy-homeassistant==0.13.2
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.9.0
