@@ -1,4 +1,4 @@
-FROM homeassistant/amd64-homeassistant-base:4.1
+FROM homeassistant/amd64-homeassistant-base:5.4
 
 WORKDIR /usr/src
 
@@ -13,12 +13,16 @@ RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
 WORKDIR /workspaces
 
 # Install Python dependencies from requirements
-COPY requirements_test.txt homeassistant/package_constraints.txt ./
-RUN pip3 install \
+COPY requirements_test.txt requirements_test_pre_commit.txt homeassistant/package_constraints.txt ./
+RUN \
+    pip3 install \
         --find-links "${WHEELS_LINKS}" \
         -r requirements_test.txt \
         -c package_constraints.txt \
-    && rm -f requirements_test.txt package_constraints.txt
+    && rm -f \
+        package_constraints.txt \
+        requirements_test_pre_commit.txt \
+        requirements_test.txt
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash
