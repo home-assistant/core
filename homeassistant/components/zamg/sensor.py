@@ -215,6 +215,8 @@ class ZamgData:
 def _get_zamg_stations():
     """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config."""
     capital_stations = {r["Station"] for r in ZamgData.current_observations()}
+    capital_stations.add('11231')  # correct number for Klagenfurt
+    capital_stations.add('11120')  # correct number for Innsbruck
     req = requests.get(
         "https://www.zamg.ac.at/cms/en/documents/climate/"
         "doc_metnetwork/zamg-observation-points",
@@ -224,6 +226,8 @@ def _get_zamg_stations():
     for row in csv.DictReader(req.text.splitlines(), delimiter=";", quotechar='"'):
         if row.get("synnr") in capital_stations:
             try:
+                if row["synnr"] == "11231": row["synnr"] = "11331"  # Override for Klagenfurt
+                if row["synnr"] == "11120": row["synnr"] = "11121"  # Override for Innsbruck
                 stations[row["synnr"]] = tuple(
                     float(row[coord].replace(",", "."))
                     for coord in ["breite_dezi", "länge_dezi"]
