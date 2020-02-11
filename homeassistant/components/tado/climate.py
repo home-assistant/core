@@ -70,8 +70,6 @@ SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME]
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tado climate platform."""
-    #    if discovery_info is None:
-    #      return
     api_list = hass.data[DOMAIN][DATA]
     entities = []
 

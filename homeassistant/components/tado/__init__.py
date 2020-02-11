@@ -63,7 +63,10 @@ def setup(hass, config):
         api_data_list.append(tadoconnector)
         # Poll for updates in the background
         hass.helpers.event.track_time_interval(
-            lambda now, tc=tadoconnector: tc.update(), SCAN_INTERVAL
+            # we're using here tadoconnector as a parameter of lambda
+            # to capture actual value instead of closuring of latest value
+            lambda now, tc=tadoconnector: tc.update(),
+            SCAN_INTERVAL,
         )
 
     hass.data[DOMAIN] = {}
