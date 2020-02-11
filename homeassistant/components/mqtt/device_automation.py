@@ -21,10 +21,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     extra=vol.ALLOW_EXTRA,
 )
 
-DEVICE_TRIGGERS = "mqtt_device_triggers"
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(hass, config_entry):
     """Set up MQTT device automation dynamically through MQTT discovery."""
 
     async def async_discover(discovery_payload):
@@ -34,7 +32,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             config = PLATFORM_SCHEMA(discovery_payload)
             if config[CONF_AUTOMATION_TYPE] == AUTOMATION_TYPE_TRIGGER:
                 await device_trigger.async_setup_trigger(
-                    hass, config, async_add_entities, config_entry, discovery_hash
+                    hass, config, config_entry, discovery_hash
                 )
         except Exception:
             if discovery_hash:

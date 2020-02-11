@@ -199,9 +199,14 @@ async def async_start(
             config_entries_key = "{}.{}".format(component, "mqtt")
             async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
                 if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
-                    await hass.config_entries.async_forward_entry_setup(
-                        config_entry, component
-                    )
+                    if component == "device_automation":
+                        from . import device_automation
+
+                        await device_automation.async_setup_entry(hass, config_entry)
+                    else:
+                        await hass.config_entries.async_forward_entry_setup(
+                            config_entry, component
+                        )
                     hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
 
             async_dispatcher_send(

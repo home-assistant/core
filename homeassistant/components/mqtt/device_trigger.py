@@ -10,7 +10,7 @@ from homeassistant.components.automation import AutomationActionType
 import homeassistant.components.automation.mqtt as automation_mqtt
 from homeassistant.components.device_automation import TRIGGER_BASE_SCHEMA
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
@@ -82,6 +82,16 @@ class Trigger:
     discovery_hash = attr.ib(type=str)
 
 
+async def _update_device(hass, config_entry, config):
+    device_registry = await hass.helpers.device_registry.async_get_registry()
+    config_entry_id = config_entry.entry_id
+    device_info = mqtt.device_info_from_config(config[CONF_DEVICE])
+
+    if config_entry_id is not None and device_info is not None:
+        device_info["config_entry_id"] = config_entry_id
+        device_registry.async_get_or_create(**device_info)
+
+
 def _update_trigger(hass, discovery_hash, config):
     for device_id, triggers in hass.data[DEVICE_TRIGGERS].items():
         if discovery_hash in triggers:
@@ -101,15 +111,12 @@ def _remove_trigger(hass, discovery_hash):
         triggers.pop(discovery_hash)
 
 
-async def async_setup_trigger(
-    hass, config, async_add_entities, config_entry, discovery_hash
-):
+async def async_setup_trigger(hass, config, config_entry, discovery_hash):
     """Set up the MQTT device trigger."""
     config = PLATFORM_SCHEMA(config)
     remove_signal = None
 
-    @callback
-    def discovery_callback(payload):
+    async def discovery_update(payload):
         """Handle discovery update."""
         _LOGGER.info(
             "Got update for trigger with hash: %s '%s'", discovery_hash, payload
@@ -125,39 +132,37 @@ async def async_setup_trigger(
             _LOGGER.info("Updating trigger: %s", discovery_hash)
             payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(payload)
+            await _update_device(hass, config_entry, config)
             _update_trigger(hass, discovery_hash, config)
 
     remove_signal = async_dispatcher_connect(
-        hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), discovery_callback
+        hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), discovery_update
     )
 
+    await _update_device(hass, config_entry, config)
+
     device_registry = await hass.helpers.device_registry.async_get_registry()
-    config_entry_id = config_entry.entry_id
-    device_info = mqtt.device_info_from_config(config[CONF_DEVICE])
-
-    if config_entry_id is not None and device_info is not None:
-        device_info["config_entry_id"] = config_entry_id
-        device_registry.async_get_or_create(**device_info)
-
     device = device_registry.async_get_device(
         {(DOMAIN, id_) for id_ in config[CONF_DEVICE][CONF_IDENTIFIERS]},
         {tuple(x) for x in config[CONF_DEVICE][CONF_CONNECTIONS]},
     )
 
-    if device is not None:
-        if DEVICE_TRIGGERS not in hass.data:
-            hass.data[DEVICE_TRIGGERS] = {}
-        if device.id not in hass.data[DEVICE_TRIGGERS]:
-            hass.data[DEVICE_TRIGGERS][device.id] = {}
-        hass.data[DEVICE_TRIGGERS][device.id][discovery_hash] = Trigger(
-            device_id=device.id,
-            type=config[CONF_TYPE],
-            subtype=config[CONF_SUBTYPE],
-            topic=config[CONF_TOPIC],
-            payload=config[CONF_PAYLOAD],
-            qos=config[CONF_QOS],
-            discovery_hash=discovery_hash,
-        )
+    if device is None:
+        return
+
+    if DEVICE_TRIGGERS not in hass.data:
+        hass.data[DEVICE_TRIGGERS] = {}
+    if device.id not in hass.data[DEVICE_TRIGGERS]:
+        hass.data[DEVICE_TRIGGERS][device.id] = {}
+    hass.data[DEVICE_TRIGGERS][device.id][discovery_hash] = Trigger(
+        device_id=device.id,
+        type=config[CONF_TYPE],
+        subtype=config[CONF_SUBTYPE],
+        topic=config[CONF_TOPIC],
+        payload=config[CONF_PAYLOAD],
+        qos=config[CONF_QOS],
+        discovery_hash=discovery_hash,
+    )
 
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:

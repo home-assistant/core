@@ -1,4 +1,6 @@
 """The tests for MQTT device triggers."""
+import json
+
 import pytest
 
 import homeassistant.components.automation as automation
@@ -248,3 +250,79 @@ async def test_if_fires_on_state_change(hass, calls, mqtt_mock):
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "long_press"
+
+
+async def test_entity_device_info_with_identifier(hass, mqtt_mock):
+    """Test MQTT device registry integration."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    data = json.dumps(
+        {
+            "automation_type": "trigger",
+            "topic": "test-topic",
+            "type": "foo",
+            "subtype": "bar",
+            "device": {
+                "identifiers": ["helloworld"],
+                "connections": [["mac", "02:5b:26:a8:dc:12"]],
+                "manufacturer": "Whatever",
+                "name": "Beer",
+                "model": "Glass",
+                "sw_version": "0.1-beta",
+            },
+        }
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+    assert device.identifiers == {("mqtt", "helloworld")}
+    assert device.connections == {("mac", "02:5b:26:a8:dc:12")}
+    assert device.manufacturer == "Whatever"
+    assert device.name == "Beer"
+    assert device.model == "Glass"
+    assert device.sw_version == "0.1-beta"
+
+
+async def test_entity_device_info_update(hass, mqtt_mock):
+    """Test device registry update."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, entry)
+    registry = await hass.helpers.device_registry.async_get_registry()
+
+    config = {
+        "automation_type": "trigger",
+        "topic": "test-topic",
+        "type": "foo",
+        "subtype": "bar",
+        "device": {
+            "identifiers": ["helloworld"],
+            "connections": [["mac", "02:5b:26:a8:dc:12"]],
+            "manufacturer": "Whatever",
+            "name": "Beer",
+            "model": "Glass",
+            "sw_version": "0.1-beta",
+        },
+    }
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+    assert device.name == "Beer"
+
+    config["device"]["name"] = "Milk"
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")}, set())
+    assert device is not None
+    assert device.name == "Milk"
