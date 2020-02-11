@@ -185,7 +185,9 @@ class LgTVDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """URL for obtaining a screen capture."""
-        return f"{self._client.url}data?target=screen_image&_={str(int(datetime.now().timestamp()))}"
+        return (
+            f"{self._client.url}data?target=screen_image&_={datetime.now().timestamp()}"
+        )
 
     def turn_off(self):
         """Turn off media player."""
