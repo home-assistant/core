@@ -1,18 +1,19 @@
-FROM python:3.7
+FROM homeassistant/home-assistant:latest
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        libudev-dev \
-        libavformat-dev \
-        libavcodec-dev \
-        libavdevice-dev \
-        libavutil-dev \
-        libswscale-dev \
-        libswresample-dev \
-        libavfilter-dev \
-        git \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Install git, bash, useful dependencies, and add a non-root user
+ARG USERNAME=vscode
+ARG USER_UID=1000
+ARG USER_GID=1000
+
+RUN apk update \
+    && apk add --no-cache git openssh-client less bash libgcc libstdc++ \
+        curl wget unzip procps coreutils ca-certificates krb5-libs \
+        libintl libssl1.1 lttng-ust tzdata userspace-rcu zlib shadow \
+    && groupadd --gid $USER_GID $USERNAME \
+    && useradd -s /bin/ash -K MAIL_DIR=/dev/null --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    && apk add --no-cache sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
 
 WORKDIR /usr/src
 
@@ -25,8 +26,12 @@ WORKDIR /workspaces
 
 # Install Python dependencies from requirements
 COPY requirements_test.txt requirements_test_pre_commit.txt homeassistant/package_constraints.txt ./
-RUN pip3 install -r requirements_test.txt -c package_constraints.txt \
+RUN apk add --no-cache build-base \
+    && pip3 install -r requirements_test.txt -c package_constraints.txt \
     && rm -f requirements_test.txt package_constraints.txt requirements_test_pre_commit.txt
+
+# Set the default user.
+USER $USERNAME
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash
