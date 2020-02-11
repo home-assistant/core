@@ -365,13 +365,25 @@ class Entity(ABC):
 
         if end - start > 0.4 and not self._slow_reported:
             self._slow_reported = True
+            extra = ""
+            if "custom_components" in type(self).__module__:
+                extra = "Please report it to the custom component author."
+            else:
+                extra = (
+                    "Please create a bug report at "
+                    "https://github.com/home-assistant/home-assistant/issues?q=is%3Aopen+is%3Aissue"
+                )
+                if self.platform:
+                    extra += (
+                        f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
+                    )
+
             _LOGGER.warning(
-                "Updating state for %s (%s) took %.3f seconds. "
-                "Please report platform to the developers at "
-                "https://goo.gl/Nvioub",
+                "Updating state for %s (%s) took %.3f seconds. %s",
                 self.entity_id,
                 type(self),
                 end - start,
+                extra,
             )
 
         # Overwrite properties that have been set in the config file.

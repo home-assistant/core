@@ -131,9 +131,22 @@ class ConversationProcessView(http.HomeAssistantView):
         """Send a request for processing."""
         hass = request.app["hass"]
 
-        intent_result = await _async_converse(
-            hass, data["text"], data.get("conversation_id"), self.context(request)
-        )
+        try:
+            intent_result = await _async_converse(
+                hass, data["text"], data.get("conversation_id"), self.context(request)
+            )
+        except intent.IntentError as err:
+            _LOGGER.error("Error handling intent: %s", err)
+            return self.json(
+                {
+                    "success": False,
+                    "error": {
+                        "code": str(err.__class__.__name__).lower(),
+                        "message": str(err),
+                    },
+                },
+                status_code=500,
+            )
 
         return self.json(intent_result)
 

@@ -77,7 +77,7 @@ PySocks==1.7.1
 PyTransportNSW==0.1.1
 
 # homeassistant.components.vicare
-PyViCare==0.1.2
+PyViCare==0.1.7
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.12.4
@@ -117,7 +117,7 @@ adafruit-circuitpython-mcp230xx==1.1.2
 adb-shell==0.1.1
 
 # homeassistant.components.adguard
-adguardhome==0.4.0
+adguardhome==0.4.1
 
 # homeassistant.components.frontier_silicon
 afsapi==0.0.4
@@ -130,6 +130,9 @@ aio_geojson_geonetnz_volcano==0.5
 
 # homeassistant.components.nsw_rural_fire_service_feed
 aio_geojson_nsw_rfs_incidents==0.1
+
+# homeassistant.components.gdacs
+aio_georss_gdacs==0.3
 
 # homeassistant.components.ambient_station
 aioambient==1.0.2
@@ -190,7 +193,7 @@ aionotion==1.1.0
 aiopvapi==1.6.14
 
 # homeassistant.components.webostv
-aiopylgtv==0.3.2
+aiopylgtv==0.3.3
 
 # homeassistant.components.switcher_kis
 aioswitcher==2019.4.26
@@ -217,7 +220,7 @@ alpha_vantage==2.1.3
 ambiclimate==0.2.1
 
 # homeassistant.components.amcrest
-amcrest==1.5.3
+amcrest==1.5.6
 
 # homeassistant.components.androidtv
 androidtv==0.0.39
@@ -299,7 +302,7 @@ beautifulsoup4==4.8.2
 beewi_smartclim==0.0.7
 
 # homeassistant.components.zha
-bellows-homeassistant==0.13.1
+bellows-homeassistant==0.13.2
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.6.2
@@ -423,7 +426,7 @@ defusedxml==0.6.0
 deluge-client==1.7.1
 
 # homeassistant.components.denonavr
-denonavr==0.7.11
+denonavr==0.7.12
 
 # homeassistant.components.directv
 directpy==0.5
@@ -451,6 +454,9 @@ dsmr_parser==0.18
 
 # homeassistant.components.dweet
 dweepy==0.3.0
+
+# homeassistant.components.dynalite
+dynalite_devices==0.1.17
 
 # homeassistant.components.rainforest_eagle
 eagle200_reader==0.2.1
@@ -582,6 +588,7 @@ georss_qld_bushfire_alert_client==0.3
 # homeassistant.components.braviatv
 # homeassistant.components.huawei_lte
 # homeassistant.components.kef
+# homeassistant.components.minecraft_server
 # homeassistant.components.nmap_tracker
 getmac==0.8.1
 
@@ -676,7 +683,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200130.1
+home-assistant-frontend==20200130.2
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -727,7 +734,7 @@ incomfort-client==0.4.0
 influxdb==5.2.3
 
 # homeassistant.components.insteon
-insteonplm==0.16.6
+insteonplm==0.16.7
 
 # homeassistant.components.iperf3
 iperf3==0.1.11
@@ -798,9 +805,6 @@ limitlessled==1.1.3
 # homeassistant.components.linode
 linode-api==4.1.9b1
 
-# homeassistant.components.liveboxplaytv
-liveboxplaytv==2.0.3
-
 # homeassistant.components.lametric
 lmnotify==0.0.4
 
@@ -836,6 +840,9 @@ maxcube-api==0.1.0
 
 # homeassistant.components.mythicbeastsdns
 mbddns==0.1.2
+
+# homeassistant.components.minecraft_server
+mcstatus==2.3.0
 
 # homeassistant.components.message_bird
 messagebird==1.2.0
@@ -1060,11 +1067,14 @@ pushbullet.py==0.11.0
 # homeassistant.components.pushetta
 pushetta==1.0.15
 
+# homeassistant.components.pushover
+pushover_complete==1.1.1
+
 # homeassistant.components.rpi_gpio_pwm
 pwmled==1.4.1
 
 # homeassistant.components.august
-py-august==0.7.0
+py-august==0.8.1
 
 # homeassistant.components.canary
 py-canary==0.5.0
@@ -1212,7 +1222,7 @@ pyebox==1.1.4
 pyeconet==0.0.11
 
 # homeassistant.components.edimax
-pyedimax==0.1
+pyedimax==0.2.1
 
 # homeassistant.components.eight_sleep
 pyeight==0.1.2
@@ -1350,6 +1360,9 @@ pymailgunner==1.4
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4
 
+# homeassistant.components.melcloud
+pymelcloud==2.0.0
+
 # homeassistant.components.somfy
 pymfy==0.7.1
 
@@ -1396,7 +1409,7 @@ pynuki==1.3.3
 pynut2==2.1.2
 
 # homeassistant.components.nws
-pynws==0.10.1
+pynws==0.10.4
 
 # homeassistant.components.nx584
 pynx584==0.4
@@ -1532,9 +1545,6 @@ pysyncthru==0.5.0
 # homeassistant.components.tautulli
 pytautulli==0.5.0
 
-# homeassistant.components.liveboxplaytv
-pyteleloisirs==3.6
-
 # homeassistant.components.tfiac
 pytfiac==0.4
 
@@ -1604,9 +1614,6 @@ python-nest==4.1.0
 # homeassistant.components.nmap_tracker
 python-nmap==0.6.1
 
-# homeassistant.components.pushover
-python-pushover==0.4
-
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.1
 
@@ -1635,7 +1642,7 @@ python-telnet-vlc==1.0.4
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.36
+python-velbus==2.0.40
 
 # homeassistant.components.vlc
 python-vlc==1.1.2
@@ -1927,7 +1934,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.1.10
+surepy==0.2.3
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.0.3
@@ -2127,10 +2134,13 @@ zhong_hong_hvac==1.0.9
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zha
+zigpy-cc==0.1.0
+
+# homeassistant.components.zha
 zigpy-deconz==0.7.0
 
 # homeassistant.components.zha
-zigpy-homeassistant==0.13.0
+zigpy-homeassistant==0.13.2
 
 # homeassistant.components.zha
 zigpy-xbee-homeassistant==0.9.0

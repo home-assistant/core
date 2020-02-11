@@ -6,6 +6,7 @@
             "already_setup_with_diff_host_and_name": "Denne oppf\u00f8ringen ser ut til \u00e5 allerede v\u00e6re konfigurert med en annen vert og navn basert p\u00e5 serienummeret. Fjern den gamle oppf\u00f8ringer fra konfigurasjonen.yaml og fra integrasjonsmenyen f\u00f8r du pr\u00f8ver ut \u00e5 legge til denne enheten p\u00e5 nytt.",
             "host_exists": "Vizio komponent med vert allerede konfigurert.",
             "name_exists": "Vizio-komponent med navn som allerede er konfigurert.",
+            "updated_entry": "Denne oppf\u00f8ringen er allerede konfigurert, men navnet og / eller alternativene som er definert i konfigurasjonen, stemmer ikke overens med den tidligere importerte konfigurasjonen, s\u00e5 konfigurasjonsoppf\u00f8ringen er oppdatert deretter.",
             "updated_options": "Denne oppf\u00f8ringen er allerede konfigurert, men alternativene som er definert i konfigurasjonen samsvarer ikke med de tidligere importerte alternativverdiene, s\u00e5 konfigurasjonsoppf\u00f8ringen er oppdatert deretter.",
             "updated_volume_step": "Denne oppf\u00f8ringen er allerede konfigurert, men volumstrinnst\u00f8rrelsen i konfigurasjonen samsvarer ikke med konfigurasjonsoppf\u00f8ringen, s\u00e5 konfigurasjonsoppf\u00f8ringen er oppdatert deretter."
         },

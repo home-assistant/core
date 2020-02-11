@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Witryna kontrolera jest ju\u017c skonfigurowana",
+            "already_configured": "Witryna kontrolera jest ju\u017c skonfigurowana.",
             "user_privilege": "U\u017cytkownik musi by\u0107 administratorem"
         },
         "error": {
