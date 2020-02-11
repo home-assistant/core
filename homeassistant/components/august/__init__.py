@@ -15,7 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, dt
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,8 +36,28 @@ AUGUST_CONFIG_FILE = ".august.conf"
 DATA_AUGUST = "august"
 DOMAIN = "august"
 DEFAULT_ENTITY_NAMESPACE = "august"
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
+
+# Limit battery and hardware updates to 1800 seconds
+# in order to reduce the number of api requests and
+# avoid hitting rate limits
+MIN_TIME_BETWEEN_LOCK_DETAIL_UPDATES = timedelta(seconds=1800)
+
+# Limit locks status check to 900 seconds now that
+# we get the state from the lock and unlock api calls
+# and the lock and unlock activities are now captured
+MIN_TIME_BETWEEN_LOCK_STATUS_UPDATES = timedelta(seconds=900)
+
+# Doorbells need to update more frequently than locks
+# since we get an image from the doorbell api
+MIN_TIME_BETWEEN_DOORBELL_STATUS_UPDATES = timedelta(seconds=20)
+
+# Activity needs to be checked more frequently as the
+# doorbell motion and rings are included here
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
+
+
 LOGIN_METHODS = ["phone", "email"]
 
 CONFIG_SCHEMA = vol.Schema(
@@ -180,9 +200,12 @@ class AugustData:
         self._access_token = access_token
         self._doorbells = self._api.get_doorbells(self._access_token) or []
         self._locks = self._api.get_operable_locks(self._access_token) or []
-        self._house_ids = [d.house_id for d in self._doorbells + self._locks]
+        self._house_ids = set()
+        for device in self._doorbells + self._locks:
+            self._house_ids.add(device.house_id)
 
         self._doorbell_detail_by_id = {}
+        self._lock_last_status_update_time_utc_by_id = {}
         self._lock_status_by_id = {}
         self._lock_detail_by_id = {}
         self._door_state_by_id = {}
@@ -234,6 +257,7 @@ class AugustData:
                 self._activities_by_id[device_id] = [
                     a for a in activities if a.device_id == device_id
                 ]
+
         _LOGGER.debug("Completed retrieving device activities")
 
     def get_doorbell_detail(self, doorbell_id):
@@ -241,7 +265,7 @@ class AugustData:
         self._update_doorbells()
         return self._doorbell_detail_by_id.get(doorbell_id)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    @Throttle(MIN_TIME_BETWEEN_DOORBELL_STATUS_UPDATES)
     def _update_doorbells(self):
         detail_by_id = {}
 
@@ -266,6 +290,17 @@ class AugustData:
         _LOGGER.debug("Completed retrieving doorbell details")
         self._doorbell_detail_by_id = detail_by_id
 
+    def update_lock_status(self, lock_id, lock_status, update_start_time_utc):
+        """Set the lock status and last status update time.
+
+        This is used when the lock, unlock apis are called
+        or newer activity is detected on the activity feed
+        in order to keep the internal data in sync
+        """
+        self._lock_status_by_id[lock_id] = lock_status
+        self._lock_last_status_update_time_utc_by_id[lock_id] = update_start_time_utc
+        return True
+
     def get_lock_status(self, lock_id):
         """Return status if the door is locked or unlocked.
 
@@ -284,58 +319,70 @@ class AugustData:
 
         This is the status from the door sensor.
         """
-        self._update_doors()
+        self._update_locks_status()
         return self._door_state_by_id.get(lock_id)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _update_doors(self):
+    def _update_locks(self):
+        self._update_locks_status()
+        self._update_locks_detail()
+
+    @Throttle(MIN_TIME_BETWEEN_LOCK_STATUS_UPDATES)
+    def _update_locks_status(self):
+        status_by_id = {}
         state_by_id = {}
+        last_status_update_by_id = {}
 
-        _LOGGER.debug("Start retrieving door status")
+        _LOGGER.debug("Start retrieving lock and door status")
         for lock in self._locks:
-            _LOGGER.debug("Updating door status for %s", lock.device_name)
-
+            update_start_time_utc = dt.utcnow()
+            _LOGGER.debug("Updating lock and door status for %s", lock.device_name)
             try:
-                state_by_id[lock.device_id] = self._api.get_lock_door_status(
-                    self._access_token, lock.device_id
+                (
+                    status_by_id[lock.device_id],
+                    state_by_id[lock.device_id],
+                ) = self._api.get_lock_status(
+                    self._access_token, lock.device_id, door_status=True
                 )
+                # Since there is a a race condition between calling the
+                # lock and activity apis, we set the last update time
+                # BEFORE making the api call since we will compare this
+                # to activity later we want activity to win over stale lock
+                # state.
+                last_status_update_by_id[lock.device_id] = update_start_time_utc
             except RequestException as ex:
                 _LOGGER.error(
-                    "Request error trying to retrieve door status for %s. %s",
+                    "Request error trying to retrieve lock and door status for %s. %s",
                     lock.device_name,
                     ex,
                 )
+                status_by_id[lock.device_id] = None
                 state_by_id[lock.device_id] = None
             except Exception:
+                status_by_id[lock.device_id] = None
                 state_by_id[lock.device_id] = None
                 raise
 
-        _LOGGER.debug("Completed retrieving door status")
+        _LOGGER.debug("Completed retrieving lock and door status")
+        self._lock_status_by_id = status_by_id
         self._door_state_by_id = state_by_id
+        self._lock_last_status_update_time_utc_by_id = last_status_update_by_id
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _update_locks(self):
-        status_by_id = {}
+    def get_last_lock_status_update_time_utc(self, lock_id):
+        """Return the last time that a lock status update was seen from the august API."""
+        # Since the activity api is called more frequently than
+        # the lock api it is possible that the lock has not
+        # been updated yet
+        if lock_id not in self._lock_last_status_update_time_utc_by_id:
+            return dt.utc_from_timestamp(0)
+
+        return self._lock_last_status_update_time_utc_by_id[lock_id]
+
+    @Throttle(MIN_TIME_BETWEEN_LOCK_DETAIL_UPDATES)
+    def _update_locks_detail(self):
         detail_by_id = {}
 
-        _LOGGER.debug("Start retrieving locks status")
+        _LOGGER.debug("Start retrieving locks detail")
         for lock in self._locks:
-            _LOGGER.debug("Updating lock status for %s", lock.device_name)
-            try:
-                status_by_id[lock.device_id] = self._api.get_lock_status(
-                    self._access_token, lock.device_id
-                )
-            except RequestException as ex:
-                _LOGGER.error(
-                    "Request error trying to retrieve door status for %s. %s",
-                    lock.device_name,
-                    ex,
-                )
-                status_by_id[lock.device_id] = None
-            except Exception:
-                status_by_id[lock.device_id] = None
-                raise
-
             try:
                 detail_by_id[lock.device_id] = self._api.get_lock_detail(
                     self._access_token, lock.device_id
@@ -351,8 +398,7 @@ class AugustData:
                 detail_by_id[lock.device_id] = None
                 raise
 
-        _LOGGER.debug("Completed retrieving locks status")
-        self._lock_status_by_id = status_by_id
+        _LOGGER.debug("Completed retrieving locks detail")
         self._lock_detail_by_id = detail_by_id
 
     def lock(self, device_id):

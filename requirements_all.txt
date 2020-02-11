@@ -77,7 +77,7 @@ PySocks==1.7.1
 PyTransportNSW==0.1.1
 
 # homeassistant.components.vicare
-PyViCare==0.1.2
+PyViCare==0.1.7
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.12.4
@@ -455,6 +455,9 @@ dsmr_parser==0.18
 # homeassistant.components.dweet
 dweepy==0.3.0
 
+# homeassistant.components.dynalite
+dynalite_devices==0.1.17
+
 # homeassistant.components.rainforest_eagle
 eagle200_reader==0.2.1
 
@@ -731,7 +734,7 @@ incomfort-client==0.4.0
 influxdb==5.2.3
 
 # homeassistant.components.insteon
-insteonplm==0.16.6
+insteonplm==0.16.7
 
 # homeassistant.components.iperf3
 iperf3==0.1.11
@@ -764,7 +767,7 @@ keyrings.alt==3.4.0
 kiwiki-client==0.1.1
 
 # homeassistant.components.konnected
-konnected==0.1.5
+konnected==1.1.0
 
 # homeassistant.components.eufy
 lakeside==0.12
@@ -1064,11 +1067,14 @@ pushbullet.py==0.11.0
 # homeassistant.components.pushetta
 pushetta==1.0.15
 
+# homeassistant.components.pushover
+pushover_complete==1.1.1
+
 # homeassistant.components.rpi_gpio_pwm
 pwmled==1.4.1
 
 # homeassistant.components.august
-py-august==0.7.0
+py-august==0.8.1
 
 # homeassistant.components.canary
 py-canary==0.5.0
@@ -1216,7 +1222,7 @@ pyebox==1.1.4
 pyeconet==0.0.11
 
 # homeassistant.components.edimax
-pyedimax==0.1
+pyedimax==0.2.1
 
 # homeassistant.components.eight_sleep
 pyeight==0.1.2
@@ -1353,6 +1359,9 @@ pymailgunner==1.4
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.4
+
+# homeassistant.components.melcloud
+pymelcloud==2.0.0
 
 # homeassistant.components.somfy
 pymfy==0.7.1
@@ -1605,9 +1614,6 @@ python-nest==4.1.0
 # homeassistant.components.nmap_tracker
 python-nmap==0.6.1
 
-# homeassistant.components.pushover
-python-pushover==0.4
-
 # homeassistant.components.qbittorrent
 python-qbittorrent==0.4.1
 
@@ -1636,7 +1642,7 @@ python-telnet-vlc==1.0.4
 python-twitch-client==0.6.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.36
+python-velbus==2.0.40
 
 # homeassistant.components.vlc
 python-vlc==1.1.2
@@ -1928,7 +1934,7 @@ sucks==0.9.4
 sunwatcher==0.2.1
 
 # homeassistant.components.surepetcare
-surepy==0.1.10
+surepy==0.2.3
 
 # homeassistant.components.swiss_hydrological_data
 swisshydrodata==0.0.3
@@ -2126,6 +2132,9 @@ zhong_hong_hvac==1.0.9
 
 # homeassistant.components.ziggo_mediabox_xl
 ziggo-mediabox-xl==1.1.0
+
+# homeassistant.components.zha
+zigpy-cc==0.1.0
 
 # homeassistant.components.zha
 zigpy-deconz==0.7.0

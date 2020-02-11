@@ -167,6 +167,9 @@ distro==1.4.0
 # homeassistant.components.dsmr
 dsmr_parser==0.18
 
+# homeassistant.components.dynalite
+dynalite_devices==0.1.17
+
 # homeassistant.components.ee_brightbox
 eebrightbox==0.0.4
 
@@ -283,6 +286,9 @@ keyring==20.0.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==3.4.0
+
+# homeassistant.components.konnected
+konnected==1.1.0
 
 # homeassistant.components.dyson
 libpurecool==0.6.1
@@ -484,6 +490,9 @@ pylitejet==0.1
 # homeassistant.components.mailgun
 pymailgunner==1.4
 
+# homeassistant.components.melcloud
+pymelcloud==2.0.0
+
 # homeassistant.components.somfy
 pymfy==0.7.1
 
@@ -562,7 +571,7 @@ python-miio==0.4.8
 python-nest==4.1.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.36
+python-velbus==2.0.40
 
 # homeassistant.components.awair
 python_awair==0.0.4
@@ -713,6 +722,9 @@ zeroconf==0.24.4
 
 # homeassistant.components.zha
 zha-quirks==0.0.32
+
+# homeassistant.components.zha
+zigpy-cc==0.1.0
 
 # homeassistant.components.zha
 zigpy-deconz==0.7.0
