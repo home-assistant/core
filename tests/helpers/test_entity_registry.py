@@ -534,7 +534,6 @@ async def test_restore_states(hass):
     all_info_set = hass.states.get("light.all_info_set")
     assert all_info_set is not None
     assert all_info_set.state == STATE_UNAVAILABLE
-    print(all_info_set.attributes)
     assert all_info_set.attributes == {
         "max": 100,
         "supported_features": 5,
