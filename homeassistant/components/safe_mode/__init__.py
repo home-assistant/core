@@ -9,7 +9,8 @@ async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Safe Mode component."""
     persistent_notification.async_create(
         hass,
-        "Home Assistant is running in safe mode. Check [the error log](/developer-tools/logs) to see what went wrong.",
-        "Safe Mode",
+        "Asystent domowy działa w trybie awaryjnym. Przejdz [do logów  systemu](/developer-tools/logs) i naciśnij "
+        "przycisk **ZAŁADUJ CAŁY LOG ASYSTENTA DOMOWEGO** aby zobaczyć, co poszło nie tak.",
+        "Tryb Awaryjny",
     )
     return True
