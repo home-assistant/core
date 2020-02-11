@@ -58,6 +58,12 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import config_validation as cv, event, intent
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
+from homeassistant import core, setup
+from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.core import callback
+from homeassistant.helpers import intent
+from homeassistant.setup import ATTR_COMPONENT
+from homeassistant.components.conversation.util import create_matcher
 
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -2869,6 +2875,7 @@ async def async_setup(hass, config):
     # AIS agent
     agent = AisAgent(hass)
     conversation.async_set_agent(hass, agent)
+    await agent.async_initialize()
     return True
 
 
@@ -4809,26 +4816,58 @@ class AisClimateSetAllOff(intent.IntentHandler):
 
 
 class AisAgent(conversation.AbstractConversationAgent):
-    """Almond conversation agent."""
+    """AIS dom conversation agent."""
 
     def __init__(self, hass: HomeAssistant):
         """Initialize the agent."""
         self.hass = hass
 
+    async def async_initialize(self):
+        """Initialize the default agent."""
+        if "intent" not in self.hass.config.components:
+            await setup.async_setup_component(self.hass, "intent", {})
+        #
+        config = self.hass.data.get("conversation_config")
+        intents = self.hass.data.setdefault("conversaton", {})
+
+        for intent_type, utterances in config.get("intents", {}).items():
+            conf = intents.get(intent_type)
+
+            if conf is None:
+                conf = intents[intent_type] = []
+
+            conf.extend(create_matcher(utterance) for utterance in utterances)
+
+        # TODO
+        # async_register(
+        #     self.hass,
+        #     intent.INTENT_TURN_ON,
+        #     ["Turn [the] [a] {name}[s] on", "Turn on [the] [a] [an] {name}[s]"],
+        # )
+
+        # @callback
+        # def component_loaded(event):
+        #     """Handle a new component loaded."""
+        #     self.register_utterances(event.data[ATTR_COMPONENT])
+        #
+        # self.hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
+
+        # Check already loaded components.
+        # for component in self.hass.config.components:
+        #     self.register_utterances(component)
+
     @property
     def attribution(self):
         """Return the attribution."""
         return {
-            "name": "",
+            "name": "AIS Agent",
             "url": "https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration.html",
         }
 
     async def async_get_onboarding(self):
         """Get onboard url if not onboarded."""
-        # return {
-        #     "text": "Would you like to opt-in to share your anonymized commands with Stanford to improve Almond's responses?",
-        #     "url": f"{host}/conversation",
-        # }
+        # return { "text": "Would you like to opt-in to share your anonymized commands with Stanford to improve
+        # Almond's responses?", "url": f"{host}/conversation", }
         return None
 
     async def async_set_onboarding(self, shown):
