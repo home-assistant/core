@@ -10,7 +10,7 @@ from vilfo.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, core, exceptions
+from homeassistant import config_entries, core, data_entry_flow, exceptions
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_ID, CONF_MAC
 
 from .const import DOMAIN  # pylint:disable=unused-import
@@ -125,6 +125,8 @@ class DomainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
+            except data_entry_flow.AbortFlow as abort_err:
+                raise abort_err
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error("Unexpected exception: %s", err)
                 errors["base"] = "unknown"

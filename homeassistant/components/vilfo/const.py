@@ -19,7 +19,6 @@ ROUTER_DEFAULT_NAME = "Vilfo Router"
 ROUTER_MANUFACTURER = "Vilfo AB"
 
 UNIT_PERCENT = "%"
-UNIT_ISO8601 = "ISO8601"
 
 SENSOR_TYPES = {
     "load": {
@@ -30,7 +29,6 @@ SENSOR_TYPES = {
     },
     "boot_time": {
         ATTR_LABEL: ATTR_BOOT_TIME.replace("_", " ").title(),
-        ATTR_UNIT: UNIT_ISO8601,
         ATTR_ICON: "mdi:timer",
         ATTR_API_DATA_FIELD: ATTR_API_DATA_FIELD_BOOT_TIME,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,

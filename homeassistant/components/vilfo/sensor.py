@@ -54,7 +54,7 @@ class VilfoRouterSensor(Entity):
     @property
     def device_class(self):
         """Return the device class."""
-        return SENSOR_TYPES[self.sensor_type].get(ATTR_DEVICE_CLASS, None)
+        return SENSOR_TYPES[self.sensor_type].get(ATTR_DEVICE_CLASS)
 
     @property
     def icon(self):
@@ -81,7 +81,7 @@ class VilfoRouterSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
-        return SENSOR_TYPES[self.sensor_type][ATTR_UNIT]
+        return SENSOR_TYPES[self.sensor_type].get(ATTR_UNIT)
 
     async def async_update(self):
         """Update the router data."""
