@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 
 # pylint:disable=unused-import
-from .const import CONF_MANUFACTURER, CONF_MODEL, DOMAIN, LOGGER, PORTS
+from .const import CONF_MANUFACTURER, CONF_MODEL, CONF_TOKEN_FILE, DOMAIN, LOGGER, PORTS
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
 
@@ -90,6 +90,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_MODEL: self._model,
                 CONF_NAME: self._name,
                 CONF_PORT: self._port,
+                CONF_TOKEN_FILE: self._token_file,
             },
         )
 

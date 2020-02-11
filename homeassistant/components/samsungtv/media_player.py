@@ -1,7 +1,6 @@
 """Support for interface with an Samsung TV."""
 import asyncio
 from datetime import timedelta
-import os
 
 from samsungctl import Remote as SamsungRemote, exceptions as samsung_exceptions
 from samsungtvws import SamsungTVWS
@@ -36,7 +35,14 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MANUFACTURER, CONF_MODEL, CONF_ON_ACTION, DOMAIN, LOGGER
+from .const import (
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_ON_ACTION,
+    CONF_TOKEN_FILE,
+    DOMAIN,
+    LOGGER,
+)
 
 KEY_PRESS_TIMEOUT = 1.2
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -106,27 +112,8 @@ class SamsungTVDevice(MediaPlayerDevice):
             "port": config_entry.data.get(CONF_PORT),
             "host": config_entry.data[CONF_HOST],
             "timeout": 1,
-            "token_file": None,
+            "token_file": config_entry.data[CONF_TOKEN_FILE],
         }
-        if config_entry.data[CONF_PORT] == 8002:
-            self._config["token_file"] = self._get_token_file()
-
-    def _get_token_file(self):
-        LOGGER.debug("Samsung TV - Creating token file")
-        path = self.hass.config.path()
-        host = self._config_entry.data[CONF_HOST]
-        token_file = f"{path}/.samsungtv-token-{host}.dat"
-
-        if os.path.isfile(token_file) is False:
-
-            # Create token file for catch possible errors
-            try:
-                handle = open(token_file, "w+")
-                handle.close()
-            except OSError:
-                LOGGER.error("Samsung TV - Error creating token file: %s", token_file)
-                token_file = None
-        return token_file
 
     def update(self):
         """Update state of device."""
