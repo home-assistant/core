@@ -137,7 +137,5 @@ class HMLight(HMDevice, Light):
 
         if self.supported_features & SUPPORT_COLOR:
             self._data.update({"COLOR": None})
-        if self.supported_features & SUPPORT_COLOR_TEMP:
-            self._data.update({"LEVEL": None})
         if self.supported_features & SUPPORT_EFFECT:
             self._data.update({"PROGRAM": None})
