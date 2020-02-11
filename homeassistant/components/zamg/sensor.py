@@ -226,8 +226,10 @@ def _get_zamg_stations():
     for row in csv.DictReader(req.text.splitlines(), delimiter=";", quotechar='"'):
         if row.get("synnr") in capital_stations:
             try:
-                if row["synnr"] == "11231": row["synnr"] = "11331"  # Override for Klagenfurt
-                if row["synnr"] == "11120": row["synnr"] = "11121"  # Override for Innsbruck
+                if row["synnr"] == "11231":  # Override for Klagenfurt
+                    row["synnr"] = "11331"
+                if row["synnr"] == "11120":  # Override for Innsbruck
+                    row["synnr"] = "11121"
                 stations[row["synnr"]] = tuple(
                     float(row[coord].replace(",", "."))
                     for coord in ["breite_dezi", "länge_dezi"]
