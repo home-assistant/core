@@ -7,10 +7,9 @@ import datetime
 import json
 import logging
 import re
-from typing import Optional
 import warnings
 
-from aiohttp.web import Response, json_response
+from aiohttp.web import json_response
 import requests
 import voluptuous as vol
 
@@ -54,16 +53,11 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     STATE_UNLOCKED,
 )
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import config_validation as cv, event, intent
+from homeassistant.helpers import config_validation as cv, event
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
-from homeassistant import core, setup
-from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.core import callback
 from homeassistant.helpers import intent
-from homeassistant.setup import ATTR_COMPONENT
-from homeassistant.components.conversation.util import create_matcher
+from .ais_agent import AisAgent
 
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -2875,7 +2869,6 @@ async def async_setup(hass, config):
     # AIS agent
     agent = AisAgent(hass)
     conversation.async_set_agent(hass, agent)
-    await agent.async_initialize()
     return True
 
 
@@ -4813,79 +4806,3 @@ class AisClimateSetAllOff(intent.IntentHandler):
 #             else:
 #                 msg = 'Na urządzeniu ' + name + ' nie można wyłączyć ogrzwania.'
 #             return msg, success
-
-
-class AisAgent(conversation.AbstractConversationAgent):
-    """AIS dom conversation agent."""
-
-    def __init__(self, hass: HomeAssistant):
-        """Initialize the agent."""
-        self.hass = hass
-
-    async def async_initialize(self):
-        """Initialize the default agent."""
-        if "intent" not in self.hass.config.components:
-            await setup.async_setup_component(self.hass, "intent", {})
-        #
-        config = self.hass.data.get("conversation_config")
-        intents = self.hass.data.setdefault("conversaton", {})
-
-        for intent_type, utterances in config.get("intents", {}).items():
-            conf = intents.get(intent_type)
-
-            if conf is None:
-                conf = intents[intent_type] = []
-
-            conf.extend(create_matcher(utterance) for utterance in utterances)
-
-        # TODO
-        # async_register(
-        #     self.hass,
-        #     intent.INTENT_TURN_ON,
-        #     ["Turn [the] [a] {name}[s] on", "Turn on [the] [a] [an] {name}[s]"],
-        # )
-
-        # @callback
-        # def component_loaded(event):
-        #     """Handle a new component loaded."""
-        #     self.register_utterances(event.data[ATTR_COMPONENT])
-        #
-        # self.hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
-
-        # Check already loaded components.
-        # for component in self.hass.config.components:
-        #     self.register_utterances(component)
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return {
-            "name": "AIS Agent",
-            "url": "https://sviete.github.io/AIS-docs/docs/en/ais_app_ai_integration.html",
-        }
-
-    async def async_get_onboarding(self):
-        """Get onboard url if not onboarded."""
-        # return { "text": "Would you like to opt-in to share your anonymized commands with Stanford to improve
-        # Almond's responses?", "url": f"{host}/conversation", }
-        return None
-
-    async def async_set_onboarding(self, shown):
-        """Set onboarding status."""
-        # TODO
-        return True
-
-    async def async_process(
-        self, text: str, context: Context, conversation_id: Optional[str] = None
-    ) -> intent.IntentResponse:
-        """Process a sentence."""
-        from homeassistant.components import ais_ai_service as ais_ai
-
-        intent_result = await ais_ai._process(self.hass, text)
-        if intent_result is None:
-            intent_result = intent.IntentResponse()
-            intent_result.async_set_speech(
-                "Przepraszam, jeszcze tego nie potrafię zrozumieć."
-            )
-
-        return intent_result
