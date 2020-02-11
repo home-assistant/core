@@ -11,21 +11,21 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .bridge import HueBridge
-from .const import DOMAIN
+from .const import (
+    CONF_ALLOW_HUE_GROUPS,
+    CONF_ALLOW_UNREACHABLE,
+    DEFAULT_ALLOW_HUE_GROUPS,
+    DEFAULT_ALLOW_UNREACHABLE,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BRIDGES = "bridges"
 
-CONF_ALLOW_UNREACHABLE = "allow_unreachable"
-DEFAULT_ALLOW_UNREACHABLE = False
-
 DATA_CONFIGS = "hue_configs"
 
 PHUE_CONFIG_FILE = "phue.conf"
-
-CONF_ALLOW_HUE_GROUPS = "allow_hue_groups"
-DEFAULT_ALLOW_HUE_GROUPS = True
 
 BRIDGE_CONFIG_SCHEMA = vol.Schema(
     {
@@ -112,8 +112,10 @@ async def async_setup_entry(
     config = hass.data[DATA_CONFIGS].get(host)
 
     if config is None:
-        allow_unreachable = DEFAULT_ALLOW_UNREACHABLE
-        allow_groups = DEFAULT_ALLOW_HUE_GROUPS
+        allow_unreachable = entry.data.get(
+            CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE
+        )
+        allow_groups = entry.data.get(CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS)
     else:
         allow_unreachable = config[CONF_ALLOW_UNREACHABLE]
         allow_groups = config[CONF_ALLOW_HUE_GROUPS]
