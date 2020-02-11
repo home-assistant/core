@@ -131,8 +131,8 @@ async def test_data_moving_average_for_discrete_sensor(hass):
     # (because the true derivative is 1 °C/min) an error of less than 10%.
 
     temperature_values = []
-    for temperature in range(60):
-        temperature_values += [temperature] * 60
+    for temperature in range(6):
+        temperature_values += [temperature] * 6
     time_window = 600
 
     times = list(range(len(temperature_values)))
