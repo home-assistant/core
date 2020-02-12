@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect, please try again",
-            "cn_too_many": "Too many results. Please precise your query",
+            "cn_too_many": "Too many results. Please state your query more precisely",
             "invalid_auth": "Invalid authentication",
             "no_results": "No results. Try with a different station/address",
             "unknown": "Unexpected error"
