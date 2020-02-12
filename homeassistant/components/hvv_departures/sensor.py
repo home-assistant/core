@@ -7,6 +7,8 @@ from pygti.exceptions import InvalidAuth
 from pygti.gti import GTI, Auth
 
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ID,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -24,13 +26,11 @@ MAX_TIME_OFFSET = 360
 ICON = "mdi:bus"
 UNIT_OF_MEASUREMENT = "min"
 
-ATTR_ATTRIBUTION = "attribution"
 ATTR_DEPARTURE = "departure"
 ATTR_LINE = "line"
 ATTR_ORIGIN = "origin"
 ATTR_DIRECTION = "direction"
 ATTR_TYPE = "type"
-ATTR_ID = "id"
 ATTR_DELAY = "delay"
 ATTR_NEXT = "next"
 
