@@ -8,9 +8,9 @@ from zigpy.application import ControllerApplication
 import zigpy.group
 import zigpy.types
 
-from homeassistant import config_entries
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.registries as zha_regs
+from homeassistant.setup import async_setup_component
 
 from .common import FakeDevice, FakeEndpoint, get_zha_gateway
 
@@ -47,8 +47,7 @@ def zigpy_radio():
 @pytest.fixture(name="config_entry")
 async def config_entry_fixture(hass):
     """Fixture representing a config entry."""
-    MockConfigEntry()
-    return MockConfigEntry(
+    entry = MockConfigEntry(
         version=1,
         domain=zha_const.DOMAIN,
         data={
@@ -57,14 +56,14 @@ async def config_entry_fixture(hass):
             zha_const.CONF_USB_PATH: "/dev/ttyUSB0",
         },
     )
+    entry.add_to_hass(hass)
+    return entry
 
 
 @pytest.fixture
 def setup_zha(hass, config_entry, zigpy_app_controller, zigpy_radio):
     """Set up ZHA component."""
-    hass.data[zha_const.DATA_ZHA] = {
-        zha_const.DATA_ZHA_CONFIG: {zha_const.CONF_ENABLE_QUIRKS: False}
-    }
+    zha_config = {zha_const.DOMAIN: {zha_const.CONF_ENABLE_QUIRKS: False}}
 
     radio_details = {
         zha_const.ZHA_GW_RADIO: mock.MagicMock(return_value=zigpy_radio),
@@ -73,10 +72,9 @@ def setup_zha(hass, config_entry, zigpy_app_controller, zigpy_radio):
     }
 
     async def _setup():
-        if config_entry.state != config_entries.ENTRY_STATE_NOT_LOADED:
-            return
         with mock.patch.dict(zha_regs.RADIO_TYPES, {"MockRadio": radio_details}):
-            await hass.config_entries.async_add(config_entry)
+            status = await async_setup_component(hass, zha_const.DOMAIN, zha_config)
+            assert status is True
             await hass.async_block_till_done()
 
     return _setup
