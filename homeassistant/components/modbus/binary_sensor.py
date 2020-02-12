@@ -2,6 +2,8 @@
 import logging
 from typing import Optional
 
+from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -83,6 +85,7 @@ class ModbusBinarySensor(BinarySensorDevice):
         self._device_class = device_class
         self._input_type = input_type
         self._value = None
+        self._available = True
 
     @property
     def name(self):
@@ -99,18 +102,38 @@ class ModbusBinarySensor(BinarySensorDevice):
         """Return the device class of the sensor."""
         return self._device_class
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
+
     def update(self):
         """Update the state of the sensor."""
-        if self._input_type == INPUT_TYPE_COIL:
-            result = self._hub.read_coils(self._slave, self._address, 1)
-        else:
-            result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
         try:
-            self._value = result.bits[0]
-        except AttributeError:
-            _LOGGER.error(
-                "No response from hub %s, slave %s, address %s",
-                self._hub.name,
-                self._slave,
-                self._address,
-            )
+            if self._input_type == INPUT_TYPE_COIL:
+                result = self._hub.read_coils(self._slave, self._address, 1)
+            else:
+                result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
+        except ConnectionException:
+            self._set_unavailable()
+            return
+
+        if isinstance(result, (ModbusException, ExceptionResponse)):
+            self._set_unavailable()
+            return
+
+        self._value = result.bits[0]
+        self._available = True
+
+    def _set_unavailable(self):
+        """Set unavailable state and log it as an error."""
+        if not self._available:
+            return
+
+        _LOGGER.error(
+            "No response from hub %s, slave %s, address %s",
+            self._hub.name,
+            self._slave,
+            self._address,
+        )
+        self._available = False

@@ -3,6 +3,8 @@ import logging
 import struct
 from typing import Any, Optional, Union
 
+from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
@@ -184,6 +186,7 @@ class ModbusRegisterSensor(RestoreEntity):
         self._structure = structure
         self._device_class = device_class
         self._value = None
+        self._available = True
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -212,30 +215,34 @@ class ModbusRegisterSensor(RestoreEntity):
         """Return the device class of the sensor."""
         return self._device_class
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
+
     def update(self):
         """Update the state of the sensor."""
-        if self._register_type == REGISTER_TYPE_INPUT:
-            result = self._hub.read_input_registers(
-                self._slave, self._register, self._count
-            )
-        else:
-            result = self._hub.read_holding_registers(
-                self._slave, self._register, self._count
-            )
-        val = 0
-
         try:
-            registers = result.registers
-            if self._reverse_order:
-                registers.reverse()
-        except AttributeError:
-            _LOGGER.error(
-                "No response from hub %s, slave %s, register %s",
-                self._hub.name,
-                self._slave,
-                self._register,
-            )
+            if self._register_type == REGISTER_TYPE_INPUT:
+                result = self._hub.read_input_registers(
+                    self._slave, self._register, self._count
+                )
+            else:
+                result = self._hub.read_holding_registers(
+                    self._slave, self._register, self._count
+                )
+        except ConnectionException:
+            self._set_unavailable()
             return
+
+        if isinstance(result, (ModbusException, ExceptionResponse)):
+            self._set_unavailable()
+            return
+
+        registers = result.registers
+        if self._reverse_order:
+            registers.reverse()
+
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         val = struct.unpack(self._structure, byte_string)[0]
         val = self._scale * val + self._offset
@@ -245,3 +252,18 @@ class ModbusRegisterSensor(RestoreEntity):
                 self._value += "." + "0" * self._precision
         else:
             self._value = f"{val:.{self._precision}f}"
+
+        self._available = True
+
+    def _set_unavailable(self):
+        """Set unavailable state and log it as an error."""
+        if not self._available:
+            return
+
+        _LOGGER.error(
+            "No response from hub %s, slave %s, address %s",
+            self._hub.name,
+            self._slave,
+            self._register,
+        )
+        self._available = False
