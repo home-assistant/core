@@ -13,7 +13,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import Throttle
 
-from .const import DOMAIN, ROUTER_DEFAULT_HOST
+from .const import ATTR_BOOT_TIME, ATTR_LOAD, DOMAIN, ROUTER_DEFAULT_HOST
 
 PLATFORMS = ["sensor"]
 
@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     access_token = entry.data[CONF_ACCESS_TOKEN]
 
-    vilfo_router = VilfoRouterData(host, access_token)
+    vilfo_router = VilfoRouterData(host, access_token, hass)
 
     await vilfo_router.async_update()
 
@@ -69,9 +69,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class VilfoRouterData:
     """Define an object to hold sensor data."""
 
-    def __init__(self, host, access_token):
+    def __init__(self, host, access_token, hass):
         """Initialize."""
         self._vilfo = VilfoClient(host, access_token)
+        self.hass = hass
         self.host = host
         self.available = False
         self.firmware_version = None
@@ -90,14 +91,24 @@ class VilfoRouterData:
 
         return self.host
 
+    def _fetch_data(self):
+        board_information = self._vilfo.get_board_information()
+        load = self._vilfo.get_load()
+
+        return {
+            "board_information": board_information,
+            "load": load,
+        }
+
     @Throttle(DEFAULT_SCAN_INTERVAL)
     async def async_update(self):
         """Update data using calls to VilfoClient library."""
         try:
-            board_information = self._vilfo.get_board_information()
-            self.firmware_version = board_information["version"]
-            self.data["boot_time"] = board_information["bootTime"]
-            self.data["load"] = self._vilfo.get_load()
+            data = await self.hass.async_add_executor_job(self._fetch_data)
+
+            self.firmware_version = data["board_information"]["version"]
+            self.data[ATTR_BOOT_TIME] = data["board_information"]["bootTime"]
+            self.data[ATTR_LOAD] = data["load"]
 
             self.available = True
         except VilfoException as error:

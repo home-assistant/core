@@ -21,16 +21,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     sensors = []
 
-    device_info = {
-        "identifiers": {(DOMAIN, vilfo.host, vilfo.mac_address)},
-        "name": ROUTER_DEFAULT_NAME,
-        "manufacturer": ROUTER_MANUFACTURER,
-        "model": ROUTER_DEFAULT_MODEL,
-        "sw_version": vilfo.firmware_version,
-    }
-
     for sensor_type in SENSOR_TYPES:
-        sensors.append(VilfoRouterSensor(sensor_type, vilfo, device_info))
+        sensors.append(VilfoRouterSensor(sensor_type, vilfo))
 
     async_add_entities(sensors, True)
 
@@ -38,13 +30,24 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class VilfoRouterSensor(Entity):
     """Define a Vilfo Router Sensor."""
 
-    def __init__(self, sensor_type, api, device_info):
+    def __init__(self, sensor_type, api):
         """Initialize."""
         self.api = api
         self.sensor_type = sensor_type
-        self._device_info = device_info
+        self._device_info = {
+            "identifiers": {(DOMAIN, api.host, api.mac_address)},
+            "name": ROUTER_DEFAULT_NAME,
+            "manufacturer": ROUTER_MANUFACTURER,
+            "model": ROUTER_DEFAULT_MODEL,
+            "sw_version": api.firmware_version,
+        }
         self._unique_id = f"{self.api.unique_id}_{self.sensor_type}"
         self._state = None
+
+    @property
+    def available(self):
+        """Return whether the sensor is available or not."""
+        return self.api.available
 
     @property
     def device_info(self):

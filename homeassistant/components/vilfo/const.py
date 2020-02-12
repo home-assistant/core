@@ -21,14 +21,14 @@ ROUTER_MANUFACTURER = "Vilfo AB"
 UNIT_PERCENT = "%"
 
 SENSOR_TYPES = {
-    "load": {
-        ATTR_LABEL: ATTR_LOAD.replace("_", " ").title(),
+    ATTR_LOAD: {
+        ATTR_LABEL: "Load",
         ATTR_UNIT: UNIT_PERCENT,
         ATTR_ICON: "mdi:memory",
         ATTR_API_DATA_FIELD: ATTR_API_DATA_FIELD_LOAD,
     },
-    "boot_time": {
-        ATTR_LABEL: ATTR_BOOT_TIME.replace("_", " ").title(),
+    ATTR_BOOT_TIME: {
+        ATTR_LABEL: "Boot time",
         ATTR_ICON: "mdi:timer",
         ATTR_API_DATA_FIELD: ATTR_API_DATA_FIELD_BOOT_TIME,
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TIMESTAMP,
