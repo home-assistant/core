@@ -441,7 +441,10 @@ class Entity(ABC):
         If state is changed more than once before the ha state change task has
         been executed, the intermediate state transitions will be missed.
         """
-        self.hass.async_create_task(self.async_update_ha_state(force_refresh))
+        if force_refresh:
+            self.hass.async_create_task(self.async_update_ha_state(force_refresh))
+        else:
+            self.async_write_ha_state()
 
     async def async_device_update(self, warning=True):
         """Process 'update' or 'async_update' from entity.
