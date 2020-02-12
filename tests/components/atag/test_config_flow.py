@@ -50,7 +50,7 @@ async def test_one_config_allowed(hass):
 
 
 async def test_connection_error(hass):
-    """Test we show user form on AdGuard Home connection error."""
+    """Test we show user form on Atag connection error."""
 
     flow = config_flow.AtagConfigFlow()
     flow.hass = hass
