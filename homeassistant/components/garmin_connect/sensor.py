@@ -168,8 +168,7 @@ class GarminConnectSensor(Entity):
             _LOGGER.debug("Entity type %s not set in fetched data", self._type)
             self._available = False
             return
-        else:
-            self._available = True
+        self._available = True
 
         if "Duration" in self._type or "Seconds" in self._type:
             self._state = data[self._type] // 60
