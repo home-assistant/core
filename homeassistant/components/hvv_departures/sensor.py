@@ -101,48 +101,6 @@ class HVVDepartureSensor(Entity):
 
         try:
             data = await self.gti.departureList(payload)
-
-            if data["returnCode"] == "OK" and len(data.get("departures", [])) > 0:
-
-                if self._last_error == ClientConnectorError:
-                    _LOGGER.debug("Network available again")
-
-                self._last_error = None
-
-                departure = data["departures"][0]
-                self._available = True
-                self._state = (
-                    departure_time
-                    + timedelta(minutes=departure["timeOffset"])
-                    + timedelta(seconds=departure.get("delay", 0))
-                )
-
-                self.attr[ATTR_LINE] = departure["line"]["name"]
-                self.attr[ATTR_ORIGIN] = departure["line"]["origin"]
-                self.attr[ATTR_DIRECTION] = departure["line"]["direction"]
-                self.attr[ATTR_TYPE] = departure["line"]["type"]["shortInfo"]
-                self.attr[ATTR_ID] = departure["line"]["id"]
-                self.attr[ATTR_DELAY] = departure.get("delay", 0)
-
-                departures = []
-                for departure in data["departures"]:
-                    departures.append(
-                        {
-                            ATTR_DEPARTURE: departure_time
-                            + timedelta(minutes=departure["timeOffset"])
-                            + timedelta(seconds=departure.get("delay", 0)),
-                            ATTR_LINE: departure["line"]["name"],
-                            ATTR_ORIGIN: departure["line"]["origin"],
-                            ATTR_DIRECTION: departure["line"]["direction"],
-                            ATTR_TYPE: departure["line"]["type"]["shortInfo"],
-                            ATTR_ID: departure["line"]["id"],
-                            ATTR_DELAY: departure.get("delay", 0),
-                        }
-                    )
-                self.attr[ATTR_NEXT] = departures
-            else:
-                self._available = False
-
         except InvalidAuth as error:
             if self._last_error != InvalidAuth:
                 _LOGGER.error("Authentication failed: %r", error)
@@ -157,6 +115,47 @@ class HVVDepartureSensor(Entity):
             if self._last_error != error:
                 _LOGGER.error("Error occurred while fetching data: %r", error)
                 self._last_error = error
+            self._available = False
+
+        if data["returnCode"] == "OK" and len(data.get("departures", [])) > 0:
+
+            if self._last_error == ClientConnectorError:
+                _LOGGER.debug("Network available again")
+
+            self._last_error = None
+
+            departure = data["departures"][0]
+            self._available = True
+            self._state = (
+                departure_time
+                + timedelta(minutes=departure["timeOffset"])
+                + timedelta(seconds=departure.get("delay", 0))
+            )
+
+            self.attr[ATTR_LINE] = departure["line"]["name"]
+            self.attr[ATTR_ORIGIN] = departure["line"]["origin"]
+            self.attr[ATTR_DIRECTION] = departure["line"]["direction"]
+            self.attr[ATTR_TYPE] = departure["line"]["type"]["shortInfo"]
+            self.attr[ATTR_ID] = departure["line"]["id"]
+            self.attr[ATTR_DELAY] = departure.get("delay", 0)
+
+            departures = []
+            for departure in data["departures"]:
+                departures.append(
+                    {
+                        ATTR_DEPARTURE: departure_time
+                        + timedelta(minutes=departure["timeOffset"])
+                        + timedelta(seconds=departure.get("delay", 0)),
+                        ATTR_LINE: departure["line"]["name"],
+                        ATTR_ORIGIN: departure["line"]["origin"],
+                        ATTR_DIRECTION: departure["line"]["direction"],
+                        ATTR_TYPE: departure["line"]["type"]["shortInfo"],
+                        ATTR_ID: departure["line"]["id"],
+                        ATTR_DELAY: departure.get("delay", 0),
+                    }
+                )
+            self.attr[ATTR_NEXT] = departures
+        else:
             self._available = False
 
     @property
