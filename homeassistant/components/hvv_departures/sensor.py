@@ -76,26 +76,25 @@ class HVVDepartureSensor(Entity):
     async def async_update(self, **kwargs):
         """Update the sensor."""
 
+        departure_time = datetime.now() + timedelta(
+            minutes=self.config_entry.options.get("offset", 0)
+        )
+
+        payload = {
+            "station": self.config_entry.data["station"],
+            "time": {
+                "date": departure_time.strftime("%d.%m.%Y"),
+                "time": departure_time.strftime("%H:%M"),
+            },
+            "maxList": MAX_LIST,
+            "maxTimeOffset": MAX_TIME_OFFSET,
+            "useRealtime": self.config_entry.options.get("realtime", False),
+        }
+
+        if "filter" in self.config_entry.options:
+            payload.update({"filter": self.config_entry.options["filter"]})
+
         try:
-
-            departure_time = datetime.now() + timedelta(
-                minutes=self.config_entry.options.get("offset", 0)
-            )
-
-            payload = {
-                "station": self.config_entry.data["station"],
-                "time": {
-                    "date": departure_time.strftime("%d.%m.%Y"),
-                    "time": departure_time.strftime("%H:%M"),
-                },
-                "maxList": MAX_LIST,
-                "maxTimeOffset": MAX_TIME_OFFSET,
-                "useRealtime": self.config_entry.options.get("realtime", False),
-            }
-
-            if "filter" in self.config_entry.options:
-                payload.update({"filter": self.config_entry.options["filter"]})
-
             data = await self.gti.departureList(payload)
 
             if data["returnCode"] == "OK" and len(data.get("departures", [])) > 0:
