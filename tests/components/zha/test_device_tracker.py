@@ -15,6 +15,7 @@ import homeassistant.util.dt as dt_util
 
 from .common import (
     async_enable_traffic,
+    async_test_rejoin,
     find_entity_id,
     make_attribute,
     make_zcl_header,
@@ -42,9 +43,7 @@ def zigpy_device_dt(zigpy_device_mock):
     return zigpy_device_mock(endpoints)
 
 
-async def test_device_tracker(
-    hass, zha_gateway, zha_device_joined_restored, zigpy_device_dt
-):
+async def test_device_tracker(hass, zha_device_joined_restored, zigpy_device_dt):
     """Test zha device tracker platform."""
 
     zha_device = await zha_device_joined_restored(zigpy_device_dt)
@@ -61,7 +60,7 @@ async def test_device_tracker(
     await hass.async_block_till_done()
 
     # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
 
     # test that the state has changed from unavailable to not home
     assert hass.states.get(entity_id).state == STATE_NOT_HOME
@@ -88,12 +87,5 @@ async def test_device_tracker(
     assert entity.battery_level == 100
 
     # test adding device tracker to the network and HA
-    cluster.bind.reset_mock()
-    cluster.configure_reporting.reset_mock()
-    await zha_gateway.async_device_initialized(zigpy_device_dt)
-    await hass.async_block_till_done()
+    await async_test_rejoin(hass, zigpy_device_dt, [cluster], (2,))
     assert hass.states.get(entity_id).state == STATE_HOME
-    assert cluster.bind.call_count == 1
-    assert cluster.bind.await_count == 1
-    assert cluster.configure_reporting.call_count == 2
-    assert cluster.configure_reporting.await_count == 2

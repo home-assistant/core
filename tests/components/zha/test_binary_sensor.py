@@ -9,6 +9,7 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
 from .common import (
     async_enable_traffic,
+    async_test_rejoin,
     find_entity_id,
     make_attribute,
     make_zcl_header,
@@ -65,13 +66,12 @@ async def async_test_iaszone_on_off(hass, cluster, entity_id):
 @pytest.mark.parametrize(
     "device, on_off_test, cluster_name, reporting",
     [
-        (DEVICE_IAS, async_test_iaszone_on_off, "ias_zone", False),
-        (DEVICE_OCCUPANCY, async_test_binary_sensor_on_off, "occupancy", True),
+        (DEVICE_IAS, async_test_iaszone_on_off, "ias_zone", (0,)),
+        (DEVICE_OCCUPANCY, async_test_binary_sensor_on_off, "occupancy", (1,)),
     ],
 )
 async def test_binary_sensor(
     hass,
-    zha_gateway,
     zigpy_device_mock,
     zha_device_joined_restored,
     device,
@@ -89,7 +89,7 @@ async def test_binary_sensor(
     # test that the sensors exist and are in the unavailable state
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
 
     # test that the sensors exist and are in the off state
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -99,13 +99,5 @@ async def test_binary_sensor(
     await on_off_test(hass, cluster, entity_id)
 
     # test rejoin
-    cluster.bind.reset_mock()
-    cluster.configure_reporting.reset_mock()
-    await zha_gateway.async_device_initialized(zigpy_device)
-    await hass.async_block_till_done()
+    await async_test_rejoin(hass, zigpy_device, [cluster], reporting)
     assert hass.states.get(entity_id).state == STATE_OFF
-    assert cluster.bind.call_count == 1
-    assert cluster.bind.await_count == 1
-    if reporting:
-        assert cluster.configure_reporting.call_count > 0
-        assert cluster.configure_reporting.await_count > 0

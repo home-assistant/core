@@ -23,8 +23,8 @@ LOCK_DOOR = 0
 UNLOCK_DOOR = 1
 
 
-@pytest.fixture(params=["zha_device_joined", "zha_device_restored"])
-async def lock(hass, zha_gateway, zigpy_device_mock, request):
+@pytest.fixture
+async def lock(hass, zigpy_device_mock, zha_device_joined_restored):
     """Lock cluster fixture."""
 
     zigpy_device = zigpy_device_mock(
@@ -37,12 +37,11 @@ async def lock(hass, zha_gateway, zigpy_device_mock, request):
         },
     )
 
-    join_or_restore = request.getfixturevalue(request.param)
-    zha_device = await join_or_restore(zigpy_device)
+    zha_device = await zha_device_joined_restored(zigpy_device)
     return zha_device, zigpy_device.endpoints[1].door_lock
 
 
-async def test_lock(hass, zha_gateway, lock):
+async def test_lock(hass, lock):
     """Test zha lock platform."""
 
     zha_device, cluster = lock
@@ -53,7 +52,7 @@ async def test_lock(hass, zha_gateway, lock):
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
 
     # test that the state has changed from unavailable to unlocked
     assert hass.states.get(entity_id).state == STATE_UNLOCKED

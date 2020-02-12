@@ -14,6 +14,7 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
 from .common import (
     async_enable_traffic,
+    async_test_rejoin,
     find_entity_id,
     make_attribute,
     make_zcl_header,
@@ -73,7 +74,7 @@ LIGHT_COLOR = {
     [(LIGHT_ON_OFF, (1, 0, 0)), (LIGHT_LEVEL, (1, 1, 0)), (LIGHT_COLOR, (1, 1, 3))],
 )
 async def test_light(
-    hass, zha_gateway, zigpy_device_mock, zha_device_joined_restored, device, reporting,
+    hass, zigpy_device_mock, zha_device_joined_restored, device, reporting,
 ):
     """Test zha light platform."""
 
@@ -92,7 +93,7 @@ async def test_light(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
 
     # test that the lights were created and are off
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -121,17 +122,7 @@ async def test_light(
         clusters.append(cluster_level)
     if cluster_color:
         clusters.append(cluster_color)
-    for cluster in clusters:
-        cluster.bind.reset_mock()
-        cluster.configure_reporting.reset_mock()
-    await zha_gateway.async_device_initialized(zigpy_device)
-    await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_OFF
-    for cluster, reporting_count in zip(clusters, reporting):
-        assert cluster.bind.call_count == 1
-        assert cluster.bind.await_count == 1
-        assert cluster.configure_reporting.call_count == reporting_count
-        assert cluster.configure_reporting.await_count == reporting_count
+    await async_test_rejoin(hass, zigpy_device, clusters, reporting)
 
 
 async def async_test_on_off_from_light(hass, cluster, entity_id):

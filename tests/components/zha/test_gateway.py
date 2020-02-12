@@ -2,7 +2,7 @@
 import pytest
 import zigpy.zcl.clusters.general as general
 
-from .common import async_enable_traffic
+from .common import async_enable_traffic, get_zha_gateway
 
 
 @pytest.fixture
@@ -27,13 +27,13 @@ async def zha_dev_basic(hass, zha_device_restored, zigpy_dev_basic):
     return zha_device
 
 
-async def test_device_left(hass, zha_gateway, zigpy_dev_basic, zha_dev_basic):
+async def test_device_left(hass, zigpy_dev_basic, zha_dev_basic):
     """Device leaving the network should become unavailable."""
 
     assert zha_dev_basic.available is False
 
-    await async_enable_traffic(hass, zha_gateway, [zha_dev_basic])
+    await async_enable_traffic(hass, [zha_dev_basic])
     assert zha_dev_basic.available is True
 
-    zha_gateway.device_left(zigpy_dev_basic)
+    get_zha_gateway(hass).device_left(zigpy_dev_basic)
     assert zha_dev_basic.available is False
