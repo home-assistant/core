@@ -35,6 +35,7 @@ homeassistant/components/arest/* @fabaff
 homeassistant/components/asuswrt/* @kennedyshead
 homeassistant/components/aten_pe/* @mtdcr
 homeassistant/components/atome/* @baqs
+homeassistant/components/august/* @bdraco
 homeassistant/components/aurora_abb_powerone/* @davet2001
 homeassistant/components/auth/* @home-assistant/core
 homeassistant/components/automatic/* @armills
