@@ -136,7 +136,7 @@ def setup_august(hass, config, api, authenticator):
         if DOMAIN in _CONFIGURING:
             hass.components.configurator.request_done(_CONFIGURING.pop(DOMAIN))
 
-        hass.data[DATA_AUGUST] = AugustData(hass, api, authentication.access_token)
+        hass.data[DATA_AUGUST] = AugustData(hass, api, authentication, authenticator)
 
         for component in AUGUST_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -193,11 +193,14 @@ def setup(hass, config):
 class AugustData:
     """August data object."""
 
-    def __init__(self, hass, api, access_token):
+    def __init__(self, hass, api, authentication, authenticator):
         """Init August data object."""
         self._hass = hass
         self._api = api
-        self._access_token = access_token
+        self._authenticator = authenticator
+        self._access_token = authentication.access_token
+        self._access_token_expires = authentication.access_token_expires
+
         self._doorbells = self._api.get_doorbells(self._access_token) or []
         self._locks = self._api.get_operable_locks(self._access_token) or []
         self._house_ids = set()
@@ -227,6 +230,21 @@ class AugustData:
         """Return a list of locks."""
         return self._locks
 
+    def _refresh_access_token_if_needed(self):
+        """Refresh the august access token if needed."""
+
+        if self._authenticator.should_refresh():
+            refreshed_authentication = self._authenticator.refresh_access_token(
+                force=False
+            )
+            _LOGGER.info(
+                "Refreshed august access token. The old token expired at %s, and the new token expires at %s",
+                self._access_token_expires,
+                refreshed_authentication.access_token_expires,
+            )
+            self._access_token = refreshed_authentication.access_token
+            self._access_token_expires = refreshed_authentication.access_token_expires
+
     def get_device_activities(self, device_id, *activity_types):
         """Return a list of activities."""
         _LOGGER.debug("Getting device activities")
@@ -245,6 +263,17 @@ class AugustData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _update_device_activities(self, limit=ACTIVITY_FETCH_LIMIT):
         """Update data object with latest from August API."""
+
+        # This is the only place we refresh the api token
+        # in order to avoid multiple threads from doing it at the same time
+        # since there will only be one activity refresh at a time
+        #
+        # In the future when this module is converted to async we should
+        # use a lock to prevent all api calls while the token
+        # is being refreshed as this is a better solution
+        #
+        self._refresh_access_token_if_needed()
+
         _LOGGER.debug("Start retrieving device activities")
         for house_id in self.house_ids:
             _LOGGER.debug("Updating device activity for house id %s", house_id)
