@@ -25,6 +25,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import (
     async_enable_traffic,
+    async_test_rejoin,
     find_entity_id,
     make_attribute,
     make_zcl_header,
@@ -102,7 +103,6 @@ async def async_test_electrical_measurement(hass, cluster, entity_id):
 )
 async def test_sensor(
     hass,
-    zha_gateway,
     zigpy_device_mock,
     zha_device_joined_restored,
     cluster_id,
@@ -128,7 +128,7 @@ async def test_sensor(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and devices
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
 
     # test that the sensor now have a state of unknown
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
@@ -137,15 +137,7 @@ async def test_sensor(
     await test_func(hass, cluster, entity_id)
 
     # test rejoin
-    cluster.bind.reset_mock()
-    cluster.configure_reporting.reset_mock()
-    await zha_gateway.async_device_initialized(zigpy_device)
-    await hass.async_block_till_done()
-    await test_func(hass, cluster, entity_id)
-    assert cluster.bind.call_count == 1
-    assert cluster.bind.await_count == 1
-    assert cluster.configure_reporting.call_count == report_count
-    assert cluster.configure_reporting.await_count == report_count
+    await async_test_rejoin(hass, zigpy_device, [cluster], (report_count,))
 
 
 async def send_attribute_report(hass, cluster, attrid, value):
@@ -232,7 +224,6 @@ async def test_temp_uom(
     expected,
     restore,
     hass_ms,
-    zha_gateway,
     core_rs,
     zigpy_device_mock,
     zha_device_restored,
@@ -267,7 +258,7 @@ async def test_temp_uom(
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and devices
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
 
     # test that the sensors now have a state of unknown
     if not restore:

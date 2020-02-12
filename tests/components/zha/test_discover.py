@@ -1,6 +1,5 @@
 """Test zha device discovery."""
 
-import asyncio
 import re
 from unittest import mock
 
@@ -11,6 +10,7 @@ import homeassistant.components.zha.core.discovery as disc
 import homeassistant.components.zha.core.gateway as core_zha_gw
 import homeassistant.helpers.entity_registry
 
+from .common import get_zha_gateway
 from .zha_devices_list import DEVICES
 
 NO_TAIL_ID = re.compile("_\\d$")
@@ -18,12 +18,7 @@ NO_TAIL_ID = re.compile("_\\d$")
 
 @pytest.mark.parametrize("device", DEVICES)
 async def test_devices(
-    device,
-    zha_gateway: core_zha_gw.ZHAGateway,
-    hass,
-    config_entry,
-    zigpy_device_mock,
-    monkeypatch,
+    device, hass, zigpy_device_mock, monkeypatch, zha_device_joined_restored
 ):
     """Test device discovery."""
 
@@ -32,7 +27,7 @@ async def test_devices(
         "00:11:22:33:44:55:66:77",
         device["manufacturer"],
         device["model"],
-        node_desc=device["node_descriptor"],
+        node_descriptor=device["node_descriptor"],
     )
 
     _dispatch = mock.MagicMock(wraps=disc.async_dispatch_discovery_info)
@@ -45,14 +40,7 @@ async def test_devices(
         "homeassistant.components.zha.core.discovery._async_create_cluster_channel",
         wraps=disc._async_create_cluster_channel,
     ):
-        await zha_gateway.async_device_restored(zigpy_device)
-        await hass.async_block_till_done()
-        tasks = [
-            hass.config_entries.async_forward_entry_setup(config_entry, component)
-            for component in zha_const.COMPONENTS
-        ]
-        await asyncio.gather(*tasks)
-
+        await zha_device_joined_restored(zigpy_device)
         await hass.async_block_till_done()
 
         entity_ids = hass.states.async_entity_ids()
@@ -61,6 +49,7 @@ async def test_devices(
             ent for ent in entity_ids if ent.split(".")[0] in zha_const.COMPONENTS
         }
 
+        zha_gateway = get_zha_gateway(hass)
         zha_dev = zha_gateway.get_device(zigpy_device.ieee)
         event_channels = {  # pylint: disable=protected-access
             ch.id for ch in zha_dev._relay_channels.values()
