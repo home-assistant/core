@@ -53,6 +53,15 @@ class MockPlexAccount:
         return self._resources
 
 
+class MockPlexSystemAccount:
+    """Mock a PlexSystemAccount instance."""
+
+    def __init__(self):
+        """Initialize the object."""
+        self.name = "Dummy"
+        self.accountID = 1
+
+
 class MockPlexServer:
     """Mock a PlexServer instance."""
 
@@ -68,6 +77,11 @@ class MockPlexServer:
         ]
         prefix = "https" if ssl else "http"
         self._baseurl = f"{prefix}://{host}:{port}"
+        self._systemAccount = MockPlexSystemAccount()
+
+    def systemAccounts(self):
+        """Mock the systemAccounts lookup method."""
+        return [self._systemAccount]
 
     @property
     def url_in_use(self):
