@@ -209,7 +209,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
         assert "some_id" == state.attributes.get("media_content_id")
 
     @patch(
-        "homeassistant.components.demo.media_player.DemoYoutubePlayer." "media_seek",
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_seek",
         autospec=True,
     )
     def test_seek(self, mock_seek):

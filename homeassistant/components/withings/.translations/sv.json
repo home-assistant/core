@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Skapandet av en auktoriseringsadress \u00f6verskred tidsgr\u00e4nsen.",
+            "missing_configuration": "Withings-integrationen \u00e4r inte konfigurerad. V\u00e4nligen f\u00f6lj dokumentationen.",
+            "no_flows": "Du m\u00e5ste konfigurera Withings innan du kan autentisera med den. L\u00e4s dokumentationen."
+        },
+        "create_entry": {
+            "default": "Lyckad autentisering med Withings."
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "V\u00e4lj autentiseringsmetod"
+            },
+            "profile": {
+                "data": {
+                    "profile": "Profil"
+                },
+                "description": "Vilken profil valde du p\u00e5 Withings webbplats? Det \u00e4r viktigt att profilerna matchar, annars kommer data att vara felm\u00e4rkta.",
+                "title": "Anv\u00e4ndarprofil."
+            },
+            "user": {
+                "data": {
+                    "profile": "Profil"
+                },
+                "description": "V\u00e4lj en anv\u00e4ndarprofil som du vill att Home Assistant ska kartl\u00e4gga med en Withings-profil. Var noga med att v\u00e4lja samma anv\u00e4ndare p\u00e5 visningssidan eller s\u00e5 kommer inte data att betecknas korrekt.",
+                "title": "Anv\u00e4ndarprofil."
+            }
+        },
+        "title": "Withings"
+    }
+}

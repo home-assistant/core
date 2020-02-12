@@ -32,10 +32,17 @@ SERVICE_RESET = "reset"
 SERVICE_CONFIGURE = "configure"
 
 
+def _none_to_empty_dict(value):
+    if value is None:
+        return {}
+    return value
+
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: cv.schema_with_slug_keys(
-            vol.Any(
+            vol.All(
+                _none_to_empty_dict,
                 {
                     vol.Optional(CONF_ICON): cv.icon,
                     vol.Optional(
@@ -51,7 +58,6 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_RESTORE, default=True): cv.boolean,
                     vol.Optional(CONF_STEP, default=DEFAULT_STEP): cv.positive_int,
                 },
-                None,
             )
         )
     },
@@ -70,12 +76,12 @@ async def async_setup(hass, config):
             cfg = {}
 
         name = cfg.get(CONF_NAME)
-        initial = cfg.get(CONF_INITIAL)
-        restore = cfg.get(CONF_RESTORE)
-        step = cfg.get(CONF_STEP)
+        initial = cfg[CONF_INITIAL]
+        restore = cfg[CONF_RESTORE]
+        step = cfg[CONF_STEP]
         icon = cfg.get(CONF_ICON)
-        minimum = cfg.get(CONF_MINIMUM)
-        maximum = cfg.get(CONF_MAXIMUM)
+        minimum = cfg[CONF_MINIMUM]
+        maximum = cfg[CONF_MAXIMUM]
 
         entities.append(
             Counter(object_id, name, initial, minimum, maximum, restore, step, icon)

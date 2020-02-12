@@ -232,7 +232,7 @@ class IQVIAEntity(Entity):
 
     @property
     def unique_id(self):
-        """Return a unique, HASS-friendly identifier for this entity."""
+        """Return a unique, Home Assistant friendly identifier for this entity."""
         return f"{self._zip_code}_{self._type}"
 
     @property

@@ -1,12 +1,11 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Account already configured"
+            "already_configured": "Account already configured"
         },
         "error": {
             "login": "Login error: please check your email & password",
             "send_verification_code": "Failed to send verification code",
-            "username_exists": "Account already configured",
             "validate_verification_code": "Failed to verify your verification code, choose a trust device and start the verification again"
         },
         "step": {

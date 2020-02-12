@@ -279,7 +279,7 @@ class DeviceBroker:
             capabilities = device.capabilities.copy()
             slots = {}
             for platform_name in SUPPORTED_PLATFORMS:
-                platform = importlib.import_module("." + platform_name, self.__module__)
+                platform = importlib.import_module(f".{platform_name}", self.__module__)
                 if not hasattr(platform, "get_capabilities"):
                     continue
                 assigned = platform.get_capabilities(capabilities)

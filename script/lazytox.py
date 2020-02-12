@@ -76,8 +76,7 @@ async def async_exec(*args, display=False):
         proc = await asyncio.create_subprocess_exec(*args, **kwargs)
     except FileNotFoundError as err:
         printc(
-            FAIL,
-            "Could not execute {}. Did you install test requirements?".format(args[0]),
+            FAIL, f"Could not execute {args[0]}. Did you install test requirements?",
         )
         raise err
 
@@ -202,7 +201,7 @@ async def main():
             elif parts[-1] == "__main__.py":
                 parts[-1] = "test_main.py"
             else:
-                parts[-1] = "test_" + parts[-1]
+                parts[-1] = f"test_{parts[-1]}"
             fname = "/".join(parts)
             if os.path.isfile(fname):
                 test_files.add(fname)

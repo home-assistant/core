@@ -1,6 +1,7 @@
 """Sensor to indicate whether the current day is a workday."""
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import holidays
 import voluptuous as vol
@@ -10,111 +11,6 @@ from homeassistant.const import CONF_NAME, WEEKDAYS
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
-# List of all countries currently supported by holidays
-# Source: https://github.com/dr-prodigy/python-holidays#available-countries
-# There seems to be no way to get the list out at runtime
-ALL_COUNTRIES = [
-    "Argentina",
-    "AR",
-    "Aruba",
-    "AW",
-    "Australia",
-    "AU",
-    "Austria",
-    "AT",
-    "Brazil",
-    "BR",
-    "Belarus",
-    "BY",
-    "Belgium",
-    "BE",
-    "Bulgaria",
-    "BG",
-    "Canada",
-    "CA",
-    "Colombia",
-    "CO",
-    "Croatia",
-    "HR",
-    "Czech",
-    "CZ",
-    "Denmark",
-    "DK",
-    "England",
-    "Estonia",
-    "EE",
-    "EuropeanCentralBank",
-    "ECB",
-    "TAR",
-    "Finland",
-    "FI",
-    "France",
-    "FRA",
-    "Germany",
-    "DE",
-    "Hungary",
-    "HU",
-    "Honduras",
-    "HND",
-    "Iceland",
-    "IS",
-    "India",
-    "IND",
-    "Ireland",
-    "IE",
-    "Isle of Man",
-    "Italy",
-    "IT",
-    "Japan",
-    "JP",
-    "Kenya",
-    "KE",
-    "Lithuania",
-    "LT",
-    "Luxembourg",
-    "LU",
-    "Mexico",
-    "MX",
-    "Netherlands",
-    "NL",
-    "NewZealand",
-    "NZ",
-    "Northern Ireland",
-    "Norway",
-    "NO",
-    "Peru",
-    "PE",
-    "Poland",
-    "Polish",
-    "PL",
-    "Portugal",
-    "PT",
-    "PortugalExt",
-    "PTE",
-    "Russia",
-    "RU",
-    "Scotland",
-    "Slovenia",
-    "SI",
-    "Slovakia",
-    "SK",
-    "South Africa",
-    "ZA",
-    "Spain",
-    "ES",
-    "Sweden",
-    "SE",
-    "Switzerland",
-    "CH",
-    "Ukraine",
-    "UA",
-    "UnitedKingdom",
-    "UK",
-    "UnitedStates",
-    "US",
-    "Wales",
-]
 
 ALLOWED_DAYS = WEEKDAYS + ["holiday"]
 
@@ -132,9 +28,28 @@ DEFAULT_EXCLUDES = ["sat", "sun", "holiday"]
 DEFAULT_NAME = "Workday Sensor"
 DEFAULT_OFFSET = 0
 
+
+def valid_country(value: Any) -> str:
+    """Validate that the given country is supported."""
+    value = cv.string(value)
+    all_supported_countries = holidays.list_supported_countries()
+
+    try:
+        raw_value = value.encode("utf-8")
+    except UnicodeError:
+        raise vol.Invalid(
+            "The country name or the abbreviation must be a valid UTF-8 string."
+        )
+    if not raw_value:
+        raise vol.Invalid("Country name or the abbreviation must not be empty.")
+    if value not in all_supported_countries:
+        raise vol.Invalid("Country is not supported.")
+    return value
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_COUNTRY): vol.In(ALL_COUNTRIES),
+        vol.Required(CONF_COUNTRY): valid_country,
         vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): vol.All(
             cv.ensure_list, [vol.In(ALLOWED_DAYS)]
         ),
@@ -151,13 +66,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Workday sensor."""
-    sensor_name = config.get(CONF_NAME)
-    country = config.get(CONF_COUNTRY)
-    province = config.get(CONF_PROVINCE)
-    workdays = config.get(CONF_WORKDAYS)
-    excludes = config.get(CONF_EXCLUDES)
-    days_offset = config.get(CONF_OFFSET)
     add_holidays = config.get(CONF_ADD_HOLIDAYS)
+    country = config[CONF_COUNTRY]
+    days_offset = config[CONF_OFFSET]
+    excludes = config[CONF_EXCLUDES]
+    province = config.get(CONF_PROVINCE)
+    sensor_name = config[CONF_NAME]
+    workdays = config[CONF_WORKDAYS]
 
     year = (get_date(datetime.today()) + timedelta(days=days_offset)).year
     obj_holidays = getattr(holidays, country)(years=year)
@@ -259,7 +174,7 @@ class IsWorkdaySensor(BinarySensorDevice):
         # Default is no workday
         self._state = False
 
-        # Get iso day of the week (1 = Monday, 7 = Sunday)
+        # Get ISO day of the week (1 = Monday, 7 = Sunday)
         date = get_date(datetime.today()) + timedelta(days=self._days_offset)
         day = date.isoweekday() - 1
         day_of_week = day_to_string(day)

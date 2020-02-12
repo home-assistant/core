@@ -103,7 +103,7 @@ class FoursquarePushReceiver(HomeAssistantView):
 
         if self.push_secret != secret:
             _LOGGER.error(
-                "Received Foursquare push with invalid" "push secret: %s", secret
+                "Received Foursquare push with invalid push secret: %s", secret
             )
             return self.json_message("Incorrect secret", HTTP_BAD_REQUEST)
 

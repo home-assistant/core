@@ -24,7 +24,26 @@ SSDP = {
     ],
     "hue": [
         {
-            "manufacturer": "Royal Philips Electronics"
+            "manufacturer": "Royal Philips Electronics",
+            "modelName": "Philips hue bridge 2012"
+        },
+        {
+            "manufacturer": "Royal Philips Electronics",
+            "modelName": "Philips hue bridge 2015"
+        },
+        {
+            "manufacturer": "Signify",
+            "modelName": "Philips hue bridge 2015"
+        }
+    ],
+    "konnected": [
+        {
+            "manufacturer": "konnected.io"
+        }
+    ],
+    "samsungtv": [
+        {
+            "st": "urn:samsung.com:device:RemoteControlReceiver:1"
         }
     ],
     "sonos": [

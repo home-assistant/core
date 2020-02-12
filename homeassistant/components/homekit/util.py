@@ -103,7 +103,7 @@ def validate_entity_config(values):
 
         if not isinstance(config, dict):
             raise vol.Invalid(
-                "The configuration for {} must be " " a dictionary.".format(entity)
+                "The configuration for {} must be a dictionary.".format(entity)
             )
 
         if domain in ("alarm_control_panel", "lock"):

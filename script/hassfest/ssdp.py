@@ -43,6 +43,7 @@ def generate_and_validate(integrations: Dict[str, Integration]):
                 content = fp.read()
                 if (
                     " async_step_ssdp" not in content
+                    and "AbstractOAuth2FlowHandler" not in content
                     and "register_discovery_flow" not in content
                 ):
                     integration.add_error("ssdp", "Config flow has no async_step_ssdp")
@@ -68,7 +69,7 @@ def validate(integrations: Dict[str, Integration], config: Config):
         if fp.read().strip() != content:
             config.add_error(
                 "ssdp",
-                "File ssdp.py is not up to date. " "Run python3 -m script.hassfest",
+                "File ssdp.py is not up to date. Run python3 -m script.hassfest",
                 fixable=True,
             )
         return

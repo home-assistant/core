@@ -107,7 +107,7 @@ class UnitSystem:
     def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
         if not isinstance(temperature, Number):
-            raise TypeError("{} is not a numeric value.".format(str(temperature)))
+            raise TypeError(f"{temperature!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
         return temperature_util.convert(  # type: ignore
@@ -117,7 +117,7 @@ class UnitSystem:
     def length(self, length: Optional[float], from_unit: str) -> float:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
-            raise TypeError("{} is not a numeric value.".format(str(length)))
+            raise TypeError(f"{length!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
         return distance_util.convert(  # type: ignore
@@ -127,7 +127,7 @@ class UnitSystem:
     def pressure(self, pressure: Optional[float], from_unit: str) -> float:
         """Convert the given pressure to this unit system."""
         if not isinstance(pressure, Number):
-            raise TypeError("{} is not a numeric value.".format(str(pressure)))
+            raise TypeError(f"{pressure!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
         return pressure_util.convert(  # type: ignore
@@ -137,7 +137,7 @@ class UnitSystem:
     def volume(self, volume: Optional[float], from_unit: str) -> float:
         """Convert the given volume to this unit system."""
         if not isinstance(volume, Number):
-            raise TypeError("{} is not a numeric value.".format(str(volume)))
+            raise TypeError(f"{volume!s} is not a numeric value.")
 
         # type ignore: https://github.com/python/mypy/issues/7207
         return volume_util.convert(  # type: ignore

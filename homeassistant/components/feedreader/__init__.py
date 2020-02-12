@@ -131,7 +131,7 @@ class FeedManager:
         """Filter the entries provided and return the ones to keep."""
         if len(self._feed.entries) > self._max_entries:
             _LOGGER.debug(
-                "Processing only the first %s entries " "in feed %s",
+                "Processing only the first %s entries in feed %s",
                 self._max_entries,
                 self._url,
             )

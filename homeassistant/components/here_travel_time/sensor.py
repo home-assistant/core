@@ -226,7 +226,7 @@ class HERETravelTimeSensor(Entity):
 
         @callback
         def delayed_sensor_update(event):
-            """Update sensor after homeassistant started."""
+            """Update sensor after Home Assistant started."""
             self.async_schedule_update_ha_state(True)
 
         self.hass.bus.async_listen_once(

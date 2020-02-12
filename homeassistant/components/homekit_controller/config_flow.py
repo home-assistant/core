@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+import re
 
 import homekit
 from homekit.controller.ip_implementation import IpPairing
@@ -16,6 +17,8 @@ from .const import DOMAIN, KNOWN_DEVICES
 HOMEKIT_IGNORE = ["Home Assistant Bridge"]
 HOMEKIT_DIR = ".homekit"
 PAIRING_FILE = "pairing.json"
+
+PIN_FORMAT = re.compile(r"^(\d{3})-{0,1}(\d{2})-{0,1}(\d{3})$")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +60,20 @@ def find_existing_host(hass, serial):
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data["AccessoryPairingID"] == serial:
             return entry
+
+
+def ensure_pin_format(pin):
+    """
+    Ensure a pin code is correctly formatted.
+
+    Ensures a pin code is in the format 111-11-111. Handles codes with and without dashes.
+
+    If incorrect code is entered, an exception is raised.
+    """
+    match = PIN_FORMAT.search(pin)
+    if not match:
+        raise homekit.exceptions.MalformedPinError(f"Invalid PIN code f{pin}")
+    return "{}-{}-{}".format(*match.groups())
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -107,6 +124,38 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                 {vol.Required("device"): vol.In(self.devices.keys())}
             ),
         )
+
+    async def async_step_unignore(self, user_input):
+        """Rediscover a previously ignored discover."""
+        unique_id = user_input["unique_id"]
+        await self.async_set_unique_id(unique_id)
+
+        records = await self.hass.async_add_executor_job(self.controller.discover, 5)
+        for record in records:
+            if normalize_hkid(record["id"]) != unique_id:
+                continue
+            return await self.async_step_zeroconf(
+                {
+                    "host": record["address"],
+                    "port": record["port"],
+                    "hostname": record["name"],
+                    "type": "_hap._tcp.local.",
+                    "name": record["name"],
+                    "properties": {
+                        "md": record["md"],
+                        "pv": record["pv"],
+                        "id": unique_id,
+                        "c#": record["c#"],
+                        "s#": record["s#"],
+                        "ff": record["ff"],
+                        "ci": record["ci"],
+                        "sf": record["sf"],
+                        "sh": "",
+                    },
+                }
+            )
+
+        return self.async_abort(reason="no_devices")
 
     async def async_step_zeroconf(self, discovery_info):
         """Handle a discovered HomeKit accessory.
@@ -245,6 +294,8 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         if pair_info:
             code = pair_info["pairing_code"]
             try:
+                code = ensure_pin_format(code)
+
                 await self.hass.async_add_executor_job(self.finish_pairing, code)
 
                 pairing = self.controller.pairings.get(self.hkid)
@@ -252,6 +303,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
                     return await self._entry_from_accessory(pairing)
 
                 errors["pairing_code"] = "unable_to_pair"
+            except homekit.exceptions.MalformedPinError:
+                # Library claimed pin was invalid before even making an API call
+                errors["pairing_code"] = "authentication_error"
             except homekit.AuthenticationError:
                 # PairSetup M4 - SRP proof failed
                 # PairSetup M6 - Ed25519 signature verification failed

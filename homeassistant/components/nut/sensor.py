@@ -189,7 +189,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         data.update(no_throttle=True)
     except data.pynuterror as err:
         _LOGGER.error(
-            "Failure while testing NUT status retrieval. " "Cannot continue setup: %s",
+            "Failure while testing NUT status retrieval. Cannot continue setup: %s",
             err,
         )
         raise PlatformNotReady

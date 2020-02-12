@@ -201,7 +201,7 @@ async def async_send_message(
             except FileTooBig as ex:
                 _LOGGER.error("File too big for server, could not upload file %s", ex)
             except UploadServiceNotFound as ex:
-                _LOGGER.error("UploadServiceNotFound: " " could not upload file %s", ex)
+                _LOGGER.error("UploadServiceNotFound, could not upload file %s", ex)
             except FileUploadError as ex:
                 _LOGGER.error("FileUploadError, could not upload file %s", ex)
             except requests.exceptions.SSLError as ex:

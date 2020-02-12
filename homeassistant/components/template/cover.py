@@ -134,7 +134,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         }
 
         initialise_templates(hass, templates)
-        entity_ids = extract_entities(device, "cover", None, templates)
+        entity_ids = extract_entities(
+            device, "cover", device_config.get(CONF_ENTITY_ID), templates
+        )
 
         covers.append(
             CoverTemplate(
@@ -226,19 +228,6 @@ class CoverTemplate(CoverDevice):
         self._tilt_value = None
         self._entities = entity_ids
         self._available = True
-
-        if self._template is not None:
-            self._template.hass = self.hass
-        if self._position_template is not None:
-            self._position_template.hass = self.hass
-        if self._tilt_template is not None:
-            self._tilt_template.hass = self.hass
-        if self._icon_template is not None:
-            self._icon_template.hass = self.hass
-        if self._entity_picture_template is not None:
-            self._entity_picture_template.hass = self.hass
-        if self._availability_template is not None:
-            self._availability_template.hass = self.hass
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -437,8 +426,7 @@ class CoverTemplate(CoverDevice):
                 if state < 0 or state > 100:
                     self._tilt_value = None
                     _LOGGER.error(
-                        "Tilt value must be between 0 and 100." " Value was: %.2f",
-                        state,
+                        "Tilt value must be between 0 and 100. Value was: %.2f", state,
                     )
                 else:
                     self._tilt_value = state
@@ -466,7 +454,7 @@ class CoverTemplate(CoverDevice):
                 ):
                     # Common during HA startup - so just a warning
                     _LOGGER.warning(
-                        "Could not render %s template %s," " the state is unknown.",
+                        "Could not render %s template %s, the state is unknown.",
                         friendly_property_name,
                         self._name,
                     )

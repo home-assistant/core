@@ -3,7 +3,9 @@
         "abort": {
             "already_setup": "Du kannst nur ein einziges Soma-Konto konfigurieren.",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
-            "missing_configuration": "Die Soma-Komponente ist nicht konfiguriert. Bitte folgen Sie der Dokumentation."
+            "connection_error": "Verbindung zu SOMA Connect fehlgeschlagen.",
+            "missing_configuration": "Die Soma-Komponente ist nicht konfiguriert. Bitte folgen Sie der Dokumentation.",
+            "result_error": "SOMA Connect hat mit einem Fehlerstatus geantwortet."
         },
         "create_entry": {
             "default": "Erfolgreich bei Soma authentifiziert."

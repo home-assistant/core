@@ -233,7 +233,7 @@ class OwnTracksContext:
 
         if self.max_gps_accuracy is not None and acc > self.max_gps_accuracy:
             _LOGGER.info(
-                "Ignoring %s update because expected GPS " "accuracy %s is not met: %s",
+                "Ignoring %s update because expected GPS accuracy %s is not met: %s",
                 message["_type"],
                 self.max_gps_accuracy,
                 message,

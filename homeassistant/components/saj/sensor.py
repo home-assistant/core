@@ -217,7 +217,7 @@ class SAJsensor(Entity):
 
     @property
     def per_total_basis(self) -> bool:
-        """Return if the sensors value is cummulative or not."""
+        """Return if the sensors value is cumulative or not."""
         return self._sensor.per_total_basis
 
     @property
@@ -225,6 +225,7 @@ class SAJsensor(Entity):
         """Return the date when the sensor was last updated."""
         return self._sensor.date
 
+    @callback
     def async_update_values(self, unknown_state=False):
         """Update this sensor."""
         update = False

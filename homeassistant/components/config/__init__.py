@@ -28,6 +28,8 @@ SECTIONS = (
     "scene",
 )
 ON_DEMAND = ("zwave",)
+ACTION_CREATE_UPDATE = "create_update"
+ACTION_DELETE = "delete"
 
 
 async def async_setup(hass, config):
@@ -92,6 +94,7 @@ class BaseEditConfigView(HomeAssistantView):
         self.data_schema = data_schema
         self.post_write_hook = post_write_hook
         self.data_validator = data_validator
+        self.mutation_lock = asyncio.Lock()
 
     def _empty_config(self):
         """Empty config if file not found."""
@@ -112,8 +115,9 @@ class BaseEditConfigView(HomeAssistantView):
     async def get(self, request, config_key):
         """Fetch device specific config."""
         hass = request.app["hass"]
-        current = await self.read_config(hass)
-        value = self._get_value(hass, current, config_key)
+        async with self.mutation_lock:
+            current = await self.read_config(hass)
+            value = self._get_value(hass, current, config_key)
 
         if value is None:
             return self.json_message("Resource not found", 404)
@@ -146,31 +150,35 @@ class BaseEditConfigView(HomeAssistantView):
 
         path = hass.config.path(self.path)
 
-        current = await self.read_config(hass)
-        self._write_value(hass, current, config_key, data)
+        async with self.mutation_lock:
+            current = await self.read_config(hass)
+            self._write_value(hass, current, config_key, data)
 
-        await hass.async_add_executor_job(_write, path, current)
+            await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_create_task(self.post_write_hook(hass))
+            hass.async_create_task(
+                self.post_write_hook(ACTION_CREATE_UPDATE, config_key)
+            )
 
         return self.json({"result": "ok"})
 
     async def delete(self, request, config_key):
         """Remove an entry."""
         hass = request.app["hass"]
-        current = await self.read_config(hass)
-        value = self._get_value(hass, current, config_key)
-        path = hass.config.path(self.path)
+        async with self.mutation_lock:
+            current = await self.read_config(hass)
+            value = self._get_value(hass, current, config_key)
+            path = hass.config.path(self.path)
 
-        if value is None:
-            return self.json_message("Resource not found", 404)
+            if value is None:
+                return self.json_message("Resource not found", 404)
 
-        self._delete_value(hass, current, config_key)
-        await hass.async_add_executor_job(_write, path, current)
+            self._delete_value(hass, current, config_key)
+            await hass.async_add_executor_job(_write, path, current)
 
         if self.post_write_hook is not None:
-            hass.async_create_task(self.post_write_hook(hass))
+            hass.async_create_task(self.post_write_hook(ACTION_DELETE, config_key))
 
         return self.json({"result": "ok"})
 

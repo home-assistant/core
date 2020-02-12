@@ -192,7 +192,7 @@ class HomeAssistant:
         return self.state in (CoreState.starting, CoreState.running)
 
     def start(self) -> int:
-        """Start home assistant.
+        """Start Home Assistant.
 
         Note: This function is only used for testing.
         For regular use, use "await hass.run()".
@@ -217,7 +217,7 @@ class HomeAssistant:
         This method is a coroutine.
         """
         if self.state != CoreState.not_running:
-            raise RuntimeError("HASS is already running")
+            raise RuntimeError("Home Assistant is already running")
 
         # _async_stop will set this instead of stopping the loop
         self._stopped = asyncio.Event()
@@ -298,10 +298,10 @@ class HomeAssistant:
 
         if asyncio.iscoroutine(check_target):
             task = self.loop.create_task(target)  # type: ignore
-        elif is_callback(check_target):
-            self.loop.call_soon(target, *args)
         elif asyncio.iscoroutinefunction(check_target):
             task = self.loop.create_task(target(*args))
+        elif is_callback(check_target):
+            self.loop.call_soon(target, *args)
         else:
             task = self.loop.run_in_executor(  # type: ignore
                 None, target, *args
@@ -360,7 +360,11 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
-        if not asyncio.iscoroutine(target) and is_callback(target):
+        if (
+            not asyncio.iscoroutine(target)
+            and not asyncio.iscoroutinefunction(target)
+            and is_callback(target)
+        ):
             target(*args)
         else:
             self.async_add_job(target, *args)
@@ -712,18 +716,14 @@ class State:
 
         if not valid_entity_id(entity_id) and not temp_invalid_id_bypass:
             raise InvalidEntityFormatError(
-                (
-                    "Invalid entity id encountered: {}. "
-                    "Format should be <domain>.<object_id>"
-                ).format(entity_id)
+                f"Invalid entity id encountered: {entity_id}. "
+                "Format should be <domain>.<object_id>"
             )
 
         if not valid_state(state):
             raise InvalidStateError(
-                (
-                    "Invalid state encountered for entity id: {}. "
-                    "State max length is 255 characters."
-                ).format(entity_id)
+                f"Invalid state encountered for entity id: {entity_id}. "
+                "State max length is 255 characters."
             )
 
         self.entity_id = entity_id.lower()
@@ -1034,9 +1034,7 @@ class ServiceCall:
                 self.domain, self.service, self.context.id, util.repr_helper(self.data)
             )
 
-        return "<ServiceCall {}.{} (c:{})>".format(
-            self.domain, self.service, self.context.id
-        )
+        return f"<ServiceCall {self.domain}.{self.service} (c:{self.context.id})>"
 
 
 class ServiceRegistry:
@@ -1251,10 +1249,10 @@ class ServiceRegistry:
         self, handler: Service, service_call: ServiceCall
     ) -> None:
         """Execute a service."""
-        if handler.is_callback:
-            handler.func(service_call)
-        elif handler.is_coroutinefunction:
+        if handler.is_coroutinefunction:
             await handler.func(service_call)
+        elif handler.is_callback:
+            handler.func(service_call)
         else:
             await self._hass.async_add_executor_job(handler.func, service_call)
 

@@ -94,7 +94,7 @@ async def test_setup(hass):
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
     with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "georss_ign_sismologia_client." "IgnSismologiaFeed"
+        "georss_ign_sismologia_client.IgnSismologiaFeed"
     ) as mock_feed:
         mock_feed.return_value.update.return_value = (
             "OK",
@@ -199,7 +199,7 @@ async def test_setup_with_custom_location(hass):
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (38.1, -3.1))
 
-    with patch("georss_ign_sismologia_client." "IgnSismologiaFeed") as mock_feed:
+    with patch("georss_ign_sismologia_client.IgnSismologiaFeed") as mock_feed:
         mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):

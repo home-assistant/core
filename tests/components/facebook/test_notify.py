@@ -88,7 +88,7 @@ class TestFacebook(unittest.TestCase):
         """Test sending a message without a target."""
         mock.register_uri(requests_mock.POST, facebook.BASE_URL, status_code=200)
 
-        self.facebook.send_message(message="goin nowhere")
+        self.facebook.send_message(message="going nowhere")
         assert not mock.called
 
     @requests_mock.Mocker()

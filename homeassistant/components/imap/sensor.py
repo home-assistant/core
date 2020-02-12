@@ -162,7 +162,7 @@ class ImapSensor(Entity):
                 self._email_count = len(lines[0].split())
             else:
                 _LOGGER.error(
-                    "Can't parse IMAP server response to search " "'%s':  %s / %s",
+                    "Can't parse IMAP server response to search '%s':  %s / %s",
                     self._search,
                     result,
                     lines[0],

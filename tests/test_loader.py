@@ -193,7 +193,7 @@ def _get_test_integration(hass, name, config_flow):
     """Return a generated test integration."""
     return loader.Integration(
         hass,
-        "homeassistant.components.{}".format(name),
+        f"homeassistant.components.{name}",
         None,
         {
             "name": name,

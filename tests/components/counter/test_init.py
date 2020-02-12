@@ -1,14 +1,17 @@
 """The tests for the counter component."""
 # pylint: disable=protected-access
-import asyncio
 import logging
 
 from homeassistant.components.counter import (
+    ATTR_INITIAL,
+    ATTR_STEP,
     CONF_ICON,
     CONF_INITIAL,
     CONF_NAME,
     CONF_RESTORE,
     CONF_STEP,
+    DEFAULT_INITIAL,
+    DEFAULT_STEP,
     DOMAIN,
 )
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
@@ -49,6 +52,7 @@ async def test_config_options(hass):
                 CONF_RESTORE: False,
                 CONF_STEP: 5,
             },
+            "test_3": None,
         }
     }
 
@@ -57,14 +61,16 @@ async def test_config_options(hass):
 
     _LOGGER.debug("ENTITIES: %s", hass.states.async_entity_ids())
 
-    assert count_start + 2 == len(hass.states.async_entity_ids())
+    assert count_start + 3 == len(hass.states.async_entity_ids())
     await hass.async_block_till_done()
 
     state_1 = hass.states.get("counter.test_1")
     state_2 = hass.states.get("counter.test_2")
+    state_3 = hass.states.get("counter.test_3")
 
     assert state_1 is not None
     assert state_2 is not None
+    assert state_3 is not None
 
     assert 0 == int(state_1.state)
     assert ATTR_ICON not in state_1.attributes
@@ -73,6 +79,9 @@ async def test_config_options(hass):
     assert 10 == int(state_2.state)
     assert "Hello World" == state_2.attributes.get(ATTR_FRIENDLY_NAME)
     assert "mdi:work" == state_2.attributes.get(ATTR_ICON)
+
+    assert DEFAULT_INITIAL == state_3.attributes.get(ATTR_INITIAL)
+    assert DEFAULT_STEP == state_3.attributes.get(ATTR_STEP)
 
 
 async def test_methods(hass):
@@ -143,8 +152,7 @@ async def test_methods_with_config(hass):
     assert 15 == int(state.state)
 
 
-@asyncio.coroutine
-def test_initial_state_overrules_restore_state(hass):
+async def test_initial_state_overrules_restore_state(hass):
     """Ensure states are restored on startup."""
     mock_restore_cache(
         hass, (State("counter.test1", "11"), State("counter.test2", "-22"))
@@ -152,7 +160,7 @@ def test_initial_state_overrules_restore_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass,
         DOMAIN,
         {
@@ -172,8 +180,7 @@ def test_initial_state_overrules_restore_state(hass):
     assert int(state.state) == 10
 
 
-@asyncio.coroutine
-def test_restore_state_overrules_initial_state(hass):
+async def test_restore_state_overrules_initial_state(hass):
     """Ensure states are restored on startup."""
 
     attr = {"initial": 6, "minimum": 1, "maximum": 8, "step": 2}
@@ -189,7 +196,7 @@ def test_restore_state_overrules_initial_state(hass):
 
     hass.state = CoreState.starting
 
-    yield from async_setup_component(
+    await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test1": {}, "test2": {CONF_INITIAL: 10}, "test3": {}}}
     )
 
@@ -210,12 +217,11 @@ def test_restore_state_overrules_initial_state(hass):
     assert state.attributes.get("step") == 2
 
 
-@asyncio.coroutine
-def test_no_initial_state_and_no_restore_state(hass):
+async def test_no_initial_state_and_no_restore_state(hass):
     """Ensure that entity is create without initial and restore feature."""
     hass.state = CoreState.starting
 
-    yield from async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_STEP: 5}}})
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {"test1": {CONF_STEP: 5}}})
 
     state = hass.states.get("counter.test1")
     assert state

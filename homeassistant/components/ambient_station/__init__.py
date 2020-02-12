@@ -26,6 +26,7 @@ from homeassistant.helpers.event import async_call_later
 from .config_flow import configured_instances
 from .const import (
     ATTR_LAST_DATA,
+    ATTR_MONITORED_CONDITIONS,
     CONF_APP_KEY,
     DATA_CLIENT,
     DOMAIN,
@@ -341,7 +342,6 @@ class AmbientStation:
         self._watchdog_listener = None
         self._ws_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
         self.client = client
-        self.monitored_conditions = []
         self.stations = {}
 
     async def _attempt_connect(self):
@@ -378,7 +378,7 @@ class AmbientStation:
             if data != self.stations[mac_address][ATTR_LAST_DATA]:
                 _LOGGER.debug("New data received: %s", data)
                 self.stations[mac_address][ATTR_LAST_DATA] = data
-                async_dispatcher_send(self._hass, TOPIC_UPDATE)
+                async_dispatcher_send(self._hass, TOPIC_UPDATE.format(mac_address))
 
             _LOGGER.debug("Resetting watchdog")
             self._watchdog_listener()
@@ -398,19 +398,19 @@ class AmbientStation:
 
                 _LOGGER.debug("New station subscription: %s", data)
 
-                self.monitored_conditions = [
+                # Only create entities based on the data coming through the socket.
+                # If the user is monitoring brightness (in W/m^2), make sure we also
+                # add a calculated sensor for the same data measured in lx:
+                monitored_conditions = [
                     k for k in station["lastData"] if k in SENSOR_TYPES
                 ]
-
-                # If the user is monitoring brightness (in W/m^2),
-                # make sure we also add a calculated sensor for the
-                # same data measured in lx:
-                if TYPE_SOLARRADIATION in self.monitored_conditions:
-                    self.monitored_conditions.append(TYPE_SOLARRADIATION_LX)
+                if TYPE_SOLARRADIATION in monitored_conditions:
+                    monitored_conditions.append(TYPE_SOLARRADIATION_LX)
 
                 self.stations[station["macAddress"]] = {
                     ATTR_LAST_DATA: station["lastData"],
                     ATTR_LOCATION: station.get("info", {}).get("location"),
+                    ATTR_MONITORED_CONDITIONS: monitored_conditions,
                     ATTR_NAME: station.get("info", {}).get(
                         "name", station["macAddress"]
                     ),
@@ -518,7 +518,7 @@ class AmbientWeatherEntity(Entity):
             self.async_schedule_update_ha_state(True)
 
         self._async_unsub_dispatcher_connect = async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, update
+            self.hass, TOPIC_UPDATE.format(self._mac_address), update
         )
 
     async def async_will_remove_from_hass(self):

@@ -1,7 +1,6 @@
 """Philips Hue sensors platform tests."""
 import asyncio
 from collections import deque
-import datetime
 import logging
 from unittest.mock import Mock
 
@@ -252,16 +251,19 @@ SENSOR_RESPONSE = {
 }
 
 
-def create_mock_bridge():
+def create_mock_bridge(hass):
     """Create a mock Hue bridge."""
     bridge = Mock(
+        hass=hass,
         available=True,
         authorized=True,
         allow_unreachable=False,
         allow_groups=False,
         api=Mock(),
+        reset_jobs=[],
         spec=hue.HueBridge,
     )
+    bridge.sensor_manager = hue_sensor_base.SensorManager(bridge)
     bridge.mock_requests = []
     # We're using a deque so we can schedule multiple responses
     # and also means that `popleft()` will blow up if we get more updates
@@ -277,8 +279,8 @@ def create_mock_bridge():
             return bridge.mock_sensor_responses.popleft()
         return None
 
-    async def async_request_call(coro):
-        await coro
+    async def async_request_call(task):
+        await task()
 
     bridge.async_request_call = async_request_call
     bridge.api.config.apiversion = "9.9.9"
@@ -289,13 +291,7 @@ def create_mock_bridge():
 @pytest.fixture
 def mock_bridge(hass):
     """Mock a Hue bridge."""
-    return create_mock_bridge()
-
-
-@pytest.fixture
-def increase_scan_interval(hass):
-    """Increase the SCAN_INTERVAL to prevent unexpected scans during tests."""
-    hue_sensor_base.SensorManager.SCAN_INTERVAL = datetime.timedelta(days=365)
+    return create_mock_bridge(hass)
 
 
 async def setup_bridge(hass, mock_bridge, hostname=None):
@@ -303,7 +299,6 @@ async def setup_bridge(hass, mock_bridge, hostname=None):
     if hostname is None:
         hostname = "mock-host"
     hass.config.components.add(hue.DOMAIN)
-    hass.data[hue.DOMAIN] = {hostname: mock_bridge}
     config_entry = config_entries.ConfigEntry(
         1,
         hue.DOMAIN,
@@ -313,6 +308,8 @@ async def setup_bridge(hass, mock_bridge, hostname=None):
         config_entries.CONN_CLASS_LOCAL_POLL,
         system_options={},
     )
+    mock_bridge.config_entry = config_entry
+    hass.data[hue.DOMAIN] = {config_entry.entry_id: mock_bridge}
     await hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
     await hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
     # and make sure it completes before going further
@@ -330,7 +327,7 @@ async def test_no_sensors(hass, mock_bridge):
 
 async def test_sensors_with_multiple_bridges(hass, mock_bridge):
     """Test the update_items function with some sensors."""
-    mock_bridge_2 = create_mock_bridge()
+    mock_bridge_2 = create_mock_bridge(hass)
     mock_bridge_2.mock_sensor_responses.append(
         {
             "1": PRESENCE_SENSOR_3_PRESENT,
@@ -412,11 +409,7 @@ async def test_new_sensor_discovered(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append(new_sensor_response)
 
     # Force updates to run again
-    sm_key = hue_sensor_base.SENSOR_MANAGER_FORMAT.format("mock-host")
-    sm = hass.data[hue.DOMAIN][sm_key]
-    await sm.async_update_items()
-
-    # To flush out the service call to update the group
+    await mock_bridge.sensor_manager.coordinator.async_refresh()
     await hass.async_block_till_done()
 
     assert len(mock_bridge.mock_requests) == 2
@@ -443,9 +436,7 @@ async def test_sensor_removed(hass, mock_bridge):
     mock_bridge.mock_sensor_responses.append({k: SENSOR_RESPONSE[k] for k in keys})
 
     # Force updates to run again
-    sm_key = hue_sensor_base.SENSOR_MANAGER_FORMAT.format("mock-host")
-    sm = hass.data[hue.DOMAIN][sm_key]
-    await sm.async_update_items()
+    await mock_bridge.sensor_manager.coordinator.async_refresh()
 
     # To flush out the service call to update the group
     await hass.async_block_till_done()
@@ -466,7 +457,6 @@ async def test_update_timeout(hass, mock_bridge):
     await setup_bridge(hass, mock_bridge)
     assert len(mock_bridge.mock_requests) == 0
     assert len(hass.states.async_all()) == 0
-    assert mock_bridge.available is False
 
 
 async def test_update_unauthorized(hass, mock_bridge):

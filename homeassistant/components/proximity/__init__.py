@@ -268,7 +268,7 @@ class Proximity(Entity):
         self.nearest = entity_name
         self.schedule_update_ha_state()
         _LOGGER.debug(
-            "proximity.%s update entity: distance=%s: direction=%s: " "device=%s",
+            "proximity.%s update entity: distance=%s: direction=%s: device=%s",
             self.friendly_name,
             round(dist_to_zone),
             direction_of_travel,

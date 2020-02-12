@@ -12,6 +12,7 @@ from .const import (
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
+    CONF_LOCALE,
 )
 from .smart_home import async_handle_message
 from .state_report import async_enable_proactive_mode
@@ -52,6 +53,11 @@ class AlexaConfig(AbstractConfig):
     def entity_config(self):
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
+
+    @property
+    def locale(self):
+        """Return config locale."""
+        return self._config.get(CONF_LOCALE)
 
     def should_expose(self, entity_id):
         """If an entity should be exposed."""

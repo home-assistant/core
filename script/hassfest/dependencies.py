@@ -130,6 +130,7 @@ IGNORE_VIOLATIONS = [
     "prometheus",
     "conversation",
     "logbook",
+    "mobile_app",
     # These should be extracted to external package
     "pvoutput",
     "dwd_weather_warnings",
@@ -221,9 +222,8 @@ def validate_dependencies(
     ):
         integration.add_error(
             "dependencies",
-            "Using component {} but it's not in 'dependencies' or 'after_dependencies'".format(
-                domain
-            ),
+            f"Using component {domain} but it's not in 'dependencies' "
+            "or 'after_dependencies'",
         )
 
 

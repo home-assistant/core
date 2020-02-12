@@ -25,7 +25,6 @@ from homeassistant.const import (
     ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_PLATFORM,
-    CONF_TIMEOUT,
     CONF_URL,
     HTTP_DIGEST_AUTHENTICATION,
 )
@@ -67,6 +66,7 @@ ATTR_URL = "url"
 ATTR_USER_ID = "user_id"
 ATTR_USERNAME = "username"
 ATTR_VERIFY_SSL = "verify_ssl"
+ATTR_TIMEOUT = "timeout"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
@@ -135,7 +135,7 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
         vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-        vol.Optional(CONF_TIMEOUT): vol.Coerce(float),
+        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -499,15 +499,15 @@ class TelegramNotificationService:
             ATTR_DISABLE_WEB_PREV: None,
             ATTR_REPLY_TO_MSGID: None,
             ATTR_REPLYMARKUP: None,
-            CONF_TIMEOUT: None,
+            ATTR_TIMEOUT: None,
         }
         if data is not None:
             if ATTR_PARSER in data:
                 params[ATTR_PARSER] = self._parsers.get(
                     data[ATTR_PARSER], self._parse_mode
                 )
-            if CONF_TIMEOUT in data:
-                params[CONF_TIMEOUT] = data[CONF_TIMEOUT]
+            if ATTR_TIMEOUT in data:
+                params[ATTR_TIMEOUT] = data[ATTR_TIMEOUT]
             if ATTR_DISABLE_NOTIF in data:
                 params[ATTR_DISABLE_NOTIF] = data[ATTR_DISABLE_NOTIF]
             if ATTR_DISABLE_WEB_PREV in data:
@@ -628,7 +628,7 @@ class TelegramNotificationService:
         """Answer a callback originated with a press in an inline keyboard."""
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug(
-            "Answer callback query with callback ID %s: %s, " "alert: %s.",
+            "Answer callback query with callback ID %s: %s, alert: %s.",
             callback_query_id,
             message,
             show_alert,
@@ -782,7 +782,13 @@ class BaseTelegramBotEntity:
             if event_data is None:
                 return message_ok
 
-            event_data[ATTR_DATA] = data[ATTR_DATA]
+            query_data = event_data[ATTR_DATA] = data[ATTR_DATA]
+
+            if query_data[0] == "/":
+                pieces = query_data.split(" ")
+                event_data[ATTR_COMMAND] = pieces[0]
+                event_data[ATTR_ARGS] = pieces[1:]
+
             event_data[ATTR_MSG] = data[ATTR_MSG]
             event_data[ATTR_CHAT_INSTANCE] = data[ATTR_CHAT_INSTANCE]
             event_data[ATTR_MSGID] = data[ATTR_MSGID]

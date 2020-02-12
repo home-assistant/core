@@ -1,8 +1,8 @@
 """Support for (EMEA/EU-based) Honeywell TCC climate systems.
 
-Such systems include evohome (multi-zone), and Round Thermostat (single zone).
+Such systems include evohome, Round Thermostat, and others.
 """
-from datetime import datetime, timedelta
+from datetime import datetime as dt, timedelta
 import logging
 import re
 from typing import Any, Dict, Optional, Tuple
@@ -13,6 +13,7 @@ import evohomeasync2
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
@@ -24,7 +25,12 @@ from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
@@ -58,16 +64,44 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+ATTR_SYSTEM_MODE = "mode"
+ATTR_DURATION_DAYS = "period"
+ATTR_DURATION_HOURS = "duration"
 
-def _local_dt_to_aware(dt_naive: datetime) -> datetime:
-    dt_aware = dt_util.now() + (dt_naive - datetime.now())
+ATTR_ZONE_TEMP = "setpoint"
+ATTR_DURATION_UNTIL = "duration"
+
+SVC_REFRESH_SYSTEM = "refresh_system"
+SVC_SET_SYSTEM_MODE = "set_system_mode"
+SVC_RESET_SYSTEM = "reset_system"
+SVC_SET_ZONE_OVERRIDE = "set_zone_override"
+SVC_RESET_ZONE_OVERRIDE = "clear_zone_override"
+
+
+RESET_ZONE_OVERRIDE_SCHEMA = vol.Schema({vol.Required(ATTR_ENTITY_ID): cv.entity_id})
+SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_ZONE_TEMP): vol.All(
+            vol.Coerce(float), vol.Range(min=4.0, max=35.0)
+        ),
+        vol.Optional(ATTR_DURATION_UNTIL): vol.All(
+            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1)),
+        ),
+    }
+)
+# system mode schemas are built dynamically, below
+
+
+def _local_dt_to_aware(dt_naive: dt) -> dt:
+    dt_aware = dt_util.now() + (dt_naive - dt.now())
     if dt_aware.microsecond >= 500000:
         dt_aware += timedelta(seconds=1)
     return dt_aware.replace(microsecond=0)
 
 
-def _dt_to_local_naive(dt_aware: datetime) -> datetime:
-    dt_naive = datetime.now() + (dt_aware - dt_util.now())
+def _dt_to_local_naive(dt_aware: dt) -> dt:
+    dt_naive = dt.now() + (dt_aware - dt_util.now())
     if dt_naive.microsecond >= 500000:
         dt_naive += timedelta(seconds=1)
     return dt_naive.replace(microsecond=0)
@@ -114,7 +148,7 @@ def _handle_exception(err) -> bool:
         return False
 
     except aiohttp.ClientConnectionError:
-        # this appears to be common with Honeywell's servers
+        # this appears to be a common occurrence with the vendor's servers
         _LOGGER.warning(
             "Unable to connect with the vendor's server. "
             "Check your network and the vendor's service status page. "
@@ -143,14 +177,14 @@ def _handle_exception(err) -> bool:
 
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
-    """Create a (EMEA/EU-based) Honeywell evohome system."""
+    """Create a (EMEA/EU-based) Honeywell TCC system."""
 
     async def load_auth_tokens(store) -> Tuple[Dict, Optional[Dict]]:
         app_storage = await store.async_load()
         tokens = dict(app_storage if app_storage else {})
 
         if tokens.pop(CONF_USERNAME, None) != config[DOMAIN][CONF_USERNAME]:
-            # any tokens wont be valid, and store might be be corrupt
+            # any tokens won't be valid, and store might be be corrupt
             await store.async_save({})
             return ({}, None)
 
@@ -209,7 +243,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
 
     await broker.save_auth_tokens()
-    await broker.update()  # get initial state
+    await broker.async_update()  # get initial state
 
     hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
     if broker.tcs.hotwater:
@@ -218,10 +252,131 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         )
 
     hass.helpers.event.async_track_time_interval(
-        broker.update, config[DOMAIN][CONF_SCAN_INTERVAL]
+        broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]
     )
 
+    setup_service_functions(hass, broker)
+
     return True
+
+
+@callback
+def setup_service_functions(hass: HomeAssistantType, broker):
+    """Set up the service handlers for the system/zone operating modes.
+
+    Not all Honeywell TCC-compatible systems support all operating modes. In addition,
+    each mode will require any of four distinct service schemas. This has to be
+    enumerated before registering the appropriate handlers.
+
+    It appears that all TCC-compatible systems support the same three zones modes.
+    """
+
+    @verify_domain_control(hass, DOMAIN)
+    async def force_refresh(call) -> None:
+        """Obtain the latest state data via the vendor's RESTful API."""
+        await broker.async_update()
+
+    @verify_domain_control(hass, DOMAIN)
+    async def set_system_mode(call) -> None:
+        """Set the system mode."""
+        payload = {
+            "unique_id": broker.tcs.systemId,
+            "service": call.service,
+            "data": call.data,
+        }
+        async_dispatcher_send(hass, DOMAIN, payload)
+
+    @verify_domain_control(hass, DOMAIN)
+    async def set_zone_override(call) -> None:
+        """Set the zone override (setpoint)."""
+        entity_id = call.data[ATTR_ENTITY_ID]
+
+        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry_entry = registry.async_get(entity_id)
+
+        if registry_entry is None or registry_entry.platform != DOMAIN:
+            raise ValueError(f"'{entity_id}' is not a known {DOMAIN} entity")
+
+        if registry_entry.domain != "climate":
+            raise ValueError(f"'{entity_id}' is not an {DOMAIN} controller/zone")
+
+        payload = {
+            "unique_id": registry_entry.unique_id,
+            "service": call.service,
+            "data": call.data,
+        }
+
+        async_dispatcher_send(hass, DOMAIN, payload)
+
+    hass.services.async_register(DOMAIN, SVC_REFRESH_SYSTEM, force_refresh)
+
+    # Enumerate which operating modes are supported by this system
+    modes = broker.config["allowedSystemModes"]
+
+    # Not all systems support "AutoWithReset": register this handler only if required
+    if [m["systemMode"] for m in modes if m["systemMode"] == "AutoWithReset"]:
+        hass.services.async_register(DOMAIN, SVC_RESET_SYSTEM, set_system_mode)
+
+    system_mode_schemas = []
+    modes = [m for m in modes if m["systemMode"] != "AutoWithReset"]
+
+    # Permanent-only modes will use this schema
+    perm_modes = [m["systemMode"] for m in modes if not m["canBeTemporary"]]
+    if perm_modes:  # any of: "Auto", "HeatingOff": permanent only
+        schema = vol.Schema({vol.Required(ATTR_SYSTEM_MODE): vol.In(perm_modes)})
+        system_mode_schemas.append(schema)
+
+    modes = [m for m in modes if m["canBeTemporary"]]
+
+    # These modes are set for a number of hours (or indefinitely): use this schema
+    temp_modes = [m["systemMode"] for m in modes if m["timingMode"] == "Duration"]
+    if temp_modes:  # any of: "AutoWithEco", permanent or for 0-24 hours
+        schema = vol.Schema(
+            {
+                vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
+                vol.Optional(ATTR_DURATION_HOURS): vol.All(
+                    cv.time_period,
+                    vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
+                ),
+            }
+        )
+        system_mode_schemas.append(schema)
+
+    # These modes are set for a number of days (or indefinitely): use this schema
+    temp_modes = [m["systemMode"] for m in modes if m["timingMode"] == "Period"]
+    if temp_modes:  # any of: "Away", "Custom", "DayOff", permanent or for 1-99 days
+        schema = vol.Schema(
+            {
+                vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
+                vol.Optional(ATTR_DURATION_DAYS): vol.All(
+                    cv.time_period,
+                    vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
+                ),
+            }
+        )
+        system_mode_schemas.append(schema)
+
+    if system_mode_schemas:
+        hass.services.async_register(
+            DOMAIN,
+            SVC_SET_SYSTEM_MODE,
+            set_system_mode,
+            schema=vol.Any(*system_mode_schemas),
+        )
+
+    # The zone modes are consistent across all systems and use the same schema
+    hass.services.async_register(
+        DOMAIN,
+        SVC_RESET_ZONE_OVERRIDE,
+        set_zone_override,
+        schema=RESET_ZONE_OVERRIDE_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SVC_SET_ZONE_OVERRIDE,
+        set_zone_override,
+        schema=SET_ZONE_OVERRIDE_SCHEMA,
+    )
 
 
 class EvoBroker:
@@ -238,7 +393,7 @@ class EvoBroker:
         loc_idx = params[CONF_LOCATION_IDX]
         self.config = client.installation_info[loc_idx][GWS][0][TCS][0]
         self.tcs = client.locations[loc_idx]._gateways[0]._control_systems[0]
-        self.temps = None
+        self.temps = {}
 
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
@@ -259,6 +414,19 @@ class EvoBroker:
             app_storage[USER_DATA] = None
 
         await self._store.async_save(app_storage)
+
+    async def call_client_api(self, api_function, refresh=True) -> Any:
+        """Call a client API."""
+        try:
+            result = await api_function
+        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
+            if not _handle_exception(err):
+                return
+
+        if refresh:
+            self.hass.helpers.event.async_call_later(1, self.async_update())
+
+        return result
 
     async def _update_v1(self, *args, **kwargs) -> None:
         """Get the latest high-precision temperatures of the default Location."""
@@ -311,15 +479,15 @@ class EvoBroker:
         except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
             _handle_exception(err)
         else:
-            self.hass.helpers.dispatcher.async_dispatcher_send(DOMAIN)
+            async_dispatcher_send(self.hass, DOMAIN)
 
             _LOGGER.debug("Status = %s", status[GWS][0][TCS][0])
 
         if access_token != self.client.access_token:
             await self.save_auth_tokens()
 
-    async def update(self, *args, **kwargs) -> None:
-        """Get the latest state data of an entire evohome Location.
+    async def async_update(self, *args, **kwargs) -> None:
+        """Get the latest state data of an entire Honeywell TCC Location.
 
         This includes state data for a Controller and all its child devices, such as the
         operating mode of the Controller and the current temp of its children (e.g.
@@ -331,7 +499,7 @@ class EvoBroker:
             await self._update_v1()
 
         # inform the evohome devices that state data has been updated
-        self.hass.helpers.dispatcher.async_dispatcher_send(DOMAIN)
+        async_dispatcher_send(self.hass, DOMAIN)
 
 
 class EvoDevice(Entity):
@@ -351,9 +519,25 @@ class EvoDevice(Entity):
         self._supported_features = None
         self._device_state_attrs = {}
 
-    @callback
-    def _refresh(self) -> None:
-        self.async_schedule_update_ha_state(force_refresh=True)
+    async def async_refresh(self, payload: Optional[dict] = None) -> None:
+        """Process any signals."""
+        if payload is None:
+            self.async_schedule_update_ha_state(force_refresh=True)
+            return
+        if payload["unique_id"] != self._unique_id:
+            return
+        if payload["service"] in [SVC_SET_ZONE_OVERRIDE, SVC_RESET_ZONE_OVERRIDE]:
+            await self.async_zone_svc_request(payload["service"], payload["data"])
+            return
+        await self.async_tcs_svc_request(payload["service"], payload["data"])
+
+    async def async_tcs_svc_request(self, service: dict, data: dict) -> None:
+        """Process a service request (system mode) for a controller."""
+        raise NotImplementedError
+
+    async def async_zone_svc_request(self, service: dict, data: dict) -> None:
+        """Process a service request (setpoint override) for a zone."""
+        raise NotImplementedError
 
     @property
     def should_poll(self) -> bool:
@@ -367,12 +551,12 @@ class EvoDevice(Entity):
 
     @property
     def name(self) -> str:
-        """Return the name of the Evohome entity."""
+        """Return the name of the evohome entity."""
         return self._name
 
     @property
     def device_state_attributes(self) -> Dict[str, Any]:
-        """Return the Evohome-specific state attributes."""
+        """Return the evohome-specific state attributes."""
         status = self._device_state_attrs
         if "systemModeStatus" in status:
             convert_until(status["systemModeStatus"], "timeUntil")
@@ -395,7 +579,7 @@ class EvoDevice(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
-        self.hass.helpers.dispatcher.async_dispatcher_connect(DOMAIN, self._refresh)
+        async_dispatcher_connect(self.hass, DOMAIN, self.async_refresh)
 
     @property
     def precision(self) -> float:
@@ -406,18 +590,6 @@ class EvoDevice(Entity):
     def temperature_unit(self) -> str:
         """Return the temperature unit to use in the frontend UI."""
         return TEMP_CELSIUS
-
-    async def _call_client_api(self, api_function, refresh=True) -> Any:
-        try:
-            result = await api_function
-        except (aiohttp.ClientError, evohomeasync2.AuthenticationError) as err:
-            if not _handle_exception(err):
-                return
-
-        if refresh is True:
-            self.hass.helpers.event.async_call_later(1, self._evo_broker.update())
-
-        return result
 
 
 class EvoChild(EvoDevice):
@@ -491,18 +663,19 @@ class EvoChild(EvoDevice):
         except IndexError:
             self._setpoints = {}
             _LOGGER.warning(
-                "Failed to get setpoints - please report as an issue", exc_info=True
+                "Failed to get setpoints, report as an issue if this error persists",
+                exc_info=True,
             )
 
         return self._setpoints
 
     async def _update_schedule(self) -> None:
-        """Get the latest schedule."""
+        """Get the latest schedule, if any."""
         if "DailySchedules" in self._schedule and not self._schedule["DailySchedules"]:
             if not self._evo_device.setpointStatus["setpointMode"] == EVO_FOLLOW:
                 return  # avoid unnecessary I/O - there's nothing to update
 
-        self._schedule = await self._call_client_api(
+        self._schedule = await self._evo_broker.call_client_api(
             self._evo_device.schedule(), refresh=False
         )
 

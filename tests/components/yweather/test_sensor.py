@@ -113,7 +113,7 @@ class YahooWeatherMock:
 
     def getWeatherImage(self, code):  # pylint: disable=invalid-name
         """Create a link to weather image from yahoo code."""
-        return "https://l.yimg.com/a/i/us/we/52/{}.gif".format(code)
+        return f"https://l.yimg.com/a/i/us/we/52/{code}.gif"
 
 
 class TestWeather(unittest.TestCase):

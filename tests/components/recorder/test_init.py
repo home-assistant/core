@@ -89,7 +89,7 @@ class TestRecorder(unittest.TestCase):
 
 @pytest.fixture
 def hass_recorder():
-    """HASS fixture with in-memory recorder."""
+    """Home Assistant fixture with in-memory recorder."""
     hass = get_test_home_assistant()
 
     def setup_recorder(config=None):
@@ -198,7 +198,14 @@ def test_recorder_setup_failure():
     ):
         setup.side_effect = ImportError("driver not found")
         rec = Recorder(
-            hass, keep_days=7, purge_interval=2, uri="sqlite://", include={}, exclude={}
+            hass,
+            keep_days=7,
+            purge_interval=2,
+            uri="sqlite://",
+            db_max_retries=10,
+            db_retry_wait=3,
+            include={},
+            exclude={},
         )
         rec.start()
         rec.join()

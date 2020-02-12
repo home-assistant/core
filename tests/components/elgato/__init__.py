@@ -33,6 +33,7 @@ async def init_integration(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id="CN11A1A00001",
         data={
             CONF_HOST: "example.local",
             CONF_PORT: 9123,

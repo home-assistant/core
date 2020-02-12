@@ -55,7 +55,7 @@ def minio_client_event_fixture():
 
 async def test_minio_services(hass, caplog, minio_client):
     """Test Minio services."""
-    hass.config.whitelist_external_dirs = set("/tmp")
+    hass.config.whitelist_external_dirs = set("/test")
 
     await async_setup_component(
         hass,
@@ -80,22 +80,22 @@ async def test_minio_services(hass, caplog, minio_client):
     await hass.services.async_call(
         DOMAIN,
         "put",
-        {"file_path": "/tmp/some_file", "key": "some_key", "bucket": "some_bucket"},
+        {"file_path": "/test/some_file", "key": "some_key", "bucket": "some_bucket"},
         blocking=True,
     )
     assert minio_client.fput_object.call_args == call(
-        "some_bucket", "some_key", "/tmp/some_file"
+        "some_bucket", "some_key", "/test/some_file"
     )
     minio_client.reset_mock()
 
     await hass.services.async_call(
         DOMAIN,
         "get",
-        {"file_path": "/tmp/some_file", "key": "some_key", "bucket": "some_bucket"},
+        {"file_path": "/test/some_file", "key": "some_key", "bucket": "some_bucket"},
         blocking=True,
     )
     assert minio_client.fget_object.call_args == call(
-        "some_bucket", "some_key", "/tmp/some_file"
+        "some_bucket", "some_key", "/test/some_file"
     )
     minio_client.reset_mock()
 
@@ -155,7 +155,7 @@ async def test_minio_listen(hass, caplog, minio_client_event):
 
 
 async def test_queue_listener():
-    """Tests QueueListener firing events on Hass event bus."""
+    """Tests QueueListener firing events on Home Assistant event bus."""
     hass = MagicMock()
 
     queue_listener = QueueListener(hass)

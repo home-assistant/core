@@ -156,11 +156,6 @@ SUPPORT_FLAGS = (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up ecobee thermostat."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the ecobee thermostat."""
 
@@ -550,7 +545,7 @@ class Thermostat(ClimateDevice):
             self.hold_preference(),
         )
         _LOGGER.debug(
-            "Setting ecobee hold_temp to: heat=%s, is=%s, " "cool=%s, is=%s",
+            "Setting ecobee hold_temp to: heat=%s, is=%s, cool=%s, is=%s",
             heat_temp,
             isinstance(heat_temp, (int, float)),
             cool_temp,

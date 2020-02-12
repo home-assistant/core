@@ -95,8 +95,7 @@ def _parse_skyhub_response(data_str):
     pattmatch = re.search("attach_dev = '(.*)'", data_str)
     if pattmatch is None:
         raise OSError(
-            "Error: Impossible to fetch data from"
-            + " Sky Hub. Try to reboot the router."
+            "Error: Impossible to fetch data from Sky Hub. Try to reboot the router."
         )
     patt = pattmatch.group(1)
 
@@ -107,8 +106,6 @@ def _parse_skyhub_response(data_str):
         if _MAC_REGEX.match(dvc[1]):
             devices[dvc[1]] = dvc[0]
         else:
-            raise RuntimeError(
-                "Error: MAC address " + dvc[1] + " not in correct format."
-            )
+            raise RuntimeError(f"Error: MAC address {dvc[1]} not in correct format.")
 
     return devices

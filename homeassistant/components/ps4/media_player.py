@@ -69,11 +69,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(device_list, update_before_add=True)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Not Implemented."""
-    pass
-
-
 class PS4Device(MediaPlayerDevice):
     """Representation of a PS4."""
 
@@ -376,7 +371,7 @@ class PS4Device(MediaPlayerDevice):
             self._unique_id = format_unique_id(self._creds, status["host-id"])
 
     async def async_will_remove_from_hass(self):
-        """Remove Entity from Hass."""
+        """Remove Entity from Home Assistant."""
         # Close TCP Transport.
         if self._ps4.connected:
             await self._ps4.close()

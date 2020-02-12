@@ -5,9 +5,11 @@ from openhomedevice.Device import Device
 
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_MUSIC,
     SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_STOP,
@@ -94,13 +96,14 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._source_names = source_names
 
         if self._source["type"] == "Radio":
-            self._supported_features |= SUPPORT_STOP | SUPPORT_PLAY
-        if self._source["type"] in ("Playlist", "Cloud"):
+            self._supported_features |= SUPPORT_STOP | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA
+        if self._source["type"] in ("Playlist", "Spotify"):
             self._supported_features |= (
                 SUPPORT_PREVIOUS_TRACK
                 | SUPPORT_NEXT_TRACK
                 | SUPPORT_PAUSE
                 | SUPPORT_PLAY
+                | SUPPORT_PLAY_MEDIA
             )
 
         if self._in_standby:
@@ -122,6 +125,18 @@ class OpenhomeDevice(MediaPlayerDevice):
     def turn_off(self):
         """Put device in standby."""
         self._device.SetStandby(True)
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Send the play_media command to the media player."""
+        if not media_type == MEDIA_TYPE_MUSIC:
+            _LOGGER.error(
+                "Invalid media type %s. Only %s is supported",
+                media_type,
+                MEDIA_TYPE_MUSIC,
+            )
+            return
+        track_details = {"title": "Home Assistant", "uri": media_id}
+        self._device.PlayMedia(track_details)
 
     def media_pause(self):
         """Send pause command."""

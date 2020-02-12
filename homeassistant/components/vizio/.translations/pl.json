@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Konfiguracja komponentu Vizio jest ju\u017c w trakcie.",
+            "already_setup": "Ten komponent jest ju\u017c skonfigurowany.",
+            "already_setup_with_diff_host_and_name": "Wygl\u0105da na to, \u017ce ten wpis zosta\u0142 ju\u017c skonfigurowany z innym hostem i nazw\u0105 na podstawie jego numeru seryjnego. Usu\u0144 wszystkie stare wpisy z pliku configuration.yaml i z menu Integracje przed ponown\u0105 pr\u00f3b\u0105 dodania tego urz\u0105dzenia.",
+            "host_exists": "Komponent Vizio dla tego hosta jest ju\u017c skonfigurowany.",
+            "name_exists": "Komponent Vizio dla tej nazwy jest ju\u017c skonfigurowany.",
+            "updated_entry": "Ten wpis zosta\u0142 ju\u017c skonfigurowany, ale nazwa i/lub opcje zdefiniowane w konfiguracji nie pasuj\u0105 do wcze\u015bniej zaimportowanych warto\u015bci, wi\u0119c wpis konfiguracji zosta\u0142 odpowiednio zaktualizowany.",
+            "updated_options": "Ten wpis zosta\u0142 ju\u017c skonfigurowany, ale opcje zdefiniowane w konfiguracji nie pasuj\u0105 do wcze\u015bniej zaimportowanych warto\u015bci, wi\u0119c wpis konfiguracji zosta\u0142 odpowiednio zaktualizowany.",
+            "updated_volume_step": "Ten wpis zosta\u0142 ju\u017c skonfigurowany, ale rozmiar skoku g\u0142o\u015bno\u015bci w konfiguracji nie pasuje do wpisu konfiguracji, wi\u0119c wpis konfiguracji zosta\u0142 odpowiednio zaktualizowany."
+        },
+        "error": {
+            "cant_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z urz\u0105dzeniem. [Przejrzyj dokumentacj\u0119] (https://www.home-assistant.io/integrations/vizio/) i ponownie sprawd\u017a, czy: \n - urz\u0105dzenie jest w\u0142\u0105czone,\n - urz\u0105dzenie jest pod\u0142\u0105czone do sieci,\n - wprowadzone warto\u015bci s\u0105 prawid\u0142owe,\n przed pr\u00f3b\u0105 ponownego przes\u0142ania.",
+            "host_exists": "Urz\u0105dzenie Vizio z okre\u015blonym hostem jest ju\u017c skonfigurowane.",
+            "name_exists": "Urz\u0105dzenie Vizio o okre\u015blonej nazwie jest ju\u017c skonfigurowane.",
+            "tv_needs_token": "Gdy typem urz\u0105dzenia jest `tv` potrzebny jest prawid\u0142owy token dost\u0119pu."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Token dost\u0119pu",
+                    "device_class": "Typ urz\u0105dzenia",
+                    "host": "<Host/IP>:<Port>",
+                    "name": "Nazwa"
+                },
+                "title": "Konfiguracja klienta Vizio SmartCast"
+            }
+        },
+        "title": "Vizio SmartCast"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Limit czasu \u017c\u0105dania API (sekundy)",
+                    "volume_step": "Skok g\u0142o\u015bno\u015bci"
+                },
+                "title": "Aktualizacja opcji Vizo SmartCast"
+            }
+        },
+        "title": "Aktualizuj opcje Vizo SmartCast"
+    }
+}

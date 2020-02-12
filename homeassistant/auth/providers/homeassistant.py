@@ -200,7 +200,7 @@ class Data:
 
 @AUTH_PROVIDERS.register("homeassistant")
 class HassAuthProvider(AuthProvider):
-    """Auth provider based on a local storage of users in HASS config dir."""
+    """Auth provider based on a local storage of users in Home Assistant config dir."""
 
     DEFAULT_TITLE = "Home Assistant Local"
 
