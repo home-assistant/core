@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_POSTCODE): cv.string,
         vol.Required(CONF_HOUSE_NUMBER): cv.string,
-        vol.Optional(CONF_HOUSE_NUMBER_EXTENSION): cv.string,
+        vol.Optional(CONF_HOUSE_NUMBER_EXTENSION): cv.positive_int,
         vol.Optional(CONF_COUNTRY_CODE, default=DEFAULT_COUNTRY_CODE): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
