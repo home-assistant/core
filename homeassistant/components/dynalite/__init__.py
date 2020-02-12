@@ -70,12 +70,6 @@ async def async_setup(hass, config):
 async def async_setup_entry(hass, entry):
     """Set up a bridge from a config entry."""
     LOGGER.debug("__init async_setup_entry %s", entry.data)
-    host = entry.data[CONF_HOST]
-    config = hass.data[DOMAIN][DATA_CONFIGS].get(host)
-
-    if config is None:
-        LOGGER.error("__init async_setup_entry empty config for host %s", host)
-        return False
 
     bridge = DynaliteBridge(hass, entry)
 
