@@ -14,6 +14,8 @@ import homeassistant.components.zha.core.registries as zha_regs
 
 from .common import FakeDevice, FakeEndpoint, get_zha_gateway
 
+from tests.common import MockConfigEntry
+
 FIXTURE_GRP_ID = 0x1001
 FIXTURE_GRP_NAME = "fixture group"
 
@@ -45,18 +47,15 @@ def zigpy_radio():
 @pytest.fixture(name="config_entry")
 async def config_entry_fixture(hass):
     """Fixture representing a config entry."""
-    return config_entries.ConfigEntry(
+    MockConfigEntry()
+    return MockConfigEntry(
         version=1,
         domain=zha_const.DOMAIN,
-        title="Mock Title",
         data={
             zha_const.CONF_BAUDRATE: zha_const.DEFAULT_BAUDRATE,
             zha_const.CONF_RADIO_TYPE: "MockRadio",
             zha_const.CONF_USB_PATH: "/dev/ttyUSB0",
         },
-        source="test",
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
-        system_options={},
     )
 
 
