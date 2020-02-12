@@ -164,7 +164,7 @@ class UniFiController:
                     WIRELESS_GUEST_CONNECTED,
                 ):
                     self.update_wireless_clients()
-            else:
+            elif data.get("clients") or data.get("devices"):
                 async_dispatcher_send(self.hass, self.signal_update)
 
     @property
@@ -238,13 +238,13 @@ class UniFiController:
 
         self.api.start_websocket()
 
-        self.config_entry.add_update_listener(self.async_options_updated)
+        self.config_entry.add_update_listener(self.async_config_entry_updated)
 
         return True
 
     @staticmethod
-    async def async_options_updated(hass, entry):
-        """Triggered by config entry options updates."""
+    async def async_config_entry_updated(hass, entry) -> None:
+        """Handle signals of config entry being updated."""
         controller_id = CONTROLLER_ID.format(
             host=entry.data[CONF_CONTROLLER][CONF_HOST],
             site=entry.data[CONF_CONTROLLER][CONF_SITE_ID],
