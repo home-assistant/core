@@ -215,8 +215,8 @@ class ZamgData:
 def _get_zamg_stations():
     """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config."""
     capital_stations = {r["Station"] for r in ZamgData.current_observations()}
-    capital_stations.add('11231')  # correct number for Klagenfurt
-    capital_stations.add('11120')  # correct number for Innsbruck
+    capital_stations.add("11231")  # correct number for Klagenfurt
+    capital_stations.add("11120")  # correct number for Innsbruck
     req = requests.get(
         "https://www.zamg.ac.at/cms/en/documents/climate/"
         "doc_metnetwork/zamg-observation-points",
