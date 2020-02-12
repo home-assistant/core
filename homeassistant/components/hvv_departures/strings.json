@@ -35,7 +35,7 @@
       "cannot_connect": "Failed to connect, please try again",
       "invalid_auth": "Invalid authentication",
       "unknown": "Unexpected error",
-      "cn_too_many": "Too many results. Please precise your query",
+      "cn_too_many": "Too many results. Please state your query more precisely",
       "no_results": "No results. Try with a different station/address"
     },
     "abort": {
