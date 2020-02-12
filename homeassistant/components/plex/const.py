@@ -3,6 +3,7 @@ from homeassistant.const import __version__
 
 DOMAIN = "plex"
 NAME_FORMAT = "Plex ({})"
+COMMON_PLAYERS = ["Plex Web"]
 
 DEFAULT_PORT = 32400
 DEFAULT_SSL = False

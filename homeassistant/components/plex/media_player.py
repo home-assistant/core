@@ -21,19 +21,14 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_SET,
 )
-from homeassistant.const import (
-    DEVICE_DEFAULT_NAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    COMMON_PLAYERS,
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
     DOMAIN as PLEX_DOMAIN,
@@ -114,6 +109,8 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._is_player_active = False
         self._machine_identifier = device.machineIdentifier
         self._make = ""
+        self._device_product = None
+        self._device_title = None
         self._name = None
         self._player_state = "idle"
         self._previous_volume_level = 1  # Used in fake muting
@@ -188,7 +185,6 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._clear_media_details()
 
         self._available = self.device or self.session
-        name_base = None
 
         if self.device:
             try:
@@ -197,7 +193,8 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 device_url = "127.0.0.1"
             if "127.0.0.1" in device_url:
                 self.device.proxyThroughServer()
-            name_base = self.device.title or self.device.product
+            self._device_product = self.device.product
+            self._device_title = self.device.title
             self._device_protocol_capabilities = self.device.protocolCapabilities
             self._player_state = self.device.state
 
@@ -215,11 +212,13 @@ class PlexMediaPlayer(MediaPlayerDevice):
             if session_device:
                 self._make = session_device.device or ""
                 self._player_state = session_device.state
-                name_base = name_base or session_device.title or session_device.product
+                self._device_product = self._device_product or session_device.product
+                self._device_title = self._device_title or session_device.title
             else:
                 _LOGGER.warning("No player associated with active session")
 
-            self._session_username = self.session.usernames[0]
+            if self.session.usernames:
+                self._session_username = self.session.usernames[0]
 
             # Calculate throttled position for proper progress display.
             position = int(self.session.viewOffset / 1000)
@@ -237,7 +236,14 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_content_id = self.session.ratingKey
             self._media_content_rating = getattr(self.session, "contentRating", None)
 
-        self._name = self._name or NAME_FORMAT.format(name_base or DEVICE_DEFAULT_NAME)
+        name_parts = [self._device_product, self._device_title]
+        if (self._device_product in COMMON_PLAYERS) and self.make:
+            # Add more context in name for likely duplicates
+            name_parts.append(self.make)
+        if self.username and self.username != self.plex_server.owner:
+            # Prepend username for shared/managed clients
+            name_parts.insert(0, self.username)
+        self._name = NAME_FORMAT.format(" - ".join(name_parts))
         self._set_player_state()
 
         if self._is_player_active and self.session is not None:
@@ -347,6 +353,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def username(self):
+        """Return the username of the client owner."""
+        return self._session_username
 
     @property
     def app_name(self):
@@ -699,7 +710,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         """Return the scene state attributes."""
         attr = {
             "media_content_rating": self._media_content_rating,
-            "session_username": self._session_username,
+            "session_username": self.username,
             "media_library_name": self._app_name,
         }
 
