@@ -230,7 +230,7 @@ class AugustData:
         """Return a list of locks."""
         return self._locks
 
-    def refresh_access_token_if_needed(self):
+    def _refresh_access_token_if_needed(self):
         """Refresh the august access token if needed."""
 
         if self._authenticator.should_refresh():
@@ -272,7 +272,7 @@ class AugustData:
         # use a lock to prevent all api calls while the token
         # is being refreshed as this is a better solution
         #
-        self.refresh_access_token_if_needed()
+        self._refresh_access_token_if_needed()
 
         _LOGGER.debug("Start retrieving device activities")
         for house_id in self.house_ids:
