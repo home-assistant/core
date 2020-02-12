@@ -389,6 +389,9 @@ pure-python-adb==0.2.2.dev0
 # homeassistant.components.pushbullet
 pushbullet.py==0.11.0
 
+# homeassistant.components.august
+py-august==0.11.0
+
 # homeassistant.components.canary
 py-canary==0.5.0
 
