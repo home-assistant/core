@@ -59,7 +59,6 @@ class HVVDepartureSensor(Entity):
 
     def __init__(self, hass, config_entry, session):
         """Initialize."""
-        self.hass = hass
         self.config_entry = config_entry
         self.station_name = self.config_entry.data["station"]["name"]
         self.attr = {ATTR_ATTRIBUTION: ATTRIBUTION}
