@@ -23,13 +23,7 @@ COMMAND_SINGLE = "single"
 
 
 @pytest.fixture
-def calls(hass):
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "zha", "warning_device_warn")
-
-
-@pytest.fixture
-async def device_ias(hass, zha_gateway, zigpy_device_mock, zha_device_joined_restored):
+async def device_ias(hass, zigpy_device_mock, zha_device_joined_restored):
     """IAS device fixture."""
 
     clusters = [general.Basic, security.IasZone, security.IasWd]
@@ -67,7 +61,7 @@ async def test_get_actions(hass, device_ias):
     assert actions == expected_actions
 
 
-async def test_action(hass, calls, device_ias):
+async def test_action(hass, device_ias):
     """Test for executing a zha device action."""
     zigpy_device, zha_device = device_ias
 
@@ -108,6 +102,7 @@ async def test_action(hass, calls, device_ias):
         )
 
         await hass.async_block_till_done()
+        calls = async_mock_service(hass, DOMAIN, "warning_device_warn")
 
         channel = {ch.name: ch for ch in zha_device.all_channels}[CHANNEL_EVENT_RELAY]
         channel.zha_send_event(channel.cluster, COMMAND_SINGLE, [])

@@ -12,6 +12,7 @@ from homeassistant.const import STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE
 
 from .common import (
     async_enable_traffic,
+    async_test_rejoin,
     find_entity_id,
     make_attribute,
     make_zcl_header,
@@ -37,9 +38,7 @@ def zigpy_cover_device(zigpy_device_mock):
 @asynctest.patch(
     "homeassistant.components.zha.core.channels.closures.WindowCovering.async_initialize"
 )
-async def test_cover(
-    m1, hass, zha_gateway, zha_device_joined_restored, zigpy_cover_device
-):
+async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
     """Test zha cover platform."""
 
     async def get_chan_attr(*args, **kwargs):
@@ -62,7 +61,7 @@ async def test_cover(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
     await hass.async_block_till_done()
 
     attr = make_attribute(8, 100)
@@ -132,12 +131,5 @@ async def test_cover(
         )
 
     # test rejoin
-    cluster.bind.reset_mock()
-    cluster.configure_reporting.reset_mock()
-    await zha_gateway.async_device_initialized(zigpy_cover_device)
-    await hass.async_block_till_done()
+    await async_test_rejoin(hass, zigpy_cover_device, [cluster], (1,))
     assert hass.states.get(entity_id).state == STATE_OPEN
-    assert cluster.bind.call_count == 1
-    assert cluster.bind.await_count == 1
-    assert cluster.configure_reporting.call_count == 1
-    assert cluster.configure_reporting.await_count == 1
