@@ -11,7 +11,7 @@ call_method:
       description: Array of additional parameters to pass to Logitech Media Server (p1, ..., pN in the CLI documentation).
       example: ["loadtracks", "album.titlesearch="]
 call_query:
-  description: Call a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' parameter.
+  description: Call a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.
   fields:
     entity_id:
       description: Name(s) of the Squeezebox entities where to run the API method.
