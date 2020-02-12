@@ -178,7 +178,7 @@ class HVVDepartureSensor(Entity):
                     self.config_entry.data["station"]["type"],
                 )
             },
-            "name": self.config_entry.data["station"]["name"],
+            "name": self._name,
             "manufacturer": MANUFACTURER,
         }
 
