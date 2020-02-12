@@ -8,7 +8,11 @@ from typing import Optional
 from simplipy import API
 from simplipy.entity import EntityTypes
 from simplipy.errors import InvalidCredentialsError, SimplipyError, WebsocketError
-from simplipy.websocket import get_event_type_from_payload
+from simplipy.websocket import (
+    EVENT_LOCK_LOCKED,
+    EVENT_LOCK_UNLOCKED,
+    get_event_type_from_payload,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -58,6 +62,8 @@ TOPIC_UPDATE = "simplisafe_update_data_{0}"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 DEFAULT_WATCHDOG_SECONDS = 5 * 60
+
+WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
 
 ATTR_LAST_EVENT_INFO = "last_event_info"
 ATTR_LAST_EVENT_SENSOR_NAME = "last_event_sensor_name"
@@ -529,11 +535,12 @@ class SimpliSafeEntity(Entity):
     def __init__(self, simplisafe, system, name, *, serial=None):
         """Initialize."""
         self._async_unsub_dispatcher_connect = None
-        self._last_used_websocket_event = None
+        self._last_processed_websocket_event = None
         self._name = name
         self._online = True
         self._simplisafe = simplisafe
         self._system = system
+        self.websocket_events_to_listen_for = []
 
         if serial:
             self._serial = serial
@@ -592,6 +599,36 @@ class SimpliSafeEntity(Entity):
         """Return the unique ID of the entity."""
         return self._serial
 
+    @callback
+    def _async_should_ignore_websocket_event(self, event_data):
+        """Return whether this entity should ignore a particular websocket event.
+
+        Note that we can't check for a final condition – whether the event belongs to
+        a particular entity, like a lock – because some events (like arming the system
+        from a keypad _or_ from the website) should impact the same entity.
+        """
+        # We've already processed this event:
+        if self._last_processed_websocket_event == event_data:
+            return True
+
+        # This is an event for a system other than the one this entity belongs to:
+        if event_data["sid"] != self._system.system_id:
+            return True
+
+        # This isn't an event that this entity cares about:
+        if event_data["eventCid"] not in self.websocket_events_to_listen_for:
+            return True
+
+        # This event is aimed at an entity whose serial number is different from this
+        # one's:
+        if (
+            event_data["eventCid"] in WEBSOCKET_EVENTS_REQUIRING_SERIAL
+            and event_data["sensorSerial"] == self._serial
+        ):
+            return True
+
+        return False
+
     async def async_added_to_hass(self):
         """Register callbacks."""
 
@@ -608,17 +645,14 @@ class SimpliSafeEntity(Entity):
         """Update the entity."""
         self.async_update_from_rest_api()
 
-        # Since the REST API triggers this coroutine, we don't want old websocket events
-        # to unnecessarily overwrite things; so, we return if the last websocket event
-        # is one the entity has already responded to:
         last_websocket_event = self._simplisafe.websocket.last_events.get(
             self._system.system_id
         )
 
-        if self._last_used_websocket_event == last_websocket_event:
+        if self._async_should_ignore_websocket_event(last_websocket_event):
             return
 
-        self._last_used_websocket_event = last_websocket_event
+        self._last_processed_websocket_event = last_websocket_event
         self._attrs.update(
             {
                 ATTR_LAST_EVENT_INFO: last_websocket_event.info,

@@ -102,6 +102,21 @@ class SimpliSafeAlarm(SimpliSafeEntity, AlarmControlPanel):
         else:
             self._state = None
 
+        for event_type in (
+            EVENT_ALARM_CANCELED,
+            EVENT_ALARM_TRIGGERED,
+            EVENT_ARMED_AWAY,
+            EVENT_ARMED_AWAY_BY_KEYPAD,
+            EVENT_ARMED_AWAY_BY_REMOTE,
+            EVENT_ARMED_HOME,
+            EVENT_AWAY_EXIT_DELAY_BY_KEYPAD,
+            EVENT_AWAY_EXIT_DELAY_BY_REMOTE,
+            EVENT_DISARMED_BY_MASTER_PIN,
+            EVENT_DISARMED_BY_REMOTE,
+            EVENT_HOME_EXIT_DELAY,
+        ):
+            self.websocket_events_to_listen_for.append(event_type)
+
     @property
     def changed_by(self):
         """Return info about who changed the alarm last."""

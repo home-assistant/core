@@ -3,7 +3,7 @@ import logging
 
 from simplipy.errors import SimplipyError
 from simplipy.lock import LockStates
-from simplipy.websocket import EVENT_LOCK_LOCKED
+from simplipy.websocket import EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED
 
 from homeassistant.components.lock import LockDevice
 from homeassistant.core import callback
@@ -38,6 +38,9 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
         super().__init__(simplisafe, system, lock.name, serial=lock.serial)
         self._is_locked = False
         self._lock = lock
+
+        for event_type in (EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED):
+            self.websocket_events_to_listen_for.append(event_type)
 
     @property
     def is_locked(self):
