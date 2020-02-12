@@ -36,7 +36,7 @@ CONF_STATES = "states"
 CONF_NAME = CONF_NAME
 CONF_ZONES = "zones"
 
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
 
 SIGNAL_ZONE_CHANGED = "elmo_alarm.zone_changed"
 SIGNAL_INPUT_CHANGED = "elmo_alarm.input_changed"
@@ -92,6 +92,8 @@ async def async_setup(hass, config):
     password = conf[CONF_PASSWORD]
     states = conf[CONF_STATES]
     scan_interval = conf[CONF_SCAN_INTERVAL]
+
+    _LOGGER.warning(f"Scan Interval:{scan_interval}")
 
     client = ElmoClientWrapper(host, vendor, username, password, states)
     await client.update()
@@ -170,7 +172,7 @@ class ElmoClientWrapper(ElmoClient):
     async def _configure_states(self):
         state_config = {}
         for state in self._states_config:
-            state_config[state[CONF_NAME]] = state[STATE_ZONES]
+            state_config[state[CONF_NAME]] = state[CONF_ZONES]
         self._states = state_config
 
     async def _update_arm_state(self):
