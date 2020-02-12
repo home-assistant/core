@@ -1,8 +1,10 @@
 """Webhook handlers for mobile_app."""
 from functools import wraps
 import logging
+import secrets
 
 from aiohttp.web import HTTPBadRequest, Request, Response
+from nacl.secret import SecretBox
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -71,6 +73,8 @@ from .const import (
     DATA_DELETED_IDS,
     DATA_STORE,
     DOMAIN,
+    ERR_ENCRYPTION_ALREADY_ENABLED,
+    ERR_ENCRYPTION_NOT_AVAILABLE,
     ERR_ENCRYPTION_REQUIRED,
     ERR_SENSOR_DUPLICATE_UNIQUE_ID,
     ERR_SENSOR_NOT_REGISTERED,
@@ -84,6 +88,7 @@ from .helpers import (
     registration_context,
     safe_registration,
     savable_state,
+    supports_encryption,
     webhook_response,
 )
 
@@ -304,6 +309,35 @@ async def webhook_update_registration(hass, config_entry, data):
 
     return webhook_response(
         safe_registration(new_registration), registration=new_registration,
+    )
+
+
+@WEBHOOK_COMMANDS.register("enable_encryption")
+async def webhook_enable_encryption(hass, config_entry, data):
+    """Handle a encryption enable webhook."""
+    if config_entry.data[ATTR_SUPPORTS_ENCRYPTION]:
+        _LOGGER.warning(
+            "Refusing to enable encryption for %s because it is already enabled!",
+            config_entry.data[ATTR_DEVICE_NAME],
+        )
+        return error_response(
+            ERR_ENCRYPTION_ALREADY_ENABLED, "Encryption already enabled"
+        )
+
+    if not supports_encryption():
+        _LOGGER.warning(
+            "Unable to enable encryption for %s because libsodium is unavailable!",
+            config_entry.data[ATTR_DEVICE_NAME],
+        )
+        return error_response(ERR_ENCRYPTION_NOT_AVAILABLE, "Encryption is unavailable")
+
+    config_entry.data[ATTR_SUPPORTS_ENCRYPTION] = True
+    config_entry.data[CONF_SECRET] = secrets.token_hex(SecretBox.KEY_SIZE)
+
+    hass.config_entries.async_update_entry(config_entry, data=config_entry.data)
+
+    return webhook_response(
+        {"secret": config_entry.data[CONF_SECRET]}, registration=config_entry.data,
     )
 
 

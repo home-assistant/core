@@ -236,3 +236,17 @@ async def test_webhook_update_location(hass, webhook_client, create_registration
     assert state.attributes["longitude"] == 2.0
     assert state.attributes["gps_accuracy"] == 10
     assert state.attributes["altitude"] == -10
+
+
+async def test_webhook_enable_encryption(hass, webhook_client, create_registrations):
+    """Test that encryption can be added to a reg initially created without."""
+    resp = await webhook_client.post(
+        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
+        json={"type": "enable_encryption"},
+    )
+
+    assert resp.status == 200
+
+    json = await resp.json()
+    assert len(json) == 1
+    assert CONF_SECRET in json
