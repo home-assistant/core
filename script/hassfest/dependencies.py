@@ -110,7 +110,7 @@ ALLOWED_USED_COMPONENTS = {
     "stream",  # Stream cannot install on all systems, can be imported without reqs.
 }
 
-IGNORE_VIOLATIONS = [
+IGNORE_VIOLATIONS = {
     # Has same requirement, gets defaults.
     ("sql", "recorder"),
     # Sharing a base class
@@ -136,7 +136,7 @@ IGNORE_VIOLATIONS = [
     "dwd_weather_warnings",
     # Should be rewritten to use own data fetcher
     "scrape",
-]
+}
 
 
 def calc_allowed_references(integration: Integration) -> Set[str]:
