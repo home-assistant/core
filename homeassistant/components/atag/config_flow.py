@@ -7,7 +7,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE, CONF_EMAIL, CONF_HOST, CONF_PORT
 from homeassistant.core import callback
 
-from . import DOMAIN
+from . import DOMAIN  # pylint: disable=unused-import
 
 DATA_SCHEMA = {
     vol.Required(CONF_HOST): str,
