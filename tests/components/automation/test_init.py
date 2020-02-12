@@ -71,7 +71,7 @@ async def test_service_specify_data(hass, calls):
 
     time = dt_util.utcnow()
 
-    with patch("homeassistant.components.automation.utcnow", return_value=time):
+    with patch("homeassistant.helpers.script.utcnow", return_value=time):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
@@ -114,7 +114,7 @@ async def test_action_delay(hass, calls):
 
     time = dt_util.utcnow()
 
-    with patch("homeassistant.components.automation.utcnow", return_value=time):
+    with patch("homeassistant.helpers.script.utcnow", return_value=time):
         hass.bus.async_fire("test_event")
         await hass.async_block_till_done()
 
@@ -131,6 +131,313 @@ async def test_action_delay(hass, calls):
     state = hass.states.get("automation.hello")
     assert state is not None
     assert state.attributes.get("last_triggered") == time
+
+
+async def test_action_delay_retrigger_allow(hass, calls):
+    """Test action delay with parallel_action: allow."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": [
+                    {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.platform }} - "
+                            "{{ trigger.event.event_type }} - 1"
+                        },
+                    },
+                    {"delay": {"minutes": "10"}},
+                    {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.platform }} - "
+                            "{{ trigger.event.event_type }} - 2"
+                        },
+                    },
+                ],
+                "parallel_action": "allow",
+            }
+        },
+    )
+
+    time1 = dt_util.utcnow()
+
+    with patch("homeassistant.helpers.script.utcnow", return_value=time1):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "event - test_event - 1"
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time1
+
+    time2 = dt_util.utcnow() + timedelta(minutes=5)
+
+    async_fire_time_changed(hass, time2)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
+    with patch("homeassistant.helpers.script.utcnow", return_value=time2):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "event - test_event - 1"
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time2
+
+    time3 = dt_util.utcnow() + timedelta(minutes=10)
+
+    async_fire_time_changed(hass, time3)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 3
+    assert calls[2].data["some"] == "event - test_event - 2"
+
+    time4 = dt_util.utcnow() + timedelta(minutes=15)
+
+    async_fire_time_changed(hass, time4)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 4
+    assert calls[3].data["some"] == "event - test_event - 2"
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time2
+
+
+async def test_action_delay_retrigger_error(hass, calls, caplog):
+    """Test action delay with parallel_action: error."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": [
+                    {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.platform }} - "
+                            "{{ trigger.event.event_type }} - 1"
+                        },
+                    },
+                    {"delay": {"minutes": "10"}},
+                    {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.platform }} - "
+                            "{{ trigger.event.event_type }} - 2"
+                        },
+                    },
+                ],
+                "parallel_action": "error",
+            }
+        },
+    )
+
+    time1 = dt_util.utcnow()
+
+    with patch("homeassistant.helpers.script.utcnow", return_value=time1):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "event - test_event - 1"
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time1
+
+    time2 = dt_util.utcnow() + timedelta(minutes=5)
+
+    async_fire_time_changed(hass, time2)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
+    with patch("homeassistant.helpers.script.utcnow", return_value=time2):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time1
+
+    time3 = dt_util.utcnow() + timedelta(minutes=10)
+
+    async_fire_time_changed(hass, time3)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "event - test_event - 2"
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time1
+
+    assert "Error while executing automation" in caplog.text
+
+
+async def test_action_delay_retrigger_restart(hass, calls):
+    """Test action delay with parallel_action: restart."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": [
+                    {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.platform }} - "
+                            "{{ trigger.event.event_type }} - 1"
+                        },
+                    },
+                    {"delay": {"minutes": "10"}},
+                    {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.platform }} - "
+                            "{{ trigger.event.event_type }} - 2"
+                        },
+                    },
+                ],
+            }
+        },
+    )
+
+    time1 = dt_util.utcnow()
+
+    with patch("homeassistant.helpers.script.utcnow", return_value=time1):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "event - test_event - 1"
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time1
+
+    time2 = dt_util.utcnow() + timedelta(minutes=5)
+
+    async_fire_time_changed(hass, time2)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
+    with patch("homeassistant.helpers.script.utcnow", return_value=time2):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "event - test_event - 1"
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time2
+
+    time3 = dt_util.utcnow() + timedelta(minutes=15)
+
+    async_fire_time_changed(hass, time3)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 3
+    assert calls[2].data["some"] == "event - test_event - 2"
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time2
+
+
+async def test_action_delay_retrigger_skip(hass, calls):
+    """Test action delay with parallel_action: skip."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "alias": "hello",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "action": [
+                    {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.platform }} - "
+                            "{{ trigger.event.event_type }} - 1"
+                        },
+                    },
+                    {"delay": {"minutes": "10"}},
+                    {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.platform }} - "
+                            "{{ trigger.event.event_type }} - 2"
+                        },
+                    },
+                ],
+                "parallel_action": "skip",
+            }
+        },
+    )
+
+    time1 = dt_util.utcnow()
+
+    with patch("homeassistant.helpers.script.utcnow", return_value=time1):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "event - test_event - 1"
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time1
+
+    time2 = dt_util.utcnow() + timedelta(minutes=5)
+
+    async_fire_time_changed(hass, time2)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
+    with patch("homeassistant.helpers.script.utcnow", return_value=time2):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    assert len(calls) == 1
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time1
+
+    time3 = dt_util.utcnow() + timedelta(minutes=10)
+
+    async_fire_time_changed(hass, time3)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "event - test_event - 2"
+
+    state = hass.states.get("automation.hello")
+    assert state is not None
+    assert state.attributes.get("last_triggered") == time1
 
 
 async def test_service_specify_entity_id(hass, calls):

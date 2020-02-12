@@ -5,7 +5,6 @@ import functools as ft
 from unittest import mock
 
 import asynctest
-import jinja2
 import pytest
 import voluptuous as vol
 
@@ -412,6 +411,56 @@ async def test_cancel_while_delay(hass):
 
     assert not script_obj.is_running
     assert len(events) == 0
+
+
+async def test_run_while_suspended(hass):
+    """Test running when already running."""
+    event = "test_event"
+    events = []
+    context = Context()
+    delay_alias = "delay step"
+
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        events.append(event)
+
+    hass.bus.async_listen(event, record_event)
+
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [
+                {"event": event},
+                {"delay": {"seconds": 5}, "alias": delay_alias},
+                {"event": event},
+            ]
+        ),
+        mode="error",
+    )
+
+    await script_obj.async_run(context=context)
+    await hass.async_block_till_done()
+
+    assert script_obj.is_running
+    assert script_obj.can_cancel
+    assert script_obj.last_action == delay_alias
+    assert len(events) == 1
+
+    with pytest.raises(exceptions.HomeAssistantError):
+        await script_obj.async_run(context=context)
+
+    assert script_obj.is_running
+    assert len(events) == 1
+
+    future = dt_util.utcnow() + timedelta(seconds=5)
+    async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
+
+    assert not script_obj.is_running
+    assert len(events) == 2
+    assert events[0].context is context
+    assert events[1].context is context
 
 
 async def test_wait_template(hass):
@@ -897,7 +946,7 @@ async def test_last_triggered(hass):
     assert script_obj.last_triggered is None
 
     time = dt_util.utcnow()
-    with mock.patch("homeassistant.helpers.script.date_util.utcnow", return_value=time):
+    with mock.patch("homeassistant.helpers.script.utcnow", return_value=time):
         await script_obj.async_run()
         await hass.async_block_till_done()
 
@@ -922,7 +971,7 @@ async def test_propagate_error_service_not_found(hass):
         await script_obj.async_run()
 
     assert len(events) == 0
-    assert script_obj._cur == -1
+    assert not script_obj.is_running
 
 
 async def test_propagate_error_invalid_service_data(hass):
@@ -958,7 +1007,7 @@ async def test_propagate_error_invalid_service_data(hass):
 
     assert len(events) == 0
     assert len(calls) == 0
-    assert script_obj._cur == -1
+    assert not script_obj.is_running
 
 
 async def test_propagate_error_service_exception(hass):
@@ -989,39 +1038,7 @@ async def test_propagate_error_service_exception(hass):
 
     assert len(events) == 0
     assert len(calls) == 0
-    assert script_obj._cur == -1
-
-
-def test_log_exception():
-    """Test logged output."""
-    script_obj = script.Script(
-        None, cv.SCRIPT_SCHEMA([{"service": "test.script"}, {"event": "test_event"}])
-    )
-    script_obj._exception_step = 1
-
-    for exc, msg in (
-        (vol.Invalid("Invalid number"), "Invalid data"),
-        (
-            exceptions.TemplateError(jinja2.TemplateError("Unclosed bracket")),
-            "Error rendering template",
-        ),
-        (exceptions.Unauthorized(), "Unauthorized"),
-        (exceptions.ServiceNotFound("light", "turn_on"), "Service not found"),
-        (ValueError("Cannot parse JSON"), "Unknown error"),
-    ):
-        logger = mock.Mock()
-        script_obj.async_log_exception(logger, "Test error", exc)
-
-        assert len(logger.mock_calls) == 1
-        _, _, p_error_desc, p_action_type, p_step, p_error = logger.mock_calls[0][1]
-
-        assert p_error_desc == msg
-        assert p_action_type == script.ACTION_FIRE_EVENT
-        assert p_step == 2
-        if isinstance(exc, ValueError):
-            assert p_error == ""
-        else:
-            assert p_error == str(exc)
+    assert not script_obj.is_running
 
 
 async def test_referenced_entities():

@@ -21,7 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.script import Script
+from homeassistant.helpers.script import SCRIPT_PARALLEL_ERROR, Script
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.loader import bind_hass
 
@@ -231,7 +231,9 @@ class ScriptEntity(ToggleEntity):
         """Initialize the script."""
         self.object_id = object_id
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
-        self.script = Script(hass, sequence, name, self.async_update_ha_state)
+        self.script = Script(
+            hass, sequence, name, self.async_update_ha_state, SCRIPT_PARALLEL_ERROR
+        )
 
     @property
     def should_poll(self):
@@ -268,13 +270,12 @@ class ScriptEntity(ToggleEntity):
             {ATTR_NAME: self.script.name, ATTR_ENTITY_ID: self.entity_id},
             context=context,
         )
-        try:
-            await self.script.async_run(kwargs.get(ATTR_VARIABLES), context)
-        except Exception as err:
-            self.script.async_log_exception(
-                _LOGGER, f"Error executing script {self.entity_id}", err
-            )
-            raise err
+        await self.script.async_run(
+            kwargs.get(ATTR_VARIABLES),
+            context,
+            _LOGGER,
+            f"Error executing script {self.entity_id}",
+        )
 
     async def async_turn_off(self, **kwargs):
         """Turn script off."""

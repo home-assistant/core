@@ -23,15 +23,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import condition, extract_domain_configs, script
+from homeassistant.helpers import condition, extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.script import SCRIPT_PARALLEL_CHOICES, Script
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.loader import bind_hass
-from homeassistant.util.dt import parse_datetime, utcnow
+from homeassistant.util.dt import parse_datetime
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 # mypy: no-check-untyped-defs, no-warn-return-any
@@ -50,6 +51,7 @@ CONF_ACTION = "action"
 CONF_TRIGGER = "trigger"
 CONF_CONDITION_TYPE = "condition_type"
 CONF_INITIAL_STATE = "initial_state"
+CONF_PARALLEL_ACTION = "parallel_action"
 CONF_SKIP_CONDITION = "skip_condition"
 
 CONDITION_USE_TRIGGER_VALUES = "use_trigger_values"
@@ -106,6 +108,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_PARALLEL_ACTION): vol.In(SCRIPT_PARALLEL_CHOICES),
         }
     ),
 )
@@ -394,13 +397,16 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         _LOGGER.info("Executing %s", self._name)
 
         try:
-            await self.action_script.async_run(variables, trigger_context)
-        except Exception as err:  # pylint: disable=broad-except
-            self.action_script.async_log_exception(
-                _LOGGER, f"Error while executing automation {self.entity_id}", err
+            await self.action_script.async_run(
+                variables,
+                trigger_context,
+                _LOGGER,
+                f"Error while executing automation {self.entity_id}",
             )
+        except Exception:  # pylint: disable=broad-except
+            pass
 
-        self._last_triggered = utcnow()
+        self._last_triggered = self.action_script.last_triggered
         await self.async_update_ha_state()
 
     async def async_will_remove_from_hass(self):
@@ -508,7 +514,12 @@ async def _async_process_config(hass, config, component):
             hidden = config_block[CONF_HIDE_ENTITY]
             initial_state = config_block.get(CONF_INITIAL_STATE)
 
-            action_script = script.Script(hass, config_block.get(CONF_ACTION, {}), name)
+            action_script = Script(
+                hass,
+                config_block.get(CONF_ACTION, {}),
+                name,
+                mode=config_block.get(CONF_PARALLEL_ACTION),
+            )
 
             if CONF_CONDITION in config_block:
                 cond_func = await _async_process_if(hass, config, config_block)
