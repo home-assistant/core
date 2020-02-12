@@ -39,8 +39,8 @@ def calls(hass):
     return async_mock_service(hass, "test", "automation")
 
 
-@pytest.fixture(params=["zha_device_joined", "zha_device_restored"])
-async def mock_devices(hass, zha_gateway, zigpy_device_mock, request):
+@pytest.fixture
+async def mock_devices(hass, zigpy_device_mock, zha_device_joined_restored):
     """IAS device fixture."""
 
     zigpy_device = zigpy_device_mock(
@@ -53,8 +53,7 @@ async def mock_devices(hass, zha_gateway, zigpy_device_mock, request):
         },
     )
 
-    join_or_restore = request.getfixturevalue(request.param)
-    zha_device = await join_or_restore(zigpy_device)
+    zha_device = await zha_device_joined_restored(zigpy_device)
     zha_device.update_available(True)
     await hass.async_block_till_done()
     return zigpy_device, zha_device
