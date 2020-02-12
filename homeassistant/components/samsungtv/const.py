@@ -12,3 +12,8 @@ CONF_ON_ACTION = "turn_on_action"
 CONF_TOKEN_FILE = "token_file"
 
 PORTS = (55000, 8001, 8002)
+
+RESULT_AUTH_MISSING = "auth_missing"
+RESULT_SUCCESS = "success"
+RESULT_NOT_SUCCESSFUL = "not_successful"
+RESULT_NOT_SUPPORTED = "not_supported"
