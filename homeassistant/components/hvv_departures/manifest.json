@@ -6,9 +6,6 @@
   "requirements": [
     "pygti==0.6.0"
   ],
-  "ssdp": [],
-  "zeroconf": [],
-  "homekit": {},
   "dependencies": [],
   "codeowners": [
     "@vigonotion"
