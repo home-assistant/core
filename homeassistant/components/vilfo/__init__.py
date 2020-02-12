@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     host = entry.data[CONF_HOST]
     access_token = entry.data[CONF_ACCESS_TOKEN]
 
-    vilfo_router = VilfoRouterData(host, access_token, hass)
+    vilfo_router = VilfoRouterData(hass, host, access_token)
 
     await vilfo_router.async_update()
 
