@@ -5,9 +5,9 @@ from dynalite_lib import CONF_ALL
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DATA_CONFIGS, DOMAIN, LOGGER
-from .light import DynaliteLight
 
 
 class BridgeError(Exception):
@@ -27,19 +27,15 @@ class DynaliteBridge:
         self.config_entry = config_entry
         self.hass = hass
         self.area = {}
-        self.async_add_entities = None
-        self.waiting_entities = []
-        self.all_entities = {}
+        self.async_add_devices = None
+        self.waiting_devices = []
         self.config = None
         self.host = config_entry.data[CONF_HOST]
-        if self.host not in hass.data[DOMAIN][DATA_CONFIGS]:
-            LOGGER.info("invalid host - %s", self.host)
-            raise BridgeError(f"invalid host - {self.host}")
         self.config = hass.data[DOMAIN][DATA_CONFIGS][self.host]
         # Configure the dynalite devices
         self.dynalite_devices = DynaliteDevices(
             config=self.config,
-            newDeviceFunc=self.add_devices,
+            newDeviceFunc=self.add_devices_when_registered,
             updateDeviceFunc=self.update_device,
         )
 
@@ -56,22 +52,12 @@ class DynaliteBridge:
 
         return True
 
-    @callback
-    def add_devices(self, devices):
-        """Call when devices should be added to home assistant."""
-        added_entities = []
-
-        for device in devices:
-            if device.category == "light":
-                entity = DynaliteLight(device, self)
-            else:
-                LOGGER.debug("Illegal device category %s", device.category)
-                continue
-            added_entities.append(entity)
-            self.all_entities[entity.unique_id] = entity
-
-        if added_entities:
-            self.add_entities_when_registered(added_entities)
+    def update_signal(self, device=None):
+        """Create signal to use to trigger entity update."""
+        if device:
+            return f"dynalite-update-{self.host}-{device.unique_id}"
+        else:
+            return f"dynalite-update-{self.host}"
 
     @callback
     def update_device(self, device):
@@ -82,28 +68,25 @@ class DynaliteBridge:
                 LOGGER.info("Connected to dynalite host")
             else:
                 LOGGER.info("Disconnected from dynalite host")
-            for uid in self.all_entities:
-                self.all_entities[uid].try_schedule_ha()
+            async_dispatcher_send(self.hass, self.update_signal())
         else:
-            uid = device.unique_id
-            if uid in self.all_entities:
-                self.all_entities[uid].try_schedule_ha()
+            async_dispatcher_send(self.hass, self.update_signal(device))
 
     @callback
-    def register_add_entities(self, async_add_entities):
+    def register_add_devices(self, async_add_devices):
         """Add an async_add_entities for a category."""
-        self.async_add_entities = async_add_entities
-        if self.waiting_entities:
-            self.async_add_entities(self.waiting_entities)
+        self.async_add_devices = async_add_devices
+        if self.waiting_devices:
+            self.async_add_devices(self.waiting_devices)
 
-    def add_entities_when_registered(self, entities):
-        """Add the entities to HA if async_add_entities was registered, otherwise queue until it is."""
-        if not entities:
+    def add_devices_when_registered(self, devices):
+        """Add the devices to HA if async_add_entities was registered, otherwise queue until it is."""
+        if not devices:
             return
-        if self.async_add_entities:
-            self.async_add_entities(entities)
+        if self.async_add_devices:
+            self.async_add_devices(devices)
         else:  # handle it later when it is registered
-            self.waiting_entities.extend(entities)
+            self.waiting_devices.extend(devices)
 
     async def async_reset(self):
         """Reset this bridge to default state.
