@@ -331,12 +331,13 @@ async def webhook_enable_encryption(hass, config_entry, data):
         )
         return error_response(ERR_ENCRYPTION_NOT_AVAILABLE, "Encryption is unavailable")
 
-    config_entry.data[ATTR_SUPPORTS_ENCRYPTION] = True
-    config_entry.data[CONF_SECRET] = secrets.token_hex(SecretBox.KEY_SIZE)
+    secret = secrets.token_hex(SecretBox.KEY_SIZE)
 
-    hass.config_entries.async_update_entry(config_entry, data=config_entry.data)
+    data = {**config_entry.data, ATTR_SUPPORTS_ENCRYPTION: True, CONF_SECRET: secret}
 
-    return json_response({"secret": config_entry.data[CONF_SECRET]})
+    hass.config_entries.async_update_entry(config_entry, data=data)
+
+    return json_response({"secret": secret})
 
 
 @WEBHOOK_COMMANDS.register("register_sensor")

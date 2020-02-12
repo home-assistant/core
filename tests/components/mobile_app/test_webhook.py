@@ -1,6 +1,7 @@
 """Webhook tests for mobile_app."""
-
 import logging
+
+import pytest
 
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
@@ -13,6 +14,53 @@ from .const import CALL_SERVICE, FIRE_EVENT, REGISTER_CLEARTEXT, RENDER_TEMPLATE
 from tests.common import async_mock_service
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def encrypt_payload(secret_key, payload):
+    """Return a encrypted payload given a key and dictionary of data."""
+    try:
+        from nacl.secret import SecretBox
+        from nacl.encoding import Base64Encoder
+    except (ImportError, OSError):
+        pytest.skip("libnacl/libsodium is not installed")
+        return
+
+    import json
+
+    keylen = SecretBox.KEY_SIZE
+    prepped_key = secret_key.encode("utf-8")
+    prepped_key = prepped_key[:keylen]
+    prepped_key = prepped_key.ljust(keylen, b"\0")
+
+    payload = json.dumps(payload).encode("utf-8")
+
+    return (
+        SecretBox(prepped_key).encrypt(payload, encoder=Base64Encoder).decode("utf-8")
+    )
+
+
+def decrypt_payload(secret_key, encrypted_data):
+    """Return a decrypted payload given a key and a string of encrypted data."""
+    try:
+        from nacl.secret import SecretBox
+        from nacl.encoding import Base64Encoder
+    except (ImportError, OSError):
+        pytest.skip("libnacl/libsodium is not installed")
+        return
+
+    import json
+
+    keylen = SecretBox.KEY_SIZE
+    prepped_key = secret_key.encode("utf-8")
+    prepped_key = prepped_key[:keylen]
+    prepped_key = prepped_key.ljust(keylen, b"\0")
+
+    decrypted_data = SecretBox(prepped_key).decrypt(
+        encrypted_data, encoder=Base64Encoder
+    )
+    decrypted_data = decrypted_data.decode("utf-8")
+
+    return json.loads(decrypted_data)
 
 
 async def test_webhook_handle_render_template(create_registrations, webhook_client):
@@ -162,9 +210,7 @@ async def test_webhook_returns_error_incorrect_json(
     assert "invalid JSON" in caplog.text
 
 
-async def test_webhook_handle_decryption(
-    webhook_client, create_registrations, encrypt_payload, decrypt_payload
-):
+async def test_webhook_handle_decryption(webhook_client, create_registrations):
     """Test that we can encrypt/decrypt properly."""
     key = create_registrations[0]["secret"]
     data = encrypt_payload(key, RENDER_TEMPLATE["data"])
@@ -220,9 +266,7 @@ async def test_webhook_update_location(hass, webhook_client, create_registration
     assert state.attributes["altitude"] == -10
 
 
-async def test_webhook_enable_encryption(
-    hass, webhook_client, create_registrations, encrypt_payload, decrypt_payload
-):
+async def test_webhook_enable_encryption(hass, webhook_client, create_registrations):
     """Test that encryption can be added to a reg initially created without."""
     webhook_id = create_registrations[1]["webhook_id"]
 
