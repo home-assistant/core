@@ -25,12 +25,13 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA, DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
+from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
 from .const import (
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
+    DATA,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
 )

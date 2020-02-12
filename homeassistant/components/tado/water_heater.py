@@ -17,11 +17,11 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
 from .const import (
-    CONF_FALLBACK,
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
+    DATA,
     TYPE_HOT_WATER,
 )
 
@@ -44,21 +44,20 @@ SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tado water heater platform."""
-    tado = hass.data[DOMAIN]
+    api_list = hass.data[DOMAIN][DATA]
+    entities = []
 
-    entities = [
-        create_water_heater_entity(
-            tado, zone["name"], zone["id"], discovery_info[CONF_FALLBACK]
-        )
-        for zone in tado.zones
-        if zone["type"] == TYPE_HOT_WATER
-    ]
+    for tado in api_list:
+        for zone in tado.zones:
+            if zone["type"] in [TYPE_HOT_WATER]:
+                entity = create_water_heater_entity(tado, zone["name"], zone["id"])
+                entities.append(entity)
 
     if entities:
         add_entities(entities, True)
 
 
-def create_water_heater_entity(tado, name: str, zone_id: int, fallback: bool):
+def create_water_heater_entity(tado, name: str, zone_id: int):
     """Create a Tado water heater device."""
     capabilities = tado.get_capabilities(zone_id)
     supports_temperature_control = capabilities["canSetTemperature"]
@@ -72,7 +71,7 @@ def create_water_heater_entity(tado, name: str, zone_id: int, fallback: bool):
         max_temp = None
 
     entity = TadoWaterHeater(
-        tado, name, zone_id, supports_temperature_control, min_temp, max_temp, fallback
+        tado, name, zone_id, supports_temperature_control, min_temp, max_temp
     )
 
     return entity
@@ -89,13 +88,13 @@ class TadoWaterHeater(WaterHeaterDevice):
         supports_temperature_control,
         min_temp,
         max_temp,
-        fallback,
     ):
         """Initialize of Tado water heater entity."""
         self._tado = tado
 
         self.zone_name = zone_name
         self.zone_id = zone_id
+        self._unique_id = f"{zone_id} {tado.device_id}"
 
         self._device_is_active = False
         self._is_away = False
@@ -110,7 +109,7 @@ class TadoWaterHeater(WaterHeaterDevice):
         if self._supports_temperature_control:
             self._supported_features |= SUPPORT_TARGET_TEMPERATURE
 
-        if fallback:
+        if tado.fallback:
             _LOGGER.debug("Default overlay is set to TADO MODE")
             # Fallback to Smart Schedule at next Schedule switch
             self._default_overlay = CONST_OVERLAY_TADO_MODE
@@ -145,6 +144,11 @@ class TadoWaterHeater(WaterHeaterDevice):
     def name(self):
         """Return the name of the entity."""
         return self.zone_name
+
+    @property
+    def unique_id(self):
+        """Return the unique id."""
+        return self._unique_id
 
     @property
     def current_operation(self):
