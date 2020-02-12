@@ -69,7 +69,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class VilfoRouterData:
     """Define an object to hold sensor data."""
 
-    def __init__(self, host, access_token, hass):
+    def __init__(self, hass, host, access_token):
         """Initialize."""
         self._vilfo = VilfoClient(host, access_token)
         self.hass = hass
