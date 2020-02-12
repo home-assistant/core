@@ -346,11 +346,14 @@ class SimpliSafeWebsocket:
         self._hass = hass
         self._websocket = websocket
         self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
+        self._websocket_reconnect_underway = False
         self._websocket_watchdog_listener = None
         self.last_events = {}
 
     async def _async_attempt_websocket_connect(self):
         """Attempt to connect to the websocket (retrying later on fail)."""
+        self._websocket_reconnect_underway = True
+
         try:
             await self._websocket.async_connect()
         except WebsocketError as err:
@@ -363,6 +366,9 @@ class SimpliSafeWebsocket:
                 self._websocket_reconnect_delay,
                 self.async_websocket_connect,
             )
+        else:
+            self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
+            self._websocket_reconnect_underway = False
 
     async def _async_websocket_reconnect(self, event_time):
         """Forcibly disconnect from and reconnect to the websocket."""
@@ -401,6 +407,9 @@ class SimpliSafeWebsocket:
 
     async def async_websocket_connect(self):
         """Register handlers and connect to the websocket."""
+        if self._websocket_reconnect_underway:
+            return
+
         self._websocket.on_connect(self._on_connect)
         self._websocket.on_disconnect(self._on_disconnect)
         self._websocket.on_event(self._on_event)
@@ -524,7 +533,6 @@ class SimpliSafeEntity(Entity):
         self._name = name
         self._online = True
         self._simplisafe = simplisafe
-        self._state = None
         self._system = system
 
         if serial:

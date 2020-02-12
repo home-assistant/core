@@ -3,10 +3,9 @@ import logging
 
 from simplipy.errors import SimplipyError
 from simplipy.lock import LockStates
-from simplipy.websocket import EVENT_LOCK_ERROR, EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED
+from simplipy.websocket import EVENT_LOCK_LOCKED
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.const import STATE_LOCKED, STATE_UNKNOWN, STATE_UNLOCKED
 from homeassistant.core import callback
 
 from . import SimpliSafeEntity
@@ -37,12 +36,13 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
     def __init__(self, simplisafe, system, lock):
         """Initialize."""
         super().__init__(simplisafe, system, lock.name, serial=lock.serial)
+        self._is_locked = False
         self._lock = lock
 
     @property
     def is_locked(self):
         """Return true if the lock is locked."""
-        return self._state == STATE_LOCKED
+        return self._is_locked
 
     async def async_lock(self, **kwargs):
         """Lock the lock."""
@@ -52,7 +52,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
             _LOGGER.error('Error while locking "%s": %s', self._lock.name, err)
             return
 
-        self._state = STATE_LOCKED
+        self._is_locked = True
 
     async def async_unlock(self, **kwargs):
         """Unlock the lock."""
@@ -62,7 +62,7 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
             _LOGGER.error('Error while unlocking "%s": %s', self._lock.name, err)
             return
 
-        self._state = STATE_UNLOCKED
+        self._is_locked = False
 
     @callback
     def async_update_from_rest_api(self):
@@ -84,10 +84,6 @@ class SimpliSafeLock(SimpliSafeEntity, LockDevice):
     def async_update_from_websocket_event(self, event):
         """Update the entity with the provided websocket event data."""
         if event.event_type == EVENT_LOCK_LOCKED:
-            self._state = STATE_LOCKED
-        elif event.event_type == EVENT_LOCK_UNLOCKED:
-            self._state = STATE_UNLOCKED
-        elif event.event_type == EVENT_LOCK_ERROR:
-            self._state = STATE_UNKNOWN
+            self._is_locked = True
         else:
-            self._state = None
+            self._is_locked = False
