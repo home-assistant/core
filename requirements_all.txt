@@ -2032,6 +2032,9 @@ venstarcolortouch==0.12
 # homeassistant.components.meteo_france
 vigilancemeteo==3.0.0
 
+# homeassistant.components.vilfo
+vilfo-api-client==0.3.2
+
 # homeassistant.components.volkszaehler
 volkszaehler==0.1.2
 
