@@ -5,7 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_DEVICE, CONF_EMAIL, CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 
 from . import DOMAIN
 
@@ -14,15 +14,6 @@ DATA_SCHEMA = {
     vol.Optional(CONF_EMAIL): str,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(int, vol.Range(min=0)),
 }
-
-
-@callback
-def configured_hosts(hass: HomeAssistant):
-    """Return a set of the configured hosts."""
-    return set(
-        (entry.data[CONF_DEVICE], entry.data[CONF_HOST])
-        for entry in hass.config_entries.async_entries(DOMAIN)
-    )
 
 
 class AtagConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -47,9 +38,6 @@ class AtagConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         except AtagException:
             return await self._show_form({"base": "connection_error"})
-
-        if atag.device in configured_hosts(self.hass):
-            return await self._show_form({"base": "identifier_exists"})
 
         user_input.update({CONF_DEVICE: atag.device})
         return self.async_create_entry(title=atag.device, data=user_input)

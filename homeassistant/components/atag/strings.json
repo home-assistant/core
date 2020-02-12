@@ -12,8 +12,7 @@
       }
     },
     "error": {
-      "connection_error": "Failed to connect, please try again",
-      "identifier_exists": "Device is already configured"
+      "connection_error": "Failed to connect, please try again"
     },
     "abort": {
       "already_configured": "Only one Atag device can be added to Home Assistant"
