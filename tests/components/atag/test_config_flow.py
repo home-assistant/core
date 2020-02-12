@@ -78,4 +78,5 @@ async def test_full_flow_implementation(hass):
 
         result = await flow.async_step_user(user_input=FIXTURE_USER_INPUT)
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["title"] == FIXTURE_COMPLETE_ENTRY[CONF_DEVICE]
         assert result["data"] == FIXTURE_COMPLETE_ENTRY
