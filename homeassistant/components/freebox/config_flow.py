@@ -10,7 +10,8 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.util import slugify
 
-from .const import API_VERSION, APP_DESC, DOMAIN, STORAGE_KEY, STORAGE_VERSION
+from .const import API_VERSION, APP_DESC, STORAGE_KEY, STORAGE_VERSION
+from .const import DOMAIN  # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,13 +26,6 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize Freebox config flow."""
         self._host = None
         self._port = None
-
-    def _configuration_exists(self, host: str) -> bool:
-        """Return True if host exists in configuration."""
-        for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_HOST] == host:
-                return True
-        return False
 
     def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
@@ -60,9 +54,9 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._host = user_input[CONF_HOST]
         self._port = user_input[CONF_PORT]
 
-        if self._configuration_exists(self._host):
-            errors["base"] = "already_configured"
-            return self._show_setup_form(user_input, errors)
+        # Check if already configured
+        await self.async_set_unique_id(self._host)
+        self._abort_if_unique_id_configured()
 
         return await self.async_step_link()
 
@@ -121,7 +115,4 @@ class FreeboxFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, user_input=None):
         """Import a config entry."""
-        if self._configuration_exists(user_input[CONF_HOST]):
-            return self.async_abort(reason="already_configured")
-
         return await self.async_step_user(user_input)

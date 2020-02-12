@@ -10,8 +10,8 @@ from aiofreepybox.exceptions import (
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.components.freebox import config_flow
 from homeassistant.components.freebox.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -44,43 +44,47 @@ def mock_controller_connect():
         yield service_mock
 
 
-def init_config_flow(hass):
-    """Init a configuration flow."""
-    flow = config_flow.FreeboxFlowHandler()
-    flow.hass = hass
-    return flow
-
-
 async def test_user(hass, connect):
     """Test user config."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}, data=None,
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
     # test with all provided
-    result = await flow.async_step_user({CONF_HOST: HOST, CONF_PORT: PORT})
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
 
 async def test_import(hass, connect):
     """Test import step."""
-    flow = init_config_flow(hass)
-
-    result = await flow.async_step_import({CONF_HOST: HOST, CONF_PORT: PORT})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
 
 async def test_link(hass, connect):
     """Test linking."""
-    flow = init_config_flow(hass)
-    await flow.async_step_user({CONF_HOST: HOST, CONF_PORT: PORT})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+    )
 
-    result = await flow.async_step_link({})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["result"].unique_id == HOST
     assert result["title"] == HOST
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == PORT
@@ -88,32 +92,42 @@ async def test_link(hass, connect):
 
 async def test_abort_if_already_setup(hass):
     """Test we abort if component is already setup."""
-    flow = init_config_flow(hass)
-    MockConfigEntry(domain=DOMAIN, data={CONF_HOST: HOST, CONF_PORT: PORT}).add_to_hass(
-        hass
-    )
+    MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: HOST, CONF_PORT: PORT}, unique_id=HOST
+    ).add_to_hass(hass)
 
     # Should fail, same HOST (import)
-    result = await flow.async_step_import({CONF_HOST: HOST, CONF_PORT: PORT})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
     # Should fail, same HOST (flow)
-    result = await flow.async_step_user({CONF_HOST: HOST, CONF_PORT: PORT})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["errors"] == {"base": "already_configured"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_abort_on_link_failed(hass):
     """Test when we have errors during linking the router."""
-    flow = init_config_flow(hass)
-    await flow.async_step_user({CONF_HOST: HOST, CONF_PORT: PORT})
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_HOST: HOST, CONF_PORT: PORT},
+    )
 
     with patch(
         "homeassistant.components.freebox.config_flow.Freepybox.open",
         side_effect=AuthorizationError(),
     ):
-        result = await flow.async_step_link({})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "register_failed"}
 
@@ -121,7 +135,7 @@ async def test_abort_on_link_failed(hass):
         "homeassistant.components.freebox.config_flow.Freepybox.open",
         side_effect=HttpRequestError(),
     ):
-        result = await flow.async_step_link({})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "connection_failed"}
 
@@ -129,6 +143,6 @@ async def test_abort_on_link_failed(hass):
         "homeassistant.components.freebox.config_flow.Freepybox.open",
         side_effect=InvalidTokenError(),
     ):
-        result = await flow.async_step_link({})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "unknown"}
