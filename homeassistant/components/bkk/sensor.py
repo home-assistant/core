@@ -57,7 +57,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     else:
         if data_updater.state == "NOT_FOUND":
             _LOGGER.error(
-                "Stop id could not be found. Please specify an existing BKK stop id!"
+                "Stop id could not be found. Please specify an existing BKK stop id."
             )
             return
         entities = []
@@ -117,7 +117,7 @@ class BkkDataUpdater(Entity):
                 minutes_after=self._minutes_after,
             )
         except ConnectionError:
-            _LOGGER.error("Unable to fetch data from api!")
+            _LOGGER.error("Unable to fetch data from api.")
         else:
             status = response["status"]
             if status == "OK":

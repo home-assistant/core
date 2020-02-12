@@ -1,1 +1,1 @@
-"""Example Load Platform integration."""
+"""BKK Budapest Public Transport integration."""
