@@ -122,6 +122,7 @@ IGNORE_VIOLATIONS = {
     ("demo", "openalpr_local"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
+    ("websocket_api", "shopping_list"),
     # Expose HA to external systems
     "homekit",
     "alexa",
