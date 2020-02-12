@@ -55,9 +55,10 @@ class DynaliteBridge:
     def update_signal(self, device=None):
         """Create signal to use to trigger entity update."""
         if device:
-            return f"dynalite-update-{self.host}-{device.unique_id}"
+            signal = f"dynalite-update-{self.host}-{device.unique_id}"
         else:
-            return f"dynalite-update-{self.host}"
+            signal = f"dynalite-update-{self.host}"
+        return signal
 
     @callback
     def update_device(self, device):
