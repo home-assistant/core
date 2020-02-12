@@ -124,17 +124,17 @@ async def test_dataSet6(hass):
 async def test_data_moving_average_for_discrete_sensor(hass):
     """Test derivative sensor state."""
     # We simulate the following situation:
-    # The temperature rises 1 °C per minute for 1 hour long.
+    # The temperature rises 1 °C per minute for 30 minutes long.
     # There is a data point every 30 seconds, however, the sensor returns
     # the temperature rounded down to an integer value.
     # We use a time window of 10 minutes and therefore we can expect
     # (because the true derivative is 1 °C/min) an error of less than 10%.
 
     temperature_values = []
-    for temperature in range(60):
+    for temperature in range(30):
         temperature_values += [temperature] * 2  # two values per minute
     time_window = 600
-    times = list(range(0, 3630, 30))
+    times = list(range(0, 1800 + 30, 30))
 
     config, entity_id = await _setup_sensor(
         hass, {"time_window": {"seconds": time_window}, "unit_time": "min", "round": 1}
