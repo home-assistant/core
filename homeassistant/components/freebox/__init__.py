@@ -1,4 +1,5 @@
 """Support for Freebox devices (Freebox v6 and Freebox mini 4K)."""
+import asyncio
 import logging
 
 from aiofreepybox.exceptions import HttpRequestError
@@ -91,10 +92,18 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
 
 
 async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
-    """Unload Freebox component."""
-    for platform in PLATFORMS:
-        await hass.config_entries.async_forward_entry_unload(entry, platform)
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        fbx = hass.data[DOMAIN]
+        await fbx.close()
+        hass.data.pop(DOMAIN)
 
-    fbx = hass.data[DOMAIN]
-    await fbx.close()
-    return True
+    return unload_ok
