@@ -117,7 +117,7 @@ class HVVDepartureSensor(Entity):
                 self._last_error = error
             self._available = False
 
-        if data["returnCode"] == "OK" and len(data.get("departures", [])) > 0:
+        if data["returnCode"] == "OK" and data.get("departures"):
 
             if self._last_error == ClientConnectorError:
                 _LOGGER.debug("Network available again")
