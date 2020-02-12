@@ -1,13 +1,19 @@
 """Support for e-connect Elmo alarm system."""
 from collections import namedtuple
 from datetime import timedelta
+from urllib3.exceptions import HTTPError
+
 import logging
 
 from elmo.api.client import ElmoClient
+from elmo.api.exceptions import PermissionDenied
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_NAME,
     CONF_SCAN_INTERVAL,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
@@ -23,21 +29,14 @@ from homeassistant.helpers.event import async_call_later
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "elmo_alarm"
-CLIENT = "client"
-USERNAME = "username"
-PASSWORD = "password"
-STATES = "states"
-STATE_NAME = "name"
-STATE_ZONES = "zones"
 
 CONF_VENDOR = "vendor"
-CONF_USER = "username"
-CONF_PASS = "password"
+
 CONF_STATES = "states"
-CONF_STATE_NAME = "name"
+CONF_NAME = CONF_NAME
 CONF_ZONES = "zones"
 
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 
 SIGNAL_ZONE_CHANGED = "elmo_alarm.zone_changed"
 SIGNAL_INPUT_CHANGED = "elmo_alarm.input_changed"
@@ -55,10 +54,10 @@ INPUT_WAIT = 0
 ZoneData = namedtuple("ZoneData", ["zone_id", "zone_name", "state"])
 InputData = namedtuple("InputData", ["input_id", "input_name", "state"])
 
-# DEFAULT_ZONE_TYPE = "motion"
+
 STATE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_STATE_NAME): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ZONES): vol.All(cv.ensure_list),
     }
 )
@@ -69,8 +68,8 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Required(CONF_HOST): cv.string,
                 vol.Required(CONF_VENDOR): cv.string,
-                vol.Required(CONF_USER): cv.string,
-                vol.Required(CONF_PASS): cv.string,
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
                 ): vol.All(cv.time_period, cv.positive_timedelta),
@@ -82,7 +81,61 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def async_setup(hass, config):
+    """Set up the e-connect Elmo Alarm platform."""
+
+    conf = config[DOMAIN]
+
+    host = conf[CONF_HOST]
+    vendor = conf[CONF_VENDOR]
+    username = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
+    states = conf[CONF_STATES]
+    scan_interval = conf[CONF_SCAN_INTERVAL]
+
+    client = ElmoClientWrapper(host, vendor, username, password, states)
+    await client.update()
+
+    hass.data[DOMAIN] = client
+
+    hass.async_create_task(
+        async_load_platform(
+            hass,
+            "binary_sensor",
+            DOMAIN,
+            {"zones": client._zones, "inputs": client._inputs},
+            config,
+        )
+    )
+
+    hass.async_create_task(
+        async_load_platform(hass, "alarm_control_panel", DOMAIN, {}, config)
+    )
+
+    async def update():
+        _LOGGER.debug("Connecting to e-connect to retrieve states.")
+        await client.update()
+        async_dispatcher_send(hass, SIGNAL_ARMING_STATE_CHANGED, client._state)
+
+        for zone in client._zones:
+            async_dispatcher_send(hass, SIGNAL_ZONE_CHANGED, zone)
+
+        for inp in client._inputs:
+            async_dispatcher_send(hass, SIGNAL_INPUT_CHANGED, inp)
+
+        async_call_later(
+            hass,
+            scan_interval.total_seconds(),
+            lambda _: hass.async_create_task(update()),
+        )
+
+    await update()
+
+    return True
+    
+
 class ElmoClientWrapper(ElmoClient):
+    '''Wrapping the Elmo client class to adapt it to home assistant'''
     def __init__(self, host, vendor, username, password, states_config):
         self._username = username
         self._password = password
@@ -94,11 +147,19 @@ class ElmoClientWrapper(ElmoClient):
         ElmoClient.__init__(self, host, vendor)
 
     async def update(self):
+        '''Get updates and refresh internal states'''
         try:
             data = self.check()
-        except Exception:
-            self.auth(self._username, self._password)
-            data = self.check()
+        except PermissionDenied as e:
+            _LOGGER.warning(f"Invalid session, trying to authenticate: {e}.")
+            try:
+                self.auth(self._username, self._password)
+                data = self.check()
+            except PermissionDenied as e:
+                _LOGGER.warning(f"Invalid credentials: {e}.")
+            except HTTPError as e:
+                _LOGGER.warning(f"Got HTTP error when authenticating. Check credentials. Code: {e.response.status_code}.")
+
         if self._data is None:
             await self._configure_states()
         self._data = data
@@ -109,7 +170,7 @@ class ElmoClientWrapper(ElmoClient):
     async def _configure_states(self):
         state_config = {}
         for state in self._states_config:
-            state_config[state[STATE_NAME]] = state[STATE_ZONES]
+            state_config[state[CONF_NAME]] = state[STATE_ZONES]
         self._states = state_config
 
     async def _update_arm_state(self):
@@ -164,56 +225,3 @@ class ElmoClientWrapper(ElmoClient):
             for inp in self._data["inputs_wait"]
             if inp["name"] != "Unknown"
         ]
-
-
-async def async_setup(hass, config):
-    """Set up the e-connect Elmo Alarm platform."""
-
-    conf = config[DOMAIN]
-
-    host = conf[CONF_HOST]
-    vendor = conf[CONF_VENDOR]
-    username = conf[CONF_USER]
-    password = conf[CONF_PASS]
-    states = conf[CONF_STATES]
-    scan_interval = conf[CONF_SCAN_INTERVAL]
-
-    client = ElmoClientWrapper(host, vendor, username, password, states)
-    await client.update()
-
-    hass.data[CLIENT] = client
-
-    hass.async_create_task(
-        async_load_platform(
-            hass,
-            "binary_sensor",
-            DOMAIN,
-            {"zones": client._zones, "inputs": client._inputs},
-            config,
-        )
-    )
-
-    hass.async_create_task(
-        async_load_platform(hass, "alarm_control_panel", DOMAIN, {}, config)
-    )
-
-    async def update():
-        _LOGGER.debug("Connecting to e-connect to retrieve states...")
-        await client.update()
-        async_dispatcher_send(hass, SIGNAL_ARMING_STATE_CHANGED, client._state)
-
-        for zone in client._zones:
-            async_dispatcher_send(hass, SIGNAL_ZONE_CHANGED, zone)
-
-        for inp in client._inputs:
-            async_dispatcher_send(hass, SIGNAL_INPUT_CHANGED, inp)
-
-        async_call_later(
-            hass,
-            scan_interval.total_seconds(),
-            lambda _: hass.async_create_task(update()),
-        )
-
-    await update()
-
-    return True
