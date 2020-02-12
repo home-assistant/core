@@ -6,6 +6,7 @@ from pygti.exceptions import CannotConnect, InvalidAuth
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
@@ -16,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 
 SCHEMA_STEP_USER = vol.Schema(
     {
-        vol.Required("host", default=GTI_DEFAULT_HOST): str,
-        vol.Required("username"): str,
-        vol.Required("password"): str,
+        vol.Required(CONF_HOST, default=GTI_DEFAULT_HOST): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
     }
 )
 
@@ -52,9 +53,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 session = aiohttp_client.async_get_clientsession(self.hass)
                 self.hub = GTIHub(
-                    user_input["host"],
-                    user_input["username"],
-                    user_input["password"],
+                    user_input[CONF_HOST],
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
                     session,
                 )
 
@@ -160,9 +161,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             try:
                 session = aiohttp_client.async_get_clientsession(self.hass)
                 self.hub = GTIHub(
-                    self.config_entry.data["host"],
-                    self.config_entry.data["username"],
-                    self.config_entry.data["password"],
+                    self.config_entry.data[CONF_HOST],
+                    self.config_entry.data[CONF_USERNAME],
+                    self.config_entry.data[CONF_PASSWORD],
                     session,
                 )
 

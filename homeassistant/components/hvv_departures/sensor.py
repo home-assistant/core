@@ -6,7 +6,12 @@ from aiohttp import ClientConnectorError
 from pygti.exceptions import InvalidAuth
 from pygti.gti import GTI, Auth
 
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    DEVICE_CLASS_TIMESTAMP,
+)
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -66,9 +71,9 @@ class HVVDepartureSensor(Entity):
         self.gti = GTI(
             Auth(
                 session,
-                self.config_entry.data["username"],
-                self.config_entry.data["password"],
-                self.config_entry.data["host"],
+                self.config_entry.data[CONF_USERNAME],
+                self.config_entry.data[CONF_PASSWORD],
+                self.config_entry.data[CONF_HOST],
             )
         )
 
