@@ -6,6 +6,7 @@ from august.activity import ActivityType
 from august.lock import LockDoorStatus
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.util import dt
 
 from . import DATA_AUGUST
 
@@ -136,6 +137,52 @@ class AugustDoorBinarySensor(BinarySensorDevice):
         self._available = self._state is not None
 
         self._state = self._state == LockDoorStatus.OPEN
+
+        activity = self._data.get_latest_device_activity(
+            self._door.device_id, ActivityType.DOOR_OPERATION
+        )
+
+        if activity is not None:
+            self._sync_door_activity(activity)
+
+    def _update_door_state(self, door_state, update_start_time):
+        new_state = door_state == LockDoorStatus.OPEN
+        if self._state != new_state:
+            self._state = new_state
+            self._data.update_door_state(
+                self._door.device_id, door_state, update_start_time
+            )
+
+    def _sync_door_activity(self, activity):
+        """Check the activity for the latest door open/close activity (events).
+
+        We use this to determine the door state in between calls to the lock
+        api as we update it more frequently
+        """
+        last_door_state_update_time_utc = self._data.get_last_door_state_update_time_utc(
+            self._door.device_id
+        )
+        activity_end_time_utc = dt.as_utc(activity.activity_end_time)
+
+        if activity_end_time_utc > last_door_state_update_time_utc:
+            _LOGGER.debug(
+                "The activity log has new events for %s: [action=%s] [activity_end_time_utc=%s] > [last_door_state_update_time_utc=%s]",
+                self.name,
+                activity.action,
+                activity_end_time_utc,
+                last_door_state_update_time_utc,
+            )
+            activity_start_time_utc = dt.as_utc(activity.activity_start_time)
+            if activity.action == "doorclosed":
+                self._update_door_state(LockDoorStatus.CLOSED, activity_start_time_utc)
+            elif activity.action == "dooropen":
+                self._update_door_state(LockDoorStatus.OPEN, activity_start_time_utc)
+            else:
+                _LOGGER.info(
+                    "Unhandled door activity action %s for %s",
+                    activity.action,
+                    self.name,
+                )
 
     @property
     def unique_id(self) -> str:
