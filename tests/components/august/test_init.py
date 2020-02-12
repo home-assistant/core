@@ -1,27 +1,12 @@
 """The tests for the august platform."""
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 from homeassistant.components import august
 
-
-def _mock_august_authenticator():
-    authenticator = MagicMock(name="august.authenticator")
-    authenticator.should_refresh = MagicMock(
-        name="august.authenticator.should_refresh", return_value=0
-    )
-    authenticator.refresh_access_token = MagicMock(
-        name="august.authenticator.refresh_access_token"
-    )
-    return authenticator
-
-
-def _mock_august_authentication(token_text, token_timestamp):
-    authentication = MagicMock(name="august.authentication")
-    type(authentication).access_token = PropertyMock(return_value=token_text)
-    type(authentication).access_token_expires = PropertyMock(
-        return_value=token_timestamp
-    )
-    return authentication
+from tests.components.august.mocks import (
+    _mock_august_authentication,
+    _mock_august_authenticator,
+)
 
 
 def test__refresh_access_token():

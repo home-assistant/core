@@ -22,10 +22,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 class AugustCamera(Camera):
-    """An implementation of a Canary security camera."""
+    """An implementation of a August security camera."""
 
     def __init__(self, data, doorbell, timeout):
-        """Initialize a Canary security camera."""
+        """Initialize a August security camera."""
         super().__init__()
         self._data = data
         self._doorbell = doorbell
