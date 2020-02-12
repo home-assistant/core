@@ -3,7 +3,7 @@ from functools import wraps
 import logging
 import secrets
 
-from aiohttp.web import HTTPBadRequest, Request, Response
+from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.secret import SecretBox
 import voluptuous as vol
 
@@ -336,9 +336,7 @@ async def webhook_enable_encryption(hass, config_entry, data):
 
     hass.config_entries.async_update_entry(config_entry, data=config_entry.data)
 
-    return webhook_response(
-        {"secret": config_entry.data[CONF_SECRET]}, registration=config_entry.data,
-    )
+    return json_response({"secret": config_entry.data[CONF_SECRET]})
 
 
 @WEBHOOK_COMMANDS.register("register_sensor")

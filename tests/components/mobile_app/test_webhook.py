@@ -2,8 +2,6 @@
 
 import logging
 
-import pytest
-
 from homeassistant.components.mobile_app.const import CONF_SECRET
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
@@ -164,25 +162,12 @@ async def test_webhook_returns_error_incorrect_json(
     assert "invalid JSON" in caplog.text
 
 
-async def test_webhook_handle_decryption(webhook_client, create_registrations):
+async def test_webhook_handle_decryption(
+    webhook_client, create_registrations, encrypt_payload, decrypt_payload
+):
     """Test that we can encrypt/decrypt properly."""
-    try:
-        from nacl.secret import SecretBox
-        from nacl.encoding import Base64Encoder
-    except (ImportError, OSError):
-        pytest.skip("libnacl/libsodium is not installed")
-        return
-
-    import json
-
-    keylen = SecretBox.KEY_SIZE
-    key = create_registrations[0]["secret"].encode("utf-8")
-    key = key[:keylen]
-    key = key.ljust(keylen, b"\0")
-
-    payload = json.dumps(RENDER_TEMPLATE["data"]).encode("utf-8")
-
-    data = SecretBox(key).encrypt(payload, encoder=Base64Encoder).decode("utf-8")
+    key = create_registrations[0]["secret"]
+    data = encrypt_payload(key, RENDER_TEMPLATE["data"])
 
     container = {"type": "render_template", "encrypted": True, "encrypted_data": data}
 
@@ -195,12 +180,9 @@ async def test_webhook_handle_decryption(webhook_client, create_registrations):
     webhook_json = await resp.json()
     assert "encrypted_data" in webhook_json
 
-    decrypted_data = SecretBox(key).decrypt(
-        webhook_json["encrypted_data"], encoder=Base64Encoder
-    )
-    decrypted_data = decrypted_data.decode("utf-8")
+    decrypted_data = decrypt_payload(key, webhook_json["encrypted_data"])
 
-    assert json.loads(decrypted_data) == {"one": "Hello world"}
+    assert decrypted_data == {"one": "Hello world"}
 
 
 async def test_webhook_requires_encryption(webhook_client, create_registrations):
@@ -219,7 +201,7 @@ async def test_webhook_requires_encryption(webhook_client, create_registrations)
 
 
 async def test_webhook_update_location(hass, webhook_client, create_registrations):
-    """Test that encrypted registrations only accept encrypted data."""
+    """Test that location can be updated."""
     resp = await webhook_client.post(
         "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
         json={
@@ -238,15 +220,52 @@ async def test_webhook_update_location(hass, webhook_client, create_registration
     assert state.attributes["altitude"] == -10
 
 
-async def test_webhook_enable_encryption(hass, webhook_client, create_registrations):
+async def test_webhook_enable_encryption(
+    hass, webhook_client, create_registrations, encrypt_payload, decrypt_payload
+):
     """Test that encryption can be added to a reg initially created without."""
-    resp = await webhook_client.post(
-        "/api/webhook/{}".format(create_registrations[1]["webhook_id"]),
-        json={"type": "enable_encryption"},
+    webhook_id = create_registrations[1]["webhook_id"]
+
+    enable_enc_resp = await webhook_client.post(
+        "/api/webhook/{}".format(webhook_id), json={"type": "enable_encryption"},
     )
 
-    assert resp.status == 200
+    assert enable_enc_resp.status == 200
 
-    json = await resp.json()
-    assert len(json) == 1
-    assert CONF_SECRET in json
+    enable_enc_json = await enable_enc_resp.json()
+    assert len(enable_enc_json) == 1
+    assert CONF_SECRET in enable_enc_json
+
+    key = enable_enc_json["secret"]
+
+    enc_required_resp = await webhook_client.post(
+        "/api/webhook/{}".format(webhook_id), json=RENDER_TEMPLATE,
+    )
+
+    assert enc_required_resp.status == 400
+
+    enc_required_json = await enc_required_resp.json()
+    assert "error" in enc_required_json
+    assert enc_required_json["success"] is False
+    assert enc_required_json["error"]["code"] == "encryption_required"
+
+    enc_data = encrypt_payload(key, RENDER_TEMPLATE["data"])
+
+    container = {
+        "type": "render_template",
+        "encrypted": True,
+        "encrypted_data": enc_data,
+    }
+
+    enc_resp = await webhook_client.post(
+        "/api/webhook/{}".format(webhook_id), json=container
+    )
+
+    assert enc_resp.status == 200
+
+    enc_json = await enc_resp.json()
+    assert "encrypted_data" in enc_json
+
+    decrypted_data = decrypt_payload(key, enc_json["encrypted_data"])
+
+    assert decrypted_data == {"one": "Hello world"}
