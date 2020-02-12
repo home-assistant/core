@@ -198,7 +198,7 @@ class HVVDepartureSensor(Entity):
         return ICON
 
     @property
-    def available(self) -> bool:
+    def available(self)
         """Return True if entity is available."""
         return self._available
 
