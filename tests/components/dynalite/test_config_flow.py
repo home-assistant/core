@@ -1,7 +1,17 @@
 """Test Dynalite config flow."""
-from unittest.mock import call, patch
+from unittest.mock import Mock, call, patch
 
 from homeassistant.components.dynalite import config_flow
+
+
+async def test_configured_hosts():
+    """Test the configured_host method."""
+    hass = Mock()
+    entry = Mock()
+    host = "abc"
+    entry.data = {"host": host}
+    hass.config_entries.async_entries = Mock(return_value=[entry])
+    assert config_flow.configured_hosts(hass) == {host}
 
 
 async def test_step_import():

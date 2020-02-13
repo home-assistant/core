@@ -10,15 +10,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from .const import DATA_CONFIGS, DOMAIN, LOGGER
 
 
-class BridgeError(Exception):
-    """Class to throw exceptions from DynaliteBridge."""
-
-    def __init__(self, message):
-        """Initialize the exception."""
-        super().__init__()
-        self.message = message
-
-
 class DynaliteBridge:
     """Manages a single Dynalite bridge."""
 
