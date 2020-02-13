@@ -1,5 +1,6 @@
 """Support for binary sensor using RPi GPIO."""
 import logging
+import threading
 
 import voluptuous as vol
 
@@ -62,12 +63,16 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
 
         rpi_gpio.setup_input(self._port, self._pull_mode)
 
-        def read_gpio(port):
+        def read_gpio():
             """Read state from GPIO."""
             self._state = rpi_gpio.read_input(self._port)
             self.schedule_update_ha_state()
 
-        rpi_gpio.edge_detect(self._port, read_gpio, self._bouncetime)
+        def edge_detected(port):
+            """Edge detection handler."""
+            threading.Timer(float(self._bouncetime)/1000, read_gpio).start()
+
+        rpi_gpio.edge_detect(self._port, edge_detected, self._bouncetime)
 
     @property
     def should_poll(self):
