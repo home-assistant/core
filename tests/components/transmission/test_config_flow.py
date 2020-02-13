@@ -84,7 +84,9 @@ async def test_flow_works(hass, api):
     """Test user config."""
     flow = init_config_flow(hass)
 
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
@@ -101,7 +103,7 @@ async def test_flow_works(hass, api):
 
     # test with all provided
     result = await hass.config_entries.flow.async_configure(
-         result["flow_id"], user_input=MOCK_ENTRY )
+        result["flow_id"], user_input=MOCK_ENTRY)
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
@@ -180,9 +182,11 @@ async def test_host_already_configured(hass, api):
         options={CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL},
     )
     entry.add_to_hass(hass)
-    flow = init_config_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
     result = await hass.config_entries.flow.async_configure(
-         result["flow_id"], user_input=MOCK_ENTRY )
+        result["flow_id"], user_input=MOCK_ENTRY)
 
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -199,9 +203,11 @@ async def test_name_already_configured(hass, api):
 
     mock_entry = MOCK_ENTRY.copy()
     mock_entry[CONF_HOST] = "0.0.0.0"
-    flow = init_config_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
     result = await hass.config_entries.flow.async_configure(
-         result["flow_id"], user_input=mock_entry )
+        result["flow_id"], user_input=mock_entry)
 
     assert result["type"] == "form"
     assert result["errors"] == {CONF_NAME: "name_exists"}
