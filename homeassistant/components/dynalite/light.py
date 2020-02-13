@@ -94,7 +94,7 @@ class DynaliteLight(Light):
         async_dispatcher_connect(
             self.hass,
             self._bridge.update_signal(self._device),
-            self.schedule_update_ha_state,
+            self.async_schedule_update_ha_state,
         )
         # register for wide update
         async_dispatcher_connect(
