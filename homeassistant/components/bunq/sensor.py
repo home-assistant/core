@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
 ICON = "mdi:cash-multiple"
-UPDATE_INTERVAL = 60
+UPDATE_INTERVAL = timedelta(seconds=60)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
 
@@ -39,7 +39,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         for account in get_account_data():
             sensors.append(BunqBalanceSensor(account))
     except (ApiException, BunqException) as err:
-        _LOGGER.error(err)
+        _LOGGER.error(
+            "Error setting up sensor: %s", err,
+        )
         raise PlatformNotReady
 
     async_add_entities(sensors, True)
@@ -98,14 +100,9 @@ class BunqBalanceSensor(Entity):
 
     def load_data(self, data):
         """Update sensor data."""
-        try:
-            old_balance = self._state
-            self._state = data.get(self.id)
-            return self._state == old_balance
-        except KeyError:
-            self._state = None
-            _LOGGER.warning("Count not find key in API results.")
-            return False
+        old_balance = self._state
+        self._state = data.get(self.id)
+        return self._state == old_balance
 
 
 class BunqData:
@@ -147,7 +144,5 @@ class BunqData:
 
             # update the sensors
             await self.update_devices()
-        except KeyError:
-            _LOGGER.warning("Bunq account not found.")
         except (ApiException, BunqException) as err:
-            _LOGGER.error(err)
+            _LOGGER.error("Error updating sensor: %s", err)

@@ -4,5 +4,5 @@
   "documentation": "https://www.home-assistant.io/integrations/bunq",
   "requirements": ["bunq-sdk==1.10.16"],
   "dependencies": [],
-  "codeowners": []
+  "codeowners": ["@EarthlingRich"]
 }
