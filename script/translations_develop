@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/usr/bin/env python
 
 # Compile the current translation strings files for testing
 
@@ -6,17 +6,50 @@
 # -e            Exit on command fail
 # -u            Exit on unset variable
 # -o pipefail   Exit if piped command has error code
-set -eu -o pipefail
+# set -eu -o pipefail
 
-cd "$(dirname "$0")/.."
+import os
+from pathlib import Path
+from shutil import rmtree
+import subprocess
 
-rm -rf build/translations-download
-mkdir -p build/translations-download
 
-script/translations_upload_merge.py
+def main():
+    """Run the script."""
+    if not os.path.isfile("requirements_all.txt"):
+        print("Run this from HA root dir")
+        return
 
-# Use the generated translations upload file as the mock output from the
-# Lokalise download
-mv build/translations-upload.json build/translations-download/en.json
+    download_dir = Path("build/translations-download")
 
-script/translations_download_split.py
+    if download_dir.is_dir():
+        rmtree(str(download_dir))
+
+    download_dir.mkdir()
+
+    subprocess.run("script/translations_upload_merge.py")
+
+    # translations_upload_merge.main()
+
+    Path("build/translations-upload.json").rename("build/translations-download/en.json")
+
+    subprocess.run("script/translations_download_split.py")
+    # translations_download_split.main()
+
+
+if __name__ == "__main__":
+    main()
+
+
+# cd "$(dirname "$0")/.."
+
+# rm -rf build/translations-download
+# mkdir -p build/translations-download
+
+# script/translations_upload_merge.py
+
+# # Use the generated translations upload file as the mock output from the
+# # Lokalise download
+# mv build/translations-upload.json build/translations-download/en.json
+
+# script/translations_download_split.py
