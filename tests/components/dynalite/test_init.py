@@ -1,7 +1,7 @@
 """Test Dynalite __init__."""
 from unittest.mock import Mock, call, patch
 
-from homeassistant.components.dynalite import DATA_CONFIGS, DOMAIN, LOGGER
+from homeassistant.components.dynalite import DATA_CONFIGS, DOMAIN
 from homeassistant.components.dynalite.__init__ import (
     async_setup,
     async_setup_entry,
@@ -16,35 +16,21 @@ async def test_empty_config():
     hass = Mock()
     hass.data = {}
     config = {}
-    mock_conf_host = Mock(return_value=[])
-    with patch(
-        "homeassistant.components.dynalite.__init__.configured_hosts", mock_conf_host
-    ):
-        assert await async_setup(hass, config)
-        mock_conf_host.assert_called_once()
-        assert mock_conf_host.mock_calls[0] == call(hass)
-        assert hass.data[DOMAIN] == {DATA_CONFIGS: {}}
+    assert await async_setup(hass, config)
+    assert hass.data[DOMAIN] == {DATA_CONFIGS: {}}
 
 
 async def test_async_setup():
     """Test a successful setup."""
-    new_host = "1.2.3.4"
-    old_host = "5.6.7.8"
+    host = "1.2.3.4"
     hass = Mock()
     hass.data = {}
-    config = {DOMAIN: {"bridges": [{"host": old_host}, {"host": new_host}]}}
-    mock_conf_host = Mock(return_value=[old_host])
-    with patch(
-        "homeassistant.components.dynalite.__init__.configured_hosts", mock_conf_host
-    ):
-        await async_setup(hass, config)
-        mock_conf_host.assert_called_once()
-        assert mock_conf_host.mock_calls[0] == call(hass)
-        assert hass.data[DOMAIN][DATA_CONFIGS] == {
-            new_host: {"host": new_host},
-            old_host: {"host": old_host},
-        }
-        hass.async_create_task.assert_called_once()
+    config = {DOMAIN: {"bridges": [{"host": host}]}}
+    await async_setup(hass, config)
+    assert hass.data[DOMAIN][DATA_CONFIGS] == {
+        host: {"host": host},
+    }
+    hass.async_create_task.assert_called_once()
 
 
 async def test_async_setup_entry():
@@ -111,6 +97,5 @@ async def test_async_unload_entry():
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][entry.entry_id] = mock_bridge
     await async_unload_entry(hass, entry)
-    LOGGER.error("XXX calls=%s", mock_bridge.mock_calls)
     mock_bridge.async_reset.assert_called_once()
     assert mock_bridge.mock_calls[0] == call.async_reset()

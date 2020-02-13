@@ -1,17 +1,8 @@
 """Config flow to configure Dynalite hub."""
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
-from homeassistant.core import callback
 
 from .const import DOMAIN, LOGGER
-
-
-@callback
-def configured_hosts(hass):
-    """Return a set of the configured hosts."""
-    return set(
-        entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
 
 
 class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

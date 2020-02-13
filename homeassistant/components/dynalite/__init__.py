@@ -8,7 +8,6 @@ from homeassistant.helpers import config_validation as cv
 
 # Loading the config flow file will register the flow
 from .bridge import DynaliteBridge
-from .config_flow import configured_hosts
 from .const import CONF_BRIDGES, DATA_CONFIGS, DOMAIN, LOGGER
 
 CONFIG_SCHEMA = vol.Schema(
@@ -37,8 +36,6 @@ async def async_setup(hass, config):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_CONFIGS] = {}
 
-    configured = configured_hosts(hass)
-
     # User has configured bridges
     if CONF_BRIDGES not in conf:
         return True
@@ -51,10 +48,6 @@ async def async_setup(hass, config):
 
         # Store config in hass.data so the config entry can find it
         hass.data[DOMAIN][DATA_CONFIGS][host] = bridge_conf
-
-        if host in configured:
-            LOGGER.debug("async_setup host=%s already configured", host)
-            continue
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(
