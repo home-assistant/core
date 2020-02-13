@@ -89,7 +89,6 @@ class ZHADevice(LogMixin):
         self.hass = hass
         self._zigpy_device = zigpy_device
         self._zha_gateway = zha_gateway
-        self.cluster_channels = {}
         self._available = False
         self._available_signal = "{}_{}_{}".format(
             self.name, self.ieee, SIGNAL_AVAILABLE
