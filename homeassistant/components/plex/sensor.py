@@ -142,3 +142,18 @@ class PlexSensor(Entity):
             now_playing.append((now_playing_user, now_playing_title))
         self._state = len(self.sessions)
         self._now_playing = now_playing
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if self.unique_id is None:
+            return None
+
+        return {
+            "identifiers": {(PLEX_DOMAIN, self.unique_id)},
+            "manufacturer": "Plex",
+            "model": "Plex Media Server",
+            "name": "Activity Sensor",
+            "sw_version": self._server.version,
+            "via_device": (PLEX_DOMAIN, self._server.machine_identifier),
+        }
