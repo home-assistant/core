@@ -315,7 +315,9 @@ class SimpliSafeWebsocketEvent:
     event_type: Optional[str] = field(init=False)
     info: str = field(init=False)
     sensor_name: str = field(init=False)
+    sensor_serial: str = field(init=False)
     sensor_type: EntityTypes = field(init=False)
+    system_id: int = field(init=False)
     timestamp: datetime = field(init=False)
 
     def __post_init__(self):
@@ -326,10 +328,7 @@ class SimpliSafeWebsocketEvent:
         )
         object.__setattr__(self, "info", self.event_data["info"])
         object.__setattr__(self, "sensor_name", self.event_data["sensorName"])
-        object.__setattr__(
-            self, "timestamp", utc_from_timestamp(self.event_data["eventTimestamp"])
-        )
-
+        object.__setattr__(self, "sensor_serial", self.event_data["sensorSerial"])
         try:
             object.__setattr__(
                 self, "sensor_type", EntityTypes(self.event_data["sensorType"]).name
@@ -342,6 +341,10 @@ class SimpliSafeWebsocketEvent:
                 self.event_data["sensorName"],
             )
             object.__setattr__(self, "sensor_type", None)
+        object.__setattr__(self, "system_id", self.event_data["sid"])
+        object.__setattr__(
+            self, "timestamp", utc_from_timestamp(self.event_data["eventTimestamp"])
+        )
 
 
 class SimpliSafeWebsocket:
@@ -600,7 +603,7 @@ class SimpliSafeEntity(Entity):
         return self._serial
 
     @callback
-    def _async_should_ignore_websocket_event(self, event_data):
+    def _async_should_ignore_websocket_event(self, event):
         """Return whether this entity should ignore a particular websocket event.
 
         Note that we can't check for a final condition – whether the event belongs to
@@ -608,22 +611,22 @@ class SimpliSafeEntity(Entity):
         from a keypad _or_ from the website) should impact the same entity.
         """
         # We've already processed this event:
-        if self._last_processed_websocket_event == event_data:
+        if self._last_processed_websocket_event == event:
             return True
 
         # This is an event for a system other than the one this entity belongs to:
-        if event_data["sid"] != self._system.system_id:
+        if event.system_id != self._system.system_id:
             return True
 
         # This isn't an event that this entity cares about:
-        if event_data["eventCid"] not in self.websocket_events_to_listen_for:
+        if event.event_type not in self.websocket_events_to_listen_for:
             return True
 
-        # This event is aimed at an entity whose serial number is different from this
-        # one's:
+        # This event is targeted at a specific entity whose serial number is different
+        # from this one's:
         if (
-            event_data["eventCid"] in WEBSOCKET_EVENTS_REQUIRING_SERIAL
-            and event_data["sensorSerial"] == self._serial
+            event.event_type in WEBSOCKET_EVENTS_REQUIRING_SERIAL
+            and event.sensor_serial != self._serial
         ):
             return True
 
