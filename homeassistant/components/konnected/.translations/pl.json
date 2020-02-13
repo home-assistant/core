@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "unknown": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d"
+        },
+        "title": "Konnected.io"
+    },
+    "options": {
+        "step": {
+            "options_binary": {
+                "data": {
+                    "name": "Nazwa (opcjonalnie)"
+                }
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Nazwa (opcjonalnie)",
+                    "type": "Typ czujnika"
+                }
+            },
+            "options_switch": {
+                "data": {
+                    "name": "Nazwa (opcjonalnie)"
+                }
+            }
+        }
+    }
+}
