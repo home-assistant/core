@@ -7,37 +7,10 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import SERVICES_SCHEMA
 from homeassistant.util.yaml import load_yaml
 
 from .model import Integration
-
-
-def exists(value):
-    """Check if value exists."""
-    if value is None:
-        raise vol.Invalid("Value cannot be None")
-    return value
-
-
-FIELD_SCHEMA = vol.Schema(
-    {
-        vol.Required("description"): str,
-        vol.Optional("example"): exists,
-        vol.Optional("default"): exists,
-        vol.Optional("values"): exists,
-        vol.Optional("required"): bool,
-    }
-)
-
-SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required("description"): str,
-        vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
-    }
-)
-
-SERVICES_SCHEMA = vol.Schema({cv.slug: SERVICE_SCHEMA})
 
 
 def grep_dir(path: pathlib.Path, glob_pattern: str, search_pattern: str) -> bool:

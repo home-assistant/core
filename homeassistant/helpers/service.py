@@ -5,6 +5,7 @@ import logging
 from typing import Callable
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 from homeassistant.const import (
@@ -38,6 +39,33 @@ CONF_SERVICE_DATA_TEMPLATE = "data_template"
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_DESCRIPTION_CACHE = "service_description_cache"
+
+
+def exists(value):
+    """Check if value exists."""
+    if value is None:
+        raise vol.Invalid("Value cannot be None")
+    return value
+
+
+FIELD_SCHEMA = vol.Schema(
+    {
+        vol.Required("description"): str,
+        vol.Optional("example"): exists,
+        vol.Optional("default"): exists,
+        vol.Optional("values"): exists,
+        vol.Optional("required"): bool,
+    }
+)
+
+SERVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required("description"): str,
+        vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
+    }
+)
+
+SERVICES_SCHEMA = vol.Schema({cv.slug: SERVICE_SCHEMA})
 
 
 @bind_hass
@@ -204,7 +232,7 @@ async def _load_services_file(hass: HomeAssistantType, domain: str) -> JSON_TYPE
     """Load services file for an integration."""
     integration = await async_get_integration(hass, domain)
     try:
-        return await hass.async_add_executor_job(
+        yml = await hass.async_add_executor_job(
             load_yaml, str(integration.file_path / "services.yaml")
         )
     except FileNotFoundError:
@@ -213,6 +241,17 @@ async def _load_services_file(hass: HomeAssistantType, domain: str) -> JSON_TYPE
     except HomeAssistantError:
         _LOGGER.warning("Unable to parse services.yaml for the %s integration", domain)
         return {}
+    if not integration.is_built_in:
+        try:
+            SERVICES_SCHEMA(yml)
+        except vol.Invalid as err:
+            _LOGGER.error(
+                "Custom component %s has invalid services.yaml. Please contact the author and tell them to fix this!: %s",
+                domain,
+                humanize_error(yml, err),
+            )
+            return {}
+    return yml
 
 
 @bind_hass
