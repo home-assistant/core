@@ -109,6 +109,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._is_player_active = False
         self._machine_identifier = device.machineIdentifier
         self._make = ""
+        self._device_platform = None
         self._device_product = None
         self._device_title = None
         self._device_version = None
@@ -194,6 +195,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 device_url = "127.0.0.1"
             if "127.0.0.1" in device_url:
                 self.device.proxyThroughServer()
+            self._device_platform = self.device.platform
             self._device_product = self.device.product
             self._device_title = self.device.title
             self._device_version = self.device.version
@@ -728,7 +730,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         return {
             "identifiers": {(PLEX_DOMAIN, self.machine_identifier)},
             "manufacturer": "Plex",
-            "model": self._device_product or self._device_platform,
+            "model": self._device_product or self._device_platform or self.make,
             "name": self.name,
             "sw_version": self._device_version,
             "via_device": (PLEX_DOMAIN, self.plex_server.machine_identifier),
