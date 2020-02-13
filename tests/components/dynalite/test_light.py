@@ -74,8 +74,8 @@ async def test_added_to_ha():
         await dyn_light.async_added_to_hass()
         assert async_dispatch.call_count == 2
         assert async_dispatch.mock_calls[0] == call(
-            dyn_light.hass, temp_signal("aaa"), dyn_light.schedule_update_ha_state
+            dyn_light.hass, temp_signal("aaa"), dyn_light.async_schedule_update_ha_state
         )
         assert async_dispatch.mock_calls[1] == call(
-            dyn_light.hass, temp_signal(), dyn_light.schedule_update_ha_state
+            dyn_light.hass, temp_signal(), dyn_light.async_schedule_update_ha_state
         )
