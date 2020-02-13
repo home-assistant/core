@@ -103,7 +103,7 @@ async def async_setup(hass, config):
             hass,
             "binary_sensor",
             DOMAIN,
-            {"zones": client._zones, "inputs": client._inputs},
+            {"zones": client.zones, "inputs": client.inputs},
             config,
         )
     )
@@ -115,12 +115,12 @@ async def async_setup(hass, config):
     async def update():
         _LOGGER.debug("Connecting to e-connect to retrieve states")
         await client.update()
-        async_dispatcher_send(hass, SIGNAL_ARMING_STATE_CHANGED, client._state)
+        async_dispatcher_send(hass, SIGNAL_ARMING_STATE_CHANGED, client.state)
 
-        for zone in client._zones:
+        for zone in client.zones:
             async_dispatcher_send(hass, SIGNAL_ZONE_CHANGED, zone)
 
-        for inp in client._inputs:
+        for inp in client.inputs:
             async_dispatcher_send(hass, SIGNAL_INPUT_CHANGED, inp)
 
         async_call_later(
@@ -144,8 +144,10 @@ class ElmoClientWrapper(ElmoClient):
         self._password = password
         self._states_config = states_config
         self._data = None
-        self._states = None
-        self._state = None
+        self.state = None
+        self.states = None
+        self.zones = None
+        self.inputs = None
 
         ElmoClient.__init__(self, host, vendor)
 
@@ -178,46 +180,46 @@ class ElmoClientWrapper(ElmoClient):
         state_config = {}
         for state in self._states_config:
             state_config[state[CONF_NAME]] = state[CONF_ZONES]
-        self._states = state_config
+        self.states = state_config
 
     async def _update_arm_state(self):
         """Update the elmo alarm states."""
         areas_armed = self._data["areas_armed"]
 
         if not areas_armed:
-            self._state = STATE_ALARM_DISARMED
+            self.state = STATE_ALARM_DISARMED
         else:
             armed_indexes = [x["index"] + 1 for x in areas_armed]
 
             state = [
                 state
-                for state, areas in self._states.items()
+                for state, areas in self.states.items()
                 if set(areas) == set(armed_indexes)
             ]
 
             if state:
                 state = state[0]
                 if state == "arm_away":
-                    self._state = STATE_ALARM_ARMED_AWAY
+                    self.state = STATE_ALARM_ARMED_AWAY
                 elif state == "arm_home":
-                    self._state = STATE_ALARM_ARMED_HOME
+                    self.state = STATE_ALARM_ARMED_HOME
                 elif state == "arm_night":
-                    self._state = STATE_ALARM_ARMED_NIGHT
+                    self.state = STATE_ALARM_ARMED_NIGHT
                 elif state == "arm_custom_bypass":
-                    self._state = STATE_ALARM_ARMED_CUSTOM_BYPASS
+                    self.state = STATE_ALARM_ARMED_CUSTOM_BYPASS
                 else:
-                    self._state = None
+                    self.state = None
             else:
-                self._state = None
+                self.state = None
 
     async def _update_zone_state(self):
         """Update the elmo alarm zone's states."""
-        self._zones = [
+        self.zones = [
             ZoneData(zone_id=area["index"], zone_name=area["name"], state=ZONE_ARMED)
             for area in self._data["areas_armed"]
             if area["name"] != "Unknown"
         ]
-        self._zones += [
+        self.zones += [
             ZoneData(zone_id=area["index"], zone_name=area["name"], state=ZONE_DISARMED)
             for area in self._data["areas_disarmed"]
             if area["name"] != "Unknown"
@@ -225,12 +227,12 @@ class ElmoClientWrapper(ElmoClient):
 
     async def _update_input_state(self):
         """Update the elmo alarm input's states."""
-        self._inputs = [
+        self.inputs = [
             InputData(input_id=inp["index"], input_name=inp["name"], state=INPUT_ALERT)
             for inp in self._data["inputs_alerted"]
             if inp["name"] != "Unknown"
         ]
-        self._inputs += [
+        self.inputs += [
             InputData(input_id=inp["index"], input_name=inp["name"], state=INPUT_WAIT)
             for inp in self._data["inputs_wait"]
             if inp["name"] != "Unknown"

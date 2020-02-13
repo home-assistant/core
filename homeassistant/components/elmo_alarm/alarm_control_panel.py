@@ -93,28 +93,28 @@ class ElmoAlarmPanel(AlarmControlPanel):
         """Send arm away command."""
 
         with self._client.lock(code) as client:
-            for zone in self._client._states["arm_away"]:
+            for zone in self._client.states["arm_away"]:
                 client.arm_sector(zone)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
 
         with self._client.lock(code) as client:
-            for zone in self._client._states["arm_home"]:
+            for zone in self._client.states["arm_home"]:
                 client.arm_sector(zone)
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm home command."""
 
         with self._client.lock(code) as client:
-            for zone in self._client._states["arm_night"]:
+            for zone in self._client.states["arm_night"]:
                 client.arm_sector(zone)
 
     async def async_alarm_arm_custom_bypass(self, code=None):
         """Send arm home command."""
 
         with self._client.lock(code) as client:
-            for zone in self._client._states["arm_custom_bypass"]:
+            for zone in self._client.states["arm_custom_bypass"]:
                 client.arm_sector(zone)
 
     @callback
