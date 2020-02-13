@@ -1,20 +1,19 @@
 """Support for e-connect Elmo alarm system."""
 from collections import namedtuple
 from datetime import timedelta
-from urllib3.exceptions import HTTPError
-
 import logging
 
 from elmo.api.client import ElmoClient
 from elmo.api.exceptions import PermissionDenied
+from urllib3.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST,
-    CONF_USERNAME,
-    CONF_PASSWORD,
     CONF_NAME,
+    CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
