@@ -166,6 +166,34 @@ class TestRestSensorSetup(unittest.TestCase):
             )
         assert 2 == mock_req.call_count
 
+    @requests_mock.Mocker()
+    def test_setup_get_xml(self, mock_req):
+        """Test setup with valid configuration."""
+        mock_req.get("http://localhost", status_code=200)
+        with assert_setup_component(1, "sensor"):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": {
+                        "platform": "rest",
+                        "resource": "http://localhost",
+                        "method": "GET",
+                        "value_template": "{{ value_json.key }}",
+                        "name": "foo",
+                        "unit_of_measurement": DATA_MEGABYTES,
+                        "verify_ssl": "true",
+                        "timeout": 30,
+                        "convert_xml": True,
+                        "authentication": "basic",
+                        "username": "my username",
+                        "password": "my password",
+                        "headers": {"Accept": "text/xml"},
+                    }
+                },
+            )
+        assert 2 == mock_req.call_count
+
 
 class TestRestSensor(unittest.TestCase):
     """Tests for REST sensor platform."""
@@ -185,9 +213,12 @@ class TestRestSensor(unittest.TestCase):
         self.unit_of_measurement = DATA_MEGABYTES
         self.device_class = None
         self.value_template = template("{{ value_json.key }}")
+        self.json_attrs_template = template("{{ value_json }}")
         self.value_template.hass = self.hass
+        self.json_attrs_template.hass = self.hass
         self.force_update = False
         self.resource_template = None
+        self.convert_xml = False
 
         self.sensor = rest.RestSensor(
             self.hass,
@@ -199,6 +230,8 @@ class TestRestSensor(unittest.TestCase):
             [],
             self.force_update,
             self.resource_template,
+            self.convert_xml,
+            self.json_attrs_template,
         )
 
     def tearDown(self):
@@ -260,6 +293,8 @@ class TestRestSensor(unittest.TestCase):
             [],
             self.force_update,
             self.resource_template,
+            self.convert_xml,
+            self.json_attrs_template,
         )
         self.sensor.update()
         assert "plain_state" == self.sensor.state
@@ -281,6 +316,8 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
+            self.convert_xml,
+            self.json_attrs_template,
         )
         self.sensor.update()
         assert "some_json_value" == self.sensor.device_state_attributes["key"]
@@ -301,6 +338,8 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
+            self.convert_xml,
+            self.json_attrs_template,
         )
         self.sensor.update()
         assert "another_value" == self.sensor.device_state_attributes["key"]
@@ -321,6 +360,8 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
+            self.convert_xml,
+            self.json_attrs_template,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -343,6 +384,8 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
+            self.convert_xml,
+            self.json_attrs_template,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -365,6 +408,8 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
+            self.convert_xml,
+            self.json_attrs_template,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -389,6 +434,8 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
+            self.convert_xml,
+            self.json_attrs_template,
         )
         self.sensor.update()
 
@@ -396,6 +443,141 @@ class TestRestSensor(unittest.TestCase):
         assert (
             "json_state_updated_value" == self.sensor.device_state_attributes["key"]
         ), self.force_update
+
+    def test_update_with_json_attrs_with_json_attrs_template(self):
+        """Test attributes get extracted from a JSON result with a template for the attributes."""
+        json_attrs_template = template("{{ value_json.toplevel.second_level }}")
+        json_attrs_template.hass = self.hass
+        value_template = template("{{ value_json.toplevel.master_value }}")
+        value_template.hass = self.hass
+
+        self.rest.update = Mock(
+            "rest.RestData.update",
+            side_effect=self.update_side_effect(
+                '{ "toplevel": {"master_value": "master", "second_level": {"some_json_key": "some_json_value", "some_json_key2": "some_json_value2" } } }'
+            ),
+        )
+        self.sensor = rest.RestSensor(
+            self.hass,
+            self.rest,
+            self.name,
+            self.unit_of_measurement,
+            self.device_class,
+            value_template,
+            ["some_json_key", "some_json_key2"],
+            self.force_update,
+            self.resource_template,
+            self.convert_xml,
+            json_attrs_template,
+        )
+
+        self.sensor.update()
+        assert "some_json_value" == self.sensor.device_state_attributes["some_json_key"]
+        assert (
+            "some_json_value2" == self.sensor.device_state_attributes["some_json_key2"]
+        )
+        assert "master" == self.sensor.state
+
+    def test_update_with_xml_convert_json_attrs_with_json_attrs_template(self):
+        """Test attributes get extracted from a JSON result that was converted from XML with a template for the attributes."""
+        json_attrs_template = template("{{ value_json.toplevel.second_level }}")
+        json_attrs_template.hass = self.hass
+        value_template = template("{{ value_json.toplevel.master_value }}")
+        value_template.hass = self.hass
+        convert_xml = True
+
+        self.rest.update = Mock(
+            "rest.RestData.update",
+            side_effect=self.update_side_effect(
+                "<toplevel><master_value>master</master_value><second_level><some_json_key>some_json_value</some_json_key><some_json_key2>some_json_value2</some_json_key2></second_level></toplevel>"
+            ),
+        )
+        self.sensor = rest.RestSensor(
+            self.hass,
+            self.rest,
+            self.name,
+            self.unit_of_measurement,
+            self.device_class,
+            value_template,
+            ["some_json_key", "some_json_key2"],
+            self.force_update,
+            self.resource_template,
+            convert_xml,
+            json_attrs_template,
+        )
+
+        self.sensor.update()
+        assert "some_json_value" == self.sensor.device_state_attributes["some_json_key"]
+        assert (
+            "some_json_value2" == self.sensor.device_state_attributes["some_json_key2"]
+        )
+        assert "master" == self.sensor.state
+
+    def test_update_with_xml_convert_json_attrs_with_jsonattr_template(self):
+        """Test attributes get extracted from a JSON result that was converted from XML."""
+        json_attrs_template = template("{{ value_json.response }}")
+        json_attrs_template.hass = self.hass
+        value_template = template("{{ value_json.response.bss.wlan }}")
+        value_template.hass = self.hass
+        convert_xml = True
+
+        self.rest.update = Mock(
+            "rest.RestData.update",
+            side_effect=self.update_side_effect(
+                '<?xml version="1.0" encoding="utf-8"?><response><scan>0</scan><ver>12556</ver><count>48</count><ssid>alexander</ssid><bss><valid>0</valid><name>0</name><privacy>0</privacy><wlan>bogus</wlan><strength>0</strength></bss><led0>0</led0><led1>0</led1><led2>0</led2><led3>0</led3><led4>0</led4><led5>0</led5><led6>0</led6><led7>0</led7><btn0>up</btn0><btn1>up</btn1><btn2>up</btn2><btn3>up</btn3><pot0>0</pot0><usr0>0</usr0><temp0>0x0XF0x0XF</temp0><time0> 0</time0></response>'
+            ),
+        )
+        self.sensor = rest.RestSensor(
+            self.hass,
+            self.rest,
+            self.name,
+            self.unit_of_measurement,
+            self.device_class,
+            value_template,
+            ["led0", "led1", "temp0", "time0", "ver"],
+            self.force_update,
+            self.resource_template,
+            convert_xml,
+            json_attrs_template,
+        )
+
+        self.sensor.update()
+        assert "0" == self.sensor.device_state_attributes["led0"]
+        assert "0" == self.sensor.device_state_attributes["led1"]
+        assert "0x0XF0x0XF" == self.sensor.device_state_attributes["temp0"]
+        assert "0" == self.sensor.device_state_attributes["time0"]
+        assert "12556" == self.sensor.device_state_attributes["ver"]
+        assert "bogus" == self.sensor.state
+
+    @patch("homeassistant.components.rest.sensor._LOGGER")
+    def test_update_with_xml_convert_bad_xml(self, mock_logger):
+        """Test attributes get extracted from a XML result with bad xml."""
+        value_template = template("{{ value_json.toplevel.master_value }}")
+        value_template.hass = self.hass
+        convert_xml = True
+
+        self.rest.update = Mock(
+            "rest.RestData.update",
+            side_effect=self.update_side_effect("this is not xml"),
+        )
+        self.sensor = rest.RestSensor(
+            self.hass,
+            self.rest,
+            self.name,
+            self.unit_of_measurement,
+            self.device_class,
+            value_template,
+            ["key"],
+            self.force_update,
+            self.resource_template,
+            convert_xml,
+            self.json_attrs_template,
+        )
+
+        self.sensor.update()
+        assert {} == self.sensor.device_state_attributes
+        assert mock_logger.warning.called
+        assert mock_logger.debug.called
 
 
 class TestRestData(unittest.TestCase):
