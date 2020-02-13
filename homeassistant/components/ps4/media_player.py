@@ -279,10 +279,10 @@ class PS4Device(MediaPlayerDevice):
             self._media_image = art or None
             self._media_type = media_type
 
-            await self.update_list()
+            await self.hass.async_add_executor_job(self.update_list)
             self.async_write_ha_state()
 
-    async def update_list(self):
+    def update_list(self):
         """Update Game List, Correct data if different."""
         if self._media_content_id in self._games:
             store = self._games[self._media_content_id]
@@ -300,7 +300,7 @@ class PS4Device(MediaPlayerDevice):
                 self._media_image,
                 self._media_type,
             )
-            self._games = await self.hass.async_add_executor_job(load_games, self.hass)
+            self._games = load_games(self.hass)
 
         self.get_source_list()
 
