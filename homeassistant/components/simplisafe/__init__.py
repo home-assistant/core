@@ -1,6 +1,6 @@
 """Support for SimpliSafe alarm systems."""
 import asyncio
-from dataclasses import InitVar, asdict, dataclass, field
+from dataclasses import InitVar, dataclass, field
 from datetime import datetime
 import logging
 from typing import Optional
@@ -67,10 +67,13 @@ DEFAULT_WATCHDOG_SECONDS = 5 * 60
 
 WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
 
+ATTR_CHANGED_BY = "changed_by"
 ATTR_LAST_EVENT_INFO = "last_event_info"
 ATTR_LAST_EVENT_SENSOR_NAME = "last_event_sensor_name"
+ATTR_LAST_EVENT_SENSOR_SERIAL = "last_event_sensor_serial"
 ATTR_LAST_EVENT_SENSOR_TYPE = "last_event_sensor_type"
 ATTR_LAST_EVENT_TIMESTAMP = "last_event_timestamp"
+ATTR_LAST_EVENT_TYPE = "last_event_type"
 ATTR_PIN_LABEL = "label"
 ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
 ATTR_PIN_VALUE = "pin"
@@ -406,7 +409,18 @@ class SimpliSafeWebsocket:
         _LOGGER.debug("New websocket event: %s", event)
         self.last_events[data["sid"]] = event
         async_dispatcher_send(self._hass, TOPIC_UPDATE.format(data["sid"]))
-        self._hass.bus.async_fire(EVENT_SIMPLISAFE_EVENT, event_data=asdict(event))
+        self._hass.bus.async_fire(
+            EVENT_SIMPLISAFE_EVENT,
+            event_data={
+                ATTR_CHANGED_BY: event.changed_by,
+                ATTR_LAST_EVENT_INFO: event.info,
+                ATTR_LAST_EVENT_SENSOR_NAME: event.sensor_name,
+                ATTR_LAST_EVENT_SENSOR_SERIAL: event.sensor_serial,
+                ATTR_LAST_EVENT_SENSOR_TYPE: event.sensor_type,
+                ATTR_LAST_EVENT_TYPE: event.event_type,
+                ATTR_SYSTEM_ID: event.system_id,
+            },
+        )
 
         _LOGGER.debug("Resetting websocket watchdog")
         self._websocket_watchdog_listener()
