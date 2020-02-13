@@ -10,6 +10,7 @@ set -eu -o pipefail
 
 cd "$(dirname "$0")/.."
 
+rm -rf build/translations-download
 mkdir -p build/translations-download
 
 script/translations_upload_merge.py
