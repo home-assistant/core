@@ -588,6 +588,23 @@ def ensure_list_csv(value: Any) -> List:
     return ensure_list(value)
 
 
+def multi_select(options: dict) -> Callable[[List], List]:
+    """Multi select validator returning list of selected values."""
+
+    def validator(selected: List) -> list:
+        """Return list of selected values."""
+        if not isinstance(selected, list):
+            raise vol.Invalid("Not a list")
+
+        for value in selected:
+            if value not in options:
+                raise vol.Invalid(f"{value} is not a valid option")
+
+        return selected
+
+    return validator
+
+
 def deprecated(
     key: str,
     replacement_key: Optional[str] = None,
@@ -712,6 +729,9 @@ def custom_serializer(schema: Any) -> Any:
     """Serialize additional types for voluptuous_serialize."""
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
+
+    if schema is multi_select:
+        return {"type": "multi_select"}
 
     return voluptuous_serialize.UNSUPPORTED
 
