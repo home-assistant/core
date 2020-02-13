@@ -1,6 +1,6 @@
 """Support for SimpliSafe alarm systems."""
 import asyncio
-from dataclasses import dataclass, field
+from dataclasses import InitVar, asdict, dataclass, field
 from datetime import datetime
 import logging
 from typing import Optional
@@ -59,6 +59,8 @@ CONF_ACCOUNTS = "accounts"
 
 DATA_LISTENER = "listener"
 TOPIC_UPDATE = "simplisafe_update_data_{0}"
+
+EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 DEFAULT_WATCHDOG_SECONDS = 5 * 60
@@ -309,7 +311,7 @@ async def async_unload_entry(hass, entry):
 class SimpliSafeWebsocketEvent:
     """Define a representation of a parsed websocket event."""
 
-    event_data: dict
+    event_data: InitVar[dict]
 
     changed_by: Optional[str] = field(init=False)
     event_type: Optional[str] = field(init=False)
@@ -320,30 +322,28 @@ class SimpliSafeWebsocketEvent:
     system_id: int = field(init=False)
     timestamp: datetime = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self, event_data):
         """Initialize."""
-        object.__setattr__(self, "changed_by", self.event_data["pinName"])
-        object.__setattr__(
-            self, "event_type", get_event_type_from_payload(self.event_data)
-        )
-        object.__setattr__(self, "info", self.event_data["info"])
-        object.__setattr__(self, "sensor_name", self.event_data["sensorName"])
-        object.__setattr__(self, "sensor_serial", self.event_data["sensorSerial"])
+        object.__setattr__(self, "changed_by", event_data["pinName"])
+        object.__setattr__(self, "event_type", get_event_type_from_payload(event_data))
+        object.__setattr__(self, "info", event_data["info"])
+        object.__setattr__(self, "sensor_name", event_data["sensorName"])
+        object.__setattr__(self, "sensor_serial", event_data["sensorSerial"])
         try:
             object.__setattr__(
-                self, "sensor_type", EntityTypes(self.event_data["sensorType"]).name
+                self, "sensor_type", EntityTypes(event_data["sensorType"]).name
             )
         except ValueError:
             _LOGGER.warning(
                 'Encountered unknown entity type: %s ("%s"). Please report it at'
                 "https://github.com/home-assistant/home-assistant/issues.",
-                self.event_data["sensorType"],
-                self.event_data["sensorName"],
+                event_data["sensorType"],
+                event_data["sensorName"],
             )
             object.__setattr__(self, "sensor_type", None)
-        object.__setattr__(self, "system_id", self.event_data["sid"])
+        object.__setattr__(self, "system_id", event_data["sid"])
         object.__setattr__(
-            self, "timestamp", utc_from_timestamp(self.event_data["eventTimestamp"])
+            self, "timestamp", utc_from_timestamp(event_data["eventTimestamp"])
         )
 
 
@@ -406,6 +406,7 @@ class SimpliSafeWebsocket:
         _LOGGER.debug("New websocket event: %s", event)
         self.last_events[data["sid"]] = event
         async_dispatcher_send(self._hass, TOPIC_UPDATE.format(data["sid"]))
+        self._hass.bus.async_fire(EVENT_SIMPLISAFE_EVENT, event_data=asdict(event))
 
         _LOGGER.debug("Resetting websocket watchdog")
         self._websocket_watchdog_listener()
