@@ -80,7 +80,7 @@ async def test_failed_setup_entry():
     hass.data[DOMAIN][DATA_CONFIGS] = {host: {}}
     mock_async_setup = Mock(return_value=False)
     with patch(
-        "homeassistant.components.dynalite.__init__.DynaliteBridge.async_setup",
+        "homeassistant.components.dynalite.DynaliteBridge.async_setup",
         async_mock(mock_async_setup),
     ):
         assert not await async_setup_entry(hass, entry)
