@@ -6,6 +6,7 @@ import unittest
 import pytest
 
 import homeassistant.components.sonarr.sensor as sonarr
+from homeassistant.const import DATA_GIGABYTES
 
 from tests.common import get_test_home_assistant
 
@@ -497,7 +498,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": [],
             "monitored_conditions": ["diskspace"],
         }
@@ -506,7 +507,7 @@ class TestSonarrSetup(unittest.TestCase):
             device.update()
             assert "263.10" == device.state
             assert "mdi:harddisk" == device.icon
-            assert "GB" == device.unit_of_measurement
+            assert DATA_GIGABYTES == device.unit_of_measurement
             assert "Sonarr Disk Space" == device.name
             assert "263.10/465.42GB (56.53%)" == device.device_state_attributes["/data"]
 
@@ -517,7 +518,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["diskspace"],
         }
@@ -526,7 +527,7 @@ class TestSonarrSetup(unittest.TestCase):
             device.update()
             assert "263.10" == device.state
             assert "mdi:harddisk" == device.icon
-            assert "GB" == device.unit_of_measurement
+            assert DATA_GIGABYTES == device.unit_of_measurement
             assert "Sonarr Disk Space" == device.name
             assert "263.10/465.42GB (56.53%)" == device.device_state_attributes["/data"]
 
@@ -537,7 +538,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["commands"],
         }
@@ -557,7 +558,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["queue"],
         }
@@ -577,7 +578,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["series"],
         }
@@ -599,7 +600,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["wanted"],
         }
@@ -621,7 +622,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }
@@ -645,7 +646,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }
@@ -665,7 +666,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "2",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["status"],
         }
@@ -685,7 +686,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
             "ssl": "true",
@@ -707,7 +708,7 @@ class TestSonarrSetup(unittest.TestCase):
             "platform": "sonarr",
             "api_key": "foo",
             "days": "1",
-            "unit": "GB",
+            "unit": DATA_GIGABYTES,
             "include_paths": ["/data"],
             "monitored_conditions": ["upcoming"],
         }
