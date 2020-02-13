@@ -262,7 +262,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow):
         _LOGGER.info(
             (
                 "Legacy configuration %s for homekit"
-                "accessory migrated to config entries"
+                "accessory migrated to configuration entries"
             ),
             hkid,
         )
