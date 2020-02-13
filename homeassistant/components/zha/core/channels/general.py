@@ -11,7 +11,7 @@ import zigpy.zcl.clusters.general as general
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import (
     REPORT_CONFIG_ASAP,
     REPORT_CONFIG_BATTERY_SAVE,
@@ -81,9 +81,11 @@ class BasicChannel(ZigbeeChannel):
         6: "Emergency mains and transfer switch",
     }
 
-    def __init__(self, cluster, device):
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+    ) -> None:
         """Initialize BasicChannel."""
-        super().__init__(cluster, device)
+        super().__init__(cluster, ch_pool)
         self._power_source = None
 
     async def async_configure(self):
@@ -238,9 +240,11 @@ class OnOffChannel(ZigbeeChannel):
     ON_OFF = 0
     REPORT_CONFIG = ({"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE},)
 
-    def __init__(self, cluster, device):
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+    ) -> None:
         """Initialize OnOffChannel."""
-        super().__init__(cluster, device)
+        super().__init__(cluster, ch_pool)
         self._state = None
         self._off_listener = None
 
@@ -293,10 +297,11 @@ class OnOffChannel(ZigbeeChannel):
 
     async def async_update(self):
         """Initialize channel."""
-        from_cache = not self.device.is_mains_powered
-        self.debug("attempting to update onoff state - from cache: %s", from_cache)
+        if self.cluster.is_client:
+            return
+        self.debug("attempting to update onoff state - from cache: False")
         self._state = bool(
-            await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
+            await self.get_attribute_value(self.ON_OFF, from_cache=False)
         )
         await super().async_update()
 

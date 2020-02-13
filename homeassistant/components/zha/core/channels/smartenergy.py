@@ -10,7 +10,7 @@ import zigpy.zcl.clusters.smartenergy as smartenergy
 
 from homeassistant.core import callback
 
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import REPORT_CONFIG_DEFAULT
 from .base import AttributeListeningChannel, ZigbeeChannel
 
@@ -95,9 +95,11 @@ class Metering(AttributeListeningChannel):
         0x0C: "MJ/s",
     }
 
-    def __init__(self, cluster, device):
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+    ) -> None:
         """Initialize Metering."""
-        super().__init__(cluster, device)
+        super().__init__(cluster, ch_pool)
         self._divisor = None
         self._multiplier = None
         self._unit_enum = None

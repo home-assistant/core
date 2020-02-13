@@ -9,7 +9,7 @@ from typing import Optional
 
 import zigpy.zcl.clusters.homeautomation as homeautomation
 
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     REPORT_CONFIG_DEFAULT,
@@ -64,9 +64,11 @@ class ElectricalMeasurementChannel(AttributeListeningChannel):
 
     REPORT_CONFIG = ({"attr": "active_power", "config": REPORT_CONFIG_DEFAULT},)
 
-    def __init__(self, cluster, device):
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+    ) -> None:
         """Initialize Metering."""
-        super().__init__(cluster, device)
+        super().__init__(cluster, ch_pool)
         self._divisor = None
         self._multiplier = None
 
