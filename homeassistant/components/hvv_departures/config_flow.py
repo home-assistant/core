@@ -95,9 +95,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
                 )
 
-            self.stations = {
-                "{} ({})".format(x.get("name"), x.get("type")): x for x in results
-            }
+            self.stations = {f"{x.get('name')} ({x.get('type')})": x for x in results}
 
             schema = vol.Schema(
                 {vol.Required("station"): vol.In(list(self.stations.keys()))}
@@ -182,7 +180,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                 )
 
                 self.filters = {
-                    "{}, {}".format(x["serviceName"], x["label"]): x
+                    f"{x['serviceName']}, {x['label']}": x
                     for x in departure_list.get("filter")
                 }
             except CannotConnect:
@@ -201,10 +199,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=options)
 
         if "filter" in self.config_entry.options:
-            old_filter = "{}, {}".format(
-                self.config_entry.options["filter"][0]["serviceName"],
-                self.config_entry.options["filter"][0]["label"],
-            )
+            old_filter = f"{self.config_entry.options['filter'][0]['serviceName']}, {self.config_entry.options['filter'][0]['label']}"
         else:
             old_filter = None
 
