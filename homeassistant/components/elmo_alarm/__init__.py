@@ -193,16 +193,15 @@ class ElmoClientWrapper(ElmoClient):
         else:
             armed_indexes = [area_data["index"] + 1 for area_data in areas_armed]
 
-            state = [
-                state
-                for state, areas in self.states.items()
-                if set(areas) == set(armed_indexes)
-            ]
+            [state] = [
+                k
+                for k, v in filter(
+                    lambda state: set(state[1]) == set(armed_indexes),
+                    self.states.items(),
+                )
+            ] or [None]
 
-            if state:
-                self.state = state[0]
-            else:
-                self.state = None
+            self.state = state
 
     async def _update_zone_state(self):
         """Update the elmo alarm zone's states."""
