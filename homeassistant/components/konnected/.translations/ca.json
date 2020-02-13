@@ -1,0 +1,93 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de dades de configuraci\u00f3 pel dispositiu ja est\u00e0 en curs.",
+            "not_konn_panel": "No s'ha reconegut com a un dispositiu Konnected.io",
+            "unknown": "S'ha produ\u00eft un error desconegut"
+        },
+        "error": {
+            "cannot_connect": "No s'ha pogut connectar amb el panell Konnected a {host}:{port}"
+        },
+        "step": {
+            "confirm": {
+                "description": "Model: {model} \nAmfitri\u00f3: {host} \nPort: {port} \n\nPots configurar el comportament de les E/S (I/O) i del panell a la configuraci\u00f3 del panell d\u2019alarma Konnected.",
+                "title": "Dispositiu Konnected llest"
+            },
+            "user": {
+                "data": {
+                    "host": "Adre\u00e7a IP del dispositiu Konnected",
+                    "port": "Port del dispositiu Konnected"
+                }
+            }
+        },
+        "title": "Konnected.io"
+    },
+    "options": {
+        "abort": {
+            "not_konn_panel": "No s'ha reconegut com a un dispositiu Konnected.io"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "Inverteix l'estat obert/tancat",
+                    "name": "Nom (opcional)",
+                    "type": "Tipus de sensor binari"
+                },
+                "description": "Selecciona les opcions pel sensor binari de {zone}",
+                "title": "Configuraci\u00f3 de sensor binari"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Nom (opcional)",
+                    "poll_interval": "Interval de sondeig (minuts) (opcional)",
+                    "type": "Tipus de sensor"
+                },
+                "description": "Selecciona les opcions pel sensor digital de {zone}",
+                "title": "Configuraci\u00f3 de sensor digital"
+            },
+            "options_io": {
+                "data": {
+                    "1": "Zona 1",
+                    "2": "Zona 2",
+                    "3": "Zona 3",
+                    "4": "Zona 4",
+                    "5": "Zona 5",
+                    "6": "Zona 6",
+                    "7": "Zona 7",
+                    "out": "OUT (sortida)"
+                },
+                "title": "Configuraci\u00f3 E/S (I/O)"
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "Zona 10",
+                    "11": "Zona 11",
+                    "12": "Zona 12",
+                    "8": "Zona 8",
+                    "9": "Zona 9",
+                    "alarm1": "ALARMA1",
+                    "alarm2_out2": "OUT2/ALARMA2",
+                    "out1": "OUT1"
+                }
+            },
+            "options_misc": {
+                "data": {
+                    "blink": "Parpelleja el LED del panell quan s'envien canvis d'estat"
+                },
+                "description": "Selecciona el comportament desitjat del panell"
+            },
+            "options_switch": {
+                "data": {
+                    "momentary": "Durada del pols (ms) (opcional)",
+                    "name": "Nom (opcional)",
+                    "pause": "Pausa entre polsos (ms) (opcional)",
+                    "repeat": "Repeticions (-1 = infinit) (opcional)"
+                },
+                "description": "Selecciona les opcions de sortida per a {zone}",
+                "title": "Configuraci\u00f3 de sortida commutable"
+            }
+        },
+        "title": "Opcions del panell d'alarma Konnected"
+    }
+}
