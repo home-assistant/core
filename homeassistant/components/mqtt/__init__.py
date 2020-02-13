@@ -568,7 +568,7 @@ async def async_setup_entry(hass, entry):
         conf = CONFIG_SCHEMA({DOMAIN: entry.data})[DOMAIN]
     elif any(key in conf for key in entry.data):
         _LOGGER.warning(
-            "Data in your config entry is going to override your "
+            "Data in your configuration entry is going to override your "
             "configuration.yaml: %s",
             entry.data,
         )
