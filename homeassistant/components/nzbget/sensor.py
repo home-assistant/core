@@ -1,6 +1,7 @@
 """Monitor the NZBGet API."""
 import logging
 
+from homeassistant.const import DATA_MEGABYTES, DATA_RATE_MEGABYTES_PER_SECOND
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -12,15 +13,19 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "NZBGet"
 
 SENSOR_TYPES = {
-    "article_cache": ["ArticleCacheMB", "Article Cache", "MB"],
-    "average_download_rate": ["AverageDownloadRate", "Average Speed", "MB/s"],
+    "article_cache": ["ArticleCacheMB", "Article Cache", DATA_MEGABYTES],
+    "average_download_rate": [
+        "AverageDownloadRate",
+        "Average Speed",
+        DATA_RATE_MEGABYTES_PER_SECOND,
+    ],
     "download_paused": ["DownloadPaused", "Download Paused", None],
-    "download_rate": ["DownloadRate", "Speed", "MB/s"],
-    "download_size": ["DownloadedSizeMB", "Size", "MB"],
-    "free_disk_space": ["FreeDiskSpaceMB", "Disk Free", "MB"],
+    "download_rate": ["DownloadRate", "Speed", DATA_RATE_MEGABYTES_PER_SECOND],
+    "download_size": ["DownloadedSizeMB", "Size", DATA_MEGABYTES],
+    "free_disk_space": ["FreeDiskSpaceMB", "Disk Free", DATA_MEGABYTES],
     "post_job_count": ["PostJobCount", "Post Processing Jobs", "Jobs"],
     "post_paused": ["PostPaused", "Post Processing Paused", None],
-    "remaining_size": ["RemainingSizeMB", "Queue Size", "MB"],
+    "remaining_size": ["RemainingSizeMB", "Queue Size", DATA_MEGABYTES],
     "uptime": ["UpTimeSec", "Uptime", "min"],
 }
 
