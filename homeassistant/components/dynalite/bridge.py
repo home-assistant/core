@@ -56,10 +56,10 @@ class DynaliteBridge:
         """Call when a device or all devices should be updated."""
         if device == CONF_ALL:
             # This is used to signal connection or disconnection, so all devices may become available or not.
-            if self.dynalite_devices.available:
-                LOGGER.info("Connected to dynalite host")
-            else:
-                LOGGER.info("Disconnected from dynalite host")
+            log_string = (
+                "Connected" if self.dynalite_devices.available else "Disconnected"
+            )
+            LOGGER.info("%s to dynalite host", log_string)
             async_dispatcher_send(self.hass, self.update_signal())
         else:
             async_dispatcher_send(self.hass, self.update_signal(device))

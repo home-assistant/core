@@ -11,6 +11,21 @@ from homeassistant.components.dynalite.__init__ import (
 from tests.common import mock_coro
 
 
+async def test_empty_config():
+    """Test with an empty config."""
+    hass = Mock()
+    hass.data = {}
+    config = {}
+    mock_conf_host = Mock(return_value=[])
+    with patch(
+        "homeassistant.components.dynalite.__init__.configured_hosts", mock_conf_host
+    ):
+        assert await async_setup(hass, config)
+        mock_conf_host.assert_called_once()
+        assert mock_conf_host.mock_calls[0] == call(hass)
+        assert hass.data[DOMAIN] == {DATA_CONFIGS: {}}
+
+
 async def test_async_setup():
     """Test a successful setup."""
     new_host = "1.2.3.4"
@@ -56,6 +71,33 @@ async def test_async_setup_entry():
         async_mock(mock_async_setup),
     ):
         assert await async_setup_entry(hass, entry)
+    mock_async_setup.assert_called_once()
+
+
+async def test_failed_setup_entry():
+    """Test when bridge setup fails."""
+
+    def async_mock(mock):
+        """Return the return value of a mock from async."""
+
+        async def async_func(*args, **kwargs):
+            return mock()
+
+        return async_func
+
+    host = "1.2.3.4"
+    hass = Mock()
+    entry = Mock()
+    entry.data = {"host": host}
+    hass.data = {}
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_CONFIGS] = {host: {}}
+    mock_async_setup = Mock(return_value=False)
+    with patch(
+        "homeassistant.components.dynalite.__init__.DynaliteBridge.async_setup",
+        async_mock(mock_async_setup),
+    ):
+        assert not await async_setup_entry(hass, entry)
     mock_async_setup.assert_called_once()
 
 
