@@ -1,7 +1,7 @@
 """Platform for light integration."""
 import logging
 
-from devolo_home_control_api.mprm_rest import (
+from devolo_home_control_api.backend.mprm_rest import (
     get_device_uid_from_element_uid,
     get_sub_device_uid_from_element_uid,
 )
@@ -43,7 +43,7 @@ async def async_setup_entry(
     hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
 ) -> None:
     """Get all devices and setup the switch devices via config entry."""
-    devices = hass.data[DOMAIN]["mprm"].binary_switch_devices
+    devices = hass.data[DOMAIN]["homecontrol"].binary_switch_devices
 
     devices_list = []
     for device in devices:
@@ -84,7 +84,7 @@ class DevoloSwitch(SwitchDevice):
             binary_switch = "devolo.BinarySwitch:" + self._device_instance.device_uid
             consumption_property = "devolo.Meter:" + self._device_instance.device_uid
         self._unique_id = get_device_uid_from_element_uid(binary_switch)
-        self._mprm = hass.data[DOMAIN]["mprm"]
+        self._mprm = hass.data[DOMAIN]["homecontrol"]
         self._name = self._device_instance.name
         self._binary_switch_property = self._device_instance.binary_switch_property.get(
             binary_switch
@@ -145,12 +145,12 @@ class DevoloSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Switch on the device."""
         self._is_on = True
-        self._mprm.set_binary_switch(element_uid=self._unique_id, state=True)
+        self._binary_switch_property.set_binary_switch(state=True)
 
     def turn_off(self, **kwargs):
         """Switch off the device."""
         self._is_on = False
-        self._mprm.set_binary_switch(element_uid=self._unique_id, state=False)
+        self._binary_switch_property.set_binary_switch(state=False)
 
     def update(self, message=None):
         """Update the binary switch state and consumption."""
