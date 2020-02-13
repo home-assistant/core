@@ -35,6 +35,7 @@ CONF_STATES = "states"
 CONF_ZONES = "zones"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
+DEFAULT_HOST = "https://connect.elmospa.com"
 
 SIGNAL_ZONE_CHANGED = "elmo_alarm.zone_changed"
 SIGNAL_INPUT_CHANGED = "elmo_alarm.input_changed"
@@ -55,7 +56,14 @@ InputData = namedtuple("InputData", ["input_id", "input_name", "state"])
 
 STATE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_NAME): vol.In(
+            [
+                STATE_ALARM_ARMED_HOME,
+                STATE_ALARM_ARMED_AWAY,
+                STATE_ALARM_ARMED_NIGHT,
+                STATE_ALARM_ARMED_CUSTOM_BYPASS,
+            ]
+        ),
         vol.Required(CONF_ZONES): vol.All(cv.ensure_list),
     }
 )
@@ -64,7 +72,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_HOST): cv.string,
+                vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
                 vol.Required(CONF_VENDOR): cv.string,
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
@@ -189,7 +197,7 @@ class ElmoClientWrapper(ElmoClient):
         if not areas_armed:
             self.state = STATE_ALARM_DISARMED
         else:
-            armed_indexes = [x["index"] + 1 for x in areas_armed]
+            armed_indexes = [area_data["index"] + 1 for area_data in areas_armed]
 
             state = [
                 state
@@ -198,17 +206,7 @@ class ElmoClientWrapper(ElmoClient):
             ]
 
             if state:
-                state = state[0]
-                if state == "arm_away":
-                    self.state = STATE_ALARM_ARMED_AWAY
-                elif state == "arm_home":
-                    self.state = STATE_ALARM_ARMED_HOME
-                elif state == "arm_night":
-                    self.state = STATE_ALARM_ARMED_NIGHT
-                elif state == "arm_custom_bypass":
-                    self.state = STATE_ALARM_ARMED_CUSTOM_BYPASS
-                else:
-                    self.state = None
+                self.state = state[0]
             else:
                 self.state = None
 
