@@ -2,7 +2,7 @@
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
 
 
 class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
