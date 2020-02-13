@@ -1,0 +1,64 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad",
+            "already_in_progress": "Konfigurationsfl\u00f6de f\u00f6r enhet p\u00e5g\u00e5r redan.",
+            "not_konn_panel": "Inte en erk\u00e4nd Konnected.io-enhet",
+            "unknown": "Ett ok\u00e4nt fel har intr\u00e4ffat"
+        },
+        "error": {
+            "cannot_connect": "Det g\u00e5r inte att ansluta till en ansluten panel p\u00e5 {host}:{port}"
+        },
+        "step": {
+            "confirm": {
+                "title": "Konnected-enheten redo"
+            },
+            "user": {
+                "data": {
+                    "host": "Konnected-enhetens IP-adress",
+                    "port": "Konnected-enhetens port"
+                },
+                "description": "Ange v\u00e4rdinformationen f\u00f6r din Konnected Panel.",
+                "title": "Uppt\u00e4ck Konnected-enhet"
+            }
+        },
+        "title": "Konnected.io"
+    },
+    "options": {
+        "abort": {
+            "not_konn_panel": "Inte en erk\u00e4nd Konnected.io-enhet"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "inverse": "Invertera \u00f6ppet/st\u00e4ngt tillst\u00e5nd",
+                    "name": "Namn (valfritt)",
+                    "type": "Bin\u00e4r sensortyp"
+                },
+                "title": "Konfigurera Bin\u00e4r Sensor"
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Namn (valfritt)",
+                    "poll_interval": "H\u00e4mtningsintervall (minuter) (valfritt)",
+                    "type": "Sensortyp"
+                }
+            },
+            "options_io_ext": {
+                "title": "Konfigurera ut\u00f6kat I/O"
+            },
+            "options_misc": {
+                "description": "V\u00e4lj \u00f6nskat beteende f\u00f6r din panel",
+                "title": "Konfigurera \u00d6vrigt"
+            },
+            "options_switch": {
+                "data": {
+                    "name": "Namn (valfritt)",
+                    "pause": "Paus mellan pulser (ms) (valfritt)"
+                },
+                "title": "Konfigurera v\u00e4xelbar utdata"
+            }
+        },
+        "title": "Alternativ f\u00f6r Konnected alarmpanel"
+    }
+}
