@@ -8,10 +8,9 @@ from homeassistant.components.wled.const import (
     ATTR_LED_COUNT,
     ATTR_MAX_POWER,
     CURRENT_MA,
-    DATA_BYTES,
     DOMAIN,
 )
-from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT, DATA_BYTES
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
