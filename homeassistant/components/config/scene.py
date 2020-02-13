@@ -5,17 +5,30 @@ import uuid
 from homeassistant.components.scene import DOMAIN, PLATFORM_SCHEMA
 from homeassistant.config import SCENE_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import DOMAIN as HA_DOMAIN
+from homeassistant.helpers import config_validation as cv, entity_registry
 
-from . import EditIdBasedConfigView
+from . import ACTION_DELETE, EditIdBasedConfigView
 
 
 async def async_setup(hass):
     """Set up the Scene config API."""
 
-    async def hook(hass):
+    async def hook(action, config_key):
         """post_write_hook for Config View that reloads scenes."""
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
+
+        if action != ACTION_DELETE:
+            return
+
+        ent_reg = await entity_registry.async_get_registry(hass)
+
+        entity_id = ent_reg.async_get_entity_id(DOMAIN, HA_DOMAIN, config_key)
+
+        if entity_id is None:
+            return
+
+        ent_reg.async_remove(entity_id)
 
     hass.http.register_view(
         EditSceneConfigView(

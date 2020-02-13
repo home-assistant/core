@@ -1,0 +1,9 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Niespodziewany b\u0142\u0105d"
+        },
+        "title": "MELCloud"
+    }
+}

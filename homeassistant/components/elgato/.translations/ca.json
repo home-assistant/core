@@ -15,7 +15,7 @@
                     "port": "N\u00famero de port"
                 },
                 "description": "Configura l'Elgato Key Light per integrar-lo amb Home Assistant.",
-                "title": "Enlla\u00e7a Elgato Key Light"
+                "title": "Enlla\u00e7 amb Elgato Key Light"
             },
             "zeroconf_confirm": {
                 "description": "Vols afegir l'Elgato Key Light amb n\u00famero de s\u00e8rie `{serial_number}` a Home Assistant?",

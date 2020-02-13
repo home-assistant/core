@@ -315,7 +315,9 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         conf = await entity_component.async_prepare_reload(skip_reset=True)
         if conf is None:
             return
-        await yaml_collection.async_load(await filter_yaml_data(hass, conf[DOMAIN]))
+        await yaml_collection.async_load(
+            await filter_yaml_data(hass, conf.get(DOMAIN, []))
+        )
 
     service.async_register_admin_service(
         hass, DOMAIN, SERVICE_RELOAD, async_reload_yaml

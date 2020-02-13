@@ -6,6 +6,7 @@ from typing import Awaitable
 
 import voluptuous as vol
 
+from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
 import homeassistant.config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -19,8 +20,8 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 import homeassistant.core as ha
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_extract_entity_ids
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,23 +75,16 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
 
         await asyncio.wait(tasks)
 
-    hass.services.async_register(ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service)
-    hass.services.async_register(ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service)
-    hass.services.async_register(ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service)
-    hass.helpers.intent.async_register(
-        intent.ServiceIntentHandler(
-            intent.INTENT_TURN_ON, ha.DOMAIN, SERVICE_TURN_ON, "Turned {} on"
-        )
+    service_schema = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids}, extra=vol.ALLOW_EXTRA)
+
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service, schema=service_schema
     )
-    hass.helpers.intent.async_register(
-        intent.ServiceIntentHandler(
-            intent.INTENT_TURN_OFF, ha.DOMAIN, SERVICE_TURN_OFF, "Turned {} off"
-        )
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_TURN_ON, async_handle_turn_service, schema=service_schema
     )
-    hass.helpers.intent.async_register(
-        intent.ServiceIntentHandler(
-            intent.INTENT_TOGGLE, ha.DOMAIN, SERVICE_TOGGLE, "Toggled {}"
-        )
+    hass.services.async_register(
+        ha.DOMAIN, SERVICE_TOGGLE, async_handle_turn_service, schema=service_schema
     )
 
     async def async_handle_core_service(call):
@@ -118,6 +112,25 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
 
     async def async_handle_update_service(call):
         """Service handler for updating an entity."""
+        if call.context.user_id:
+            user = await hass.auth.async_get_user(call.context.user_id)
+
+            if user is None:
+                raise UnknownUser(
+                    context=call.context,
+                    permission=POLICY_CONTROL,
+                    user_id=call.context.user_id,
+                )
+
+            for entity in call.data[ATTR_ENTITY_ID]:
+                if not user.permissions.check_entity(entity, POLICY_CONTROL):
+                    raise Unauthorized(
+                        context=call.context,
+                        permission=POLICY_CONTROL,
+                        user_id=call.context.user_id,
+                        perm_category=CAT_ENTITIES,
+                    )
+
         tasks = [
             hass.helpers.entity_component.async_update_entity(entity)
             for entity in call.data[ATTR_ENTITY_ID]
@@ -126,13 +139,13 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
         if tasks:
             await asyncio.wait(tasks)
 
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service
     )
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART, async_handle_core_service
     )
-    hass.services.async_register(
+    hass.helpers.service.async_register_admin_service(
         ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service
     )
     hass.services.async_register(

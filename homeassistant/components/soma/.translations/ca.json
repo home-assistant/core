@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_setup": "Nom\u00e9s pots configurar un compte de Soma.",
+            "already_setup": "Nom\u00e9s pots configurar un \u00fanic compte amb Soma.",
             "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
             "connection_error": "No s'ha pogut connectar amb SOMA Connect.",
             "missing_configuration": "El component Soma no est\u00e0 configurat. Mira'n la documentaci\u00f3.",

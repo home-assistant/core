@@ -90,8 +90,32 @@ async def test_sensors(hass):
     clients[1]["rx_bytes"] = 2345000000
     clients[1]["tx_bytes"] = 6789000000
 
-    controller.mock_client_responses.append(clients)
-    await controller.async_update()
+    event = {"meta": {"message": "sta:sync"}, "data": clients}
+    controller.api.message_handler(event)
+    await hass.async_block_till_done()
+
+    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
+    assert wireless_client_rx.state == "2345.0"
+
+    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
+    assert wireless_client_tx.state == "6789.0"
+
+    hass.config_entries.async_update_entry(
+        controller.config_entry,
+        options={unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: False},
+    )
+    await hass.async_block_till_done()
+
+    wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")
+    assert wireless_client_rx is None
+
+    wireless_client_tx = hass.states.get("sensor.wireless_client_name_tx")
+    assert wireless_client_tx is None
+
+    hass.config_entries.async_update_entry(
+        controller.config_entry,
+        options={unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: True},
+    )
     await hass.async_block_till_done()
 
     wireless_client_rx = hass.states.get("sensor.wireless_client_name_rx")

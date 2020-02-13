@@ -54,15 +54,15 @@ async def test_full_flow(hass, aiohttp_client, aioclient_mock):
 
     scope = "+".join(
         [
-            "read_station",
-            "read_camera",
             "access_camera",
-            "write_camera",
-            "read_presence",
             "access_presence",
+            "read_camera",
             "read_homecoach",
+            "read_presence",
             "read_smokedetector",
+            "read_station",
             "read_thermostat",
+            "write_camera",
             "write_thermostat",
         ]
     )

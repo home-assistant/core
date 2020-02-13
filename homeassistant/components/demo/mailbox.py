@@ -71,7 +71,7 @@ class DemoMailbox(Mailbox):
             reverse=True,
         )
 
-    def async_delete(self, msgid):
+    async def async_delete(self, msgid):
         """Delete the specified messages."""
         if msgid in self._messages:
             _LOGGER.info("Deleting: %s", msgid)

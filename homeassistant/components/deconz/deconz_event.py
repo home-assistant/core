@@ -3,7 +3,7 @@ from homeassistant.const import CONF_EVENT, CONF_ID
 from homeassistant.core import callback
 from homeassistant.util import slugify
 
-from .const import _LOGGER, CONF_GESTURE
+from .const import CONF_GESTURE, LOGGER
 from .deconz_device import DeconzBase
 
 CONF_DECONZ_EVENT = "deconz_event"
@@ -21,11 +21,11 @@ class DeconzEvent(DeconzBase):
         """Register callback that will be used for signals."""
         super().__init__(device, gateway)
 
-        self._device.register_async_callback(self.async_update_callback)
+        self._device.register_callback(self.async_update_callback)
 
         self.device_id = None
         self.event_id = slugify(self._device.name)
-        _LOGGER.debug("deCONZ event created: %s", self.event_id)
+        LOGGER.debug("deCONZ event created: %s", self.event_id)
 
     @property
     def device(self):
@@ -50,7 +50,7 @@ class DeconzEvent(DeconzBase):
             CONF_EVENT: self._device.state,
         }
 
-        if self._device.gesture:
+        if self._device.gesture is not None:
             data[CONF_GESTURE] = self._device.gesture
 
         self.gateway.hass.bus.async_fire(CONF_DECONZ_EVENT, data)

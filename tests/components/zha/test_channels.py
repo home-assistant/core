@@ -6,7 +6,7 @@ import homeassistant.components.zha.core.channels as channels
 import homeassistant.components.zha.core.device as zha_device
 import homeassistant.components.zha.core.registries as registries
 
-from .common import make_device
+from .common import get_zha_gateway
 
 
 @pytest.fixture
@@ -19,6 +19,13 @@ def ieee():
 def nwk():
     """NWK fixture."""
     return t.NWK(0xBEEF)
+
+
+@pytest.fixture
+async def zha_gateway(hass, setup_zha):
+    """Return ZhaGateway fixture."""
+    await setup_zha()
+    return get_zha_gateway(hass)
 
 
 @pytest.mark.parametrize(
@@ -64,9 +71,11 @@ def nwk():
         (0x1000, 1, {}),
     ],
 )
-async def test_in_channel_config(cluster_id, bind_count, attrs, zha_gateway, hass):
+async def test_in_channel_config(
+    cluster_id, bind_count, attrs, hass, zigpy_device_mock, zha_gateway
+):
     """Test ZHA core channel configuration for input clusters."""
-    zigpy_dev = make_device(
+    zigpy_dev = zigpy_device_mock(
         {1: {"in_clusters": [cluster_id], "out_clusters": [], "device_type": 0x1234}},
         "00:11:22:33:44:55:66:77",
         "test manufacturer",
@@ -120,9 +129,11 @@ async def test_in_channel_config(cluster_id, bind_count, attrs, zha_gateway, has
         (0x1000, 1),
     ],
 )
-async def test_out_channel_config(cluster_id, bind_count, zha_gateway, hass):
+async def test_out_channel_config(
+    cluster_id, bind_count, zha_gateway, hass, zigpy_device_mock
+):
     """Test ZHA core channel configuration for output clusters."""
-    zigpy_dev = make_device(
+    zigpy_dev = zigpy_device_mock(
         {1: {"out_clusters": [cluster_id], "in_clusters": [], "device_type": 0x1234}},
         "00:11:22:33:44:55:66:77",
         "test manufacturer",

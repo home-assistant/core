@@ -51,6 +51,7 @@ class PlexServer:
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         self.options = options
         self.server_choice = None
+        self._owner_username = None
 
         # Header conditionally added as it is not available in config entry v1
         if CONF_CLIENT_IDENTIFIER in server_config:
@@ -93,6 +94,14 @@ class PlexServer:
         else:
             _connect_with_token()
 
+        owner_account = [
+            account.name
+            for account in self._plex_server.systemAccounts()
+            if account.accountID == 1
+        ]
+        if owner_account:
+            self._owner_username = owner_account[0]
+
     def refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
         unique_id = f"{self.machine_identifier}:{machine_identifier}"
@@ -132,6 +141,9 @@ class PlexServer:
                 _LOGGER.debug("New device: %s", device.machineIdentifier)
 
         for session in sessions:
+            if session.TYPE == "photo":
+                _LOGGER.debug("Photo session detected, skipping: %s", session)
+                continue
             for player in session.players:
                 self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
@@ -178,6 +190,11 @@ class PlexServer:
     def plex_server(self):
         """Return the plexapi PlexServer instance."""
         return self._plex_server
+
+    @property
+    def owner(self):
+        """Return the Plex server owner username."""
+        return self._owner_username
 
     @property
     def friendly_name(self):

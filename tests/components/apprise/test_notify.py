@@ -95,7 +95,7 @@ async def test_apprise_notification(hass):
         assert await async_setup_component(hass, BASE_COMPONENT, config)
         await hass.async_block_till_done()
 
-        # Test the existance of our service
+        # Test the existence of our service
         assert hass.services.has_service(BASE_COMPONENT, "test")
 
         # Test the call to our underlining notify() call
@@ -134,7 +134,7 @@ async def test_apprise_notification_with_target(hass, tmp_path):
         assert await async_setup_component(hass, BASE_COMPONENT, config)
         await hass.async_block_till_done()
 
-        # Test the existance of our service
+        # Test the existence of our service
         assert hass.services.has_service(BASE_COMPONENT, "test")
 
         # Test the call to our underlining notify() call

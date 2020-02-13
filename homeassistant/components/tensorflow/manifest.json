@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/tensorflow",
   "requirements": [
     "tensorflow==1.13.2",
-    "numpy==1.17.4",
+    "numpy==1.18.1",
     "protobuf==3.6.1",
     "pillow==6.2.1"
   ],

@@ -213,6 +213,12 @@ class ModbusHub:
             kwargs = {"unit": unit} if unit else {}
             return self._client.read_coils(address, count, **kwargs)
 
+    def read_discrete_inputs(self, unit, address, count):
+        """Read discrete inputs."""
+        with self._lock:
+            kwargs = {"unit": unit} if unit else {}
+            return self._client.read_discrete_inputs(address, count, **kwargs)
+
     def read_input_registers(self, unit, address, count):
         """Read input registers."""
         with self._lock:

@@ -32,7 +32,7 @@ ENTITY_COVER = "cover.test_template_cover"
 
 @pytest.fixture
 def calls(hass):
-    """Track calls to a mock serivce."""
+    """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
 
@@ -885,7 +885,7 @@ async def test_availability_template(hass, calls):
 
 
 async def test_availability_without_availability_template(hass, calls):
-    """Test that component is availble if there is no."""
+    """Test that component is available if there is no."""
     assert await setup.async_setup_component(
         hass,
         "cover",

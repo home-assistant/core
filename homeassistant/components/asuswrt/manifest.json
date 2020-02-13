@@ -1,6 +1,6 @@
 {
   "domain": "asuswrt",
-  "name": "Asuswrt",
+  "name": "ASUSWRT",
   "documentation": "https://www.home-assistant.io/integrations/asuswrt",
   "requirements": ["aioasuswrt==1.1.22"],
   "dependencies": [],

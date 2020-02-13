@@ -1,0 +1,17 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Plats redan registrerad"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mmi": "MMI",
+                    "radius": "Radie"
+                },
+                "title": "Fyll i dina filterdetaljer."
+            }
+        },
+        "title": "GeoNet NZ Quakes"
+    }
+}

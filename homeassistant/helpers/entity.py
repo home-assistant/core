@@ -337,7 +337,7 @@ class Entity(ABC):
         if name is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
-        icon = self.icon
+        icon = (entry and entry.icon) or self.icon
         if icon is not None:
             attr[ATTR_ICON] = icon
 
@@ -365,13 +365,25 @@ class Entity(ABC):
 
         if end - start > 0.4 and not self._slow_reported:
             self._slow_reported = True
+            extra = ""
+            if "custom_components" in type(self).__module__:
+                extra = "Please report it to the custom component author."
+            else:
+                extra = (
+                    "Please create a bug report at "
+                    "https://github.com/home-assistant/home-assistant/issues?q=is%3Aopen+is%3Aissue"
+                )
+                if self.platform:
+                    extra += (
+                        f"+label%3A%22integration%3A+{self.platform.platform_name}%22"
+                    )
+
             _LOGGER.warning(
-                "Updating state for %s (%s) took %.3f seconds. "
-                "Please report platform to the developers at "
-                "https://goo.gl/Nvioub",
+                "Updating state for %s (%s) took %.3f seconds. %s",
                 self.entity_id,
                 type(self),
                 end - start,
+                extra,
             )
 
         # Overwrite properties that have been set in the config file.
@@ -568,7 +580,6 @@ class Entity(ABC):
     # call an requests
     async def async_request_call(self, coro):
         """Process request batched."""
-
         if self.parallel_updates:
             await self.parallel_updates.acquire()
 
@@ -596,23 +607,17 @@ class ToggleEntity(Entity):
         """Turn the entity on."""
         raise NotImplementedError()
 
-    def async_turn_on(self, **kwargs):
-        """Turn the entity on.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
+    async def async_turn_on(self, **kwargs):
+        """Turn the entity on."""
+        await self.hass.async_add_job(ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         raise NotImplementedError()
 
-    def async_turn_off(self, **kwargs):
-        """Turn the entity off.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
+    async def async_turn_off(self, **kwargs):
+        """Turn the entity off."""
+        await self.hass.async_add_job(ft.partial(self.turn_off, **kwargs))
 
     def toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
@@ -621,11 +626,9 @@ class ToggleEntity(Entity):
         else:
             self.turn_on(**kwargs)
 
-    def async_toggle(self, **kwargs):
-        """Toggle the entity.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_toggle(self, **kwargs):
+        """Toggle the entity."""
         if self.is_on:
-            return self.async_turn_off(**kwargs)
-        return self.async_turn_on(**kwargs)
+            await self.async_turn_off(**kwargs)
+        else:
+            await self.async_turn_on(**kwargs)
