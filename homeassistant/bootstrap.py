@@ -4,7 +4,7 @@ import logging
 import logging.handlers
 import os
 import sys
-from time import time
+from time import monotonic
 from typing import Any, Dict, Optional, Set
 
 import voluptuous as vol
@@ -110,7 +110,7 @@ async def async_from_config_dict(
     Dynamically loads required components and its dependencies.
     This method is a coroutine.
     """
-    start = time()
+    start = monotonic()
 
     core_config = config.get(core.DOMAIN, {})
 
@@ -131,7 +131,7 @@ async def async_from_config_dict(
 
     await _async_set_up_integrations(hass, config)
 
-    stop = time()
+    stop = monotonic()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
 
     if REQUIRED_NEXT_PYTHON_DATE and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER:
