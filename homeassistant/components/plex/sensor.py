@@ -150,10 +150,9 @@ class PlexSensor(Entity):
             return None
 
         return {
-            "identifiers": {(PLEX_DOMAIN, self.unique_id)},
+            "identifiers": {(PLEX_DOMAIN, self._server.machine_identifier)},
             "manufacturer": "Plex",
             "model": "Plex Media Server",
             "name": "Activity Sensor",
             "sw_version": self._server.version,
-            "via_device": (PLEX_DOMAIN, self._server.machine_identifier),
         }
