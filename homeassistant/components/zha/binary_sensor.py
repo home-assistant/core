@@ -50,12 +50,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation binary sensor from config entry."""
     entities = hass.data[DATA_ZHA][DOMAIN] = []
 
-    async def async_discover(update: bool = True):
+    async def async_discover():
         """Add enqueued entities."""
         if not entities:
             return
         to_add = [ent(*args) for ent, args in entities]
-        async_add_entities(to_add, update_before_add=update)
+        async_add_entities(to_add, update_before_add=True)
         entities.clear()
 
     unsub = async_dispatcher_connect(hass, SIGNAL_ADD_ENTITIES, async_discover)
