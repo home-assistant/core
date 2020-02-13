@@ -154,7 +154,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         errors = {}
-        if self.filters == {}:
+        if not self.filters:
 
             try:
                 session = aiohttp_client.async_get_clientsession(self.hass)
