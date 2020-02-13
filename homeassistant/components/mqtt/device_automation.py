@@ -27,8 +27,8 @@ async def async_setup_entry(hass, config_entry):
 
     async def async_discover(discovery_payload):
         """Discover and add an MQTT device automation."""
+        discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
         try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(discovery_payload)
             if config[CONF_AUTOMATION_TYPE] == AUTOMATION_TYPE_TRIGGER:
                 await device_trigger.async_setup_trigger(

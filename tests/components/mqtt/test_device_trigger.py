@@ -5,6 +5,7 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.mqtt import DOMAIN
+from homeassistant.components.mqtt.device_trigger import async_attach_trigger
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.setup import async_setup_component
 
@@ -60,9 +61,7 @@ async def test_get_triggers(hass, device_reg, entity_reg, mqtt_mock):
             "platform": "device",
             "domain": DOMAIN,
             "device_id": device_entry.id,
-            "topic": "foobar/triggers/button1",
-            "payload": "short_press",
-            "qos": 0,
+            "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
         },
@@ -128,9 +127,7 @@ async def test_discover_bad_triggers(hass, device_reg, entity_reg, mqtt_mock):
             "platform": "device",
             "domain": DOMAIN,
             "device_id": device_entry.id,
-            "topic": "foobar/triggers/button1",
-            "payload": "short_press",
-            "qos": 0,
+            "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
         },
@@ -170,9 +167,7 @@ async def test_update_remove_triggers(hass, device_reg, entity_reg, mqtt_mock):
             "platform": "device",
             "domain": DOMAIN,
             "device_id": device_entry.id,
-            "topic": "foobar/triggers/button1",
-            "payload": "short_press",
-            "qos": 0,
+            "discovery_id": "bla",
             "type": "button_short_press",
             "subtype": "button_1",
         },
@@ -198,8 +193,33 @@ async def test_update_remove_triggers(hass, device_reg, entity_reg, mqtt_mock):
     assert_lists_same(triggers, [])
 
 
-async def test_if_fires_on_state_change(hass, calls, mqtt_mock):
-    """Test for turn_on and turn_off triggers firing."""
+async def test_if_fires_on_mqtt_message(hass, device_reg, calls, mqtt_mock):
+    """Test triggers firing."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, config_entry)
+
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "short_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    data2 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "long_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_long_press",'
+        '  "subtype": "button_2" }'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -209,9 +229,8 @@ async def test_if_fires_on_state_change(hass, calls, mqtt_mock):
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
-                        "topic": "foobar/triggers/button1",
-                        "payload": "short_press",
+                        "device_id": device_entry.id,
+                        "discovery_id": "bla1",
                         "type": "button_short_press",
                         "subtype": "button_1",
                     },
@@ -224,11 +243,10 @@ async def test_if_fires_on_state_change(hass, calls, mqtt_mock):
                     "trigger": {
                         "platform": "device",
                         "domain": DOMAIN,
-                        "device_id": "",
-                        "topic": "foobar/triggers/button1",
-                        "payload": "long_press",
-                        "type": "button_short_press",
-                        "subtype": "button_1",
+                        "device_id": device_entry.id,
+                        "discovery_id": "bla2",
+                        "type": "button_1",
+                        "subtype": "button_long_press",
                     },
                     "action": {
                         "service": "test.automation",
@@ -250,6 +268,330 @@ async def test_if_fires_on_state_change(hass, calls, mqtt_mock):
     await hass.async_block_till_done()
     assert len(calls) == 2
     assert calls[1].data["some"] == "long_press"
+
+
+async def test_if_fires_on_mqtt_message_late_discover(
+    hass, device_reg, calls, mqtt_mock
+):
+    """Test triggers firing of MQTT device triggers discovered after setup."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, config_entry)
+
+    data0 = (
+        '{ "device":{"identifiers":["0AFFD2"]},'
+        '  "state_topic": "foobar/sensor",'
+        '  "unique_id": "unique" }'
+    )
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "short_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    data2 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "long_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_long_press",'
+        '  "subtype": "button_2" }'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla0/config", data0)
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "bla1",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press")},
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "bla2",
+                        "type": "button_1",
+                        "subtype": "button_long_press",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("long_press")},
+                    },
+                },
+            ]
+        },
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla2/config", data2)
+    await hass.async_block_till_done()
+
+    # Fake short press.
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0].data["some"] == "short_press"
+
+    # Fake long press.
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "long_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+    assert calls[1].data["some"] == "long_press"
+
+
+async def test_if_fires_on_mqtt_message_after_update(
+    hass, device_reg, calls, mqtt_mock
+):
+    """Test triggers firing after update."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, config_entry)
+
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    data2 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "topic": "foobar/triggers/buttonOne",'
+        '  "type": "button_long_press",'
+        '  "subtype": "button_2" }'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "bla1",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press")},
+                    },
+                },
+            ]
+        },
+    )
+
+    # Fake short press.
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Update the trigger
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data2)
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    async_fire_mqtt_message(hass, "foobar/triggers/buttonOne", "")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+
+async def test_not_fires_on_mqtt_message_after_remove(
+    hass, device_reg, calls, mqtt_mock
+):
+    """Test triggers not firing after removal."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, config_entry)
+
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device_entry.id,
+                        "discovery_id": "bla1",
+                        "type": "button_short_press",
+                        "subtype": "button_1",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {"some": ("short_press")},
+                    },
+                },
+            ]
+        },
+    )
+
+    # Fake short press.
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Update the trigger
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_attach_remove(hass, device_reg, mqtt_mock):
+    """Test attach and removal of trigger."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, config_entry)
+
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "short_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+
+    calls = []
+
+    def callback(trigger):
+        calls.append(trigger["trigger"]["payload"])
+
+    remove = await async_attach_trigger(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device_entry.id,
+            "discovery_id": "bla1",
+            "type": "button_short_press",
+            "subtype": "button_1",
+        },
+        callback,
+        None,
+    )
+
+    # Fake short press.
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0] == "short_press"
+
+    # Remove the trigger
+    remove()
+    await hass.async_block_till_done()
+
+    # Verify the triggers are no longer active
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_attach_remove_late(hass, device_reg, mqtt_mock):
+    """Test attach and removal of trigger ."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
+    config_entry.add_to_hass(hass)
+    await async_start(hass, "homeassistant", {}, config_entry)
+
+    data0 = (
+        '{ "device":{"identifiers":["0AFFD2"]},'
+        '  "state_topic": "foobar/sensor",'
+        '  "unique_id": "unique" }'
+    )
+    data1 = (
+        '{ "automation_type":"trigger",'
+        '  "device":{"identifiers":["0AFFD2"]},'
+        '  "payload": "short_press",'
+        '  "topic": "foobar/triggers/button1",'
+        '  "type": "button_short_press",'
+        '  "subtype": "button_1" }'
+    )
+    async_fire_mqtt_message(hass, "homeassistant/sensor/bla0/config", data0)
+    await hass.async_block_till_done()
+    device_entry = device_reg.async_get_device({("mqtt", "0AFFD2")}, set())
+
+    calls = []
+
+    def callback(trigger):
+        calls.append(trigger["trigger"]["payload"])
+
+    remove = await async_attach_trigger(
+        hass,
+        {
+            "platform": "device",
+            "domain": DOMAIN,
+            "device_id": device_entry.id,
+            "discovery_id": "bla1",
+            "type": "button_short_press",
+            "subtype": "button_1",
+        },
+        callback,
+        None,
+    )
+
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+
+    # Fake short press.
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0] == "short_press"
+
+    # Remove the trigger
+    remove()
+    await hass.async_block_till_done()
+
+    # Verify the triggers are no longer active
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
 
 
 async def test_entity_device_info_with_identifier(hass, mqtt_mock):
