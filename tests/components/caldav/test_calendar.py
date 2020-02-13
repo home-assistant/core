@@ -125,6 +125,36 @@ DESCRIPTION:What a day
 END:VEVENT
 END:VCALENDAR
 """,
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:9
+DTSTAMP:20171125T000000Z
+DTSTART:20171027T220000Z
+DTEND:20171027T230000Z
+SUMMARY:This is a recurring event
+LOCATION:Hamburg
+DESCRIPTION:Every day for a while
+RRULE:FREQ=DAILY;UNTIL=20171227T215959
+END:VEVENT
+END:VCALENDAR
+""",
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//E-Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:9
+DTSTAMP:20171125T000000Z
+DTSTART:20171027T230000Z
+DTEND:20171027T233000Z
+SUMMARY:This is a recurring event that has ended
+LOCATION:Hamburg
+DESCRIPTION:Every day for a while
+RRULE:FREQ=DAILY;UNTIL=20171127T225959
+END:VEVENT
+END:VCALENDAR
+""",
 ]
 
 CALDAV_CONFIG = {
@@ -461,3 +491,35 @@ async def test_all_day_event_returned(mock_now, hass, calendar):
         "location": "Hamburg",
         "description": "What a beautiful day",
     }
+
+
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(22, 45))
+async def test_event_rrule_ongoing(mock_now, hass, calendar):
+    """Test that the ongoing event is returned."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.private")
+    assert state.name == calendar.name
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": "Private",
+        "message": "This is a recurring event",
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": "2017-11-27 22:00:00",
+        "end_time": "2017-11-27 23:00:00",
+        "location": "Hamburg",
+        "description": "Every day for a while",
+    }
+
+
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(23, 15))
+async def test_event_rrule_ended(mock_now, hass, calendar):
+    """Test that the ongoing event is returned."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.private")
+    assert state.name == calendar.name
+    assert state.state == STATE_OFF

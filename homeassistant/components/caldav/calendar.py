@@ -199,6 +199,22 @@ class WebDavCalendarData:
             dt.start_of_local_day(), dt.start_of_local_day() + timedelta(days=1)
         )
 
+        # Change start/end dates of recurring events to today if they occur today.
+        # For recurring events, some servers return the original event with recurrence rules
+        # and they would not be properly parsed using their original start/end dates.
+        for event in results:
+            vevent = event.instance.vevent
+            rrules = vevent.getrruleset()
+            if rrules:
+                sld = dt.start_of_local_day()
+                if sld.date() in (rrule.date() for rrule in rrules):
+                    vevent.dtstart.value = vevent.dtstart.value.replace(
+                        year=sld.year, month=sld.month, day=sld.day
+                    )
+                    vevent.dtend.value = vevent.dtend.value.replace(
+                        year=sld.year, month=sld.month, day=sld.day
+                    )
+
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
         results.sort(key=lambda x: self.to_datetime(x.instance.vevent.dtstart.value))
