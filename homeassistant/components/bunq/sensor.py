@@ -125,9 +125,9 @@ class BunqData:
         if tasks:
             await asyncio.wait(tasks)
 
-    async def schedule_update(self, updateInterval):
+    async def schedule_update(self, update_interval):
         """Schedule an update."""
-        async_track_time_interval(self.hass, self.async_update, updateInterval)
+        async_track_time_interval(self.hass, self.async_update, update_interval)
 
     async def async_update(self, *_):
         """Update data."""
