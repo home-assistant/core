@@ -94,12 +94,11 @@ class FritzboxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             result = await self.hass.async_add_executor_job(self._try_connect)
 
-            if result == RESULT_AUTH_FAILED:
-                errors["base"] = result
-            elif result != RESULT_SUCCESS:
-                return self.async_abort(reason=result)
-            else:
+            if result == RESULT_SUCCESS:
                 return self._get_entry()
+            elif result != RESULT_AUTH_FAILED:
+                return self.async_abort(reason=result)
+            errors["base"] = result
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA_USER, errors=errors
