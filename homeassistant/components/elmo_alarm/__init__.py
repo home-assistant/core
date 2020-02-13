@@ -134,10 +134,11 @@ async def async_setup(hass, config):
     await update()
 
     return True
-    
+
 
 class ElmoClientWrapper(ElmoClient):
-    '''Wrapping the Elmo client class to adapt it to home assistant'''
+    """Wrapping the Elmo client class to adapt it to home assistant"""
+
     def __init__(self, host, vendor, username, password, states_config):
         self._username = username
         self._password = password
@@ -149,7 +150,7 @@ class ElmoClientWrapper(ElmoClient):
         ElmoClient.__init__(self, host, vendor)
 
     async def update(self):
-        '''Get updates and refresh internal states'''
+        """Get updates and refresh internal states"""
         try:
             data = self.check()
         except PermissionDenied as e:
@@ -160,7 +161,9 @@ class ElmoClientWrapper(ElmoClient):
             except PermissionDenied as e:
                 _LOGGER.warning(f"Invalid credentials: {e}.")
             except HTTPError as e:
-                _LOGGER.warning(f"Got HTTP error when authenticating. Check credentials. Code: {e.response.status_code}.")
+                _LOGGER.warning(
+                    f"Got HTTP error when authenticating. Check credentials. Code: {e.response.status_code}."
+                )
 
         if self._data is None:
             await self._configure_states()
