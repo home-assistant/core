@@ -72,7 +72,7 @@ class ElmoAlarmPanel(AlarmControlPanel):
         return self._state
 
     @property
-    def supported_features(self) -> int:
+    def supported_features(self):
         """Return the list of supported features."""
 
         return (

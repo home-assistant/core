@@ -70,7 +70,7 @@ class ElmoBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if sensor is on."""
-        return self._state == 1
+        return bool(self._state)
 
     @property
     def device_class(self):
