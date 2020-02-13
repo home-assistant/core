@@ -105,9 +105,8 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
             self.async_schedule_update_ha_state()
         else:
             _LOGGER.debug(
-                "Device Changed Event for %s (%s) not fired. Entity is disabled.",
+                "Device Changed Event for %s (Alarm Control Panel) not fired. Entity is disabled.",
                 self.name,
-                self._device.modelType,
             )
 
     @property
