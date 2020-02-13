@@ -57,7 +57,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     else:
         if data_updater.state == "NOT_FOUND":
             _LOGGER.error(
-                "Stop id could not be found. Please specify an existing BKK stop id."
+                "Stop id could not be found. Please specify an existing BKK stop id"
             )
             return
         entities = []
