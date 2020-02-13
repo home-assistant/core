@@ -56,8 +56,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PRECISION, default=1): cv.positive_int,
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
         vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
-        vol.Optional(CONF_MAX_TEMP, default=5): cv.positive_int,
-        vol.Optional(CONF_MIN_TEMP, default=35): cv.positive_int,
+        vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
+        vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
         vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
         vol.Optional(CONF_UNIT, default="C"): cv.string,
     }
