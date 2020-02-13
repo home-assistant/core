@@ -273,7 +273,7 @@ class BkkRoute(Entity):
     @staticmethod
     def to_iso_datetime(epoch):
         """Convert epoch date format to ISO format."""
-        if epoch > 0:
+        if epoch:
             return datetime.isoformat(datetime.fromtimestamp(epoch))
         return None
 
