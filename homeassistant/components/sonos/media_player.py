@@ -107,7 +107,7 @@ class SonosData:
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the Sonos platform. Obsolete."""
     _LOGGER.error(
-        "Loading Sonos by media_player platform config is no longer supported"
+        "Loading Sonos by media_player platform configuration is no longer supported"
     )
 
 
