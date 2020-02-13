@@ -155,17 +155,17 @@ class ElmoClientWrapper(ElmoClient):
         """Get updates and refresh internal states."""
         try:
             data = self.check()
-        except PermissionDenied as e:
-            _LOGGER.warning("Invalid session, trying to authenticate %s", e)
+        except PermissionDenied as exception:
+            _LOGGER.warning("Invalid session, trying to authenticate %s", exception)
             try:
                 self.auth(self._username, self._password)
                 data = self.check()
-            except PermissionDenied as e:
-                _LOGGER.warning("Invalid credentials: %s", e)
-            except HTTPError as e:
+            except PermissionDenied as exception:
+                _LOGGER.warning("Invalid credentials: %s", exception)
+            except HTTPError as exception:
                 _LOGGER.warning(
                     "Got HTTP error when authenticating. Check credentials. Code: %s",
-                    e.response.status_code,
+                    exception,
                 )
 
         if self._data is None:
