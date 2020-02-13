@@ -2,7 +2,7 @@
 
 import logging
 
-import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.components.alarm_control_panel import AlarmControlPanel, FORMAT_NUMBER
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
@@ -27,7 +27,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     async_add_entities([device])
 
 
-class ElmoAlarmPanel(alarm.AlarmControlPanel):
+class ElmoAlarmPanel(AlarmControlPanel):
     """Representation of an e-connect Elmo alarm panel."""
 
     def __init__(self, client, name):
@@ -61,7 +61,7 @@ class ElmoAlarmPanel(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return the regex for code format or None if no code is required."""
-        return alarm.FORMAT_NUMBER
+        return FORMAT_NUMBER
 
     @property
     def state(self):

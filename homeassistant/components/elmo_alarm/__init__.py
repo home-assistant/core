@@ -33,7 +33,6 @@ DOMAIN = "elmo_alarm"
 CONF_VENDOR = "vendor"
 
 CONF_STATES = "states"
-CONF_NAME = CONF_NAME
 CONF_ZONES = "zones"
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=5)
@@ -93,7 +92,7 @@ async def async_setup(hass, config):
     states = conf[CONF_STATES]
     scan_interval = conf[CONF_SCAN_INTERVAL]
 
-    _LOGGER.warning(f"Scan Interval:{scan_interval}")
+    _LOGGER.warning("Scan Interval: %s", scan_interval)
 
     client = ElmoClientWrapper(host, vendor, username, password, states)
     await client.update()
@@ -115,7 +114,7 @@ async def async_setup(hass, config):
     )
 
     async def update():
-        _LOGGER.debug("Connecting to e-connect to retrieve states.")
+        _LOGGER.debug("Connecting to e-connect to retrieve states")
         await client.update()
         async_dispatcher_send(hass, SIGNAL_ARMING_STATE_CHANGED, client._state)
 
@@ -154,15 +153,15 @@ class ElmoClientWrapper(ElmoClient):
         try:
             data = self.check()
         except PermissionDenied as e:
-            _LOGGER.warning(f"Invalid session, trying to authenticate: {e}.")
+            _LOGGER.warning("Invalid session, trying to authenticate %s", e)
             try:
                 self.auth(self._username, self._password)
                 data = self.check()
             except PermissionDenied as e:
-                _LOGGER.warning(f"Invalid credentials: {e}.")
+                _LOGGER.warning("Invalid credentials: %s", e)
             except HTTPError as e:
                 _LOGGER.warning(
-                    f"Got HTTP error when authenticating. Check credentials. Code: {e.response.status_code}."
+                    "Got HTTP error when authenticating. Check credentials. Code: %s", e.response.status_code
                 )
 
         if self._data is None:
@@ -181,7 +180,7 @@ class ElmoClientWrapper(ElmoClient):
     async def _update_arm_state(self):
         areas_armed = self._data["areas_armed"]
 
-        if len(areas_armed) == 0:
+        if not areas_armed:
             self._state = STATE_ALARM_DISARMED
         else:
             armed_indexes = [x["index"] + 1 for x in areas_armed]
@@ -192,7 +191,7 @@ class ElmoClientWrapper(ElmoClient):
                 if set(areas) == set(armed_indexes)
             ]
 
-            if len(state) > 0:
+            if state:
                 state = state[0]
                 if state == "arm_away":
                     self._state = STATE_ALARM_ARMED_AWAY
