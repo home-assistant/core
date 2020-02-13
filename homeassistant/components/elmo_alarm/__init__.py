@@ -136,9 +136,11 @@ async def async_setup(hass, config):
 
 
 class ElmoClientWrapper(ElmoClient):
-    """Wrapping the Elmo client class to adapt it to home assistant"""
+    """Wrapping the Elmo client class to adapt it to home assistant."""
 
     def __init__(self, host, vendor, username, password, states_config):
+        """Initialize the elmo client wrapper."""
+
         self._username = username
         self._password = password
         self._states_config = states_config
@@ -149,7 +151,7 @@ class ElmoClientWrapper(ElmoClient):
         ElmoClient.__init__(self, host, vendor)
 
     async def update(self):
-        """Get updates and refresh internal states"""
+        """Get updates and refresh internal states."""
         try:
             data = self.check()
         except PermissionDenied as e:
@@ -161,7 +163,8 @@ class ElmoClientWrapper(ElmoClient):
                 _LOGGER.warning("Invalid credentials: %s", e)
             except HTTPError as e:
                 _LOGGER.warning(
-                    "Got HTTP error when authenticating. Check credentials. Code: %s", e.response.status_code
+                    "Got HTTP error when authenticating. Check credentials. Code: %s",
+                    e.response.status_code,
                 )
 
         if self._data is None:
@@ -172,12 +175,14 @@ class ElmoClientWrapper(ElmoClient):
         await self._update_input_state()
 
     async def _configure_states(self):
+        """Initialize the elmo alarm states."""
         state_config = {}
         for state in self._states_config:
             state_config[state[CONF_NAME]] = state[CONF_ZONES]
         self._states = state_config
 
     async def _update_arm_state(self):
+        """Update the elmo alarm states."""
         areas_armed = self._data["areas_armed"]
 
         if not areas_armed:
@@ -207,6 +212,7 @@ class ElmoClientWrapper(ElmoClient):
                 self._state = None
 
     async def _update_zone_state(self):
+        """Update the elmo alarm zone's states."""
         self._zones = [
             ZoneData(zone_id=area["index"], zone_name=area["name"], state=ZONE_ARMED)
             for area in self._data["areas_armed"]
@@ -219,6 +225,7 @@ class ElmoClientWrapper(ElmoClient):
         ]
 
     async def _update_input_state(self):
+        """Update the elmo alarm input's states."""
         self._inputs = [
             InputData(input_id=inp["index"], input_name=inp["name"], state=INPUT_ALERT)
             for inp in self._data["inputs_alerted"]

@@ -2,7 +2,10 @@
 
 import logging
 
-from homeassistant.components.alarm_control_panel import AlarmControlPanel, FORMAT_NUMBER
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanel,
+    FORMAT_NUMBER,
+)
 from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
