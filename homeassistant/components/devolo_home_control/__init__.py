@@ -1,5 +1,6 @@
 """The devolo_home_control integration."""
-from devolo_home_control_api.mprm_websocket import MprmWebsocket
+# from devolo_home_control_api.backend.mprm_websocket import MprmWebsocket
+from devolo_home_control_api.homecontrol import HomeControl
 from devolo_home_control_api.mydevolo import (
     Mydevolo,
     WrongCredentialsError,
@@ -61,7 +62,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     hass.data.setdefault(DOMAIN, {})
 
     try:
-        mydevolo = Mydevolo.get_instance()
+        mydevolo = Mydevolo()
         mydevolo.user = conf.get(CONF_USERNAME)
         mydevolo.password = conf.get(CONF_PASSWORD)
         mydevolo.url = conf.get("mydevolo")
@@ -76,7 +77,9 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
     mprm_url = conf.get("mprm")
 
     try:
-        hass.data[DOMAIN]["mprm"] = MprmWebsocket(gateway_id=gateway_id, url=mprm_url)
+        hass.data[DOMAIN]["homecontrol"] = HomeControl(
+            gateway_id=gateway_id, url=mprm_url
+        )
     except ConnectionError:
         return False
 
