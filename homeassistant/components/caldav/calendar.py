@@ -206,26 +206,23 @@ class WebDavCalendarData:
         vevents = [event.instance.vevent for event in results]
         new_vevents = []
         for vevent in vevents:
-            rrules = vevent.getrruleset()  # Returns a list of datetimes or `None`.
-            if rrules:
-                for start_dt in rrules:
-                    today = copy.copy(start_of_today)
-                    tomorrow = copy.copy(start_of_tomorrow)
-                    if self.is_all_day(vevent):
-                        start_dt = start_dt.date()
-                        today = today.date()
-                        tomorrow = tomorrow.date()
-                    if today <= start_dt <= tomorrow:
-                        new_vevent = copy.deepcopy(vevent)
-                        if hasattr(new_vevent, "dtend"):
-                            dur = new_vevent.dtend.value - new_vevent.dtstart.value
-                            new_vevent.dtend.value = start_dt + dur
-                        new_vevent.dtstart.value = start_dt
-                        new_vevents.append(new_vevent)
-                    elif tomorrow <= start_dt:
-                        break
-            if not rrules:
-                continue
+            rrules = vevent.getrruleset() or []
+            for start_dt in rrules:
+                _start_of_today = start_of_today
+                _start_of_tomorrow = start_of_tomorrow
+                if self.is_all_day(vevent):
+                    start_dt = start_dt.date()
+                    _start_of_today = _start_of_today.date()
+                    _start_of_tomorrow = _start_of_tomorrow.date()
+                if _start_of_today <= start_dt < _start_of_tomorrow:
+                    new_vevent = copy.deepcopy(vevent)
+                    if hasattr(new_vevent, "dtend"):
+                        dur = new_vevent.dtend.value - new_vevent.dtstart.value
+                        new_vevent.dtend.value = start_dt + dur
+                    new_vevent.dtstart.value = start_dt
+                    new_vevents.append(new_vevent)
+                elif _start_of_tomorrow <= start_dt:
+                    break
         vevents += new_vevents
 
         # dtstart can be a date or datetime depending if the event lasts a
