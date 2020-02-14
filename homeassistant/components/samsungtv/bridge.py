@@ -1,6 +1,4 @@
 """samsungctl and samsungtvws bridge classes."""
-import os
-
 import requests
 from requests import RequestException
 from samsungctl import Remote
@@ -29,15 +27,16 @@ class SamsungTVBridge:
             if config["method"] == "legacy":
                 return SamsungTVLegacyBridge(config)
             if config["method"] == "websocket":
-                return SamsungTVWSBridge(None, config)
+                return SamsungTVWSBridge(config)
         return None
 
     def __init__(self, config):
         """Initialize Bridge."""
         self.port = None
-        self.method = None
-        self.token_file = None
-        self.config = None
+        self.token = None
+        self.config = config
+        self.method = config["method"]
+        self.host = config["host"]
         self._remote = None
         self._callback = None
 
@@ -45,10 +44,10 @@ class SamsungTVBridge:
         """Register a callback function."""
         self._callback = func
 
-    def try_connect(self, host, port):
+    def try_connect(self, port):
         """Try to connect to the TV."""
 
-    def get_state(self, host):
+    def get_state(self):
         """Get TV state."""
 
     def send_key(self, key):
@@ -93,20 +92,19 @@ class SamsungTVBridge:
 class SamsungTVLegacyBridge(SamsungTVBridge):
     """The Bridge for Legacy TVs."""
 
-    def __init__(self, config=None):
+    def __init__(self, config):
         """Initialize Bridge."""
         super().__init__(config)
-        self.method = "legacy"
         self.port = 55000
 
-    def try_connect(self, host, port):
+    def try_connect(self, port):
         """Try to connect to the Legacy TV."""
         if port is None or port == self.port:
             config = {
                 "name": "HomeAssistant",
                 "description": "HomeAssistant",
                 "id": "ha.component.samsung",
-                "host": host,
+                "host": self.host,
                 "method": self.method,
                 "port": self.port,
                 # We need this high timeout because waiting for auth popup is just an open socket
@@ -128,7 +126,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
         return RESULT_NOT_SUCCESSFUL
 
-    def get_state(self, host):
+    def get_state(self):
         """Get TV state."""
         if self._remote is not None:
             # Close the current remote connection
@@ -173,57 +171,37 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 class SamsungTVWSBridge(SamsungTVBridge):
     """The Bridge for WebSocket TVs."""
 
-    def __init__(self, hass, config=None):
+    def __init__(self, config):
         """Initialize Bridge."""
         super().__init__(config)
-        self.hass = hass
-        self.method = "websocket"
         self.config = config
 
-    def _get_token_file(self, host):
-        """Get Token file."""
-        path = self.hass.config.path()
-        token_file = f"{path}/.samsungtv-token-{host}.dat"
-
-        if os.path.isfile(token_file) is False:
-            # Create token file for catch possible errors
-            try:
-                handle = open(token_file, "w+")
-                handle.close()
-            except OSError:
-                LOGGER.error("Samsung TV - Error creating token file: %s", token_file)
-                token_file = None
-        return token_file
-
-    def try_connect(self, host, port):
+    def try_connect(self, port):
         """Try to connect to the Websocket TV."""
         for self.port in (8001, 8002):
             if port is None or port == self.port:
-                token_file = None
-                if port == 8002:
-                    token_file = self._get_token_file(host)
                 config = {
                     "name": "HomeAssistant",
                     "description": "HomeAssistant",
-                    "host": host,
+                    "host": self.host,
                     "method": self.method,
                     "port": self.port,
                     # We need this high timeout because waiting for auth popup is just an open socket
                     "timeout": 31,
-                    "token_file": token_file,
+                    "token": self.token,
                 }
                 try:
                     LOGGER.debug("Try config: %s", config)
                     with SamsungTVWS(
-                        host=host,
+                        host=self.host,
                         port=self.port,
-                        token_file=token_file,
+                        token=self.token,
                         timeout=config["timeout"],
                         name=config["name"],
                     ) as remote:
                         remote.open()
                     LOGGER.debug("Working config: %s", config)
-                    self.token_file = token_file
+                    LOGGER.debug("Token %s", self.token)
                     return RESULT_SUCCESS
                 except WebSocketException:
                     LOGGER.debug("Working but unsupported config: %s", config)
@@ -233,10 +211,10 @@ class SamsungTVWSBridge(SamsungTVBridge):
 
         return RESULT_NOT_SUCCESSFUL
 
-    def get_state(self, host):
+    def get_state(self):
         """Get TV state."""
         try:
-            ping_url = f"http://{host}:8001/api/v2/"
+            ping_url = f"http://{self.host}:8001/api/v2/"
 
             requests.get(ping_url, timeout=1)
             return STATE_ON
@@ -255,7 +233,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             self._remote = SamsungTVWS(
                 host=self.config["host"],
                 port=self.config["port"],
-                token_file=self.config["token_file"],
+                token=self.config["token"],
                 timeout=self.config["timeout"],
                 name=self.config["name"],
             )

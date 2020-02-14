@@ -21,11 +21,11 @@ from homeassistant.const import (
 )
 
 # pylint:disable=unused-import
-from .bridge import SamsungTVLegacyBridge, SamsungTVWSBridge
+from .bridge import SamsungTVBridge
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
-    CONF_TOKEN_FILE,
+    CONF_TOKEN,
     DOMAIN,
     LOGGER,
     RESULT_AUTH_MISSING,
@@ -34,6 +34,7 @@ from .const import (
 )
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
+SUPPORTED_METHODS = ["websocket", "legacy"]
 
 
 def _get_ip(host):
@@ -74,21 +75,21 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_MODEL: self._model,
                 CONF_NAME: self._name,
                 CONF_PORT: self._bridge.port,
-                CONF_TOKEN_FILE: self._bridge.token_file,
+                CONF_TOKEN: self._bridge.token,
             },
         )
 
     def _try_connect(self):
         """Try to connect and check auth."""
-        self._bridge = SamsungTVWSBridge(self.hass)
-        result = self._bridge.try_connect(self._host, self._port)
-        if result == RESULT_SUCCESS:
-            return result
-        self._bridge = SamsungTVLegacyBridge()
-        result = self._bridge.try_connect(self._host, self._port)
-        if result == RESULT_SUCCESS:
-            return result
-
+        for method in SUPPORTED_METHODS:
+            config = {
+                "method": method,
+                "host": self._host,
+            }
+            self._bridge = SamsungTVBridge.get_bridge(config)
+            result = self._bridge.try_connect(self._port)
+            if result == RESULT_SUCCESS:
+                return result
         LOGGER.debug("No working config found")
         return RESULT_NOT_SUCCESSFUL
 

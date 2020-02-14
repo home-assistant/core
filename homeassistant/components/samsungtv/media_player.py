@@ -36,7 +36,7 @@ from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_ON_ACTION,
-    CONF_TOKEN_FILE,
+    CONF_TOKEN,
     DOMAIN,
     LOGGER,
 )
@@ -108,7 +108,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             "port": config_entry.data.get(CONF_PORT),
             "host": config_entry.data[CONF_HOST],
             "timeout": 1,
-            "token_file": config_entry.data[CONF_TOKEN_FILE],
+            "token": config_entry.data[CONF_TOKEN],
         }
         self._bridge = SamsungTVBridge.get_bridge(self._config)
 
@@ -126,7 +126,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         if self._power_off_in_progress():
             self._state = STATE_OFF
         else:
-            self._state = self._bridge.get_state(self._config["host"])
+            self._state = self._bridge.get_state()
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
