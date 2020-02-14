@@ -490,7 +490,10 @@ def test_multi_select():
 
 def test_multi_select_in_serializer():
     """Test multi_select with custom_serializer."""
-    assert cv.custom_serializer(cv.multi_select({})) == {"type": "multi_select"}
+    assert cv.custom_serializer(cv.multi_select({"paulus": "Paulus"})) == {
+        "type": "multi_select",
+        "options": {"paulus": "Paulus"},
+    }
 
 
 @pytest.fixture
