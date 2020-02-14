@@ -181,20 +181,9 @@ class IsWorkdaySensor(BinarySensorDevice):
         date = get_date(datetime.today()) + timedelta(days=self._days_offset)
         day = date.isoweekday() - 1
         day_of_week = day_to_string(day)
-        _LOGGER.debug(
-            "date "
-            + str(date)
-            + " day "
-            + str(day)
-            + " Day of week "
-            + str(day_of_week)
-        )
 
-        _LOGGER.debug("self._state (before test) " + str(self._state))
         if self.is_include(day_of_week, date):
             self._state = True
-        _LOGGER.debug("self._state (after day of week) " + str(self._state))
 
         if self.is_exclude(day_of_week, date):
             self._state = False
-        _LOGGER.debug("self._state (after exclude) " + str(self._state))
