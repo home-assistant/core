@@ -137,6 +137,8 @@ class MikrotikData:
         self.model = self.get_info(ATTR_MODEL)
         self.firmware = self.get_info(ATTR_FIRMWARE)
         self.serial_number = self.get_info(ATTR_SERIAL_NUMBER)
+        self.support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
+        self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
 
     def connect_to_hub(self):
         """Connect to hub."""
@@ -265,11 +267,6 @@ class MikrotikData:
 
         return response if response else None
 
-    def setup(self):
-        """Setup the Mikrotik Client."""
-        self.support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
-        self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
-
     def update(self):
         """Update device_tracker from Mikrotik API."""
         if not self.available or not self.api:
@@ -377,7 +374,6 @@ class MikrotikHub:
             return False
 
         self._mk_data = MikrotikData(self.hass, self.config_entry, api)
-        self._mk_data.setup()
         await self.async_add_options()
         await self.hass.async_add_executor_job(self._mk_data.get_hub_details)
         await self.hass.async_add_executor_job(self._mk_data.update)
