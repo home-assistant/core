@@ -76,7 +76,7 @@ async def test_turn_on(hass, mock_device):
 
 async def test_turn_off(hass, mock_device):
     """Test turning a light off."""
-    mock_device.async_turn_off.return_value = mock_coro(True)
+    mock_device.async_turn_off = CoroutineMock(return_value=True)
     await create_light_from_device(hass, mock_device)
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": "light.name"}, blocking=True
