@@ -71,7 +71,7 @@ async def test_turn_on(hass, mock_device):
         "light", "turn_on", {"entity_id": "light.name"}, blocking=True
     )
     await hass.async_block_till_done()
-    mock_device.async_turn_on.assert_called_once()
+    mock_device.async_turn_on.assert_awaited_once()
 
 
 async def test_turn_off(hass, mock_device):
