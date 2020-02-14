@@ -8,7 +8,6 @@ from homeassistant.components import dynalite
 from homeassistant.components.light import SUPPORT_BRIGHTNESS
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
 
 
 @pytest.fixture
