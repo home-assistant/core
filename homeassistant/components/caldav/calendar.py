@@ -193,11 +193,12 @@ class WebDavCalendarData:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data."""
+        start_of_today = dt.start_of_local_day()
+        end_of_today = dt.start_of_local_day() + timedelta(days=1)
+
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        results = self.calendar.date_search(
-            dt.start_of_local_day(), dt.start_of_local_day() + timedelta(days=1)
-        )
+        results = self.calendar.date_search(start_of_today, end_of_today)
 
         # Create new vevents for each recurrence of an event that happens today.
         # For recurring events, some servers return the original event with recurrence rules
@@ -205,27 +206,22 @@ class WebDavCalendarData:
         vevents = [event.instance.vevent for event in results]
         new_vevents = []
         for vevent in vevents:
-            rrules = vevent.getrruleset()
+            rrules = vevent.getrruleset()  # Returns a list of datetimes or `None`.
             if rrules:
-                occurrences = []
-                for rrule in rrules:
-                    if not rrule.tzinfo:
-                        rrule = dt.as_local(rrule)
-                    if (
-                        dt.start_of_local_day() + timedelta(days=1)
-                        > rrule
-                        > dt.start_of_local_day()
-                    ):
-                        occurrences.append(rrule)
-                    elif rrule > dt.start_of_local_day() + timedelta(days=1):
+                for start_dt in rrules:
+                    if not start_dt.tzinfo:
+                        start_dt = dt.as_local(start_dt)
+                    if start_of_today < start_dt < end_of_today:
+                        new_vevent = copy.deepcopy(vevent)
+                        if hasattr(new_vevent, "dtend"):
+                            dur = new_vevent.dtend.value - new_vevent.dtstart.value
+                            new_vevent.dtend.value = start_dt + dur
+                        new_vevent.dtstart.value = start_dt
+                        new_vevents.append(new_vevent)
+                    elif end_of_today < start_dt:
                         break
-                for occurrence in occurrences:
-                    new_vevent = copy.deepcopy(vevent)
-                    if hasattr(new_vevent, "dtend"):
-                        dur = new_vevent.dtend.value - new_vevent.dtstart.value
-                        new_vevent.dtend.value = occurrence + dur
-                    new_vevent.dtstart.value = occurrence
-                    new_vevents.append(new_vevent)
+            if not rrules:
+                continue
         vevents += new_vevents
 
         # dtstart can be a date or datetime depending if the event lasts a
