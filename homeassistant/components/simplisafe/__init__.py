@@ -9,8 +9,14 @@ from simplipy import API
 from simplipy.entity import EntityTypes
 from simplipy.errors import InvalidCredentialsError, SimplipyError, WebsocketError
 from simplipy.websocket import (
+    EVENT_CAMERA_MOTION_DETECTED,
+    EVENT_DOORBELL_DETECTED,
+    EVENT_ENTRY_DETECTED,
     EVENT_LOCK_LOCKED,
     EVENT_LOCK_UNLOCKED,
+    EVENT_MOTION_DETECTED,
+    EVENT_SENSOR_NOT_RESPONDING,
+    EVENT_SENSOR_RESTORED,
     get_event_type_from_payload,
 )
 import voluptuous as vol
@@ -66,6 +72,14 @@ DEFAULT_SOCKET_MIN_RETRY = 15
 DEFAULT_WATCHDOG_SECONDS = 5 * 60
 
 WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
+WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT = [
+    EVENT_CAMERA_MOTION_DETECTED,
+    EVENT_DOORBELL_DETECTED,
+    EVENT_ENTRY_DETECTED,
+    EVENT_MOTION_DETECTED,
+    EVENT_SENSOR_NOT_RESPONDING,
+    EVENT_SENSOR_RESTORED,
+]
 
 ATTR_LAST_EVENT_INFO = "last_event_info"
 ATTR_LAST_EVENT_SENSOR_NAME = "last_event_sensor_name"
@@ -406,7 +420,9 @@ class SimpliSafeWebsocket:
         _LOGGER.debug("New websocket event: %s", event)
         self.last_events[data["sid"]] = event
         async_dispatcher_send(self._hass, TOPIC_UPDATE.format(data["sid"]))
-        self._hass.bus.async_fire(EVENT_SIMPLISAFE_EVENT, event_data=asdict(event))
+
+        if event.event_type in WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT:
+            self._hass.bus.async_fire(EVENT_SIMPLISAFE_EVENT, event_data=asdict(event))
 
         _LOGGER.debug("Resetting websocket watchdog")
         self._websocket_watchdog_listener()
