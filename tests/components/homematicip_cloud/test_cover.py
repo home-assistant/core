@@ -24,14 +24,17 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_cover_shutter(hass, default_mock_hap):
+async def test_hmip_cover_shutter(hass, default_mock_hap_factory):
     """Test HomematicipCoverShutte."""
     entity_id = "cover.sofa_links"
     entity_name = "Sofa links"
     device_model = "HmIP-FBL"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "closed"
@@ -90,14 +93,17 @@ async def test_hmip_cover_shutter(hass, default_mock_hap):
     assert ha_state.state == STATE_UNKNOWN
 
 
-async def test_hmip_cover_slats(hass, default_mock_hap):
+async def test_hmip_cover_slats(hass, default_mock_hap_factory):
     """Test HomematicipCoverSlats."""
     entity_id = "cover.sofa_links"
     entity_name = "Sofa links"
     device_model = "HmIP-FBL"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == STATE_CLOSED
@@ -157,14 +163,17 @@ async def test_hmip_cover_slats(hass, default_mock_hap):
     assert ha_state.state == STATE_UNKNOWN
 
 
-async def test_hmip_garage_door_tormatic(hass, default_mock_hap):
+async def test_hmip_garage_door_tormatic(hass, default_mock_hap_factory):
     """Test HomematicipCoverShutte."""
     entity_id = "cover.garage_door_module"
     entity_name = "Garage Door Module"
     device_model = "HmIP-MOD-TM"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "closed"

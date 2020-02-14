@@ -39,14 +39,17 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_accesspoint_status(hass, default_mock_hap):
+async def test_hmip_accesspoint_status(hass, default_mock_hap_factory):
     """Test HomematicipSwitch."""
     entity_id = "sensor.access_point"
     entity_name = "Access Point"
     device_model = None
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
     assert hmip_device
     assert ha_state.state == "8.0"
@@ -58,14 +61,17 @@ async def test_hmip_accesspoint_status(hass, default_mock_hap):
     assert ha_state.state == "17.3"
 
 
-async def test_hmip_heating_thermostat(hass, default_mock_hap):
+async def test_hmip_heating_thermostat(hass, default_mock_hap_factory):
     """Test HomematicipHeatingThermostat."""
     entity_id = "sensor.heizkorperthermostat_heating"
     entity_name = "Heizkörperthermostat Heating"
     device_model = "HMIP-eTRV"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Heizkörperthermostat"]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "0"
@@ -89,14 +95,17 @@ async def test_hmip_heating_thermostat(hass, default_mock_hap):
     assert ha_state.attributes["icon"] == "mdi:battery-outline"
 
 
-async def test_hmip_humidity_sensor(hass, default_mock_hap):
+async def test_hmip_humidity_sensor(hass, default_mock_hap_factory):
     """Test HomematicipHumiditySensor."""
     entity_id = "sensor.bwth_1_humidity"
     entity_name = "BWTH 1 Humidity"
     device_model = "HmIP-BWTH"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["BWTH 1"]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "40"
@@ -109,14 +118,17 @@ async def test_hmip_humidity_sensor(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_RSSI_PEER] == -77
 
 
-async def test_hmip_temperature_sensor1(hass, default_mock_hap):
+async def test_hmip_temperature_sensor1(hass, default_mock_hap_factory):
     """Test HomematicipTemperatureSensor."""
     entity_id = "sensor.bwth_1_temperature"
     entity_name = "BWTH 1 Temperature"
     device_model = "HmIP-BWTH"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["BWTH 1"]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "21.0"
@@ -131,14 +143,17 @@ async def test_hmip_temperature_sensor1(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_TEMPERATURE_OFFSET] == 10
 
 
-async def test_hmip_temperature_sensor2(hass, default_mock_hap):
+async def test_hmip_temperature_sensor2(hass, default_mock_hap_factory):
     """Test HomematicipTemperatureSensor."""
     entity_id = "sensor.heizkorperthermostat_temperature"
     entity_name = "Heizkörperthermostat Temperature"
     device_model = "HMIP-eTRV"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Heizkörperthermostat"]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "20.0"
@@ -153,14 +168,17 @@ async def test_hmip_temperature_sensor2(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_TEMPERATURE_OFFSET] == 10
 
 
-async def test_hmip_power_sensor(hass, default_mock_hap):
+async def test_hmip_power_sensor(hass, default_mock_hap_factory):
     """Test HomematicipPowerSensor."""
     entity_id = "sensor.flur_oben_power"
     entity_name = "Flur oben Power"
     device_model = "HmIP-BSM"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Flur oben"]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "0.0"
@@ -187,14 +205,17 @@ async def test_hmip_power_sensor(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_CONFIG_PENDING]
 
 
-async def test_hmip_illuminance_sensor1(hass, default_mock_hap):
+async def test_hmip_illuminance_sensor1(hass, default_mock_hap_factory):
     """Test HomematicipIlluminanceSensor."""
     entity_id = "sensor.wettersensor_illuminance"
     entity_name = "Wettersensor Illuminance"
     device_model = "HmIP-SWO-B"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wettersensor"]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "4890.0"
@@ -204,14 +225,17 @@ async def test_hmip_illuminance_sensor1(hass, default_mock_hap):
     assert ha_state.state == "231"
 
 
-async def test_hmip_illuminance_sensor2(hass, default_mock_hap):
+async def test_hmip_illuminance_sensor2(hass, default_mock_hap_factory):
     """Test HomematicipIlluminanceSensor."""
     entity_id = "sensor.lichtsensor_nord_illuminance"
     entity_name = "Lichtsensor Nord Illuminance"
     device_model = "HmIP-SLO"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Lichtsensor Nord"]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "807.3"
@@ -224,14 +248,17 @@ async def test_hmip_illuminance_sensor2(hass, default_mock_hap):
     assert ha_state.attributes[ATTR_LOWEST_ILLUMINATION] == 785.2
 
 
-async def test_hmip_windspeed_sensor(hass, default_mock_hap):
+async def test_hmip_windspeed_sensor(hass, default_mock_hap_factory):
     """Test HomematicipWindspeedSensor."""
     entity_id = "sensor.wettersensor_pro_windspeed"
     entity_name = "Wettersensor - pro Windspeed"
     device_model = "HmIP-SWO-PR"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Wettersensor - pro"]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "2.6"
@@ -268,14 +295,17 @@ async def test_hmip_windspeed_sensor(hass, default_mock_hap):
         assert ha_state.attributes[ATTR_WIND_DIRECTION] == txt
 
 
-async def test_hmip_today_rain_sensor(hass, default_mock_hap):
+async def test_hmip_today_rain_sensor(hass, default_mock_hap_factory):
     """Test HomematicipTodayRainSensor."""
     entity_id = "sensor.weather_sensor_plus_today_rain"
     entity_name = "Weather Sensor – plus Today Rain"
     device_model = "HmIP-SWO-PL"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Weather Sensor – plus"]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "3.9"
@@ -285,14 +315,17 @@ async def test_hmip_today_rain_sensor(hass, default_mock_hap):
     assert ha_state.state == "14.2"
 
 
-async def test_hmip_passage_detector_delta_counter(hass, default_mock_hap):
+async def test_hmip_passage_detector_delta_counter(hass, default_mock_hap_factory):
     """Test HomematicipPassageDetectorDeltaCounter."""
     entity_id = "sensor.spdr_1"
     entity_name = "SPDR_1"
     device_model = "HmIP-SPDR"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=[entity_name]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "164"

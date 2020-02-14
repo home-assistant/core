@@ -107,9 +107,10 @@ async def test_hap_setup_connection_error():
     assert not hass.config_entries.flow.async_init.mock_calls
 
 
-async def test_hap_reset_unloads_entry_if_setup(hass, default_mock_hap):
+async def test_hap_reset_unloads_entry_if_setup(hass, default_mock_hap_factory):
     """Test calling reset while the entry has been setup."""
-    assert hass.data[HMIPC_DOMAIN][HAPID] == default_mock_hap
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap()
+    assert hass.data[HMIPC_DOMAIN][HAPID] == mock_hap
     config_entries = hass.config_entries.async_entries(HMIPC_DOMAIN)
     assert len(config_entries) == 1
     # hap_reset is called during unload
