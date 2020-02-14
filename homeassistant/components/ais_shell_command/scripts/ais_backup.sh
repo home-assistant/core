@@ -45,7 +45,7 @@ rm /data/data/pl.sviete.dom/files/home/AIS/www/*.jpeg
 rm -rf /data/data/pl.sviete.dom/files/usr/tmp/*
 
 # 8. rclone
-echo > /data/data/pl.sviete.dom/files/home/dom/rclone.conf
+echo > /data/data/pl.sviete.dom/files/home/AIS/.dom/rclone.conf
 
 # 9. Spotify
 rm /data/data/pl.sviete.dom/files/home/AIS/.dom/.ais-dom-spotify-token-cache

@@ -22,7 +22,11 @@ aisCloud = ais_cloud.AisCloudWS()
 DOMAIN = "ais_drives_service"
 G_LOCAL_FILES_ROOT = "/data/data/pl.sviete.dom/files/home/dom"
 G_CLOUD_PREFIX = "dyski-zdalne:"
-G_RCLONE_CONF_FILE = "/data/data/pl.sviete.dom/files/home/dom/rclone.conf"
+
+# run the rclone gui
+# rclone rcd --rc-web-gui --rc-user=admin --rc-pass=pass --rc-addr :5572 --config dom/rclone.conf
+G_RCLONE_OLD_CONF_FILE = "/data/data/pl.sviete.dom/files/home/dom/rclone.conf"
+G_RCLONE_CONF_FILE = "/data/data/pl.sviete.dom/files/home/AIS/.dom/rclone.conf"
 G_RCLONE_CONF = "--config=" + G_RCLONE_CONF_FILE
 G_RCLONE_URL_TO_STREAM = "http://127.0.0.1:8080/"
 G_DRIVE_CLIENT_ID = None
@@ -532,7 +536,7 @@ class LocalData:
                     {
                         "name": "Dyski zdalne",
                         "icon": "onedrive",
-                        "path": G_CLOUD_PREFIX,
+                        "path": G_LOCAL_FILES_ROOT + "/" + G_CLOUD_PREFIX,
                     },
                 ]
             },
@@ -742,11 +746,6 @@ class LocalData:
         if path.startswith(G_CLOUD_PREFIX):
             return True
         return False
-
-    def rclone_fix_permissions(self):
-        command = 'su -c "chmod -R 777 /sdcard/rclone"'
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-        # process.wait()
 
     def rclone_append_listremotes(self):
         remotes = rclone_get_remotes_long()
@@ -1124,6 +1123,16 @@ class LocalData:
         def load():
             self.display_root_items(False)
             global G_DRIVE_SECRET, G_DRIVE_CLIENT_ID
+
+            # version 0.105 config migration - to allow backup to AIS cloud
+            if os.path.isfile(G_RCLONE_OLD_CONF_FILE):
+                if not os.path.isfile(G_RCLONE_CONF_FILE):
+                    subprocess.call(
+                        "mv %s %s" % (G_RCLONE_OLD_CONF_FILE, G_RCLONE_CONF_FILE),
+                        shell=True,
+                    )
+
+            # set client and secret
             try:
                 ws_resp = aisCloud.key("gdrive_client_id")
                 json_ws_resp = ws_resp.json()

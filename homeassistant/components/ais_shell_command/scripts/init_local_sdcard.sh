@@ -44,8 +44,8 @@ if [ ! -e "/sdcard/dom/informacja.txt" ] ; then
 fi
 
 
-if [ ! -e "/data/data/pl.sviete.dom/files/home/dom/rclone.conf" ] ; then
-    touch "/data/data/pl.sviete.dom/files/home/dom/rclone.conf"
+if [ ! -e "/data/data/pl.sviete.dom/files/home/AIS/.dom/rclone.conf" ] ; then
+    touch "/data/data/pl.sviete.dom/files/home/AIS/.dom/rclone.conf"
 fi
 
 # ln -s /sdcard/dom dysk-wewnętrzny
