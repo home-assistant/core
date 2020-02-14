@@ -1,0 +1,18 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Feeler beim verbannen, prob\u00e9iert w.e.g. nach emol.",
+            "invalid_auth": "Ong\u00eblteg Authentifikatioun",
+            "unknown": "Onerwaarte Feeler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "MELCloud Passwuert"
+                },
+                "title": "Mat MELCloud verbannen"
+            }
+        },
+        "title": "MELCloud"
+    }
+}

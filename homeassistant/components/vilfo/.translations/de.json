@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Router-Hostname oder IP"
+                },
+                "title": "Stellen Sie eine Verbindung zum Vilfo Router her"
+            }
+        },
+        "title": "Vilfo Router"
+    }
+}
