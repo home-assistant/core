@@ -775,6 +775,7 @@ class ConfigEntries:
 
         return await entry.async_unload(self.hass, integration=integration)
 
+    @callback
     def _async_schedule_save(self) -> None:
         """Save the entity registry to a file."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
