@@ -131,8 +131,8 @@ PRODID:-//E-Corp.//CalDAV Client//EN
 BEGIN:VEVENT
 UID:9
 DTSTAMP:20171125T000000Z
-DTSTART:20171027T223000Z
-DTEND:20171027T230000Z
+DTSTART:20171027T220000Z
+DTEND:20171027T223000Z
 SUMMARY:This is a recurring event
 LOCATION:Hamburg
 DESCRIPTION:Every day for a while
@@ -161,8 +161,8 @@ PRODID:-//E-Corp.//CalDAV Client//EN
 BEGIN:VEVENT
 UID:9
 DTSTAMP:20171125T000000Z
-DTSTART:20171027T230000Z
-DTEND:20171027T233000Z
+DTSTART:20171027T233000Z
+DTEND:20171027T235959Z
 SUMMARY:This is a recurring event that has ended
 LOCATION:Hamburg
 DESCRIPTION:Every day for a while
@@ -508,9 +508,9 @@ async def test_all_day_event_returned(mock_now, hass, calendar):
     }
 
 
-@patch("homeassistant.util.dt.now", return_value=_local_datetime(22, 15))
-async def test_event_rrule_ongoing(mock_now, hass, calendar):
-    """Test that the ongoing event is returned."""
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(21, 45))
+async def test_event_rrule(mock_now, hass, calendar):
+    """Test that the future recurring event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
 
@@ -522,16 +522,37 @@ async def test_event_rrule_ongoing(mock_now, hass, calendar):
         "message": "This is a recurring event",
         "all_day": False,
         "offset_reached": False,
-        "start_time": "2017-11-27 22:30:00",
-        "end_time": "2017-11-27 23:00:00",
+        "start_time": "2017-11-27 22:00:00",
+        "end_time": "2017-11-27 22:30:00",
+        "location": "Hamburg",
+        "description": "Every day for a while",
+    }
+
+
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(22, 15))
+async def test_event_rrule_ongoing(mock_now, hass, calendar):
+    """Test that the current recurring event is returned."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.private")
+    assert state.name == calendar.name
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": "Private",
+        "message": "This is a recurring event",
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": "2017-11-27 22:00:00",
+        "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
         "description": "Every day for a while",
     }
 
 
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(22, 45))
-async def test_event_rrule_ongoin_duration(mock_now, hass, calendar):
-    """Test that the ongoing event is returned."""
+async def test_event_rrule_duration(mock_now, hass, calendar):
+    """Test that the future recurring event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
 
@@ -551,8 +572,29 @@ async def test_event_rrule_ongoin_duration(mock_now, hass, calendar):
 
 
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(23, 15))
+async def test_event_rrule_duration_ongoing(mock_now, hass, calendar):
+    """Test that the ongoing recurring event is returned."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.private")
+    assert state.name == calendar.name
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": "Private",
+        "message": "This is a recurring event with a duration",
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": "2017-11-27 23:00:00",
+        "end_time": "2017-11-27 23:30:00",
+        "location": "Hamburg",
+        "description": "Every day for a while as well",
+    }
+
+
+@patch("homeassistant.util.dt.now", return_value=_local_datetime(23, 45))
 async def test_event_rrule_ended(mock_now, hass, calendar):
-    """Test that the ongoing event is returned."""
+    """Test that the ended recurring event is not returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
     await hass.async_block_till_done()
 

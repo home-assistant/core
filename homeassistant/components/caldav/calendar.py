@@ -199,7 +199,7 @@ class WebDavCalendarData:
             dt.start_of_local_day(), dt.start_of_local_day() + timedelta(days=1)
         )
 
-        # Change start/end dates of the next recurring event to today if they occur after now.
+        # Change start/end dates of the next recurring event to today if they occur after now or are ongoing.
         # For recurring events, some servers return the original event with recurrence rules
         # and they would not be properly parsed using their original start/end dates.
         for event in results:
