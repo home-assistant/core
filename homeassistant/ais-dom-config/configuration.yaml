@@ -91,3 +91,8 @@ mobile_app:
 ais_usb:
 
 zone:
+
+recorder:
+  db_url: 'sqlite:///:memory:'
+  purge_interval: 1
+  purge_keep_days: 3
