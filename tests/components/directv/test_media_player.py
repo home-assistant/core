@@ -407,6 +407,7 @@ async def test_setup_platform_discover_client(hass):
 
 
 async def test_unique_id(hass, platforms):
+    """Test unique id."""
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
