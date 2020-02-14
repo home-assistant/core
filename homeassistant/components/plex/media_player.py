@@ -109,8 +109,10 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._is_player_active = False
         self._machine_identifier = device.machineIdentifier
         self._make = ""
+        self._device_platform = None
         self._device_product = None
         self._device_title = None
+        self._device_version = None
         self._name = None
         self._player_state = "idle"
         self._previous_volume_level = 1  # Used in fake muting
@@ -195,8 +197,10 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 device_url = "127.0.0.1"
             if "127.0.0.1" in device_url:
                 self.device.proxyThroughServer()
+            self._device_platform = self.device.platform
             self._device_product = self.device.product
             self._device_title = self.device.title
+            self._device_version = self.device.version
             self._device_protocol_capabilities = self.device.protocolCapabilities
             self._player_state = self.device.state
 
@@ -216,6 +220,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
                 self._player_state = session_device.state
                 self._device_product = self._device_product or session_device.product
                 self._device_title = self._device_title or session_device.title
+                self._device_version = self._device_version or session_device.version
             else:
                 _LOGGER.warning("No player associated with active session")
 
@@ -724,3 +729,18 @@ class PlexMediaPlayer(MediaPlayerDevice):
         }
 
         return attr
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if self.machine_identifier is None:
+            return None
+
+        return {
+            "identifiers": {(PLEX_DOMAIN, self.machine_identifier)},
+            "manufacturer": "Plex",
+            "model": self._device_product or self._device_platform or self.make,
+            "name": self.name,
+            "sw_version": self._device_version,
+            "via_device": (PLEX_DOMAIN, self.plex_server.machine_identifier),
+        }
