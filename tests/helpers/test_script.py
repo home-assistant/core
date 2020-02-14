@@ -1,7 +1,9 @@
 """The tests for the Script component."""
 # pylint: disable=protected-access
+import asyncio
 from datetime import timedelta
 import functools as ft
+import logging
 from unittest import mock
 
 import asynctest
@@ -190,6 +192,85 @@ async def test_calling_service_template(hass):
     assert calls[0].data.get("hello") == "world"
 
 
+async def test_legacy_no_wait(hass):
+    """Test the legacy behavior with no wait in script."""
+    calls = []
+    logger = logging.getLogger("TEST")
+
+    async def async_simulate_service(service):
+        """Simulate a service that takes a non-significant time."""
+
+        @callback
+        def done(event):
+            nonlocal waiting
+            logger.debug("simulated service (%s:%s) done", fire, listen)
+            waiting = False
+
+        calls.append(service)
+        fire = service.data.get("fire")
+        listen = service.data.get("listen")
+        logger.debug("simulated service (%s:%s) started", fire, listen)
+
+        unsub = hass.bus.async_listen(listen, done)
+        hass.bus.async_fire(fire)
+
+        waiting = True
+        while waiting:
+            await asyncio.sleep(0)
+        unsub()
+
+    hass.services.async_register("test", "script", async_simulate_service)
+
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [
+                {
+                    "service": "test.script",
+                    "data_template": {"fire": "{{ fire1 }}", "listen": "{{ listen1 }}"},
+                },
+                {
+                    "service": "test.script",
+                    "data_template": {"fire": "{{ fire2 }}", "listen": "{{ listen2 }}"},
+                },
+            ],
+        ),
+    )
+
+    async def async_sequence_test():
+        @callback
+        def done(event):
+            nonlocal waiting
+            logger.debug("sequencer heard: %s", event)
+            waiting = False
+
+        logger.debug("sequencer starting 1st script")
+        hass.async_run_job(
+            script_obj.async_run(
+                {"fire1": "1", "listen1": "2", "fire2": "3", "listen2": "4"}
+            )
+        )
+
+        waiting = True
+        unsub = hass.bus.async_listen("1", done)
+        while waiting:
+            await asyncio.sleep(0)
+        unsub()
+
+        logger.debug("sequencer starting 2nd script")
+        hass.async_run_job(
+            script_obj.async_run(
+                {"fire1": "2", "listen1": "3", "fire2": "4", "listen2": "4"}
+            )
+        )
+
+    hass.async_run_job(async_sequence_test())
+
+    await hass.async_block_till_done()
+
+    assert len(calls) == 4
+
+
 async def test_delay(hass):
     """Test the delay."""
     event = "test_event"
@@ -231,6 +312,38 @@ async def test_delay(hass):
     assert len(events) == 2
     assert events[0].context is context
     assert events[1].context is context
+
+
+async def test_legacy_with_delay(hass):
+    """Test the legacy behavior with a delay in script."""
+    event = "test_event"
+    events = []
+
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        events.append(event)
+
+    hass.bus.async_listen(event, record_event)
+
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [{"event": event}, {"delay": {"seconds": 5}}, {"event": event}]
+        ),
+    )
+
+    await script_obj.async_run()
+    await hass.async_block_till_done()
+
+    assert script_obj.is_running
+    assert len(events) == 1
+
+    await script_obj.async_run()
+    await hass.async_block_till_done()
+
+    assert not script_obj.is_running
+    assert len(events) == 2
 
 
 async def test_delay_template(hass):
@@ -459,6 +572,44 @@ async def test_wait_template(hass):
     assert len(events) == 2
     assert events[0].context is context
     assert events[1].context is context
+
+
+async def test_legacy_with_wait_template(hass):
+    """Test the legacy behavior with a wait_template in script."""
+    event = "test_event"
+    events = []
+
+    @callback
+    def record_event(event):
+        """Add recorded event to set."""
+        events.append(event)
+
+    hass.bus.async_listen(event, record_event)
+
+    hass.states.async_set("switch.test", "on")
+
+    script_obj = script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
+            [
+                {"event": event},
+                {"wait_template": "{{states.switch.test.state == 'off'}}"},
+                {"event": event},
+            ]
+        ),
+    )
+
+    await script_obj.async_run()
+    await hass.async_block_till_done()
+
+    assert script_obj.is_running
+    assert len(events) == 1
+
+    await script_obj.async_run()
+    await hass.async_block_till_done()
+
+    assert not script_obj.is_running
+    assert len(events) == 2
 
 
 async def test_wait_template_cancel(hass):
