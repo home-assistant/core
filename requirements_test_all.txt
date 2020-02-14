@@ -159,7 +159,7 @@ defusedxml==0.6.0
 denonavr==0.7.12
 
 # homeassistant.components.directv
-directpy==0.5
+directpy==0.6
 
 # homeassistant.components.updater
 distro==1.4.0
