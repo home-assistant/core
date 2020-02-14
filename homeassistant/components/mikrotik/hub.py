@@ -28,6 +28,7 @@ from .const import (
     IDENTITY,
     INFO,
     IS_WIRELESS,
+    IS_CAPSMAN,
     MIKROTIK_SERVICES,
     NAME,
     WIRELESS,
@@ -96,6 +97,7 @@ class MikrotikData:
         self.devices = {}
         self.available = True
         self.support_wireless = bool(self.command(MIKROTIK_SERVICES[IS_WIRELESS]))
+        self.support_capsman = bool(self.command(MIKROTIK_SERVICES[IS_CAPSMAN]))
         self.hostname = None
         self.model = None
         self.firmware = None
@@ -162,7 +164,7 @@ class MikrotikData:
         device_list = {}
         try:
             self.all_devices = self.get_list_from_interface(DHCP)
-            if self.support_wireless:
+            if self.support_wireless or self.support_capsman:
                 _LOGGER.debug("wireless is supported")
                 for interface in [CAPSMAN, WIRELESS]:
                     wireless_devices = self.get_list_from_interface(interface)
@@ -170,7 +172,7 @@ class MikrotikData:
                         _LOGGER.debug("Scanning wireless devices using %s", interface)
                         break
 
-            if self.support_wireless and not self.force_dhcp:
+            if (self.support_wireless or self.support_capsman) and not self.force_dhcp:
                 device_list = wireless_devices
             else:
                 device_list = self.all_devices
