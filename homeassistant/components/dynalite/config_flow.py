@@ -20,7 +20,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info):
         """Import a new bridge as a config entry."""
         LOGGER.debug("async_step_import - %s", import_info)
-        host = self.context[CONF_HOST] = import_info[CONF_HOST]
+        host = import_info[CONF_HOST]
         await self.async_set_unique_id(host)
         self._abort_if_unique_id_configured()
         return await self._entry_from_bridge(host)
