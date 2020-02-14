@@ -101,7 +101,7 @@ async def test_hap_setup_connection_error():
     with patch.object(hap, "get_hap", side_effect=HmipcConnectionError), pytest.raises(
         ConfigEntryNotReady
     ):
-        await hap.async_setup()
+        assert not await hap.async_setup()
 
     assert not hass.async_add_job.mock_calls
     assert not hass.config_entries.flow.async_init.mock_calls
@@ -135,13 +135,12 @@ async def test_hap_create(hass, hmip_config_entry, simple_mock_home):
 async def test_hap_create_exception(hass, hmip_config_entry, simple_mock_home):
     """Mock AsyncHome to execute get_hap."""
     hass.config.components.add(HMIPC_DOMAIN)
+
     hap = HomematicipHAP(hass, hmip_config_entry)
     assert hap
 
-    with patch.object(hap, "get_hap", side_effect=HmipConnectionError), pytest.raises(
-        HmipConnectionError
-    ):
-        await hap.async_setup()
+    with patch.object(hap, "get_hap", side_effect=Exception):
+        assert not await hap.async_setup()
 
     simple_mock_home.init.side_effect = HmipConnectionError
     with patch(

@@ -201,7 +201,7 @@ async def async_setup_services(hass: HomeAssistantType) -> None:
     )
 
 
-async def async_unload_services(hass):
+async def async_unload_services(hass: HomeAssistantType):
     """Unload HomematicIP Cloud services."""
     if hass.data[DOMAIN]:
         return

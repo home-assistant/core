@@ -152,7 +152,12 @@ async def test_hmip_multi_switch(hass, default_mock_hap_factory):
     entity_name = "Jalousien - 1 KiZi, 2 SchlaZi Channel1"
     device_model = "HmIP-PCBS2"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=["Jalousien - 1 KiZi, 2 SchlaZi"]
+        test_devices=[
+            "Jalousien - 1 KiZi, 2 SchlaZi",
+            "Multi IO Box",
+            "Heizungsaktor",
+            "ioBroker",
+        ]
     )
 
     ha_state, hmip_device = get_and_check_entity_basics(

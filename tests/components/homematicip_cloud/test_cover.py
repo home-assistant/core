@@ -26,9 +26,9 @@ async def test_manually_configured_platform(hass):
 
 async def test_hmip_cover_shutter(hass, default_mock_hap_factory):
     """Test HomematicipCoverShutte."""
-    entity_id = "cover.sofa_links"
-    entity_name = "Sofa links"
-    device_model = "HmIP-FBL"
+    entity_id = "cover.broll_1"
+    entity_name = "BROLL_1"
+    device_model = "HmIP-BROLL"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=[entity_name]
     )
@@ -39,7 +39,6 @@ async def test_hmip_cover_shutter(hass, default_mock_hap_factory):
 
     assert ha_state.state == "closed"
     assert ha_state.attributes["current_position"] == 0
-    assert ha_state.attributes["current_tilt_position"] == 0
     service_call_counter = len(hmip_device.mock_calls)
 
     await hass.services.async_call(
@@ -52,7 +51,6 @@ async def test_hmip_cover_shutter(hass, default_mock_hap_factory):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OPEN
     assert ha_state.attributes[ATTR_CURRENT_POSITION] == 100
-    assert ha_state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     await hass.services.async_call(
         "cover",
@@ -67,7 +65,6 @@ async def test_hmip_cover_shutter(hass, default_mock_hap_factory):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OPEN
     assert ha_state.attributes[ATTR_CURRENT_POSITION] == 50
-    assert ha_state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     await hass.services.async_call(
         "cover", "close_cover", {"entity_id": entity_id}, blocking=True
@@ -79,7 +76,6 @@ async def test_hmip_cover_shutter(hass, default_mock_hap_factory):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_CLOSED
     assert ha_state.attributes[ATTR_CURRENT_POSITION] == 0
-    assert ha_state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     await hass.services.async_call(
         "cover", "stop_cover", {"entity_id": entity_id}, blocking=True
@@ -157,6 +153,10 @@ async def test_hmip_cover_slats(hass, default_mock_hap_factory):
     assert len(hmip_device.mock_calls) == service_call_counter + 8
     assert hmip_device.mock_calls[-1][0] == "set_shutter_stop"
     assert hmip_device.mock_calls[-1][1] == ()
+
+    await async_manipulate_test_data(hass, hmip_device, "slatsLevel", None)
+    ha_state = hass.states.get(entity_id)
+    assert not ha_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
 
     await async_manipulate_test_data(hass, hmip_device, "shutterLevel", None)
     ha_state = hass.states.get(entity_id)

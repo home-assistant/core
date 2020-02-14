@@ -1,6 +1,7 @@
 """Test HomematicIP Cloud setup process."""
 
 from asynctest import CoroutineMock, Mock, patch
+from homematicip.base.base_connection import HmipConnectionError
 
 from homeassistant.components.homematicip_cloud.const import (
     CONF_ACCESSPOINT,
@@ -11,7 +12,16 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_NAME,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
-from homeassistant.config_entries import ENTRY_STATE_LOADED, ENTRY_STATE_NOT_LOADED
+from homeassistant.components.homematicip_cloud.services import (
+    HOMEMATICIP_CLOUD_SERVICES,
+    async_setup_services,
+    async_unload_services,
+)
+from homeassistant.config_entries import (
+    ENTRY_STATE_LOADED,
+    ENTRY_STATE_NOT_LOADED,
+    ENTRY_STATE_SETUP_ERROR,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.setup import async_setup_component
 
@@ -87,6 +97,34 @@ async def test_config_already_registered_not_passed_to_config_entry(hass):
     assert config_entries[0].unique_id == "ABC123"
 
 
+async def test_load_entry_fails_due_to_connection_error(hass, hmip_config_entry):
+    """Test load entry fails due to connection error."""
+    hmip_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.get_hap",
+        side_effect=HmipConnectionError,
+    ):
+        assert await async_setup_component(hass, HMIPC_DOMAIN, {}) is True
+
+    assert hass.data[HMIPC_DOMAIN][hmip_config_entry.unique_id]
+    assert hmip_config_entry.state == ENTRY_STATE_SETUP_ERROR
+
+
+async def test_load_entry_fails_due_to_generic_exceptionr(hass, hmip_config_entry):
+    """Test load entry fails due to generic exception."""
+    hmip_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.get_hap",
+        side_effect=Exception,
+    ):
+        assert await async_setup_component(hass, HMIPC_DOMAIN, {}) is True
+
+    assert hass.data[HMIPC_DOMAIN][hmip_config_entry.unique_id]
+    assert hmip_config_entry.state == ENTRY_STATE_SETUP_ERROR
+
+
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
     mock_config = {HMIPC_AUTHTOKEN: "123", HMIPC_HAPID: "ABC123", HMIPC_NAME: "name"}
@@ -127,3 +165,85 @@ async def test_hmip_dump_hap_config_services(hass, mock_hap_with_service):
         assert home.mock_calls[-1][0] == "download_configuration"
         assert home.mock_calls
         assert write_mock.mock_calls
+
+
+async def test_setup_services_and_unload_services(hass):
+    """Test setup services and unload services."""
+    entry_config = {
+        CONF_ACCESSPOINT: "ABC123",
+        CONF_AUTHTOKEN: "123",
+        CONF_NAME: "name",
+    }
+
+    assert (
+        await async_setup_component(hass, HMIPC_DOMAIN, {HMIPC_DOMAIN: entry_config})
+        is True
+    )
+    assert not hass.services.async_services().get(HMIPC_DOMAIN)
+
+    await async_setup_services(hass)
+
+    hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
+    assert len(hmipc_services) == 8
+
+    # remove hap from data
+    hass.data[HMIPC_DOMAIN].pop("ABC123")
+
+    await async_unload_services(hass)
+    assert not hass.services.async_services().get(HMIPC_DOMAIN)
+
+
+async def test_setup_services_with_services_already_setup(hass):
+    """Test do not setup services, if already setup."""
+    entry_config = {
+        CONF_ACCESSPOINT: "ABC123",
+        CONF_AUTHTOKEN: "123",
+        CONF_NAME: "name",
+    }
+
+    assert (
+        await async_setup_component(hass, HMIPC_DOMAIN, {HMIPC_DOMAIN: entry_config})
+        is True
+    )
+    assert not hass.services.async_services().get(HMIPC_DOMAIN)
+
+    # add marker, that services are already setup
+    hass.data[HOMEMATICIP_CLOUD_SERVICES] = True
+    await async_setup_services(hass)
+
+    assert not hass.services.async_services().get(HMIPC_DOMAIN)
+
+
+async def test_setup_services_and_do_not_unload(hass):
+    """Test setup services and unload services."""
+    entry_config = {
+        CONF_ACCESSPOINT: "ABC123",
+        CONF_AUTHTOKEN: "123",
+        CONF_NAME: "name",
+    }
+
+    assert (
+        await async_setup_component(hass, HMIPC_DOMAIN, {HMIPC_DOMAIN: entry_config})
+        is True
+    )
+    assert not hass.services.async_services().get(HMIPC_DOMAIN)
+
+    await async_setup_services(hass)
+
+    hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
+    assert len(hmipc_services) == 8
+
+    #  hap is not removed from data with 'hass.data[HMIPC_DOMAIN].pop("ABC123")'
+
+    await async_unload_services(hass)
+    hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
+    assert len(hmipc_services) == 8
+
+    # remove hap from data
+    hass.data[HMIPC_DOMAIN].pop("ABC123")
+    # set marker, that services are not loaded
+    hass.data[HOMEMATICIP_CLOUD_SERVICES] = False
+
+    await async_unload_services(hass)
+    hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
+    assert len(hmipc_services) == 8
