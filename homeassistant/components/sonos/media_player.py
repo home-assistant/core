@@ -762,6 +762,7 @@ class SonosEntity(MediaPlayerDevice):
 
             return await self.hass.async_add_executor_job(_get_soco_group)
 
+        @callback
         def _async_regroup(group):
             """Rebuild internal group layout."""
             sonos_group = []
