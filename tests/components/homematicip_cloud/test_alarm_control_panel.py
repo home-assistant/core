@@ -51,20 +51,23 @@ async def test_manually_configured_platform(hass):
     assert not hass.data.get(HMIPC_DOMAIN)
 
 
-async def test_hmip_alarm_control_panel(hass, default_mock_hap):
+async def test_hmip_alarm_control_panel(hass, default_mock_hap_factory):
     """Test HomematicipAlarmControlPanel."""
     entity_id = "alarm_control_panel.hmip_alarm_control_panel"
     entity_name = "HmIP Alarm Control Panel"
     device_model = None
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_groups=["EXTERNAL", "INTERNAL"]
+    )
 
     ha_state, hmip_device = get_and_check_entity_basics(
-        hass, default_mock_hap, entity_id, entity_name, device_model
+        hass, mock_hap, entity_id, entity_name, device_model
     )
 
     assert ha_state.state == "disarmed"
     assert not hmip_device
 
-    home = default_mock_hap.home
+    home = mock_hap.home
 
     await hass.services.async_call(
         "alarm_control_panel", "alarm_arm_away", {"entity_id": entity_id}, blocking=True
