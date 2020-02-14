@@ -62,7 +62,7 @@ class DynaliteBridge:
         """Try to connect to dynalite with timeout."""
         # Currently by polling. Future - will need to change the library to be proactive
         timeout = 30
-        for i in range(0, timeout):
+        for _ in range(0, timeout):
             if self.dynalite_devices.available:
                 return True
             await asyncio.sleep(1)

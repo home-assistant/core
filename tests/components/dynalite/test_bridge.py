@@ -10,9 +10,7 @@ from homeassistant.components import dynalite
 async def test_bridge_setup():
     """Test a successful setup."""
     hass = Mock()
-    entry = Mock()
     host = "1.2.3.4"
-    entry.data = {"host": host}
     hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
     dyn_bridge = dynalite.DynaliteBridge(hass, host)
 
@@ -27,9 +25,7 @@ async def test_bridge_setup():
 async def test_update_device():
     """Test a successful setup."""
     hass = Mock()
-    entry = Mock()
     host = "1.2.3.4"
-    entry.data = {"host": host}
     hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
     dyn_bridge = dynalite.DynaliteBridge(hass, host)
     async_dispatch = Mock()
@@ -53,9 +49,7 @@ async def test_update_device():
 async def test_add_devices_then_register():
     """Test that add_devices work."""
     hass = Mock()
-    entry = Mock()
     host = "1.2.3.4"
-    entry.data = {"host": host}
     hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
     dyn_bridge = dynalite.DynaliteBridge(hass, host)
     # First test empty
@@ -76,9 +70,7 @@ async def test_add_devices_then_register():
 async def test_register_then_add_devices():
     """Test that add_devices work after register_add_entities."""
     hass = Mock()
-    entry = Mock()
     host = "1.2.3.4"
-    entry.data = {"host": host}
     hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
     dyn_bridge = dynalite.DynaliteBridge(hass, host)
 
