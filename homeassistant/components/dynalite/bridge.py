@@ -72,7 +72,7 @@ class DynaliteBridge:
             self.async_add_devices(self.waiting_devices)
 
     def add_devices_when_registered(self, devices):
-        """Add the devices to HA if async_add_entities was registered, otherwise queue until it is."""
+        """Add the devices to HA if the add devices callback was registered, otherwise queue until it is."""
         if not devices:
             return
         if self.async_add_devices:
