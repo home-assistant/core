@@ -1,12 +1,12 @@
 """Support for MelCloud device sensors."""
 import logging
 
-from pymelcloud import DEVICE_TYPE_ATA, AtaDevice
+from pymelcloud import DEVICE_TYPE_ATA
 
 from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.unit_system import UnitSystem
 
+from . import MelCloudDevice
 from .const import DOMAIN, TEMP_UNIT_LOOKUP
 
 ATTR_MEASUREMENT_NAME = "measurement_name"
@@ -14,6 +14,7 @@ ATTR_ICON = "icon"
 ATTR_UNIT_FN = "unit_fn"
 ATTR_DEVICE_CLASS = "device_class"
 ATTR_VALUE_FN = "value_fn"
+ATTR_ENABLED_FN = "enabled"
 
 SENSORS = {
     "room_temperature": {
@@ -22,6 +23,7 @@ SENSORS = {
         ATTR_UNIT_FN: lambda x: TEMP_UNIT_LOOKUP.get(x.device.temp_unit, TEMP_CELSIUS),
         ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
         ATTR_VALUE_FN: lambda x: x.device.room_temperature,
+        ATTR_ENABLED_FN: lambda x: True,
     },
     "energy": {
         ATTR_MEASUREMENT_NAME: "Energy",
@@ -29,6 +31,7 @@ SENSORS = {
         ATTR_UNIT_FN: lambda x: "kWh",
         ATTR_DEVICE_CLASS: None,
         ATTR_VALUE_FN: lambda x: x.device.total_energy_consumed,
+        ATTR_ENABLED_FN: lambda x: x.device.has_energy_consumed_meter,
     },
 }
 
@@ -40,9 +43,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
     mel_devices = hass.data[DOMAIN].get(entry.entry_id)
     async_add_entities(
         [
-            MelCloudSensor(mel_device, measurement, definition, hass.config.units)
+            MelCloudSensor(mel_device, measurement, definition)
             for measurement, definition in SENSORS.items()
             for mel_device in mel_devices[DEVICE_TYPE_ATA]
+            if definition[ATTR_ENABLED_FN](mel_device)
         ],
         True,
     )
@@ -51,7 +55,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class MelCloudSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, device: AtaDevice, measurement, definition, units: UnitSystem):
+    def __init__(self, device: MelCloudDevice, measurement, definition):
         """Initialize the sensor."""
         self._api = device
         self._name_slug = device.name
