@@ -2,9 +2,19 @@
 
 Can only be used by integrations that have pillow in their requirements.
 """
-from typing import Tuple
+import io
+from pathlib import Path
+from typing import Tuple, Union
 
-from PIL import ImageDraw
+from PIL import Image, ImageDraw, UnidentifiedImageError
+
+
+def convert_to_pil_image(fp: Union[str, Path, io.BytesIO]) -> Union[Image.Image, None]:
+    """Convert a valid input to a PIL Image."""
+    try:
+        return Image.open(fp).convert("RGB")
+    except UnidentifiedImageError:
+        return None
 
 
 def draw_box(
