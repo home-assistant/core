@@ -159,8 +159,7 @@ async def test_options_flow_cannot_connect(hass):
     flow.hass = hass
 
     with patch(
-        "homeassistant.components.hvv_departures.config_flow.GTIHub.authenticate",
-        side_effect=CannotConnect(),
+        "pygti.gti.GTI.departureList", side_effect=CannotConnect(),
     ):
 
         # step: init

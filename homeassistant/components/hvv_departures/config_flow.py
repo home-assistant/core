@@ -156,18 +156,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors = {}
         if not self.filters:
 
+            departure_list = []
+
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            self.hub = GTIHub(
+                self.config_entry.data[CONF_HOST],
+                self.config_entry.data[CONF_USERNAME],
+                self.config_entry.data[CONF_PASSWORD],
+                session,
+            )
+
             try:
-                session = aiohttp_client.async_get_clientsession(self.hass)
-                self.hub = GTIHub(
-                    self.config_entry.data[CONF_HOST],
-                    self.config_entry.data[CONF_USERNAME],
-                    self.config_entry.data[CONF_PASSWORD],
-                    session,
-                )
-
-                response = await self.hub.authenticate()
-                _LOGGER.debug("init gti: %r", response)
-
                 departure_list = await self.hub.gti.departureList(
                     {
                         "station": self.config_entry.data["station"],
@@ -178,17 +177,17 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         "returnFilters": True,
                     }
                 )
-
-                self.filters = {
-                    f"{x['serviceName']}, {x['label']}": x
-                    for x in departure_list.get("filter")
-                }
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
         if user_input is not None and errors == {}:
+
+            self.filters = {
+                f"{x['serviceName']}, {x['label']}": x
+                for x in departure_list.get("filter")
+            }
 
             options = {
                 "filter": [self.filters[user_input["filter"]]],
