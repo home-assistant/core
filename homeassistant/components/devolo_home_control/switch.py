@@ -1,10 +1,8 @@
 """Platform for light integration."""
 import logging
 
-from devolo_home_control_api.backend.mprm_rest import (
-    get_device_uid_from_element_uid,
-    get_sub_device_uid_from_element_uid,
-)
+from devolo_home_control_api.devices.zwave import get_device_uid_from_element_uid
+from devolo_home_control_api.homecontrol import get_sub_device_uid_from_element_uid
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.config_entries import ConfigEntry
@@ -72,20 +70,17 @@ class DevoloSwitch(SwitchDevice):
         self._device_instance = device_instance
         if sub_uid is not None:
             binary_switch = (
-                "devolo.BinarySwitch:"
-                + self._device_instance.device_uid
-                + "#"
-                + str(sub_uid)
+                "devolo.BinarySwitch:" + self._device_instance.uid + "#" + str(sub_uid)
             )
             consumption_property = (
-                "devolo.Meter:" + self._device_instance.device_uid + "#" + str(sub_uid)
+                "devolo.Meter:" + self._device_instance.uid + "#" + str(sub_uid)
             )
         else:
-            binary_switch = "devolo.BinarySwitch:" + self._device_instance.device_uid
-            consumption_property = "devolo.Meter:" + self._device_instance.device_uid
+            binary_switch = "devolo.BinarySwitch:" + self._device_instance.uid
+            consumption_property = "devolo.Meter:" + self._device_instance.uid
         self._unique_id = get_device_uid_from_element_uid(binary_switch)
         self._mprm = hass.data[DOMAIN]["homecontrol"]
-        self._name = self._device_instance.name
+        self._name = self._device_instance.itemName
         self._binary_switch_property = self._device_instance.binary_switch_property.get(
             binary_switch
         )
@@ -96,10 +91,8 @@ class DevoloSwitch(SwitchDevice):
             ).current
         else:
             self._consumption = None
-        self._subscriber = Subscriber(self._device_instance.name, device=self)
-        self._mprm.publisher.register(
-            self._device_instance.device_uid, self._subscriber
-        )
+        self._subscriber = Subscriber(self._device_instance.itemName, device=self)
+        self._mprm.publisher.register(self._device_instance.uid, self._subscriber)
 
     @property
     def unique_id(self):
