@@ -1,4 +1,5 @@
 """Tests for the Sighthound integration."""
+import os
 from unittest.mock import patch
 
 import pytest
@@ -9,6 +10,8 @@ import homeassistant.components.sighthound.image_processing as sh
 from homeassistant.const import ATTR_ENTITY_ID, CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
+
+TEST_DIR = os.path.join(os.path.dirname(__file__))
 
 VALID_CONFIG = {
     ip.DOMAIN: {
@@ -91,3 +94,18 @@ async def test_process_image(hass, mock_image, mock_detections):
     state = hass.states.get(VALID_ENTITY_ID)
     assert state.state == "2"
     assert len(person_events) == 2
+
+
+async def test_save_image(hass, mock_image, mock_detections):
+    """Save a processed image."""
+    VALID_CONFIG.update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
+    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    assert hass.states.get(VALID_ENTITY_ID)
+
+    data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
+    with patch("PIL.Image.Image.save") as mock_save:
+        await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
+        await hass.async_block_till_done()
+        state = hass.states.get(VALID_ENTITY_ID)
+        assert state.state == "2"
+        mock_save.assert_called_with("test.jpg")
