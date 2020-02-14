@@ -208,10 +208,12 @@ class ElmoClientWrapper(ElmoClient):
         self.zones = []
 
         zones_armed = list(
-            filter(lambda inp: (inp["name"] != "Unknown"), self._data["areas_armed"])
+            filter(lambda zone: (zone["name"] != "Unknown"), self._data["areas_armed"])
         )
         zones_disarmed = list(
-            filter(lambda inp: (inp["name"] != "Unknown"), self._data["areas_disarmed"])
+            filter(
+                lambda zone: (zone["name"] != "Unknown"), self._data["areas_disarmed"]
+            )
         )
 
         for zone in zones_armed:
@@ -233,22 +235,31 @@ class ElmoClientWrapper(ElmoClient):
         self.inputs = []
 
         inputs_alert = list(
-            filter(lambda inp: (inp["name"] != "Unknown"), self._data["inputs_alerted"])
+            filter(
+                lambda input_: (input_["name"] != "Unknown"),
+                self._data["inputs_alerted"],
+            )
         )
         inputs_wait = list(
-            filter(lambda inp: (inp["name"] != "Unknown"), self._data["inputs_wait"])
+            filter(
+                lambda input_: (input_["name"] != "Unknown"), self._data["inputs_wait"]
+            )
         )
 
-        for input in inputs_alert:
+        for input_ in inputs_alert:
             self.inputs.append(
                 InputData(
-                    input_id=input["index"], input_name=input["name"], state=INPUT_ALERT
+                    input_id=input_["index"],
+                    input_name=input_["name"],
+                    state=INPUT_ALERT,
                 )
             )
 
-        for input in inputs_wait:
+        for input_ in inputs_wait:
             self.inputs.append(
                 InputData(
-                    input_id=input["index"], input_name=input["name"], state=INPUT_WAIT
+                    input_id=input_["index"],
+                    input_name=input_["name"],
+                    state=INPUT_WAIT,
                 )
             )
