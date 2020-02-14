@@ -14,7 +14,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import (
     ATTR_DISCOVERY_HASH,
@@ -53,7 +53,7 @@ TRIGGER_SCHEMA = TRIGGER_BASE_SCHEMA.extend(
     }
 )
 
-PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+TRIGGER_DISCOVERY_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_AUTOMATION_TYPE): str,
         vol.Required(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
@@ -69,22 +69,66 @@ DEVICE_TRIGGERS = "mqtt_device_triggers"
 ATTACHED_DEVICE_TRIGGERS = "mqtt_attached_device_triggers"
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(slots=True)
 class Trigger:
     """Device trigger settings."""
 
     device_id = attr.ib(type=str)
-    type = attr.ib(type=str)
-    subtype = attr.ib(type=str)
-    topic = attr.ib(type=str)
+    discovery_id = attr.ib(type=str)
+    hass = attr.ib(type=HomeAssistantType)
     payload = attr.ib(type=str)
     qos = attr.ib(type=int)
-    discovery_id = attr.ib(type=str)
+    subtype = attr.ib(type=str)
+    topic = attr.ib(type=str)
+    type = attr.ib(type=str)
+
+    async def attach_trigger(self, action, automation_info):
+        """Attach MQTT trigger."""
+        mqtt_config = {
+            automation_mqtt.CONF_TOPIC: self.topic,
+            automation_mqtt.CONF_ENCODING: DEFAULT_ENCODING,
+            automation_mqtt.CONF_QOS: self.qos,
+        }
+        if self.payload:
+            mqtt_config[CONF_PAYLOAD] = self.payload
+
+        return await automation_mqtt.async_attach_trigger(
+            self.hass, mqtt_config, action, automation_info
+        )
+
+    async def update_trigger(self, config):
+        """Update MQTT device trigger."""
+        self.type = config[CONF_TYPE]
+        self.subtype = config[CONF_SUBTYPE]
+        self.topic = config[CONF_TOPIC]
+        self.payload = config[CONF_PAYLOAD]
+        self.qos = config[CONF_QOS]
+
+        if ATTACHED_DEVICE_TRIGGERS not in self.hass.data:
+            return
+
+        # Unsubscribe+subscribe if this trigger is in use
+        for trig in self.hass.data[ATTACHED_DEVICE_TRIGGERS]:
+            if trig.discovery_id == self.discovery_id:
+                if trig.remove:
+                    trig.remove()
+                trig.remove = await self.attach_trigger(
+                    trig.action, trig.automation_info
+                )
+
+    def detach_trigger(self):
+        """Remove MQTT device trigger."""
+
+        # Unsubscribe if this trigger is in use
+        for trig in self.hass.data[ATTACHED_DEVICE_TRIGGERS]:
+            if trig.discovery_id == self.discovery_id:
+                if trig.remove:
+                    trig.remove()
 
 
 @attr.s(slots=True)
 class AttachedTrigger:
-    """Device trigger settings."""
+    """Attached trigger settings."""
 
     device_id = attr.ib(type=str)
     discovery_id = attr.ib(type=str)
@@ -104,66 +148,9 @@ async def _update_device(hass, config_entry, config):
         device_registry.async_get_or_create(**device_info)
 
 
-async def _attach_mqtt_trigger(hass, discovery_id, action, automation_info):
-    """Attach MQTT trigger."""
-    trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
-    mqtt_config = {
-        automation_mqtt.CONF_TOPIC: trigger.topic,
-        automation_mqtt.CONF_ENCODING: DEFAULT_ENCODING,
-        automation_mqtt.CONF_QOS: trigger.qos,
-    }
-    if trigger.payload:
-        mqtt_config[CONF_PAYLOAD] = trigger.payload
-
-    return await automation_mqtt.async_attach_trigger(
-        hass, mqtt_config, action, automation_info
-    )
-
-
-async def _update_trigger(hass, discovery_id, config):
-    """Remove MQTT device trigger."""
-    device_id = hass.data[DEVICE_TRIGGERS][discovery_id].device_id
-    hass.data[DEVICE_TRIGGERS][discovery_id] = Trigger(
-        device_id=device_id,
-        type=config[CONF_TYPE],
-        subtype=config[CONF_SUBTYPE],
-        topic=config[CONF_TOPIC],
-        payload=config[CONF_PAYLOAD],
-        qos=config[CONF_QOS],
-        discovery_id=discovery_id,
-    )
-
-    if ATTACHED_DEVICE_TRIGGERS not in hass.data:
-        return
-
-    # Unsubscribe+subscribe if this trigger is in use
-    for trig in hass.data[ATTACHED_DEVICE_TRIGGERS]:
-        if trig.discovery_id == discovery_id:
-            if trig.remove:
-                trig.remove()
-            trig.remove = await _attach_mqtt_trigger(
-                hass, discovery_id, trig.action, trig.automation_info
-            )
-
-
-def _remove_trigger(hass, discovery_id):
-    """Remove MQTT device trigger."""
-    trigger = hass.data[DEVICE_TRIGGERS].pop(discovery_id)
-
-    if not trigger:
-        return
-
-    discovery_id = trigger.discovery_id
-    # Unsubscribe if this trigger is in use
-    for trig in hass.data[ATTACHED_DEVICE_TRIGGERS]:
-        if trig.discovery_id == discovery_id:
-            if trig.remove:
-                trig.remove()
-
-
 async def async_setup_trigger(hass, config, config_entry, discovery_hash):
     """Set up the MQTT device trigger."""
-    config = PLATFORM_SCHEMA(config)
+    config = TRIGGER_DISCOVERY_SCHEMA(config)
     discovery_id = discovery_hash[1]
     remove_signal = None
 
@@ -175,16 +162,20 @@ async def async_setup_trigger(hass, config, config_entry, discovery_hash):
         if not payload:
             # Empty payload: Remove trigger
             _LOGGER.info("Removing trigger: %s", discovery_hash)
-            _remove_trigger(hass, discovery_id)
-            clear_discovery_hash(hass, discovery_hash)
-            remove_signal()
+            device_trigger = hass.data[DEVICE_TRIGGERS].pop(discovery_id)
+
+            if device_trigger:
+                device_trigger.detach_trigger()
+                clear_discovery_hash(hass, discovery_hash)
+                remove_signal()
         else:
             # Non-empty payload: Update trigger
             _LOGGER.info("Updating trigger: %s", discovery_hash)
             payload.pop(ATTR_DISCOVERY_HASH)
-            config = PLATFORM_SCHEMA(payload)
+            config = TRIGGER_DISCOVERY_SCHEMA(payload)
             await _update_device(hass, config_entry, config)
-            await _update_trigger(hass, discovery_id, config)
+            device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
+            await device_trigger.update_trigger(config)
 
     remove_signal = async_dispatcher_connect(
         hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), discovery_update
@@ -204,6 +195,7 @@ async def async_setup_trigger(hass, config, config_entry, discovery_hash):
     if DEVICE_TRIGGERS not in hass.data:
         hass.data[DEVICE_TRIGGERS] = {}
     hass.data[DEVICE_TRIGGERS][discovery_id] = Trigger(
+        hass=hass,
         device_id=device.id,
         type=config[CONF_TYPE],
         subtype=config[CONF_SUBTYPE],
@@ -219,8 +211,9 @@ async def async_setup_trigger(hass, config, config_entry, discovery_hash):
     # If someone was waiting for this trigger to be discovered, subscribe now
     for trig in hass.data[ATTACHED_DEVICE_TRIGGERS]:
         if trig.discovery_id == discovery_id:
-            trig.remove = await _attach_mqtt_trigger(
-                hass, discovery_id, trig.action, trig.automation_info
+            device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
+            trig.remove = await device_trigger.attach_trigger(
+                trig.action, trig.automation_info
             )
 
 
@@ -263,9 +256,8 @@ async def async_attach_trigger(
 
     if DEVICE_TRIGGERS in hass.data and discovery_id in hass.data[DEVICE_TRIGGERS]:
         # If we know about the trigger, subscribe to MQTT topic
-        mqtt_remove = await _attach_mqtt_trigger(
-            hass, discovery_id, action, automation_info
-        )
+        device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
+        mqtt_remove = await device_trigger.attach_trigger(action, automation_info)
 
     attached_trigger = AttachedTrigger(
         device_id, discovery_id, action, automation_info, mqtt_remove

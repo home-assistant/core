@@ -250,7 +250,7 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
 
 
 ABBREVIATIONS_WHITE_LIST = [
-    # MQTT client/server/triger settings
+    # MQTT client/server/trigger settings
     "CONF_BIRTH_MESSAGE",
     "CONF_BROKER",
     "CONF_CERTIFICATE",
