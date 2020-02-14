@@ -1,7 +1,7 @@
 """Test Dynalite light."""
 from unittest.mock import Mock
 
-from asynctest import patch
+from asynctest import CoroutineMock, patch
 import pytest
 
 from homeassistant.components import dynalite
