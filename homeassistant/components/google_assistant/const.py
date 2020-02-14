@@ -145,3 +145,5 @@ STORE_AGENT_USER_IDS = "agent_user_ids"
 
 SOURCE_CLOUD = "cloud"
 SOURCE_LOCAL = "local"
+
+NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK}
