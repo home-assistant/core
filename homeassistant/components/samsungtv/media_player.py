@@ -2,10 +2,7 @@
 import asyncio
 from datetime import timedelta
 
-from samsungctl import Remote as SamsungRemote, exceptions as samsung_exceptions
-from samsungtvws import SamsungTVWS
 import voluptuous as vol
-from websocket import WebSocketException
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -29,12 +26,12 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     STATE_OFF,
-    STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
+from .bridge import SamsungTVBridge
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
@@ -99,7 +96,6 @@ class SamsungTVDevice(MediaPlayerDevice):
         # Assume that the TV is in Play mode
         self._playing = True
         self._state = None
-        self._remote = None
         # Mark the end of a shutdown command (need to wait 15 seconds before
         # sending the next command to avoid turning the TV back ON).
         self._end_of_power_off = None
@@ -114,96 +110,30 @@ class SamsungTVDevice(MediaPlayerDevice):
             "timeout": 1,
             "token_file": config_entry.data[CONF_TOKEN_FILE],
         }
+        self._bridge = SamsungTVBridge.get_bridge(self._config)
+
+    def acces_denied(self):
+        """Access denied callbck."""
+        LOGGER.debug("Access denied in getting remote object")
+        self.hass.async_create_task(
+            self.hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": "reauth"}, data=self._config_entry.data,
+            )
+        )
 
     def update(self):
         """Update state of device."""
         if self._power_off_in_progress():
             self._state = STATE_OFF
         else:
-            if self._remote is not None:
-                # Close the current remote connection
-                self._remote.close()
-                self._remote = None
-
-            try:
-                self.get_remote()
-                if self._remote:
-                    self._state = STATE_ON
-            except (
-                samsung_exceptions.UnhandledResponse,
-                samsung_exceptions.AccessDenied,
-            ):
-                # We got a response so it's working.
-                self._state = STATE_ON
-            except (OSError, WebSocketException):
-                # Different reasons, e.g. hostname not resolveable
-                self._state = STATE_OFF
-            except Exception:  # pylint: disable=broad-except
-                # Different reasons, e.g. hostname not resolveable
-                self._state = STATE_OFF
-
-    def get_remote(self):
-        """Create or return a remote control instance."""
-        if self._remote is None:
-            # We need to create a new instance to reconnect.
-            try:
-                if self._config["method"] == "legacy":
-                    LOGGER.debug("Create SamsungRemote")
-                    self._remote = SamsungRemote(self._config.copy())
-                else:
-                    LOGGER.debug("Create SamsungTVWS")
-                    self._remote = SamsungTVWS(
-                        host=self._config["host"],
-                        port=self._config["port"],
-                        token_file=self._config["token_file"],
-                        timeout=self._config["timeout"],
-                        name=self._config["name"],
-                    )
-                    self._remote.open()
-            # This is only happening when the auth was switched to DENY
-            # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
-            except samsung_exceptions.AccessDenied:
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": "reauth"},
-                        data=self._config_entry.data,
-                    )
-                )
-                raise
-
-        return self._remote
+            self._state = self._bridge.get_state(self._config["host"])
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
         if self._power_off_in_progress() and key not in ("KEY_POWER", "KEY_POWEROFF"):
             LOGGER.info("TV is powering off, not sending command: %s", key)
             return
-        try:
-            # recreate connection if connection was dead
-            retry_count = 1
-            for _ in range(retry_count + 1):
-                try:
-                    remote = self.get_remote()
-                    if self._config["method"] == "legacy":
-                        remote.control(key)
-                    else:
-                        remote.send_key(key)
-                    break
-                except (
-                    samsung_exceptions.ConnectionClosed,
-                    BrokenPipeError,
-                    WebSocketException,
-                ):
-                    # BrokenPipe can occur when the commands is sent to fast
-                    # WebSocketException can occur when timed out
-                    self._remote = None
-        except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
-            # We got a response so it's on.
-            LOGGER.debug("Failed sending command %s", key, exc_info=True)
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            pass
+        self._bridge.send_key(key)
 
     def _power_off_in_progress(self):
         return (
@@ -268,8 +198,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             self.send_key("KEY_POWEROFF")
         # Force closing of remote session to provide instant UI feedback
         try:
-            self.get_remote().close()
-            self._remote = None
+            self._bridge.close_remote()
         except OSError:
             LOGGER.debug("Could not establish connection.")
 
