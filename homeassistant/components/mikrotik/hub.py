@@ -199,9 +199,7 @@ class MikrotikData:
 
             if self.support_capsman or self.support_wireless:
                 # if wireless is supported then wireless_params are params
-                self.devices[mac].update(
-                    wireless_params=device_list[mac], active=True
-                )
+                self.devices[mac].update(wireless_params=device_list[mac], active=True)
                 continue
             # for wired devices or when forcing dhcp check for active-address
             if not params.get("active-address"):
