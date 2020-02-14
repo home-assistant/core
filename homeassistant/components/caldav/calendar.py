@@ -194,11 +194,11 @@ class WebDavCalendarData:
     def update(self):
         """Get the latest data."""
         start_of_today = dt.start_of_local_day()
-        end_of_today = dt.start_of_local_day() + timedelta(days=1)
+        start_of_tomorrow = dt.start_of_local_day() + timedelta(days=1)
 
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        results = self.calendar.date_search(start_of_today, end_of_today)
+        results = self.calendar.date_search(start_of_today, start_of_tomorrow)
 
         # Create new vevents for each recurrence of an event that happens today.
         # For recurring events, some servers return the original event with recurrence rules
@@ -209,16 +209,20 @@ class WebDavCalendarData:
             rrules = vevent.getrruleset()  # Returns a list of datetimes or `None`.
             if rrules:
                 for start_dt in rrules:
-                    if not start_dt.tzinfo:
-                        start_dt = dt.as_local(start_dt)
-                    if start_of_today < start_dt < end_of_today:
+                    today = copy.copy(start_of_today)
+                    tomorrow = copy.copy(start_of_tomorrow)
+                    if self.is_all_day(vevent):
+                        start_dt = start_dt.date()
+                        today = today.date()
+                        tomorrow = tomorrow.date()
+                    if today <= start_dt <= tomorrow:
                         new_vevent = copy.deepcopy(vevent)
                         if hasattr(new_vevent, "dtend"):
                             dur = new_vevent.dtend.value - new_vevent.dtstart.value
                             new_vevent.dtend.value = start_dt + dur
                         new_vevent.dtstart.value = start_dt
                         new_vevents.append(new_vevent)
-                    elif end_of_today < start_dt:
+                    elif tomorrow <= start_dt:
                         break
             if not rrules:
                 continue
