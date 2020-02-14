@@ -152,15 +152,11 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def volume_level(self) -> Optional[float]:
         """Return the device volume."""
-        if self._currently_playing is None:
-            return None
         return self._currently_playing.get("device", {}).get("volume_percent", 0) / 100
 
     @property
     def media_content_id(self) -> Optional[str]:
         """Return the media URL."""
-        if self._currently_playing is None:
-            return None
         return self._currently_playing.get("item", {}).get("name")
 
     @property
@@ -171,10 +167,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def media_duration(self) -> Optional[int]:
         """Duration of current playing media in seconds."""
-        if (
-            self._currently_playing is None
-            or self._currently_playing.get("item") is None
-        ):
+        if self._currently_playing.get("item") is None:
             return None
         return self._currently_playing["item"]["duration_ms"] / 1000
 
@@ -196,8 +189,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def media_image_url(self) -> Optional[str]:
         """Return the media image URL."""
         if (
-            self._currently_playing is None
-            or self._currently_playing.get("item") is None
+            self._currently_playing.get("item") is None
             or not self._currently_playing["item"]["album"]["images"]
         ):
             return None
@@ -211,17 +203,12 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def media_title(self) -> Optional[str]:
         """Return the media title."""
-        if self._currently_playing is None:
-            return None
         return self._currently_playing.get("item", {}).get("name")
 
     @property
     def media_artist(self) -> Optional[str]:
         """Return the media artist."""
-        if (
-            self._currently_playing is None
-            or self._currently_playing.get("item") is None
-        ):
+        if self._currently_playing.get("item") is None:
             return None
         return ", ".join(
             [artist["name"] for artist in self._currently_playing["item"]["artists"]]
@@ -230,18 +217,13 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def media_album_name(self) -> Optional[str]:
         """Return the media album."""
-        if (
-            self._currently_playing is None
-            or self._currently_playing.get("item") is None
-        ):
+        if self._currently_playing.get("item") is None:
             return None
         return self._currently_playing["item"]["album"]["name"]
 
     @property
     def media_track(self) -> Optional[int]:
         """Track number of current playing media, music track only."""
-        if self._currently_playing is None:
-            return None
         return self._currently_playing.get("item", {}).get("track_number")
 
     @property
@@ -254,8 +236,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def source(self) -> Optional[str]:
         """Return the current playback device."""
-        if self._currently_playing is None:
-            return None
         return self._currently_playing.get("device", {}).get("name")
 
     @property
@@ -268,8 +248,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def shuffle(self) -> bool:
         """Shuffling state."""
-        if self._currently_playing is None:
-            return False
         return bool(self._currently_playing.get("shuffle_state"))
 
     @property
