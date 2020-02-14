@@ -162,7 +162,6 @@ class MikrotikData:
     def update_devices(self):
         """Get list of devices with latest status."""
         arp_devices = {}
-        wireless_devices = {}
         device_list = {}
         try:
             self.all_devices = self.get_list_from_interface(DHCP)
