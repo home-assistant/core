@@ -144,7 +144,7 @@ END:VCALENDAR
 VERSION:2.0
 PRODID:-//E-Corp.//CalDAV Client//EN
 BEGIN:VEVENT
-UID:9
+UID:10
 DTSTAMP:20171125T000000Z
 DTSTART:20171027T230000Z
 DURATION:PT30M
@@ -159,7 +159,7 @@ END:VCALENDAR
 VERSION:2.0
 PRODID:-//E-Corp.//CalDAV Client//EN
 BEGIN:VEVENT
-UID:9
+UID:11
 DTSTAMP:20171125T000000Z
 DTSTART:20171027T233000Z
 DTEND:20171027T235959Z
@@ -174,7 +174,7 @@ END:VCALENDAR
 VERSION:2.0
 PRODID:-//E-Corp.//CalDAV Client//EN
 BEGIN:VEVENT
-UID:9
+UID:12
 DTSTAMP:20171125T000000Z
 DTSTART:20171027T234500Z
 DTEND:20171027T235959Z
@@ -182,6 +182,21 @@ SUMMARY:This is a recurring event that never ends
 LOCATION:Hamburg
 DESCRIPTION:Every day forever
 RRULE:FREQ=DAILY
+END:VEVENT
+END:VCALENDAR
+""",
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:13
+DTSTAMP:20161125T000000Z
+DTSTART:20161127
+DTEND:20161128
+SUMMARY:This is a recurring all day event
+LOCATION:Hamburg
+DESCRIPTION:Groundhog Day
+RRULE:FREQ=DAILY;COUNT=100
 END:VEVENT
 END:VCALENDAR
 """,
@@ -625,4 +640,33 @@ async def test_event_rrule_endless(mock_now, hass, calendar):
         "end_time": "2017-11-27 23:59:59",
         "location": "Hamburg",
         "description": "Every day forever",
+    }
+
+
+@patch(
+    "homeassistant.util.dt.now",
+    return_value=dt.as_local(datetime.datetime(2016, 12, 1, 17, 30)),
+)
+async def test_event_rrule_all_day(mock_now, hass, calendar):
+    """Test that the recurring all day event is returned."""
+    config = dict(CALDAV_CONFIG)
+    config["custom_calendars"] = [
+        {"name": "Private", "calendar": "Private", "search": ".*"}
+    ]
+
+    assert await async_setup_component(hass, "calendar", {"calendar": config})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.private_private")
+    assert state.name == calendar.name
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": "Private",
+        "message": "This is a recurring all day event",
+        "all_day": True,
+        "offset_reached": False,
+        "start_time": "2016-12-01 00:00:00",
+        "end_time": "2016-12-02 00:00:00",
+        "location": "Hamburg",
+        "description": "Groundhog Day",
     }
