@@ -206,8 +206,7 @@ class WebDavCalendarData:
         vevents = [event.instance.vevent for event in results]
         new_vevents = []
         for vevent in vevents:
-            rrules = vevent.getrruleset() or []
-            for start_dt in rrules:
+            for start_dt in vevent.getrruleset() or []:
                 _start_of_today = start_of_today
                 _start_of_tomorrow = start_of_tomorrow
                 if self.is_all_day(vevent):
