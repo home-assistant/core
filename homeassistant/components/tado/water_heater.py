@@ -1,9 +1,4 @@
-"""
-Support for Tado hot water zones.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/water_heater/tado/
-"""
+"""Support for Tado hot water zones."""
 import logging
 
 from homeassistant.components.water_heater import (
@@ -21,6 +16,7 @@ from .const import (
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
+    CONST_OVERLAY_TIMER,
     DATA,
     TYPE_HOT_WATER,
 )
@@ -31,12 +27,14 @@ MODE_AUTO = "auto"
 MODE_HEAT = "heat"
 MODE_OFF = "off"
 
+OPERATION_MODES = [MODE_AUTO, MODE_HEAT, MODE_OFF]
+
 WATER_HEATER_MAP_TADO = {
-    "MANUAL": MODE_HEAT,
-    "TIMER": MODE_HEAT,
-    "TADO_MODE": MODE_HEAT,
-    "SMART_SCHEDULE": MODE_AUTO,
-    "OFF": MODE_OFF,
+    CONST_OVERLAY_MANUAL: MODE_HEAT,
+    CONST_OVERLAY_TIMER: MODE_HEAT,
+    CONST_OVERLAY_TADO_MODE: MODE_HEAT,
+    CONST_MODE_SMART_SCHEDULE: MODE_AUTO,
+    CONST_MODE_OFF: MODE_OFF,
 }
 
 SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
@@ -44,6 +42,9 @@ SUPPORT_FLAGS_HEATER = SUPPORT_OPERATION_MODE
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tado water heater platform."""
+    if discovery_info is None:
+        return
+
     api_list = hass.data[DOMAIN][DATA]
     entities = []
 
@@ -110,11 +111,9 @@ class TadoWaterHeater(WaterHeaterDevice):
             self._supported_features |= SUPPORT_TARGET_TEMPERATURE
 
         if tado.fallback:
-            _LOGGER.debug("Default overlay is set to TADO MODE")
             # Fallback to Smart Schedule at next Schedule switch
             self._default_overlay = CONST_OVERLAY_TADO_MODE
         else:
-            _LOGGER.debug("Default overlay is set to MANUAL MODE")
             # Don't fallback to Smart Schedule, but keep in manual mode
             self._default_overlay = CONST_OVERLAY_MANUAL
 
@@ -168,7 +167,7 @@ class TadoWaterHeater(WaterHeaterDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes (readable)."""
-        return [MODE_AUTO, MODE_HEAT, MODE_OFF]
+        return OPERATION_MODES
 
     @property
     def temperature_unit(self):
@@ -220,11 +219,7 @@ class TadoWaterHeater(WaterHeaterDevice):
     def update(self):
         """Handle update callbacks."""
         _LOGGER.debug("Updating water_heater platform for zone %d", self.zone_id)
-        try:
-            data = self._tado.data["zone"][self.zone_id]
-        except KeyError:
-            _LOGGER.debug("No data")
-            return
+        data = self._tado.data["zone"][self.zone_id]
 
         if "tadoMode" in data:
             mode = data["tadoMode"]
