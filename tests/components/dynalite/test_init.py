@@ -86,6 +86,6 @@ async def test_unload_entry(hass):
     assert hass.data[dynalite.DOMAIN].get(entry.entry_id)
 
     mock_bridge.return_value.async_reset.return_value = mock_coro(True)
-    assert await dynalite.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     assert len(mock_bridge.return_value.async_reset.mock_calls) == 1
     assert not hass.data[dynalite.DOMAIN].get(entry.entry_id)
