@@ -31,16 +31,20 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
+from .const import (
+    ATTR_MEDIA_CURRENTLY_RECORDING,
+    ATTR_MEDIA_RATING,
+    ATTR_MEDIA_RECORDED,
+    ATTR_MEDIA_START_TIME,
+    DATA_DIRECTV,
+    DATA_HOST_SERIAL_NUMBERS,
+    DATA_KNOWN_DEVICES,
+    DEFAULT_DEVICE,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+)
+
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
-ATTR_MEDIA_RATING = "media_rating"
-ATTR_MEDIA_RECORDED = "media_recorded"
-ATTR_MEDIA_START_TIME = "media_start_time"
-
-DEFAULT_DEVICE = "0"
-DEFAULT_NAME = "DirecTV Receiver"
-DEFAULT_PORT = 8080
 
 SUPPORT_DTV = (
     SUPPORT_PAUSE
@@ -62,8 +66,6 @@ SUPPORT_DTV_CLIENT = (
     | SUPPORT_PLAY
 )
 
-DATA_DIRECTV = "data_directv"
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -76,23 +78,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DirecTV platform."""
-    known_devices = hass.data.get(DATA_DIRECTV, set())
+    hass.data.setdefault(
+        DATA_DIRECTV, {DATA_KNOWN_DEVICES: set(), DATA_HOST_SERIAL_NUMBERS: {}},
+    )
+
+    known_devices = hass.data[DATA_DIRECTV][DATA_KNOWN_DEVICES]
+    host_serials = hass.data[DATA_DIRECTV][DATA_HOST_SERIAL_NUMBERS]
     hosts = []
 
     if CONF_HOST in config:
+        device = config.get(CONF_DEVICE)
+        host = config.get(CONF_HOST)
+        name = config.get(CONF_NAME)
+        port = config.get(CONF_PORT)
+
         _LOGGER.debug(
-            "Adding configured device %s with client address %s ",
-            config.get(CONF_NAME),
-            config.get(CONF_DEVICE),
+            "Adding configured device %s with client address %s ", name, device,
         )
-        hosts.append(
-            [
-                config.get(CONF_NAME),
-                config.get(CONF_HOST),
-                config.get(CONF_PORT),
-                config.get(CONF_DEVICE),
-            ]
-        )
+
+        if host not in host_serials:
+            dtv = DIRECTV(host, port)
+            host_serials[host] = _get_receiver_serial_number(dtv)
+
+        hosts.append([name, host, port, device, host_serials[host]])
 
     elif discovery_info:
         host = discovery_info.get("host")
@@ -102,6 +110,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
 
         dtv = DIRECTV(host, DEFAULT_PORT)
+
+        if host not in host_serials:
+            host_serials[host] = _get_receiver_serial_number(dtv)
+
         try:
             resp = dtv.get_locations()
         except requests.exceptions.RequestException as ex:
@@ -139,6 +151,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         host,
                         DEFAULT_PORT,
                         loc["clientAddr"],
+                        host_serials[host],
                     ]
                 )
 
@@ -146,15 +159,25 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     for host in hosts:
         dtvs.append(DirecTvDevice(*host))
-        hass.data.setdefault(DATA_DIRECTV, set()).add((host[1], host[3]))
+        known_devices.add((host[1], host[3]))
 
     add_entities(dtvs)
+
+
+def _get_receiver_serial_number(client):
+    """Return the serial number of the DirectTV receiver."""
+    try:
+        resp = client.get_serial_num()
+        return resp.get("serialNum")
+    except requests.exceptions.RequestException as ex:
+        _LOGGER.debug("Request exception %s trying to get receiver serial number", ex)
+        return None
 
 
 class DirecTvDevice(MediaPlayerDevice):
     """Representation of a DirecTV receiver on the network."""
 
-    def __init__(self, name, host, port, device):
+    def __init__(self, name, host, port, device, receiver_serial=None):
         """Initialize the device."""
 
         self.dtv = DIRECTV(host, port, device)
@@ -171,8 +194,14 @@ class DirecTvDevice(MediaPlayerDevice):
         self._first_error_timestamp = None
 
         if self._is_client:
+            if receiver_serial is not None:
+                self._unique_id = f"{receiver_serial}-{device}"
+
             _LOGGER.debug("Created DirecTV client %s for device %s", self._name, device)
         else:
+            if receiver_serial is not None:
+                self._unique_id = receiver_serial
+
             _LOGGER.debug("Created DirecTV device for %s", self._name)
 
     def update(self):
@@ -256,6 +285,11 @@ class DirecTvDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID to use for this media player."""
+        return self._unique_id
 
     # MediaPlayerDevice properties and methods
     @property

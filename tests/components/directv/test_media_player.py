@@ -60,6 +60,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed
 
+ATTR_UNIQUE_ID = "unique_id"
 CLIENT_ENTITY_ID = "media_player.client_dvr"
 MAIN_ENTITY_ID = "media_player.main_dvr"
 IP_ADDRESS = "127.0.0.1"
@@ -138,7 +139,7 @@ def main_dtv():
 def dtv_side_effect(client_dtv, main_dtv):
     """Fixture to create DIRECTV instance for main and client."""
 
-    def mock_dtv(ip, port, client_addr):
+    def mock_dtv(ip, port, client_addr="0"):
         if client_addr != "0":
             mocked_dtv = client_dtv
         else:
@@ -271,6 +272,20 @@ class MockDirectvClass:
         }
 
         return test_locations
+
+    def get_serial_num(self):
+        """Mock for get_serial_num method."""
+        test_serial_num = {
+            "serialNum": "9999999999",
+            "status": {
+                "code": 200,
+                "commandResult": 0,
+                "msg": "OK.",
+                "query": "/info/getSerialNum",
+            },
+        }
+
+        return test_serial_num
 
     def get_standby(self):
         """Mock for get_standby method."""
@@ -435,6 +450,7 @@ async def test_check_attributes(hass, platforms, mock_now):
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert state.state == STATE_PLAYING
 
+    assert state.attributes.get(ATTR_UNIQUE_ID) == "9999999999-1"
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) == RECORDING["programId"]
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_TVSHOW
     assert state.attributes.get(ATTR_MEDIA_DURATION) == RECORDING["duration"]
