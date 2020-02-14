@@ -209,6 +209,8 @@ class WebDavCalendarData:
             if rrules:
                 occurrences = []
                 for rrule in rrules:
+                    if not rrule.tzinfo:
+                        rrule = dt.as_local(rrule)
                     if (
                         dt.start_of_local_day() + timedelta(days=1)
                         > rrule
