@@ -8,7 +8,7 @@ from aiofreepybox import Freepybox
 from aiofreepybox.api.wifi import Wifi
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, DATA_RATE_KILOBYTES_PER_SECOND
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -326,7 +326,7 @@ class FreeboxSensor:
 
     def update(self, state: any) -> None:
         """Update the Freebox sensor."""
-        if self._unit == "KB/s":
+        if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
             self._state = round(state / 1000, 2)
         else:
             self._state = state
