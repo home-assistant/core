@@ -20,17 +20,22 @@ from .const import (
     ATTR_APP_ID,
     ATTR_APP_VERSION,
     ATTR_DEVICE_NAME,
+    ATTR_OS_NAME,
     ATTR_OS_VERSION,
     ATTR_PUSH_RATE_LIMITS,
     ATTR_PUSH_RATE_LIMITS_ERRORS,
     ATTR_PUSH_RATE_LIMITS_MAXIMUM,
     ATTR_PUSH_RATE_LIMITS_RESETS_AT,
     ATTR_PUSH_RATE_LIMITS_SUCCESSFUL,
+    ATTR_PUSH_SUPPORTS_ENCRYPTION,
     ATTR_PUSH_TOKEN,
     ATTR_PUSH_URL,
+    ATTR_SUPPORTS_ENCRYPTION,
+    CONF_SECRET,
     DATA_CONFIG_ENTRIES,
     DOMAIN,
 )
+from .helpers import _encrypt_payload
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,10 +129,23 @@ class MobileAppNotificationService(BaseNotificationService):
                 ATTR_APP_ID: entry_data[ATTR_APP_ID],
                 ATTR_APP_VERSION: entry_data[ATTR_APP_VERSION],
             }
+            if ATTR_OS_NAME in entry_data:
+                reg_info[ATTR_OS_NAME] = entry_data[ATTR_OS_NAME]
             if ATTR_OS_VERSION in entry_data:
                 reg_info[ATTR_OS_VERSION] = entry_data[ATTR_OS_VERSION]
 
             data["registration_info"] = reg_info
+
+            if (
+                entry_data[ATTR_SUPPORTS_ENCRYPTION]
+                and app_data[ATTR_PUSH_SUPPORTS_ENCRYPTION]
+            ):
+                data = {
+                    "encrypted": True,
+                    "encrypted_data": _encrypt_payload(entry_data[CONF_SECRET], data),
+                    ATTR_PUSH_TOKEN: push_token,
+                    "registration_info": reg_info,
+                }
 
             try:
                 with async_timeout.timeout(10):

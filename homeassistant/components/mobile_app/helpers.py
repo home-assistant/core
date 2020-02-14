@@ -59,6 +59,16 @@ def setup_encrypt() -> Tuple[int, Callable]:
     return (SecretBox.KEY_SIZE, encrypt)
 
 
+def _encrypt_payload(reg_secret: str, payload: str) -> str:
+    keylen, encrypt = setup_encrypt()
+
+    key = reg_secret.encode("utf-8")
+    key = key[:keylen]
+    key = key.ljust(keylen, b"\0")
+
+    return encrypt(payload.encode("utf-8"), key).decode("utf-8")
+
+
 def _decrypt_payload(key: str, ciphertext: str) -> Dict[str, str]:
     """Decrypt encrypted payload."""
     try:
@@ -150,14 +160,12 @@ def webhook_response(
     data = json.dumps(data, cls=JSONEncoder)
 
     if registration[ATTR_SUPPORTS_ENCRYPTION]:
-        keylen, encrypt = setup_encrypt()
-
-        key = registration[CONF_SECRET].encode("utf-8")
-        key = key[:keylen]
-        key = key.ljust(keylen, b"\0")
-
-        enc_data = encrypt(data.encode("utf-8"), key).decode("utf-8")
-        data = json.dumps({"encrypted": True, "encrypted_data": enc_data})
+        data = json.dumps(
+            {
+                "encrypted": True,
+                "encrypted_data": _encrypt_payload(registration[CONF_SECRET], data),
+            }
+        )
 
     return Response(
         text=data, status=status, content_type="application/json", headers=headers
