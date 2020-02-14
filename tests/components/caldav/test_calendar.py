@@ -608,17 +608,6 @@ async def test_event_rrule_duration_ongoing(mock_now, hass, calendar):
 
 
 @patch("homeassistant.util.dt.now", return_value=_local_datetime(23, 37))
-async def test_event_rrule_ended(mock_now, hass, calendar):
-    """Test that the ended recurring event is not returned."""
-    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("calendar.private")
-    assert state.name == calendar.name
-    assert state.state == STATE_OFF
-
-
-@patch("homeassistant.util.dt.now", return_value=_local_datetime(23, 37))
 async def test_event_rrule_endless(mock_now, hass, calendar):
     """Test that the endless recurring event is returned."""
     assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
