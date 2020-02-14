@@ -87,3 +87,8 @@ class MockPlexServer:
     def url_in_use(self):
         """Return URL used by PlexServer."""
         return self._baseurl
+
+    @property
+    def version(self):
+        """Mock version of PlexServer."""
+        return "1.0"

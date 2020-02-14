@@ -52,6 +52,7 @@ class PlexServer:
         self.options = options
         self.server_choice = None
         self._owner_username = None
+        self._version = None
 
         # Header conditionally added as it is not available in config entry v1
         if CONF_CLIENT_IDENTIFIER in server_config:
@@ -101,6 +102,8 @@ class PlexServer:
         ]
         if owner_account:
             self._owner_username = owner_account[0]
+
+        self._version = self._plex_server.version
 
     def refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
@@ -195,6 +198,11 @@ class PlexServer:
     def owner(self):
         """Return the Plex server owner username."""
         return self._owner_username
+
+    @property
+    def version(self):
+        """Return the version of the Plex server."""
+        return self._version
 
     @property
     def friendly_name(self):
