@@ -154,9 +154,12 @@ class IsWorkdaySensor(BinarySensorDevice):
         """Check if given day is in the excludes list."""
         if day in self._excludes:
             return True
-        if "holiday" in self._excludes and now in self._obj_holidays:
+
+        if not ("holiday" in self._excludes) and now in self._obj_holidays:
+            _LOGGER.debug("found holiday, should be excluded")
             return True
 
+        _LOGGER.debug("is_exclude returning false, should not")
         return False
 
     @property
@@ -178,9 +181,20 @@ class IsWorkdaySensor(BinarySensorDevice):
         date = get_date(datetime.today()) + timedelta(days=self._days_offset)
         day = date.isoweekday() - 1
         day_of_week = day_to_string(day)
+        _LOGGER.debug(
+            "date "
+            + str(date)
+            + " day "
+            + str(day)
+            + " Day of week "
+            + str(day_of_week)
+        )
 
+        _LOGGER.debug("self._state (before test) " + str(self._state))
         if self.is_include(day_of_week, date):
             self._state = True
+        _LOGGER.debug("self._state (after day of week) " + str(self._state))
 
         if self.is_exclude(day_of_week, date):
             self._state = False
+        _LOGGER.debug("self._state (after exclude) " + str(self._state))
