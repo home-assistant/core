@@ -1,5 +1,4 @@
 """Test Dynalite __init__."""
-from unittest.mock import Mock
 
 from asynctest import patch
 
@@ -19,47 +18,39 @@ async def test_empty_config(hass):
 async def test_async_setup(hass):
     """Test a successful setup."""
     host = "1.2.3.4"
-    port = 789
-    with patch.object(
-        dynalite.DynaliteBridge, "async_setup", return_value=mock_coro(True)
-    ):
-        assert (
-            await async_setup_component(
-                hass,
-                dynalite.DOMAIN,
-                {
-                    dynalite.DOMAIN: {
-                        dynalite.CONF_BRIDGES: [
-                            {dynalite.CONF_HOST: host, "port": port},
-                        ]
-                    }
-                },
+    with patch.object(dynalite.DynaliteBridge, "async_setup", return_value=True):
+        with patch.object(dynalite.DynaliteBridge, "try_connection", return_value=True):
+            assert (
+                await async_setup_component(
+                    hass,
+                    dynalite.DOMAIN,
+                    {
+                        dynalite.DOMAIN: {
+                            dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]
+                        }
+                    },
+                )
+                is True
             )
-            is True
-        )
     assert (
         hass.data[dynalite.DOMAIN][dynalite.DATA_CONFIGS][host][dynalite.CONF_HOST]
         == host
     )
-    assert hass.data[dynalite.DOMAIN][dynalite.DATA_CONFIGS][host]["port"] == port
+    # DATA_CONFIGS + new entry
+    assert len(hass.data[dynalite.DOMAIN]) == 2
 
 
 async def test_async_setup_failed(hass):
     """Test a setup when DynaliteBridge.async_setup fails."""
     host = "1.2.3.4"
-    port = 789
-    with patch.object(
-        dynalite.DynaliteBridge, "async_setup", return_value=mock_coro(False)
-    ):
+    with patch.object(dynalite.DynaliteBridge, "async_setup", return_value=False):
         assert (
             await async_setup_component(
                 hass,
                 dynalite.DOMAIN,
                 {
                     dynalite.DOMAIN: {
-                        dynalite.CONF_BRIDGES: [
-                            {dynalite.CONF_HOST: host, "port": port},
-                        ]
+                        dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]
                     }
                 },
             )
@@ -69,7 +60,8 @@ async def test_async_setup_failed(hass):
         hass.data[dynalite.DOMAIN][dynalite.DATA_CONFIGS][host][dynalite.CONF_HOST]
         == host
     )
-    assert hass.data[dynalite.DOMAIN][dynalite.DATA_CONFIGS][host]["port"] == port
+    # DATA_CONFIGS only
+    assert len(hass.data[dynalite.DOMAIN]) == 1
 
 
 async def test_unload_entry(hass):
@@ -80,12 +72,20 @@ async def test_unload_entry(hass):
 
     with patch.object(dynalite, "DynaliteBridge") as mock_bridge:
         mock_bridge.return_value.async_setup.return_value = mock_coro(True)
-        mock_bridge.return_value.api.config = Mock(bridgeid="aabbccddeeff")
-        assert await async_setup_component(hass, dynalite.DOMAIN, {}) is True
+        assert (
+            await async_setup_component(
+                hass,
+                dynalite.DOMAIN,
+                {
+                    dynalite.DOMAIN: {
+                        dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]
+                    }
+                },
+            )
+            is True
+        )
     assert len(mock_bridge.return_value.mock_calls) == 1
     assert hass.data[dynalite.DOMAIN].get(entry.entry_id)
 
-    mock_bridge.return_value.async_reset.return_value = mock_coro(True)
     assert await hass.config_entries.async_unload(entry.entry_id)
-    assert len(mock_bridge.return_value.async_reset.mock_calls) == 1
     assert not hass.data[dynalite.DOMAIN].get(entry.entry_id)

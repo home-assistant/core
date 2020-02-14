@@ -1,9 +1,10 @@
 """Code to handle a Dynalite bridge."""
 
+import asyncio
+
 from dynalite_devices_lib import DynaliteDevices
 from dynalite_lib import CONF_ALL
 
-from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -13,15 +14,14 @@ from .const import DATA_CONFIGS, DOMAIN, LOGGER
 class DynaliteBridge:
     """Manages a single Dynalite bridge."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass, host):
         """Initialize the system based on host parameter."""
-        self.config_entry = config_entry
         self.hass = hass
         self.area = {}
         self.async_add_devices = None
         self.waiting_devices = []
         self.config = None
-        self.host = config_entry.data[CONF_HOST]
+        self.host = host
         self.config = hass.data[DOMAIN][DATA_CONFIGS][self.host]
         # Configure the dynalite devices
         self.dynalite_devices = DynaliteDevices(
@@ -34,12 +34,6 @@ class DynaliteBridge:
         """Set up a Dynalite bridge."""
         # Configure the dynalite devices
         await self.dynalite_devices.async_setup()
-
-        self.hass.async_create_task(
-            self.hass.config_entries.async_forward_entry_setup(
-                self.config_entry, "light"
-            )
-        )
 
         return True
 
@@ -64,6 +58,16 @@ class DynaliteBridge:
         else:
             async_dispatcher_send(self.hass, self.update_signal(device))
 
+    async def try_connection(self):
+        """Try to connect to dynalite with timeout."""
+        # Currently by polling. Future - will need to change the library to be proactive
+        timeout = 30
+        for i in range(0, timeout):
+            if self.dynalite_devices.available:
+                return True
+            await asyncio.sleep(1)
+        return False
+
     @callback
     def register_add_devices(self, async_add_devices):
         """Add an async_add_entities for a category."""
@@ -79,15 +83,3 @@ class DynaliteBridge:
             self.async_add_devices(devices)
         else:  # handle it later when it is registered
             self.waiting_devices.extend(devices)
-
-    async def async_reset(self):
-        """Reset this bridge to default state.
-
-        Will cancel any scheduled setup retry and will unload
-        the config entry.
-        """
-        result = await self.hass.config_entries.async_forward_entry_unload(
-            self.config_entry, "light"
-        )
-        # None and True are OK
-        return result

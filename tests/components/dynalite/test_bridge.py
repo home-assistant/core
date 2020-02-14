@@ -1,12 +1,10 @@
 """Test Dynalite bridge."""
-from unittest.mock import Mock, call, patch
+from unittest.mock import Mock, call
 
+from asynctest import patch
 from dynalite_lib import CONF_ALL
 
-from homeassistant.components.dynalite import DATA_CONFIGS, DOMAIN
-from homeassistant.components.dynalite.bridge import DynaliteBridge
-
-from tests.common import mock_coro
+from homeassistant.components import dynalite
 
 
 async def test_bridge_setup():
@@ -15,19 +13,15 @@ async def test_bridge_setup():
     entry = Mock()
     host = "1.2.3.4"
     entry.data = {"host": host}
-    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = DynaliteBridge(hass, entry)
+    hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
+    dyn_bridge = dynalite.DynaliteBridge(hass, host)
 
     with patch.object(
-        dyn_bridge.dynalite_devices, "async_setup", return_value=mock_coro(True)
-    ):
+        dyn_bridge.dynalite_devices, "async_setup", return_value=True
+    ) as dyn_dev_setup:
         assert await dyn_bridge.async_setup() is True
-
-    forward_entries = set(
-        c[1][1] for c in hass.config_entries.async_forward_entry_setup.mock_calls
-    )
-    hass.config_entries.async_forward_entry_setup.assert_called_once()
-    assert forward_entries == set(["light"])
+        dyn_dev_setup.assert_called_once
+        hass.config_entries.async_forward_entry_setup.assert_not_called()
 
 
 async def test_update_device():
@@ -36,8 +30,8 @@ async def test_update_device():
     entry = Mock()
     host = "1.2.3.4"
     entry.data = {"host": host}
-    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = DynaliteBridge(hass, entry)
+    hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
+    dyn_bridge = dynalite.DynaliteBridge(hass, host)
     async_dispatch = Mock()
 
     with patch(
@@ -62,8 +56,8 @@ async def test_add_devices_then_register():
     entry = Mock()
     host = "1.2.3.4"
     entry.data = {"host": host}
-    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = DynaliteBridge(hass, entry)
+    hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
+    dyn_bridge = dynalite.DynaliteBridge(hass, host)
     # First test empty
     dyn_bridge.add_devices_when_registered([])
     assert not dyn_bridge.waiting_devices
@@ -85,8 +79,8 @@ async def test_register_then_add_devices():
     entry = Mock()
     host = "1.2.3.4"
     entry.data = {"host": host}
-    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = DynaliteBridge(hass, entry)
+    hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
+    dyn_bridge = dynalite.DynaliteBridge(hass, host)
 
     device1 = Mock()
     device1.category = "light"
@@ -97,21 +91,3 @@ async def test_register_then_add_devices():
     dyn_bridge.add_devices_when_registered([device1, device2])
     reg_func.assert_called_once()
     assert reg_func.mock_calls[0][1][0][0] is device1
-
-
-async def test_async_reset():
-    """Test async_reset."""
-    hass = Mock()
-    hass.config_entries.async_forward_entry_unload = Mock(
-        return_value=mock_coro(Mock())
-    )
-    entry = Mock()
-    host = "1.2.3.4"
-    entry.data = {"host": host}
-    hass.data = {DOMAIN: {DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = DynaliteBridge(hass, entry)
-    await dyn_bridge.async_reset()
-    hass.config_entries.async_forward_entry_unload.assert_called_once()
-    assert hass.config_entries.async_forward_entry_unload.mock_calls[0] == call(
-        entry, "light"
-    )

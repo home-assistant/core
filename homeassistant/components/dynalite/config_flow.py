@@ -2,6 +2,7 @@
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 
+from .bridge import DynaliteBridge
 from .const import DOMAIN, LOGGER  # pylint: disable=unused-import
 
 
@@ -23,6 +24,13 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         host = import_info[CONF_HOST]
         await self.async_set_unique_id(host)
         self._abort_if_unique_id_configured()
+
+        bridge = DynaliteBridge(self.hass, host)
+        if not await bridge.async_setup():
+            LOGGER.error("bridge.async_setup failed")
+            return self.async_abort(reason="bridge_setup_failed")
+        if not await bridge.try_connection():
+            return self.async_abort(reason="no_connection")
         return await self._entry_from_bridge(host)
 
     async def _entry_from_bridge(self, host):

@@ -1,6 +1,7 @@
 """Test Dynalite light."""
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
+from asynctest import patch
 import pytest
 
 from homeassistant.components import dynalite
@@ -29,20 +30,21 @@ async def create_light_from_device(hass, device):
     """Set up the component and platform and create a light based on the device provided."""
     host = "1.2.3.4"
     with patch.object(
-        dynalite.bridge.DynaliteDevices, "async_setup", return_value=mock_coro(True)
+        dynalite.bridge.DynaliteDevices, "async_setup", return_value=True
     ):
-        assert (
-            await async_setup_component(
-                hass,
-                dynalite.DOMAIN,
-                {
-                    dynalite.DOMAIN: {
-                        dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]
-                    }
-                },
+        with patch.object(dynalite.DynaliteBridge, "try_connection", return_value=True):
+            assert (
+                await async_setup_component(
+                    hass,
+                    dynalite.DOMAIN,
+                    {
+                        dynalite.DOMAIN: {
+                            dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]
+                        }
+                    },
+                )
+                is True
             )
-            is True
-        )
     await hass.async_block_till_done()
     # Find the bridge
     bridge = None
