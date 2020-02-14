@@ -1,5 +1,4 @@
 """The devolo_home_control integration."""
-# from devolo_home_control_api.backend.mprm_websocket import MprmWebsocket
 from devolo_home_control_api.homecontrol import HomeControl
 from devolo_home_control_api.mydevolo import (
     Mydevolo,
@@ -51,7 +50,9 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: SERVER_CONFIG_SCHEMA}, extra=vol.ALLOW_EXTRA
 
 def setup(hass, config):
     """Get all devices and add them to hass."""
-
+    print(
+        "###############################################################################################################"
+    )
     return True
 
 
