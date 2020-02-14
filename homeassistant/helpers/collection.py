@@ -158,9 +158,13 @@ class StorageCollection(ObservableCollection):
         """Home Assistant object."""
         return self.store.hass
 
+    async def _async_load_data(self) -> Optional[dict]:
+        """Load the data."""
+        return cast(Optional[dict], await self.store.async_load())
+
     async def async_load(self) -> None:
         """Load the storage Manager."""
-        raw_storage = cast(Optional[dict], await self.store.async_load())
+        raw_storage = await self._async_load_data()
 
         if raw_storage is None:
             raw_storage = {"items": []}
