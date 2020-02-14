@@ -30,7 +30,7 @@ async def create_light_from_device(hass, device):
     """Set up the component and platform and create a light based on the device provided."""
     host = "1.2.3.4"
     with patch(
-        dynalite.bridge.DynaliteDevices, "async_setup", return_value=True
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup", return_value=True
     ):
         with patch.object(dynalite.DynaliteBridge, "try_connection", return_value=True):
             assert (
