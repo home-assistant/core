@@ -278,6 +278,7 @@ iaqualink==0.3.1
 # homeassistant.components.influxdb
 influxdb==5.2.3
 
+# homeassistant.components.rest
 # homeassistant.components.verisure
 jsonpath==0.82
 

@@ -1,9 +1,9 @@
 """Support for RESTful API sensors."""
-import ast
 import json
 import logging
 from xml.parsers.expat import ExpatError
 
+from jsonpath import jsonpath
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
@@ -41,11 +41,9 @@ DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_TIMEOUT = 10
 
-CONF_CONVERT_XML = "convert_xml"
-DEFAULT_CONVERT_XML = False
 
 CONF_JSON_ATTRS = "json_attributes"
-CONF_JSON_ATTRS_TEMPLATE = "json_attributes_template"
+CONF_JSON_ATTRS_PATH = "json_attributes_path"
 METHODS = ["POST", "GET"]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -57,7 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
         vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
-        vol.Optional(CONF_CONVERT_XML, default=DEFAULT_CONVERT_XML): cv.boolean,
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
@@ -65,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_JSON_ATTRS_TEMPLATE): cv.template,
+        vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
@@ -93,13 +90,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     json_attrs = config.get(CONF_JSON_ATTRS)
-    convert_xml = config.get(CONF_CONVERT_XML)
-    json_attrs_template = config.get(CONF_JSON_ATTRS_TEMPLATE)
+    json_attrs_path = config.get(CONF_JSON_ATTRS_PATH)
     force_update = config.get(CONF_FORCE_UPDATE)
     timeout = config.get(CONF_TIMEOUT)
-
-    if json_attrs_template is not None:
-        json_attrs_template.hass = hass
 
     if value_template is not None:
         value_template.hass = hass
@@ -134,8 +127,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 json_attrs,
                 force_update,
                 resource_template,
-                convert_xml,
-                json_attrs_template,
+                json_attrs_path,
             )
         ],
         True,
@@ -156,8 +148,7 @@ class RestSensor(Entity):
         json_attrs,
         force_update,
         resource_template,
-        convert_xml,
-        json_attrs_template,
+        json_attrs_path,
     ):
         """Initialize the REST sensor."""
         self._hass = hass
@@ -171,8 +162,7 @@ class RestSensor(Entity):
         self._attributes = None
         self._force_update = force_update
         self._resource_template = resource_template
-        self._convert_xml = convert_xml
-        self._json_attrs_template = json_attrs_template
+        self._json_attrs_path = json_attrs_path
 
     @property
     def name(self):
@@ -211,9 +201,9 @@ class RestSensor(Entity):
 
         self.rest.update()
         value = self.rest.data
-        json_dict = None
+        content_type = self.rest.headers.get("content-type")
 
-        if self._convert_xml:
+        if content_type and content_type.startswith("text/xml"):
             try:
                 value = json.dumps(xmltodict.parse(value))
             except ExpatError:
@@ -227,14 +217,8 @@ class RestSensor(Entity):
             if value:
                 try:
                     json_dict = json.loads(value)
-                    if self._json_attrs_template is not None:
-                        # render_with_possible_json_value returns single quoted
-                        # strings so we cannot use json.loads to read it back here
-                        json_dict = ast.literal_eval(
-                            self._json_attrs_template.render_with_possible_json_value(
-                                value, None
-                            )
-                        )
+                    if self._json_attrs_path is not None:
+                        json_dict = jsonpath(json_dict, self._json_attrs_path)
                     if isinstance(json_dict, list):
                         json_dict = json_dict[0]
                     if isinstance(json_dict, dict):
@@ -278,6 +262,7 @@ class RestData:
         self._verify_ssl = verify_ssl
         self._timeout = timeout
         self.data = None
+        self.headers = None
 
     def set_url(self, url):
         """Set url."""
@@ -297,6 +282,8 @@ class RestData:
                 verify=self._verify_ssl,
             )
             self.data = response.text
+            self.headers = response.headers
         except requests.exceptions.RequestException as ex:
             _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
             self.data = None
+            self.headers = None

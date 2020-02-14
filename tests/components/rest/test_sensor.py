@@ -6,6 +6,7 @@ import pytest
 from pytest import raises
 import requests
 from requests.exceptions import RequestException, Timeout
+from requests.structures import CaseInsensitiveDict
 import requests_mock
 
 import homeassistant.components.rest.sensor as rest
@@ -184,7 +185,6 @@ class TestRestSensorSetup(unittest.TestCase):
                         "unit_of_measurement": DATA_MEGABYTES,
                         "verify_ssl": "true",
                         "timeout": 30,
-                        "convert_xml": True,
                         "authentication": "basic",
                         "username": "my username",
                         "password": "my password",
@@ -206,19 +206,18 @@ class TestRestSensor(unittest.TestCase):
         self.rest.update = Mock(
             "rest.RestData.update",
             side_effect=self.update_side_effect(
-                '{ "key": "' + self.initial_state + '" }'
+                '{ "key": "' + self.initial_state + '" }',
+                CaseInsensitiveDict({"Content-Type": "application/json"}),
             ),
         )
         self.name = "foo"
         self.unit_of_measurement = DATA_MEGABYTES
         self.device_class = None
         self.value_template = template("{{ value_json.key }}")
-        self.json_attrs_template = template("{{ value_json }}")
+        self.json_attrs_path = None
         self.value_template.hass = self.hass
-        self.json_attrs_template.hass = self.hass
         self.force_update = False
         self.resource_template = None
-        self.convert_xml = False
 
         self.sensor = rest.RestSensor(
             self.hass,
@@ -230,17 +229,17 @@ class TestRestSensor(unittest.TestCase):
             [],
             self.force_update,
             self.resource_template,
-            self.convert_xml,
-            self.json_attrs_template,
+            self.json_attrs_path,
         )
 
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def update_side_effect(self, data):
+    def update_side_effect(self, data, headers):
         """Side effect function for mocking RestData.update()."""
         self.rest.data = data
+        self.rest.headers = headers
 
     def test_name(self):
         """Test the name."""
@@ -262,7 +261,8 @@ class TestRestSensor(unittest.TestCase):
     def test_update_when_value_is_none(self):
         """Test state gets updated to unknown when sensor returns no data."""
         self.rest.update = Mock(
-            "rest.RestData.update", side_effect=self.update_side_effect(None)
+            "rest.RestData.update",
+            side_effect=self.update_side_effect(None, CaseInsensitiveDict()),
         )
         self.sensor.update()
         assert self.sensor.state is None
@@ -272,7 +272,10 @@ class TestRestSensor(unittest.TestCase):
         """Test state gets updated when sensor returns a new status."""
         self.rest.update = Mock(
             "rest.RestData.update",
-            side_effect=self.update_side_effect('{ "key": "updated_state" }'),
+            side_effect=self.update_side_effect(
+                '{ "key": "updated_state" }',
+                CaseInsensitiveDict({"Content-Type": "application/json"}),
+            ),
         )
         self.sensor.update()
         assert "updated_state" == self.sensor.state
@@ -281,7 +284,10 @@ class TestRestSensor(unittest.TestCase):
     def test_update_with_no_template(self):
         """Test update when there is no value template."""
         self.rest.update = Mock(
-            "rest.RestData.update", side_effect=self.update_side_effect("plain_state")
+            "rest.RestData.update",
+            side_effect=self.update_side_effect(
+                "plain_state", CaseInsensitiveDict({"Content-Type": "application/json"})
+            ),
         )
         self.sensor = rest.RestSensor(
             self.hass,
@@ -293,8 +299,7 @@ class TestRestSensor(unittest.TestCase):
             [],
             self.force_update,
             self.resource_template,
-            self.convert_xml,
-            self.json_attrs_template,
+            self.json_attrs_path,
         )
         self.sensor.update()
         assert "plain_state" == self.sensor.state
@@ -304,7 +309,10 @@ class TestRestSensor(unittest.TestCase):
         """Test attributes get extracted from a JSON result."""
         self.rest.update = Mock(
             "rest.RestData.update",
-            side_effect=self.update_side_effect('{ "key": "some_json_value" }'),
+            side_effect=self.update_side_effect(
+                '{ "key": "some_json_value" }',
+                CaseInsensitiveDict({"Content-Type": "application/json"}),
+            ),
         )
         self.sensor = rest.RestSensor(
             self.hass,
@@ -316,8 +324,7 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
-            self.convert_xml,
-            self.json_attrs_template,
+            self.json_attrs_path,
         )
         self.sensor.update()
         assert "some_json_value" == self.sensor.device_state_attributes["key"]
@@ -326,7 +333,10 @@ class TestRestSensor(unittest.TestCase):
         """Test attributes get extracted from a JSON list[0] result."""
         self.rest.update = Mock(
             "rest.RestData.update",
-            side_effect=self.update_side_effect('[{ "key": "another_value" }]'),
+            side_effect=self.update_side_effect(
+                '[{ "key": "another_value" }]',
+                CaseInsensitiveDict({"Content-Type": "application/json"}),
+            ),
         )
         self.sensor = rest.RestSensor(
             self.hass,
@@ -338,8 +348,7 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
-            self.convert_xml,
-            self.json_attrs_template,
+            self.json_attrs_path,
         )
         self.sensor.update()
         assert "another_value" == self.sensor.device_state_attributes["key"]
@@ -348,7 +357,10 @@ class TestRestSensor(unittest.TestCase):
     def test_update_with_json_attrs_no_data(self, mock_logger):
         """Test attributes when no JSON result fetched."""
         self.rest.update = Mock(
-            "rest.RestData.update", side_effect=self.update_side_effect(None)
+            "rest.RestData.update",
+            side_effect=self.update_side_effect(
+                None, CaseInsensitiveDict({"Content-Type": "application/json"})
+            ),
         )
         self.sensor = rest.RestSensor(
             self.hass,
@@ -360,8 +372,7 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
-            self.convert_xml,
-            self.json_attrs_template,
+            self.json_attrs_path,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -372,7 +383,10 @@ class TestRestSensor(unittest.TestCase):
         """Test attributes get extracted from a JSON result."""
         self.rest.update = Mock(
             "rest.RestData.update",
-            side_effect=self.update_side_effect('["list", "of", "things"]'),
+            side_effect=self.update_side_effect(
+                '["list", "of", "things"]',
+                CaseInsensitiveDict({"Content-Type": "application/json"}),
+            ),
         )
         self.sensor = rest.RestSensor(
             self.hass,
@@ -384,8 +398,7 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
-            self.convert_xml,
-            self.json_attrs_template,
+            self.json_attrs_path,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -396,7 +409,10 @@ class TestRestSensor(unittest.TestCase):
         """Test attributes get extracted from a JSON result."""
         self.rest.update = Mock(
             "rest.RestData.update",
-            side_effect=self.update_side_effect("This is text rather than JSON data."),
+            side_effect=self.update_side_effect(
+                "This is text rather than JSON data.",
+                CaseInsensitiveDict({"Content-Type": "text/plain"}),
+            ),
         )
         self.sensor = rest.RestSensor(
             self.hass,
@@ -408,8 +424,7 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
-            self.convert_xml,
-            self.json_attrs_template,
+            self.json_attrs_path,
         )
         self.sensor.update()
         assert {} == self.sensor.device_state_attributes
@@ -421,7 +436,8 @@ class TestRestSensor(unittest.TestCase):
         self.rest.update = Mock(
             "rest.RestData.update",
             side_effect=self.update_side_effect(
-                '{ "key": "json_state_updated_value" }'
+                '{ "key": "json_state_updated_value" }',
+                CaseInsensitiveDict({"Content-Type": "application/json"}),
             ),
         )
         self.sensor = rest.RestSensor(
@@ -434,8 +450,7 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
-            self.convert_xml,
-            self.json_attrs_template,
+            self.json_attrs_path,
         )
         self.sensor.update()
 
@@ -444,17 +459,17 @@ class TestRestSensor(unittest.TestCase):
             "json_state_updated_value" == self.sensor.device_state_attributes["key"]
         ), self.force_update
 
-    def test_update_with_json_attrs_with_json_attrs_template(self):
+    def test_update_with_json_attrs_with_json_attrs_path(self):
         """Test attributes get extracted from a JSON result with a template for the attributes."""
-        json_attrs_template = template("{{ value_json.toplevel.second_level }}")
-        json_attrs_template.hass = self.hass
+        json_attrs_path = "$.toplevel.second_level"
         value_template = template("{{ value_json.toplevel.master_value }}")
         value_template.hass = self.hass
 
         self.rest.update = Mock(
             "rest.RestData.update",
             side_effect=self.update_side_effect(
-                '{ "toplevel": {"master_value": "master", "second_level": {"some_json_key": "some_json_value", "some_json_key2": "some_json_value2" } } }'
+                '{ "toplevel": {"master_value": "master", "second_level": {"some_json_key": "some_json_value", "some_json_key2": "some_json_value2" } } }',
+                CaseInsensitiveDict({"Content-Type": "application/json"}),
             ),
         )
         self.sensor = rest.RestSensor(
@@ -467,8 +482,7 @@ class TestRestSensor(unittest.TestCase):
             ["some_json_key", "some_json_key2"],
             self.force_update,
             self.resource_template,
-            self.convert_xml,
-            json_attrs_template,
+            json_attrs_path,
         )
 
         self.sensor.update()
@@ -478,18 +492,17 @@ class TestRestSensor(unittest.TestCase):
         )
         assert "master" == self.sensor.state
 
-    def test_update_with_xml_convert_json_attrs_with_json_attrs_template(self):
+    def test_update_with_xml_convert_json_attrs_with_json_attrs_path(self):
         """Test attributes get extracted from a JSON result that was converted from XML with a template for the attributes."""
-        json_attrs_template = template("{{ value_json.toplevel.second_level }}")
-        json_attrs_template.hass = self.hass
+        json_attrs_path = "$.toplevel.second_level"
         value_template = template("{{ value_json.toplevel.master_value }}")
         value_template.hass = self.hass
-        convert_xml = True
 
         self.rest.update = Mock(
             "rest.RestData.update",
             side_effect=self.update_side_effect(
-                "<toplevel><master_value>master</master_value><second_level><some_json_key>some_json_value</some_json_key><some_json_key2>some_json_value2</some_json_key2></second_level></toplevel>"
+                "<toplevel><master_value>master</master_value><second_level><some_json_key>some_json_value</some_json_key><some_json_key2>some_json_value2</some_json_key2></second_level></toplevel>",
+                CaseInsensitiveDict({"Content-Type": "text/xml+svg"}),
             ),
         )
         self.sensor = rest.RestSensor(
@@ -502,8 +515,7 @@ class TestRestSensor(unittest.TestCase):
             ["some_json_key", "some_json_key2"],
             self.force_update,
             self.resource_template,
-            convert_xml,
-            json_attrs_template,
+            json_attrs_path,
         )
 
         self.sensor.update()
@@ -515,16 +527,15 @@ class TestRestSensor(unittest.TestCase):
 
     def test_update_with_xml_convert_json_attrs_with_jsonattr_template(self):
         """Test attributes get extracted from a JSON result that was converted from XML."""
-        json_attrs_template = template("{{ value_json.response }}")
-        json_attrs_template.hass = self.hass
+        json_attrs_path = "$.response"
         value_template = template("{{ value_json.response.bss.wlan }}")
         value_template.hass = self.hass
-        convert_xml = True
 
         self.rest.update = Mock(
             "rest.RestData.update",
             side_effect=self.update_side_effect(
-                '<?xml version="1.0" encoding="utf-8"?><response><scan>0</scan><ver>12556</ver><count>48</count><ssid>alexander</ssid><bss><valid>0</valid><name>0</name><privacy>0</privacy><wlan>bogus</wlan><strength>0</strength></bss><led0>0</led0><led1>0</led1><led2>0</led2><led3>0</led3><led4>0</led4><led5>0</led5><led6>0</led6><led7>0</led7><btn0>up</btn0><btn1>up</btn1><btn2>up</btn2><btn3>up</btn3><pot0>0</pot0><usr0>0</usr0><temp0>0x0XF0x0XF</temp0><time0> 0</time0></response>'
+                '<?xml version="1.0" encoding="utf-8"?><response><scan>0</scan><ver>12556</ver><count>48</count><ssid>alexander</ssid><bss><valid>0</valid><name>0</name><privacy>0</privacy><wlan>bogus</wlan><strength>0</strength></bss><led0>0</led0><led1>0</led1><led2>0</led2><led3>0</led3><led4>0</led4><led5>0</led5><led6>0</led6><led7>0</led7><btn0>up</btn0><btn1>up</btn1><btn2>up</btn2><btn3>up</btn3><pot0>0</pot0><usr0>0</usr0><temp0>0x0XF0x0XF</temp0><time0> 0</time0></response>',
+                CaseInsensitiveDict({"Content-Type": "text/xml"}),
             ),
         )
         self.sensor = rest.RestSensor(
@@ -537,8 +548,7 @@ class TestRestSensor(unittest.TestCase):
             ["led0", "led1", "temp0", "time0", "ver"],
             self.force_update,
             self.resource_template,
-            convert_xml,
-            json_attrs_template,
+            json_attrs_path,
         )
 
         self.sensor.update()
@@ -554,11 +564,12 @@ class TestRestSensor(unittest.TestCase):
         """Test attributes get extracted from a XML result with bad xml."""
         value_template = template("{{ value_json.toplevel.master_value }}")
         value_template.hass = self.hass
-        convert_xml = True
 
         self.rest.update = Mock(
             "rest.RestData.update",
-            side_effect=self.update_side_effect("this is not xml"),
+            side_effect=self.update_side_effect(
+                "this is not xml", CaseInsensitiveDict({"Content-Type": "text/xml"})
+            ),
         )
         self.sensor = rest.RestSensor(
             self.hass,
@@ -570,8 +581,7 @@ class TestRestSensor(unittest.TestCase):
             ["key"],
             self.force_update,
             self.resource_template,
-            convert_xml,
-            self.json_attrs_template,
+            self.json_attrs_path,
         )
 
         self.sensor.update()
