@@ -732,7 +732,7 @@ def custom_serializer(schema: Any) -> Any:
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
 
-    if schema is multi_select:
+    if isinstance(schema, multi_select):
         return {"type": "multi_select"}
 
     return voluptuous_serialize.UNSUPPORTED
