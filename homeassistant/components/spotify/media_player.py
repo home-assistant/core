@@ -157,9 +157,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def media_content_id(self) -> Optional[str]:
         """Return the media URL."""
-        if self._currently_playing.get("item") is None:
-            return None
-        return self._currently_playing.get("item", {}).get("name")
+        item = self._currently_playing.get("item") or {}
+        return item.get("name")
 
     @property
     def media_content_type(self) -> Optional[str]:
@@ -205,9 +204,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def media_title(self) -> Optional[str]:
         """Return the media title."""
-        if self._currently_playing.get("item") is None:
-            return None
-        return self._currently_playing.get("item", {}).get("name")
+        item = self._currently_playing.get("item") or {}
+        return item.get("name")
 
     @property
     def media_artist(self) -> Optional[str]:
@@ -228,9 +226,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def media_track(self) -> Optional[int]:
         """Track number of current playing media, music track only."""
-        if self._currently_playing.get("item") is None:
-            return None
-        return self._currently_playing.get("item", {}).get("track_number")
+        item = self._currently_playing.get("item") or {}
+        return item.get("track_number")
 
     @property
     def media_playlist(self):
