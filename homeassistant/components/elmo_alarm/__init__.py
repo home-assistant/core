@@ -8,6 +8,8 @@ from elmo.api.exceptions import PermissionDenied
 from urllib3.exceptions import HTTPError
 import voluptuous as vol
 
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -69,7 +71,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.url,
                 vol.Required(CONF_VENDOR): cv.string,
                 vol.Required(CONF_USERNAME): cv.string,
                 vol.Required(CONF_PASSWORD): cv.string,
@@ -104,16 +106,14 @@ async def async_setup(hass, config):
     hass.async_create_task(
         async_load_platform(
             hass,
-            "binary_sensor",
+            SENSOR_DOMAIN,
             DOMAIN,
             {"zones": client.zones, "inputs": client.inputs},
             config,
         )
     )
 
-    hass.async_create_task(
-        async_load_platform(hass, "alarm_control_panel", DOMAIN, {}, config)
-    )
+    hass.async_create_task(async_load_platform(hass, ALARM_DOMAIN, DOMAIN, {}, config))
 
     async def update():
         _LOGGER.debug("Connecting to e-connect to retrieve states")
@@ -193,13 +193,12 @@ class ElmoClientWrapper(ElmoClient):
         else:
             armed_indexes = [area_data["index"] + 1 for area_data in areas_armed]
 
-            [state] = [
-                k
-                for k, v in filter(
-                    lambda state: set(state[1]) == set(armed_indexes),
-                    self.states.items(),
-                )
-            ] or [None]
+            matching_state = filter(
+                lambda state: set(state[1]) == set(armed_indexes), self.states.items()
+            )
+
+            # Get the state name in position 0 or None
+            state = next((name for name, zone_list in matching_state), None)
 
             self.state = state
 
