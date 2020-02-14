@@ -205,11 +205,6 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> Dict[str, Any]:
         """Handle zeroconf discovery."""
 
-        # Set unique ID early to prevent device from getting rediscovered multiple times
-        await self.async_set_unique_id(
-            unique_id=discovery_info[CONF_HOST].split(":")[0], raise_on_progress=True
-        )
-
         discovery_info[
             CONF_HOST
         ] = f"{discovery_info[CONF_HOST]}:{discovery_info[CONF_PORT]}"

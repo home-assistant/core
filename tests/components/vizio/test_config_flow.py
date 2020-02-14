@@ -506,29 +506,3 @@ async def test_zeroconf_flow_already_configured(
     # Flow should abort because device is already setup
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_setup"
-
-
-async def test_zeroconf_dupe_fail(
-    hass: HomeAssistantType,
-    vizio_connect: pytest.fixture,
-    vizio_bypass_setup: pytest.fixture,
-    vizio_guess_device_type: pytest.fixture,
-) -> None:
-    """Test zeroconf config flow when device gets discovered multiple times."""
-    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
-    )
-
-    # Form should always show even if all required properties are discovered
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "user"
-
-    discovery_info = MOCK_ZEROCONF_SERVICE_INFO.copy()
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
-    )
-
-    # Flow should abort because device is already setup
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_in_progress"
