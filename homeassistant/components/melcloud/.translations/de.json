@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "MELCloud Passwort."
+                },
+                "description": "Verbinden Sie sich mit Ihrem MELCloud-Konto.",
+                "title": "Stellen Sie eine Verbindung zu MELCloud her"
+            }
+        },
+        "title": "MELCloud"
+    }
+}
