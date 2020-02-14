@@ -50,28 +50,28 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
+            session = aiohttp_client.async_get_clientsession(self.hass)
+            self.hub = GTIHub(
+                user_input[CONF_HOST],
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+                session,
+            )
+
             try:
-                session = aiohttp_client.async_get_clientsession(self.hass)
-                self.hub = GTIHub(
-                    user_input[CONF_HOST],
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PASSWORD],
-                    session,
-                )
-
                 response = await self.hub.authenticate()
-
                 _LOGGER.debug("init gti: %r", response)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
 
+            if not errors:
                 self.data = user_input
 
                 return self.async_show_form(
                     step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
                 )
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user", data_schema=SCHEMA_STEP_USER, errors=errors
@@ -182,7 +182,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
-        if user_input is not None and errors == {}:
+        if user_input is not None and not errors:
 
             self.filters = {
                 f"{x['serviceName']}, {x['label']}": x
