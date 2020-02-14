@@ -125,6 +125,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._media_content_type = None
         self._media_duration = None
         self._media_image_url = None
+        self._media_summary = None
         self._media_title = None
         self._media_position = None
         self._media_position_updated_at = None
@@ -166,6 +167,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         self._media_content_type = None
         self._media_duration = None
         self._media_image_url = None
+        self._media_summary = None
         self._media_title = None
         # Music
         self._media_album_artist = None
@@ -250,6 +252,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._session_type = self.session.type
             self._media_duration = int(self.session.duration / 1000)
             #  title (movie name, tv episode name, music song name)
+            self._media_summary = self.session.summary
             self._media_title = self.session.title
             # media type
             self._set_media_type()
@@ -438,6 +441,11 @@ class PlexMediaPlayer(MediaPlayerDevice):
     def media_image_url(self):
         """Return the image URL of current playing media."""
         return self._media_image_url
+
+    @property
+    def media_summary(self):
+        """Return the summary of current playing media."""
+        return self._media_summary
 
     @property
     def media_title(self):
@@ -712,6 +720,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             "media_content_rating": self._media_content_rating,
             "session_username": self.username,
             "media_library_name": self._app_name,
+            "summary": self.media_summary,
         }
 
         return attr
