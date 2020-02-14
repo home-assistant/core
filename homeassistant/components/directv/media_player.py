@@ -97,6 +97,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         )
 
         if host not in host_serials:
+            _LOGGER.debug(
+                "Doing lookup of serial number of DirecTV receiver on %s", host
+            )
             dtv = DIRECTV(host, port)
             host_serials[host] = _get_receiver_serial_number(dtv)
 
@@ -112,6 +115,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         dtv = DIRECTV(host, DEFAULT_PORT)
 
         if host not in host_serials:
+            _LOGGER.debug(
+                "Doing lookup of serial number of DirecTV receiver on %s", host
+            )
             host_serials[host] = _get_receiver_serial_number(dtv)
 
         try:
@@ -182,6 +188,7 @@ class DirecTvDevice(MediaPlayerDevice):
 
         self.dtv = DIRECTV(host, port, device)
         self._name = name
+        self._unique_id = None
         self._is_standby = True
         self._current = None
         self._last_update = None

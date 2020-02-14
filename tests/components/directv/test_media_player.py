@@ -406,6 +406,16 @@ async def test_setup_platform_discover_client(hass):
     assert len(hass.states.async_entity_ids("media_player")) == 3
 
 
+async def test_unique_id(hass, platforms):
+    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+
+    main = entity_registry.async_get(MAIN_ENTITY_ID)
+    assert main.unique_id == "9999999999"
+
+    client = entity_registry.async_get(CLIENT_ENTITY_ID)
+    assert client.unique_id == "9999999999-1"
+
+
 async def test_supported_features(hass, platforms):
     """Test supported features."""
     # Features supported for main DVR
@@ -450,7 +460,6 @@ async def test_check_attributes(hass, platforms, mock_now):
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert state.state == STATE_PLAYING
 
-    assert state.attributes.get(ATTR_UNIQUE_ID) == "9999999999-1"
     assert state.attributes.get(ATTR_MEDIA_CONTENT_ID) == RECORDING["programId"]
     assert state.attributes.get(ATTR_MEDIA_CONTENT_TYPE) == MEDIA_TYPE_TVSHOW
     assert state.attributes.get(ATTR_MEDIA_DURATION) == RECORDING["duration"]
