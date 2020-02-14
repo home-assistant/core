@@ -28,6 +28,7 @@ HAPID = "3014F7110000000000000001"
 HAPPIN = "5678"
 AUTH_TOKEN = "1234"
 HOME_JSON = "homematicip_cloud.json"
+FIXTURE_DATA = load_fixture(HOME_JSON)
 
 
 def get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_model):
@@ -159,9 +160,9 @@ class HomeTemplate(Home):
 
         return json
 
-    def init_home(self, json_path=HOME_JSON):
+    def init_home(self):
         """Init template with json."""
-        self.init_json_state = self._cleanup_json(json.loads(load_fixture(HOME_JSON)))
+        self.init_json_state = self._cleanup_json(json.loads(FIXTURE_DATA))
         self.update_home(json_state=self.init_json_state, clearConfig=True)
         return self
 
