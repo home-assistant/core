@@ -682,7 +682,6 @@ async def test_device_class_cover(hass, device_class, google_type):
     "device_class,google_type",
     [
         ("non_existing_class", "action.devices.types.SWITCH"),
-        ("speaker", "action.devices.types.SPEAKER"),
         ("tv", "action.devices.types.TV"),
     ],
 )
