@@ -166,21 +166,19 @@ class MikrotikData:
         device_list = {}
         try:
             self.all_devices = self.get_list_from_interface(DHCP)
-            if self.support_wireless or self.support_capsman:
-                _LOGGER.debug("wireless is supported")
-                for interface in [CAPSMAN, WIRELESS]:
-                    wireless_devices = self.get_list_from_interface(interface)
-                    if wireless_devices:
-                        _LOGGER.debug("Scanning wireless devices using %s", interface)
-                        break
+            if self.support_capsman:
+                _LOGGER.debug("Hub is a CAPSman manager")
+                device_list = self.get_list_from_interface(CAPSMAN)
+            elif self.support_wireless:
+                _LOGGER.debug("Hub supports wireless Interface")
+                device_list = self.get_list_from_interface(WIRELESS)
 
-            if (self.support_wireless or self.support_capsman) and not self.force_dhcp:
-                device_list = wireless_devices
-            else:
+            if not device_list or self.force_dhcp:
                 device_list = self.all_devices
                 _LOGGER.debug("Falling back to DHCP for scanning devices")
 
             if self.arp_enabled:
+                _LOGGER.debug("Using arp-ping to check devices")
                 arp_devices = self.get_list_from_interface(ARP)
 
             # get new hub firmware version if updated
@@ -199,10 +197,10 @@ class MikrotikData:
             else:
                 self.devices[mac].update(params=self.all_devices.get(mac, {}))
 
-            if mac in wireless_devices:
+            if self.support_capsman or self.support_wireless:
                 # if wireless is supported then wireless_params are params
                 self.devices[mac].update(
-                    wireless_params=wireless_devices[mac], active=True
+                    wireless_params=device_list[mac], active=True
                 )
                 continue
             # for wired devices or when forcing dhcp check for active-address
