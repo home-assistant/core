@@ -43,7 +43,6 @@ async def create_light_from_device(hass, device):
                         }
                     },
                 )
-                is True
             )
     await hass.async_block_till_done()
     # Find the bridge
