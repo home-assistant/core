@@ -1,9 +1,12 @@
 """The totalconnect component."""
+import asyncio
 import logging
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from total_connect_client import TotalConnectClient
 
@@ -24,10 +27,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-TOTALCONNECT_PLATFORMS = ["alarm_control_panel", "binary_sensor"]
+PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
 
-def setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: dict):
     """Set up TotalConnect component."""
     conf = config[DOMAIN]
 
@@ -42,7 +45,7 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = TotalConnectSystem(username, password, client)
 
-    for platform in TOTALCONNECT_PLATFORMS:
+    for platform in PLATFORMS:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
