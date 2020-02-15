@@ -1,5 +1,6 @@
 """Support for Netgear routers."""
 import logging
+from pprint import pformat
 
 from pynetgear import Netgear
 import voluptuous as vol
@@ -80,7 +81,7 @@ class NetgearDeviceScanner(DeviceScanner):
         self.last_results = []
         self._api = Netgear(password, host, username, port, ssl)
 
-        _LOGGER.info("Logging in")
+        _LOGGER.debug("Logging in")
 
         results = self.get_attached_devices()
 
@@ -156,9 +157,11 @@ class NetgearDeviceScanner(DeviceScanner):
         if not self.success_init:
             return
 
-        _LOGGER.info("Scanning")
+        _LOGGER.debug("Scanning")
 
         results = self.get_attached_devices()
+
+        _LOGGER.debug("Scan result: \n%s", pformat(results))
 
         if results is None:
             _LOGGER.warning("Error scanning devices")
