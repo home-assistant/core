@@ -150,6 +150,11 @@ class TadoWaterHeater(WaterHeaterDevice):
         return self._unique_id
 
     @property
+    def should_poll(self) -> bool:
+        """Do not poll."""
+        return False
+
+    @property
     def current_operation(self):
         """Return current readable operation mode."""
         return WATER_HEATER_MAP_TADO.get(self._current_operation)
