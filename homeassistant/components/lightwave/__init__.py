@@ -6,11 +6,11 @@ from homeassistant.const import CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_SWITCHES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-CONF_DEFAULT_PORT = 7878
-CONF_DEFAULT_IP = "127.0.0.1"
 CONF_SERIAL = "serial"
 CONF_TRV = "trv"
 CONF_TRVS = "trvs"
+DEFAULT_PORT = 7878
+DEFAULT_IP = "127.0.0.1"
 DOMAIN = "lightwave"
 LIGHTWAVE_LINK = "lightwave_link"
 LIGHTWAVE_TRV_PROXY = "lightwave_proxy"
@@ -33,8 +33,8 @@ CONFIG_SCHEMA = vol.Schema(
                         cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string})
                     },
                     vol.Optional(CONF_TRV, default={}): {
-                        vol.Optional(PROXY_PORT, default=CONF_DEFAULT_PORT): cv.port,
-                        vol.Optional(PROXY_IP, default=CONF_DEFAULT_IP): cv.string,
+                        vol.Optional(PROXY_PORT, default=DEFAULT_PORT): cv.port,
+                        vol.Optional(PROXY_IP, default=DEFAULT_IP): cv.string,
                         vol.Required(CONF_TRVS, default={}): {
                             cv.string: vol.Schema(
                                 {
@@ -70,14 +70,15 @@ async def async_setup(hass, config):
         )
 
     trv = config[DOMAIN][CONF_TRV]
+    trvs = trv[CONF_TRVS]
     if trv:
         hass.data[LIGHTWAVE_TRV_PROXY] = trv[PROXY_IP]
         hass.data[LIGHTWAVE_TRV_PROXY_PORT] = trv[PROXY_PORT]
         hass.async_create_task(
-            async_load_platform(hass, "climate", DOMAIN, trv[CONF_TRVS], config)
+            async_load_platform(hass, "climate", DOMAIN, trvs, config)
         )
         hass.async_create_task(
-            async_load_platform(hass, "sensor", DOMAIN, trv[CONF_TRVS], config)
+            async_load_platform(hass, "sensor", DOMAIN, trvs, config)
         )
 
     return True

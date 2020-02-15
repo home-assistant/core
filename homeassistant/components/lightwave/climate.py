@@ -12,7 +12,12 @@ from homeassistant.components.climate import (
     ClimateDevice,
 )
 from homeassistant.components.climate.const import CURRENT_HVAC_HEAT, CURRENT_HVAC_OFF
-from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_TEMPERATURE,
+    CONF_NAME,
+    TEMP_CELSIUS,
+)
 
 from . import CONF_SERIAL, LIGHTWAVE_LINK, LIGHTWAVE_TRV_PROXY, LIGHTWAVE_TRV_PROXY_PORT
 
@@ -67,11 +72,6 @@ class LightwaveTrv(ClimateDevice):
         """Flag supported features."""
         return SUPPORT_TARGET_TEMPERATURE
 
-    @property
-    def should_poll(self):
-        """Poll the Proxy."""
-        return True
-
     def update_ctarg(self, j):
         """Update target temp logic."""
         if self._inhibit == 0:
@@ -124,7 +124,7 @@ class LightwaveTrv(ClimateDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         return {
-            "Battery Level": self._battery,
+            ATTR_BATTERY_LEVEL: self._battery,
             "Device Type": "LightwaveRF TRV",
         }
 

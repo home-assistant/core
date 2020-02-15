@@ -6,7 +6,7 @@ import socket
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-from . import LIGHTWAVE_TRV_PROXY, LIGHTWAVE_TRV_PROXY_PORT
+from . import CONF_SERIAL, LIGHTWAVE_TRV_PROXY, LIGHTWAVE_TRV_PROXY_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for device_id, device_config in discovery_info.items():
         name = device_config[CONF_NAME]
-        serial = device_config["serial"]
+        serial = device_config[CONF_SERIAL]
         batt.append(
             LightwaveBattery(name, device_id, serial, trv_proxy_ip, trv_proxy_port)
         )
@@ -44,11 +44,6 @@ class LightwaveBattery(Entity):
         self._unit_of_measurement = "%"
         self._proxy_ip = trv_proxy_ip
         self._proxy_port = trv_proxy_port
-
-    @property
-    def should_poll(self):
-        """Connect to the TRV proxy."""
-        return True
 
     @property
     def device_class(self):
