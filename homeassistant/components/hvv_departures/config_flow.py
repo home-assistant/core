@@ -6,7 +6,7 @@ from pygti.exceptions import CannotConnect, InvalidAuth
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
@@ -28,7 +28,7 @@ SCHEMA_STEP_STATION = vol.Schema({vol.Required("station"): str})
 SCHEMA_STEP_OPTIONS = vol.Schema(
     {
         vol.Required("filter"): vol.In([]),
-        vol.Required("offset", default=0): vol.All(int, vol.Range(min=0)),
+        vol.Required(CONF_OFFSET, default=0): vol.All(int, vol.Range(min=0)),
         vol.Optional("realtime", default=True): bool,
     }
 )
@@ -191,7 +191,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
             options = {
                 "filter": [self.filters[user_input["filter"]]],
-                "offset": user_input["offset"],
+                CONF_OFFSET: user_input[CONF_OFFSET],
                 "realtime": user_input["realtime"],
             }
 
@@ -210,7 +210,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         self.filters.keys()
                     ),
                     vol.Required(
-                        "offset", default=self.config_entry.options.get("offset", 0)
+                        CONF_OFFSET,
+                        default=self.config_entry.options.get(CONF_OFFSET, 0),
                     ): vol.All(int, vol.Range(min=0)),
                     vol.Optional(
                         "realtime",
