@@ -58,6 +58,10 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers import intent
 from .ais_agent import AisAgent
+from homeassistant.components.conversation.default_agent import (
+    DefaultAgent,
+    async_register,
+)
 
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -3607,6 +3611,13 @@ def _process(hass, text, calling_client_id=None, hot_word_on=False):
     m = None
     m_org = None
     found_intent = None
+
+    # async_initialize ha agent
+    ha_agent = hass.data.get("ha_conversation_agent")
+    if ha_agent is None:
+        ha_agent = hass.data["ha_conversation_agent"] = DefaultAgent(hass)
+        yield from ha_agent.async_initialize(hass.data.get("conversation_config"))
+
     # first check the conversation intents
     conv_intents = hass.data.get("conversation", {})
     for intent_type, matchers in conv_intents.items():
