@@ -179,6 +179,9 @@ elgato==0.2.0
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1
 
+# homeassistant.components.entur_public_transport
+enturclient==0.2.1
+
 # homeassistant.components.season
 ephem==3.7.7.0
 
@@ -425,7 +428,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==3.2.2
+pyatmo==3.2.3
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
