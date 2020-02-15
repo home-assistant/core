@@ -199,7 +199,9 @@ class MikrotikData:
 
             if mac in wireless_devices:
                 # if wireless is supported then wireless_params are params
-                self.devices[mac].update(wireless_params=wireless_devices[mac], active=True)
+                self.devices[mac].update(
+                    wireless_params=wireless_devices[mac], active=True
+                )
                 continue
             # for wired devices or when forcing dhcp check for active-address
             if not params.get("active-address"):
