@@ -21,7 +21,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 
 ATTR_OBSERVATIONS = "observations"
-ATTR_ENTITIES = "observed_entities"
+ATTR_ENTITY_ID = "observed_entities"
 ATTR_PROBABILITY = "probability"
 ATTR_PROBABILITY_THRESHOLD = "probability_threshold"
 
@@ -127,7 +127,15 @@ class BayesianBinarySensor(BinarySensorDevice):
         self.probability = prior
 
         self.current_obs = OrderedDict({})
-        self.current_ent = OrderedDict({})
+        self.entity_obs_dict = []
+
+        for obs in self._observations:
+            if "entity_id" in obs:
+                self.entity_obs_dict.append(set(obs.get("entity_id")))
+            if "value_template" in obs:
+                self.entity_obs_dict.append(
+                    set(obs.get(CONF_VALUE_TEMPLATE).extract_entities())
+                )
 
         to_observe = set()
         for obs in self._observations:
@@ -186,24 +194,13 @@ class BayesianBinarySensor(BinarySensorDevice):
             prob_true = entity_observation["prob_given_true"]
             prob_false = entity_observation.get("prob_given_false", 1 - prob_true)
 
-            if "entity_id" in entity_observation:
-                entity_id = entity_observation.get("entity_id")
-            if "value_template" in entity_observation:
-                entity_id = entity_observation.get(
-                    CONF_VALUE_TEMPLATE
-                ).extract_entities()
-
             self.current_obs[obs_id] = {
                 "prob_true": prob_true,
                 "prob_false": prob_false,
             }
-            self.current_ent[obs_id] = {
-                "entity_id": entity_id,
-            }
 
         else:
             self.current_obs.pop(obs_id, None)
-            self.current_ent.pop(obs_id, None)
 
     def _process_numeric_state(self, entity_observation):
         """Add entity to current_obs if numeric state conditions are met."""
@@ -264,8 +261,8 @@ class BayesianBinarySensor(BinarySensorDevice):
         """Return the state attributes of the sensor."""
         return {
             ATTR_OBSERVATIONS: list(self.current_obs.values()),
-            ATTR_ENTITIES: list(
-                self.current_ent[ent]["entity_id"] for ent in self.current_ent
+            ATTR_ENTITY_ID: list(
+                self.entity_obs_dict[obs] for obs in self.current_obs.keys()
             ),
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
