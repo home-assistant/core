@@ -1,33 +1,36 @@
 """Test Dynalite bridge."""
+import asyncio  # only so it knows to patch the correct one
 from unittest.mock import Mock, call
 
 from asynctest import patch
 from dynalite_lib import CONF_ALL
+import pytest
 
 from homeassistant.components import dynalite
 
 
-async def test_bridge_setup():
-    """Test a successful setup."""
+@pytest.fixture
+def dyn_bridge():
+    """Define a basic mock bridge."""
     hass = Mock()
     host = "1.2.3.4"
     hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = dynalite.DynaliteBridge(hass, host)
+    bridge = dynalite.DynaliteBridge(hass, host)
+    return bridge
 
+
+async def test_bridge_setup(dyn_bridge):
+    """Test a successful setup."""
     with patch.object(
         dyn_bridge.dynalite_devices, "async_setup", return_value=True
     ) as dyn_dev_setup:
         assert await dyn_bridge.async_setup() is True
         dyn_dev_setup.assert_called_once()
-        hass.config_entries.async_forward_entry_setup.assert_not_called()
+        dyn_bridge.hass.config_entries.async_forward_entry_setup.assert_not_called()
 
 
-async def test_update_device():
+async def test_update_device(dyn_bridge):
     """Test a successful setup."""
-    hass = Mock()
-    host = "1.2.3.4"
-    hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = dynalite.DynaliteBridge(hass, host)
     async_dispatch = Mock()
 
     with patch(
@@ -35,23 +38,21 @@ async def test_update_device():
     ):
         dyn_bridge.update_device(CONF_ALL)
         async_dispatch.assert_called_once()
-        assert async_dispatch.mock_calls[0] == call(hass, f"dynalite-update-{host}")
+        assert async_dispatch.mock_calls[0] == call(
+            dyn_bridge.hass, f"dynalite-update-{dyn_bridge.host}"
+        )
         async_dispatch.reset_mock()
         device = Mock
         device.unique_id = "abcdef"
         dyn_bridge.update_device(device)
         async_dispatch.assert_called_once()
         assert async_dispatch.mock_calls[0] == call(
-            hass, f"dynalite-update-{host}-{device.unique_id}"
+            dyn_bridge.hass, f"dynalite-update-{dyn_bridge.host}-{device.unique_id}"
         )
 
 
-async def test_add_devices_then_register():
+async def test_add_devices_then_register(dyn_bridge):
     """Test that add_devices work."""
-    hass = Mock()
-    host = "1.2.3.4"
-    hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = dynalite.DynaliteBridge(hass, host)
     # First test empty
     dyn_bridge.add_devices_when_registered([])
     assert not dyn_bridge.waiting_devices
@@ -67,13 +68,8 @@ async def test_add_devices_then_register():
     assert reg_func.mock_calls[0][1][0][0] is device1
 
 
-async def test_register_then_add_devices():
+async def test_register_then_add_devices(dyn_bridge):
     """Test that add_devices work after register_add_entities."""
-    hass = Mock()
-    host = "1.2.3.4"
-    hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
-    dyn_bridge = dynalite.DynaliteBridge(hass, host)
-
     device1 = Mock()
     device1.category = "light"
     device2 = Mock()
@@ -83,3 +79,16 @@ async def test_register_then_add_devices():
     dyn_bridge.add_devices_when_registered([device1, device2])
     reg_func.assert_called_once()
     assert reg_func.mock_calls[0][1][0][0] is device1
+
+
+async def test_try_connection(dyn_bridge):
+    """Test that try connection works."""
+    # so it doesn't complain asyncio is not used
+    asyncio.get_running_loop()
+    # successful
+    with patch.object(dyn_bridge.dynalite_devices, "connected", True):
+        assert await dyn_bridge.try_connection()
+    # unsuccessful
+    with patch.object(dyn_bridge.dynalite_devices, "connected", False):
+        with patch("asyncio.sleep", return_value=True):
+            assert not await dyn_bridge.try_connection()
