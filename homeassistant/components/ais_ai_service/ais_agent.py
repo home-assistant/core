@@ -15,7 +15,7 @@ class AisAgent(conversation.AbstractConversationAgent):
     def attribution(self):
         """Return the attribution."""
         if self.hass.services.has_service("conversation", "process"):
-            name = "Zdefiniowane komendy > "
+            name = "Komendy > "
         name += "Asystent AIS"
         if self.hass.services.has_service("ais_google_home", "command"):
             name += " > Google Home"
