@@ -154,8 +154,7 @@ class NetgearDeviceScanner(DeviceScanner):
         self.last_results = results or []
 
     def get_attached_devices(self):
-        """
-        List attached devices with pynetgear.
+        """List attached devices with pynetgear.
 
         The v2 method takes more time and is more heavy on the router
         so we only use it if we need connected AP info.
