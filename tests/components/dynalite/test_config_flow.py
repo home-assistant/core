@@ -16,7 +16,7 @@ async def run_flow(hass, setup, connection):
         result = await hass.config_entries.flow.async_init(
             dynalite.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={dynalite.CONF_HOST: host, dynalite.CONF_NOWAIT: True},
+            data={dynalite.CONF_HOST: host},
         )
     return result
 

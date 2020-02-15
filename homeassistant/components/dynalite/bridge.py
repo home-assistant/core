@@ -8,7 +8,7 @@ from dynalite_lib import CONF_ALL, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import CONF_NOWAIT, LOGGER
+from .const import LOGGER
 
 CONNECT_TIMEOUT = 30
 CONNECT_INTERVAL = 1
@@ -24,7 +24,6 @@ class DynaliteBridge:
         self.async_add_devices = None
         self.waiting_devices = []
         self.host = config[CONF_HOST]
-        self.no_wait = config.get(CONF_NOWAIT, False)
         # Configure the dynalite devices
         self.dynalite_devices = DynaliteDevices(
             config=config,
@@ -35,11 +34,7 @@ class DynaliteBridge:
     async def async_setup(self, tries=0):
         """Set up a Dynalite bridge."""
         # Configure the dynalite devices
-        if not await self.dynalite_devices.async_setup():
-            return False
-        if self.no_wait:
-            return True
-        return await self.try_connection()
+        return await self.dynalite_devices.async_setup()
 
     def update_signal(self, device=None):
         """Create signal to use to trigger entity update."""

@@ -7,7 +7,6 @@ from dynalite_devices_lib import (
     CONF_DEFAULT,
     CONF_FADE,
     CONF_HIDDENENTITY,
-    CONF_LOGLEVEL,
     CONF_NAME,
     CONF_POLLTIMER,
     CONF_PORT,
@@ -18,11 +17,12 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
 # Loading the config flow file will register the flow
 from .bridge import DynaliteBridge
-from .const import CONF_BRIDGES, CONF_NOWAIT, DATA_CONFIGS, DOMAIN, LOGGER
+from .const import CONF_BRIDGES, DATA_CONFIGS, DOMAIN, LOGGER
 
 
 def num_string(value):
@@ -65,13 +65,11 @@ BRIDGE_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_LOGLEVEL): str,
         vol.Optional(CONF_AUTODISCOVER, default=False): vol.Coerce(bool),
         vol.Optional(CONF_POLLTIMER, default=1.0): vol.Coerce(float),
         vol.Optional(CONF_AREA): AREA_SCHEMA,
         vol.Optional(CONF_DEFAULT): PLATFORM_DEFAULTS_SCHEMA,
         vol.Optional(CONF_ACTIVE, default=False): vol.Coerce(bool),
-        vol.Optional(CONF_NOWAIT): vol.Coerce(bool),
     }
 )
 
@@ -130,6 +128,11 @@ async def async_setup_entry(hass, entry):
     if not await bridge.async_setup():
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
         return False
+
+    if not await bridge.try_connection():
+        LOGGER.errot("Could not connect with entry %s", entry)
+        raise ConfigEntryNotReady
+
     hass.data[DOMAIN][entry.entry_id] = bridge
 
     hass.async_create_task(
