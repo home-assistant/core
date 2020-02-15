@@ -6,23 +6,25 @@ from homeassistant.const import CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_SWITCHES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
+CONF_DEFAULT_PORT = 7878
+CONF_DEFAULT_IP = "127.0.0.1"
+CONF_SERIAL = "serial"
+CONF_TRV = "trv"
+CONF_TRVS = "trvs"
 DOMAIN = "lightwave"
 LIGHTWAVE_LINK = "lightwave_link"
 LIGHTWAVE_TRV_PROXY = "lightwave_proxy"
 LIGHTWAVE_TRV_PROXY_PORT = "lightwave_proxy_port"
-PROXY_IP = "trv_proxy_ip"
-PROXY_PORT = "trv_proxy_port"
+PROXY_IP = "proxy_ip"
+PROXY_PORT = "proxy_port"
 
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             vol.All(
-                cv.has_at_least_one_key(CONF_LIGHTS, CONF_SWITCHES, "trv"),
+                cv.has_at_least_one_key(CONF_LIGHTS, CONF_SWITCHES, CONF_TRV),
                 {
-                    vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(PROXY_IP): cv.string,
-                    vol.Optional(PROXY_PORT): cv.string,
                     vol.Required(CONF_HOST): cv.string,
                     vol.Optional(CONF_LIGHTS, default={}): {
                         cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string})
@@ -30,13 +32,17 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Optional(CONF_SWITCHES, default={}): {
                         cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string})
                     },
-                    vol.Optional("trv", default={}): {
-                        cv.string: vol.Schema(
-                            {
-                                vol.Required(CONF_NAME): cv.string,
-                                vol.Required("serial"): cv.string,
-                            }
-                        )
+                    vol.Optional(CONF_TRV, default={}): {
+                        vol.Optional(PROXY_PORT, default=CONF_DEFAULT_PORT): cv.port,
+                        vol.Optional(PROXY_IP, default=CONF_DEFAULT_IP): cv.string,
+                        vol.Required(CONF_TRVS, default={}): {
+                            cv.string: vol.Schema(
+                                {
+                                    vol.Required(CONF_NAME): cv.string,
+                                    vol.Required(CONF_SERIAL): cv.string,
+                                }
+                            )
+                        },
                     },
                 },
             )
@@ -51,16 +57,6 @@ async def async_setup(hass, config):
     host = config[DOMAIN][CONF_HOST]
     hass.data[LIGHTWAVE_LINK] = LWLink(host)
 
-    trv_proxy_ip = "127.0.0.1"
-    if PROXY_IP in config[DOMAIN].keys():
-        trv_proxy_ip = config[DOMAIN][PROXY_IP]
-    trv_proxy_port = 7878
-    if PROXY_PORT in config[DOMAIN].keys():
-        trv_proxy_port = int(config[DOMAIN][PROXY_PORT])
-
-    hass.data[LIGHTWAVE_TRV_PROXY] = trv_proxy_ip
-    hass.data[LIGHTWAVE_TRV_PROXY_PORT] = trv_proxy_port
-
     lights = config[DOMAIN][CONF_LIGHTS]
     if lights:
         hass.async_create_task(
@@ -73,13 +69,15 @@ async def async_setup(hass, config):
             async_load_platform(hass, "switch", DOMAIN, switches, config)
         )
 
-    trvs = config[DOMAIN]["trv"]
-    if trvs:
+    trv = config[DOMAIN][CONF_TRV]
+    if trv:
+        hass.data[LIGHTWAVE_TRV_PROXY] = trv[PROXY_IP]
+        hass.data[LIGHTWAVE_TRV_PROXY_PORT] = trv[PROXY_PORT]
         hass.async_create_task(
-            async_load_platform(hass, "climate", DOMAIN, trvs, config)
+            async_load_platform(hass, "climate", DOMAIN, trv[CONF_TRVS], config)
         )
         hass.async_create_task(
-            async_load_platform(hass, "sensor", DOMAIN, trvs, config)
+            async_load_platform(hass, "sensor", DOMAIN, trv[CONF_TRVS], config)
         )
 
     return True
