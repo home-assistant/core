@@ -477,23 +477,9 @@ class AugustData:
         _LOGGER.debug("Completed retrieving locks detail")
         self._lock_detail_by_id = detail_by_id
 
-    def _call_api_operation_that_requires_bridge(
-        self, device_name, operation_name, func, *args, **kwargs
-    ):
-        """Call an API that requires the bridge to be online."""
-        ret = None
-        try:
-            ret = func(*args, **kwargs)
-        except AugustApiHTTPError as err:
-            raise HomeAssistantError(
-                device_name + ": " + str(err)
-            ) from AugustApiHTTPError
-
-        return ret
-
     def lock(self, device_id):
         """Lock the device."""
-        return self._call_api_operation_that_requires_bridge(
+        return _call_api_operation_that_requires_bridge(
             self.get_lock_name(device_id),
             "lock",
             self._api.lock,
@@ -503,10 +489,23 @@ class AugustData:
 
     def unlock(self, device_id):
         """Unlock the device."""
-        return self._call_api_operation_that_requires_bridge(
+        return _call_api_operation_that_requires_bridge(
             self.get_lock_name(device_id),
             "unlock",
             self._api.unlock,
             self._access_token,
             device_id,
         )
+
+
+def _call_api_operation_that_requires_bridge(
+    device_name, operation_name, func, *args, **kwargs
+):
+    """Call an API that requires the bridge to be online."""
+    ret = None
+    try:
+        ret = func(*args, **kwargs)
+    except AugustApiHTTPError as err:
+        raise HomeAssistantError(device_name + ": " + str(err)) from AugustApiHTTPError
+
+    return ret
