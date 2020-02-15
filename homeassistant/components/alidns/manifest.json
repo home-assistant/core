@@ -1,0 +1,8 @@
+{
+  "domain": "alidns",
+  "name": "aliyun dns",
+  "documentation": "https://www.home-assistant.io/integrations/alidns",
+  "dependencies": [],
+  "codeowners": [],
+  "requirements": ["aliyun-python-sdk-core==2.13.14", "aliyun-python-sdk-alidns==2.0.15"]
+}
