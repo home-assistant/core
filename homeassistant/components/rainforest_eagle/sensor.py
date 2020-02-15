@@ -51,15 +51,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def hwtest(cloud_id, install_code, ip_address):
-    """Try API call 'device_list' to see if target device is Legacy or Eagle-200."""
+    """Try API call 'get_network_info' to see if target device is Legacy or Eagle-200."""
     reader = LeagleReader(cloud_id, install_code, ip_address)
-    response = reader.post_cmd("device_list")
-    if "Error" in response and "Unknown command" in response["Error"]["Text"]:
-        return reader  # Probably a Legacy model
-    if "DeviceList" in response:
-        return EagleReader(ip_address, cloud_id, install_code)  # Probably Eagle-200
+    response = reader.get_network_info()
 
-    _LOGGER.error("Couldn't determine device model.")
+    # Branch to test if target is Legacy Model
+    if "NetworkInfo" in response:
+        if response["NetworkInfo"].get("ModelId", None) == "Z109-EAGLE":
+            return reader
+
+    # Branch to test if target is Eagle-200 Model
+    if "Response" in response:
+        if response["Response"].get("Command", None) == "get_network_info":
+            return EagleReader(ip_address, cloud_id, install_code)
+
+    # Catch-all if hardware ID tests fail
+    raise ValueError("Couldn't determine device model.")
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
