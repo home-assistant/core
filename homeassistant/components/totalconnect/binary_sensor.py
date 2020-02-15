@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
 )
 
-from . import DOMAIN as TOTALCONNECT_DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = []
 
-    client_locations = hass.data[TOTALCONNECT_DOMAIN].client.locations
+    client_locations = hass.data[DOMAIN].client.locations
 
     for location_id, location in client_locations.items():
         for zone_id, zone in location.zones.items():

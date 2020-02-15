@@ -18,7 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_TRIGGERED,
 )
 
-from . import DOMAIN as TOTALCONNECT_DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     alarms = []
 
-    client = hass.data[TOTALCONNECT_DOMAIN].client
+    client = hass.data[DOMAIN].client
 
     for location_id, location in client.locations.items():
         location_name = location.location_name
