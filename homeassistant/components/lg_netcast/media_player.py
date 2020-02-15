@@ -120,6 +120,10 @@ class LgTVDevice(MediaPlayerDevice):
                     channel_info = channel_info[0]
                     self._channel_name = channel_info.find("chname").text
                     self._program_name = channel_info.find("progName").text
+                    if self._channel_name is None:
+                        self._channel_name = channel_info.find("inputSourceName").text
+                    if self._program_name is None:
+                        self._program_name = channel_info.find("labelName").text
 
                 channel_list = client.query_data("channel_list")
                 if channel_list:
