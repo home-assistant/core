@@ -8,16 +8,16 @@ from homeassistant.helpers import config_validation as cv
 
 # Loading the config flow file will register the flow
 from .bridge import DynaliteBridge
-from .const import CONF_BRIDGES, DATA_CONFIGS, DOMAIN, LOGGER
+from .const import CONF_BRIDGES, CONF_NOWAIT, DATA_CONFIGS, DOMAIN, LOGGER
+
+EXT_BRIDGE_SCHEMA = BRIDGE_CONFIG_SCHEMA.extend(
+    {vol.Optional(CONF_NOWAIT): vol.Coerce(bool)}
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_BRIDGES): vol.All(
-                    cv.ensure_list, [BRIDGE_CONFIG_SCHEMA]
-                )
-            }
+            {vol.Optional(CONF_BRIDGES): vol.All(cv.ensure_list, [EXT_BRIDGE_SCHEMA])}
         )
     },
     extra=vol.ALLOW_EXTRA,

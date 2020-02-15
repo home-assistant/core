@@ -14,19 +14,29 @@ def dyn_bridge():
     """Define a basic mock bridge."""
     hass = Mock()
     host = "1.2.3.4"
-    hass.data = {dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {}}}}
+    hass.data = {
+        dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {dynalite.CONF_NOWAIT: True}}}
+    }
     bridge = dynalite.DynaliteBridge(hass, host)
     return bridge
 
 
 async def test_bridge_setup(dyn_bridge):
-    """Test a successful setup."""
-    with patch.object(
-        dyn_bridge.dynalite_devices, "async_setup", return_value=True
-    ) as dyn_dev_setup:
-        assert await dyn_bridge.async_setup() is True
-        dyn_dev_setup.assert_called_once()
-        dyn_bridge.hass.config_entries.async_forward_entry_setup.assert_not_called()
+    """Test the bridge setup setup."""
+    # if dynalite_devices fails, has to fail
+    with patch.object(dyn_bridge.dynalite_devices, "async_setup", return_value=False):
+        assert not await dyn_bridge.async_setup()
+    # if dynalite_devices works and NOWAIT is set, has to succeed anyway
+    with patch.object(dyn_bridge.dynalite_devices, "async_setup", return_value=True):
+        with patch.object(dyn_bridge, "try_connection", return_value=False):
+            assert await dyn_bridge.async_setup()
+    # if dynalite_devices works and NOWAIT is not set, depends on try_connection
+    with patch.object(dyn_bridge.dynalite_devices, "async_setup", return_value=True):
+        with patch.dict(dyn_bridge.config, {dynalite.CONF_NOWAIT: False}):
+            with patch.object(dyn_bridge, "try_connection", return_value=True):
+                assert await dyn_bridge.async_setup()
+            with patch.object(dyn_bridge, "try_connection", return_value=False):
+                assert not await dyn_bridge.async_setup()
 
 
 async def test_update_device(dyn_bridge):

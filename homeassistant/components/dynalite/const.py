@@ -6,6 +6,7 @@ DOMAIN = "dynalite"
 DATA_CONFIGS = "dynalite_configs"
 
 CONF_BRIDGES = "bridges"
+CONF_NOWAIT = "nowait"
 
 DEFAULT_NAME = "dynalite"
 DEFAULT_PORT = 12345
