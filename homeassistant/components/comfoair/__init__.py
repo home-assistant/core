@@ -6,6 +6,7 @@ from comfoair.asyncio import ComfoAir
 import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import Event
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -93,10 +94,10 @@ class ComfoAirModule:
         """Connect to a serial port or socket."""
         await self._ca.connect(self._hass.loop)
 
-    async def stop(self):
+    async def stop(self, event: Event):
         """Close resources."""
         self._ca.remove_listener(self._event)
-        self._ca.shutdown()
+        await self._ca.shutdown()
 
     async def set_speed(self, speed: int):
         """Set the speed of the fans."""
