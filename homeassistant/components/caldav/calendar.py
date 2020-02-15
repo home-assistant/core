@@ -200,12 +200,12 @@ class WebDavCalendarData:
         # won't return events that have already started
         results = self.calendar.date_search(start_of_today, start_of_tomorrow)
 
-        # Create new vevents for each recurrence of an event that happens today.
+        # Create new events for each recurrence of an event that happens today.
         # For recurring events, some servers return the original event with recurrence rules
         # and they would not be properly parsed using their original start/end dates.
-        vevents = [event.instance.vevent for event in results]
-        new_vevents = []
-        for vevent in vevents:
+        new_events = []
+        for event in results:
+            vevent = event.instance.vevent
             for start_dt in vevent.getrruleset() or []:
                 _start_of_today = start_of_today
                 _start_of_tomorrow = start_of_tomorrow
@@ -214,15 +214,16 @@ class WebDavCalendarData:
                     _start_of_today = _start_of_today.date()
                     _start_of_tomorrow = _start_of_tomorrow.date()
                 if _start_of_today <= start_dt < _start_of_tomorrow:
-                    new_vevent = vevent
+                    new_event = event.copy()
+                    new_vevent = new_event.instance.vevent
                     if hasattr(new_vevent, "dtend"):
                         dur = new_vevent.dtend.value - new_vevent.dtstart.value
                         new_vevent.dtend.value = start_dt + dur
                     new_vevent.dtstart.value = start_dt
-                    new_vevents.append(new_vevent)
+                    new_events.append(new_event)
                 elif _start_of_tomorrow <= start_dt:
                     break
-        vevents += new_vevents
+        vevents = [event.instance.vevent for event in results + new_events]
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
