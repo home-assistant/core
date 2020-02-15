@@ -110,10 +110,7 @@ class NetgearDeviceScanner(DeviceScanner):
                     or dev.name in self.excluded_devices
                 )
             )
-
-            # when link_rate is None this means the router still knows about
-            # the device, but it is not in range.
-            if tracked and dev.link_rate is not None:
+            if tracked:
                 devices.append(dev.mac)
                 if (
                     self.tracked_accesspoints
