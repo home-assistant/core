@@ -1,11 +1,11 @@
 """Test Dynalite __init__."""
 
-from asynctest import patch
+from asynctest import CoroutineMock, patch
 
 from homeassistant.components import dynalite
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 async def test_empty_config(hass):
@@ -71,7 +71,7 @@ async def test_unload_entry(hass):
     entry.add_to_hass(hass)
 
     with patch.object(dynalite, "DynaliteBridge") as mock_bridge:
-        mock_bridge.return_value.async_setup.return_value = mock_coro(True)
+        mock_bridge.return_value.async_setup = CoroutineMock(return_value=True)
         assert (
             await async_setup_component(
                 hass,

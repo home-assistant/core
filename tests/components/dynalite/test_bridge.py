@@ -18,7 +18,7 @@ async def test_bridge_setup():
         dyn_bridge.dynalite_devices, "async_setup", return_value=True
     ) as dyn_dev_setup:
         assert await dyn_bridge.async_setup() is True
-        dyn_dev_setup.assert_called_once
+        dyn_dev_setup.assert_called_once()
         hass.config_entries.async_forward_entry_setup.assert_not_called()
 
 
