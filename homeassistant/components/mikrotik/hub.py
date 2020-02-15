@@ -163,14 +163,15 @@ class MikrotikData:
         """Get list of devices with latest status."""
         arp_devices = {}
         device_list = {}
+        wireless_devices = {}
         try:
             self.all_devices = self.get_list_from_interface(DHCP)
             if self.support_capsman:
                 _LOGGER.debug("Hub is a CAPSman manager")
-                device_list = self.get_list_from_interface(CAPSMAN)
+                device_list = wireless_devices = self.get_list_from_interface(CAPSMAN)
             elif self.support_wireless:
                 _LOGGER.debug("Hub supports wireless Interface")
-                device_list = self.get_list_from_interface(WIRELESS)
+                device_list = wireless_devices = self.get_list_from_interface(WIRELESS)
 
             if not device_list or self.force_dhcp:
                 device_list = self.all_devices
@@ -196,9 +197,9 @@ class MikrotikData:
             else:
                 self.devices[mac].update(params=self.all_devices.get(mac, {}))
 
-            if self.support_capsman or self.support_wireless:
+            if mac in wireless_devices:
                 # if wireless is supported then wireless_params are params
-                self.devices[mac].update(wireless_params=device_list[mac], active=True)
+                self.devices[mac].update(wireless_params=wireless_devices[mac], active=True)
                 continue
             # for wired devices or when forcing dhcp check for active-address
             if not params.get("active-address"):
