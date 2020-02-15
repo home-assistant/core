@@ -51,46 +51,34 @@ def get_scanner(hass, config):
     excluded_devices = info.get(CONF_EXCLUDE)
     accesspoints = info.get(CONF_APS)
 
-    scanner = NetgearDeviceScanner(
-        host, ssl, username, password, port, devices, excluded_devices, accesspoints
-    )
+    api = Netgear(password, host, username, port, ssl)
+    scanner = NetgearDeviceScanner(api, devices, excluded_devices, accesspoints)
 
-    return scanner if scanner.success_init else None
+    _LOGGER.debug("Logging in")
+
+    results = scanner.get_attached_devices()
+
+    if results is not None:
+        scanner.last_results = results
+    else:
+        _LOGGER.error("Failed to Login")
+        return None
+
+    return scanner
 
 
 class NetgearDeviceScanner(DeviceScanner):
     """Queries a Netgear wireless router using the SOAP-API."""
 
     def __init__(
-        self,
-        host,
-        ssl,
-        username,
-        password,
-        port,
-        devices,
-        excluded_devices,
-        accesspoints,
+        self, api, devices, excluded_devices, accesspoints,
     ):
         """Initialize the scanner."""
-
         self.tracked_devices = devices
         self.excluded_devices = excluded_devices
         self.tracked_accesspoints = accesspoints
-
         self.last_results = []
-        self._api = Netgear(password, host, username, port, ssl)
-
-        _LOGGER.debug("Logging in")
-
-        results = self.get_attached_devices()
-
-        self.success_init = results is not None
-
-        if self.success_init:
-            self.last_results = results
-        else:
-            _LOGGER.error("Failed to Login")
+        self._api = api
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -154,9 +142,6 @@ class NetgearDeviceScanner(DeviceScanner):
 
         Returns boolean if scanning successful.
         """
-        if not self.success_init:
-            return
-
         _LOGGER.debug("Scanning")
 
         results = self.get_attached_devices()
