@@ -26,6 +26,7 @@ from .core.const import (
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
+    CHANNEL_MULTISTATE_INPUT,
     CHANNEL_POWER_CONFIGURATION,
     CHANNEL_PRESSURE,
     CHANNEL_SMARTENERGY_METERING,
@@ -60,11 +61,6 @@ BATTERY_SIZES = {
 
 CHANNEL_ST_HUMIDITY_CLUSTER = f"channel_0x{SMARTTHINGS_HUMIDITY_CLUSTER:04x}"
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation sensors."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -127,7 +123,7 @@ class Sensor(ZhaEntity):
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
-        self._device_state_attributes = await self.async_state_attr_provider()
+        self._device_state_attributes.update(await self.async_state_attr_provider())
 
         await self.async_accept_signal(
             self._channel, SIGNAL_ATTR_UPDATED, self.async_set_state
@@ -151,10 +147,9 @@ class Sensor(ZhaEntity):
         """Return the state of the entity."""
         if self._state is None:
             return None
-        if isinstance(self._state, float):
-            return str(round(self._state, 2))
         return self._state
 
+    @callback
     def async_set_state(self, state):
         """Handle state update from channel."""
         if state is not None:
@@ -208,6 +203,13 @@ class Battery(Sensor):
             state_attrs["battery_quantity"] = battery_quantity
         return state_attrs
 
+    @callback
+    def async_update_state_attribute(self, key, value):
+        """Update a single device state attribute."""
+        if key == "battery_voltage":
+            self._device_state_attributes[key] = round(value / 10, 1)
+            self.async_schedule_update_ha_state()
+
 
 @STRICT_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
 class ElectricalMeasurement(Sensor):
@@ -224,7 +226,22 @@ class ElectricalMeasurement(Sensor):
 
     def formatter(self, value) -> int:
         """Return 'normalized' value."""
-        return round(value * self._channel.multiplier / self._channel.divisor)
+        value = value * self._channel.multiplier / self._channel.divisor
+        if value < 100 and self._channel.divisor > 1:
+            return round(value, self._decimals)
+        return round(value)
+
+
+@STRICT_MATCH(channel_names=CHANNEL_MULTISTATE_INPUT)
+class Text(Sensor):
+    """Sensor that displays string values."""
+
+    _device_class = None
+    _unit = None
+
+    def formatter(self, value) -> str:
+        """Return string value."""
+        return value
 
 
 @STRICT_MATCH(generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER)

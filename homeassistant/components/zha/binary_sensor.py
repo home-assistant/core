@@ -46,11 +46,6 @@ CLASS_MAPPING = {
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation binary sensors."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation binary sensor from config entry."""
 
@@ -130,6 +125,7 @@ class BinarySensor(ZhaEntity, BinarySensorDevice):
         """Return device class from component DEVICE_CLASSES."""
         return self._device_class
 
+    @callback
     def async_set_state(self, state):
         """Set the state."""
         self._state = bool(state)

@@ -13,6 +13,8 @@ import bellows.zigbee.application
 import zigpy.profiles.zha
 import zigpy.profiles.zll
 import zigpy.zcl as zcl
+import zigpy_cc.api
+import zigpy_cc.zigbee.application
 import zigpy_deconz.api
 import zigpy_deconz.zigbee.application
 import zigpy_xbee.api
@@ -44,8 +46,11 @@ REMOTE_DEVICE_TYPES = {
         zigpy.profiles.zha.DeviceType.COLOR_DIMMER_SWITCH,
         zigpy.profiles.zha.DeviceType.COLOR_SCENE_CONTROLLER,
         zigpy.profiles.zha.DeviceType.DIMMER_SWITCH,
+        zigpy.profiles.zha.DeviceType.LEVEL_CONTROL_SWITCH,
         zigpy.profiles.zha.DeviceType.NON_COLOR_CONTROLLER,
         zigpy.profiles.zha.DeviceType.NON_COLOR_SCENE_CONTROLLER,
+        zigpy.profiles.zha.DeviceType.ON_OFF_SWITCH,
+        zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT_SWITCH,
         zigpy.profiles.zha.DeviceType.REMOTE_CONTROL,
         zigpy.profiles.zha.DeviceType.SCENE_SELECTOR,
     ],
@@ -104,7 +109,6 @@ DEVICE_CLASS = {
         zigpy.profiles.zha.DeviceType.LEVEL_CONTROLLABLE_OUTPUT: LIGHT,
         zigpy.profiles.zha.DeviceType.ON_OFF_BALLAST: SWITCH,
         zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT: LIGHT,
-        zigpy.profiles.zha.DeviceType.ON_OFF_LIGHT_SWITCH: SWITCH,
         zigpy.profiles.zha.DeviceType.ON_OFF_PLUG_IN_UNIT: SWITCH,
         zigpy.profiles.zha.DeviceType.SMART_PLUG: SWITCH,
     },
@@ -125,15 +129,20 @@ LIGHT_CLUSTERS = SetRegistry()
 OUTPUT_CHANNEL_ONLY_CLUSTERS = SetRegistry()
 
 RADIO_TYPES = {
+    RadioType.deconz.name: {
+        ZHA_GW_RADIO: zigpy_deconz.api.Deconz,
+        CONTROLLER: zigpy_deconz.zigbee.application.ControllerApplication,
+        ZHA_GW_RADIO_DESCRIPTION: "Deconz",
+    },
     RadioType.ezsp.name: {
         ZHA_GW_RADIO: bellows.ezsp.EZSP,
         CONTROLLER: bellows.zigbee.application.ControllerApplication,
         ZHA_GW_RADIO_DESCRIPTION: "EZSP",
     },
-    RadioType.deconz.name: {
-        ZHA_GW_RADIO: zigpy_deconz.api.Deconz,
-        CONTROLLER: zigpy_deconz.zigbee.application.ControllerApplication,
-        ZHA_GW_RADIO_DESCRIPTION: "Deconz",
+    RadioType.ti_cc.name: {
+        ZHA_GW_RADIO: zigpy_cc.api.API,
+        CONTROLLER: zigpy_cc.zigbee.application.ControllerApplication,
+        ZHA_GW_RADIO_DESCRIPTION: "TI CC",
     },
     RadioType.xbee.name: {
         ZHA_GW_RADIO: zigpy_xbee.api.XBee,

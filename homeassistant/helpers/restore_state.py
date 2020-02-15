@@ -115,6 +115,7 @@ class RestoreStateData:
         self.last_states: Dict[str, StoredState] = {}
         self.entity_ids: Set[str] = set()
 
+    @callback
     def async_get_stored_states(self) -> List[StoredState]:
         """Get the set of states which should be stored.
 
@@ -173,6 +174,7 @@ class RestoreStateData:
     def async_setup_dump(self, *args: Any) -> None:
         """Set up the restore state listeners."""
 
+        @callback
         def _async_dump_states(*_: Any) -> None:
             self.hass.async_create_task(self.async_dump_states())
 

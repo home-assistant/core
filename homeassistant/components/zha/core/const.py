@@ -18,6 +18,7 @@ ATTR_CLUSTER_ID = "cluster_id"
 ATTR_CLUSTER_TYPE = "cluster_type"
 ATTR_COMMAND = "command"
 ATTR_COMMAND_TYPE = "command_type"
+ATTR_DEVICE_TYPE = "device_type"
 ATTR_ENDPOINT_ID = "endpoint_id"
 ATTR_IEEE = "ieee"
 ATTR_LAST_SEEN = "last_seen"
@@ -58,6 +59,7 @@ CHANNEL_HUMIDITY = "humidity"
 CHANNEL_IAS_WD = "ias_wd"
 CHANNEL_ILLUMINANCE = "illuminance"
 CHANNEL_LEVEL = ATTR_LEVEL
+CHANNEL_MULTISTATE_INPUT = "multistate_input"
 CHANNEL_OCCUPANCY = "occupancy"
 CHANNEL_ON_OFF = "on_off"
 CHANNEL_POWER_CONFIGURATION = "power"
@@ -94,6 +96,7 @@ DATA_ZHA_GATEWAY = "zha_gateway"
 DEBUG_COMP_BELLOWS = "bellows"
 DEBUG_COMP_ZHA = "homeassistant.components.zha"
 DEBUG_COMP_ZIGPY = "zigpy"
+DEBUG_COMP_ZIGPY_CC = "zigpy_cc"
 DEBUG_COMP_ZIGPY_DECONZ = "zigpy_deconz"
 DEBUG_COMP_ZIGPY_XBEE = "zigpy_xbee"
 DEBUG_COMP_ZIGPY_ZIGATE = "zigpy_zigate"
@@ -103,8 +106,9 @@ DEBUG_LEVELS = {
     DEBUG_COMP_BELLOWS: logging.DEBUG,
     DEBUG_COMP_ZHA: logging.DEBUG,
     DEBUG_COMP_ZIGPY: logging.DEBUG,
-    DEBUG_COMP_ZIGPY_XBEE: logging.DEBUG,
+    DEBUG_COMP_ZIGPY_CC: logging.DEBUG,
     DEBUG_COMP_ZIGPY_DECONZ: logging.DEBUG,
+    DEBUG_COMP_ZIGPY_XBEE: logging.DEBUG,
     DEBUG_COMP_ZIGPY_ZIGATE: logging.DEBUG,
 }
 DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY]
@@ -129,9 +133,10 @@ POWER_BATTERY_OR_UNKNOWN = "Battery or Unknown"
 class RadioType(enum.Enum):
     """Possible options for radio type."""
 
-    ezsp = "ezsp"
-    xbee = "xbee"
     deconz = "deconz"
+    ezsp = "ezsp"
+    ti_cc = "ti_cc"
+    xbee = "xbee"
     zigate = "zigate"
 
     @classmethod
@@ -223,13 +228,18 @@ WARNING_DEVICE_SQUAWK_MODE_ARMED = 0
 WARNING_DEVICE_SQUAWK_MODE_DISARMED = 1
 
 ZHA_DISCOVERY_NEW = "zha_discovery_new_{}"
-ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
 ZHA_GW_MSG = "zha_gateway_message"
-ZHA_GW_MSG_DEVICE_REMOVED = "device_removed"
-ZHA_GW_MSG_DEVICE_INFO = "device_info"
 ZHA_GW_MSG_DEVICE_FULL_INIT = "device_fully_initialized"
+ZHA_GW_MSG_DEVICE_INFO = "device_info"
 ZHA_GW_MSG_DEVICE_JOINED = "device_joined"
-ZHA_GW_MSG_LOG_OUTPUT = "log_output"
+ZHA_GW_MSG_DEVICE_REMOVED = "device_removed"
+ZHA_GW_MSG_GROUP_ADDED = "group_added"
+ZHA_GW_MSG_GROUP_INFO = "group_info"
+ZHA_GW_MSG_GROUP_MEMBER_ADDED = "group_member_added"
+ZHA_GW_MSG_GROUP_MEMBER_REMOVED = "group_member_removed"
+ZHA_GW_MSG_GROUP_REMOVED = "group_removed"
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
+ZHA_GW_MSG_LOG_OUTPUT = "log_output"
+ZHA_GW_MSG_RAW_INIT = "raw_device_initialized"
 ZHA_GW_RADIO = "radio"
 ZHA_GW_RADIO_DESCRIPTION = "radio_description"

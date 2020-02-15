@@ -72,20 +72,26 @@ def main():
     if args.template != "integration":
         generate.generate(args.template, info)
 
-    pipe_null = "" if args.develop else "> /dev/null"
+    pipe_null = {} if args.develop else {"stdout": subprocess.DEVNULL}
 
     print("Running hassfest to pick up new information.")
-    subprocess.run(f"python -m script.hassfest {pipe_null}", shell=True)
+    subprocess.run(["python", "-m", "script.hassfest"], **pipe_null)
     print()
 
     print("Running gen_requirements_all to pick up new information.")
-    subprocess.run(f"python -m script.gen_requirements_all {pipe_null}", shell=True)
+    subprocess.run(["python", "-m", "script.gen_requirements_all"], **pipe_null)
+    print()
+
+    print("Running script/translations_develop to pick up new translation strings.")
+    subprocess.run(
+        ["script/translations_develop", "--integration", info.domain], **pipe_null
+    )
     print()
 
     if args.develop:
         print("Running tests")
         print(f"$ pytest -vvv tests/components/{info.domain}")
-        subprocess.run(f"pytest -vvv tests/components/{info.domain}", shell=True)
+        subprocess.run(["pytest", "-vvv", "tests/components/{info.domain}"])
         print()
 
     docs.print_relevant_docs(args.template, info)

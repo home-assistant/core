@@ -881,17 +881,17 @@ class TestConfig(unittest.TestCase):
 
     def test_path_with_file(self):
         """Test get_config_path method."""
-        self.config.config_dir = "/tmp/ha-config"
-        assert "/tmp/ha-config/test.conf" == self.config.path("test.conf")
+        self.config.config_dir = "/test/ha-config"
+        assert "/test/ha-config/test.conf" == self.config.path("test.conf")
 
     def test_path_with_dir_and_file(self):
         """Test get_config_path method."""
-        self.config.config_dir = "/tmp/ha-config"
-        assert "/tmp/ha-config/dir/test.conf" == self.config.path("dir", "test.conf")
+        self.config.config_dir = "/test/ha-config"
+        assert "/test/ha-config/dir/test.conf" == self.config.path("dir", "test.conf")
 
     def test_as_dict(self):
         """Test as dict."""
-        self.config.config_dir = "/tmp/ha-config"
+        self.config.config_dir = "/test/ha-config"
         expected = {
             "latitude": 0,
             "longitude": 0,
@@ -900,7 +900,7 @@ class TestConfig(unittest.TestCase):
             "location_name": "Home",
             "time_zone": "UTC",
             "components": set(),
-            "config_dir": "/tmp/ha-config",
+            "config_dir": "/test/ha-config",
             "whitelist_external_dirs": set(),
             "version": __version__,
             "config_source": "default",
@@ -1180,3 +1180,28 @@ def test_context():
     assert c.user_id == 23
     assert c.parent_id == 100
     assert c.id is not None
+
+
+async def test_async_functions_with_callback(hass):
+    """Test we deal with async functions accidentally marked as callback."""
+    runs = []
+
+    @ha.callback
+    async def test():
+        runs.append(True)
+
+    await hass.async_add_job(test)
+    assert len(runs) == 1
+
+    hass.async_run_job(test)
+    await hass.async_block_till_done()
+    assert len(runs) == 2
+
+    @ha.callback
+    async def service_handler(call):
+        runs.append(True)
+
+    hass.services.async_register("test_domain", "test_service", service_handler)
+
+    await hass.services.async_call("test_domain", "test_service", blocking=True)
+    assert len(runs) == 3

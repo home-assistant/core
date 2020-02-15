@@ -1,8 +1,21 @@
 """Alexa capabilities."""
 import logging
+import math
 
-from homeassistant.components import cover, fan, image_processing, input_number, light
+from homeassistant.components import (
+    cover,
+    fan,
+    image_processing,
+    input_number,
+    light,
+    vacuum,
+)
 from homeassistant.components.alarm_control_panel import ATTR_CODE_FORMAT, FORMAT_NUMBER
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+    SUPPORT_ALARM_ARM_NIGHT,
+)
 import homeassistant.components.climate.const as climate
 import homeassistant.components.media_player.const as media_player
 from homeassistant.const import (
@@ -633,6 +646,43 @@ class AlexaSpeaker(AlexaCapability):
         """Return the Alexa API name of this interface."""
         return "Alexa.Speaker"
 
+    def properties_supported(self):
+        """Return what properties this entity supports."""
+        properties = [{"name": "volume"}]
+
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        if supported & media_player.SUPPORT_VOLUME_MUTE:
+            properties.append({"name": "muted"})
+
+        return properties
+
+    def properties_proactively_reported(self):
+        """Return True if properties asynchronously reported."""
+        return True
+
+    def properties_retrievable(self):
+        """Return True if properties can be retrieved."""
+        return True
+
+    def get_property(self, name):
+        """Read and return a property."""
+        if name == "volume":
+            current_level = self.entity.attributes.get(
+                media_player.ATTR_MEDIA_VOLUME_LEVEL
+            )
+            try:
+                current = math.floor(int(current_level * 100))
+            except ZeroDivisionError:
+                current = 0
+            return current
+
+        if name == "muted":
+            return bool(
+                self.entity.attributes.get(media_player.ATTR_MEDIA_VOLUME_MUTED)
+            )
+
+        return None
+
 
 class AlexaStepSpeaker(AlexaCapability):
     """Implements Alexa.StepSpeaker.
@@ -699,6 +749,13 @@ class AlexaInputController(AlexaCapability):
         source_list = self.entity.attributes.get(
             media_player.ATTR_INPUT_SOURCE_LIST, []
         )
+        input_list = AlexaInputController.get_valid_inputs(source_list)
+
+        return input_list
+
+    @staticmethod
+    def get_valid_inputs(source_list):
+        """Return list of supported inputs."""
         input_list = []
         for source in source_list:
             formatted_source = (
@@ -1075,14 +1132,36 @@ class AlexaSecurityPanelController(AlexaCapability):
     def configuration(self):
         """Return configuration object with supported authorization types."""
         code_format = self.entity.attributes.get(ATTR_CODE_FORMAT)
+        supported = self.entity.attributes[ATTR_SUPPORTED_FEATURES]
+        configuration = {}
+
+        supported_arm_states = [{"value": "DISARMED"}]
+        if supported & SUPPORT_ALARM_ARM_AWAY:
+            supported_arm_states.append({"value": "ARMED_AWAY"})
+        if supported & SUPPORT_ALARM_ARM_HOME:
+            supported_arm_states.append({"value": "ARMED_STAY"})
+        if supported & SUPPORT_ALARM_ARM_NIGHT:
+            supported_arm_states.append({"value": "ARMED_NIGHT"})
+
+        configuration["supportedArmStates"] = supported_arm_states
 
         if code_format == FORMAT_NUMBER:
-            return {"supportedAuthorizationTypes": [{"type": "FOUR_DIGIT_PIN"}]}
-        return None
+            configuration["supportedAuthorizationTypes"] = [{"type": "FOUR_DIGIT_PIN"}]
+
+        return configuration
 
 
 class AlexaModeController(AlexaCapability):
     """Implements Alexa.ModeController.
+
+    The instance property must be unique across ModeController, RangeController, ToggleController within the same device.
+    The instance property should be a concatenated string of device domain period and single word.
+    e.g. fan.speed & fan.direction.
+
+    The instance property must not contain words from other instance property strings within the same device.
+    e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
+
+    An instance property string value may be reused for different devices.
 
     https://developer.amazon.com/docs/device-apis/alexa-modecontroller.html
     """
@@ -1187,35 +1266,48 @@ class AlexaModeController(AlexaCapability):
                 f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}",
                 [AlexaGlobalCatalog.VALUE_CLOSE],
             )
-            self._resource.add_mode(f"{cover.ATTR_POSITION}.custom", ["Custom"])
+            self._resource.add_mode(
+                f"{cover.ATTR_POSITION}.custom",
+                ["Custom", AlexaGlobalCatalog.SETTING_PRESET],
+            )
             return self._resource.serialize_capability_resources()
 
         return None
 
     def semantics(self):
         """Build and return semantics object."""
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+            lower_labels = [AlexaSemantics.ACTION_LOWER]
+            raise_labels = [AlexaSemantics.ACTION_RAISE]
             self._semantics = AlexaSemantics()
+
+            # Add open/close semantics if tilt is not supported.
+            if not supported & cover.SUPPORT_SET_TILT_POSITION:
+                lower_labels.append(AlexaSemantics.ACTION_CLOSE)
+                raise_labels.append(AlexaSemantics.ACTION_OPEN)
+                self._semantics.add_states_to_value(
+                    [AlexaSemantics.STATES_CLOSED],
+                    f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}",
+                )
+                self._semantics.add_states_to_value(
+                    [AlexaSemantics.STATES_OPEN],
+                    f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}",
+                )
+
             self._semantics.add_action_to_directive(
-                [AlexaSemantics.ACTION_CLOSE, AlexaSemantics.ACTION_LOWER],
+                lower_labels,
                 "SetMode",
                 {"mode": f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}"},
             )
             self._semantics.add_action_to_directive(
-                [AlexaSemantics.ACTION_OPEN, AlexaSemantics.ACTION_RAISE],
+                raise_labels,
                 "SetMode",
                 {"mode": f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}"},
             )
-            self._semantics.add_states_to_value(
-                [AlexaSemantics.STATES_CLOSED],
-                f"{cover.ATTR_POSITION}.{cover.STATE_CLOSED}",
-            )
-            self._semantics.add_states_to_value(
-                [AlexaSemantics.STATES_OPEN],
-                f"{cover.ATTR_POSITION}.{cover.STATE_OPEN}",
-            )
+
             return self._semantics.serialize_semantics()
 
         return None
@@ -1223,6 +1315,15 @@ class AlexaModeController(AlexaCapability):
 
 class AlexaRangeController(AlexaCapability):
     """Implements Alexa.RangeController.
+
+    The instance property must be unique across ModeController, RangeController, ToggleController within the same device.
+    The instance property should be a concatenated string of device domain period and single word.
+    e.g. fan.speed & fan.direction.
+
+    The instance property must not contain words from other instance property strings within the same device.
+    e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
+
+    An instance property string value may be reused for different devices.
 
     https://developer.amazon.com/docs/device-apis/alexa-rangecontroller.html
     """
@@ -1270,26 +1371,42 @@ class AlexaRangeController(AlexaCapability):
         if name != "rangeValue":
             raise UnsupportedProperty(name)
 
+        # Return None for unavailable and unknown states.
+        # Allows the Alexa.EndpointHealth Interface to handle the unavailable state in a stateReport.
+        if self.entity.state in (STATE_UNAVAILABLE, STATE_UNKNOWN, None):
+            return None
+
         # Fan Speed
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_SPEED}":
-            speed_list = self.entity.attributes[fan.ATTR_SPEED_LIST]
-            speed = self.entity.attributes[fan.ATTR_SPEED]
-            speed_index = next(
-                (i for i, v in enumerate(speed_list) if v == speed), None
-            )
-            return speed_index
+            speed_list = self.entity.attributes.get(fan.ATTR_SPEED_LIST)
+            speed = self.entity.attributes.get(fan.ATTR_SPEED)
+            if speed_list is not None and speed is not None:
+                speed_index = next(
+                    (i for i, v in enumerate(speed_list) if v == speed), None
+                )
+                return speed_index
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
             return self.entity.attributes.get(cover.ATTR_CURRENT_POSITION)
 
-        # Cover Tilt Position
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
+        # Cover Tilt
+        if self.instance == f"{cover.DOMAIN}.tilt":
             return self.entity.attributes.get(cover.ATTR_CURRENT_TILT_POSITION)
 
         # Input Number Value
         if self.instance == f"{input_number.DOMAIN}.{input_number.ATTR_VALUE}":
             return float(self.entity.state)
+
+        # Vacuum Fan Speed
+        if self.instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+            speed_list = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED_LIST)
+            speed = self.entity.attributes.get(vacuum.ATTR_FAN_SPEED)
+            if speed_list is not None and speed is not None:
+                speed_index = next(
+                    (i for i, v in enumerate(speed_list) if v == speed), None
+                )
+                return speed_index
 
         return None
 
@@ -1314,12 +1431,16 @@ class AlexaRangeController(AlexaCapability):
                 precision=1,
             )
             for index, speed in enumerate(speed_list):
-                labels = [speed.replace("_", " ")]
+                labels = []
+                if isinstance(speed, str):
+                    labels.append(speed.replace("_", " "))
                 if index == 1:
                     labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
                 if index == max_value:
                     labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
-                self._resource.add_preset(value=index, labels=labels)
+
+                if len(labels) > 0:
+                    self._resource.add_preset(value=index, labels=labels)
 
             return self._resource.serialize_capability_resources()
 
@@ -1334,10 +1455,10 @@ class AlexaRangeController(AlexaCapability):
             )
             return self._resource.serialize_capability_resources()
 
-        # Cover Tilt Position Resources
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
+        # Cover Tilt Resources
+        if self.instance == f"{cover.DOMAIN}.tilt":
             self._resource = AlexaPresetResource(
-                ["Tilt Position", AlexaGlobalCatalog.SETTING_OPENING],
+                ["Tilt", "Angle", AlexaGlobalCatalog.SETTING_DIRECTION],
                 min_value=0,
                 max_value=100,
                 precision=1,
@@ -1353,7 +1474,7 @@ class AlexaRangeController(AlexaCapability):
             unit = self.entity.attributes.get(input_number.ATTR_UNIT_OF_MEASUREMENT)
 
             self._resource = AlexaPresetResource(
-                ["Value"],
+                ["Value", AlexaGlobalCatalog.SETTING_PRESET],
                 min_value=min_value,
                 max_value=max_value,
                 precision=precision,
@@ -1367,28 +1488,59 @@ class AlexaRangeController(AlexaCapability):
             )
             return self._resource.serialize_capability_resources()
 
+        # Vacuum Fan Speed Resources
+        if self.instance == f"{vacuum.DOMAIN}.{vacuum.ATTR_FAN_SPEED}":
+            speed_list = self.entity.attributes[vacuum.ATTR_FAN_SPEED_LIST]
+            max_value = len(speed_list) - 1
+            self._resource = AlexaPresetResource(
+                labels=[AlexaGlobalCatalog.SETTING_FAN_SPEED],
+                min_value=0,
+                max_value=max_value,
+                precision=1,
+            )
+            for index, speed in enumerate(speed_list):
+                labels = [speed.replace("_", " ")]
+                if index == 1:
+                    labels.append(AlexaGlobalCatalog.VALUE_MINIMUM)
+                if index == max_value:
+                    labels.append(AlexaGlobalCatalog.VALUE_MAXIMUM)
+                self._resource.add_preset(value=index, labels=labels)
+
+            return self._resource.serialize_capability_resources()
+
         return None
 
     def semantics(self):
         """Build and return semantics object."""
+        supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         # Cover Position
         if self.instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
+            lower_labels = [AlexaSemantics.ACTION_LOWER]
+            raise_labels = [AlexaSemantics.ACTION_RAISE]
             self._semantics = AlexaSemantics()
+
+            # Add open/close semantics if tilt is not supported.
+            if not supported & cover.SUPPORT_SET_TILT_POSITION:
+                lower_labels.append(AlexaSemantics.ACTION_CLOSE)
+                raise_labels.append(AlexaSemantics.ACTION_OPEN)
+                self._semantics.add_states_to_value(
+                    [AlexaSemantics.STATES_CLOSED], value=0
+                )
+                self._semantics.add_states_to_range(
+                    [AlexaSemantics.STATES_OPEN], min_value=1, max_value=100
+                )
+
             self._semantics.add_action_to_directive(
-                [AlexaSemantics.ACTION_LOWER], "SetRangeValue", {"rangeValue": 0}
+                lower_labels, "SetRangeValue", {"rangeValue": 0}
             )
             self._semantics.add_action_to_directive(
-                [AlexaSemantics.ACTION_RAISE], "SetRangeValue", {"rangeValue": 100}
-            )
-            self._semantics.add_states_to_value([AlexaSemantics.STATES_CLOSED], value=0)
-            self._semantics.add_states_to_range(
-                [AlexaSemantics.STATES_OPEN], min_value=1, max_value=100
+                raise_labels, "SetRangeValue", {"rangeValue": 100}
             )
             return self._semantics.serialize_semantics()
 
-        # Cover Tilt Position
-        if self.instance == f"{cover.DOMAIN}.{cover.ATTR_TILT_POSITION}":
+        # Cover Tilt
+        if self.instance == f"{cover.DOMAIN}.tilt":
             self._semantics = AlexaSemantics()
             self._semantics.add_action_to_directive(
                 [AlexaSemantics.ACTION_CLOSE], "SetRangeValue", {"rangeValue": 0}
@@ -1407,6 +1559,15 @@ class AlexaRangeController(AlexaCapability):
 
 class AlexaToggleController(AlexaCapability):
     """Implements Alexa.ToggleController.
+
+    The instance property must be unique across ModeController, RangeController, ToggleController within the same device.
+    The instance property should be a concatenated string of device domain period and single word.
+    e.g. fan.speed & fan.direction.
+
+    The instance property must not contain words from other instance property strings within the same device.
+    e.g. Instance property cover.position & cover.tilt_position will cause the Alexa.Discovery directive to fail.
+
+    An instance property string value may be reused for different devices.
 
     https://developer.amazon.com/docs/device-apis/alexa-togglecontroller.html
     """

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "Plats redan registrerad"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radie"
+                },
+                "title": "Fyll i dina filterdetaljer."
+            }
+        },
+        "title": "GeoNet NZ Volcano"
+    }
+}

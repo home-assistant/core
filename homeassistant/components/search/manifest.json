@@ -7,6 +7,6 @@
   "zeroconf": [],
   "homekit": {},
   "dependencies": ["websocket_api"],
-  "after_dependencies": ["scene", "group"],
+  "after_dependencies": ["scene", "group", "automation", "script"],
   "codeowners": ["@home-assistant/core"]
 }

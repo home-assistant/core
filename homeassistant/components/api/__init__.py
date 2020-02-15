@@ -411,6 +411,7 @@ async def async_services_json(hass):
     return [{"domain": key, "services": value} for key, value in descriptions.items()]
 
 
+@ha.callback
 def async_events_json(hass):
     """Generate event data to JSONify."""
     return [

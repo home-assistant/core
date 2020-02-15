@@ -41,6 +41,9 @@ async def test_list_entities(hass, client):
             "disabled_by": None,
             "entity_id": "test_domain.name",
             "name": "Hello World",
+            "icon": None,
+            "original_name": None,
+            "original_icon": None,
             "platform": "test_platform",
         },
         {
@@ -49,6 +52,9 @@ async def test_list_entities(hass, client):
             "disabled_by": None,
             "entity_id": "test_domain.no_name",
             "name": None,
+            "icon": None,
+            "original_name": None,
+            "original_icon": None,
             "platform": "test_platform",
         },
     ]
@@ -85,6 +91,9 @@ async def test_get_entity(hass, client):
         "platform": "test_platform",
         "entity_id": "test_domain.name",
         "name": "Hello World",
+        "icon": None,
+        "original_name": None,
+        "original_icon": None,
     }
 
     await client.send_json(
@@ -103,6 +112,9 @@ async def test_get_entity(hass, client):
         "platform": "test_platform",
         "entity_id": "test_domain.no_name",
         "name": None,
+        "icon": None,
+        "original_name": None,
+        "original_icon": None,
     }
 
 
@@ -117,6 +129,7 @@ async def test_update_entity(hass, client):
                 # Using component.async_add_entities is equal to platform "domain"
                 platform="test_platform",
                 name="before update",
+                icon="icon:before update",
             )
         },
     )
@@ -127,14 +140,16 @@ async def test_update_entity(hass, client):
     state = hass.states.get("test_domain.world")
     assert state is not None
     assert state.name == "before update"
+    assert state.attributes["icon"] == "icon:before update"
 
-    # UPDATE NAME
+    # UPDATE NAME & ICON
     await client.send_json(
         {
             "id": 6,
             "type": "config/entity_registry/update",
             "entity_id": "test_domain.world",
             "name": "after update",
+            "icon": "icon:after update",
         }
     )
 
@@ -147,10 +162,14 @@ async def test_update_entity(hass, client):
         "platform": "test_platform",
         "entity_id": "test_domain.world",
         "name": "after update",
+        "icon": "icon:after update",
+        "original_name": None,
+        "original_icon": None,
     }
 
     state = hass.states.get("test_domain.world")
     assert state.name == "after update"
+    assert state.attributes["icon"] == "icon:after update"
 
     # UPDATE DISABLED_BY TO USER
     await client.send_json(
@@ -186,6 +205,9 @@ async def test_update_entity(hass, client):
         "platform": "test_platform",
         "entity_id": "test_domain.world",
         "name": "after update",
+        "icon": "icon:after update",
+        "original_name": None,
+        "original_icon": None,
     }
 
 
@@ -229,6 +251,9 @@ async def test_update_entity_no_changes(hass, client):
         "platform": "test_platform",
         "entity_id": "test_domain.world",
         "name": "name of entity",
+        "icon": None,
+        "original_name": None,
+        "original_icon": None,
     }
 
     state = hass.states.get("test_domain.world")
@@ -301,6 +326,9 @@ async def test_update_entity_id(hass, client):
         "platform": "test_platform",
         "entity_id": "test_domain.planet",
         "name": None,
+        "icon": None,
+        "original_name": None,
+        "original_icon": None,
     }
 
     assert hass.states.get("test_domain.world") is None

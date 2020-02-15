@@ -173,6 +173,23 @@ SCHEMA_WEBSOCKET_GET_THUMBNAIL = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.exten
 )
 
 
+def _rename_keys(**keys):
+    """Create validator that renames keys.
+
+    Necessary because the service schema names do not match the command parameters.
+
+    Async friendly.
+    """
+
+    def rename(value):
+        for to_key, from_key in keys.items():
+            if from_key in value:
+                value[to_key] = value.pop(from_key)
+        return value
+
+    return rename
+
+
 async def async_setup(hass, config):
     """Track states and offer events for media_players."""
     component = hass.data[DOMAIN] = EntityComponent(
@@ -238,30 +255,39 @@ async def async_setup(hass, config):
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_SET,
-        {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
-        lambda entity, call: entity.async_set_volume_level(
-            volume=call.data[ATTR_MEDIA_VOLUME_LEVEL]
+        vol.All(
+            cv.make_entity_service_schema(
+                {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float}
+            ),
+            _rename_keys(volume=ATTR_MEDIA_VOLUME_LEVEL),
         ),
+        "async_set_volume_level",
         [SUPPORT_VOLUME_SET],
     )
     component.async_register_entity_service(
         SERVICE_VOLUME_MUTE,
-        {vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean},
-        lambda entity, call: entity.async_mute_volume(
-            mute=call.data[ATTR_MEDIA_VOLUME_MUTED]
+        vol.All(
+            cv.make_entity_service_schema(
+                {vol.Required(ATTR_MEDIA_VOLUME_MUTED): cv.boolean}
+            ),
+            _rename_keys(mute=ATTR_MEDIA_VOLUME_MUTED),
         ),
+        "async_mute_volume",
         [SUPPORT_VOLUME_MUTE],
     )
     component.async_register_entity_service(
         SERVICE_MEDIA_SEEK,
-        {
-            vol.Required(ATTR_MEDIA_SEEK_POSITION): vol.All(
-                vol.Coerce(float), vol.Range(min=0)
-            )
-        },
-        lambda entity, call: entity.async_media_seek(
-            position=call.data[ATTR_MEDIA_SEEK_POSITION]
+        vol.All(
+            cv.make_entity_service_schema(
+                {
+                    vol.Required(ATTR_MEDIA_SEEK_POSITION): vol.All(
+                        vol.Coerce(float), vol.Range(min=0)
+                    )
+                }
+            ),
+            _rename_keys(position=ATTR_MEDIA_SEEK_POSITION),
         ),
+        "async_media_seek",
         [SUPPORT_SEEK],
     )
     component.async_register_entity_service(
@@ -278,12 +304,15 @@ async def async_setup(hass, config):
     )
     component.async_register_entity_service(
         SERVICE_PLAY_MEDIA,
-        MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
-        lambda entity, call: entity.async_play_media(
-            media_type=call.data[ATTR_MEDIA_CONTENT_TYPE],
-            media_id=call.data[ATTR_MEDIA_CONTENT_ID],
-            enqueue=call.data.get(ATTR_MEDIA_ENQUEUE),
+        vol.All(
+            cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
+            _rename_keys(
+                media_type=ATTR_MEDIA_CONTENT_TYPE,
+                media_id=ATTR_MEDIA_CONTENT_ID,
+                enqueue=ATTR_MEDIA_ENQUEUE,
+            ),
         ),
+        "async_play_media",
         [SUPPORT_PLAY_MEDIA],
     )
     component.async_register_entity_service(
@@ -485,122 +514,89 @@ class MediaPlayerDevice(Entity):
         """Turn the media player on."""
         raise NotImplementedError()
 
-    def async_turn_on(self):
-        """Turn the media player on.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.turn_on)
+    async def async_turn_on(self):
+        """Turn the media player on."""
+        await self.hass.async_add_job(self.turn_on)
 
     def turn_off(self):
         """Turn the media player off."""
         raise NotImplementedError()
 
-    def async_turn_off(self):
-        """Turn the media player off.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.turn_off)
+    async def async_turn_off(self):
+        """Turn the media player off."""
+        await self.hass.async_add_job(self.turn_off)
 
     def mute_volume(self, mute):
         """Mute the volume."""
         raise NotImplementedError()
 
-    def async_mute_volume(self, mute):
-        """Mute the volume.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.mute_volume, mute)
+    async def async_mute_volume(self, mute):
+        """Mute the volume."""
+        await self.hass.async_add_job(self.mute_volume, mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         raise NotImplementedError()
 
-    def async_set_volume_level(self, volume):
-        """Set volume level, range 0..1.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_volume_level, volume)
+    async def async_set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        await self.hass.async_add_job(self.set_volume_level, volume)
 
     def media_play(self):
         """Send play command."""
         raise NotImplementedError()
 
-    def async_media_play(self):
-        """Send play command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.media_play)
+    async def async_media_play(self):
+        """Send play command."""
+        await self.hass.async_add_job(self.media_play)
 
     def media_pause(self):
         """Send pause command."""
         raise NotImplementedError()
 
-    def async_media_pause(self):
-        """Send pause command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.media_pause)
+    async def async_media_pause(self):
+        """Send pause command."""
+        await self.hass.async_add_job(self.media_pause)
 
     def media_stop(self):
         """Send stop command."""
         raise NotImplementedError()
 
-    def async_media_stop(self):
-        """Send stop command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.media_stop)
+    async def async_media_stop(self):
+        """Send stop command."""
+        await self.hass.async_add_job(self.media_stop)
 
     def media_previous_track(self):
         """Send previous track command."""
         raise NotImplementedError()
 
-    def async_media_previous_track(self):
-        """Send previous track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.media_previous_track)
+    async def async_media_previous_track(self):
+        """Send previous track command."""
+        await self.hass.async_add_job(self.media_previous_track)
 
     def media_next_track(self):
         """Send next track command."""
         raise NotImplementedError()
 
-    def async_media_next_track(self):
-        """Send next track command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.media_next_track)
+    async def async_media_next_track(self):
+        """Send next track command."""
+        await self.hass.async_add_job(self.media_next_track)
 
     def media_seek(self, position):
         """Send seek command."""
         raise NotImplementedError()
 
-    def async_media_seek(self, position):
-        """Send seek command.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.media_seek, position)
+    async def async_media_seek(self, position):
+        """Send seek command."""
+        await self.hass.async_add_job(self.media_seek, position)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         raise NotImplementedError()
 
-    def async_play_media(self, media_type, media_id, **kwargs):
-        """Play a piece of media.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        await self.hass.async_add_job(
             ft.partial(self.play_media, media_type, media_id, **kwargs)
         )
 
@@ -608,45 +604,33 @@ class MediaPlayerDevice(Entity):
         """Select input source."""
         raise NotImplementedError()
 
-    def async_select_source(self, source):
-        """Select input source.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.select_source, source)
+    async def async_select_source(self, source):
+        """Select input source."""
+        await self.hass.async_add_job(self.select_source, source)
 
     def select_sound_mode(self, sound_mode):
         """Select sound mode."""
         raise NotImplementedError()
 
-    def async_select_sound_mode(self, sound_mode):
-        """Select sound mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.select_sound_mode, sound_mode)
+    async def async_select_sound_mode(self, sound_mode):
+        """Select sound mode."""
+        await self.hass.async_add_job(self.select_sound_mode, sound_mode)
 
     def clear_playlist(self):
         """Clear players playlist."""
         raise NotImplementedError()
 
-    def async_clear_playlist(self):
-        """Clear players playlist.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.clear_playlist)
+    async def async_clear_playlist(self):
+        """Clear players playlist."""
+        await self.hass.async_add_job(self.clear_playlist)
 
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         raise NotImplementedError()
 
-    def async_set_shuffle(self, shuffle):
-        """Enable/disable shuffle mode.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(self.set_shuffle, shuffle)
+    async def async_set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
+        await self.hass.async_add_job(self.set_shuffle, shuffle)
 
     # No need to overwrite these.
     @property
@@ -714,18 +698,17 @@ class MediaPlayerDevice(Entity):
         """Boolean if shuffle is supported."""
         return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
 
-    def async_toggle(self):
-        """Toggle the power on the media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_toggle(self):
+        """Toggle the power on the media player."""
         if hasattr(self, "toggle"):
             # pylint: disable=no-member
-            return self.hass.async_add_job(self.toggle)
+            await self.hass.async_add_job(self.toggle)
+            return
 
         if self.state in [STATE_OFF, STATE_IDLE]:
-            return self.async_turn_on()
-        return self.async_turn_off()
+            await self.async_turn_on()
+        else:
+            await self.async_turn_off()
 
     async def async_volume_up(self):
         """Turn volume up for media player.
@@ -753,18 +736,17 @@ class MediaPlayerDevice(Entity):
         if self.volume_level > 0 and self.supported_features & SUPPORT_VOLUME_SET:
             await self.async_set_volume_level(max(0, self.volume_level - 0.1))
 
-    def async_media_play_pause(self):
-        """Play or pause the media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    async def async_media_play_pause(self):
+        """Play or pause the media player."""
         if hasattr(self, "media_play_pause"):
             # pylint: disable=no-member
-            return self.hass.async_add_job(self.media_play_pause)
+            await self.hass.async_add_job(self.media_play_pause)
+            return
 
         if self.state == STATE_PLAYING:
-            return self.async_media_pause()
-        return self.async_media_play()
+            await self.async_media_pause()
+        else:
+            await self.async_media_play()
 
     @property
     def entity_picture(self):
@@ -784,8 +766,8 @@ class MediaPlayerDevice(Entity):
 
     @property
     def capability_attributes(self):
-        """Return capabilitiy attributes."""
-        supported_features = self.supported_features
+        """Return capability attributes."""
+        supported_features = self.supported_features or 0
         data = {}
 
         if supported_features & SUPPORT_SELECT_SOURCE:

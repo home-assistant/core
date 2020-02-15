@@ -1,0 +1,26 @@
+{
+    "options": {
+        "step": {
+            "options_io": {
+                "data": {
+                    "1": "Zone 1",
+                    "2": "Zone 2",
+                    "3": "Zone 3",
+                    "4": "Zone 4",
+                    "5": "Zone 5",
+                    "6": "Zone 6",
+                    "7": "Zone 7"
+                }
+            },
+            "options_io_ext": {
+                "data": {
+                    "10": "Zone 10",
+                    "11": "Zone 11",
+                    "12": "Zone 12",
+                    "8": "Zone 8",
+                    "9": "Zone 9"
+                }
+            }
+        }
+    }
+}

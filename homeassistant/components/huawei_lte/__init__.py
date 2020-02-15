@@ -5,6 +5,7 @@ from datetime import timedelta
 from functools import partial
 import ipaddress
 import logging
+import time
 from typing import Any, Callable, Dict, List, Set, Tuple
 from urllib.parse import urlparse
 
@@ -65,6 +66,7 @@ from .const import (
     KEY_MONITORING_STATUS,
     KEY_MONITORING_TRAFFIC_STATISTICS,
     KEY_WLAN_HOST_LIST,
+    NOTIFY_SUPPRESS_TIMEOUT,
     SERVICE_CLEAR_TRAFFIC_STATISTICS,
     SERVICE_REBOOT,
     SERVICE_RESUME_INTEGRATION,
@@ -138,9 +140,11 @@ class Router:
         init=False,
         factory=lambda: defaultdict(set, ((x, {"initial_scan"}) for x in ALL_KEYS)),
     )
+    inflight_gets: Set[str] = attr.ib(init=False, factory=set)
     unload_handlers: List[CALLBACK_TYPE] = attr.ib(init=False, factory=list)
     client: Client
     suspended = attr.ib(init=False, default=False)
+    notify_last_attempt: float = attr.ib(init=False, default=-1)
 
     def __attrs_post_init__(self):
         """Set up internal state on init."""
@@ -167,6 +171,10 @@ class Router:
     def _get_data(self, key: str, func: Callable[[None], Any]) -> None:
         if not self.subscriptions.get(key):
             return
+        if key in self.inflight_gets:
+            _LOGGER.debug("Skipping already inflight get for %s", key)
+            return
+        self.inflight_gets.add(key)
         _LOGGER.debug("Getting %s for subscribers %s", key, self.subscriptions[key])
         try:
             self.data[key] = func()
@@ -189,7 +197,21 @@ class Router:
                 "%s requires authorization, excluding from future updates", key
             )
             self.subscriptions.pop(key)
+        except Timeout:
+            grace_left = (
+                self.notify_last_attempt - time.monotonic() + NOTIFY_SUPPRESS_TIMEOUT
+            )
+            if grace_left > 0:
+                _LOGGER.debug(
+                    "%s timed out, %.1fs notify timeout suppress grace remaining",
+                    key,
+                    grace_left,
+                    exc_info=True,
+                )
+            else:
+                raise
         finally:
+            self.inflight_gets.discard(key)
             _LOGGER.debug("%s=%s", key, self.data.get(key))
 
     def update(self) -> None:
@@ -504,6 +526,19 @@ async def async_signal_options_update(
 ) -> None:
     """Handle config entry options update."""
     async_dispatcher_send(hass, UPDATE_OPTIONS_SIGNAL, config_entry)
+
+
+async def async_migrate_entry(hass: HomeAssistantType, config_entry: ConfigEntry):
+    """Migrate config entry to new version."""
+    if config_entry.version == 1:
+        options = config_entry.options
+        recipient = options.get(CONF_RECIPIENT)
+        if isinstance(recipient, str):
+            options[CONF_RECIPIENT] = [x.strip() for x in recipient.split(",")]
+        config_entry.version = 2
+        hass.config_entries.async_update_entry(config_entry, options=options)
+        _LOGGER.info("Migrated config entry to version %d", config_entry.version)
+    return True
 
 
 @attr.s

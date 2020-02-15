@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import ATTR_DARK, ATTR_ON, NEW_SENSOR
 from .deconz_device import DeconzDevice
-from .gateway import DeconzEntityHandler, get_gateway_from_config_entry
+from .gateway import get_gateway_from_config_entry
 
 ATTR_ORIENTATION = "orientation"
 ATTR_TILTANGLE = "tiltangle"
@@ -23,8 +23,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
 
-    entity_handler = DeconzEntityHandler(gateway)
-
     @callback
     def async_add_sensor(sensors, new=True):
         """Add binary sensor from deCONZ."""
@@ -32,10 +30,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
         for sensor in sensors:
 
-            if new and sensor.BINARY:
-                new_sensor = DeconzBinarySensor(sensor, gateway)
-                entity_handler.add_entity(new_sensor)
-                entities.append(new_sensor)
+            if (
+                new
+                and sensor.BINARY
+                and (
+                    gateway.option_allow_clip_sensor
+                    or not sensor.type.startswith("CLIP")
+                )
+            ):
+                entities.append(DeconzBinarySensor(sensor, gateway))
 
         async_add_entities(entities, True)
 
@@ -54,11 +57,13 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
     """Representation of a deCONZ binary sensor."""
 
     @callback
-    def async_update_callback(self, force_update=False):
+    def async_update_callback(self, force_update=False, ignore_update=False):
         """Update the sensor's state."""
-        changed = set(self._device.changed_keys)
+        if ignore_update:
+            return
+
         keys = {"on", "reachable", "state"}
-        if force_update or any(key in changed for key in keys):
+        if force_update or self._device.changed_keys.intersection(keys):
             self.async_schedule_update_ha_state()
 
     @property
@@ -87,8 +92,10 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorDevice):
         if self._device.secondary_temperature is not None:
             attr[ATTR_TEMPERATURE] = self._device.secondary_temperature
 
-        if self._device.type in Presence.ZHATYPE and self._device.dark is not None:
-            attr[ATTR_DARK] = self._device.dark
+        if self._device.type in Presence.ZHATYPE:
+
+            if self._device.dark is not None:
+                attr[ATTR_DARK] = self._device.dark
 
         elif self._device.type in Vibration.ZHATYPE:
             attr[ATTR_ORIENTATION] = self._device.orientation

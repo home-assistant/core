@@ -298,10 +298,10 @@ class HomeAssistant:
 
         if asyncio.iscoroutine(check_target):
             task = self.loop.create_task(target)  # type: ignore
-        elif is_callback(check_target):
-            self.loop.call_soon(target, *args)
         elif asyncio.iscoroutinefunction(check_target):
             task = self.loop.create_task(target(*args))
+        elif is_callback(check_target):
+            self.loop.call_soon(target, *args)
         else:
             task = self.loop.run_in_executor(  # type: ignore
                 None, target, *args
@@ -360,7 +360,11 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
-        if not asyncio.iscoroutine(target) and is_callback(target):
+        if (
+            not asyncio.iscoroutine(target)
+            and not asyncio.iscoroutinefunction(target)
+            and is_callback(target)
+        ):
             target(*args)
         else:
             self.async_add_job(target, *args)
@@ -1245,10 +1249,10 @@ class ServiceRegistry:
         self, handler: Service, service_call: ServiceCall
     ) -> None:
         """Execute a service."""
-        if handler.is_callback:
-            handler.func(service_call)
-        elif handler.is_coroutinefunction:
+        if handler.is_coroutinefunction:
             await handler.func(service_call)
+        elif handler.is_callback:
+            handler.func(service_call)
         else:
             await self._hass.async_add_executor_job(handler.func, service_call)
 

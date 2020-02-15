@@ -275,7 +275,7 @@ class AFSAPIDevice(MediaPlayerDevice):
 
     async def async_set_volume_level(self, volume):
         """Set volume command."""
-        await self.fs_device.set_volume(volume)
+        await self.fs_device.set_volume(int(volume * 20))
 
     async def async_select_source(self, source):
         """Select input source."""

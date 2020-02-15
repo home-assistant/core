@@ -13,6 +13,8 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ICON,
     CONF_NAME,
+    ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
@@ -73,15 +75,19 @@ def _conf_preprocess(value):
     return value
 
 
-GROUP_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
-        CONF_VIEW: cv.boolean,
-        CONF_NAME: cv.string,
-        CONF_ICON: cv.icon,
-        CONF_CONTROL: CONTROL_TYPES,
-        CONF_ALL: cv.boolean,
-    }
+GROUP_SCHEMA = vol.All(
+    cv.deprecated(CONF_CONTROL, invalidation_version="0.107.0"),
+    cv.deprecated(CONF_VIEW, invalidation_version="0.107.0"),
+    vol.Schema(
+        {
+            vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
+            CONF_VIEW: cv.boolean,
+            CONF_NAME: cv.string,
+            CONF_ICON: cv.icon,
+            CONF_CONTROL: CONTROL_TYPES,
+            CONF_ALL: cv.boolean,
+        }
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -130,7 +136,10 @@ def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> Lis
     """
     found_ids: List[str] = []
     for entity_id in entity_ids:
-        if not isinstance(entity_id, str):
+        if not isinstance(entity_id, str) or entity_id in (
+            ENTITY_MATCH_NONE,
+            ENTITY_MATCH_ALL,
+        ):
             continue
 
         entity_id = entity_id.lower()
@@ -317,18 +326,23 @@ async def async_setup(hass, config):
         DOMAIN,
         SERVICE_SET,
         locked_service_handler,
-        schema=vol.Schema(
-            {
-                vol.Required(ATTR_OBJECT_ID): cv.slug,
-                vol.Optional(ATTR_NAME): cv.string,
-                vol.Optional(ATTR_VIEW): cv.boolean,
-                vol.Optional(ATTR_ICON): cv.string,
-                vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
-                vol.Optional(ATTR_VISIBLE): cv.boolean,
-                vol.Optional(ATTR_ALL): cv.boolean,
-                vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
-                vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
-            }
+        schema=vol.All(
+            cv.deprecated(ATTR_CONTROL, invalidation_version="0.107.0"),
+            cv.deprecated(ATTR_VIEW, invalidation_version="0.107.0"),
+            cv.deprecated(ATTR_VISIBLE, invalidation_version="0.107.0"),
+            vol.Schema(
+                {
+                    vol.Required(ATTR_OBJECT_ID): cv.slug,
+                    vol.Optional(ATTR_NAME): cv.string,
+                    vol.Optional(ATTR_VIEW): cv.boolean,
+                    vol.Optional(ATTR_ICON): cv.string,
+                    vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
+                    vol.Optional(ATTR_VISIBLE): cv.boolean,
+                    vol.Optional(ATTR_ALL): cv.boolean,
+                    vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
+                    vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
+                }
+            ),
         ),
     )
 
@@ -342,6 +356,11 @@ async def async_setup(hass, config):
     async def visibility_service_handler(service):
         """Change visibility of a group."""
         visible = service.data.get(ATTR_VISIBLE)
+
+        _LOGGER.warning(
+            "The group.set_visibility service has been deprecated and will"
+            "be removed in Home Assistant 0.107.0."
+        )
 
         tasks = []
         for group in await component.async_extract_from_service(

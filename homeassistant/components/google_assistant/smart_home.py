@@ -21,9 +21,11 @@ HANDLERS = Registry()
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_handle_message(hass, config, user_id, message):
+async def async_handle_message(hass, config, user_id, message, source):
     """Handle incoming API messages."""
-    data = RequestData(config, user_id, message["requestId"], message.get("devices"))
+    data = RequestData(
+        config, user_id, source, message["requestId"], message.get("devices")
+    )
 
     response = await _process(hass, data, message)
 
@@ -75,7 +77,9 @@ async def async_devices_sync(hass, data, payload):
     https://developers.google.com/assistant/smarthome/develop/process-intents#SYNC
     """
     hass.bus.async_fire(
-        EVENT_SYNC_RECEIVED, {"request_id": data.request_id}, context=data.context
+        EVENT_SYNC_RECEIVED,
+        {"request_id": data.request_id, "source": data.source},
+        context=data.context,
     )
 
     agent_user_id = data.config.get_agent_user_id(data.context)
@@ -108,7 +112,11 @@ async def async_devices_query(hass, data, payload):
 
         hass.bus.async_fire(
             EVENT_QUERY_RECEIVED,
-            {"request_id": data.request_id, ATTR_ENTITY_ID: devid},
+            {
+                "request_id": data.request_id,
+                ATTR_ENTITY_ID: devid,
+                "source": data.source,
+            },
             context=data.context,
         )
 
@@ -142,6 +150,7 @@ async def handle_devices_execute(hass, data, payload):
                     "request_id": data.request_id,
                     ATTR_ENTITY_ID: entity_id,
                     "execution": execution,
+                    "source": data.source,
                 },
                 context=data.context,
             )
@@ -234,7 +243,7 @@ async def async_devices_reachable(hass, data: RequestData, payload):
         "devices": [
             entity.reachable_device_serialize()
             for entity in async_get_entities(hass, data.config)
-            if entity.entity_id in google_ids and entity.should_expose()
+            if entity.entity_id in google_ids and entity.should_expose_local()
         ]
     }
 

@@ -2,7 +2,7 @@
   "domain": "nederlandse_spoorwegen",
   "name": "Nederlandse Spoorwegen (NS)",
   "documentation": "https://www.home-assistant.io/integrations/nederlandse_spoorwegen",
-  "requirements": ["nsapi==3.0.0"],
+  "requirements": ["nsapi==3.0.2"],
   "dependencies": [],
   "codeowners": ["@YarmoM"]
 }

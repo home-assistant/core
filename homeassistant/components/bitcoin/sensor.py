@@ -1,4 +1,4 @@
-"""Bitcoin information service that uses blockchain.info."""
+"""Bitcoin information service that uses blockchain.com."""
 from datetime import timedelta
 import logging
 
@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = "Data provided by blockchain.info"
+ATTRIBUTION = "Data provided by blockchain.com"
 
 DEFAULT_CURRENCY = "USD"
 
@@ -168,7 +168,7 @@ class BitcoinData:
         self.ticker = None
 
     def update(self):
-        """Get the latest data from blockchain.info."""
+        """Get the latest data from blockchain.com."""
 
         self.stats = statistics.get()
         self.ticker = exchangerates.get_ticker()

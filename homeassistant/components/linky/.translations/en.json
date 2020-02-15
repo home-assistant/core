@@ -1,13 +1,12 @@
 {
     "config": {
         "abort": {
-            "username_exists": "Account already configured"
+            "already_configured": "Account already configured"
         },
         "error": {
             "access": "Could not access to Enedis.fr, please check your internet connection",
             "enedis": "Enedis.fr answered with an error: please retry later (usually not between 11PM and 2AM)",
             "unknown": "Unknown error: please retry later (usually not between 11PM and 2AM)",
-            "username_exists": "Account already configured",
             "wrong_login": "Login error: please check your email & password"
         },
         "step": {

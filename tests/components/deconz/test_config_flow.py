@@ -205,7 +205,7 @@ async def test_manual_configuration_update_configuration(hass, aioclient_mock):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "updated_instance"
+    assert result["reason"] == "already_configured"
     assert gateway.config_entry.data[config_flow.CONF_HOST] == "2.3.4.5"
 
 
@@ -382,7 +382,7 @@ async def test_ssdp_discovery_update_configuration(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "updated_instance"
+    assert result["reason"] == "already_configured"
     assert gateway.config_entry.data[config_flow.CONF_HOST] == "2.3.4.5"
 
 
@@ -469,7 +469,7 @@ async def test_hassio_discovery_update_configuration(hass):
     )
 
     assert result["type"] == "abort"
-    assert result["reason"] == "updated_instance"
+    assert result["reason"] == "already_configured"
     assert gateway.config_entry.data[config_flow.CONF_HOST] == "2.3.4.5"
     assert gateway.config_entry.data[config_flow.CONF_PORT] == 8080
     assert gateway.config_entry.data[config_flow.CONF_API_KEY] == "updated"

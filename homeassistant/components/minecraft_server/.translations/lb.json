@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparat ass scho konfigur\u00e9iert"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Apparat",
+                    "name": "Numm",
+                    "port": "Port"
+                }
+            }
+        },
+        "title": "Minecraft Server"
+    }
+}

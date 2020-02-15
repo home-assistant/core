@@ -10,6 +10,7 @@ import requests_mock
 
 import homeassistant.components.rest.sensor as rest
 import homeassistant.components.sensor as sensor
+from homeassistant.const import DATA_MEGABYTES
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.config_validation import template
 from homeassistant.setup import setup_component
@@ -125,7 +126,7 @@ class TestRestSensorSetup(unittest.TestCase):
                         "method": "GET",
                         "value_template": "{{ value_json.key }}",
                         "name": "foo",
-                        "unit_of_measurement": "MB",
+                        "unit_of_measurement": DATA_MEGABYTES,
                         "verify_ssl": "true",
                         "timeout": 30,
                         "authentication": "basic",
@@ -153,7 +154,7 @@ class TestRestSensorSetup(unittest.TestCase):
                         "value_template": "{{ value_json.key }}",
                         "payload": '{ "device": "toaster"}',
                         "name": "foo",
-                        "unit_of_measurement": "MB",
+                        "unit_of_measurement": DATA_MEGABYTES,
                         "verify_ssl": "true",
                         "timeout": 30,
                         "authentication": "basic",
@@ -181,7 +182,7 @@ class TestRestSensor(unittest.TestCase):
             ),
         )
         self.name = "foo"
-        self.unit_of_measurement = "MB"
+        self.unit_of_measurement = DATA_MEGABYTES
         self.device_class = None
         self.value_template = template("{{ value_json.key }}")
         self.value_template.hass = self.hass

@@ -5,7 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/huawei_lte",
   "requirements": [
     "getmac==0.8.1",
-    "huawei-lte-api==1.4.6",
+    "huawei-lte-api==1.4.7",
     "stringcase==1.2.0",
     "url-normalize==1.4.1"
   ],

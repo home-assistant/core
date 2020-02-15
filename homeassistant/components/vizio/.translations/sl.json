@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Konfiguracijski tok za komponento vizio je \u017ee v teku.",
+            "already_setup": "Ta vnos je \u017ee nastavljen.",
+            "already_setup_with_diff_host_and_name": "Zdi se, da je bil ta vnos \u017ee nastavljen z drugim gostiteljem in imenom glede na njegovo serijsko \u0161tevilko. Pred ponovnim poskusom dodajanja te naprave, odstranite vse stare vnose iz config.yaml in iz menija Integrations.",
+            "host_exists": "VIZIO komponenta z gostiteljem \u017ee nastavljen.",
+            "name_exists": "Vizio komponenta z imenom je \u017ee konfigurirana.",
+            "updated_entry": "Ta vnos je \u017ee nastavljen, vendar se ime in / ali mo\u017enosti, opredeljene v config, ne ujemajo s predhodno uvo\u017eenim configom, zato je bil vnos konfiguracije ustrezno posodobljen.",
+            "updated_options": "Ta vnos je \u017ee nastavljen, vendar se mo\u017enosti, definirane v config-u, ne ujemajo s predhodno uvo\u017eenimi vrednostmi, zato je bil vnos konfiguracije ustrezno posodobljen.",
+            "updated_volume_step": "Ta vnos je \u017ee nastavljen, vendar velikost koraka glasnosti v config-u ne ustreza vnosu konfiguracije, zato je bil vnos konfiguracije ustrezno posodobljen."
+        },
+        "error": {
+            "cant_connect": "Ni bilo mogo\u010de povezati z napravo. [Preglejte dokumente] (https://www.home-assistant.io/integrations/vizio/) in ponovno preverite, ali: \n \u2013 Naprava je vklopljena \n \u2013 Naprava je povezana z omre\u017ejem \n \u2013 Vrednosti, ki ste jih izpolnili, so to\u010dne \nnato poskusite ponovno.",
+            "host_exists": "Naprava Vizio z dolo\u010denim gostiteljem je \u017ee konfigurirana.",
+            "name_exists": "Naprava Vizio z navedenim imenom je \u017ee konfigurirana.",
+            "tv_needs_token": "Ko je vrsta naprave\u00bb TV \u00ab, je potreben veljaven \u017eeton za dostop."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "\u017deton za dostop",
+                    "device_class": "Vrsta naprave",
+                    "host": "<Host/IP>:<Port>",
+                    "name": "Ime"
+                },
+                "title": "Nastavite odjemalec Vizio SmartCast"
+            }
+        },
+        "title": "Vizio SmartCast"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "\u010casovna omejitev zahteve za API (sekunde)",
+                    "volume_step": "Velikost koraka glasnosti"
+                },
+                "title": "Posodobite mo\u017enosti Vizo SmartCast"
+            }
+        },
+        "title": "Posodobite mo\u017enosti Vizo SmartCast"
+    }
+}

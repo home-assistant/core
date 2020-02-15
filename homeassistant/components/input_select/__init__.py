@@ -12,7 +12,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import collection, entity_registry
+from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -116,18 +116,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
     ).async_setup(hass)
 
-    async def _collection_changed(
-        change_type: str, item_id: str, config: typing.Optional[typing.Dict]
-    ) -> None:
-        """Handle a collection change: clean up entity registry on removals."""
-        if change_type != collection.CHANGE_REMOVED:
-            return
-
-        ent_reg = await entity_registry.async_get_registry(hass)
-        ent_reg.async_remove(ent_reg.async_get_entity_id(DOMAIN, DOMAIN, item_id))
-
-    yaml_collection.async_add_listener(_collection_changed)
-    storage_collection.async_add_listener(_collection_changed)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, yaml_collection)
+    collection.attach_entity_registry_cleaner(hass, DOMAIN, DOMAIN, storage_collection)
 
     async def reload_service_handler(service_call: ServiceCallType) -> None:
         """Reload yaml entities."""
@@ -153,11 +143,15 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_NEXT, {}, lambda entity, call: entity.async_offset_index(1)
+        SERVICE_SELECT_NEXT,
+        {},
+        callback(lambda entity, call: entity.async_offset_index(1)),
     )
 
     component.async_register_entity_service(
-        SERVICE_SELECT_PREVIOUS, {}, lambda entity, call: entity.async_offset_index(-1)
+        SERVICE_SELECT_PREVIOUS,
+        {},
+        callback(lambda entity, call: entity.async_offset_index(-1)),
     )
 
     component.async_register_entity_service(
@@ -258,7 +252,8 @@ class InputSelect(RestoreEntity):
         """Return unique id for the entity."""
         return self._config[CONF_ID]
 
-    async def async_select_option(self, option):
+    @callback
+    def async_select_option(self, option):
         """Select new option."""
         if option not in self._options:
             _LOGGER.warning(
@@ -270,14 +265,16 @@ class InputSelect(RestoreEntity):
         self._current_option = option
         self.async_write_ha_state()
 
-    async def async_offset_index(self, offset):
+    @callback
+    def async_offset_index(self, offset):
         """Offset current index."""
         current_index = self._options.index(self._current_option)
         new_index = (current_index + offset) % len(self._options)
         self._current_option = self._options[new_index]
         self.async_write_ha_state()
 
-    async def async_set_options(self, options):
+    @callback
+    def async_set_options(self, options):
         """Set options."""
         self._current_option = options[0]
         self._config[CONF_OPTIONS] = options

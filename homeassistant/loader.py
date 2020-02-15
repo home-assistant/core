@@ -245,6 +245,16 @@ class Integration:
         return cast(str, self.manifest.get("quality_scale"))
 
     @property
+    def logo(self) -> Optional[str]:
+        """Return Integration Logo."""
+        return cast(str, self.manifest.get("logo"))
+
+    @property
+    def icon(self) -> Optional[str]:
+        """Return Integration Icon."""
+        return cast(str, self.manifest.get("icon"))
+
+    @property
     def is_built_in(self) -> bool:
         """Test if package is a built-in integration."""
         return self.pkg_path.startswith(PACKAGE_BUILTIN)
@@ -531,7 +541,7 @@ def _async_mount_config_dir(hass: "HomeAssistant") -> bool:
     Async friendly but not a coroutine.
     """
     if hass.config.config_dir is None:
-        _LOGGER.error("Can't load integrations - config dir is not set")
+        _LOGGER.error("Can't load integrations - configuration directory is not set")
         return False
     if hass.config.config_dir not in sys.path:
         sys.path.insert(0, hass.config.config_dir)

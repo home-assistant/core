@@ -32,6 +32,7 @@ from .const import (
     ATTR_CLUSTER_ID,
     ATTR_COMMAND,
     ATTR_COMMAND_TYPE,
+    ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_ID,
     ATTR_IEEE,
     ATTR_LAST_SEEN,
@@ -57,6 +58,7 @@ from .const import (
     POWER_BATTERY_OR_UNKNOWN,
     POWER_MAINS_POWERED,
     SIGNAL_AVAILABLE,
+    UNKNOWN,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
 )
@@ -102,7 +104,17 @@ class ZHADevice(LogMixin):
         self._available_check = async_track_time_interval(
             self.hass, self._check_available, _UPDATE_ALIVE_INTERVAL
         )
+        self._ha_device_id = None
         self.status = DeviceStatus.CREATED
+
+    @property
+    def device_id(self):
+        """Return the HA device registry device id."""
+        return self._ha_device_id
+
+    def set_device_id(self, device_id):
+        """Set the HA device registry device id."""
+        self._ha_device_id = device_id
 
     @property
     def name(self):
@@ -159,6 +171,14 @@ class ZHADevice(LogMixin):
     def is_mains_powered(self):
         """Return true if device is mains powered."""
         return self._zigpy_device.node_desc.is_mains_powered
+
+    @property
+    def device_type(self):
+        """Return the logical device type for the device."""
+        node_descriptor = self._zigpy_device.node_desc
+        return (
+            node_descriptor.logical_type.name if node_descriptor.is_valid else UNKNOWN
+        )
 
     @property
     def power_source(self):
@@ -281,6 +301,7 @@ class ZHADevice(LogMixin):
             ATTR_RSSI: self.rssi,
             ATTR_LAST_SEEN: update_time,
             ATTR_AVAILABLE: self.available,
+            ATTR_DEVICE_TYPE: self.device_type,
         }
 
     def add_cluster_channel(self, cluster_channel):
@@ -394,6 +415,25 @@ class ZHADevice(LogMixin):
     def async_update_last_seen(self, last_seen):
         """Set last seen on the zigpy device."""
         self._zigpy_device.last_seen = last_seen
+
+    @callback
+    def async_get_info(self):
+        """Get ZHA device information."""
+        device_info = {}
+        device_info.update(self.device_info)
+        device_info["entities"] = [
+            {
+                "entity_id": entity_ref.reference_id,
+                ATTR_NAME: entity_ref.device_info[ATTR_NAME],
+            }
+            for entity_ref in self.gateway.device_registry[self.ieee]
+        ]
+        reg_device = self.gateway.ha_device_registry.async_get(self.device_id)
+        if reg_device is not None:
+            device_info["user_given_name"] = reg_device.name_by_user
+            device_info["device_reg_id"] = reg_device.id
+            device_info["area_id"] = reg_device.area_id
+        return device_info
 
     @callback
     def async_get_clusters(self):

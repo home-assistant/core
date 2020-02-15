@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Gostitelj je \u017ee konfiguriran."
+        },
+        "error": {
+            "cannot_connect": "Povezava s stre\u017enikom ni uspela. Preverite gostitelja in vrata in poskusite znova. Zagotovite tudi, da na stre\u017eniku izvajate vsaj Minecraft razli\u010dice 1.7.",
+            "invalid_ip": "IP naslov ni veljaven (MAC naslova ni mogo\u010de dolo\u010diti). Popravite ga in poskusite znova.",
+            "invalid_port": "Vrata morajo biti v razponu od 1024 do 65535. Prosimo, popravite in poskusite znova."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Gostitelj",
+                    "name": "Ime",
+                    "port": "Vrata"
+                },
+                "description": "Nastavite svoj Minecraft stre\u017enik, da omogo\u010dite spremljanje.",
+                "title": "Pove\u017eite svoj Minecraft stre\u017enik"
+            }
+        },
+        "title": "Minecraft stre\u017enik"
+    }
+}
