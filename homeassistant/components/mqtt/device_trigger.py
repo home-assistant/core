@@ -66,15 +66,23 @@ TRIGGER_DISCOVERY_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
 )
 
 DEVICE_TRIGGERS = "mqtt_device_triggers"
-ATTACHED_DEVICE_TRIGGERS = "mqtt_attached_device_triggers"
+
+
+@attr.s(slots=True)
+class AttachedTrigger:
+    """Attached trigger settings."""
+
+    action = attr.ib(type=AutomationActionType)
+    automation_info = attr.ib(type=dict)
+    remove = attr.ib(type=CALLBACK_TYPE)
 
 
 @attr.s(slots=True)
 class Trigger:
     """Device trigger settings."""
 
+    attached_triggers = attr.ib(type=[AttachedTrigger])
     device_id = attr.ib(type=str)
-    discovery_id = attr.ib(type=str)
     hass = attr.ib(type=HomeAssistantType)
     payload = attr.ib(type=str)
     qos = attr.ib(type=int)
@@ -82,7 +90,29 @@ class Trigger:
     topic = attr.ib(type=str)
     type = attr.ib(type=str)
 
-    async def attach_trigger(self, action, automation_info):
+    async def add_trigger(self, action, automation_info):
+        """Add MQTT trigger."""
+        attached_trigger = AttachedTrigger(action, automation_info, None)
+        self.attached_triggers.append(attached_trigger)
+
+        if self.topic is not None:
+            # If we know about the trigger, subscribe to MQTT topic
+            attached_trigger.remove = await self.attach_trigger(attached_trigger)
+
+        @callback
+        def async_remove() -> None:
+            """Remove trigger."""
+            if attached_trigger not in self.attached_triggers:
+                raise HomeAssistantError("Can't remove trigger twice")
+
+            index = self.attached_triggers.index(attached_trigger)
+            if self.attached_triggers[index].remove:
+                self.attached_triggers[index].remove()
+            self.attached_triggers.pop(index)
+
+        return async_remove
+
+    async def attach_trigger(self, attached_trigger):
         """Attach MQTT trigger."""
         mqtt_config = {
             automation_mqtt.CONF_TOPIC: self.topic,
@@ -93,7 +123,10 @@ class Trigger:
             mqtt_config[CONF_PAYLOAD] = self.payload
 
         return await automation_mqtt.async_attach_trigger(
-            self.hass, mqtt_config, action, automation_info
+            self.hass,
+            mqtt_config,
+            attached_trigger.action,
+            attached_trigger.automation_info,
         )
 
     async def update_trigger(self, config):
@@ -104,37 +137,19 @@ class Trigger:
         self.payload = config[CONF_PAYLOAD]
         self.qos = config[CONF_QOS]
 
-        if ATTACHED_DEVICE_TRIGGERS not in self.hass.data:
-            return
-
         # Unsubscribe+subscribe if this trigger is in use
-        for trig in self.hass.data[ATTACHED_DEVICE_TRIGGERS]:
-            if trig.discovery_id == self.discovery_id:
-                if trig.remove:
-                    trig.remove()
-                trig.remove = await self.attach_trigger(
-                    trig.action, trig.automation_info
-                )
+        for trig in self.attached_triggers:
+            if trig.remove:
+                trig.remove()
+            trig.remove = await self.attach_trigger(trig)
 
     def detach_trigger(self):
         """Remove MQTT device trigger."""
 
         # Unsubscribe if this trigger is in use
-        for trig in self.hass.data[ATTACHED_DEVICE_TRIGGERS]:
-            if trig.discovery_id == self.discovery_id:
-                if trig.remove:
-                    trig.remove()
-
-
-@attr.s(slots=True)
-class AttachedTrigger:
-    """Attached trigger settings."""
-
-    device_id = attr.ib(type=str)
-    discovery_id = attr.ib(type=str)
-    action = attr.ib(type=AutomationActionType)
-    automation_info = attr.ib(type=dict)
-    remove = attr.ib(type=CALLBACK_TYPE)
+        for trig in self.attached_triggers:
+            if trig.remove:
+                trig.remove()
 
 
 async def _update_device(hass, config_entry, config):
@@ -194,27 +209,19 @@ async def async_setup_trigger(hass, config, config_entry, discovery_hash):
 
     if DEVICE_TRIGGERS not in hass.data:
         hass.data[DEVICE_TRIGGERS] = {}
-    hass.data[DEVICE_TRIGGERS][discovery_id] = Trigger(
-        hass=hass,
-        device_id=device.id,
-        type=config[CONF_TYPE],
-        subtype=config[CONF_SUBTYPE],
-        topic=config[CONF_TOPIC],
-        payload=config[CONF_PAYLOAD],
-        qos=config[CONF_QOS],
-        discovery_id=discovery_id,
-    )
-
-    if ATTACHED_DEVICE_TRIGGERS not in hass.data:
-        return
-
-    # If someone was waiting for this trigger to be discovered, subscribe now
-    for trig in hass.data[ATTACHED_DEVICE_TRIGGERS]:
-        if trig.discovery_id == discovery_id:
-            device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
-            trig.remove = await device_trigger.attach_trigger(
-                trig.action, trig.automation_info
-            )
+    if discovery_id not in hass.data[DEVICE_TRIGGERS]:
+        hass.data[DEVICE_TRIGGERS][discovery_id] = Trigger(
+            attached_triggers=[],
+            hass=hass,
+            device_id=device.id,
+            type=config[CONF_TYPE],
+            subtype=config[CONF_SUBTYPE],
+            topic=config[CONF_TOPIC],
+            payload=config[CONF_PAYLOAD],
+            qos=config[CONF_QOS],
+        )
+    else:
+        await hass.data[DEVICE_TRIGGERS][discovery_id].update_trigger(config)
 
 
 async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
@@ -224,8 +231,8 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
     if DEVICE_TRIGGERS not in hass.data:
         return triggers
 
-    for trig in hass.data[DEVICE_TRIGGERS].values():
-        if trig.device_id != device_id:
+    for discovery_id, trig in hass.data[DEVICE_TRIGGERS].items():
+        if trig.device_id != device_id or trig.topic is None:
             continue
 
         trigger = {
@@ -233,7 +240,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
             "device_id": device_id,
             "type": trig.type,
             "subtype": trig.subtype,
-            "discovery_id": trig.discovery_id,
+            "discovery_id": discovery_id,
         }
         triggers.append(trigger)
 
@@ -247,31 +254,23 @@ async def async_attach_trigger(
     automation_info: dict,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
-    if ATTACHED_DEVICE_TRIGGERS not in hass.data:
-        hass.data[ATTACHED_DEVICE_TRIGGERS] = []
+    if DEVICE_TRIGGERS not in hass.data:
+        hass.data[DEVICE_TRIGGERS] = {}
     config = TRIGGER_SCHEMA(config)
     device_id = config[CONF_DEVICE_ID]
     discovery_id = config[CONF_DISCOVERY_ID]
-    mqtt_remove = None
 
-    if DEVICE_TRIGGERS in hass.data and discovery_id in hass.data[DEVICE_TRIGGERS]:
-        # If we know about the trigger, subscribe to MQTT topic
-        device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
-        mqtt_remove = await device_trigger.attach_trigger(action, automation_info)
-
-    attached_trigger = AttachedTrigger(
-        device_id, discovery_id, action, automation_info, mqtt_remove
+    if discovery_id not in hass.data[DEVICE_TRIGGERS]:
+        hass.data[DEVICE_TRIGGERS][discovery_id] = Trigger(
+            attached_triggers=[],
+            hass=hass,
+            device_id=device_id,
+            type=config[CONF_TYPE],
+            subtype=config[CONF_SUBTYPE],
+            topic=None,
+            payload=None,
+            qos=None,
+        )
+    return await hass.data[DEVICE_TRIGGERS][discovery_id].add_trigger(
+        action, automation_info
     )
-    hass.data[ATTACHED_DEVICE_TRIGGERS].append(attached_trigger)
-
-    @callback
-    def async_remove() -> None:
-        """Remove trigger."""
-        if attached_trigger not in hass.data[ATTACHED_DEVICE_TRIGGERS]:
-            raise HomeAssistantError("Can't remove trigger twice")
-
-        index = hass.data[ATTACHED_DEVICE_TRIGGERS].index(attached_trigger)
-        hass.data[ATTACHED_DEVICE_TRIGGERS][index].remove()
-        hass.data[ATTACHED_DEVICE_TRIGGERS].pop(index)
-
-    return async_remove
