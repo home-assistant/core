@@ -10,6 +10,9 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import CONF_NOWAIT, DATA_CONFIGS, DOMAIN, LOGGER
 
+CONNECT_TIMEOUT = 30
+CONNECT_INTERVAL = 1
+
 
 class DynaliteBridge:
     """Manages a single Dynalite bridge."""
@@ -63,11 +66,10 @@ class DynaliteBridge:
     async def try_connection(self):
         """Try to connect to dynalite with timeout."""
         # Currently by polling. Future - will need to change the library to be proactive
-        timeout = 30
-        for _ in range(0, timeout):
+        for _ in range(0, CONNECT_TIMEOUT):
             if self.dynalite_devices.available:
                 return True
-            await asyncio.sleep(1)
+            await asyncio.sleep(CONNECT_INTERVAL)
         return False
 
     @callback

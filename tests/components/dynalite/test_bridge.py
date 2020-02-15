@@ -1,5 +1,4 @@
 """Test Dynalite bridge."""
-import asyncio  # only so it knows to patch the correct one
 from unittest.mock import Mock, call
 
 from asynctest import patch
@@ -93,12 +92,10 @@ async def test_register_then_add_devices(dyn_bridge):
 
 async def test_try_connection(dyn_bridge):
     """Test that try connection works."""
-    # so it doesn't complain asyncio is not used
-    asyncio.get_running_loop()
     # successful
     with patch.object(dyn_bridge.dynalite_devices, "connected", True):
         assert await dyn_bridge.try_connection()
     # unsuccessful
     with patch.object(dyn_bridge.dynalite_devices, "connected", False):
-        with patch("asyncio.sleep", return_value=True):
+        with patch("homeassistant.components.dynalite.bridge.CONNECT_INTERVAL", 0):
             assert not await dyn_bridge.try_connection()
