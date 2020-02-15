@@ -15,6 +15,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ class AuroraABBSolarPVMonitorSensor(Entity):
     def __init__(self, client, name, typename):
         """Initialize the sensor."""
         self._name = f"{name} {typename}"
-        self._unique_id = f"{client.serial_number()}-{typename}"
+        self._unique_id = f"{slugify(client.serline.port)}-{client.address}-{typename}"
         self.client = client
         self._state = None
 
