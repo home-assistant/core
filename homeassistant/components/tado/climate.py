@@ -342,7 +342,6 @@ class TadoClimate(ClimateDevice):
                 self._target_temp = self.max_temp
             else:
                 self._target_temp = self.min_temp
-            self.schedule_update_ha_state()
 
         self._control_heating()
 

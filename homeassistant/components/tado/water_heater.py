@@ -206,7 +206,6 @@ class TadoWaterHeater(WaterHeaterDevice):
         # Set a target temperature if we don't have any
         if mode == CONST_OVERLAY_TADO_MODE and self._target_temp is None:
             self._target_temp = self.min_temp
-            self.schedule_update_ha_state()
 
         self._control_heater()
 
