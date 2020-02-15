@@ -62,7 +62,7 @@ class DynaliteBridge:
     async def try_connection(self):
         """Try to connect to dynalite with timeout."""
         # Currently by polling. Future - will need to change the library to be proactive
-        timeout = 3
+        timeout = 30
         for _ in range(0, timeout):
             if self.dynalite_devices.available:
                 return True
