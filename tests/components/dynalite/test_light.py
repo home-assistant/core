@@ -30,17 +30,12 @@ async def create_light_from_device(hass, device):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
-    ):
-        with patch.object(dynalite.DynaliteBridge, "try_connection", return_value=True):
-            assert await async_setup_component(
-                hass,
-                dynalite.DOMAIN,
-                {
-                    dynalite.DOMAIN: {
-                        dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]
-                    }
-                },
-            )
+    ), patch.object(dynalite.DynaliteBridge, "try_connection", return_value=True):
+        assert await async_setup_component(
+            hass,
+            dynalite.DOMAIN,
+            {dynalite.DOMAIN: {dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]}},
+        )
     await hass.async_block_till_done()
     # Find the bridge
     bridge = None

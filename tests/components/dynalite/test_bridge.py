@@ -25,16 +25,18 @@ async def test_bridge_setup(dyn_bridge):
     with patch.object(dyn_bridge.dynalite_devices, "async_setup", return_value=False):
         assert not await dyn_bridge.async_setup()
     # if dynalite_devices works and NOWAIT is set, has to succeed anyway
-    with patch.object(dyn_bridge.dynalite_devices, "async_setup", return_value=True):
-        with patch.object(dyn_bridge, "try_connection", return_value=False):
-            assert await dyn_bridge.async_setup()
+    with patch.object(
+        dyn_bridge.dynalite_devices, "async_setup", return_value=True
+    ), patch.object(dyn_bridge, "try_connection", return_value=False):
+        assert await dyn_bridge.async_setup()
     # if dynalite_devices works and NOWAIT is not set, depends on try_connection
-    with patch.object(dyn_bridge.dynalite_devices, "async_setup", return_value=True):
-        with patch.object(dyn_bridge, "no_wait", False):
-            with patch.object(dyn_bridge, "try_connection", return_value=True):
-                assert await dyn_bridge.async_setup()
-            with patch.object(dyn_bridge, "try_connection", return_value=False):
-                assert not await dyn_bridge.async_setup()
+    with patch.object(
+        dyn_bridge.dynalite_devices, "async_setup", return_value=True
+    ), patch.object(dyn_bridge, "no_wait", False):
+        with patch.object(dyn_bridge, "try_connection", return_value=True):
+            assert await dyn_bridge.async_setup()
+        with patch.object(dyn_bridge, "try_connection", return_value=False):
+            assert not await dyn_bridge.async_setup()
 
 
 async def test_update_device(dyn_bridge):
@@ -95,6 +97,7 @@ async def test_try_connection(dyn_bridge):
     with patch.object(dyn_bridge.dynalite_devices, "connected", True):
         assert await dyn_bridge.try_connection()
     # unsuccessful
-    with patch.object(dyn_bridge.dynalite_devices, "connected", False):
-        with patch("homeassistant.components.dynalite.bridge.CONNECT_INTERVAL", 0):
-            assert not await dyn_bridge.try_connection()
+    with patch.object(dyn_bridge.dynalite_devices, "connected", False), patch(
+        "homeassistant.components.dynalite.bridge.CONNECT_INTERVAL", 0
+    ):
+        assert not await dyn_bridge.try_connection()
