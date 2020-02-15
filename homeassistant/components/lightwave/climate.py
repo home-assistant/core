@@ -82,7 +82,6 @@ class LightwaveTrv(ClimateDevice):
             if j["cTarg"] >= 40:
                 # Call for heat mode, or TRV in a fixed position
                 self._target_temperature = None
-                self._target_temperature = j["cTarg"]
         else:
             # Done the job - use proxy next iteration
             self._inhibit = 0
