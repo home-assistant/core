@@ -3,6 +3,7 @@ from asynctest import patch
 from pygti.exceptions import CannotConnect, InvalidAuth
 
 from homeassistant.components.hvv_departures import config_flow
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 
 async def test_user_flow(hass):
@@ -74,9 +75,9 @@ async def test_user_flow(hass):
 
         result_user = await flow.async_step_user(
             user_input={
-                "host": "api-test.geofox.de",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "api-test.geofox.de",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             }
         )
 
@@ -99,9 +100,9 @@ async def test_user_flow(hass):
         assert result_station_select["type"] == "create_entry"
         assert result_station_select["title"] == "Wartenau"
         assert result_station_select["data"] == {
-            "host": "api-test.geofox.de",
-            "username": "test-username",
-            "password": "test-password",
+            CONF_HOST: "api-test.geofox.de",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
             "station": {
                 "name": "Wartenau",
                 "city": "Hamburg",
@@ -167,9 +168,9 @@ async def test_user_flow_no_results(hass):
 
         result_user = await flow.async_step_user(
             user_input={
-                "host": "api-test.geofox.de",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "api-test.geofox.de",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             }
         )
 
@@ -199,9 +200,9 @@ async def test_user_flow_invalid_auth(hass):
         # step: user
         result_user = await flow.async_step_user(
             user_input={
-                "host": "api-test.geofox.de",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "api-test.geofox.de",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             }
         )
 
@@ -222,9 +223,9 @@ async def test_user_flow_cannot_connect(hass):
         # step: user
         result_user = await flow.async_step_user(
             user_input={
-                "host": "api-test.geofox.de",
-                "username": "test-username",
-                "password": "test-password",
+                CONF_HOST: "api-test.geofox.de",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
             }
         )
 

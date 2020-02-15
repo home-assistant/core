@@ -5,6 +5,7 @@ from pygti.exceptions import CannotConnect, InvalidAuth
 from homeassistant.components.hvv_departures import config_flow
 from homeassistant.components.hvv_departures.const import DOMAIN
 from homeassistant.config_entries import CONN_CLASS_CLOUD_POLL, ConfigEntry
+from homeassistant.const import CONF_OFFSET
 
 from .patched_data import (
     PATCHED_CONFIG_ENTRY_DATA,
@@ -44,7 +45,7 @@ async def test_options_flow(hass):
         result_init = await flow.async_step_init(
             user_input={
                 "filter": "U1, Fuhlsbüttel Nord / Ochsenzoll / Norderstedt Mitte / Kellinghusenstraße / Ohlsdorf / Garstedt",
-                "offset": 15,
+                CONF_OFFSET: 15,
                 "realtime": False,
             }
         )
@@ -59,7 +60,7 @@ async def test_options_flow(hass):
                     "serviceName": "U1",
                 }
             ],
-            "offset": 15,
+            CONF_OFFSET: 15,
             "realtime": False,
         }
 
@@ -130,7 +131,7 @@ async def test_options_flow_invalid_auth(hass):
         result_init = await flow.async_step_init(
             user_input={
                 "filter": "U1, Fuhlsbüttel Nord / Ochsenzoll / Norderstedt Mitte / Kellinghusenstraße / Ohlsdorf / Garstedt",
-                "offset": 15,
+                CONF_OFFSET: 15,
                 "realtime": False,
             }
         )
@@ -167,7 +168,7 @@ async def test_options_flow_cannot_connect(hass):
         result_init = await flow.async_step_init(
             user_input={
                 "filter": "U1, Fuhlsbüttel Nord / Ochsenzoll / Norderstedt Mitte / Kellinghusenstraße / Ohlsdorf / Garstedt",
-                "offset": 15,
+                CONF_OFFSET: 15,
                 "realtime": False,
             }
         )
