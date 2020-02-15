@@ -85,6 +85,11 @@ async def test_set_brightness(hass, requests_mock):
 async def test_set_color(hass, requests_mock):
     """Test the color can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
+    requests_mock.put(
+        "https://my.goabode.com/api/v1/control/light/ZB:db5b1a",
+        json={"id": "ZB:db5b1a", "status": "1"},
+    )
+
     requests_mock.post(
         "https://my.goabode.com/integrations/v1/devices/741385f4388b2637df4c6b398fe50581",
         json={
@@ -94,12 +99,12 @@ async def test_set_color(hass, requests_mock):
             "state": {
                 "brightness": 68,
                 "powerState": "ON",
-                "color": {"hue": 193, "saturation": 0},
+                "color": {"hue": 240, "saturation": 100},
             },
             "dimLevel": 68,
             "colorMode": "hue",
-            "hue": 193,
-            "saturation": 0,
+            "hue": 240,
+            "saturation": 100,
         },
     )
 
@@ -119,11 +124,11 @@ async def test_set_color(hass, requests_mock):
             "idForPanel": "ZB:db5b1a",
             "name": "Living Room Lamp",
             "state": {
-                "brightness": 70,
+                "brightness": 68,
                 "powerState": "ON",
                 "colorTemperatureInKelvin": 3236,
             },
-            "dimLevel": 70,
+            "dimLevel": 68,
             "colorMode": "temp",
             "colorTemperature": 3236,
         },
