@@ -704,8 +704,8 @@ async def test_event_rrule_hourly_on_first(mock_now, hass, calendar):
         "message": "This is an hourly recurring event",
         "all_day": False,
         "offset_reached": False,
-        "start_time": "2015-11-27 10:00:00",
-        "end_time": "2015-11-27 10:30:00",
+        "start_time": "2015-11-27 00:00:00",
+        "end_time": "2015-11-27 00:30:00",
         "location": "Hamburg",
         "description": "The bell tolls for thee",
     }
