@@ -14,7 +14,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.climate.const import CURRENT_HVAC_HEAT, CURRENT_HVAC_OFF
 from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, TEMP_CELSIUS
 
-from . import LIGHTWAVE_LINK, LIGHTWAVE_TRV_PROXY, LIGHTWAVE_TRV_PROXY_PORT
+from . import CONF_SERIAL, LIGHTWAVE_LINK, LIGHTWAVE_TRV_PROXY, LIGHTWAVE_TRV_PROXY_PORT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for device_id, device_config in discovery_info.items():
         name = device_config[CONF_NAME]
-        serial = device_config["serial"]
+        serial = device_config[CONF_SERIAL]
         trv.append(
             LightwaveTrv(name, device_id, lwlink, serial, trv_proxy_ip, trv_proxy_port)
         )
