@@ -8,18 +8,16 @@ from homeassistant.components import dynalite
 async def run_flow(hass, setup, connection):
     """Run a flow with or without errors and return result."""
     host = "1.2.3.4"
-    hass.data[dynalite.DOMAIN] = {}
-    hass.data[dynalite.DOMAIN][dynalite.DATA_CONFIGS] = {}
-    hass.data[dynalite.DOMAIN][dynalite.DATA_CONFIGS][host] = {dynalite.CONF_HOST: host}
-    with patch.object(dynalite.DynaliteBridge, "async_setup", return_value=setup):
-        with patch.object(
-            dynalite.DynaliteBridge, "try_connection", return_value=connection
-        ):
-            result = await hass.config_entries.flow.async_init(
-                dynalite.DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data={dynalite.CONF_HOST: host},
-            )
+    with patch(
+        "dynalite_devices_lib.DynaliteDevices.async_setup", return_value=setup
+    ), patch("dynalite_devices_lib.DynaliteDevices.available", connection), patch(
+        "homeassistant.components.dynalite.bridge.CONNECT_INTERVAL", 0
+    ):
+        result = await hass.config_entries.flow.async_init(
+            dynalite.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={dynalite.CONF_HOST: host, dynalite.CONF_NOWAIT: True},
+        )
     return result
 
 

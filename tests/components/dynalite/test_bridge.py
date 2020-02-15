@@ -13,10 +13,9 @@ def dyn_bridge():
     """Define a basic mock bridge."""
     hass = Mock()
     host = "1.2.3.4"
-    hass.data = {
-        dynalite.DOMAIN: {dynalite.DATA_CONFIGS: {host: {dynalite.CONF_NOWAIT: True}}}
-    }
-    bridge = dynalite.DynaliteBridge(hass, host)
+    bridge = dynalite.DynaliteBridge(
+        hass, {dynalite.CONF_HOST: host, dynalite.CONF_NOWAIT: True}
+    )
     return bridge
 
 

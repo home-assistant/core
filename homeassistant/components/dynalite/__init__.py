@@ -114,7 +114,7 @@ async def async_setup(hass, config):
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_IMPORT},
-                data={CONF_HOST: bridge_conf[CONF_HOST]},
+                data=bridge_conf,
             )
         )
 
@@ -125,7 +125,7 @@ async def async_setup_entry(hass, entry):
     """Set up a bridge from a config entry."""
     LOGGER.debug("Setting up entry %s", entry.data)
 
-    bridge = DynaliteBridge(hass, entry.data[CONF_HOST])
+    bridge = DynaliteBridge(hass, entry.data)
 
     if not await bridge.async_setup():
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
