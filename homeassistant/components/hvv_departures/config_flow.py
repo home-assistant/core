@@ -86,16 +86,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {"theName": {"name": user_input["station"]}, "maxList": 20}
             )
 
-            results = check_name.get("results")
+            stations = check_name.get("results")
 
-            if not results:
+            if not stations:
                 errors["base"] = "no_results"
 
                 return self.async_show_form(
                     step_id="station", data_schema=SCHEMA_STEP_STATION, errors=errors
                 )
 
-            self.stations = {f"{x.get('name')} ({x.get('type')})": x for x in results}
+            self.stations = {
+                f"{station.get('name')} ({station.get('type')})": station
+                for station in stations
+            }
 
             schema = vol.Schema(
                 {vol.Required("station"): vol.In(list(self.stations.keys()))}
@@ -185,8 +188,8 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None and not errors:
 
             self.filters = {
-                f"{x['serviceName']}, {x['label']}": x
-                for x in departure_list.get("filter")
+                f"{departure_filter['serviceName']}, {departure_filter['label']}": departure_filter
+                for departure_filter in departure_list.get("filter")
             }
 
             options = {
