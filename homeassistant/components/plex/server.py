@@ -13,7 +13,8 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
     CONF_CLIENT_IDENTIFIER,
-    CONF_IGNORE_SHARED_USERS,
+    CONF_IGNORE_NEW_SHARED_USERS,
+    CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
@@ -52,6 +53,7 @@ class PlexServer:
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         self.options = options
         self.server_choice = None
+        self._accounts = []
         self._owner_username = None
         self._version = None
 
@@ -96,6 +98,15 @@ class PlexServer:
         else:
             _connect_with_token()
 
+        self._accounts = sorted(
+            [
+                account.name
+                for account in self._plex_server.systemAccounts()
+                if account.name
+            ],
+            key=str.lower,
+        )
+
         owner_account = [
             account.name
             for account in self._plex_server.systemAccounts()
@@ -103,6 +114,8 @@ class PlexServer:
         ]
         if owner_account:
             self._owner_username = owner_account[0]
+            self._accounts.remove(self.owner)
+            self._accounts.insert(0, self.owner)
 
         self._version = self._plex_server.version
 
@@ -124,6 +137,9 @@ class PlexServer:
         available_clients = {}
         ignored_clients = set()
         new_clients = set()
+        monitored_users = self.options[MP_DOMAIN].get(
+            CONF_MONITORED_USERS, self.accounts
+        )
 
         try:
             devices = self._plex_server.clients()
@@ -151,7 +167,7 @@ class PlexServer:
                 continue
             session_username = session.usernames[0]
             for player in session.players:
-                if self.ignore_shared_users and session_username != self.owner:
+                if session_username not in monitored_users:
                     ignored_clients.add(player.machineIdentifier)
                     _LOGGER.debug("Ignoring Plex client owned by %s", session_username)
                     continue
@@ -204,6 +220,11 @@ class PlexServer:
         return self._plex_server
 
     @property
+    def accounts(self):
+        """Return accounts associated with the Plex server."""
+        return self._accounts
+
+    @property
     def owner(self):
         """Return the Plex server owner username."""
         return self._owner_username
@@ -229,9 +250,9 @@ class PlexServer:
         return self._plex_server._baseurl  # pylint: disable=protected-access
 
     @property
-    def ignore_shared_users(self):
-        """Return ignore_shared_users option."""
-        return self.options[MP_DOMAIN].get(CONF_IGNORE_SHARED_USERS, False)
+    def ignore_new_shared_users(self):
+        """Return ignore_new_shared_users option."""
+        return self.options[MP_DOMAIN].get(CONF_IGNORE_NEW_SHARED_USERS, False)
 
     @property
     def use_episode_art(self):

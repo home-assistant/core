@@ -26,7 +26,7 @@ DEFAULT_OPTIONS = {
     config_flow.MP_DOMAIN: {
         config_flow.CONF_USE_EPISODE_ART: False,
         config_flow.CONF_SHOW_ALL_CONTROLS: False,
-        config_flow.CONF_IGNORE_SHARED_USERS: False,
+        config_flow.CONF_IGNORE_NEW_SHARED_USERS: False,
     }
 }
 
@@ -474,7 +474,7 @@ async def test_option_flow(hass):
         user_input={
             config_flow.CONF_USE_EPISODE_ART: True,
             config_flow.CONF_SHOW_ALL_CONTROLS: True,
-            config_flow.CONF_IGNORE_SHARED_USERS: True,
+            config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
         },
     )
     assert result["type"] == "create_entry"
@@ -482,7 +482,7 @@ async def test_option_flow(hass):
         config_flow.MP_DOMAIN: {
             config_flow.CONF_USE_EPISODE_ART: True,
             config_flow.CONF_SHOW_ALL_CONTROLS: True,
-            config_flow.CONF_IGNORE_SHARED_USERS: True,
+            config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
         }
     }
 

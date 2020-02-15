@@ -14,13 +14,15 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import CONF_SSL, CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
 
 from .const import (  # pylint: disable=unused-import
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
     CONF_CLIENT_IDENTIFIER,
-    CONF_IGNORE_SHARED_USERS,
+    CONF_IGNORE_NEW_SHARED_USERS,
+    CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     CONF_SHOW_ALL_CONTROLS,
@@ -29,6 +31,7 @@ from .const import (  # pylint: disable=unused-import
     DOMAIN,
     PLEX_CONFIG_FILE,
     PLEX_SERVER_CONFIG,
+    SERVERS,
     X_PLEX_DEVICE_NAME,
     X_PLEX_PLATFORM,
     X_PLEX_PRODUCT,
@@ -255,6 +258,9 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize Plex options flow."""
         self.options = copy.deepcopy(config_entry.options)
+        server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
+        plex_server = self.hass.data[DOMAIN][SERVERS][server_id]
+        self.accounts = plex_server.accounts
 
     async def async_step_init(self, user_input=None):
         """Manage the Plex options."""
@@ -269,10 +275,15 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS] = user_input[
                 CONF_SHOW_ALL_CONTROLS
             ]
-            self.options[MP_DOMAIN][CONF_IGNORE_SHARED_USERS] = user_input[
-                CONF_IGNORE_SHARED_USERS
+            self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS] = user_input[
+                CONF_IGNORE_NEW_SHARED_USERS
+            ]
+            self.options[MP_DOMAIN][CONF_MONITORED_USERS] = user_input[
+                CONF_MONITORED_USERS
             ]
             return self.async_create_entry(title="", data=self.options)
+
+        available_accounts = {name: name for name in self.accounts}
 
         return self.async_show_form(
             step_id="plex_mp_settings",
@@ -287,11 +298,14 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                         default=self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS],
                     ): bool,
                     vol.Required(
-                        CONF_IGNORE_SHARED_USERS,
+                        CONF_IGNORE_NEW_SHARED_USERS,
                         default=self.options[MP_DOMAIN].get(
-                            CONF_IGNORE_SHARED_USERS, False
+                            CONF_IGNORE_NEW_SHARED_USERS, False
                         ),
                     ): bool,
+                    vol.Optional(CONF_MONITORED_USERS): cv.multi_select(
+                        available_accounts
+                    ),
                 }
             ),
         )
