@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
@@ -28,8 +29,6 @@ from .const import (
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
-    DEFAULT_DETECTION_TIME,
-    DEFAULT_SSID_FILTER,
     DOMAIN,
     LOGGER,
 )
@@ -228,15 +227,13 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
         controller = get_controller_from_config_entry(self.hass, self.config_entry)
 
-        current_ssid_filter = self.config_entry.options.get(
-            CONF_SSID_FILTER, DEFAULT_SSID_FILTER
-        )
-        ssid_filter = {}
-        for wlan in controller.api.wlans:
-            ssid_filter[vol.Optional(wlan, default=wlan in current_ssid_filter)] = bool
+        ssid_filter = {wlan: wlan for wlan in controller.api.wlans}
 
         return self.async_show_form(
-            step_id="device_tracker_ssid_filter", data_schema=vol.Schema(ssid_filter)
+            step_id="device_tracker_ssid_filter",
+            data_schema=vol.Schema(
+                {vol.Optional(CONF_SSID_FILTER): cv.multi_select(ssid_filter)}
+            ),
         )
 
     async def async_step_statistics_sensors(self, user_input=None):
