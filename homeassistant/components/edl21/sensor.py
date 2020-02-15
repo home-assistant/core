@@ -32,44 +32,6 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class EDL21:
     """EDL21 handles telegrams sent by a compatible smart meter."""
 
-    def __init__(self, hass, config, async_add_entities) -> None:
-        """Initialize an EDL21 object."""
-        self._cache = {}
-        self._hass = hass
-        self._async_add_entities = async_add_entities
-        self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
-        self._proto.add_listener(self.event, ["SmlGetListResponse"])
-
-    async def connect(self):
-        """Connect to an EDL21 reader."""
-        await self._proto.connect(self._hass.loop)
-
-    def event(self, message_body) -> None:
-        """Handle events from pysml."""
-        assert isinstance(message_body, SmlGetListResponse)
-
-        new_devices = []
-        for telegram in message_body.get("valList", []):
-            obis = telegram.get("objName")
-            if not obis:
-                continue
-
-            device = self._cache.get(obis)
-            if not device:
-                device = self._cache[obis] = EDL21Entity(obis, telegram)
-                new_devices.append(device)
-            elif device.update_telegram(telegram):
-                self._hass.async_create_task(device.async_update_ha_state())
-
-        if new_devices:
-            self._hass.async_add_job(
-                self._async_add_entities(new_devices, update_before_add=True)
-            )
-
-
-class EDL21Entity(Entity):
-    """Entity reading values from EDL21 telegram."""
-
     # OBIS format: A-B:C.D.E*F
     _OBIS_NAMES = {
         # A=1: Electricity
@@ -94,14 +56,64 @@ class EDL21Entity(Entity):
         # D=7: Instantaneous value
         # E=0: Total
         "1-0:16.7.0*255": "Sum active instantaneous power",
-        # A=129: Manufacturer specific
-        "129-129:199.130.3*255": "Manufacturer",
-        "129-129:199.130.5*255": "Public Key",
     }
 
-    def __init__(self, obis, telegram):
+    def __init__(self, hass, config, async_add_entities) -> None:
+        """Initialize an EDL21 object."""
+        self._blacklist = {
+            # A=129: Manufacturer specific
+            "129-129:199.130.3*255",  # Iskraemeco: Manufacturer
+            "129-129:199.130.5*255",  # Iskraemeco: Public Key
+        }
+        self._cache = {}
+        self._hass = hass
+        self._async_add_entities = async_add_entities
+        self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
+        self._proto.add_listener(self.event, ["SmlGetListResponse"])
+
+    async def connect(self):
+        """Connect to an EDL21 reader."""
+        await self._proto.connect(self._hass.loop)
+
+    def event(self, message_body) -> None:
+        """Handle events from pysml."""
+        assert isinstance(message_body, SmlGetListResponse)
+
+        new_devices = []
+        for telegram in message_body.get("valList", []):
+            obis = telegram.get("objName")
+            if not obis:
+                continue
+
+            device = self._cache.get(obis)
+            if not device:
+                name = self._OBIS_NAMES.get(obis)
+                if name:
+                    device = self._cache[obis] = EDL21Entity(obis, name, telegram)
+                    new_devices.append(device)
+                elif obis not in self._blacklist:
+                    _LOGGER.warning(
+                        "Unhandled sensor %s detected. Please report at "
+                        "https://github.com/home-assistant/home-assistant/issues",
+                        obis,
+                    )
+                    self._blacklist.add(obis)
+            elif device.update_telegram(telegram):
+                self._hass.async_create_task(device.async_update_ha_state())
+
+        if new_devices:
+            self._hass.async_add_job(
+                self._async_add_entities(new_devices, update_before_add=True)
+            )
+
+
+class EDL21Entity(Entity):
+    """Entity reading values from EDL21 telegram."""
+
+    def __init__(self, obis, name, telegram):
         """Initialize an EDL21Entity."""
         self._obis = obis
+        self._name = name
         self._telegram = telegram
 
     @property
@@ -117,7 +129,7 @@ class EDL21Entity(Entity):
     @property
     def name(self) -> Optional[str]:
         """Return a name."""
-        return self._OBIS_NAMES.get(self._obis)
+        return self._name
 
     @property
     def state(self) -> str:
