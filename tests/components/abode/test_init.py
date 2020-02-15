@@ -1,4 +1,4 @@
-"""Test for the Abode module."""
+"""Tests for the Abode module."""
 import abodepy.helpers.constants as CONST
 
 import homeassistant.components.abode as abode

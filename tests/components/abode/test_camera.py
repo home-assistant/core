@@ -1,4 +1,4 @@
-"""Test for the Abode camera device."""
+"""Tests for the Abode camera device."""
 import abodepy.helpers.constants as CONST
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN

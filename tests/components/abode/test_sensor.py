@@ -1,4 +1,4 @@
-"""Test for the Abode sensor device."""
+"""Tests for the Abode sensor device."""
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 
 from .common import setup_platform

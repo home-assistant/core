@@ -1,4 +1,4 @@
-"""Test for the Abode light device."""
+"""Tests for the Abode light device."""
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 
 from .common import setup_platform
@@ -34,24 +34,33 @@ async def test_switch_off(hass, requests_mock):
     """Test the light can be turned off."""
     await setup_platform(hass, LIGHT_DOMAIN)
     requests_mock.put(
-        "https://my.goabode.com/api/v1/control/light/ZB:db5b1a", text="",
+        "https://my.goabode.com/api/v1/control/light/ZB:db5b1a",
+        json={"id": "ZB:db5b1a", "status": "0"},
     )
 
-    await hass.services.async_call(
-        "light", "turn_off", {"entity_id": "light.living_room_lamp"}
+    assert await hass.services.async_call(
+        "light", "turn_off", {"entity_id": "light.living_room_lamp"}, blocking=True
     )
     await hass.async_block_till_done()
+    # Manually call the callback
+    device = hass.data["abode"].abode.get_device("ZB:db5b1a")
+    # pylint: disable=W0212
+    hass.data["abode"].abode.events._device_callbacks["ZB:db5b1a"][0](device)
+
+    # state = hass.states.get("light.living_room_lamp")
+    # assert state.state == "off"
 
 
 async def test_switch_on(hass, requests_mock):
     """Test the light can be turned on."""
     await setup_platform(hass, LIGHT_DOMAIN)
     requests_mock.put(
-        "https://my.goabode.com/api/v1/control/light/ZB:db5b1a", text="",
+        "https://my.goabode.com/api/v1/control/light/ZB:db5b1a",
+        json={"id": "ZB:db5b1a", "status": "1"},
     )
 
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": "light.living_room_lamp"}
+        "light", "turn_on", {"entity_id": "light.living_room_lamp"}, blocking=True
     )
     await hass.async_block_till_done()
 
@@ -60,11 +69,15 @@ async def test_set_brightness(hass, requests_mock):
     """Test the brightness can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
     requests_mock.put(
-        "https://my.goabode.com/api/v1/control/light/ZB:db5b1a", text="",
+        "https://my.goabode.com/api/v1/control/light/ZB:db5b1a",
+        json={"id": "ZB:db5b1a", "level": "39"},
     )
 
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": "light.living_room_lamp", "brightness": 100},
+        "light",
+        "turn_on",
+        {"entity_id": "light.living_room_lamp", "brightness": 100},
+        blocking=True,
     )
     await hass.async_block_till_done()
 
@@ -72,19 +85,51 @@ async def test_set_brightness(hass, requests_mock):
 async def test_set_color(hass, requests_mock):
     """Test the color can be set."""
     await setup_platform(hass, LIGHT_DOMAIN)
-    requests_mock.put(
-        "https://my.goabode.com/api/v1/control/light/ZB:db5b1a", text="",
+    requests_mock.post(
+        "https://my.goabode.com/integrations/v1/devices/741385f4388b2637df4c6b398fe50581",
+        json={
+            "id": "741385f4388b2637df4c6b398fe50581",
+            "idForPanel": "ZB:db5b1a",
+            "name": "Living Room Lamp",
+            "state": {
+                "brightness": 68,
+                "powerState": "ON",
+                "color": {"hue": 193, "saturation": 0},
+            },
+            "dimLevel": 68,
+            "colorMode": "hue",
+            "hue": 193,
+            "saturation": 0,
+        },
     )
 
     await hass.services.async_call(
         "light",
         "turn_on",
-        {"entity_id": "light.living_room_lamp", "rgb_color": [200, 100, 50]},
+        {"entity_id": "light.living_room_lamp", "hs_color": [240, 100]},
+        blocking=True,
     )
     await hass.async_block_till_done()
-
     # Test color temp
+    await setup_platform(hass, LIGHT_DOMAIN)
+    requests_mock.post(
+        "https://my.goabode.com/integrations/v1/devices/741385f4388b2637df4c6b398fe50581",
+        json={
+            "id": "741385f4388b2637df4c6b398fe50581",
+            "idForPanel": "ZB:db5b1a",
+            "name": "Living Room Lamp",
+            "state": {
+                "brightness": 70,
+                "powerState": "ON",
+                "colorTemperatureInKelvin": 3236,
+            },
+            "dimLevel": 70,
+            "colorMode": "temp",
+            "colorTemperature": 3236,
+        },
+    )
+
     await hass.services.async_call(
-        "light", "turn_on", {"entity_id": "light.living_room_lamp", "kelvin": 3000},
+        "light", "turn_on", {"entity_id": "light.living_room_lamp", "color_temp": 309},
     )
     await hass.async_block_till_done()

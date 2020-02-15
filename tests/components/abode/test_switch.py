@@ -1,4 +1,4 @@
-"""Test for the Abode switch device."""
+"""Tests for the Abode switch device."""
 import abodepy.helpers.constants as CONST
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN

@@ -1,4 +1,4 @@
-"""Test for the Abode binary sensor device."""
+"""Tests for the Abode binary sensor device."""
 from homeassistant.components.abode.const import ATTRIBUTION
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 

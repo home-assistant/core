@@ -1,4 +1,4 @@
-"""Test for the Abode alarm control panel device."""
+"""Tests for the Abode alarm control panel device."""
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 
 from .common import setup_platform
@@ -42,9 +42,6 @@ async def test_set_alarm_away(hass, requests_mock):
         blocking=True,
     )
     await hass.async_block_till_done()
-    # Mimic abodepy alarm state change
-    hass.data["abode"].abode._devices["area_1"].set_away()
-    # Need to figure out a way to force an entity refresh to re-check the state
 
 
 async def test_set_alarm_home(hass, requests_mock):
@@ -62,8 +59,6 @@ async def test_set_alarm_home(hass, requests_mock):
         blocking=True,
     )
     await hass.async_block_till_done()
-    # Mimic abodepy alarm state change
-    hass.data["abode"].abode._devices["area_1"].set_home()
 
 
 async def test_set_alarm_standby(hass, requests_mock):
@@ -81,5 +76,3 @@ async def test_set_alarm_standby(hass, requests_mock):
         blocking=True,
     )
     await hass.async_block_till_done()
-    # Mimic abodepy alarm state change
-    hass.data["abode"].abode._devices["area_1"].set_standby()

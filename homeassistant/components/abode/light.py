@@ -46,10 +46,10 @@ class AbodeLight(AbodeDevice, Light):
                 int(color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]))
             )
 
-        if ATTR_HS_COLOR in kwargs and self._device.is_color_capable:
+        elif ATTR_HS_COLOR in kwargs and self._device.is_color_capable:
             self._device.set_color(kwargs[ATTR_HS_COLOR])
 
-        if ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
+        elif ATTR_BRIGHTNESS in kwargs and self._device.is_dimmable:
             # Convert Home Assistant brightness (0-255) to Abode brightness (0-99)
             # If 100 is sent to Abode, response is 99 causing an error
             self._device.set_level(ceil(kwargs[ATTR_BRIGHTNESS] * 99 / 255.0))
