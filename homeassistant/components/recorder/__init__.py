@@ -57,7 +57,9 @@ SERVICE_PURGE_SCHEMA = vol.Schema(
     }
 )
 
-DEFAULT_URL = "sqlite:///{hass_config_path}"
+# DEFAULT_URL = "sqlite:///{hass_config_path}"
+# AIS performance fix
+DEFAULT_URL = "sqlite:///:memory:"
 DEFAULT_DB_FILE = "home-assistant_v2.db"
 
 CONF_DB_URL = "db_url"
@@ -89,7 +91,7 @@ CONFIG_SCHEMA = vol.Schema(
     {
         vol.Optional(DOMAIN, default=dict): FILTER_SCHEMA.extend(
             {
-                vol.Optional(CONF_PURGE_KEEP_DAYS, default=10): vol.All(
+                vol.Optional(CONF_PURGE_KEEP_DAYS, default=2): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
                 vol.Optional(CONF_PURGE_INTERVAL, default=1): vol.All(
