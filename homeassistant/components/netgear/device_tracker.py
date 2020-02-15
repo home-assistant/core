@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_SSL, default=False): cv.boolean,
         vol.Optional(CONF_USERNAME, default=""): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=None): vol.Any(None, cv.port),
+        vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_DEVICES, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_EXCLUDE, default=[]): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_APS, default=[]): vol.All(cv.ensure_list, [cv.string]),
