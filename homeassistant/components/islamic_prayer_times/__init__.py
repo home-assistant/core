@@ -147,7 +147,7 @@ class IslamicPrayerClient:
 
         async_track_point_in_time(self.hass, self.async_update, next_update_at)
 
-    async def async_update(self):
+    async def async_update(self, *_):
         """Update sensors with new prayer times."""
         try:
             await self.get_new_prayer_times()
