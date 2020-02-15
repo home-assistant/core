@@ -20,14 +20,14 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info):
         """Import a new bridge as a config entry."""
-        LOGGER.debug("async_step_import - %s", import_info)
+        LOGGER.debug("Starting async_step_import - %s", import_info)
         host = import_info[CONF_HOST]
         await self.async_set_unique_id(host)
         self._abort_if_unique_id_configured()
 
         bridge = DynaliteBridge(self.hass, host)
         if not await bridge.async_setup():
-            LOGGER.error("bridge.async_setup failed")
+            LOGGER.error("Unable to setup bridge - import info=%s", import_info)
             return self.async_abort(reason="bridge_setup_failed")
         if not await bridge.try_connection():
             return self.async_abort(reason="no_connection")
@@ -35,6 +35,6 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _entry_from_bridge(self, host):
         """Return a config entry from an initialized bridge."""
-        LOGGER.debug("entry_from_bridge - %s", host)
+        LOGGER.debug("Creating entry for the bridge - %s", host)
 
         return self.async_create_entry(title=host, data={CONF_HOST: host})

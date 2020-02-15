@@ -105,7 +105,7 @@ async def async_setup(hass, config):
 
     for bridge_conf in bridges:
         host = bridge_conf[CONF_HOST]
-        LOGGER.debug("async_setup host=%s conf=%s", host, bridge_conf)
+        LOGGER.debug("Starting config entry flow host=%s conf=%s", host, bridge_conf)
 
         # Store config in hass.data so the config entry can find it
         hass.data[DOMAIN][DATA_CONFIGS][host] = bridge_conf
@@ -123,12 +123,12 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up a bridge from a config entry."""
-    LOGGER.debug("__init async_setup_entry %s", entry.data)
+    LOGGER.debug("Setting up entry %s", entry.data)
 
     bridge = DynaliteBridge(hass, entry.data[CONF_HOST])
 
     if not await bridge.async_setup():
-        LOGGER.error("bridge.async_setup failed")
+        LOGGER.error("Could not set up bridge for entry %s", entry.data)
         return False
     hass.data[DOMAIN][entry.entry_id] = bridge
 
@@ -140,7 +140,7 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    LOGGER.debug("async_unload_entry %s", entry.data)
+    LOGGER.debug("Unloading entry %s", entry.data)
     hass.data[DOMAIN].pop(entry.entry_id)
     result = await hass.config_entries.async_forward_entry_unload(entry, "light")
     return result
