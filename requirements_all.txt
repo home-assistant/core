@@ -213,6 +213,12 @@ aladdin_connect==0.3
 # homeassistant.components.alarmdecoder
 alarmdecoder==1.13.2
 
+# homeassistant.components.alidns
+aliyun-python-sdk-alidns==2.0.15
+
+# homeassistant.components.alidns
+aliyun-python-sdk-core==2.13.14
+
 # homeassistant.components.alpha_vantage
 alpha_vantage==2.1.3
 

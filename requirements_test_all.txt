@@ -86,6 +86,12 @@ aiowwlln==2.0.2
 # homeassistant.components.airly
 airly==0.0.2
 
+# homeassistant.components.alidns
+aliyun-python-sdk-alidns==2.0.15
+
+# homeassistant.components.alidns
+aliyun-python-sdk-core==2.13.14
+
 # homeassistant.components.ambiclimate
 ambiclimate==0.2.1
 
