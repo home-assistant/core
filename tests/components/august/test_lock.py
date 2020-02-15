@@ -1,7 +1,6 @@
 """The lock tests for the august platform."""
 
 import datetime
-from unittest.mock import MagicMock
 
 from august.activity import (
     ACTION_LOCK_LOCK,
@@ -10,40 +9,9 @@ from august.activity import (
 )
 from august.lock import LockStatus
 
-from homeassistant.components.august.lock import AugustLock
 from homeassistant.util import dt
 
-from tests.components.august.mocks import (
-    MockActivity,
-    MockAugustData,
-    _mock_august_lock,
-)
-
-
-class MockAugustLock(AugustLock):
-    """A mock for august component AugustLock class."""
-
-    def __init__(self, august_data=None):
-        """Init the mock for august component AugustLock class."""
-        self._data = august_data
-        self._lock = _mock_august_lock()
-
-    @property
-    def device_id(self):
-        """Mock device_id."""
-        return "mockdeviceid1"
-
-    def _update_lock_status(self, lock_status, activity_start_time_utc):
-        """Mock updating the lock status."""
-        self._data.set_last_lock_status_update_time_utc(
-            self._lock.device_id, activity_start_time_utc
-        )
-        self.last_update_lock_status = {}
-        self.last_update_lock_status["lock_status"] = lock_status
-        self.last_update_lock_status[
-            "activity_start_time_utc"
-        ] = activity_start_time_utc
-        return MagicMock()
+from tests.components.august.mocks import MockActivity, MockAugustData, MockAugustLock
 
 
 def test__sync_lock_activity_locked_via_onetouchlock():
