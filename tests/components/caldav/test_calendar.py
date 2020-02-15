@@ -200,6 +200,21 @@ RRULE:FREQ=DAILY;COUNT=100
 END:VEVENT
 END:VCALENDAR
 """,
+    """BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Global Corp.//CalDAV Client//EN
+BEGIN:VEVENT
+UID:14
+DTSTAMP:20151125T000000Z
+DTSTART:20151127T000000Z
+DTEND:20151127T003000Z
+SUMMARY:This is an hourly recurring event
+LOCATION:Hamburg
+DESCRIPTION:The bell tolls for thee
+RRULE:FREQ=HOURLY;INTERVAL=1;COUNT=12
+END:VEVENT
+END:VCALENDAR
+""",
 ]
 
 CALDAV_CONFIG = {
@@ -670,3 +685,55 @@ async def test_event_rrule_all_day(mock_now, hass, calendar):
         "location": "Hamburg",
         "description": "Groundhog Day",
     }
+
+
+@patch(
+    "homeassistant.util.dt.now",
+    return_value=dt.as_local(datetime.datetime(2015, 11, 27, 11, 15)),
+)
+async def test_event_rrule_hourly_on(mock_now, hass, calendar):
+    """Test that the endless recurring event is returned."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.private")
+    assert state.name == calendar.name
+    assert state.state == STATE_ON
+    assert dict(state.attributes) == {
+        "friendly_name": "Private",
+        "message": "This is an hourly recurring event",
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": "2015-11-27 11:00:00",
+        "end_time": "2015-11-27 11:30:00",
+        "location": "Hamburg",
+        "description": "The bell tolls for thee",
+    }
+
+
+@patch(
+    "homeassistant.util.dt.now",
+    return_value=dt.as_local(datetime.datetime(2015, 11, 27, 11, 45)),
+)
+async def test_event_rrule_hourly_off(mock_now, hass, calendar):
+    """Test that the endless recurring event is returned."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.private")
+    assert state.name == calendar.name
+    assert state.state == STATE_OFF
+
+
+@patch(
+    "homeassistant.util.dt.now",
+    return_value=dt.as_local(datetime.datetime(2015, 11, 27, 12, 45)),
+)
+async def test_event_rrule_hourly_ended(mock_now, hass, calendar):
+    """Test that the endless recurring event is returned."""
+    assert await async_setup_component(hass, "calendar", {"calendar": CALDAV_CONFIG})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.private")
+    assert state.name == calendar.name
+    assert state.state == STATE_OFF
