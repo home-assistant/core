@@ -4,11 +4,16 @@ import re
 from unittest import mock
 
 import pytest
+import zigpy.quirks
+import zigpy.zcl.clusters.closures
+import zigpy.zcl.clusters.general
+import zigpy.zcl.clusters.security
 
 import homeassistant.components.zha.core.channels as zha_channels
 import homeassistant.components.zha.core.channels.base as base_channels
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.discovery as disc
+import homeassistant.components.zha.core.registries as zha_regs
 import homeassistant.helpers.entity_registry
 
 from .zha_devices_list import DEVICES
@@ -232,3 +237,80 @@ async def test_discover_endpoint(device_info, channels_mock, hass):
         entity_info = device_info["entity_map"][map_id]
         assert set([ch.name for ch in channels]) == set(entity_info["channels"])
         assert ent_cls.__name__ == entity_info["entity_class"]
+
+
+def _ch_mock(cluster):
+    """Return mock of a channel with a cluster."""
+    channel = mock.MagicMock()
+    type(channel).cluster = mock.PropertyMock(return_value=cluster(mock.MagicMock()))
+    return channel
+
+
+@mock.patch(
+    "homeassistant.components.zha.core.discovery.ProbeEndpoint"
+    ".handle_on_off_output_cluster_exception",
+    new=mock.MagicMock(),
+)
+@mock.patch(
+    "homeassistant.components.zha.core.discovery.ProbeEndpoint.probe_single_cluster"
+)
+def _test_single_input_cluster_device_class(probe_mock):
+    """Test SINGLE_INPUT_CLUSTER_DEVICE_CLASS matching by cluster id or class."""
+
+    door_ch = _ch_mock(zigpy.zcl.clusters.closures.DoorLock)
+    cover_ch = _ch_mock(zigpy.zcl.clusters.closures.WindowCovering)
+    multistate_ch = _ch_mock(zigpy.zcl.clusters.general.MultistateInput)
+
+    class QuirkedIAS(zigpy.quirks.CustomCluster, zigpy.zcl.clusters.security.IasZone):
+        pass
+
+    ias_ch = _ch_mock(QuirkedIAS)
+
+    class _Analog(zigpy.quirks.CustomCluster, zigpy.zcl.clusters.general.AnalogInput):
+        pass
+
+    analog_ch = _ch_mock(_Analog)
+
+    ch_pool = mock.MagicMock(spec_set=zha_channels.ChannelPool)
+    ch_pool.unclaimed_channels.return_value = [
+        door_ch,
+        cover_ch,
+        multistate_ch,
+        ias_ch,
+        analog_ch,
+    ]
+
+    disc.ProbeEndpoint().discover_by_cluster_id(ch_pool)
+    assert probe_mock.call_count == len(ch_pool.unclaimed_channels())
+    probes = (
+        (zha_const.LOCK, door_ch),
+        (zha_const.COVER, cover_ch),
+        (zha_const.SENSOR, multistate_ch),
+        (zha_const.BINARY_SENSOR, ias_ch),
+        (zha_const.SENSOR, analog_ch),
+    )
+    for call, details in zip(probe_mock.call_args_list, probes):
+        component, ch = details
+        assert call[0][0] == component
+        assert call[0][1] == ch
+
+
+def test_single_input_cluster_device_class():
+    """Test SINGLE_INPUT_CLUSTER_DEVICE_CLASS matching by cluster id or class."""
+    _test_single_input_cluster_device_class()
+
+
+def test_single_input_cluster_device_class_by_cluster_class():
+    """Test SINGLE_INPUT_CLUSTER_DEVICE_CLASS matching by cluster id or class."""
+    mock_reg = {
+        zigpy.zcl.clusters.closures.DoorLock.cluster_id: zha_const.LOCK,
+        zigpy.zcl.clusters.closures.WindowCovering.cluster_id: zha_const.COVER,
+        zigpy.zcl.clusters.general.AnalogInput: zha_const.SENSOR,
+        zigpy.zcl.clusters.general.MultistateInput: zha_const.SENSOR,
+        zigpy.zcl.clusters.security.IasZone: zha_const.BINARY_SENSOR,
+    }
+
+    with mock.patch.dict(
+        zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS, mock_reg, clear=True
+    ):
+        _test_single_input_cluster_device_class()

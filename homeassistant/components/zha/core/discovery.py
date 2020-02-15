@@ -56,23 +56,28 @@ class ProbeEndpoint:
     def discover_by_cluster_id(self, channel_pool: zha_typing.ChannelPoolType) -> None:
         """Process an endpoint on a zigpy device."""
 
+        items = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS.items()
+        single_input_clusters = {
+            cluster_class: match
+            for cluster_class, match in items
+            if not isinstance(cluster_class, int)
+        }
         remaining_channels = channel_pool.unclaimed_channels()
         for channel in remaining_channels:
             if channel.cluster.cluster_id in zha_regs.CHANNEL_ONLY_CLUSTERS:
                 channel_pool.claim_channels([channel])
                 continue
 
-            cmpnt = None
-            for class_or_id in zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS:
-                if isinstance(class_or_id, int):
-                    if class_or_id == channel.cluster.cluster_id:
-                        cmpnt = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS[class_or_id]
+            component = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS.get(
+                channel.cluster.cluster_id
+            )
+            if component is None:
+                for cluster_class, match in single_input_clusters.items():
+                    if isinstance(channel.cluster, cluster_class):
+                        component = match
                         break
-                elif isinstance(channel.cluster, class_or_id):
-                    cmpnt = zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS[class_or_id]
-                    break
 
-            self.probe_single_cluster(cmpnt, channel, channel_pool)
+            self.probe_single_cluster(component, channel, channel_pool)
 
         # until we can get rid off registries
         self.handle_on_off_output_cluster_exception(channel_pool)
