@@ -79,7 +79,7 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    LOGGER.error("async_unload_entry %s", entry.data)
+    LOGGER.debug("async_unload_entry %s", entry.data)
     hass.data[DOMAIN].pop(entry.entry_id)
     result = await hass.config_entries.async_forward_entry_unload(entry, "light")
     return result
