@@ -32,7 +32,7 @@ async def test_bridge_setup(dyn_bridge):
             assert await dyn_bridge.async_setup()
     # if dynalite_devices works and NOWAIT is not set, depends on try_connection
     with patch.object(dyn_bridge.dynalite_devices, "async_setup", return_value=True):
-        with patch.dict(dyn_bridge.config, {dynalite.CONF_NOWAIT: False}):
+        with patch.object(dyn_bridge, "no_wait", False):
             with patch.object(dyn_bridge, "try_connection", return_value=True):
                 assert await dyn_bridge.async_setup()
             with patch.object(dyn_bridge, "try_connection", return_value=False):

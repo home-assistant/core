@@ -21,10 +21,11 @@ class DynaliteBridge:
         self.async_add_devices = None
         self.waiting_devices = []
         self.host = host
-        self.config = hass.data[DOMAIN][DATA_CONFIGS][self.host]
+        config = hass.data[DOMAIN][DATA_CONFIGS][self.host]
+        self.no_wait = config.get(CONF_NOWAIT, False)
         # Configure the dynalite devices
         self.dynalite_devices = DynaliteDevices(
-            config=self.config,
+            config=config,
             newDeviceFunc=self.add_devices_when_registered,
             updateDeviceFunc=self.update_device,
         )
@@ -34,7 +35,7 @@ class DynaliteBridge:
         # Configure the dynalite devices
         if not await self.dynalite_devices.async_setup():
             return False
-        if self.config.get(CONF_NOWAIT, False):
+        if self.no_wait:
             return True
         return await self.try_connection()
 
