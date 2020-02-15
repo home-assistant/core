@@ -214,7 +214,7 @@ class WebDavCalendarData:
                     _start_of_today = _start_of_today.date()
                     _start_of_tomorrow = _start_of_tomorrow.date()
                 if _start_of_today <= start_dt < _start_of_tomorrow:
-                    new_vevent = copy.deepcopy(vevent)
+                    new_vevent = vevent
                     if hasattr(new_vevent, "dtend"):
                         dur = new_vevent.dtend.value - new_vevent.dtstart.value
                         new_vevent.dtend.value = start_dt + dur
