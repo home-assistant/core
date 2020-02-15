@@ -515,13 +515,21 @@ async def test_not_fires_on_mqtt_message_after_remove(
     await hass.async_block_till_done()
     assert len(calls) == 1
 
-    # Update the trigger
+    # Remove the trigger
     async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", "")
     await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+    # Rediscover the trigger
+    async_fire_mqtt_message(hass, "homeassistant/device_automation/bla1/config", data1)
+    await hass.async_block_till_done()
+
+    async_fire_mqtt_message(hass, "foobar/triggers/button1", "short_press")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
 
 
 async def test_attach_remove(hass, device_reg, mqtt_mock):

@@ -145,11 +145,14 @@ class Trigger:
 
     def detach_trigger(self):
         """Remove MQTT device trigger."""
+        # Mark trigger as unknown
 
+        self.topic = None
         # Unsubscribe if this trigger is in use
         for trig in self.attached_triggers:
             if trig.remove:
                 trig.remove()
+                trig.remove = None
 
 
 async def _update_device(hass, config_entry, config):
@@ -177,9 +180,8 @@ async def async_setup_trigger(hass, config, config_entry, discovery_hash):
         if not payload:
             # Empty payload: Remove trigger
             _LOGGER.info("Removing trigger: %s", discovery_hash)
-            device_trigger = hass.data[DEVICE_TRIGGERS].pop(discovery_id)
-
-            if device_trigger:
+            if discovery_id in hass.data[DEVICE_TRIGGERS]:
+                device_trigger = hass.data[DEVICE_TRIGGERS][discovery_id]
                 device_trigger.detach_trigger()
                 clear_discovery_hash(hass, discovery_hash)
                 remove_signal()
