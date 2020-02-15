@@ -277,13 +277,6 @@ class AugustData:
         """Update data object with latest from August API."""
 
         # This is the only place we refresh the api token
-        # in order to avoid multiple threads from doing it at the same time
-        # since there will only be one activity refresh at a time
-        #
-        # In the future when this module is converted to async we should
-        # use a lock to prevent all api calls while the token
-        # is being refreshed as this is a better solution
-        #
         await self._async_refresh_access_token_if_needed()
         return await self._hass.async_add_executor_job(
             partial(self._update_device_activities, limit=ACTIVITY_FETCH_LIMIT)
