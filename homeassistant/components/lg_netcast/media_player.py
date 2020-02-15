@@ -16,6 +16,7 @@ from homeassistant.components.media_player.const import (
     SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
@@ -28,10 +29,13 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "LG TV Remote"
+
+CONF_ON_ACTION = "turn_on_action"
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -49,6 +53,7 @@ SUPPORT_LGTV = (
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
+        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_ACCESS_TOKEN): vol.All(cv.string, vol.Length(max=6)),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -62,20 +67,23 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     host = config.get(CONF_HOST)
     access_token = config.get(CONF_ACCESS_TOKEN)
     name = config.get(CONF_NAME)
+    on_action = config.get(CONF_ON_ACTION)
 
     client = LgNetCastClient(host, access_token)
+    on_action_script = Script(hass, on_action) if on_action else None
 
-    add_entities([LgTVDevice(client, name)], True)
+    add_entities([LgTVDevice(client, name, on_action_script)], True)
 
 
 class LgTVDevice(MediaPlayerDevice):
     """Representation of a LG TV."""
 
-    def __init__(self, client, name):
+    def __init__(self, client, name, on_action_script):
         """Initialize the LG TV device."""
         self._client = client
         self._name = name
         self._muted = False
+        self._on_action_script = on_action_script
         # Assume that the TV is in Play mode
         self._playing = True
         self._volume = 0
@@ -180,6 +188,8 @@ class LgTVDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
+        if self._on_action_script:
+            return SUPPORT_LGTV | SUPPORT_TURN_ON
         return SUPPORT_LGTV
 
     @property
@@ -190,6 +200,11 @@ class LgTVDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn off media player."""
         self.send_command(1)
+
+    def turn_on(self):
+        """Turn on the media player."""
+        if self._on_action_script:
+            self._on_action_script.run()
 
     def volume_up(self):
         """Volume up the media player."""
