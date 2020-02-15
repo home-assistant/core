@@ -42,14 +42,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def get_scanner(hass, config):
     """Validate the configuration and returns a Netgear scanner."""
     info = config[DOMAIN]
-    host = info.get(CONF_HOST)
-    ssl = info.get(CONF_SSL)
-    username = info.get(CONF_USERNAME)
-    password = info.get(CONF_PASSWORD)
+    host = info[CONF_HOST]
+    ssl = info[CONF_SSL]
+    username = info[CONF_USERNAME]
+    password = info[CONF_PASSWORD]
     port = info.get(CONF_PORT)
-    devices = info.get(CONF_DEVICES)
-    excluded_devices = info.get(CONF_EXCLUDE)
-    accesspoints = info.get(CONF_APS)
+    devices = info[CONF_DEVICES]
+    excluded_devices = info[CONF_EXCLUDE]
+    accesspoints = info[CONF_APS]
 
     api = Netgear(password, host, username, port, ssl)
     scanner = NetgearDeviceScanner(api, devices, excluded_devices, accesspoints)
