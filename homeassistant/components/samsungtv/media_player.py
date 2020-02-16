@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     STATE_OFF,
+    STATE_ON,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
@@ -76,15 +77,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     ):
         turn_on_action = hass.data[DOMAIN][ip_address][CONF_ON_ACTION]
         on_script = Script(hass, turn_on_action)
-    async_add_entities([SamsungTVDevice(hass, config_entry, on_script)])
+    async_add_entities([SamsungTVDevice(config_entry, on_script)])
 
 
 class SamsungTVDevice(MediaPlayerDevice):
     """Representation of a Samsung TV."""
 
-    def __init__(self, hass, config_entry, on_script):
+    def __init__(self, config_entry, on_script):
         """Initialize the Samsung device."""
-        self.hass = hass
         self._config_entry = config_entry
         self._manufacturer = config_entry.data.get(CONF_MANUFACTURER)
         self._model = config_entry.data.get(CONF_MODEL)
@@ -100,7 +100,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         # sending the next command to avoid turning the TV back ON).
         self._end_of_power_off = None
         # Generate a configuration for the Samsung library
-        self._config = {
+        config = {
             "name": "HomeAssistant",
             "description": "HomeAssistant",
             "id": "ha.component.samsung",
@@ -110,9 +110,10 @@ class SamsungTVDevice(MediaPlayerDevice):
             "timeout": 1,
             "token": config_entry.data[CONF_TOKEN],
         }
-        self._bridge = SamsungTVBridge.get_bridge(self._config)
+        self._bridge = SamsungTVBridge.get_bridge(config)
+        self._bridge.register_reauth_callback(self.access_denied)
 
-    def acces_denied(self):
+    def access_denied(self):
         """Access denied callbck."""
         LOGGER.debug("Access denied in getting remote object")
         self.hass.async_create_task(
@@ -126,11 +127,11 @@ class SamsungTVDevice(MediaPlayerDevice):
         if self._power_off_in_progress():
             self._state = STATE_OFF
         else:
-            self._state = self._bridge.get_state()
+            self._state = STATE_ON if self._bridge.is_on() else STATE_OFF
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
-        if self._power_off_in_progress() and key not in ("KEY_POWER", "KEY_POWEROFF"):
+        if self._power_off_in_progress() and key != "KEY_POWEROFF":
             LOGGER.info("TV is powering off, not sending command: %s", key)
             return
         self._bridge.send_key(key)
@@ -192,10 +193,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         """Turn off media player."""
         self._end_of_power_off = dt_util.utcnow() + timedelta(seconds=15)
 
-        if self._config["method"] == "websocket":
-            self.send_key("KEY_POWER")
-        else:
-            self.send_key("KEY_POWEROFF")
+        self.send_key("KEY_POWEROFF")
         # Force closing of remote session to provide instant UI feedback
         try:
             self._bridge.close_remote()

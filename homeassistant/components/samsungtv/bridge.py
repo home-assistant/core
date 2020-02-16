@@ -1,12 +1,12 @@
 """samsungctl and samsungtvws bridge classes."""
+from abc import ABC, abstractmethod
+
 import requests
 from requests import RequestException
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws import SamsungTVWS
 from websocket import WebSocketException
-
-from homeassistant.const import STATE_OFF, STATE_ON
 
 from .const import (
     LOGGER,
@@ -17,8 +17,8 @@ from .const import (
 )
 
 
-class SamsungTVBridge:
-    """The Base Bridge class."""
+class SamsungTVBridge(ABC):
+    """The Base Bridge abstract class."""
 
     @staticmethod
     def get_bridge(config):
@@ -44,11 +44,13 @@ class SamsungTVBridge:
         """Register a callback function."""
         self._callback = func
 
+    @abstractmethod
     def try_connect(self, port):
         """Try to connect to the TV."""
 
-    def get_state(self):
-        """Get TV state."""
+    @abstractmethod
+    def is_on(self):
+        """Tells if the TV is on."""
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
@@ -74,9 +76,11 @@ class SamsungTVBridge:
             # Different reasons, e.g. hostname not resolveable
             pass
 
+    @abstractmethod
     def _send_key(self, key):
         """Send the key."""
 
+    @abstractmethod
     def _get_remote(self):
         """Get Remote object."""
 
@@ -85,6 +89,7 @@ class SamsungTVBridge:
         self._get_remote().close()
 
     def _notify_callback(self):
+        """Notify access denied callback."""
         if self._callback:
             self._callback()
 
@@ -99,35 +104,35 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
 
     def try_connect(self, port):
         """Try to connect to the Legacy TV."""
-        if port is None or port == self.port:
-            config = {
-                "name": "HomeAssistant",
-                "description": "HomeAssistant",
-                "id": "ha.component.samsung",
-                "host": self.host,
-                "method": self.method,
-                "port": self.port,
-                # We need this high timeout because waiting for auth popup is just an open socket
-                "timeout": 31,
-            }
-            try:
-                LOGGER.debug("Try config: %s", config)
-                with Remote(config.copy()):
-                    LOGGER.debug("Working config: %s", config)
-                    return RESULT_SUCCESS
-            except AccessDenied:
-                LOGGER.debug("Working but denied config: %s", config)
-                return RESULT_AUTH_MISSING
-            except (UnhandledResponse):
-                LOGGER.debug("Working but unsupported config: %s", config)
-                return RESULT_NOT_SUPPORTED
-            except OSError as err:
-                LOGGER.debug("Failing config: %s, error: %s", config, err)
+        if port is not None and port != self.port:
+            return RESULT_NOT_SUCCESSFUL
+        config = {
+            "name": "HomeAssistant",
+            "description": "HomeAssistant",
+            "id": "ha.component.samsung",
+            "host": self.host,
+            "method": self.method,
+            "port": self.port,
+            # We need this high timeout because waiting for auth popup is just an open socket
+            "timeout": 31,
+        }
+        try:
+            LOGGER.debug("Try config: %s", config)
+            with Remote(config.copy()):
+                LOGGER.debug("Working config: %s", config)
+                return RESULT_SUCCESS
+        except AccessDenied:
+            LOGGER.debug("Working but denied config: %s", config)
+            return RESULT_AUTH_MISSING
+        except UnhandledResponse:
+            LOGGER.debug("Working but unsupported config: %s", config)
+            return RESULT_NOT_SUPPORTED
+        except OSError as err:
+            LOGGER.debug("Failing config: %s, error: %s", config, err)
+            return RESULT_NOT_SUCCESSFUL
 
-        return RESULT_NOT_SUCCESSFUL
-
-    def get_state(self):
-        """Get TV state."""
+    def is_on(self):
+        """Tells if the TV is on."""
         if self._remote is not None:
             # Close the current remote connection
             self._remote.close()
@@ -136,18 +141,18 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         try:
             self._get_remote()
             if self._remote:
-                return STATE_ON
+                return True
         except (
             UnhandledResponse,
             AccessDenied,
         ):
             # We got a response so it's working.
-            return STATE_ON
+            return True
         except OSError:
             # Different reasons, e.g. hostname not resolveable
-            return STATE_OFF
+            return False
 
-        return STATE_OFF
+        return False
 
     def _get_remote(self):
         """Create or return a remote control instance."""
@@ -179,50 +184,53 @@ class SamsungTVWSBridge(SamsungTVBridge):
     def try_connect(self, port):
         """Try to connect to the Websocket TV."""
         for self.port in (8001, 8002):
-            if port is None or port == self.port:
-                config = {
-                    "name": "HomeAssistant",
-                    "description": "HomeAssistant",
-                    "host": self.host,
-                    "method": self.method,
-                    "port": self.port,
-                    # We need this high timeout because waiting for auth popup is just an open socket
-                    "timeout": 31,
-                    "token": self.token,
-                }
-                try:
-                    LOGGER.debug("Try config: %s", config)
-                    with SamsungTVWS(
-                        host=self.host,
-                        port=self.port,
-                        token=self.token,
-                        timeout=config["timeout"],
-                        name=config["name"],
-                    ) as remote:
-                        remote.open()
-                    LOGGER.debug("Working config: %s", config)
-                    LOGGER.debug("Token %s", self.token)
-                    return RESULT_SUCCESS
-                except WebSocketException:
-                    LOGGER.debug("Working but unsupported config: %s", config)
-                    return RESULT_NOT_SUPPORTED
-                except (OSError, Exception) as err:  # pylint: disable=broad-except
-                    LOGGER.debug("Failing config: %s, error: %s", config, err)
+            if port is not None and port != self.port:
+                continue
+            config = {
+                "name": "HomeAssistant",
+                "description": "HomeAssistant",
+                "host": self.host,
+                "method": self.method,
+                "port": self.port,
+                # We need this high timeout because waiting for auth popup is just an open socket
+                "timeout": 31,
+                "token": self.token,
+            }
+            try:
+                LOGGER.debug("Try config: %s", config)
+                with SamsungTVWS(
+                    host=self.host,
+                    port=self.port,
+                    token=self.token,
+                    timeout=config["timeout"],
+                    name=config["name"],
+                ) as remote:
+                    remote.open()
+                LOGGER.debug("Working config: %s", config)
+                LOGGER.debug("Token: %s", self.token)
+                return RESULT_SUCCESS
+            except WebSocketException:
+                LOGGER.debug("Working but unsupported config: %s", config)
+                return RESULT_NOT_SUPPORTED
+            except (OSError, Exception) as err:  # pylint: disable=broad-except
+                LOGGER.debug("Failing config: %s, error: %s", config, err)
 
         return RESULT_NOT_SUCCESSFUL
 
-    def get_state(self):
+    def is_on(self):
         """Get TV state."""
         try:
             ping_url = f"http://{self.host}:8001/api/v2/"
 
             requests.get(ping_url, timeout=1)
-            return STATE_ON
+            return True
         except RequestException:
-            return STATE_OFF
+            return False
 
     def _send_key(self, key):
         """Send the key using websocket protocol."""
+        if key == "KEY_POWEROFF":
+            key = "KEY_POWER"
         self._get_remote().send_key(key)
 
     def _get_remote(self):
