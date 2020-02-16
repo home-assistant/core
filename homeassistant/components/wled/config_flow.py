@@ -11,8 +11,8 @@ from homeassistant.config_entries import (
     ConfigFlow,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
-from homeassistant.helpers import ConfigType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN  # pylint: disable=unused-import
 
