@@ -1,6 +1,5 @@
 """Support for August lock."""
 from datetime import timedelta
-from functools import partial
 import logging
 
 from august.activity import ACTIVITY_ACTION_STATES, ActivityType
@@ -45,7 +44,7 @@ class AugustLock(LockDevice):
         """Lock the device."""
         update_start_time_utc = dt.utcnow()
         lock_status = await self.hass.async_add_executor_job(
-            partial(self._data.lock, self._lock.device_id)
+            self._data.lock, self._lock.device_id
         )
         self._update_lock_status(lock_status, update_start_time_utc)
 
@@ -53,7 +52,7 @@ class AugustLock(LockDevice):
         """Unlock the device."""
         update_start_time_utc = dt.utcnow()
         lock_status = await self.hass.async_add_executor_job(
-            partial(self._data.unlock, self._lock.device_id)
+            self._data.unlock, self._lock.device_id
         )
         self._update_lock_status(lock_status, update_start_time_utc)
 
