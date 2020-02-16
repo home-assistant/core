@@ -506,6 +506,6 @@ def _call_api_operation_that_requires_bridge(
     try:
         ret = func(*args, **kwargs)
     except AugustApiHTTPError as err:
-        raise HomeAssistantError(device_name + ": " + str(err)) from AugustApiHTTPError
+        raise HomeAssistantError(device_name + ": " + str(err))
 
     return ret

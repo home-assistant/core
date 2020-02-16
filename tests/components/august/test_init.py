@@ -7,21 +7,26 @@ from homeassistant.exceptions import HomeAssistantError
 
 from tests.components.august.mocks import (
     MockAugustApiFailing,
-    MockAugustData,
+    MockAugustComponentData,
     _mock_august_authentication,
     _mock_august_authenticator,
+    _mock_august_lock,
 )
 
 
 def test_get_lock_name():
     """Get the lock name from August data."""
-    data = MockAugustData(last_lock_status_update_timestamp=1)
+    data = MockAugustComponentData(last_lock_status_update_timestamp=1)
+    lock = _mock_august_lock()
+    data.set_mocked_locks([lock])
     assert data.get_lock_name("mockdeviceid1") == "Mocked Lock 1"
 
 
 def test_unlock_throws_august_api_http_error():
     """Test unlock."""
-    data = MockAugustData(api=MockAugustApiFailing())
+    data = MockAugustComponentData(api=MockAugustApiFailing())
+    lock = _mock_august_lock()
+    data.set_mocked_locks([lock])
     last_err = None
     try:
         data.unlock("mockdeviceid1")
@@ -34,7 +39,9 @@ def test_unlock_throws_august_api_http_error():
 
 def test_lock_throws_august_api_http_error():
     """Test lock."""
-    data = MockAugustData(api=MockAugustApiFailing())
+    data = MockAugustComponentData(api=MockAugustApiFailing())
+    lock = _mock_august_lock()
+    data.set_mocked_locks([lock])
     last_err = None
     try:
         data.unlock("mockdeviceid1")
@@ -45,7 +52,7 @@ def test_lock_throws_august_api_http_error():
     )
 
 
-def test__refresh_access_token():
+async def test__refresh_access_token(hass):
     """Test refresh of the access token."""
     authentication = _mock_august_authentication("original_token", 1234)
     authenticator = _mock_august_authenticator()

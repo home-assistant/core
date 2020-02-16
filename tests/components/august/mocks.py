@@ -5,8 +5,10 @@ from unittest.mock import MagicMock, PropertyMock
 from august.activity import Activity
 from august.api import Api
 from august.exceptions import AugustApiHTTPError
+from august.lock import Lock
 
 from homeassistant.components.august import AugustData
+from homeassistant.components.august.binary_sensor import AugustDoorBinarySensor
 from homeassistant.components.august.lock import AugustLock
 from homeassistant.util import dt
 
@@ -54,23 +56,21 @@ class MockActivity(Activity):
         return self._action
 
 
-class MockAugustLock(AugustLock):
+class MockAugustComponentDoorBinarySensor(AugustDoorBinarySensor):
+    """A mock for august component AugustDoorBinarySensor class."""
+
+    def _update_door_state(self, door_state, activity_start_time_utc):
+        """Mock updating the lock status."""
+        self._data.set_last_door_state_update_time_utc(
+            self._door.device_id, activity_start_time_utc
+        )
+        self.last_update_door_state = {}
+        self.last_update_door_state["door_state"] = door_state
+        self.last_update_door_state["activity_start_time_utc"] = activity_start_time_utc
+
+
+class MockAugustComponentLock(AugustLock):
     """A mock for august component AugustLock class."""
-
-    def __init__(self, august_data=None):
-        """Init the mock for august component AugustLock class."""
-        self._data = august_data
-        self._lock = _mock_august_lock()
-
-    @property
-    def device_id(self):
-        """Mock device_id."""
-        return "mockdeviceid1"
-
-    @property
-    def device_name(self):
-        """Mock device_name."""
-        return "Mocked Lock 1"
 
     def _update_lock_status(self, lock_status, activity_start_time_utc):
         """Mock updating the lock status."""
@@ -82,10 +82,9 @@ class MockAugustLock(AugustLock):
         self.last_update_lock_status[
             "activity_start_time_utc"
         ] = activity_start_time_utc
-        return MagicMock()
 
 
-class MockAugustData(AugustData):
+class MockAugustComponentData(AugustData):
     """A wrapper to mock AugustData."""
 
     # AugustData support multiple locks, however for the purposes of
@@ -97,6 +96,8 @@ class MockAugustData(AugustData):
         last_door_state_update_timestamp=1,
         api=MockAugustApi(),
         access_token="mocked_access_token",
+        locks=[],
+        doorbells=[],
     ):
         """Mock AugustData."""
         self._last_lock_status_update_time_utc = dt.as_utc(
@@ -107,7 +108,18 @@ class MockAugustData(AugustData):
         )
         self._api = api
         self._access_token = access_token
-        self._locks = [MockAugustLock()]
+        self._locks = locks
+        self._doorbells = doorbells
+        self._lock_status_by_id = {}
+        self._lock_last_status_update_time_utc_by_id = {}
+
+    def set_mocked_locks(self, locks):
+        """Set lock mocks."""
+        self._locks = locks
+
+    def set_mocked_doorbells(self, doorbells):
+        """Set doorbell mocks."""
+        self._doorbells = doorbells
 
     def get_last_lock_status_update_time_utc(self, device_id):
         """Mock to get last lock status update time."""
@@ -124,12 +136,6 @@ class MockAugustData(AugustData):
     def set_last_door_state_update_time_utc(self, device_id, update_time):
         """Mock to set last door state update time."""
         self._last_door_state_update_time_utc = update_time
-
-
-def _mock_august_lock():
-    lock = MagicMock(name="august.lock")
-    type(lock).device_id = PropertyMock(return_value="lock_device_id_1")
-    return lock
 
 
 def _mock_august_authenticator():
@@ -150,3 +156,10 @@ def _mock_august_authentication(token_text, token_timestamp):
         return_value=token_timestamp
     )
     return authentication
+
+
+def _mock_august_lock():
+    return Lock(
+        "mockdeviceid1",
+        {"LockName": "Mocked Lock 1", "HouseID": "mockhouseid1", "UserType": "owner"},
+    )

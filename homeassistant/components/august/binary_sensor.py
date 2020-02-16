@@ -56,7 +56,7 @@ async def _async_activity_time_based_state(data, doorbell, activity_types):
     return None
 
 
-# Sensor types: Name, device_class, async_state_provider
+# sensor_type: [name, device_class, async_state_provider]
 SENSOR_TYPES_DOOR = {"door_open": ["Open", "door", _async_retrieve_door_state]}
 
 SENSOR_TYPES_DOORBELL = {
