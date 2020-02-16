@@ -22,4 +22,4 @@ async def test_travel_time(hass):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
     sensor = hass.states.get("travel_time.demo")
-    assert sensor.duration == 1000
+    assert int(sensor.state) >= 5

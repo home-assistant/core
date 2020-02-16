@@ -19,7 +19,7 @@ from homeassistant.components.travel_time.const import (
     ICON_PUBLIC,
     ICON_TRUCK,
 )
-from homeassistant.const import CONF_MODE, CONF_NAME, EVENT_HOMEASSISTANT_START
+from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
@@ -62,7 +62,7 @@ async def async_setup_platform(
     destination_name = config.get(CONF_DESTINATION_NAME)
 
     name = config[CONF_NAME]
-    travel_mode = config[CONF_MODE]
+    travel_mode = config[CONF_TRAVEL_MODE]
 
     travel_time_entity = DemoTravelTimeEntity(
         name,
