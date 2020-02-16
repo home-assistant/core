@@ -1,6 +1,30 @@
 {
-    "options": {
+    "config": {
         "step": {
+            "user": {
+                "data": {
+                    "host": "IP-adres van Konnected apparaat"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "one": "Leeg",
+            "other": "Leeg"
+        },
+        "step": {
+            "options_binary": {
+                "data": {
+                    "name": "Naam (optioneel)"
+                }
+            },
+            "options_digital": {
+                "data": {
+                    "name": "Naam (optioneel)",
+                    "type": "Type sensor"
+                }
+            },
             "options_io": {
                 "data": {
                     "1": "Zone 1",
@@ -19,6 +43,11 @@
                     "12": "Zone 12",
                     "8": "Zone 8",
                     "9": "Zone 9"
+                }
+            },
+            "options_switch": {
+                "data": {
+                    "name": "Naam (optioneel)"
                 }
             }
         }
