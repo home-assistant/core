@@ -94,6 +94,9 @@ class HomematicipHAP:
             )
         except HmipcConnectionError:
             raise ConfigEntryNotReady
+        except Exception as err:  # pylint: disable=broad-except
+            _LOGGER.error("Error connecting with HomematicIP Cloud: %s", err)
+            return False
 
         _LOGGER.info(
             "Connected to HomematicIP with HAP %s", self.config_entry.unique_id
