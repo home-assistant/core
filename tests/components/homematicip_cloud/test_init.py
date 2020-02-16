@@ -12,7 +12,6 @@ from homeassistant.components.homematicip_cloud.const import (
     HMIPC_NAME,
 )
 from homeassistant.components.homematicip_cloud.hap import HomematicipHAP
-from homeassistant.components.homematicip_cloud.services import async_unload_services
 from homeassistant.config_entries import (
     ENTRY_STATE_LOADED,
     ENTRY_STATE_NOT_LOADED,
@@ -224,6 +223,3 @@ async def test_setup_two_haps_unload_one_by_one(hass):
 
     # Check services are removed
     assert not hass.services.async_services().get(HMIPC_DOMAIN)
-
-    # try manually unload services
-    await async_unload_services(hass)
