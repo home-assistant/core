@@ -6,25 +6,12 @@ from typing import Callable, Dict, Optional, Union
 import herepy
 import voluptuous as vol
 
-from homeassistant.components.travel_time import TRAVEL_TIME_SCHEMA, TravelTimeEntity
-from homeassistant.components.travel_time.const import (
-    CONF_DESTINATION_ENTITY_ID,
-    CONF_DESTINATION_LATITUDE,
-    CONF_DESTINATION_LONGITUDE,
-    CONF_ORIGIN_ENTITY_ID,
-    CONF_ORIGIN_LATITUDE,
-    CONF_ORIGIN_LONGITUDE,
-    CONF_TRAVEL_MODE,
-    CONF_ROUTE_MODE,
-    CONF_TRAFFIC_MODE,
-    ICON_BICYCLE,
-    ICON_CAR,
-    ICON_PEDESTRIAN,
-    ICON_PUBLIC,
-    ICON_TRUCK,
-    UNIT_OF_MEASUREMENT,
-)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    ATTR_MODE,
     CONF_MODE,
     CONF_NAME,
     CONF_UNIT_SYSTEM,
@@ -33,7 +20,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     TIME_MINUTES,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import DiscoveryInfoType
@@ -42,13 +30,11 @@ import homeassistant.util.dt as dt
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DESTINATION_LATITUDE = "destination_latitude"
-CONF_DESTINATION_LATITUDE_TEMPLATE = "destination_latitude_template"
 CONF_DESTINATION_LONGITUDE = "destination_longitude"
-CONF_DESTINATION_LONGITUDE_TEMPLATE = "destination_longitude_template"
+CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
 CONF_ORIGIN_LATITUDE = "origin_latitude"
-CONF_ORIGIN_LATITUDE_TEMPLATE = "origin_latitude_template"
 CONF_ORIGIN_LONGITUDE = "origin_longitude"
-CONF_ORIGIN_LONGITUDE_TEMPLATE = "origin_longitude_template"
+CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
 CONF_API_KEY = "api_key"
 CONF_TRAFFIC_MODE = "traffic_mode"
 CONF_ROUTE_MODE = "route_mode"
@@ -82,6 +68,12 @@ TRAFFIC_MODE_DISABLED = "traffic_disabled"
 ROUTE_MODE_FASTEST = "fastest"
 ROUTE_MODE_SHORTEST = "shortest"
 ROUTE_MODE = [ROUTE_MODE_FASTEST, ROUTE_MODE_SHORTEST]
+
+ICON_BICYCLE = "mdi:bike"
+ICON_CAR = "mdi:car"
+ICON_PEDESTRIAN = "mdi:walk"
+ICON_PUBLIC = "mdi:bus"
+ICON_TRUCK = "mdi:truck"
 
 UNITS = [CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL]
 
@@ -168,7 +160,6 @@ async def async_setup_platform(
         )
         return
 
-    # TODO CHANGE TO TEMPLATE
     if config.get(CONF_ORIGIN_LATITUDE) is not None:
         origin = f"{config[CONF_ORIGIN_LATITUDE]},{config[CONF_ORIGIN_LONGITUDE]}"
         origin_entity_id = None
@@ -197,11 +188,11 @@ async def async_setup_platform(
         here_client, travel_mode, traffic_mode, route_mode, units, arrival, departure
     )
 
-    travel_time_entity = HERETravelTimeEntity(
+    sensor = HERETravelTimeSensor(
         name, origin, destination, origin_entity_id, destination_entity_id, here_data
     )
 
-    async_add_entities([travel_time_entity])
+    async_add_entities([sensor])
 
 
 def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
@@ -223,8 +214,8 @@ def _are_valid_client_credentials(here_client: herepy.RoutingApi) -> bool:
     return True
 
 
-class HERETravelTimeEntity(TravelTimeEntity):
-    """Representation of HERE travel_time."""
+class HERETravelTimeSensor(Entity):
+    """Representation of a HERE travel time sensor."""
 
     def __init__(
         self,
@@ -235,7 +226,7 @@ class HERETravelTimeEntity(TravelTimeEntity):
         destination_entity_id: str,
         here_data: "HERETravelTimeData",
     ) -> None:
-        """Initialize the travel_time entity."""
+        """Initialize the sensor."""
         self._name = name
         self._origin_entity_id = origin_entity_id
         self._destination_entity_id = destination_entity_id
@@ -253,7 +244,7 @@ class HERETravelTimeEntity(TravelTimeEntity):
             self._here_data.destination = destination
 
     async def async_added_to_hass(self) -> None:
-        """Delay the travel_time update to avoid entity not found warnings."""
+        """Delay the sensor update to avoid entity not found warnings."""
 
         @callback
         def delayed_sensor_update(event):
@@ -261,44 +252,50 @@ class HERETravelTimeEntity(TravelTimeEntity):
             self.async_schedule_update_ha_state(True)
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, delayed_travel_time_update
+            EVENT_HOMEASSISTANT_START, delayed_sensor_update
         )
 
     @property
-    def attribution(self) -> str:
-        """Get the attribution of the travel_time entity."""
+    def state(self) -> Optional[str]:
+        """Return the state of the sensor."""
+        if self._here_data.traffic_mode:
+            if self._here_data.traffic_time is not None:
+                return str(round(self._here_data.traffic_time / 60))
         if self._here_data.base_time is not None:
-            return self._here_data.attribution
+            return str(round(self._here_data.base_time / 60))
+
+        return None
 
     @property
-    def destination(self) -> str:
-        """Get the destination coordinates of the travel_time entity."""
-        if self._here_data.base_time is not None:
-            return self._here_data.destination
+    def name(self) -> str:
+        """Get the name of the sensor."""
+        return self._name
 
     @property
-    def destination_name(self) -> str:
-        """Get the destination name of the travel_time entity."""
-        if self._here_data.base_time is not None:
-            return self._here_data.destination_name
+    def device_state_attributes(
+        self,
+    ) -> Optional[Dict[str, Union[None, float, str, bool]]]:
+        """Return the state attributes."""
+        if self._here_data.base_time is None:
+            return None
+
+        res = self._attrs
+        if self._here_data.attribution is not None:
+            res[ATTR_ATTRIBUTION] = self._here_data.attribution
+        res[ATTR_DURATION] = self._here_data.base_time / 60
+        res[ATTR_DISTANCE] = self._here_data.distance
+        res[ATTR_ROUTE] = self._here_data.route
+        res[ATTR_DURATION_IN_TRAFFIC] = self._here_data.traffic_time / 60
+        res[ATTR_ORIGIN] = self._here_data.origin
+        res[ATTR_DESTINATION] = self._here_data.destination
+        res[ATTR_ORIGIN_NAME] = self._here_data.origin_name
+        res[ATTR_DESTINATION_NAME] = self._here_data.destination_name
+        return res
 
     @property
-    def distance(self) -> str:
-        """Get the distance of the travel_time entity."""
-        if self._here_data.base_time is not None:
-            return self._here_data.distance
-
-    @property
-    def duration(self) -> str:
-        """Get the duration without traffic of the travel_time entity."""
-        if self._here_data.base_time is not None:
-            return self._here_data.base_time / 60
-
-    @property
-    def duration_in_traffic(self) -> str:
-        """Get the duration with traffic of the travel_time entity."""
-        if self._here_data.base_time is not None:
-            return self._here_data.traffic_time / 60
+    def unit_of_measurement(self) -> str:
+        """Return the unit this state is expressed in."""
+        return self._unit_of_measurement
 
     @property
     def icon(self) -> str:
@@ -313,74 +310,68 @@ class HERETravelTimeEntity(TravelTimeEntity):
             return ICON_TRUCK
         return ICON_CAR
 
-    @property
-    def mode(self) -> str:
-        """Get the mode of travelling e.g car for this entity."""
-        if self._here_data.travel_mode is not None:
-            return self._here_data.travel_mode
-
-    @property
-    def name(self) -> str:
-        """Get the name of the travel_time entity."""
-        return self._name
-
-    @property
-    def origin(self) -> str:
-        """Get the origin coordinates of the travel_time entity."""
-        if self._here_data.base_time is not None:
-            return self._here_data.origin
-
-    @property
-    def origin_name(self) -> str:
-        """Get the origin name of the travel_time entity."""
-        if self._here_data.base_time is not None:
-            return self._here_data.origin_name
-
-    @property
-    def route(self) -> str:
-        """Get the route of the travel_time entity."""
-        if self._here_data.base_time is not None:
-            return self._here_data.route
-
-    @property
-    def route_mode(self) -> str:
-        """Get the route of the travel_time entity."""
-        if self._here_data.route_mode is not None:
-            return self._here_data.route_mode
-
-    @property
-    def state(self) -> Optional[str]:
-        """Return the state of the sensor."""
-        if self._here_data.traffic_mode:
-            if self._here_data.traffic_time is not None:
-                return str(round(self._here_data.traffic_time / 60))
-        if self._here_data.base_time is not None:
-            return str(round(self._here_data.base_time / 60))
-
-        return None
-
-    @property
-    def traffic_mode(self) -> Optional[str]:
-        """Return if traffic_mode is enabled for this travel_time entity."""
-        if self._here_data.traffic_mode is not None:
-            return self._here_data.traffic_mode
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def unit_system(self) -> str:
-        """Get the unit system of the travel_time entity."""
-        if self._here_data.base_time is not None:
-            return self._here_data.units
-
     async def async_update(self) -> None:
         """Update Sensor Information."""
-        # TODO render template
+        # Convert device_trackers to HERE friendly location
+        if self._origin_entity_id is not None:
+            self._here_data.origin = await self._get_location_from_entity(
+                self._origin_entity_id
+            )
+
+        if self._destination_entity_id is not None:
+            self._here_data.destination = await self._get_location_from_entity(
+                self._destination_entity_id
+            )
 
         await self.hass.async_add_executor_job(self._here_data.update)
+
+    async def _get_location_from_entity(self, entity_id: str) -> Optional[str]:
+        """Get the location from the entity state or attributes."""
+        entity = self.hass.states.get(entity_id)
+
+        if entity is None:
+            _LOGGER.error("Unable to find entity %s", entity_id)
+            return None
+
+        # Check if the entity has location attributes
+        if location.has_location(entity):
+            return self._get_location_from_attributes(entity)
+
+        # Check if device is in a zone
+        zone_entity = self.hass.states.get("zone.{}".format(entity.state))
+        if location.has_location(zone_entity):
+            _LOGGER.debug(
+                "%s is in %s, getting zone location", entity_id, zone_entity.entity_id
+            )
+            return self._get_location_from_attributes(zone_entity)
+
+        # Check if state is valid coordinate set
+        if self._entity_state_is_valid_coordinate_set(entity.state):
+            return entity.state
+
+        _LOGGER.error(
+            "The state of %s is not a valid set of coordinates: %s",
+            entity_id,
+            entity.state,
+        )
+        return None
+
+    @staticmethod
+    def _entity_state_is_valid_coordinate_set(state: str) -> bool:
+        """Check that the given string is a valid set of coordinates."""
+        schema = vol.Schema(cv.gps)
+        try:
+            coordinates = state.split(",")
+            schema(coordinates)
+            return True
+        except (vol.MultipleInvalid):
+            return False
+
+    @staticmethod
+    def _get_location_from_attributes(entity: State) -> str:
+        """Get the lat/long string from an entities attributes."""
+        attr = entity.attributes
+        return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
     async def _get_location_from_entity(
         self, entity_id: str, recursion_history: Optional[list] = None

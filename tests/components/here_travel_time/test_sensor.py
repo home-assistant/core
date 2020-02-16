@@ -6,29 +6,24 @@ import urllib
 import herepy
 import pytest
 
-from homeassistant.components.travel_time.const import (
+from homeassistant.components.here_travel_time.sensor import (
+    ATTR_ATTRIBUTION,
     ATTR_DESTINATION,
     ATTR_DESTINATION_NAME,
     ATTR_DISTANCE,
     ATTR_DURATION,
     ATTR_DURATION_IN_TRAFFIC,
-    ATTR_MODE,
     ATTR_ORIGIN,
     ATTR_ORIGIN_NAME,
     ATTR_ROUTE,
-    ATTR_TRAFFIC_MODE,
+    CONF_MODE,
+    CONF_TRAFFIC_MODE,
+    CONF_UNIT_SYSTEM,
     ICON_BICYCLE,
     ICON_CAR,
     ICON_PEDESTRIAN,
     ICON_PUBLIC,
     ICON_TRUCK,
-    UNIT_OF_MEASUREMENT,
-)
-
-from homeassistant.components.travel_time import SCAN_INTERVAL
-
-from homeassistant.components.here_travel_time.travel_time import (
-    CONF_UNIT_SYSTEM,
     NO_ROUTE_ERROR_MESSAGE,
     ROUTE_MODE_FASTEST,
     ROUTE_MODE_SHORTEST,
@@ -44,13 +39,13 @@ from homeassistant.components.here_travel_time.travel_time import (
     TRAVEL_MODE_TRUCK,
     convert_time_to_isodate,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ICON, EVENT_HOMEASSISTANT_START
+from homeassistant.const import ATTR_ICON, EVENT_HOMEASSISTANT_START
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import async_fire_time_changed, load_fixture
 
-DOMAIN = "travel_time"
+DOMAIN = "sensor"
 
 PLATFORM = "here_travel_time"
 
@@ -112,8 +107,8 @@ def _assert_truck_sensor(sensor):
     )
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == ""
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == "Eisenhower Expy E"
-    assert sensor.attributes.get(ATTR_MODE) == TRAVEL_MODE_TRUCK
-    assert sensor.attributes.get(ATTR_TRAFFIC_MODE) is False
+    assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_TRUCK
+    assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
     assert sensor.attributes.get(ATTR_ICON) == ICON_TRUCK
 
@@ -182,7 +177,7 @@ async def test_car(hass, requests_mock_car_disabled_response):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     assert sensor.state == "30"
     assert sensor.attributes.get("unit_of_measurement") == TIME_MINUTES
     assert sensor.attributes.get(ATTR_ATTRIBUTION) is None
@@ -202,8 +197,8 @@ async def test_car(hass, requests_mock_car_disabled_response):
     )
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "22nd St NW"
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == "Service Rd S"
-    assert sensor.attributes.get(ATTR_MODE) == TRAVEL_MODE_CAR
-    assert sensor.attributes.get(ATTR_TRAFFIC_MODE) is False
+    assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_CAR
+    assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
     assert sensor.attributes.get(ATTR_ICON) == ICON_CAR
 
@@ -243,7 +238,7 @@ async def test_traffic_mode_enabled(hass, requests_mock_credentials_check):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     # Test traffic mode enabled
     assert sensor.attributes.get(ATTR_DURATION) != sensor.attributes.get(
         ATTR_DURATION_IN_TRAFFIC
@@ -269,7 +264,7 @@ async def test_imperial(hass, requests_mock_car_disabled_response):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 14.852635608048994
 
 
@@ -300,7 +295,7 @@ async def test_route_mode_shortest(hass, requests_mock_credentials_check):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 18.388
 
 
@@ -331,7 +326,7 @@ async def test_route_mode_fastest(hass, requests_mock_credentials_check):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     assert sensor.attributes.get(ATTR_DISTANCE) == 23.381
 
 
@@ -354,7 +349,7 @@ async def test_truck(hass, requests_mock_truck_response):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     _assert_truck_sensor(sensor)
 
 
@@ -385,7 +380,7 @@ async def test_public_transport(hass, requests_mock_credentials_check):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     assert sensor.state == "89"
     assert sensor.attributes.get("unit_of_measurement") == TIME_MINUTES
 
@@ -401,8 +396,8 @@ async def test_public_transport(hass, requests_mock_credentials_check):
     assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ""
-    assert sensor.attributes.get(ATTR_MODE) == TRAVEL_MODE_PUBLIC
-    assert sensor.attributes.get(ATTR_TRAFFIC_MODE) is False
+    assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_PUBLIC
+    assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
     assert sensor.attributes.get(ATTR_ICON) == ICON_PUBLIC
 
@@ -435,7 +430,7 @@ async def test_public_transport_time_table(hass, requests_mock_credentials_check
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     assert sensor.state == "80"
     assert sensor.attributes.get("unit_of_measurement") == TIME_MINUTES
 
@@ -451,8 +446,8 @@ async def test_public_transport_time_table(hass, requests_mock_credentials_check
     assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ""
-    assert sensor.attributes.get(ATTR_MODE) == TRAVEL_MODE_PUBLIC_TIME_TABLE
-    assert sensor.attributes.get(ATTR_TRAFFIC_MODE) is False
+    assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_PUBLIC_TIME_TABLE
+    assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
     assert sensor.attributes.get(ATTR_ICON) == ICON_PUBLIC
 
@@ -485,7 +480,7 @@ async def test_pedestrian(hass, requests_mock_credentials_check):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     assert sensor.state == "211"
     assert sensor.attributes.get("unit_of_measurement") == TIME_MINUTES
 
@@ -503,8 +498,8 @@ async def test_pedestrian(hass, requests_mock_credentials_check):
     assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ""
-    assert sensor.attributes.get(ATTR_MODE) == TRAVEL_MODE_PEDESTRIAN
-    assert sensor.attributes.get(ATTR_TRAFFIC_MODE) is False
+    assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_PEDESTRIAN
+    assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
     assert sensor.attributes.get(ATTR_ICON) == ICON_PEDESTRIAN
 
@@ -536,7 +531,7 @@ async def test_bicycle(hass, requests_mock_credentials_check):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     assert sensor.state == "55"
     assert sensor.attributes.get("unit_of_measurement") == TIME_MINUTES
 
@@ -554,8 +549,8 @@ async def test_bicycle(hass, requests_mock_credentials_check):
     assert sensor.attributes.get(ATTR_DESTINATION) == destination
     assert sensor.attributes.get(ATTR_ORIGIN_NAME) == "Mannheim Rd"
     assert sensor.attributes.get(ATTR_DESTINATION_NAME) == ""
-    assert sensor.attributes.get(ATTR_MODE) == TRAVEL_MODE_BICYCLE
-    assert sensor.attributes.get(ATTR_TRAFFIC_MODE) is False
+    assert sensor.attributes.get(CONF_MODE) == TRAVEL_MODE_BICYCLE
+    assert sensor.attributes.get(CONF_TRAFFIC_MODE) is False
 
     assert sensor.attributes.get(ATTR_ICON) == ICON_BICYCLE
 
@@ -599,14 +594,14 @@ async def test_location_zone(hass, requests_mock_truck_response):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("travel_time.test")
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
         # Test that update works more than once
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("travel_time.test")
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
 
@@ -638,14 +633,14 @@ async def test_location_sensor(hass, requests_mock_truck_response):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("travel_time.test")
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
         # Test that update works more than once
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("travel_time.test")
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
 
@@ -686,14 +681,14 @@ async def test_location_person(hass, requests_mock_truck_response):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("travel_time.test")
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
         # Test that update works more than once
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("travel_time.test")
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
 
@@ -734,14 +729,14 @@ async def test_location_device_tracker(hass, requests_mock_truck_response):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("travel_time.test")
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
         # Test that update works more than once
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("travel_time.test")
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
 
 
@@ -768,7 +763,7 @@ async def test_location_device_tracker_added_after_update(
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("travel_time.test")
+        sensor = hass.states.get("sensor.test")
         assert len(caplog.records) == 2
         assert "Unable to find entity" in caplog.text
         caplog.clear()
@@ -795,7 +790,7 @@ async def test_location_device_tracker_added_after_update(
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL)
         await hass.async_block_till_done()
 
-        sensor = hass.states.get("travel_time.test")
+        sensor = hass.states.get("sensor.test")
         _assert_truck_sensor(sensor)
         assert len(caplog.records) == 0
 
@@ -836,7 +831,7 @@ async def test_location_device_tracker_in_zone(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     _assert_truck_sensor(sensor)
     assert ", getting zone location" in caplog.text
 
@@ -971,123 +966,11 @@ async def test_attribution(hass, requests_mock_credentials_check):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
 
-    sensor = hass.states.get("travel_time.test")
+    sensor = hass.states.get("sensor.test")
     assert (
         sensor.attributes.get(ATTR_ATTRIBUTION)
         == "With the support of HERE Technologies. All information is provided without warranty of any kind."
     )
-
-
-async def test_sensor_state_is_entity(hass, requests_mock_truck_response):
-    """Test that state of a sensor is an entity works."""
-    zone_config = {
-        "zone": [
-            {
-                "name": "Origin",
-                "latitude": TRUCK_ORIGIN_LATITUDE,
-                "longitude": TRUCK_ORIGIN_LONGITUDE,
-                "radius": 250,
-                "passive": False,
-            }
-        ]
-    }
-    hass.states.async_set("sensor.origin", "zone.origin")
-    assert await async_setup_component(hass, "zone", zone_config)
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_entity_id": "sensor.origin",
-            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
-            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
-            "api_key": API_KEY,
-            "mode": TRAVEL_MODE_TRUCK,
-        }
-    }
-    assert await async_setup_component(hass, "input_text", input_text_config)
-    assert await async_setup_component(hass, "zone", zone_config)
-    assert await async_setup_component(hass, DOMAIN, config)
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
-
-    sensor = hass.states.get("travel_time.test")
-    _assert_truck_sensor(sensor)
-
-
-async def test_input_select_is_entity(hass, requests_mock_truck_response):
-    """Test that state of an input_select is an entity works."""
-    zone_config = {
-        "zone": [
-            {
-                "name": "Origin",
-                "latitude": TRUCK_ORIGIN_LATITUDE,
-                "longitude": TRUCK_ORIGIN_LONGITUDE,
-                "radius": 250,
-                "passive": False,
-            }
-        ]
-    }
-    input_select_config = {
-        "input_select": {
-            "origin": {"options": ["zone.origin"], "initial": "zone.origin"}
-        }
-    }
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_entity_id": "input_select.origin",
-            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
-            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
-            "app_id": APP_ID,
-            "app_code": APP_CODE,
-            "mode": TRAVEL_MODE_TRUCK,
-        }
-    }
-    assert await async_setup_component(hass, DOMAIN, config)
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
-
-    sensor = hass.states.get("travel_time.test")
-    _assert_truck_sensor(sensor)
-
-
-async def test_input_text_is_entity(hass, requests_mock_truck_response):
-    """Test that state of an input_text is an entity works."""
-    zone_config = {
-        "zone": [
-            {
-                "name": "Origin",
-                "latitude": TRUCK_ORIGIN_LATITUDE,
-                "longitude": TRUCK_ORIGIN_LONGITUDE,
-                "radius": 250,
-                "passive": False,
-            }
-        ]
-    }
-    input_text_config = {"input_text": {"origin": {"initial": "zone.origin"}}}
-    config = {
-        DOMAIN: {
-            "platform": PLATFORM,
-            "name": "test",
-            "origin_entity_id": "input_text.origin",
-            "destination_latitude": TRUCK_DESTINATION_LATITUDE,
-            "destination_longitude": TRUCK_DESTINATION_LONGITUDE,
-            "api_key": API_KEY,
-            "mode": TRAVEL_MODE_TRUCK,
-        }
-    }
-    assert await async_setup_component(hass, "input_select", input_select_config)
-    assert await async_setup_component(hass, "zone", zone_config)
-    assert await async_setup_component(hass, DOMAIN, config)
-
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-    await hass.async_block_till_done()
-
-    sensor = hass.states.get("travel_time.test")
-    _assert_truck_sensor(sensor)
 
 
 async def test_pattern_entity_state(hass, requests_mock_truck_response, caplog):
