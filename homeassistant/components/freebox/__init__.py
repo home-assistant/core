@@ -2,6 +2,8 @@
 import logging
 import socket
 
+from aiofreepybox import Freepybox
+from aiofreepybox.exceptions import HttpRequestError
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_FREEBOX
@@ -49,8 +51,6 @@ async def async_setup(hass, config):
 
 async def async_setup_freebox(hass, config, host, port):
     """Start up the Freebox component platforms."""
-    from aiofreepybox import Freepybox
-    from aiofreepybox.exceptions import HttpRequestError
 
     app_desc = {
         "app_id": "hass",
@@ -60,7 +60,7 @@ async def async_setup_freebox(hass, config, host, port):
     }
 
     token_file = hass.config.path(FREEBOX_CONFIG_FILE)
-    api_version = "v4"
+    api_version = "v6"
 
     fbx = Freepybox(app_desc=app_desc, token_file=token_file, api_version=api_version)
 
@@ -70,6 +70,12 @@ async def async_setup_freebox(hass, config, host, port):
         _LOGGER.exception("Failed to connect to Freebox")
     else:
         hass.data[DATA_FREEBOX] = fbx
+
+        async def async_freebox_reboot(call):
+            """Handle reboot service call."""
+            await fbx.system.reboot()
+
+        hass.services.async_register(DOMAIN, "reboot", async_freebox_reboot)
 
         hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
         hass.async_create_task(

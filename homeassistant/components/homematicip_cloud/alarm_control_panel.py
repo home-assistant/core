@@ -1,9 +1,14 @@
 """Support for HomematicIP Cloud alarm control panel."""
 import logging
+from typing import Any, Dict
 
 from homematicip.functionalHomes import SecurityAndAlarmHome
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.alarm_control_panel.const import (
+    SUPPORT_ALARM_ARM_AWAY,
+    SUPPORT_ALARM_ARM_HOME,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -11,9 +16,10 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID
+from . import DOMAIN as HMIPC_DOMAIN
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,16 +27,11 @@ _LOGGER = logging.getLogger(__name__)
 CONST_ALARM_CONTROL_PANEL_NAME = "HmIP Alarm Control Panel"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the HomematicIP Cloud alarm control devices."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
     async_add_entities([HomematicipAlarmControlPanel(hap)])
 
 
@@ -40,9 +41,10 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
     def __init__(self, hap: HomematicipHAP) -> None:
         """Initialize the alarm control panel."""
         self._home = hap.home
+        _LOGGER.info("Setting up %s", self.name)
 
     @property
-    def device_info(self):
+    def device_info(self) -> Dict[str, Any]:
         """Return device specific attributes."""
         return {
             "identifiers": {(HMIPC_DOMAIN, f"ACP {self._home.id}")},
@@ -70,29 +72,42 @@ class HomematicipAlarmControlPanel(AlarmControlPanel):
         return STATE_ALARM_DISARMED
 
     @property
-    def _security_and_alarm(self):
+    def _security_and_alarm(self) -> SecurityAndAlarmHome:
         return self._home.get_functionalHome(SecurityAndAlarmHome)
 
-    async def async_alarm_disarm(self, code=None):
+    @property
+    def supported_features(self) -> int:
+        """Return the list of supported features."""
+        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+
+    async def async_alarm_disarm(self, code=None) -> None:
         """Send disarm command."""
         await self._home.set_security_zones_activation(False, False)
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code=None) -> None:
         """Send arm home command."""
         await self._home.set_security_zones_activation(False, True)
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code=None) -> None:
         """Send arm away command."""
         await self._home.set_security_zones_activation(True, True)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._home.on_update(self._async_device_changed)
 
-    def _async_device_changed(self, *args, **kwargs):
+    @callback
+    def _async_device_changed(self, *args, **kwargs) -> None:
         """Handle device state changes."""
-        _LOGGER.debug("Event %s (%s)", self.name, CONST_ALARM_CONTROL_PANEL_NAME)
-        self.async_schedule_update_ha_state()
+        # Don't update disabled entities
+        if self.enabled:
+            _LOGGER.debug("Event %s (%s)", self.name, CONST_ALARM_CONTROL_PANEL_NAME)
+            self.async_schedule_update_ha_state()
+        else:
+            _LOGGER.debug(
+                "Device Changed Event for %s (Alarm Control Panel) not fired. Entity is disabled.",
+                self.name,
+            )
 
     @property
     def name(self) -> str:

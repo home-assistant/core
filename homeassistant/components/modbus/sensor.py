@@ -1,12 +1,15 @@
 """Support for Modbus Register sensors."""
 import logging
 import struct
+from typing import Any, Optional, Union
 
-from typing import Any, Union
+from pymodbus.exceptions import ConnectionException, ModbusException
+from pymodbus.pdu import ExceptionResponse
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
     CONF_SLAVE,
@@ -67,6 +70,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_INT): vol.In(
                     [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT, DATA_TYPE_CUSTOM]
                 ),
+                vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
                 vol.Optional(CONF_OFFSET, default=0): number,
                 vol.Optional(CONF_PRECISION, default=0): cv.positive_int,
@@ -100,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 )
             except KeyError:
                 _LOGGER.error(
-                    "Unable to detect data type for %s sensor, " "try a custom type",
+                    "Unable to detect data type for %s sensor, try a custom type",
                     register.get(CONF_NAME),
                 )
                 continue
@@ -117,7 +121,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         if register.get(CONF_COUNT) * 2 != size:
             _LOGGER.error(
-                "Structure size (%d bytes) mismatch registers count " "(%d words)",
+                "Structure size (%d bytes) mismatch registers count (%d words)",
                 size,
                 register.get(CONF_COUNT),
             )
@@ -139,6 +143,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 register.get(CONF_OFFSET),
                 structure,
                 register.get(CONF_PRECISION),
+                register.get(CONF_DEVICE_CLASS),
             )
         )
 
@@ -164,6 +169,7 @@ class ModbusRegisterSensor(RestoreEntity):
         offset,
         structure,
         precision,
+        device_class,
     ):
         """Initialize the modbus register sensor."""
         self._hub = hub
@@ -178,7 +184,9 @@ class ModbusRegisterSensor(RestoreEntity):
         self._offset = offset
         self._precision = precision
         self._structure = structure
+        self._device_class = device_class
         self._value = None
+        self._available = True
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -202,30 +210,39 @@ class ModbusRegisterSensor(RestoreEntity):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
+    @property
+    def device_class(self) -> Optional[str]:
+        """Return the device class of the sensor."""
+        return self._device_class
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._available
+
     def update(self):
         """Update the state of the sensor."""
-        if self._register_type == REGISTER_TYPE_INPUT:
-            result = self._hub.read_input_registers(
-                self._slave, self._register, self._count
-            )
-        else:
-            result = self._hub.read_holding_registers(
-                self._slave, self._register, self._count
-            )
-        val = 0
-
         try:
-            registers = result.registers
-            if self._reverse_order:
-                registers.reverse()
-        except AttributeError:
-            _LOGGER.error(
-                "No response from hub %s, slave %s, register %s",
-                self._hub.name,
-                self._slave,
-                self._register,
-            )
+            if self._register_type == REGISTER_TYPE_INPUT:
+                result = self._hub.read_input_registers(
+                    self._slave, self._register, self._count
+                )
+            else:
+                result = self._hub.read_holding_registers(
+                    self._slave, self._register, self._count
+                )
+        except ConnectionException:
+            self._set_unavailable()
             return
+
+        if isinstance(result, (ModbusException, ExceptionResponse)):
+            self._set_unavailable()
+            return
+
+        registers = result.registers
+        if self._reverse_order:
+            registers.reverse()
+
         byte_string = b"".join([x.to_bytes(2, byteorder="big") for x in registers])
         val = struct.unpack(self._structure, byte_string)[0]
         val = self._scale * val + self._offset
@@ -235,3 +252,18 @@ class ModbusRegisterSensor(RestoreEntity):
                 self._value += "." + "0" * self._precision
         else:
             self._value = f"{val:.{self._precision}f}"
+
+        self._available = True
+
+    def _set_unavailable(self):
+        """Set unavailable state and log it as an error."""
+        if not self._available:
+            return
+
+        _LOGGER.error(
+            "No response from hub %s, slave %s, address %s",
+            self._hub.name,
+            self._slave,
+            self._register,
+        )
+        self._available = False

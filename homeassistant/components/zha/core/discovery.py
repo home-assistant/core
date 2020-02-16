@@ -11,30 +11,18 @@ import zigpy.profiles
 from zigpy.zcl.clusters.general import OnOff, PowerConfiguration
 
 from homeassistant import const as ha_const
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR
-from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .channels import AttributeListeningChannel, EventRelayChannel, ZDOChannel
-from .const import (
-    COMPONENTS,
-    CONF_DEVICE_CONFIG,
-    DATA_ZHA,
-    SENSOR_GENERIC,
-    SENSOR_TYPE,
-    UNKNOWN,
-    ZHA_DISCOVERY_NEW,
-)
+from .const import COMPONENTS, CONF_DEVICE_CONFIG, DATA_ZHA, ZHA_DISCOVERY_NEW
 from .registries import (
-    BINARY_SENSOR_TYPES,
     CHANNEL_ONLY_CLUSTERS,
     COMPONENT_CLUSTERS,
     DEVICE_CLASS,
     EVENT_RELAY_CLUSTERS,
     OUTPUT_CHANNEL_ONLY_CLUSTERS,
     REMOTE_DEVICE_TYPES,
-    SENSOR_TYPES,
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
     SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
     ZIGBEE_CHANNEL_REGISTRY,
@@ -163,15 +151,6 @@ def _async_handle_profile_match(
         "component": component,
     }
 
-    if component == BINARY_SENSOR:
-        discovery_info.update({SENSOR_TYPE: UNKNOWN})
-        for cluster_id in profile_clusters:
-            if cluster_id in BINARY_SENSOR_TYPES:
-                discovery_info.update(
-                    {SENSOR_TYPE: BINARY_SENSOR_TYPES.get(cluster_id, UNKNOWN)}
-                )
-                break
-
     return discovery_info
 
 
@@ -290,14 +269,5 @@ def _async_handle_single_cluster_match(
         "entity_suffix": f"_{cluster.cluster_id}",
         "component": component,
     }
-
-    if component == SENSOR:
-        discovery_info.update(
-            {SENSOR_TYPE: SENSOR_TYPES.get(cluster.cluster_id, SENSOR_GENERIC)}
-        )
-    if component == BINARY_SENSOR:
-        discovery_info.update(
-            {SENSOR_TYPE: BINARY_SENSOR_TYPES.get(cluster.cluster_id, UNKNOWN)}
-        )
 
     return discovery_info

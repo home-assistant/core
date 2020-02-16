@@ -2,7 +2,7 @@
 import ipaddress
 import logging
 
-from braviarc.braviarc import BraviaRC
+from bravia_tv import BraviaRC
 from getmac import get_mac_address
 import voluptuous as vol
 
@@ -291,7 +291,7 @@ class BraviaTVDevice(MediaPlayerDevice):
         if self._channel_name is not None:
             return_value = self._channel_name
             if self._program_name is not None:
-                return_value = return_value + ": " + self._program_name
+                return_value = f"{return_value}: {self._program_name}"
         return return_value
 
     @property

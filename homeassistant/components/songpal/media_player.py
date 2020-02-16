@@ -1,21 +1,20 @@
 """Support for Songpal-enabled (Sony) media devices."""
 import asyncio
-import logging
 from collections import OrderedDict
+import logging
 
-import voluptuous as vol
 from songpal import (
+    ConnectChange,
+    ContentChange,
     Device,
+    PowerChange,
     SongpalException,
     VolumeChange,
-    ContentChange,
-    PowerChange,
-    ConnectChange,
 )
+import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerDevice, PLATFORM_SCHEMA
+from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
-    DOMAIN,
     SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON,
@@ -26,12 +25,14 @@ from homeassistant.components.media_player.const import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_NAME,
+    EVENT_HOMEASSISTANT_STOP,
     STATE_OFF,
     STATE_ON,
-    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+
+from .const import DOMAIN, SET_SOUND_SETTING
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +42,6 @@ PARAM_NAME = "name"
 PARAM_VALUE = "value"
 
 PLATFORM = "songpal"
-
-SET_SOUND_SETTING = "songpal_set_sound_setting"
 
 SUPPORT_SONGPAL = (
     SUPPORT_VOLUME_SET

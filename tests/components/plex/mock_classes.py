@@ -1,6 +1,6 @@
 """Mock classes used in tests."""
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.components.plex.const import CONF_SERVER, CONF_SERVER_IDENTIFIER
+from homeassistant.const import CONF_HOST, CONF_PORT
 
 MOCK_SERVERS = [
     {
@@ -30,7 +30,7 @@ class MockResource:
         self.provides = ["server"]
         self._mock_plex_server = MockPlexServer(index)
 
-    def connect(self):
+    def connect(self, timeout):
         """Mock the resource connect method."""
         return self._mock_plex_server
 
@@ -53,6 +53,15 @@ class MockPlexAccount:
         return self._resources
 
 
+class MockPlexSystemAccount:
+    """Mock a PlexSystemAccount instance."""
+
+    def __init__(self):
+        """Initialize the object."""
+        self.name = "Dummy"
+        self.accountID = 1
+
+
 class MockPlexServer:
     """Mock a PlexServer instance."""
 
@@ -68,8 +77,18 @@ class MockPlexServer:
         ]
         prefix = "https" if ssl else "http"
         self._baseurl = f"{prefix}://{host}:{port}"
+        self._systemAccount = MockPlexSystemAccount()
+
+    def systemAccounts(self):
+        """Mock the systemAccounts lookup method."""
+        return [self._systemAccount]
 
     @property
     def url_in_use(self):
         """Return URL used by PlexServer."""
         return self._baseurl
+
+    @property
+    def version(self):
+        """Mock version of PlexServer."""
+        return "1.0"

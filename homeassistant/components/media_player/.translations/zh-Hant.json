@@ -1,11 +1,11 @@
 {
     "device_automation": {
         "condition_type": {
-            "is_idle": "{entity_name} \u9592\u7f6e",
-            "is_off": "{entity_name} \u95dc\u9589",
-            "is_on": "{entity_name} \u958b\u555f",
-            "is_paused": "{entity_name} \u5df2\u66ab\u505c",
-            "is_playing": "{entity_name} \u6b63\u5728\u64ad\u653e"
+            "is_idle": "{entity_name}\u9592\u7f6e",
+            "is_off": "{entity_name}\u95dc\u9589",
+            "is_on": "{entity_name}\u958b\u555f",
+            "is_paused": "{entity_name}\u5df2\u66ab\u505c",
+            "is_playing": "{entity_name}\u6b63\u5728\u64ad\u653e"
         }
     }
 }

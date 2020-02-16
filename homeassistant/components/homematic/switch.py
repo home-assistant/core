@@ -2,9 +2,9 @@
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.const import STATE_UNKNOWN
 
-from . import ATTR_DISCOVER_DEVICES, HMDevice
+from .const import ATTR_DISCOVER_DEVICES
+from .entity import HMDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         new_device = HMSwitch(conf)
         devices.append(new_device)
 
-    add_entities(devices)
+    add_entities(devices, True)
 
 
 class HMSwitch(HMDevice, SwitchDevice):
@@ -55,8 +55,8 @@ class HMSwitch(HMDevice, SwitchDevice):
     def _init_data_struct(self):
         """Generate the data dictionary (self._data) from metadata."""
         self._state = "STATE"
-        self._data.update({self._state: STATE_UNKNOWN})
+        self._data.update({self._state: None})
 
         # Need sensor values for SwitchPowermeter
         for node in self._hmdevice.SENSORNODE:
-            self._data.update({node: STATE_UNKNOWN})
+            self._data.update({node: None})

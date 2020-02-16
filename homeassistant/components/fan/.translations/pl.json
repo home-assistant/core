@@ -4,7 +4,7 @@
             "turn_off": "wy\u0142\u0105cz {entity_name}",
             "turn_on": "w\u0142\u0105cz {entity_name}"
         },
-        "condtion_type": {
+        "condition_type": {
             "is_off": "wentylator (entity_name} jest wy\u0142\u0105czony",
             "is_on": "wentylator (entity_name} jest w\u0142\u0105czony"
         },

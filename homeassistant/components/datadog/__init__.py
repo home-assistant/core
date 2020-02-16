@@ -1,6 +1,7 @@
 """Support for sending data to Datadog."""
 import logging
 
+from datadog import initialize, statsd
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -42,7 +43,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the Datadog component."""
-    from datadog import initialize, statsd
 
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)

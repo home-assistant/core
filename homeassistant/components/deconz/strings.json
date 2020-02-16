@@ -23,7 +23,7 @@
       },
       "hassio_confirm": {
         "title": "deCONZ Zigbee gateway via Hass.io add-on",
-        "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the hass.io add-on {addon}?",
+        "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the Hass.io add-on {addon}?",
         "data": {
           "allow_clip_sensor": "Allow importing virtual sensors",
           "allow_deconz_groups": "Allow importing deCONZ groups"
@@ -70,6 +70,12 @@
       "remote_moved": "Device moved with \"{subtype}\" up",
       "remote_double_tap": "Device \"{subtype}\" double tapped",
       "remote_gyro_activated": "Device shaken",
+      "remote_flip_90_degrees": "Device flipped 90 degrees",
+      "remote_flip_180_degrees": "Device flipped 180 degrees",
+      "remote_moved_any_side": "Device moved with any side up",
+      "remote_double_tap_any_side": "Device double tapped on any side",
+      "remote_turned_clockwise": "Device turned clockwise",
+      "remote_turned_counter_clockwise": "Device turned counter clockwise",
       "remote_rotate_from_side_1": "Device rotated from \"side 1\" to \"{subtype}\"",
       "remote_rotate_from_side_2": "Device rotated from \"side 2\" to \"{subtype}\"",
       "remote_rotate_from_side_3": "Device rotated from \"side 3\" to \"{subtype}\"",

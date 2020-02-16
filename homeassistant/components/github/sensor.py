@@ -1,6 +1,7 @@
 """Support for GitHub."""
 from datetime import timedelta
 import logging
+
 import github
 import voluptuous as vol
 

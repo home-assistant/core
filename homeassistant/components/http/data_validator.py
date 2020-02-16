@@ -4,7 +4,6 @@ import logging
 
 import voluptuous as vol
 
-
 # mypy: allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,6 +20,9 @@ class RequestDataValidator:
 
     def __init__(self, schema, allow_empty=False):
         """Initialize the decorator."""
+        if isinstance(schema, dict):
+            schema = vol.Schema(schema)
+
         self._schema = schema
         self._allow_empty = allow_empty
 

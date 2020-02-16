@@ -3,13 +3,15 @@ from homeassistant.const import __version__
 
 DOMAIN = "plex"
 NAME_FORMAT = "Plex ({})"
+COMMON_PLAYERS = ["Plex Web"]
 
 DEFAULT_PORT = 32400
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
 DISPATCHERS = "dispatchers"
-PLATFORMS = ["media_player", "sensor"]
+PLATFORMS = frozenset(["media_player", "sensor"])
+PLATFORMS_COMPLETED = "platforms_completed"
 SERVERS = "servers"
 WEBSOCKETS = "websockets"
 

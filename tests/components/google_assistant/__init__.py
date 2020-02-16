@@ -1,5 +1,17 @@
 """Tests for the Google Assistant integration."""
+from asynctest.mock import MagicMock
+
 from homeassistant.components.google_assistant import helpers
+
+
+def mock_google_config_store(agent_user_ids=None):
+    """Fake a storage for google assistant."""
+    store = MagicMock(spec=helpers.GoogleConfigStore)
+    if agent_user_ids is not None:
+        store.agent_user_ids = agent_user_ids
+    else:
+        store.agent_user_ids = {}
+    return store
 
 
 class MockConfig(helpers.AbstractConfig):
@@ -10,11 +22,13 @@ class MockConfig(helpers.AbstractConfig):
         *,
         secure_devices_pin=None,
         should_expose=None,
+        should_2fa=None,
         entity_config=None,
         hass=None,
         local_sdk_webhook_id=None,
         local_sdk_user_id=None,
         enabled=True,
+        agent_user_ids=None,
     ):
         """Initialize config."""
         super().__init__(hass)
@@ -24,6 +38,7 @@ class MockConfig(helpers.AbstractConfig):
         self._local_sdk_webhook_id = local_sdk_webhook_id
         self._local_sdk_user_id = local_sdk_user_id
         self._enabled = enabled
+        self._store = mock_google_config_store(agent_user_ids)
 
     @property
     def enabled(self):
@@ -49,6 +64,10 @@ class MockConfig(helpers.AbstractConfig):
     def local_sdk_user_id(self):
         """Return local SDK webhook id."""
         return self._local_sdk_user_id
+
+    def get_agent_user_id(self, context):
+        """Get agent user ID making request."""
+        return context.user_id
 
     def should_expose(self, state):
         """Expose it all."""
@@ -85,7 +104,10 @@ DEMO_DEVICES = [
     },
     {
         "id": "light.ceiling_lights",
-        "name": {"name": "Roof Lights", "nicknames": ["top lights", "ceiling lights"]},
+        "name": {
+            "name": "Roof Lights",
+            "nicknames": ["Roof Lights", "top lights", "ceiling lights"],
+        },
         "traits": [
             "action.devices.traits.OnOff",
             "action.devices.traits.Brightness",
@@ -103,20 +125,6 @@ DEMO_DEVICES = [
             "action.devices.traits.ColorSetting",
         ],
         "type": "action.devices.types.LIGHT",
-        "willReportState": False,
-    },
-    {
-        "id": "group.all_lights",
-        "name": {"name": "all lights"},
-        "traits": ["action.devices.traits.OnOff"],
-        "type": "action.devices.types.SWITCH",
-        "willReportState": False,
-    },
-    {
-        "id": "group.all_switches",
-        "name": {"name": "all switches"},
-        "traits": ["action.devices.traits.OnOff"],
-        "type": "action.devices.types.SWITCH",
         "willReportState": False,
     },
     {
@@ -145,13 +153,6 @@ DEMO_DEVICES = [
         "name": {"name": "Kitchen Window"},
         "traits": ["action.devices.traits.OpenClose"],
         "type": "action.devices.types.BLINDS",
-        "willReportState": False,
-    },
-    {
-        "id": "group.all_covers",
-        "name": {"name": "all covers"},
-        "traits": ["action.devices.traits.OnOff"],
-        "type": "action.devices.types.SWITCH",
         "willReportState": False,
     },
     {
@@ -186,7 +187,11 @@ DEMO_DEVICES = [
     {
         "id": "media_player.walkman",
         "name": {"name": "Walkman"},
-        "traits": ["action.devices.traits.OnOff", "action.devices.traits.Volume"],
+        "traits": [
+            "action.devices.traits.OnOff",
+            "action.devices.traits.Volume",
+            "action.devices.traits.Modes",
+        ],
         "type": "action.devices.types.SWITCH",
         "willReportState": False,
     },
@@ -202,13 +207,6 @@ DEMO_DEVICES = [
         "name": {"name": "Ceiling Fan"},
         "traits": ["action.devices.traits.FanSpeed", "action.devices.traits.OnOff"],
         "type": "action.devices.types.FAN",
-        "willReportState": False,
-    },
-    {
-        "id": "group.all_fans",
-        "name": {"name": "all fans"},
-        "traits": ["action.devices.traits.OnOff"],
-        "type": "action.devices.types.SWITCH",
         "willReportState": False,
     },
     {

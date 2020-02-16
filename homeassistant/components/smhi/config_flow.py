@@ -1,4 +1,5 @@
 """Config flow to configure SMHI component."""
+from smhi.smhi_lib import Smhi, SmhiForecastException
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -96,7 +97,6 @@ class SmhiFlowHandler(config_entries.ConfigFlow):
 
     async def _check_location(self, longitude: str, latitude: str) -> bool:
         """Return true if location is ok."""
-        from smhi.smhi_lib import Smhi, SmhiForecastException
 
         try:
             session = aiohttp_client.async_get_clientsession(self.hass)

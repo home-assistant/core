@@ -11,10 +11,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Platform uses config entry setup."""
-    pass
+DEVICE_TYPES = [CONST.TYPE_SWITCH, CONST.TYPE_VALVE]
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -23,8 +20,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
 
-    for device in data.abode.get_devices(generic_type=CONST.TYPE_SWITCH):
-        entities.append(AbodeSwitch(data, device))
+    for device_type in DEVICE_TYPES:
+        for device in data.abode.get_devices(generic_type=device_type):
+            entities.append(AbodeSwitch(data, device))
 
     for automation in data.abode.get_automations(generic_type=CONST.TYPE_AUTOMATION):
         entities.append(

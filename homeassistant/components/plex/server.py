@@ -51,6 +51,8 @@ class PlexServer:
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         self.options = options
         self.server_choice = None
+        self._owner_username = None
+        self._version = None
 
         # Header conditionally added as it is not available in config entry v1
         if CONF_CLIENT_IDENTIFIER in server_config:
@@ -77,7 +79,7 @@ class PlexServer:
             self.server_choice = (
                 self._server_name if self._server_name else available_servers[0][0]
             )
-            self._plex_server = account.resource(self.server_choice).connect()
+            self._plex_server = account.resource(self.server_choice).connect(timeout=10)
 
         def _connect_with_url():
             session = None
@@ -92,6 +94,16 @@ class PlexServer:
             _connect_with_url()
         else:
             _connect_with_token()
+
+        owner_account = [
+            account.name
+            for account in self._plex_server.systemAccounts()
+            if account.accountID == 1
+        ]
+        if owner_account:
+            self._owner_username = owner_account[0]
+
+        self._version = self._plex_server.version
 
     def refresh_entity(self, machine_identifier, device, session):
         """Forward refresh dispatch to media_player."""
@@ -132,6 +144,9 @@ class PlexServer:
                 _LOGGER.debug("New device: %s", device.machineIdentifier)
 
         for session in sessions:
+            if session.TYPE == "photo":
+                _LOGGER.debug("Photo session detected, skipping: %s", session)
+                continue
             for player in session.players:
                 self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
@@ -180,6 +195,16 @@ class PlexServer:
         return self._plex_server
 
     @property
+    def owner(self):
+        """Return the Plex server owner username."""
+        return self._owner_username
+
+    @property
+    def version(self):
+        """Return the version of the Plex server."""
+        return self._version
+
+    @property
     def friendly_name(self):
         """Return name of connected Plex server."""
         return self._plex_server.friendlyName
@@ -192,7 +217,7 @@ class PlexServer:
     @property
     def url_in_use(self):
         """Return URL used for connected Plex server."""
-        return self._plex_server._baseurl  # pylint: disable=W0212
+        return self._plex_server._baseurl  # pylint: disable=protected-access
 
     @property
     def use_episode_art(self):

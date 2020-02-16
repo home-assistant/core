@@ -4,8 +4,8 @@ import logging
 import time
 
 from homeassistant import bootstrap, config_entries
-import homeassistant.core as ha
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
+import homeassistant.core as ha
 
 DOMAIN = "demo"
 _LOGGER = logging.getLogger(__name__)

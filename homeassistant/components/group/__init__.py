@@ -7,34 +7,35 @@ import voluptuous as vol
 
 from homeassistant import core as ha
 from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
+    ATTR_ICON,
+    ATTR_NAME,
     CONF_ICON,
     CONF_NAME,
+    ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
+    SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
+    STATE_LOCKED,
     STATE_NOT_HOME,
     STATE_OFF,
+    STATE_OK,
     STATE_ON,
     STATE_OPEN,
-    STATE_LOCKED,
-    STATE_UNLOCKED,
-    STATE_OK,
     STATE_PROBLEM,
     STATE_UNKNOWN,
-    ATTR_ASSUMED_STATE,
-    SERVICE_RELOAD,
-    ATTR_NAME,
-    ATTR_ICON,
+    STATE_UNLOCKED,
 )
 from homeassistant.core import callback
-from homeassistant.loader import bind_hass
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import ENTITY_SERVICE_SCHEMA
 from homeassistant.helpers.typing import HomeAssistantType
-
+from homeassistant.loader import bind_hass
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
@@ -63,28 +64,6 @@ SERVICE_REMOVE = "remove"
 
 CONTROL_TYPES = vol.In(["hidden", None])
 
-SET_VISIBILITY_SERVICE_SCHEMA = ENTITY_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_VISIBLE): cv.boolean}
-)
-
-RELOAD_SERVICE_SCHEMA = vol.Schema({})
-
-SET_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_OBJECT_ID): cv.slug,
-        vol.Optional(ATTR_NAME): cv.string,
-        vol.Optional(ATTR_VIEW): cv.boolean,
-        vol.Optional(ATTR_ICON): cv.string,
-        vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
-        vol.Optional(ATTR_VISIBLE): cv.boolean,
-        vol.Optional(ATTR_ALL): cv.boolean,
-        vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
-        vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
-    }
-)
-
-REMOVE_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug})
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -96,15 +75,19 @@ def _conf_preprocess(value):
     return value
 
 
-GROUP_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
-        CONF_VIEW: cv.boolean,
-        CONF_NAME: cv.string,
-        CONF_ICON: cv.icon,
-        CONF_CONTROL: CONTROL_TYPES,
-        CONF_ALL: cv.boolean,
-    }
+GROUP_SCHEMA = vol.All(
+    cv.deprecated(CONF_CONTROL, invalidation_version="0.107.0"),
+    cv.deprecated(CONF_VIEW, invalidation_version="0.107.0"),
+    vol.Schema(
+        {
+            vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
+            CONF_VIEW: cv.boolean,
+            CONF_NAME: cv.string,
+            CONF_ICON: cv.icon,
+            CONF_CONTROL: CONTROL_TYPES,
+            CONF_ALL: cv.boolean,
+        }
+    ),
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -153,7 +136,10 @@ def expand_entity_ids(hass: HomeAssistantType, entity_ids: Iterable[Any]) -> Lis
     """
     found_ids: List[str] = []
     for entity_id in entity_ids:
-        if not isinstance(entity_id, str):
+        if not isinstance(entity_id, str) or entity_id in (
+            ENTITY_MATCH_NONE,
+            ENTITY_MATCH_ALL,
+        ):
             continue
 
         entity_id = entity_id.lower()
@@ -206,6 +192,24 @@ def get_entity_ids(
     return [ent_id for ent_id in entity_ids if ent_id.startswith(domain_filter)]
 
 
+@bind_hass
+def groups_with_entity(hass: HomeAssistantType, entity_id: str) -> List[str]:
+    """Get all groups that contain this entity.
+
+    Async friendly.
+    """
+    if DOMAIN not in hass.data:
+        return []
+
+    groups = []
+
+    for group in hass.data[DOMAIN].entities:
+        if entity_id in group.tracking:
+            groups.append(group.entity_id)
+
+    return groups
+
+
 async def async_setup(hass, config):
     """Set up all groups found defined in the configuration."""
     component = hass.data.get(DOMAIN)
@@ -227,7 +231,7 @@ async def async_setup(hass, config):
         await component.async_add_entities(auto)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=RELOAD_SERVICE_SCHEMA
+        DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
 
     service_lock = asyncio.Lock()
@@ -319,16 +323,44 @@ async def async_setup(hass, config):
             await component.async_remove_entity(entity_id)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET, locked_service_handler, schema=SET_SERVICE_SCHEMA
+        DOMAIN,
+        SERVICE_SET,
+        locked_service_handler,
+        schema=vol.All(
+            cv.deprecated(ATTR_CONTROL, invalidation_version="0.107.0"),
+            cv.deprecated(ATTR_VIEW, invalidation_version="0.107.0"),
+            cv.deprecated(ATTR_VISIBLE, invalidation_version="0.107.0"),
+            vol.Schema(
+                {
+                    vol.Required(ATTR_OBJECT_ID): cv.slug,
+                    vol.Optional(ATTR_NAME): cv.string,
+                    vol.Optional(ATTR_VIEW): cv.boolean,
+                    vol.Optional(ATTR_ICON): cv.string,
+                    vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
+                    vol.Optional(ATTR_VISIBLE): cv.boolean,
+                    vol.Optional(ATTR_ALL): cv.boolean,
+                    vol.Exclusive(ATTR_ENTITIES, "entities"): cv.entity_ids,
+                    vol.Exclusive(ATTR_ADD_ENTITIES, "entities"): cv.entity_ids,
+                }
+            ),
+        ),
     )
 
     hass.services.async_register(
-        DOMAIN, SERVICE_REMOVE, groups_service_handler, schema=REMOVE_SERVICE_SCHEMA
+        DOMAIN,
+        SERVICE_REMOVE,
+        groups_service_handler,
+        schema=vol.Schema({vol.Required(ATTR_OBJECT_ID): cv.slug}),
     )
 
     async def visibility_service_handler(service):
         """Change visibility of a group."""
         visible = service.data.get(ATTR_VISIBLE)
+
+        _LOGGER.warning(
+            "The group.set_visibility service has been deprecated and will"
+            "be removed in Home Assistant 0.107.0."
+        )
 
         tasks = []
         for group in await component.async_extract_from_service(
@@ -344,7 +376,7 @@ async def async_setup(hass, config):
         DOMAIN,
         SERVICE_SET_VISIBILITY,
         visibility_service_handler,
-        schema=SET_VISIBILITY_SERVICE_SCHEMA,
+        schema=make_entity_service_schema({vol.Required(ATTR_VISIBLE): cv.boolean}),
     )
 
     return True
@@ -587,12 +619,12 @@ class Group(Entity):
         self._async_update_group_state()
 
     async def async_added_to_hass(self):
-        """Handle addition to HASS."""
+        """Handle addition to Home Assistant."""
         if self.tracking:
             self.async_start()
 
     async def async_will_remove_from_hass(self):
-        """Handle removal from HASS."""
+        """Handle removal from Home Assistant."""
         if self._async_unsub_state_changed:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
@@ -656,7 +688,6 @@ class Group(Entity):
         if gr_on is None:
             return
 
-        # pylint: disable=too-many-boolean-expressions
         if tr_state is None or (
             (gr_state == gr_on and tr_state.state == gr_off)
             or (gr_state == gr_off and tr_state.state == gr_on)
