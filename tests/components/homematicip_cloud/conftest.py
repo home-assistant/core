@@ -110,6 +110,7 @@ def simple_mock_home_fixture() -> AsyncHome:
     """Return a simple AsyncHome Mock."""
     return Mock(
         spec=AsyncHome,
+        name="Demo",
         devices=[],
         groups=[],
         location=Mock(),
