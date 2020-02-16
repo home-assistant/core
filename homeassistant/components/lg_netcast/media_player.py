@@ -1,5 +1,5 @@
 """Support for LG TV running on NetCast 3 or 4."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from pylgnetcast import LgNetCastClient, LgNetCastError
@@ -199,7 +199,9 @@ class LgTVDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """URL for obtaining a screen capture."""
-        return self._client.url + "data?target=screen_image"
+        return (
+            f"{self._client.url}data?target=screen_image&_={datetime.now().timestamp()}"
+        )
 
     def turn_off(self):
         """Turn off media player."""
