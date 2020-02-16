@@ -71,9 +71,24 @@ def remote_fixture():
         yield remote
 
 
-async def test_user(hass, remote):
-    """Test starting a flow by user."""
+@pytest.fixture(name="remotews")
+def remotews_fixture():
+    """Patch the samsungtvws SamsungTVWS."""
+    with patch("samsungtvws.SamsungTVWS") as remotews_class, patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ) as socket_class:
+        remotews = mock.Mock()
+        remotews.__enter__ = mock.Mock()
+        remotews.__exit__ = mock.Mock()
+        remotews.open = mock.Mock()
+        remotews_class.return_value = remotews
+        socket = mock.Mock()
+        socket_class.return_value = socket
+        yield remotews
 
+
+async def test_user(hass, remote, remotews):
+    """Test starting a flow by user."""
     # show form
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
