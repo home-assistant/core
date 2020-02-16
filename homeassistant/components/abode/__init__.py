@@ -2,7 +2,6 @@
 from asyncio import gather
 from copy import deepcopy
 from functools import partial
-import logging
 
 from abodepy import Abode
 from abodepy.exceptions import AbodeException
@@ -26,8 +25,6 @@ from homeassistant.helpers.entity import Entity
 
 from .const import ATTRIBUTION, DEFAULT_CACHEDB, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 CONF_POLLING = "polling"
 
 SERVICE_SETTINGS = "change_setting"
@@ -46,8 +43,6 @@ ATTR_USER_NAME = "user_name"
 ATTR_APP_TYPE = "app_type"
 ATTR_EVENT_BY = "event_by"
 ATTR_VALUE = "value"
-
-ABODE_DEVICE_ID_LIST_SCHEMA = vol.Schema([str])
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -123,7 +118,7 @@ async def async_setup_entry(hass, config_entry):
         hass.data[DOMAIN] = AbodeSystem(abode, polling)
 
     except (AbodeException, ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Abode: %s", str(ex))
+        LOGGER.error("Unable to connect to Abode: %s", str(ex))
         return False
 
     for platform in ABODE_PLATFORMS:
@@ -173,7 +168,7 @@ def setup_hass_services(hass):
         try:
             hass.data[DOMAIN].abode.set_setting(setting, value)
         except AbodeException as ex:
-            _LOGGER.warning(ex)
+            LOGGER.warning(ex)
 
     def capture_image(call):
         """Capture a new image."""
@@ -225,7 +220,7 @@ async def setup_hass_events(hass):
             hass.data[DOMAIN].abode.events.stop()
 
         hass.data[DOMAIN].abode.logout()
-        _LOGGER.info("Logged out of Abode")
+        LOGGER.info("Logged out of Abode")
 
     if not hass.data[DOMAIN].polling:
         await hass.async_add_executor_job(hass.data[DOMAIN].abode.events.start)
@@ -377,11 +372,6 @@ class AbodeAutomation(Entity):
     def name(self):
         """Return the name of the automation."""
         return self._automation.name
-
-    @property
-    def icon(self):
-        """Return the robot icon to match Home Assistant automations."""
-        return "mdi:robot"
 
     @property
     def device_state_attributes(self):

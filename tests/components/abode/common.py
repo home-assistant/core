@@ -12,6 +12,7 @@ async def setup_platform(hass, platform):
     MockConfigEntry(
         domain=DOMAIN, data={"username": "foo", "password": "bar"}
     ).add_to_hass(hass)
+
     with patch("homeassistant.components.abode.ABODE_PLATFORMS", [platform]), patch(
         "abodepy.event_controller.sio"
     ):

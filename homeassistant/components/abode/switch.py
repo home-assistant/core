@@ -10,6 +10,8 @@ from .const import DOMAIN, SIGNAL_TRIGGER_AUTOMATION
 
 DEVICE_TYPES = [CONST.TYPE_SWITCH, CONST.TYPE_VALVE]
 
+ICON = "mdi:robot"
+
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Abode switch devices."""
@@ -74,3 +76,8 @@ class AbodeAutomationSwitch(AbodeAutomation, SwitchDevice):
     def is_on(self):
         """Return True if the automation is enabled."""
         return self._automation.is_enabled
+
+    @property
+    def icon(self):
+        """Return the robot icon to match Home Assistant automations."""
+        return ICON
