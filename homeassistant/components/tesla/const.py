@@ -3,6 +3,7 @@ DOMAIN = "tesla"
 DATA_LISTENER = "listener"
 DEFAULT_SCAN_INTERVAL = 660
 MIN_SCAN_INTERVAL = 60
+MIN_UPDATE_INTERVAL = 15
 TESLA_COMPONENTS = [
     "sensor",
     "lock",

@@ -1,6 +1,7 @@
 """Support for Tesla cars."""
 import asyncio
 from collections import defaultdict
+from datetime import timedelta
 import logging
 
 from teslajsonpy import Controller as TeslaAPI, TeslaException
@@ -19,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
+from homeassistant.util import Throttle, slugify
 
 from .config_flow import (
     CannotConnect,
@@ -33,6 +34,7 @@ from .const import (
     DOMAIN,
     ICONS,
     MIN_SCAN_INTERVAL,
+    MIN_UPDATE_INTERVAL,
     TESLA_COMPONENTS,
 )
 
@@ -247,6 +249,7 @@ class TeslaDevice(Entity):
         """Prepare for unload."""
         pass
 
+    @Throttle(timedelta(seconds=MIN_UPDATE_INTERVAL))
     async def async_update(self):
         """Update the state of the device."""
         if self.controller.is_token_refreshed():
