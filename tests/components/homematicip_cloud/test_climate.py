@@ -19,6 +19,7 @@ from homeassistant.components.climate.const import (
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
+    PRESET_NONE,
 )
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.climate import (
@@ -32,11 +33,8 @@ from .helper import HAPID, async_manipulate_test_data, get_and_check_entity_basi
 
 async def test_manually_configured_platform(hass):
     """Test that we do not set up an access point."""
-    assert (
-        await async_setup_component(
-            hass, CLIMATE_DOMAIN, {CLIMATE_DOMAIN: {"platform": HMIPC_DOMAIN}}
-        )
-        is True
+    assert await async_setup_component(
+        hass, CLIMATE_DOMAIN, {CLIMATE_DOMAIN: {"platform": HMIPC_DOMAIN}}
     )
     assert not hass.data.get(HMIPC_DOMAIN)
 
@@ -47,7 +45,7 @@ async def test_hmip_heating_group_heat(hass, default_mock_hap_factory):
     entity_name = "Badezimmer"
     device_model = None
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
-        test_devices=["Wandthermostat", "Heizkörperthermostat"],
+        test_devices=["Wandthermostat", "Heizkörperthermostat3"],
         test_groups=[entity_name],
     )
 
@@ -376,6 +374,28 @@ async def test_hmip_heating_group_heat_with_switch(hass, default_mock_hap_factor
     assert ha_state.attributes["current_humidity"] == 43
     assert ha_state.attributes[ATTR_PRESET_MODE] == "STD"
     assert ha_state.attributes[ATTR_PRESET_MODES] == [PRESET_BOOST, "STD", "P2"]
+
+
+async def test_hmip_heating_group_heat_with_radiator(hass, default_mock_hap_factory):
+    """Test HomematicipHeatingGroup."""
+    entity_id = "climate.vorzimmer"
+    entity_name = "Vorzimmer"
+    device_model = None
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Heizkörperthermostat2"], test_groups=[entity_name],
+    )
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert hmip_device
+    assert ha_state.state == HVAC_MODE_AUTO
+    assert ha_state.attributes["current_temperature"] == 20
+    assert ha_state.attributes["min_temp"] == 5.0
+    assert ha_state.attributes["max_temp"] == 30.0
+    assert ha_state.attributes["temperature"] == 5.0
+    assert ha_state.attributes[ATTR_PRESET_MODE] is None
+    assert ha_state.attributes[ATTR_PRESET_MODES] == [PRESET_NONE, PRESET_BOOST]
 
 
 async def test_hmip_climate_services(hass, mock_hap_with_service):
