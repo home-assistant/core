@@ -3,16 +3,15 @@
 Can only be used by integrations that have pillow in their requirements.
 """
 import io
-from pathlib import Path
 from typing import Tuple, Union
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
 
 
-def convert_to_pil_image(fp: Union[str, Path, io.BytesIO]) -> Union[Image.Image, None]:
-    """Convert a valid input to a PIL Image."""
+def convert_to_pil_image(image: bytes) -> Union[Image.Image, None]:
+    """Convert a camera image to a PIL Image."""
     try:
-        return Image.open(fp).convert("RGB")
+        return Image.open(io.BytesIO(bytearray(image))).convert("RGB")
     except UnidentifiedImageError:
         return None
 
