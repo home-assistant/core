@@ -6,7 +6,7 @@ from aioesphomeapi import APIClient, APIConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries, core
-from homeassistant.helpers import ConfigType
+from homeassistant.helpers.typing import ConfigType
 
 from .entry_data import DATA_KEY, RuntimeEntryData
 
