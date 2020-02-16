@@ -55,7 +55,8 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass, config):
     """Try to start embedded Lightwave broker."""
     host = config[DOMAIN][CONF_HOST]
-    hass.data[LIGHTWAVE_LINK] = LWLink(host)
+    lwlink = LWLink(host)
+    hass.data[LIGHTWAVE_LINK] = lwlink
 
     lights = config[DOMAIN][CONF_LIGHTS]
     if lights:
@@ -72,8 +73,11 @@ async def async_setup(hass, config):
     trv = config[DOMAIN][CONF_TRV]
     trvs = trv[CONF_TRVS]
     if trv:
-        hass.data[LIGHTWAVE_TRV_PROXY] = trv[PROXY_IP]
-        hass.data[LIGHTWAVE_TRV_PROXY_PORT] = trv[PROXY_PORT]
+        proxy_ip = trv[PROXY_IP]
+        proxy_port = trv[PROXY_PORT]
+        hass.data[LIGHTWAVE_TRV_PROXY] = proxy_ip
+        hass.data[LIGHTWAVE_TRV_PROXY_PORT] = proxy_port
+        lwlink.set_trv_proxy(proxy_ip, proxy_port)
         hass.async_create_task(
             async_load_platform(hass, "climate", DOMAIN, trvs, config)
         )

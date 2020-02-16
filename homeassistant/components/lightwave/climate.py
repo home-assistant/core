@@ -1,7 +1,5 @@
 """Support for LightwaveRF TRVs."""
-import json
 import logging
-import socket
 
 from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
@@ -72,53 +70,31 @@ class LightwaveTrv(ClimateDevice):
         """Flag supported features."""
         return SUPPORT_TARGET_TEMPERATURE
 
-    def update_ctarg(self, j):
-        """Update target temp logic."""
-        if self._inhibit == 0:
-            self._target_temperature = j["cTarg"]
-            if j["cTarg"] == 0:
-                # TRV off
-                self._target_temperature = None
-            if j["cTarg"] >= 40:
-                # Call for heat mode, or TRV in a fixed position
-                self._target_temperature = None
-        else:
-            # Done the job - use proxy next iteration
-            self._inhibit = 0
-
     def update(self):
         """Communicate with a Lightwave RTF Proxy to get state."""
-        try:
-            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-                sock.settimeout(2.0)
-                msg = self._serial.encode("UTF-8")
-                sock.sendto(msg, (self._proxy_ip, self._proxy_port))
-                response, dummy = sock.recvfrom(1024)
-                msg = response.decode()
-                j = json.loads(msg)
-                if "cTemp" in j.keys():
-                    self._current_temperature = j["cTemp"]
-                if "cTarg" in j.keys():
-                    self.update_ctarg(j)
-                if "batt" in j.keys():
-                    # convert the voltage to a rough percentage
-                    self._battery = int((j["batt"] - 2.22) * 110)
-                if "output" in j.keys():
-                    if int(j["output"]) > 0:
-                        self._hvac_action = CURRENT_HVAC_HEAT
-                    else:
-                        self._hvac_action = CURRENT_HVAC_OFF
-                if "error" in j.keys():
-                    _LOGGER.warning("TRV proxy error: %s", j["error"])
-
-        except socket.timeout:
-            _LOGGER.warning("TRV proxy not responing")
-
-        except socket.error as ex:
-            _LOGGER.warning("TRV proxy error %s", ex)
-
-        except json.JSONDecodeError:
-            _LOGGER.warning("TRV proxy JSON error")
+        targ = temp = battery = trv_output = None
+        (temp, targ, battery, trv_output) = self._lwlink.read_trv_status(self._serial)
+        if temp is not None:
+            self._current_temperature = temp
+        if targ is not None:
+            if self._inhibit == 0:
+                self._target_temperature = targ
+                if targ == 0:
+                    # TRV off
+                    self._target_temperature = None
+                if targ >= 40:
+                    # Call for heat mode, or TRV in a fixed position
+                    self._target_temperature = None
+            else:
+                # Done the job - use proxy next iteration
+                self._inhibit = 0
+        if battery is not None:
+            self._battery = battery
+        if trv_output is not None:
+            if trv_output > 0:
+                self._hvac_action = CURRENT_HVAC_HEAT
+            else:
+                self._hvac_action = CURRENT_HVAC_OFF
 
     @property
     def device_state_attributes(self):
