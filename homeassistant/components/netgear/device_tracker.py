@@ -147,7 +147,6 @@ class NetgearDeviceScanner(DeviceScanner):
         results = self.get_attached_devices()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            print("DEBUG LOGGING")
             _LOGGER.debug("Scan result: \n%s", pformat(results))
 
         if results is None:
