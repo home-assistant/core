@@ -480,7 +480,7 @@ eliqonline==1.2.2
 elkm1-lib==0.7.15
 
 # homeassistant.components.elmo_alarm
-elmo==0.1.1
+elmo==0.1.2
 
 # homeassistant.components.emulated_roku
 emulated_roku==0.2.1

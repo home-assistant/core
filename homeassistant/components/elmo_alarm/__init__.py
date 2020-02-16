@@ -191,7 +191,7 @@ class ElmoClientWrapper(ElmoClient):
         if not areas_armed:
             self.state = STATE_ALARM_DISARMED
         else:
-            armed_indexes = [area_data["index"] + 1 for area_data in areas_armed]
+            armed_indexes = [area_data["element"] for area_data in areas_armed]
 
             matching_state = filter(
                 lambda state: set(state[1]) == set(armed_indexes), self.states.items()

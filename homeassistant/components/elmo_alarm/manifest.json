@@ -2,7 +2,7 @@
   "domain": "elmo_alarm",
   "name": "Elmo SPA Alarm",
   "documentation": "https://www.home-assistant.io/integrations/elmo_alarm",
-  "requirements": ["elmo==0.1.1"],
+  "requirements": ["elmo==0.1.2"],
   "dependencies": [],
   "codeowners": ["@markin"]
 }
