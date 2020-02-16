@@ -199,6 +199,8 @@ class TeslaDevice(RestoreEntity):
         self.tesla_id = slugify(self.tesla_device.uniq_name)
         self._attributes = {}
         self._icon = ICONS.get(self.tesla_device.type)
+        self._state = None
+        self._units = None
 
     @property
     def name(self):
