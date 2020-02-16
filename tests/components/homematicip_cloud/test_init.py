@@ -215,9 +215,6 @@ async def test_setup_two_haps_unload_one_by_one(hass):
     # unload the first AP
     await hass.config_entries.async_unload(config_entries[0].entry_id)
 
-    hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
-    assert len(hmipc_services) == 8
-
     # services still exists
     hmipc_services = hass.services.async_services()[HMIPC_DOMAIN]
     assert len(hmipc_services) == 8
