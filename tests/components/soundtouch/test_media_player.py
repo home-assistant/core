@@ -19,7 +19,11 @@ from homeassistant.components.media_player.const import (
 )
 from homeassistant.components.soundtouch import media_player as soundtouch
 from homeassistant.components.soundtouch.const import DOMAIN
-from homeassistant.components.soundtouch.media_player import DATA_SOUNDTOUCH
+from homeassistant.components.soundtouch.media_player import (
+    ATTR_SOUNDTOUCH_GROUP,
+    ATTR_SOUNDTOUCH_ZONE,
+    DATA_SOUNDTOUCH,
+)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
@@ -154,9 +158,9 @@ def _mocked_presets(*args, **kwargs):
 class MockPreset(Preset):
     """Mock preset."""
 
-    def __init__(self, id):
+    def __init__(self, id_):
         """Init the class."""
-        self._id = id
+        self._id = id_
         self._name = "preset"
 
 
@@ -858,3 +862,49 @@ async def test_add_zone_slave(
         True,
     )
     assert mocked_add_zone_slave.call_count == 1
+
+
+@patch("libsoundtouch.device.SoundTouchDevice.create_zone")
+@patch("libsoundtouch.device.SoundTouchDevice.volume")
+@patch("libsoundtouch.device.SoundTouchDevice.status", side_effect=MockStatusPlaying)
+async def test_zone_attributes(
+    mocked_status, mocked_volume, mocked_create_zone, hass, two_zones,
+):
+    """Test play everywhere."""
+    mocked_soundtouch_device = two_zones
+    assert await async_setup_component(
+        hass, "media_player", {"media_player": [DEVICE_1_CONFIG, DEVICE_2_CONFIG]}
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    assert mocked_soundtouch_device.call_count == 2
+    assert mocked_status.call_count == 4
+    assert mocked_volume.call_count == 4
+
+    entity_1_state = hass.states.get("media_player.soundtouch_1")
+    assert entity_1_state.attributes[ATTR_SOUNDTOUCH_ZONE]["is_master"]
+    assert (
+        entity_1_state.attributes[ATTR_SOUNDTOUCH_ZONE]["master"]
+        == "media_player.soundtouch_1"
+    )
+    assert entity_1_state.attributes[ATTR_SOUNDTOUCH_ZONE]["slaves"] == [
+        "media_player.soundtouch_2"
+    ]
+    assert entity_1_state.attributes[ATTR_SOUNDTOUCH_GROUP] == [
+        "media_player.soundtouch_1",
+        "media_player.soundtouch_2",
+    ]
+    entity_2_state = hass.states.get("media_player.soundtouch_2")
+    assert not entity_2_state.attributes[ATTR_SOUNDTOUCH_ZONE]["is_master"]
+    assert (
+        entity_2_state.attributes[ATTR_SOUNDTOUCH_ZONE]["master"]
+        == "media_player.soundtouch_1"
+    )
+    assert entity_2_state.attributes[ATTR_SOUNDTOUCH_ZONE]["slaves"] == [
+        "media_player.soundtouch_2"
+    ]
+    assert entity_2_state.attributes[ATTR_SOUNDTOUCH_GROUP] == [
+        "media_player.soundtouch_1",
+        "media_player.soundtouch_2",
+    ]
