@@ -22,11 +22,13 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    EVENT_HOMEASSISTANT_START,
     STATE_OFF,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
@@ -105,7 +107,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         remote_config = {"id": "ha.component.soundtouch", "host": host, "port": port}
         bose_soundtouch_entity = SoundTouchDevice(None, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
-        add_entities([bose_soundtouch_entity])
+        add_entities([bose_soundtouch_entity], True)
     else:
         name = config.get(CONF_NAME)
         remote_config = {
@@ -115,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         }
         bose_soundtouch_entity = SoundTouchDevice(name, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
-        add_entities([bose_soundtouch_entity])
+        add_entities([bose_soundtouch_entity], True)
 
     def service_handle(service):
         """Handle the applying of a service."""
@@ -193,8 +195,8 @@ class SoundTouchDevice(MediaPlayerDevice):
             self._name = self._device.config.name
         else:
             self._name = name
-        self._status = self._device.status()
-        self._volume = self._device.volume()
+        self._status = None
+        self._volume = None
         self._config = config
         self._zone = None
 
@@ -320,6 +322,18 @@ class SoundTouchDevice(MediaPlayerDevice):
     def media_album_name(self):
         """Album name of current playing media."""
         return self._status.album
+
+    async def async_added_to_hass(self):
+        """Populate zone info which requires entity_id."""
+
+        @callback
+        def async_update_on_start(event):
+            """Schedule an update when all platform entities have been added."""
+            self.async_schedule_update_ha_state(True)
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, async_update_on_start
+        )
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
