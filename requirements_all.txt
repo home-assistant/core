@@ -2008,6 +2008,9 @@ twentemilieu==0.2.0
 # homeassistant.components.twilio
 twilio==6.32.0
 
+# homeassistant.components.rainforest_eagle
+uEagle==0.0.1
+
 # homeassistant.components.unifiled
 unifiled==0.11
 

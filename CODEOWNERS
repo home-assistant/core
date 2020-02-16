@@ -279,7 +279,7 @@ homeassistant/components/quantum_gateway/* @cisasteelersfan
 homeassistant/components/qwikswitch/* @kellerza
 homeassistant/components/rainbird/* @konikvranik
 homeassistant/components/raincloud/* @vanstinator
-homeassistant/components/rainforest_eagle/* @gtdiehl
+homeassistant/components/rainforest_eagle/* @gtdiehl @jcalbert
 homeassistant/components/rainmachine/* @bachya
 homeassistant/components/random/* @fabaff
 homeassistant/components/repetier/* @MTrab
