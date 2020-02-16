@@ -159,7 +159,7 @@ class ElmoClientWrapper(ElmoClient):
         try:
             data = self.check()
         except PermissionDenied as exception:
-            _LOGGER.warning("Invalid session, trying to authenticate %s", exception)
+            _LOGGER.warning("Invalid session, trying to authenticate: %s", exception)
             try:
                 self.auth(self._username, self._password)
                 data = self.check()
