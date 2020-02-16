@@ -33,11 +33,8 @@ from .helper import HAPID, async_manipulate_test_data, get_and_check_entity_basi
 
 async def test_manually_configured_platform(hass):
     """Test that we do not set up an access point."""
-    assert (
-        await async_setup_component(
-            hass, CLIMATE_DOMAIN, {CLIMATE_DOMAIN: {"platform": HMIPC_DOMAIN}}
-        )
-        is True
+    assert await async_setup_component(
+        hass, CLIMATE_DOMAIN, {CLIMATE_DOMAIN: {"platform": HMIPC_DOMAIN}}
     )
     assert not hass.data.get(HMIPC_DOMAIN)
 
