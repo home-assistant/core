@@ -1,4 +1,6 @@
 """Tests for the Abode alarm control panel device."""
+from unittest.mock import patch
+
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 
 from .common import setup_platform
@@ -30,49 +32,40 @@ async def test_automation_attributes(hass, requests_mock):
 async def test_set_alarm_away(hass, requests_mock):
     """Test the alarm control panel can be set to away."""
     await setup_platform(hass, ALARM_DOMAIN)
-    requests_mock.put(
-        "https://my.goabode.com/api/v1/panel/mode/1/away",
-        text='{ "area": "1", "mode": "away"}',
-    )
 
-    await hass.services.async_call(
-        "alarm_control_panel",
-        "alarm_arm_away",
-        {"entity_id": "alarm_control_panel.abode_alarm"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with patch("abodepy.ALARM.AbodeAlarm.set_away") as mock_set_away:
+        await hass.services.async_call(
+            "alarm_control_panel",
+            "alarm_arm_away",
+            {"entity_id": "alarm_control_panel.abode_alarm"},
+            blocking=True,
+        )
+        mock_set_away.assert_called_once()
 
 
 async def test_set_alarm_home(hass, requests_mock):
     """Test the alarm control panel can be set to home."""
     await setup_platform(hass, ALARM_DOMAIN)
-    requests_mock.put(
-        "https://my.goabode.com/api/v1/panel/mode/1/home",
-        text='{ "area": "1", "mode": "home"}',
-    )
 
-    await hass.services.async_call(
-        "alarm_control_panel",
-        "alarm_arm_home",
-        {"entity_id": "alarm_control_panel.abode_alarm"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with patch("abodepy.ALARM.AbodeAlarm.set_home") as mock_set_home:
+        await hass.services.async_call(
+            "alarm_control_panel",
+            "alarm_arm_home",
+            {"entity_id": "alarm_control_panel.abode_alarm"},
+            blocking=True,
+        )
+        mock_set_home.assert_called_once()
 
 
 async def test_set_alarm_standby(hass, requests_mock):
     """Test the alarm control panel can be set to standby."""
     await setup_platform(hass, ALARM_DOMAIN)
-    requests_mock.put(
-        "https://my.goabode.com/api/v1/panel/mode/1/standby",
-        text='{ "area": "1", "mode": "standby"}',
-    )
 
-    await hass.services.async_call(
-        "alarm_control_panel",
-        "alarm_disarm",
-        {"entity_id": "alarm_control_panel.abode_alarm"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with patch("abodepy.ALARM.AbodeAlarm.set_standby") as mock_set_standby:
+        await hass.services.async_call(
+            "alarm_control_panel",
+            "alarm_disarm",
+            {"entity_id": "alarm_control_panel.abode_alarm"},
+            blocking=True,
+        )
+        mock_set_standby.assert_called_once()

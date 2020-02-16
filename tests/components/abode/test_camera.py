@@ -1,5 +1,5 @@
 """Tests for the Abode camera device."""
-import abodepy.helpers.constants as CONST
+from unittest.mock import patch
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 
@@ -15,7 +15,7 @@ async def test_entity_registry(hass, requests_mock):
     assert entry.unique_id == "d0a3a1c316891ceb00c20118aae2a133"
 
 
-async def test_switch_attributes(hass, requests_mock):
+async def test_camera_attributes(hass, requests_mock):
     """Test the camera attributes are correct."""
     await setup_platform(hass, CAMERA_DOMAIN)
 
@@ -26,9 +26,9 @@ async def test_switch_attributes(hass, requests_mock):
 async def test_capture_image(hass, requests_mock):
     """Test the camera capture image service."""
     await setup_platform(hass, CAMERA_DOMAIN)
-    requests_mock.patch(CONST.BASE_URL + "api/v1/cams/XF:b0c5ba27592a/record", text="")
 
-    await hass.services.async_call(
-        "abode", "capture_image", {"entity_id": "camera.test_cam"}, blocking=True,
-    )
-    await hass.async_block_till_done()
+    with patch("abodepy.AbodeCamera.capture") as mock_capture:
+        await hass.services.async_call(
+            "abode", "capture_image", {"entity_id": "camera.test_cam"}, blocking=True,
+        )
+        mock_capture.assert_called_once()

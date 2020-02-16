@@ -1,4 +1,6 @@
 """Tests for the Abode switch device."""
+from unittest.mock import patch
+
 import abodepy.helpers.constants as CONST
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -77,15 +79,13 @@ async def test_turn_automation_on(hass, requests_mock):
 async def test_trigger_automation(hass, requests_mock):
     """Test the trigger automation service."""
     await setup_platform(hass, SWITCH_DOMAIN)
-    requests_mock.patch(
-        str.replace(CONST.AUTOMATION_APPLY_URL, "$AUTOMATIONID$", AUTOMATION_ID),
-        text="",
-    )
 
-    await hass.services.async_call(
-        "abode",
-        "trigger_automation",
-        {"entity_id": "switch.test_automation"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with patch("abodepy.AbodeAutomation.trigger") as mock:
+        await hass.services.async_call(
+            "abode",
+            "trigger_automation",
+            {"entity_id": "switch.test_automation"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        mock.assert_called_once()
