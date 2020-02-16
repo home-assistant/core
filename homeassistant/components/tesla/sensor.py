@@ -33,8 +33,8 @@ class TeslaSensor(TeslaDevice, Entity):
 
     def __init__(self, tesla_device, controller, config_entry, sensor_type=None):
         """Initialize of the sensor."""
-        self.current_value = None
-        self.units = None
+        self._state = None
+        self._units = None
         self.last_changed_time = None
         self.type = sensor_type
         self._device_class = tesla_device.device_class
@@ -53,12 +53,12 @@ class TeslaSensor(TeslaDevice, Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.current_value
+        return self._state
 
     @property
     def unit_of_measurement(self):
         """Return the unit_of_measurement of the device."""
-        return self.units
+        return self._units
 
     @property
     def device_class(self):
@@ -72,26 +72,33 @@ class TeslaSensor(TeslaDevice, Entity):
         units = self.tesla_device.measurement
 
         if self.tesla_device.type == "temperature sensor":
-            if self.type == "outside":
-                self.current_value = self.tesla_device.get_outside_temp()
-            else:
-                self.current_value = self.tesla_device.get_inside_temp()
+            if (
+                self.type == "outside"
+                and self.tesla_device.get_outside_temp() is not None
+            ):
+                self._state = self.tesla_device.get_outside_temp()
+            elif self.tesla_device.get_inside_temp() is not None:
+                self._state = self.tesla_device.get_inside_temp()
             if units == "F":
-                self.units = TEMP_FAHRENHEIT
+                self._units = TEMP_FAHRENHEIT
             else:
-                self.units = TEMP_CELSIUS
+                self._units = TEMP_CELSIUS
         elif self.tesla_device.type in ["range sensor", "mileage sensor"]:
-            self.current_value = self.tesla_device.get_value()
+            if self.tesla_device.get_value() is None:
+                return
+            self._state = self.tesla_device.get_value()
             if units == "LENGTH_MILES":
-                self.units = LENGTH_MILES
+                self._units = LENGTH_MILES
             else:
-                self.units = LENGTH_KILOMETERS
-                self.current_value = round(
-                    convert(self.current_value, LENGTH_MILES, LENGTH_KILOMETERS), 2
+                self._units = LENGTH_KILOMETERS
+                self._state = round(
+                    convert(self._state, LENGTH_MILES, LENGTH_KILOMETERS), 2
                 )
         elif self.tesla_device.type == "charging rate sensor":
-            self.current_value = self.tesla_device.charging_rate
-            self.units = units
+            if self.tesla_device.charging_rate is None:
+                return
+            self._state = self.tesla_device.charging_rate
+            self._units = units
             self._attributes = {
                 "time_left": self.tesla_device.time_left,
                 "added_range": self.tesla_device.added_range,
@@ -100,5 +107,7 @@ class TeslaSensor(TeslaDevice, Entity):
                 "charger_voltage": self.tesla_device.charger_voltage,
             }
         else:
-            self.current_value = self.tesla_device.get_value()
-            self.units = units
+            if self.tesla_device.get_value() is None:
+                return
+            self._state = self.tesla_device.get_value()
+            self._units = units

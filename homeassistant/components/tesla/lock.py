@@ -49,4 +49,7 @@ class TeslaLock(TeslaDevice, LockDevice):
         """Update state of the lock."""
         _LOGGER.debug("Updating state for: %s", self._name)
         await super().async_update()
-        self._state = STATE_LOCKED if self.tesla_device.is_locked() else STATE_UNLOCKED
+        if self.tesla_device.is_locked() is not None:
+            self._state = (
+                STATE_LOCKED if self.tesla_device.is_locked() else STATE_UNLOCKED
+            )

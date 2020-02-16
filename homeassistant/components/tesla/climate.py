@@ -41,6 +41,7 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         super().__init__(tesla_device, controller, config_entry)
         self._target_temperature = None
         self._temperature = None
+        self._units = None
 
     @property
     def supported_features(self):
@@ -69,15 +70,17 @@ class TeslaThermostat(TeslaDevice, ClimateDevice):
         """Call by the Tesla device callback to update state."""
         _LOGGER.debug("Updating: %s", self._name)
         await super().async_update()
-        self._target_temperature = self.tesla_device.get_goal_temp()
-        self._temperature = self.tesla_device.get_current_temp()
+        if self.tesla_device.measurement is not None:
+            self._units = self.tesla_device.measurement
+        if self.tesla_device.get_goal_temp() is not None:
+            self._target_temperature = self.tesla_device.get_goal_temp()
+        if self.tesla_device.get_current_temp() is not None:
+            self._temperature = self.tesla_device.get_current_temp()
 
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        tesla_temp_units = self.tesla_device.measurement
-
-        if tesla_temp_units == "F":
+        if self._units == "F":
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 

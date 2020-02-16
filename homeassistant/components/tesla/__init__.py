@@ -10,6 +10,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ACCESS_TOKEN,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
@@ -18,7 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import slugify
 
 from .config_flow import (
@@ -186,7 +187,7 @@ async def update_listener(hass, config_entry):
     )
 
 
-class TeslaDevice(Entity):
+class TeslaDevice(RestoreEntity):
     """Representation of a Tesla device."""
 
     def __init__(self, tesla_device, controller, config_entry):
@@ -241,7 +242,13 @@ class TeslaDevice(Entity):
 
     async def async_added_to_hass(self):
         """Register state update callback."""
-        pass
+        state = await self.async_get_last_state()
+        if state is None:
+            return
+        self._state = state.state
+        self._attributes = state.attributes.copy()
+        if self._attributes.get(ATTR_UNIT_OF_MEASUREMENT):
+            self._units = self._attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
     async def async_will_remove_from_hass(self):
         """Prepare for unload."""
