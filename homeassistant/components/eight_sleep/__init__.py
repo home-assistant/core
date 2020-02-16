@@ -59,8 +59,14 @@ NAME_MAP = {
     "room_temp": "Room Temperature",
 }
 
-SENSORS = ["current_sleep", "current_sleep_fitness", "last_sleep",
-           "bed_state", "bed_temp", "sleep_stage"]
+SENSORS = [
+    "current_sleep",
+    "current_sleep_fitness",
+    "last_sleep",
+    "bed_state",
+    "bed_temp",
+    "sleep_stage",
+]
 
 SERVICE_HEAT_SET = "heat_set"
 
