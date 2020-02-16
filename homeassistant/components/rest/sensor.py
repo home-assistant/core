@@ -219,6 +219,9 @@ class RestSensor(Entity):
                     json_dict = json.loads(value)
                     if self._json_attrs_path is not None:
                         json_dict = jsonpath(json_dict, self._json_attrs_path)
+                    # jsonpath will always store the result in json_dict[0]
+                    # so the next line happens to work exactly as needed to
+                    # find the result
                     if isinstance(json_dict, list):
                         json_dict = json_dict[0]
                     if isinstance(json_dict, dict):
