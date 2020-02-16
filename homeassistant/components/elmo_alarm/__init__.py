@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 
 from elmo.api.client import ElmoClient
-from elmo.api.exceptions import PermissionDenied
 from urllib3.exceptions import HTTPError
 import voluptuous as vol
 
