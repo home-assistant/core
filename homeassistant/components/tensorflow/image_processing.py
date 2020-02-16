@@ -1,5 +1,4 @@
 """Support for performing TensorFlow classification on images."""
-import io
 import logging
 import os
 import sys
@@ -19,7 +18,7 @@ from homeassistant.components.image_processing import (
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.pil import draw_box
+from homeassistant.util.pil import convert_to_pil_image, draw_box
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -238,7 +237,9 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         }
 
     def _save_image(self, image, matches, paths):
-        img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+        img = convert_to_pil_image(image)
+        if not img:
+            return
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
 
@@ -287,7 +288,9 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
         except ImportError:
-            img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+            img = convert_to_pil_image(image)
+            if not img:
+                return
             img.thumbnail((460, 460), Image.ANTIALIAS)
             img_width, img_height = img.size
             inp = (
