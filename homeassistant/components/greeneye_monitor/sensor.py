@@ -309,7 +309,7 @@ class VoltageSensor(GEMSensor):
     @property
     def state(self):
         """Return the current voltage being reported by this sensor."""
-        if not self._monitor.voltage:
+        if not self._monitor:
             return None
 
         return self._monitor.voltage
