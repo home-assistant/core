@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Router hostnaam of IP-adres"
+                }
+            }
+        }
+    }
+}
