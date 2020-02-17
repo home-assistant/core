@@ -436,6 +436,9 @@ pybotvac==0.0.17
 # homeassistant.components.cast
 pychromecast==4.1.1
 
+# homeassistant.components.coolmaster_serial
+pycoolmaster==0.2.1
+
 # homeassistant.components.coolmaster
 pycoolmasternet==0.0.4
 
