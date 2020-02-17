@@ -1288,6 +1288,9 @@ class Config:
         # List of allowed external dirs to access
         self.whitelist_external_dirs: Set[str] = set()
 
+        # If Home Assistant is running in safe mode
+        self.safe_mode: bool = False
+
     def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.
 
