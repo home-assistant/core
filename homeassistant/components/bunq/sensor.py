@@ -28,21 +28,23 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     sensors = []
 
     try:
-        # setup api
+        # setup api context
         api_context = ApiContext(
-            ApiEnvironmentType.PRODUCTION, config.get(CONF_API_KEY), "Home Assistant",
+            ApiEnvironmentType.PRODUCTION,
+            config.config[CONF_API_KEY],
+            "Home Assistant",
         )
         api_context.ensure_session_active()
         BunqContext.load_api_context(api_context)
-
-        # create sensors
-        for account in get_account_data():
-            sensors.append(BunqBalanceSensor(account))
     except (ApiException, BunqException) as err:
         _LOGGER.error(
             "Error setting up sensor: %s", err,
         )
         raise PlatformNotReady
+
+    # create sensors
+    for account in get_account_data():
+        sensors.append(BunqBalanceSensor(account))
 
     async_add_entities(sensors, True)
 
@@ -134,13 +136,11 @@ class BunqData:
         try:
             # get new data from api
             accounts = get_account_data()
-
-            # create a dict with account id as key and account data as value
-            self.data = {
-                account.id_: float(account.balance.value) for account in accounts
-            }
-
-            # update the sensors
-            await self.update_devices()
         except (ApiException, BunqException) as err:
             _LOGGER.error("Error updating sensor: %s", err)
+
+        # create a dict with account id as key and account data as value
+        self.data = {account.id_: float(account.balance.value) for account in accounts}
+
+        # update the sensors
+        await self.update_devices()
