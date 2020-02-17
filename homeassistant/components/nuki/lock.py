@@ -84,6 +84,7 @@ class NukiLock(LockDevice):
         self._nuki_lock = nuki_lock
         self._locked = nuki_lock.is_locked
         self._name = nuki_lock.name
+        self._unique_id = self._nuki_lock.nuki_id
         self._battery_critical = nuki_lock.battery_critical
         self._available = nuki_lock.state not in ERROR_STATES
 
@@ -95,7 +96,7 @@ class NukiLock(LockDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return self._nuki_lock.nuki_id
+        return self._unique_id
 
     @property
     def is_locked(self):
