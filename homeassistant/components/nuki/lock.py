@@ -8,7 +8,6 @@ import voluptuous as vol
 
 from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockDevice
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
@@ -24,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 20
 
+ATTR_BATTERY_CRITICAL = "battery_critical"
 ATTR_NUKI_ID = "nuki_id"
 ATTR_UNLATCH = "unlatch"
 
@@ -106,7 +106,7 @@ class NukiLock(LockDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         data = {
-            ATTR_BATTERY_LEVEL: 10 if self._battery_critical else 100,
+            ATTR_BATTERY_CRITICAL: self._battery_critical,
             ATTR_NUKI_ID: self._nuki_lock.nuki_id,
         }
         return data
