@@ -4,6 +4,7 @@ import datetime as dt
 from datetime import timedelta
 import logging
 from typing import Any, Callable, Dict, List, Optional
+from random import randint
 
 from aiohttp import ClientError
 from spotipy import Spotify, SpotifyException
@@ -104,6 +105,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._devices: Optional[List[dict]] = []
         self._playlist: Optional[dict] = None
         self._spotify: Spotify = None
+        self._start_random = False
 
         self.player_available = False
 
@@ -299,6 +301,13 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             kwargs["uris"] = [media_id]
         elif media_type == MEDIA_TYPE_PLAYLIST:
             kwargs["context_uri"] = media_id
+            if self._start_random:
+                response = self._spotify.playlist_tracks(media_id,
+                                                     offset=0,
+                                                     fields='total')
+                N_songs = response.get('total', 1)
+                position = randint(0, N_songs - 1)
+                kwargs["offset"] = {"position": position}
         else:
             _LOGGER.error("Media type %s is not supported", media_type)
             return
@@ -318,6 +327,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @spotify_exception_handler
     def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
+        self._start_random = shuffle
         self._spotify.shuffle(shuffle)
 
     @spotify_exception_handler
