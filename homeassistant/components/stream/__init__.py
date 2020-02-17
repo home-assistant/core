@@ -50,11 +50,7 @@ def request_stream(hass, stream_source, *, fmt="hls", keepalive=False, options=N
         options = {}
 
     # For RTSP streams, prefer TCP
-    if (
-        isinstance(stream_source, str)
-        and stream_source[:7] == "rtsp://"
-        and not options
-    ):
+    if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
         options["rtsp_flags"] = "prefer_tcp"
         options["stimeout"] = "5000000"
 
