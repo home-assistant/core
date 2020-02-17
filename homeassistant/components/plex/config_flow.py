@@ -258,9 +258,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry):
         """Initialize Plex options flow."""
         self.options = copy.deepcopy(config_entry.options)
-        server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-        plex_server = self.hass.data[DOMAIN][SERVERS][server_id]
-        self.accounts = plex_server.accounts
+        self.server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
 
     async def async_step_init(self, user_input=None):
         """Manage the Plex options."""
@@ -283,7 +281,8 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             ]
             return self.async_create_entry(title="", data=self.options)
 
-        available_accounts = {name: name for name in self.accounts}
+        plex_server = self.hass.data[DOMAIN][SERVERS][self.server_id]
+        available_accounts = {name: name for name in plex_server.accounts}
 
         return self.async_show_form(
             step_id="plex_mp_settings",
