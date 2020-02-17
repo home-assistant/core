@@ -7,12 +7,7 @@ from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.lock import PLATFORM_SCHEMA, SUPPORT_OPEN, LockDevice
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_TOKEN,
-)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import extract_entity_ids
 
