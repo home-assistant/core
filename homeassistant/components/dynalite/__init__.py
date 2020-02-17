@@ -1,18 +1,4 @@
 """Support for the Dynalite networks."""
-from dynalite_devices_lib import (
-    CONF_ACTIVE,
-    CONF_AREA,
-    CONF_AUTODISCOVER,
-    CONF_CHANNEL,
-    CONF_DEFAULT,
-    CONF_FADE,
-    CONF_HIDDENENTITY,
-    CONF_NAME,
-    CONF_POLLTIMER,
-    CONF_PORT,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-)
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -22,7 +8,24 @@ from homeassistant.helpers import config_validation as cv
 
 # Loading the config flow file will register the flow
 from .bridge import DynaliteBridge
-from .const import CONF_BRIDGES, DATA_CONFIGS, DOMAIN, LOGGER
+from .const import (
+    CONF_ACTIVE,
+    CONF_AREA,
+    CONF_AUTO_DISCOVER,
+    CONF_BRIDGES,
+    CONF_CHANNEL,
+    CONF_DEFAULT,
+    CONF_FADE,
+    CONF_HIDDEN_ENTITY,
+    CONF_NAME,
+    CONF_POLLTIMER,
+    CONF_PORT,
+    DATA_CONFIGS,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DOMAIN,
+    LOGGER,
+)
 
 
 def num_string(value):
@@ -37,7 +40,7 @@ CHANNEL_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_FADE): vol.Coerce(float),
-        vol.Optional(CONF_HIDDENENTITY, default=False): vol.Coerce(bool),
+        vol.Optional(CONF_HIDDEN_ENTITY, default=False): vol.Coerce(bool),
     }
 )
 
@@ -61,7 +64,7 @@ BRIDGE_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_AUTODISCOVER, default=False): vol.Coerce(bool),
+        vol.Optional(CONF_AUTO_DISCOVER, default=False): vol.Coerce(bool),
         vol.Optional(CONF_POLLTIMER, default=1.0): vol.Coerce(float),
         vol.Optional(CONF_AREA): AREA_SCHEMA,
         vol.Optional(CONF_DEFAULT): PLATFORM_DEFAULTS_SCHEMA,
