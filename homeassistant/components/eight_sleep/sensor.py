@@ -207,11 +207,13 @@ class EightUserSensor(EightSleepUserEntity):
             return None
 
         if "fitness" in self._sensor_root:
-            state_attr = {ATTR_FIT_DATE: self._attr["date"]}
-            state_attr[ATTR_FIT_DURATION_SCORE] = self._attr["duration"]
-            state_attr[ATTR_FIT_ASLEEP_SCORE] = self._attr["asleep"]
-            state_attr[ATTR_FIT_OUT_SCORE] = self._attr["out"]
-            state_attr[ATTR_FIT_WAKEUP_SCORE] = self._attr["wakeup"]
+            state_attr = {
+                ATTR_FIT_DATE: self._attr["date"],
+                ATTR_FIT_DURATION_SCORE: self._attr["duration"],
+                ATTR_FIT_ASLEEP_SCORE: self._attr["asleep"],
+                ATTR_FIT_OUT_SCORE: self._attr["out"],
+                ATTR_FIT_WAKEUP_SCORE: self._attr["wakeup"],
+            }
             return state_attr
 
         state_attr = {ATTR_SESSION_START: self._attr["date"]}
