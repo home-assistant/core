@@ -1,54 +1,26 @@
 """The lock tests for the august platform."""
 
 import datetime
-from unittest.mock import MagicMock
 
 from august.activity import ACTION_DOOR_CLOSED, ACTION_DOOR_OPEN
 from august.lock import LockDoorStatus
 
-from homeassistant.components.august.binary_sensor import AugustDoorBinarySensor
 from homeassistant.util import dt
 
 from tests.components.august.mocks import (
     MockActivity,
-    MockAugustData,
+    MockAugustComponentData,
+    MockAugustComponentDoorBinarySensor,
     _mock_august_lock,
 )
 
 
-class MockAugustDoorBinarySensor(AugustDoorBinarySensor):
-    """A mock for august component AugustLock class."""
-
-    def __init__(self, august_data=None):
-        """Init the mock for august component AugustLock class."""
-        self._data = august_data
-        self._door = _mock_august_lock()
-
-    @property
-    def name(self):
-        """Mock name."""
-        return "mockedname1"
-
-    @property
-    def device_id(self):
-        """Mock device_id."""
-        return "mockdeviceid1"
-
-    def _update_door_state(self, door_state, activity_start_time_utc):
-        """Mock updating the lock status."""
-        self._data.set_last_door_state_update_time_utc(
-            self._door.device_id, activity_start_time_utc
-        )
-        self.last_update_door_state = {}
-        self.last_update_door_state["door_state"] = door_state
-        self.last_update_door_state["activity_start_time_utc"] = activity_start_time_utc
-        return MagicMock()
-
-
 def test__sync_door_activity_doored_via_dooropen():
     """Test _sync_door_activity dooropen."""
-    data = MockAugustData(last_door_state_update_timestamp=1)
-    door = MockAugustDoorBinarySensor(august_data=data)
+    data = MockAugustComponentData(last_door_state_update_timestamp=1)
+    lock = _mock_august_lock()
+    data.set_mocked_locks([lock])
+    door = MockAugustComponentDoorBinarySensor(data, "door_open", lock)
     door_activity_start_timestamp = 1234
     door_activity = MockActivity(
         action=ACTION_DOOR_OPEN,
@@ -64,8 +36,10 @@ def test__sync_door_activity_doored_via_dooropen():
 
 def test__sync_door_activity_doorclosed():
     """Test _sync_door_activity doorclosed."""
-    data = MockAugustData(last_door_state_update_timestamp=1)
-    door = MockAugustDoorBinarySensor(august_data=data)
+    data = MockAugustComponentData(last_door_state_update_timestamp=1)
+    lock = _mock_august_lock()
+    data.set_mocked_locks([lock])
+    door = MockAugustComponentDoorBinarySensor(data, "door_open", lock)
     door_activity_timestamp = 1234
     door_activity = MockActivity(
         action=ACTION_DOOR_CLOSED,
@@ -81,8 +55,10 @@ def test__sync_door_activity_doorclosed():
 
 def test__sync_door_activity_ignores_old_data():
     """Test _sync_door_activity dooropen then expired doorclosed."""
-    data = MockAugustData(last_door_state_update_timestamp=1)
-    door = MockAugustDoorBinarySensor(august_data=data)
+    data = MockAugustComponentData(last_door_state_update_timestamp=1)
+    lock = _mock_august_lock()
+    data.set_mocked_locks([lock])
+    door = MockAugustComponentDoorBinarySensor(data, "door_open", lock)
     first_door_activity_timestamp = 1234
     door_activity = MockActivity(
         action=ACTION_DOOR_OPEN,
@@ -98,7 +74,7 @@ def test__sync_door_activity_ignores_old_data():
     # Now we do the update with an older start time to
     # make sure it ignored
     data.set_last_door_state_update_time_utc(
-        door.device_id, dt.as_utc(datetime.datetime.fromtimestamp(1000))
+        lock.device_id, dt.as_utc(datetime.datetime.fromtimestamp(1000))
     )
     door_activity_timestamp = 2
     door_activity = MockActivity(
