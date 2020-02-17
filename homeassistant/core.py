@@ -1353,6 +1353,7 @@ class Config:
             "whitelist_external_dirs": self.whitelist_external_dirs,
             "version": __version__,
             "config_source": self.config_source,
+            "safe_mode": self.safe_mode,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
