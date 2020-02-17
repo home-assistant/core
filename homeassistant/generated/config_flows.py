@@ -17,6 +17,7 @@ FLOWS = [
     "cast",
     "cert_expiry",
     "coolmaster",
+    "coolmaster_serial",
     "daikin",
     "deconz",
     "dialogflow",
