@@ -6,6 +6,7 @@ from requests import RequestException
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws import SamsungTVWS
+from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketException
 
 from .const import (
@@ -212,7 +213,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
             except WebSocketException:
                 LOGGER.debug("Working but unsupported config: %s", config)
                 return RESULT_NOT_SUPPORTED
-            except (OSError, Exception) as err:  # pylint: disable=broad-except
+            except (OSError, ConnectionFailure) as err:
                 LOGGER.debug("Failing config: %s, error: %s", config, err)
 
         return RESULT_NOT_SUCCESSFUL
