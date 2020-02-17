@@ -10,6 +10,9 @@ ATTR_STATE_WINDOW_OPEN = "window_open"
 
 CONF_CONNECTIONS = "connections"
 
+DEFAULT_HOST = "fritz.box"
+DEFAULT_USERNAME = "admin"
+
 DOMAIN = "fritzbox"
 
 LOGGER = logging.getLogger(__package__)
