@@ -132,7 +132,9 @@ async def test_themes_api(hass, hass_ws_client):
     msg = await client.receive_json()
 
     assert msg["result"]["default_theme"] == "safe_mode"
-    assert msg["result"]["themes"] == {"safe_mode": {"primary-color": "#db4437"}}
+    assert msg["result"]["themes"] == {
+        "safe_mode": {"primary-color": "#db4437", "accent-color": "#eeee02"}
+    }
 
 
 async def test_themes_set_theme(hass, hass_ws_client):
