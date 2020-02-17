@@ -119,6 +119,7 @@ class EDL21Entity(Entity):
         self._telegram = telegram
         self._min_time = MIN_TIME_BETWEEN_UPDATES
         self._last_update = utcnow()
+        self._state_attrs = {"status", "valTime", "scaler", "valueSignature"}
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
@@ -163,11 +164,7 @@ class EDL21Entity(Entity):
     @property
     def device_state_attributes(self):
         """Enumerate supported attributes."""
-        attr = self._telegram.copy()
-        for key in ("objName", "unit", "value"):
-            if key in attr:
-                del attr[key]
-        return attr
+        return {k: v for k, v in self._telegram.items() if k in self._state_attrs}
 
     @property
     def unit_of_measurement(self):
