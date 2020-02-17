@@ -7,8 +7,8 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event
-from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 DOMAIN = "comfoair"
@@ -47,9 +47,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     hass.data[DOMAIN] = ComfoAirModule(hass, config)
     await hass.data[DOMAIN].connect()
 
-    for com in ["fan", "sensor"]:
-        coro = discovery.async_load_platform(hass, com, DOMAIN, {}, config)
-        hass.async_create_task(coro)
+    hass.async_create_task(async_load_platform(hass, "fan", DOMAIN, {}, config))
 
     async def ca_service_virtualkey(service):
         ev_mask = service.data[ATTR_MASK]
