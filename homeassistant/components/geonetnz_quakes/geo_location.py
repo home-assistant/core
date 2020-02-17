@@ -26,6 +26,9 @@ ATTR_MMI = "mmi"
 ATTR_PUBLICATION_DATE = "publication_date"
 ATTR_QUALITY = "quality"
 
+# An update of this entity is not making a web request, but uses internal data only.
+PARALLEL_UPDATES = 0
+
 SOURCE = "geonetnz_quakes"
 
 
@@ -34,9 +37,9 @@ async def async_setup_entry(hass, entry, async_add_entities):
     manager = hass.data[DOMAIN][FEED][entry.entry_id]
 
     @callback
-    def async_add_geolocation(feed_manager, external_id, unit_system):
+    def async_add_geolocation(feed_manager, external_id):
         """Add gelocation entity from feed."""
-        new_entity = GeonetnzQuakesEvent(feed_manager, external_id, unit_system)
+        new_entity = GeonetnzQuakesEvent(feed_manager, external_id)
         _LOGGER.debug("Adding geolocation %s", new_entity)
         async_add_entities([new_entity], True)
 
@@ -45,6 +48,8 @@ async def async_setup_entry(hass, entry, async_add_entities):
             hass, manager.async_event_new_entity(), async_add_geolocation
         )
     )
+    # Do not wait for update here so that the setup can be completed and because an
+    # update will fetch data from the feed via HTTP and then process that data.
     hass.async_create_task(manager.async_update())
     _LOGGER.debug("Geolocation setup done")
 
@@ -52,11 +57,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class GeonetnzQuakesEvent(GeolocationEvent):
     """This represents an external event with GeoNet NZ Quakes feed data."""
 
-    def __init__(self, feed_manager, external_id, unit_system):
+    def __init__(self, feed_manager, external_id):
         """Initialize entity with data from feed entry."""
         self._feed_manager = feed_manager
         self._external_id = external_id
-        self._unit_system = unit_system
         self._title = None
         self._distance = None
         self._latitude = None
@@ -115,7 +119,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         """Update the internal state from the provided feed entry."""
         self._title = feed_entry.title
         # Convert distance if not metric system.
-        if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             self._distance = IMPERIAL_SYSTEM.length(
                 feed_entry.distance_to_home, LENGTH_KILOMETERS
             )
@@ -164,7 +168,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        if self._unit_system == CONF_UNIT_SYSTEM_IMPERIAL:
+        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             return LENGTH_MILES
         return LENGTH_KILOMETERS
 

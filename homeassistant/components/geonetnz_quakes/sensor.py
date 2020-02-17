@@ -22,6 +22,9 @@ ATTR_REMOVED = "removed"
 DEFAULT_ICON = "mdi:pulse"
 DEFAULT_UNIT_OF_MEASUREMENT = "quakes"
 
+# An update of this entity is not making a web request, but uses internal data only.
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the GeoNet NZ Quakes Feed platform."""
@@ -90,11 +93,10 @@ class GeonetnzQuakesSensor(Entity):
         self._last_update = (
             dt.as_utc(status_info.last_update) if status_info.last_update else None
         )
-        self._last_update_successful = (
-            dt.as_utc(status_info.last_update_successful)
-            if status_info.last_update_successful
-            else None
-        )
+        if status_info.last_update_successful:
+            self._last_update_successful = dt.as_utc(status_info.last_update_successful)
+        else:
+            self._last_update_successful = None
         self._last_timestamp = status_info.last_timestamp
         self._total = status_info.total
         self._created = status_info.created
