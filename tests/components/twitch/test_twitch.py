@@ -20,7 +20,7 @@ CONFIG_WITH_OAUTH = {
         "platform": "twitch",
         "client_id": "1234",
         "channels": ["channel123"],
-        "oauth_token": "9876",
+        "token": "9876",
     }
 }
 

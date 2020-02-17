@@ -6,7 +6,7 @@ from twitch import TwitchClient
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_TOKEN
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -24,7 +24,6 @@ ATTR_VIEWS = "views"
 
 CONF_CHANNELS = "channels"
 CONF_CLIENT_ID = "client_id"
-CONF_OAUTH_TOKEN = "oauth_token"
 
 ICON = "mdi:twitch"
 
@@ -35,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_CLIENT_ID): cv.string,
         vol.Required(CONF_CHANNELS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_OAUTH_TOKEN): cv.string,
+        vol.Optional(CONF_TOKEN): cv.string,
     }
 )
 
@@ -44,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Twitch platform."""
     channels = config[CONF_CHANNELS]
     client_id = config[CONF_CLIENT_ID]
-    oauth_token = config.get(CONF_OAUTH_TOKEN)
+    oauth_token = config.get(CONF_TOKEN)
     client = TwitchClient(client_id, oauth_token)
 
     try:
