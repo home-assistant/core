@@ -626,7 +626,7 @@ gpiozero==1.5.1
 gps3==0.33.3
 
 # homeassistant.components.greeneye_monitor
-greeneye_monitor==1.0.1
+greeneye_monitor==2.0
 
 # homeassistant.components.greenwave
 greenwavereality==0.5.1
