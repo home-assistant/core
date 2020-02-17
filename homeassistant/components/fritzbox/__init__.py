@@ -32,10 +32,10 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Schema(
                     {
                         vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                        vol.Required(CONF_PASSWORD): cv.string,
                         vol.Required(
-                            CONF_PASSWORD, default=DEFAULT_USERNAME
+                            CONF_USERNAME, default=DEFAULT_USERNAME
                         ): cv.string,
-                        vol.Required(CONF_USERNAME): cv.string,
                     }
                 )
             ],
