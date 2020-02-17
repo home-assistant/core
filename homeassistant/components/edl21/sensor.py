@@ -94,7 +94,7 @@ class EDL21:
                 elif obis not in self._blacklist:
                     _LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at "
-                        "https://github.com/home-assistant/home-assistant/issues",
+                        'https://github.com/home-assistant/home-assistant/issues?q=is%%3Aissue+label%%3A"integration%%3A+edl21"+',
                         obis,
                     )
                     self._blacklist.add(obis)
