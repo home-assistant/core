@@ -4,7 +4,13 @@ import socket
 from pyfritzhome import Fritzhome
 import voluptuous as vol
 
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
