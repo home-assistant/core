@@ -17,20 +17,6 @@ def dyn_bridge():
     return bridge
 
 
-async def test_bridge_setup(dyn_bridge):
-    """Test the bridge setup successfully."""
-    # succeeds and fails based on async_setup of dynalite_devices
-    with patch.object(dyn_bridge.dynalite_devices, "async_setup", return_value=True):
-        assert await dyn_bridge.async_setup()
-
-
-async def test_bridge_setup_fail(dyn_bridge):
-    """Test the bridge setup with failure."""
-    # succeeds and fails based on async_setup of dynalite_devices
-    with patch.object(dyn_bridge.dynalite_devices, "async_setup", return_value=False):
-        assert not await dyn_bridge.async_setup()
-
-
 async def test_update_device(dyn_bridge):
     """Test a successful setup."""
     async_dispatch = Mock()
