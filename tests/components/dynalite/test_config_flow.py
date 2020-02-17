@@ -42,3 +42,50 @@ async def test_flow_no_connection(hass):
     result = await run_flow(hass, True, False)
     assert result["type"] == "abort"
     assert result["reason"] == "no_connection"
+
+
+async def test_existing_same_config(hass):
+    """Test when the entry exists with the same config."""
+    host = "1.2.3.4"
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.available", True
+    ):
+        await hass.config_entries.flow.async_init(
+            dynalite.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={dynalite.CONF_HOST: host},
+        )
+        # Do it for a second time
+        result = await hass.config_entries.flow.async_init(
+            dynalite.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={dynalite.CONF_HOST: host},
+        )
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
+
+async def test_existing_different_config(hass):
+    """Test when the entry exists with a different config."""
+    host = "1.2.3.4"
+    with patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.available", True
+    ):
+        await hass.config_entries.flow.async_init(
+            dynalite.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={dynalite.CONF_HOST: host},
+        )
+        # Do it for a second time
+        result = await hass.config_entries.flow.async_init(
+            dynalite.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={dynalite.CONF_HOST: host, "aaa": "bbb"},
+        )
+    assert result["type"] == "create_entry"

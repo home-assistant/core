@@ -27,7 +27,7 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             LOGGER.debug("Entry already configured - %s", entry.data)
             if entry.data != import_info:
                 LOGGER.debug("Entry configured with different info - updating")
-                self.hass.config_entries.entry_unload(entry)
+                await self.hass.config_entries.async_unload(entry.entry_id)
                 return self.async_create_entry(title=host, data=import_info)
             LOGGER.debug("Entry has the same info - doing nothing")
             raise data_entry_flow.AbortFlow("already_configured")
