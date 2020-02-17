@@ -1,9 +1,13 @@
 """The tests for the  Template switch platform."""
 from homeassistant import setup
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
-from homeassistant.core import callback
+from homeassistant.core import State, callback
 
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import (
+    assert_setup_component,
+    get_test_home_assistant,
+    mock_restore_cache,
+)
 from tests.components.switch import common
 
 
@@ -605,3 +609,38 @@ async def test_invalid_availability_template_keeps_component_available(hass, cap
 
     assert hass.states.get("switch.test_template_switch").state != STATE_UNAVAILABLE
     assert ("UndefinedError: 'x' is undefined") in caplog.text
+
+    def test_restore_state(self):
+        """Test state restoration."""
+        mock_restore_cache(
+            hass, (State("switch.s1", STATE_ON,), State("switch.s2", STATE_OFF,),)
+        )
+
+        assert setup.setup_component(
+            self.hass,
+            "switch",
+            {
+                "switch": {
+                    "platform": "template",
+                    "switches": {
+                        "s1": {
+                            "turn_on": {"service": "test.automation"},
+                            "turn_off": {"service": "test.automation"},
+                        },
+                        "s2": {
+                            "turn_on": {"service": "test.automation"},
+                            "turn_off": {"service": "test.automation"},
+                        },
+                    },
+                }
+            },
+        )
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = hass.states.get("switch.s1")
+        assert state.state == STATE_ON
+
+        state = hass.states.get("switch.s2")
+        assert state.state == STATE_OFF
