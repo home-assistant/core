@@ -706,6 +706,7 @@ def test_available():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=False),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.available is False
@@ -720,6 +721,7 @@ def test_available():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=True),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.available is True
@@ -734,6 +736,7 @@ def test_available():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=False),
         is_group=True,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.available is True
@@ -751,6 +754,7 @@ def test_hs_color():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.hs_color is None
@@ -765,6 +769,7 @@ def test_hs_color():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.hs_color is None
@@ -779,6 +784,189 @@ def test_hs_color():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.hs_color == color.color_xy_to_hs(0.4, 0.5, LIGHT_GAMUT)
+
+
+async def test_group_features(hass, mock_bridge):
+    """Test group features."""
+
+    color_temp_type = "Color temperature light"
+    extended_color_type = "Extended color light"
+
+    group_response = {
+        "1": {
+            "name": "Group 1",
+            "lights": ["1", "2"],
+            "type": "Room",
+            "action": {
+                "on": True,
+                "bri": 254,
+                "hue": 10000,
+                "sat": 254,
+                "effect": "none",
+                "xy": [0.5, 0.5],
+                "ct": 250,
+                "alert": "select",
+                "colormode": "ct",
+            },
+            "state": {"any_on": True, "all_on": False},
+        },
+        "2": {
+            "name": "Group 2",
+            "lights": ["3", "4"],
+            "type": "Room",
+            "action": {
+                "on": True,
+                "bri": 153,
+                "hue": 4345,
+                "sat": 254,
+                "effect": "none",
+                "xy": [0.5, 0.5],
+                "ct": 250,
+                "alert": "select",
+                "colormode": "ct",
+            },
+            "state": {"any_on": True, "all_on": False},
+        },
+        "3": {
+            "name": "Group 3",
+            "lights": ["1", "3"],
+            "type": "Room",
+            "action": {
+                "on": True,
+                "bri": 153,
+                "hue": 4345,
+                "sat": 254,
+                "effect": "none",
+                "xy": [0.5, 0.5],
+                "ct": 250,
+                "alert": "select",
+                "colormode": "ct",
+            },
+            "state": {"any_on": True, "all_on": False},
+        },
+    }
+
+    light_1 = {
+        "state": {
+            "on": True,
+            "bri": 144,
+            "ct": 467,
+            "alert": "none",
+            "effect": "none",
+            "reachable": True,
+        },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "A",
+                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+            }
+        },
+        "type": color_temp_type,
+        "name": "Hue Lamp 1",
+        "modelid": "LCT001",
+        "swversion": "66009461",
+        "manufacturername": "Philips",
+        "uniqueid": "456",
+    }
+    light_2 = {
+        "state": {
+            "on": False,
+            "bri": 0,
+            "ct": 0,
+            "alert": "none",
+            "effect": "none",
+            "colormode": "xy",
+            "reachable": True,
+        },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "A",
+                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+            }
+        },
+        "type": color_temp_type,
+        "name": "Hue Lamp 2",
+        "modelid": "LCT001",
+        "swversion": "66009461",
+        "manufacturername": "Philips",
+        "uniqueid": "456",
+    }
+    light_3 = {
+        "state": {
+            "on": False,
+            "bri": 0,
+            "hue": 0,
+            "sat": 0,
+            "xy": [0, 0],
+            "ct": 0,
+            "alert": "none",
+            "effect": "none",
+            "colormode": "hs",
+            "reachable": True,
+        },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "A",
+                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+            }
+        },
+        "type": extended_color_type,
+        "name": "Hue Lamp 3",
+        "modelid": "LCT001",
+        "swversion": "66009461",
+        "manufacturername": "Philips",
+        "uniqueid": "123",
+    }
+    light_4 = {
+        "state": {
+            "on": True,
+            "bri": 100,
+            "hue": 13088,
+            "sat": 210,
+            "xy": [0.5, 0.4],
+            "ct": 420,
+            "alert": "none",
+            "effect": "none",
+            "colormode": "hs",
+            "reachable": True,
+        },
+        "capabilities": {
+            "control": {
+                "colorgamuttype": "A",
+                "colorgamut": [[0.704, 0.296], [0.2151, 0.7106], [0.138, 0.08]],
+            }
+        },
+        "type": extended_color_type,
+        "name": "Hue Lamp 4",
+        "modelid": "LCT001",
+        "swversion": "66009461",
+        "manufacturername": "Philips",
+        "uniqueid": "123",
+    }
+    light_response = {
+        "1": light_1,
+        "2": light_2,
+        "3": light_3,
+        "4": light_4,
+    }
+
+    mock_bridge.allow_groups = True
+    mock_bridge.mock_light_responses.append(light_response)
+    mock_bridge.mock_group_responses.append(group_response)
+    await setup_bridge(hass, mock_bridge)
+
+    color_temp_feature = hue_light.SUPPORT_HUE["Color temperature light"]
+    extended_color_feature = hue_light.SUPPORT_HUE["Extended color light"]
+
+    group_1 = hass.states.get("light.group_1")
+    assert group_1.attributes["supported_features"] == color_temp_feature
+
+    group_2 = hass.states.get("light.group_2")
+    assert group_2.attributes["supported_features"] == extended_color_feature
+
+    group_3 = hass.states.get("light.group_3")
+    assert group_3.attributes["supported_features"] == extended_color_feature
