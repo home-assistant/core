@@ -706,6 +706,7 @@ def test_available():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=False),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.available is False
@@ -720,6 +721,7 @@ def test_available():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=True),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.available is True
@@ -734,6 +736,7 @@ def test_available():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(allow_unreachable=False),
         is_group=True,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.available is True
@@ -751,6 +754,7 @@ def test_hs_color():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.hs_color is None
@@ -765,6 +769,7 @@ def test_hs_color():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.hs_color is None
@@ -779,6 +784,7 @@ def test_hs_color():
         coordinator=Mock(last_update_success=True),
         bridge=Mock(),
         is_group=False,
+        supported_features=hue_light.SUPPORT_HUE_EXTENDED,
     )
 
     assert light.hs_color == color.color_xy_to_hs(0.4, 0.5, LIGHT_GAMUT)
