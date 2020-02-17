@@ -102,9 +102,7 @@ class EDL21:
                 self._hass.async_create_task(entity.async_update_ha_state())
 
         if new_entities:
-            self._hass.async_add_job(
-                self._async_add_entities(new_entities, update_before_add=True)
-            )
+            self._async_add_entities(new_entities, update_before_add=True)
 
 
 class EDL21Entity(Entity):
