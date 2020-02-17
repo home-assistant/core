@@ -57,14 +57,14 @@ class EDL21:
         # E=0: Total
         "1-0:16.7.0*255": "Sum active instantaneous power",
     }
+    _OBIS_BLACKLIST = {
+        # A=129: Manufacturer specific
+        "129-129:199.130.3*255",  # Iskraemeco: Manufacturer
+        "129-129:199.130.5*255",  # Iskraemeco: Public Key
+    }
 
     def __init__(self, hass, config, async_add_entities) -> None:
         """Initialize an EDL21 object."""
-        self._blacklist = {
-            # A=129: Manufacturer specific
-            "129-129:199.130.3*255",  # Iskraemeco: Manufacturer
-            "129-129:199.130.5*255",  # Iskraemeco: Public Key
-        }
         self._cache = {}
         self._hass = hass
         self._async_add_entities = async_add_entities
@@ -91,13 +91,13 @@ class EDL21:
                 if name:
                     device = self._cache[obis] = EDL21Entity(obis, name, telegram)
                     new_devices.append(device)
-                elif obis not in self._blacklist:
+                elif obis not in self._OBIS_BLACKLIST:
                     _LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at "
                         'https://github.com/home-assistant/home-assistant/issues?q=is%%3Aissue+label%%3A"integration%%3A+edl21"+',
                         obis,
                     )
-                    self._blacklist.add(obis)
+                    self._OBIS_BLACKLIST.add(obis)
             elif device.update_telegram(telegram):
                 self._hass.async_create_task(device.async_update_ha_state())
 
