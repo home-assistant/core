@@ -123,7 +123,7 @@ adguardhome==0.4.1
 afsapi==0.0.4
 
 # homeassistant.components.geonetnz_quakes
-aio_geojson_geonetnz_quakes==0.11
+aio_geojson_geonetnz_quakes==0.12
 
 # homeassistant.components.geonetnz_volcano
 aio_geojson_geonetnz_volcano==0.5
