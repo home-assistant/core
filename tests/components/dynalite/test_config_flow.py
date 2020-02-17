@@ -10,7 +10,7 @@ async def run_flow(hass, setup, connection):
     host = "1.2.3.4"
     with patch(
         "dynalite_devices_lib.DynaliteDevices.async_setup", return_value=setup
-    ), patch("dynalite_devices_lib.DynaliteDevices.available", connection), patch(
+    ), patch("homeassistant.components.dynalite.bridge.DynaliteDevices.available", connection), patch(
         "homeassistant.components.dynalite.bridge.CONNECT_INTERVAL", 0
     ):
         result = await hass.config_entries.flow.async_init(
