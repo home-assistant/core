@@ -79,18 +79,18 @@ class EDL21:
         """Handle events from pysml."""
         assert isinstance(message_body, SmlGetListResponse)
 
-        new_devices = []
+        new_entities = []
         for telegram in message_body.get("valList", []):
             obis = telegram.get("objName")
             if not obis:
                 continue
 
-            device = self._cache.get(obis)
-            if not device:
+            entity = self._cache.get(obis)
+            if not entity:
                 name = self._OBIS_NAMES.get(obis)
                 if name:
-                    device = self._cache[obis] = EDL21Entity(obis, name, telegram)
-                    new_devices.append(device)
+                    entity = self._cache[obis] = EDL21Entity(obis, name, telegram)
+                    new_entities.append(entity)
                 elif obis not in self._OBIS_BLACKLIST:
                     _LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at "
@@ -98,12 +98,12 @@ class EDL21:
                         obis,
                     )
                     self._OBIS_BLACKLIST.add(obis)
-            elif device.update_telegram(telegram):
-                self._hass.async_create_task(device.async_update_ha_state())
+            elif entity.update_telegram(telegram):
+                self._hass.async_create_task(entity.async_update_ha_state())
 
-        if new_devices:
+        if new_entities:
             self._hass.async_add_job(
-                self._async_add_entities(new_devices, update_before_add=True)
+                self._async_add_entities(new_entities, update_before_add=True)
             )
 
 
