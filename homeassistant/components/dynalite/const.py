@@ -3,7 +3,6 @@ import logging
 
 LOGGER = logging.getLogger(__package__)
 DOMAIN = "dynalite"
-DATA_CONFIGS = "dynalite_configs"
 
 CONF_ACTIVE = "active"
 CONF_ALL = "ALL"

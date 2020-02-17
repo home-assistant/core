@@ -41,10 +41,10 @@ async def create_light_from_device(hass, device):
     await hass.async_block_till_done()
     # Find the bridge
     bridge = None
-    for index in hass.data[dynalite.DOMAIN]:
-        if index != dynalite.DATA_CONFIGS:
-            bridge = hass.data[dynalite.DOMAIN][index]
-            break
+    dynalite.LOGGER.error("XXX - light_from_Dev - %s", hass.data[dynalite.DOMAIN])
+    assert len(hass.data[dynalite.DOMAIN]) == 1
+    key = next(iter(hass.data[dynalite.DOMAIN]))
+    bridge = hass.data[dynalite.DOMAIN][key]
     bridge.dynalite_devices.newDeviceFunc([device])
     await hass.async_block_till_done()
 

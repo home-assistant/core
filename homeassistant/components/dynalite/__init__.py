@@ -19,7 +19,6 @@ from .const import (
     CONF_NAME,
     CONF_POLLTIMER,
     CONF_PORT,
-    DATA_CONFIGS,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DOMAIN,
@@ -87,7 +86,6 @@ async def async_setup(hass, config):
         conf = {}
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CONFIGS] = {}
 
     # User has configured bridges
     if CONF_BRIDGES not in conf:
@@ -98,9 +96,6 @@ async def async_setup(hass, config):
     for bridge_conf in bridges:
         host = bridge_conf[CONF_HOST]
         LOGGER.debug("Starting config entry flow host=%s conf=%s", host, bridge_conf)
-
-        # Store config in hass.data so the config entry can find it
-        hass.data[DOMAIN][DATA_CONFIGS][host] = bridge_conf
 
         hass.async_create_task(
             hass.config_entries.flow.async_init(

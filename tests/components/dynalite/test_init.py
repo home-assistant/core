@@ -12,7 +12,7 @@ async def test_empty_config(hass):
     """Test with an empty config."""
     assert await async_setup_component(hass, dynalite.DOMAIN, {}) is True
     assert len(hass.config_entries.flow.async_progress()) == 0
-    assert hass.data[dynalite.DOMAIN] == {dynalite.DATA_CONFIGS: {}}
+    assert hass.data[dynalite.DOMAIN] == {}
 
 
 async def test_async_setup(hass):
@@ -26,12 +26,8 @@ async def test_async_setup(hass):
             dynalite.DOMAIN,
             {dynalite.DOMAIN: {dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]}},
         )
-    assert (
-        hass.data[dynalite.DOMAIN][dynalite.DATA_CONFIGS][host][dynalite.CONF_HOST]
-        == host
-    )
-    # DATA_CONFIGS + new entry
-    assert len(hass.data[dynalite.DOMAIN]) == 2
+
+    assert len(hass.data[dynalite.DOMAIN]) == 1
 
 
 async def test_async_setup_failed(hass):
@@ -43,12 +39,8 @@ async def test_async_setup_failed(hass):
             dynalite.DOMAIN,
             {dynalite.DOMAIN: {dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]}},
         )
-    assert (
-        hass.data[dynalite.DOMAIN][dynalite.DATA_CONFIGS][host][dynalite.CONF_HOST]
-        == host
-    )
-    # DATA_CONFIGS only
-    assert len(hass.data[dynalite.DOMAIN]) == 1
+    dynalite.LOGGER.error("XXX - %s", hass.data[dynalite.DOMAIN])
+    assert hass.data[dynalite.DOMAIN] == {}
 
 
 async def test_unload_entry(hass):
