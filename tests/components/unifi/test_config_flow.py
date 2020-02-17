@@ -256,14 +256,9 @@ async def test_option_flow(hass):
             config_flow.CONF_TRACK_CLIENTS: False,
             config_flow.CONF_TRACK_WIRED_CLIENTS: False,
             config_flow.CONF_TRACK_DEVICES: False,
+            config_flow.CONF_SSID_FILTER: ["SSID 1"],
             config_flow.CONF_DETECTION_TIME: 100,
         }
-    )
-    assert result["type"] == "form"
-    assert result["step_id"] == "device_tracker_ssid_filter"
-
-    result = await flow.async_step_device_tracker_ssid_filter(
-        user_input={config_flow.CONF_SSID_FILTER: ["SSID 1"]}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "statistics_sensors"

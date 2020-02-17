@@ -28,6 +28,7 @@
             "device_tracker": {
                 "data": {
                     "detection_time": "Time in seconds from last seen until considered away",
+                    "ssid_filter": "Select SSIDs for tracking clients",
                     "track_clients": "Track network clients",
                     "track_devices": "Track network devices (Ubiquiti devices)",
                     "track_wired_clients": "Include wired network clients"
