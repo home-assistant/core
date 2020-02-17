@@ -7,7 +7,13 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
-from .const import CONF_CONNECTIONS, DOMAIN, SUPPORTED_DOMAINS
+from .const import (
+    CONF_CONNECTIONS,
+    DEFAULT_HOST,
+    DEFAULT_USERNAME,
+    DOMAIN,
+    SUPPORTED_DOMAINS,
+)
 
 
 def ensure_unique_hosts(value):
@@ -25,8 +31,10 @@ CONFIG_SCHEMA = vol.Schema(
             [
                 vol.Schema(
                     {
-                        vol.Required(CONF_HOST): cv.string,
-                        vol.Required(CONF_PASSWORD): cv.string,
+                        vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+                        vol.Required(
+                            CONF_PASSWORD, default=DEFAULT_USERNAME
+                        ): cv.string,
                         vol.Required(CONF_USERNAME): cv.string,
                     }
                 )
