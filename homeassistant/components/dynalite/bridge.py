@@ -31,7 +31,7 @@ class DynaliteBridge:
             updateDeviceFunc=self.update_device,
         )
 
-    async def async_setup(self, tries=0):
+    async def async_setup(self):
         """Set up a Dynalite bridge."""
         # Configure the dynalite devices
         return await self.dynalite_devices.async_setup()
