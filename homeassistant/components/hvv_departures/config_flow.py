@@ -9,6 +9,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_OFFSET, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
+import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN  # pylint:disable=unused-import
 from .hub import GTIHub
@@ -151,15 +152,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Initialize HVV Departures options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
-        self.filters = {}
+        self.departure_filters = {}
         self.hub = None
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
         errors = {}
-        if not self.filters:
+        if not self.departure_filters:
 
-            departure_list = []
+            departure_list = {}
 
             session = aiohttp_client.async_get_clientsession(self.hass)
             self.hub = GTIHub(
@@ -185,15 +186,23 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
 
+            if not errors:
+                self.departure_filters = {
+                    str(i): departure_filter
+                    for i, departure_filter in enumerate(departure_list.get("filter"))
+                }
+
         if user_input is not None and not errors:
 
-            self.filters = {
-                f"{departure_filter['serviceName']}, {departure_filter['label']}": departure_filter
-                for departure_filter in departure_list.get("filter")
-            }
-
             options = {
-                "filter": [self.filters[user_input["filter"]]],
+                "filter": [
+                    departure_filter[1]
+                    for departure_filter in filter(
+                        lambda departure_filter: departure_filter[0]
+                        in user_input["filter"],
+                        self.departure_filters.items(),
+                    )
+                ],
                 CONF_OFFSET: user_input[CONF_OFFSET],
                 "realtime": user_input["realtime"],
             }
@@ -201,16 +210,26 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=options)
 
         if "filter" in self.config_entry.options:
-            old_filter = f"{self.config_entry.options['filter'][0]['serviceName']}, {self.config_entry.options['filter'][0]['label']}"
+            old_filter = [
+                departure_filter[0]
+                for departure_filter in filter(
+                    lambda departure_filter: departure_filter[1]
+                    in self.config_entry.options.get("filter"),
+                    self.departure_filters.items(),
+                )
+            ]
         else:
-            old_filter = None
+            old_filter = []
 
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required("filter", default=old_filter): vol.In(
-                        self.filters.keys()
+                    vol.Optional("filter", default=old_filter): cv.multi_select(
+                        {
+                            key: f"{departure_filter['serviceName']}, {departure_filter['label']}"
+                            for key, departure_filter in self.departure_filters.items()
+                        }
                     ),
                     vol.Required(
                         CONF_OFFSET,

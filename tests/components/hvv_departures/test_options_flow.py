@@ -41,13 +41,9 @@ async def test_options_flow(hass):
     ):
 
         # step: init
-
+        await flow.async_step_init(user_input=None)
         result_init = await flow.async_step_init(
-            user_input={
-                "filter": "U1, Fuhlsbüttel Nord / Ochsenzoll / Norderstedt Mitte / Kellinghusenstraße / Ohlsdorf / Garstedt",
-                CONF_OFFSET: 15,
-                "realtime": False,
-            }
+            user_input={"filter": ["0"], CONF_OFFSET: 15, "realtime": False}
         )
 
         assert result_init["type"] == "create_entry"
@@ -92,7 +88,6 @@ async def test_options_flow_options_not_set(hass):
     ):
 
         # step: init
-
         result_init = await flow.async_step_init(user_input=None)
 
         assert result_init["type"] == "form"
@@ -129,11 +124,7 @@ async def test_options_flow_invalid_auth(hass):
         # step: init
 
         result_init = await flow.async_step_init(
-            user_input={
-                "filter": "U1, Fuhlsbüttel Nord / Ochsenzoll / Norderstedt Mitte / Kellinghusenstraße / Ohlsdorf / Garstedt",
-                CONF_OFFSET: 15,
-                "realtime": False,
-            }
+            user_input={"filter": ["0"], CONF_OFFSET: 15, "realtime": False}
         )
 
         assert result_init["type"] == "form"
@@ -164,13 +155,9 @@ async def test_options_flow_cannot_connect(hass):
     ):
 
         # step: init
-
+        await flow.async_step_init()
         result_init = await flow.async_step_init(
-            user_input={
-                "filter": "U1, Fuhlsbüttel Nord / Ochsenzoll / Norderstedt Mitte / Kellinghusenstraße / Ohlsdorf / Garstedt",
-                CONF_OFFSET: 15,
-                "realtime": False,
-            }
+            user_input={"filter": ["0"], CONF_OFFSET: 15, "realtime": False}
         )
 
         assert result_init["type"] == "form"
