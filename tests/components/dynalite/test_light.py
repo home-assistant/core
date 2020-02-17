@@ -30,7 +30,9 @@ async def create_light_from_device(hass, device):
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
-    ), patch("homeassistant.components.dynalite.bridge.DynaliteDevices.available", True):
+    ), patch(
+        "homeassistant.components.dynalite.bridge.DynaliteDevices.available", True
+    ):
         assert await async_setup_component(
             hass,
             dynalite.DOMAIN,
