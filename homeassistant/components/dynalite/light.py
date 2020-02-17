@@ -46,11 +46,6 @@ class DynaliteLight(Light):
         """Return if entity is available."""
         return self._device.available
 
-    @property
-    def hidden(self):
-        """Return true if this entity should be hidden from UI."""
-        return self._device.hidden
-
     async def async_update(self):
         """Update the entity."""
         return

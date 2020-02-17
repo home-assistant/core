@@ -1,5 +1,5 @@
 """Config flow to configure Dynalite hub."""
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.const import CONF_HOST
 
 from .bridge import DynaliteBridge
@@ -22,19 +22,22 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a new bridge as a config entry."""
         LOGGER.debug("Starting async_step_import - %s", import_info)
         host = import_info[CONF_HOST]
-        await self.async_set_unique_id(host)
-        self._abort_if_unique_id_configured()
-
-        bridge = DynaliteBridge(self.hass, import_info)
-        if not await bridge.async_setup():
-            LOGGER.error("Unable to setup bridge - import info=%s", import_info)
-            return self.async_abort(reason="bridge_setup_failed")
-        if not await bridge.try_connection():
-            return self.async_abort(reason="no_connection")
-        return await self._entry_from_bridge(import_info)
-
-    async def _entry_from_bridge(self, import_info):
-        """Return a config entry from an initialized bridge."""
-        LOGGER.debug("Creating entry for the bridge - %s", import_info)
-
-        return self.async_create_entry(title=import_info[CONF_HOST], data=import_info)
+        entry = await self.async_set_unique_id(host)
+        if entry:
+            LOGGER.debug("Entry already configured - %s", entry.data)
+            if entry.data != import_info:
+                LOGGER.debug("Entry configured with different info - updating")
+                self.hass.config_entries.async_update_entry(entry, data=import_info)
+            else:
+                LOGGER.debug("Entry has the same info - doing nothing")
+            raise data_entry_flow.AbortFlow("already_configured")
+            # self._abort_if_unique_id_configured(import_info) XXX - remove
+        else:  # New entry
+            bridge = DynaliteBridge(self.hass, import_info)
+            if not await bridge.async_setup():
+                LOGGER.error("Unable to setup bridge - import info=%s", import_info)
+                return self.async_abort(reason="bridge_setup_failed")
+            if not await bridge.try_connection():
+                return self.async_abort(reason="no_connection")
+            LOGGER.debug("Creating entry for the bridge - %s", import_info)
+            return self.async_create_entry(title=host, data=import_info)
