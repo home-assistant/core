@@ -3,8 +3,18 @@ from datetime import timedelta
 
 from pyatag import AtagDataStore, AtagException
 
+from homeassistant.components.climate import DOMAIN as CLIMATE
+from homeassistant.components.sensor import DOMAIN as SENSOR
+from homeassistant.components.water_heater import DOMAIN as WATER_HEATER
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ICON,
+    ATTR_ID,
+    ATTR_MODE,
+    ATTR_NAME,
+    ATTR_STATE,
+    ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_CLASS_PRESSURE,
     DEVICE_CLASS_TEMPERATURE,
     EVENT_HOMEASSISTANT_STOP,
@@ -20,75 +30,88 @@ from homeassistant.helpers.event import async_track_time_interval
 
 DOMAIN = "atag"
 DATA_LISTENER = "listener"
-SIGNAL_UPDATE_ATAG = "atag_update"
-PLATFORMS = ["sensor", "climate", "water_heater"]
+SIGNAL_UPDATE_ATAG = f"{DOMAIN}_update"
+PLATFORMS = [CLIMATE, WATER_HEATER, SENSOR]
 SCAN_INTERVAL = timedelta(seconds=30)
-UNIT_TO_CLASS = {
-    PRESSURE_BAR: DEVICE_CLASS_PRESSURE,
-    TEMP_CELSIUS: DEVICE_CLASS_TEMPERATURE,
-}
+HOUR = "h"
+FIRE = "fire"
+PERCENTAGE = "%"
 
 ICONS = {
     TEMP_CELSIUS: "mdi:thermometer",
     PRESSURE_BAR: "mdi:gauge",
-    "fire": "mdi:fire",
-    "mode": "mdi:settings",
+    FIRE: "mdi:fire",
+    ATTR_MODE: "mdi:settings",
 }
 
 ENTITY_TYPES = {
-    "sensor": {
+    SENSOR: {
         1: {
-            "name": "Outside Temperature",
-            "data_field": "outside_temp",
-            "unit": TEMP_CELSIUS,
-            "class": DEVICE_CLASS_TEMPERATURE,
-            "icon": ICONS[TEMP_CELSIUS],
+            ATTR_NAME: "Outside Temperature",
+            ATTR_ID: "outside_temp",
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+            ATTR_ICON: ICONS[TEMP_CELSIUS],
         },
         2: {
-            "name": "Average Outside Temperature",
-            "data_field": "tout_avg",
-            "unit": TEMP_CELSIUS,
-            "class": DEVICE_CLASS_TEMPERATURE,
-            "icon": ICONS[TEMP_CELSIUS],
+            ATTR_NAME: "Average Outside Temperature",
+            ATTR_ID: "tout_avg",
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+            ATTR_ICON: ICONS[TEMP_CELSIUS],
         },
-        3: {"name": "Weather Status", "data_field": "weather_status"},
-        4: {"name": "Operation Mode", "icon": ICONS["mode"], "data_field": "ch_mode"},
+        3: {
+            ATTR_NAME: "Weather Status",
+            ATTR_ID: "weather_status",
+            ATTR_UNIT_OF_MEASUREMENT: None,
+            ATTR_DEVICE_CLASS: None,
+            ATTR_ICON: None,
+        },
+        4: {
+            ATTR_NAME: "Operation Mode",
+            ATTR_ID: "ch_mode",
+            ATTR_UNIT_OF_MEASUREMENT: None,
+            ATTR_DEVICE_CLASS: None,
+            ATTR_ICON: ICONS[ATTR_MODE],
+        },
         5: {
-            "name": "CH Water Pressure",
-            "data_field": "ch_water_pres",
-            "unit": PRESSURE_BAR,
-            "class": DEVICE_CLASS_PRESSURE,
-            "icon": ICONS[PRESSURE_BAR],
+            ATTR_NAME: "CH Water Pressure",
+            ATTR_ID: "ch_water_pres",
+            ATTR_UNIT_OF_MEASUREMENT: PRESSURE_BAR,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_PRESSURE,
+            ATTR_ICON: ICONS[PRESSURE_BAR],
         },
         6: {
-            "name": "CH Water Temperature",
-            "data_field": "ch_water_temp",
-            "unit": TEMP_CELSIUS,
-            "class": DEVICE_CLASS_TEMPERATURE,
-            "icon": ICONS[TEMP_CELSIUS],
+            ATTR_NAME: "CH Water Temperature",
+            ATTR_ID: "ch_water_temp",
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+            ATTR_ICON: ICONS[TEMP_CELSIUS],
         },
         7: {
-            "name": "CH Return Temperature",
-            "data_field": "ch_return_temp",
-            "unit": TEMP_CELSIUS,
-            "class": DEVICE_CLASS_TEMPERATURE,
-            "icon": ICONS[TEMP_CELSIUS],
+            ATTR_NAME: "CH Return Temperature",
+            ATTR_ID: "ch_return_temp",
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_DEVICE_CLASS: DEVICE_CLASS_TEMPERATURE,
+            ATTR_ICON: ICONS[TEMP_CELSIUS],
         },
         8: {
-            "name": "Burning Hours",
-            "data_field": "burning_hours",
-            "unit": "h",
-            "icon": ICONS["fire"],
+            ATTR_NAME: "Burning Hours",
+            ATTR_ID: "burning_hours",
+            ATTR_UNIT_OF_MEASUREMENT: HOUR,
+            ATTR_DEVICE_CLASS: None,
+            ATTR_ICON: ICONS[FIRE],
         },
         9: {
-            "name": "Flame",
-            "data_field": "rel_mod_level",
-            "unit": "%",
-            "icon": ICONS["fire"],
+            ATTR_NAME: "Flame",
+            ATTR_ID: "rel_mod_level",
+            ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            ATTR_DEVICE_CLASS: None,
+            ATTR_ICON: ICONS[FIRE],
         },
     },
-    "climate": {"name": "Climate"},
-    "water_heater": {"name": "Domestic Hot Water"},
+    CLIMATE: {ATTR_NAME: CLIMATE.title()},
+    WATER_HEATER: {ATTR_NAME: "Domestic Hot Water"},
 }
 
 
@@ -157,11 +180,12 @@ class AtagEntity(Entity):
         """Initialize the Atag entity."""
         self.atag = atag
 
-        self._data_field = atag_type.get("data_field")
-        self._name = f"{atag_type['name']}"
-        self._icon = atag_type.get("icon")
-        self._unit = atag_type.get("unit")
-        self._sensor_value = atag.sensordata.get(self._data_field, {}).get("state")
+        self._id = atag_type.get(ATTR_ID)
+        self._name = f"{atag_type[ATTR_NAME]}"
+        self._icon = atag_type.get(ATTR_ICON)
+        self._unit = atag_type.get(ATTR_UNIT_OF_MEASUREMENT)
+        self._class = atag_type.get(ATTR_DEVICE_CLASS)
+        self._sensor_value = atag.sensordata.get(self._id, {}).get(ATTR_STATE)
         self._unsub_dispatcher = None
 
     @property
@@ -172,7 +196,7 @@ class AtagEntity(Entity):
         version = self.atag.apiversion
         return {
             "identifiers": {(DOMAIN, device, host)},
-            "name": "Atag Thermostat",
+            ATTR_NAME: "Atag Thermostat",
             "model": "Atag One",
             "sw_version": version,
             "manufacturer": "Atag",
@@ -203,8 +227,8 @@ class AtagEntity(Entity):
     @property
     def device_class(self):
         """Return the device class."""
-        if hasattr(self, "_unit"):
-            return UNIT_TO_CLASS.get(self._unit)
+        if hasattr(self, "_class"):
+            return self._class
 
     async def async_added_to_hass(self) -> None:
         """Connect to dispatcher listening for entity data notifications."""

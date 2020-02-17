@@ -15,9 +15,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import DOMAIN, ENTITY_TYPES, AtagEntity
-
-PLATFORM = "climate"
+from . import CLIMATE, DOMAIN, ENTITY_TYPES, AtagEntity
 
 
 async def async_setup_platform(hass, _config, async_add_devices, _discovery_info=None):
@@ -28,7 +26,7 @@ async def async_setup_platform(hass, _config, async_add_devices, _discovery_info
 async def async_setup_entry(hass, entry, async_add_devices):
     """Load a config entry."""
     atag = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([AtagThermostat(atag, ENTITY_TYPES[PLATFORM])])
+    async_add_devices([AtagThermostat(atag, ENTITY_TYPES[CLIMATE])])
 
 
 class AtagThermostat(AtagEntity, ClimateDevice, RestoreEntity):

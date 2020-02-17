@@ -7,9 +7,8 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import STATE_OFF, TEMP_CELSIUS
 
-from . import DOMAIN, ENTITY_TYPES, AtagEntity
+from . import DOMAIN, ENTITY_TYPES, WATER_HEATER, AtagEntity
 
-PLATFORM = "water_heater"
 SUPPORT_FLAGS_HEATER = 0
 OPERATION_LIST = [STATE_OFF, STATE_ECO, STATE_PERFORMANCE]
 
@@ -22,7 +21,7 @@ async def async_setup_platform(hass, config, async_add_devices, _discovery_info=
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Initialize DHW device from config entry."""
     atag = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities([AtagWaterHeater(atag, ENTITY_TYPES[PLATFORM])])
+    async_add_entities([AtagWaterHeater(atag, ENTITY_TYPES[WATER_HEATER])])
 
 
 class AtagWaterHeater(AtagEntity, WaterHeaterDevice):
