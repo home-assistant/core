@@ -223,14 +223,22 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         """Fetch state from the ventilation unit."""
         try:
             days_remaining = int(self._state_proxy.fetch_metric(self._metric_key))
-            days_remaining_delta = timedelta(days=days_remaining)
+            if days_remaining == 0:
+                self._device_class = None
+                self._state = "overdue"
+                self._available = True
+            else:
+                self._device_class = DEVICE_CLASS_TIMESTAMP
+                days_remaining_delta = timedelta(days=days_remaining)
 
-            # Since only a delta of days is received from the device, fix the
-            # time so the timestamp does not change with every update.
-            now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
+                # Since only a delta of days is received from the device, fix the
+                # time so the timestamp does not change with every update.
+                now = datetime.utcnow().replace(
+                    hour=13, minute=0, second=0, microsecond=0
+                )
 
-            self._state = (now + days_remaining_delta).isoformat()
-            self._available = True
+                self._state = (now + days_remaining_delta).isoformat()
+                self._available = True
 
         except (OSError, KeyError) as err:
             self._available = False
