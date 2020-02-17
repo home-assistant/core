@@ -34,25 +34,21 @@ def num_string(value):
 
 
 CHANNEL_DATA_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Optional(CONF_NAME): str,
-            vol.Optional(CONF_FADE): vol.Coerce(float),
-            vol.Optional(CONF_HIDDENENTITY, default=False): vol.Coerce(bool),
-        }
-    )
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_FADE): vol.Coerce(float),
+        vol.Optional(CONF_HIDDENENTITY, default=False): vol.Coerce(bool),
+    }
 )
 
-CHANNEL_SCHEMA = vol.Schema({num_string: vol.Any(CHANNEL_DATA_SCHEMA, None)})
+CHANNEL_SCHEMA = vol.Schema({num_string: CHANNEL_DATA_SCHEMA})
 
 AREA_DATA_SCHEMA = vol.Schema(
-    vol.All(
-        {
-            vol.Required(CONF_NAME): str,
-            vol.Optional(CONF_FADE): vol.Coerce(float),
-            vol.Optional(CONF_CHANNEL): CHANNEL_SCHEMA,
-        },
-    )
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_FADE): vol.Coerce(float),
+        vol.Optional(CONF_CHANNEL): CHANNEL_SCHEMA,
+    },
 )
 
 AREA_SCHEMA = vol.Schema({num_string: vol.Any(AREA_DATA_SCHEMA, None)})
@@ -62,8 +58,8 @@ PLATFORM_DEFAULTS_SCHEMA = vol.Schema({vol.Optional(CONF_FADE): vol.Coerce(float
 
 BRIDGE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_AUTODISCOVER, default=False): vol.Coerce(bool),
         vol.Optional(CONF_POLLTIMER, default=1.0): vol.Coerce(float),
