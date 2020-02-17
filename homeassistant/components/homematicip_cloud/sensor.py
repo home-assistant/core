@@ -80,7 +80,7 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipTemperatureSensor(hap, device))
             entities.append(HomematicipHumiditySensor(hap, device))
-        elif isinstance(device, (AsyncRoomControlDeviceAnalog,),):
+        elif isinstance(device, (AsyncRoomControlDeviceAnalog,)):
             entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
             device,
