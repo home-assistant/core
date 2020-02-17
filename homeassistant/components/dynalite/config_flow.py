@@ -29,16 +29,14 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 LOGGER.debug("Entry configured with different info - updating")
                 self.hass.config_entries.entry_unload(entry)
                 return self.async_create_entry(title=host, data=import_info)
-            else:
-                LOGGER.debug("Entry has the same info - doing nothing")
-                raise data_entry_flow.AbortFlow("already_configured")
-            # self._abort_if_unique_id_configured(import_info) XXX - remove
-        else:  # New entry
-            bridge = DynaliteBridge(self.hass, import_info)
-            if not await bridge.async_setup():
-                LOGGER.error("Unable to setup bridge - import info=%s", import_info)
-                return self.async_abort(reason="bridge_setup_failed")
-            if not await bridge.try_connection():
-                return self.async_abort(reason="no_connection")
-            LOGGER.debug("Creating entry for the bridge - %s", import_info)
-            return self.async_create_entry(title=host, data=import_info)
+            LOGGER.debug("Entry has the same info - doing nothing")
+            raise data_entry_flow.AbortFlow("already_configured")
+        # New entry
+        bridge = DynaliteBridge(self.hass, import_info)
+        if not await bridge.async_setup():
+            LOGGER.error("Unable to setup bridge - import info=%s", import_info)
+            return self.async_abort(reason="bridge_setup_failed")
+        if not await bridge.try_connection():
+            return self.async_abort(reason="no_connection")
+        LOGGER.debug("Creating entry for the bridge - %s", import_info)
+        return self.async_create_entry(title=host, data=import_info)
