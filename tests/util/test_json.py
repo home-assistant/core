@@ -9,13 +9,16 @@ from unittest.mock import Mock
 import pytest
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.json import SerializationError, load_json, save_json
+from homeassistant.util.json import (
+    SerializationError,
+    find_paths_unserializable_data,
+    load_json,
+    save_json,
+)
 
 # Test data that can be saved as JSON
 TEST_JSON_A = {"a": 1, "B": "two"}
 TEST_JSON_B = {"a": "one", "B": 2}
-# Test data that can not be saved as JSON (keys must be strings)
-TEST_BAD_OBJECT = {("A",): 1}
 # Test data that can not be loaded as JSON
 TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
 TMP_DIR = None
@@ -71,9 +74,12 @@ def test_overwrite_and_reload():
 
 def test_save_bad_data():
     """Test error from trying to save unserialisable data."""
-    fname = _path_for("test4")
-    with pytest.raises(SerializationError):
-        save_json(fname, TEST_BAD_OBJECT)
+    with pytest.raises(SerializationError) as excinfo:
+        save_json("test4", {"hello": set()})
+
+    assert "Failed to serialize to JSON: test4. Bad data found at $.hello" in str(
+        excinfo.value
+    )
 
 
 def test_load_bad_data():
@@ -99,3 +105,20 @@ def test_custom_encoder():
     save_json(fname, Mock(), encoder=MockJSONEncoder)
     data = load_json(fname)
     assert data == "9"
+
+
+def test_find_unserializable_data():
+    """Find unserializeable data."""
+    assert find_paths_unserializable_data(1) == []
+    assert find_paths_unserializable_data([1, 2]) == []
+    assert find_paths_unserializable_data({"something": "yo"}) == []
+
+    assert find_paths_unserializable_data({"something": set()}) == ["$.something"]
+    assert find_paths_unserializable_data({"something": [1, set()]}) == [
+        "$.something[1]"
+    ]
+    assert find_paths_unserializable_data([1, {"bla": set(), "blub": set()}]) == [
+        "$[1].bla",
+        "$[1].blub",
+    ]
+    assert find_paths_unserializable_data({("A",): 1}) == ["$<key: ('A',)>"]
