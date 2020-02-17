@@ -4,7 +4,7 @@ from datetime import timedelta
 from functools import partial
 import logging
 
-from august.api import Api
+from august.api import Api, AugustApiHTTPError
 from august.authenticator import AuthenticationState, Authenticator, ValidationResult
 from requests import RequestException, Session
 import voluptuous as vol
@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle, dt
@@ -364,6 +365,12 @@ class AugustData:
         await self._async_update_locks()
         return self._lock_detail_by_id.get(lock_id)
 
+    def get_lock_name(self, device_id):
+        """Return lock name as August has it stored."""
+        for lock in self._locks:
+            if lock.device_id == device_id:
+                return lock.device_name
+
     async def async_get_door_state(self, lock_id):
         """Return status if the door is open or closed.
 
@@ -472,8 +479,33 @@ class AugustData:
 
     def lock(self, device_id):
         """Lock the device."""
-        return self._api.lock(self._access_token, device_id)
+        return _call_api_operation_that_requires_bridge(
+            self.get_lock_name(device_id),
+            "lock",
+            self._api.lock,
+            self._access_token,
+            device_id,
+        )
 
     def unlock(self, device_id):
         """Unlock the device."""
-        return self._api.unlock(self._access_token, device_id)
+        return _call_api_operation_that_requires_bridge(
+            self.get_lock_name(device_id),
+            "unlock",
+            self._api.unlock,
+            self._access_token,
+            device_id,
+        )
+
+
+def _call_api_operation_that_requires_bridge(
+    device_name, operation_name, func, *args, **kwargs
+):
+    """Call an API that requires the bridge to be online."""
+    ret = None
+    try:
+        ret = func(*args, **kwargs)
+    except AugustApiHTTPError as err:
+        raise HomeAssistantError(device_name + ": " + str(err))
+
+    return ret
