@@ -56,6 +56,14 @@ async def async_setup(hass, config):
                 )
             )
 
+    def logout_fritzboxes(event):
+        """Close all connections to the fritzboxes."""
+        if DOMAIN in hass.data and CONF_CONNECTIONS in hass.data[DOMAIN]:
+            for fritz in hass.data[DOMAIN][CONF_CONNECTIONS]:
+                fritz.logout()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, logout_fritzboxes)
+
     return True
 
 
