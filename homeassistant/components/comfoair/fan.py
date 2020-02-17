@@ -12,6 +12,7 @@ from homeassistant.components.fan import (
     SUPPORT_SET_SPEED,
     FanEntity,
 )
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import DOMAIN, ComfoAirModule
 
@@ -21,7 +22,9 @@ SPEED_MAPPING = {1: SPEED_OFF, 2: SPEED_LOW, 3: SPEED_MEDIUM, 4: SPEED_HIGH}
 SPEED_VALUES = list(SPEED_MAPPING.values())
 
 
-async def async_setup_platform(hass, conf, async_add_entities, discovery_info):
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+) -> None:
     """Set up the ComfoAir fan platform."""
     unit = hass.data[DOMAIN]
 

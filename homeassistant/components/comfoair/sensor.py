@@ -6,6 +6,7 @@ from comfoair.asyncio import ComfoAir
 
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 from . import DOMAIN, ComfoAirModule
 
@@ -62,7 +63,9 @@ SENSOR_TYPES = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
+) -> None:
     """Set up the ComfoAir sensor platform."""
     unit = hass.data[DOMAIN]
 
