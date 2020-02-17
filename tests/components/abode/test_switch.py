@@ -66,7 +66,6 @@ async def test_turn_automation_off(hass, requests_mock):
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: AUTOMATION_ID}, blocking=True
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(AUTOMATION_ID)
     assert state.state == STATE_OFF
@@ -83,7 +82,6 @@ async def test_turn_automation_on(hass, requests_mock):
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: AUTOMATION_ID}, blocking=True
     )
-    await hass.async_block_till_done()
 
     state = hass.states.get(AUTOMATION_ID)
     assert state.state == STATE_ON
@@ -100,5 +98,4 @@ async def test_trigger_automation(hass, requests_mock):
             {ATTR_ENTITY_ID: AUTOMATION_ID},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock.assert_called_once()

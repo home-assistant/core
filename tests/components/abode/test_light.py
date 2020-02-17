@@ -51,10 +51,6 @@ async def test_attributes(hass, requests_mock):
 async def test_switch_off(hass, requests_mock):
     """Test the light can be turned off."""
     await setup_platform(hass, LIGHT_DOMAIN)
-    requests_mock.put(
-        "https://my.goabode.com/api/v1/control/light/ZB:db5b1a",
-        json={"id": "ZB:db5b1a", "status": "0"},
-    )
 
     with patch("abodepy.AbodeLight.switch_off") as mock_switch_off:
         assert await hass.services.async_call(
