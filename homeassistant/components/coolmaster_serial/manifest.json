@@ -3,7 +3,7 @@
   "name": "coolmaster_serial",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/coolmaster_serial",
-  "requirements": ["pycoolmaster==0.1.5"],
+  "requirements": ["pycoolmaster==0.2.1"],
   "dependencies": [],
   "codeowners": ["@issacg"]
 }
