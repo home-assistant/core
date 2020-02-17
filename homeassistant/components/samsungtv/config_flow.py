@@ -34,7 +34,7 @@ from .const import (
 )
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
-SUPPORTED_METHODS = ["websocket", "legacy"]
+SUPPORTED_METHODS = ["legacy", "websocket"]
 
 
 def _get_ip(host):
