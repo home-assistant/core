@@ -263,7 +263,7 @@ homeassistant-pyozw==0.1.8
 homekit[IP]==0.15.0
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.10.15
+homematicip==0.10.17
 
 # homeassistant.components.google
 # homeassistant.components.remember_the_milk
