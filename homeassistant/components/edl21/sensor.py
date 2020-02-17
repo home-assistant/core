@@ -70,7 +70,7 @@ class EDL21:
 
     def __init__(self, hass, config, async_add_entities) -> None:
         """Initialize an EDL21 object."""
-        self._cache = {}
+        self._registered_obis = set()
         self._hass = hass
         self._async_add_entities = async_add_entities
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
@@ -90,12 +90,13 @@ class EDL21:
             if not obis:
                 continue
 
-            entity = self._cache.get(obis)
-            if not entity:
+            if obis in self._registered_obis:
+                async_dispatcher_send(self._hass, SIGNAL_EDL21_TELEGRAM, telegram)
+            else:
                 name = self._OBIS_NAMES.get(obis)
                 if name:
-                    entity = self._cache[obis] = EDL21Entity(obis, name, telegram)
-                    new_entities.append(entity)
+                    new_entities.append(EDL21Entity(obis, name, telegram))
+                    self._registered_obis.add(obis)
                 elif obis not in self._OBIS_BLACKLIST:
                     _LOGGER.warning(
                         "Unhandled sensor %s detected. Please report at "
@@ -103,8 +104,6 @@ class EDL21:
                         obis,
                     )
                     self._OBIS_BLACKLIST.add(obis)
-            else:
-                async_dispatcher_send(self._hass, SIGNAL_EDL21_TELEGRAM, telegram)
 
         if new_entities:
             self._async_add_entities(new_entities, update_before_add=True)
