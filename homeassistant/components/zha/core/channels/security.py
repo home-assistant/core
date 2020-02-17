@@ -146,9 +146,8 @@ class IASZoneChannel(ZigbeeChannel):
 
     async def async_configure(self):
         """Configure IAS device."""
-        # Xiaomi devices don't need this and it disrupts pairing
-        if self._zha_device.manufacturer == "LUMI":
-            self.debug("finished IASZoneChannel configuration")
+        if self._zha_device.skip_configuration:
+            self.debug("skipping IASZoneChannel configuration")
             return
 
         self.debug("started IASZoneChannel configuration")
