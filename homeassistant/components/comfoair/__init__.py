@@ -9,11 +9,9 @@ from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 
 DOMAIN = "comfoair"
-SIGNAL_COMFOAIR_UPDATE_RECEIVED = "comfoair_update_received"
 CONF_SERIAL_PORT = "serial_port"
 DEFAULT_NAME = "ComfoAir"
 
@@ -77,18 +75,7 @@ class ComfoAirModule:
         """Initialize the ComfoAir component."""
         self._hass = hass
         self._name = config[DOMAIN][CONF_NAME]
-        self._cache = {}
-
         self._ca = ComfoAir(config[DOMAIN][CONF_SERIAL_PORT])
-        self._ca.add_listener(self._event)
-
-    async def _event(self, event):
-        cmd, data = event
-        if self._cache.get(cmd) == data:
-            return
-        self._cache[cmd] = data
-
-        async_dispatcher_send(self._hass, SIGNAL_COMFOAIR_UPDATE_RECEIVED, [cmd, data])
 
     async def connect(self):
         """Connect to a serial port or socket."""
@@ -96,16 +83,11 @@ class ComfoAirModule:
 
     async def stop(self, event: Event):
         """Close resources."""
-        self._ca.remove_listener(self._event)
         await self._ca.shutdown()
 
     async def set_speed(self, speed: int):
         """Set the speed of the fans."""
         await self._ca.set_speed(speed)
-
-    def __getitem__(self, key: int) -> bytes:
-        """Access cached data."""
-        return self._cache.get(key)
 
     @property
     def name(self):
@@ -120,3 +102,7 @@ class ComfoAirModule:
             millis = 100
 
         await self._ca.emulate_keypress(ev_mask, millis)
+
+    def add_cooked_listener(self, attr, callback):
+        """Register a callback for a sensor value."""
+        return self._ca.add_cooked_listener(attr, callback)
