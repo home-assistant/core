@@ -1,16 +1,7 @@
 """Initialization of ATAG One sensor platform."""
-from . import DOMAIN, AtagEntity
+from . import DOMAIN, ENTITY_TYPES, AtagEntity
 
-DEFAULT_SENSORS = [
-    "outside_temp",
-    "outside_temp_avg",
-    "weather_status",
-    "operation_mode",
-    "ch_water_pressure",
-    "dhw_water_temp",
-    "burning_hours",
-    "flame_level",
-]
+PLATFORM = "sensor"
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -22,8 +13,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Initialize sensor platform from config entry."""
     atag = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
-    for sensor in DEFAULT_SENSORS:
-        entities.append(AtagSensor(atag, sensor))
+    for sensor in ENTITY_TYPES[PLATFORM]:
+        entities.append(AtagSensor(atag, ENTITY_TYPES[PLATFORM][sensor]))
     async_add_entities(entities)
 
 
@@ -33,11 +24,11 @@ class AtagSensor(AtagEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._state
+        return self._sensor_value
 
     async def async_update(self):
         """Get latest data from datastore."""
-        data = self.atag.sensordata.get(self._datafield)
+        data = self.atag.sensordata.get(self._data_field)
         if data:
-            self._state = data.get("state")
+            self._sensor_value = data.get("state")
             self._icon = data.get("icon") or self._icon

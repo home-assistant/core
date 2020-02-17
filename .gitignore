@@ -1,9 +1,9 @@
 config/*
 config2/*
-
+__pycache__
 tests/testing_config/deps
 tests/testing_config/home-assistant.log
-
+homeassistant-0.105.0.dev0
 # hass-release
 data/
 .token

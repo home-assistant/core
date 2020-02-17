@@ -1,7 +1,7 @@
 """The ATAG Integration."""
 from datetime import timedelta
 
-from pyatag import SENSOR_TYPES, AtagDataStore, AtagException
+from pyatag import AtagDataStore, AtagException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -26,6 +26,69 @@ SCAN_INTERVAL = timedelta(seconds=30)
 UNIT_TO_CLASS = {
     PRESSURE_BAR: DEVICE_CLASS_PRESSURE,
     TEMP_CELSIUS: DEVICE_CLASS_TEMPERATURE,
+}
+
+ICONS = {
+    TEMP_CELSIUS: "mdi:thermometer",
+    PRESSURE_BAR: "mdi:gauge",
+    "fire": "mdi:fire",
+    "mode": "mdi:settings",
+}
+
+ENTITY_TYPES = {
+    "sensor": {
+        1: {
+            "name": "Outside Temperature",
+            "data_field": "outside_temp",
+            "unit": TEMP_CELSIUS,
+            "class": DEVICE_CLASS_TEMPERATURE,
+            "icon": ICONS[TEMP_CELSIUS],
+        },
+        2: {
+            "name": "Average Outside Temperature",
+            "data_field": "tout_avg",
+            "unit": TEMP_CELSIUS,
+            "class": DEVICE_CLASS_TEMPERATURE,
+            "icon": ICONS[TEMP_CELSIUS],
+        },
+        3: {"name": "Weather Status", "data_field": "weather_status"},
+        4: {"name": "Operation Mode", "icon": ICONS["mode"], "data_field": "ch_mode"},
+        5: {
+            "name": "CH Water Pressure",
+            "data_field": "ch_water_pres",
+            "unit": PRESSURE_BAR,
+            "class": DEVICE_CLASS_PRESSURE,
+            "icon": ICONS[PRESSURE_BAR],
+        },
+        6: {
+            "name": "CH Water Temperature",
+            "data_field": "ch_water_temp",
+            "unit": TEMP_CELSIUS,
+            "class": DEVICE_CLASS_TEMPERATURE,
+            "icon": ICONS[TEMP_CELSIUS],
+        },
+        7: {
+            "name": "CH Return Temperature",
+            "data_field": "ch_return_temp",
+            "unit": TEMP_CELSIUS,
+            "class": DEVICE_CLASS_TEMPERATURE,
+            "icon": ICONS[TEMP_CELSIUS],
+        },
+        8: {
+            "name": "Burning Hours",
+            "data_field": "burning_hours",
+            "unit": "h",
+            "icon": ICONS["fire"],
+        },
+        9: {
+            "name": "Flame",
+            "data_field": "rel_mod_level",
+            "unit": "%",
+            "icon": ICONS["fire"],
+        },
+    },
+    "climate": {"name": "Climate"},
+    "water_heater": {"name": "Domestic Hot Water"},
 }
 
 
@@ -90,20 +153,15 @@ async def async_unload_entry(hass, entry):
 class AtagEntity(Entity):
     """Defines a base Atag entity."""
 
-    def __init__(self, atag: AtagDataStore, atagtype: str) -> None:
+    def __init__(self, atag: AtagDataStore, atag_type: dict) -> None:
         """Initialize the Atag entity."""
-        if atagtype not in SENSOR_TYPES:
-            self._type = atagtype
-        else:
-            sensortype = SENSOR_TYPES[atagtype]
-            self._type = sensortype["type"]
-            self._unit = sensortype["unit"]
-            self._datafield = sensortype["datafield"]
-            self._state = atag.sensordata[self._datafield]["state"]
-            self._icon = atag.sensordata[self._datafield].get("icon")
-
-        self._name = f"{DOMAIN.title()} {self._type}"
         self.atag = atag
+
+        self._data_field = atag_type.get("data_field")
+        self._name = f"{atag_type['name']}"
+        self._icon = atag_type.get("icon")
+        self._unit = atag_type.get("unit")
+        self._sensor_value = atag.sensordata.get(self._data_field, {}).get("state")
         self._unsub_dispatcher = None
 
     @property
@@ -166,4 +224,4 @@ class AtagEntity(Entity):
     @property
     def unique_id(self):
         """Return a unique ID to use for this entity."""
-        return f"{DOMAIN.title()}-{self._type}-{self.atag.device}"
+        return f"{self.atag.device}-{self._name}"

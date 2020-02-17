@@ -12,7 +12,7 @@ from . import DOMAIN  # pylint: disable=unused-import
 DATA_SCHEMA = {
     vol.Required(CONF_HOST): str,
     vol.Optional(CONF_EMAIL): str,
-    vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(int, vol.Range(min=0)),
+    vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
 }
 
 
