@@ -79,7 +79,7 @@ class TotalConnectAlarm(alarm.AlarmControlPanel):
             "low_battery": self._client.locations[self._location_id].low_battery,
             "cover_tampered": self._client.locations[
                 self._location_id
-            ].is_cover_tampered,
+            ].is_cover_tampered(),
             "triggered_source": None,
             "triggered_zone": None,
         }

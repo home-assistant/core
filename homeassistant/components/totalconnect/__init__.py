@@ -10,6 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 from total_connect_client import TotalConnectClient
 
+from pprint import pprint
+
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,12 +33,13 @@ PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up TotalConnect component."""
-    conf = config[DOMAIN]
-
-    username = conf[CONF_USERNAME]
-    password = conf[CONF_PASSWORD]
-
+    """Setup from existing/saved configuration."""
+    conf = config.get(DOMAIN)
+    if conf is None:
+        return True
+        
+    username = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASSWORD)
     client = TotalConnectClient.TotalConnectClient(username, password)
 
     if client.token is False:
@@ -46,9 +49,38 @@ async def async_setup(hass: HomeAssistant, config: dict):
     hass.data[DOMAIN] = TotalConnectSystem(username, password, client)
 
     for platform in PLATFORMS:
-        discovery.load_platform(hass, platform, DOMAIN, {}, config)
+        hass.async_create_task(discovery.async_load_platform(hass, platform, DOMAIN, {}, config))
 
     return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Setup upon config entry in user interface."""
+
+    _LOGGER.info("TotalConnect async_setup_entry")
+
+    conf = entry.data
+    username = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASSWORD)
+    client = TotalConnectClient.TotalConnectClient(username, password)
+
+    if client.token is False:
+        _LOGGER.error("TotalConnect authentication failed")
+        return False
+
+    hass.data[DOMAIN] = TotalConnectSystem(username, password, client)
+
+    for platform in PLATFORMS:
+        hass.async_create_task(discovery.async_load_platform(hass, platform, DOMAIN, {}, entry))
+
+    #Pretty sure we don't do this because the component itself doesn't need the configuration data
+#    for component in PLATFORMS:
+#        hass.async_create_task(
+#            hass.config_entries.async_forward_entry_setup(entry, component)
+#        )
+
+    return True
+
 
 
 class TotalConnectSystem:
