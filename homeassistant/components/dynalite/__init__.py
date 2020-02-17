@@ -16,7 +16,6 @@ from .const import (
     CONF_CHANNEL,
     CONF_DEFAULT,
     CONF_FADE,
-    CONF_HIDDEN_ENTITY,
     CONF_NAME,
     CONF_POLLTIMER,
     CONF_PORT,
@@ -37,11 +36,7 @@ def num_string(value):
 
 
 CHANNEL_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_FADE): vol.Coerce(float),
-        vol.Optional(CONF_HIDDEN_ENTITY, default=False): vol.Coerce(bool),
-    }
+    {vol.Optional(CONF_NAME): cv.string, vol.Optional(CONF_FADE): vol.Coerce(float)}
 )
 
 CHANNEL_SCHEMA = vol.Schema({num_string: CHANNEL_DATA_SCHEMA})

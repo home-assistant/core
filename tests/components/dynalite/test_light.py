@@ -10,7 +10,7 @@ from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-def mock_device(hass):
+def mock_device():
     """Mock a Dynalite device."""
     device = Mock()
     device.category = "light"
@@ -51,7 +51,6 @@ async def test_light_setup(hass, mock_device):
     """Test a successful setup."""
     await create_light_from_device(hass, mock_device)
     entity_state = hass.states.get("light.name")
-    assert entity_state.attributes["hidden"] == mock_device.hidden
     assert entity_state.attributes["brightness"] == mock_device.brightness
     assert entity_state.attributes["supported_features"] == SUPPORT_BRIGHTNESS
 

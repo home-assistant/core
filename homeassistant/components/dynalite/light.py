@@ -58,7 +58,11 @@ class DynaliteLight(Light):
     @property
     def device_info(self):
         """Device info for this entity."""
-        return self._device.device_info
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Dynalite",
+        }
 
     @property
     def brightness(self):

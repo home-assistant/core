@@ -3,12 +3,11 @@
 import asyncio
 
 from dynalite_devices_lib import DynaliteDevices
-from dynalite_lib import CONF_ALL, CONF_HOST
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import LOGGER
+from .const import CONF_ALL, CONF_HOST, LOGGER
 
 CONNECT_TIMEOUT = 30
 CONNECT_INTERVAL = 1
