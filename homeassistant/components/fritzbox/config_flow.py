@@ -10,13 +10,12 @@ from homeassistant.components.ssdp import ATTR_SSDP_LOCATION, ATTR_UPNP_FRIENDLY
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 # pylint:disable=unused-import
-from .const import DOMAIN
+from .const import DEFAULT_HOST, DEFAULT_USERNAME, DOMAIN
 
-DEFAULT_HOST = "fritz.box"
 DATA_SCHEMA_USER = vol.Schema(
     {
         vol.Required(CONF_HOST, default=DEFAULT_HOST): str,
-        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
     }
 )
