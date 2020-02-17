@@ -1,0 +1,18 @@
+{
+  "config": {
+    "title": "CoolMaster (Legacy)",
+    "step": {
+      "user": {
+        "title": "Setup your CoolMaster RS232 connection details.",
+        "data": {
+          "serial_port": "Serial port ('/dev/ttyUSB0', 'COM3', etc)",
+          "baudrate": "Baud Rate"
+        }
+      }
+    },
+    "error": {
+      "connection_error": "Failed to connect to CoolMaster instance. Please double check your serial port and baud rate.",
+      "no_units": "Could not find any HVAC units in CoolMaster bridge."
+    }
+  }
+}
