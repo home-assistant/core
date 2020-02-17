@@ -165,6 +165,31 @@ async def test_hmip_temperature_sensor2(hass, default_mock_hap_factory):
     assert ha_state.attributes[ATTR_TEMPERATURE_OFFSET] == 10
 
 
+async def test_hmip_temperature_sensor3(hass, default_mock_hap_factory):
+    """Test HomematicipTemperatureSensor."""
+    entity_id = "sensor.raumbediengerat_analog_temperature"
+    entity_name = "Raumbediengerät Analog Temperature"
+    device_model = "ALPHA-IP-RBGa"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Raumbediengerät Analog"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "23.3"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == TEMP_CELSIUS
+    await async_manipulate_test_data(hass, hmip_device, "actualTemperature", 23.5)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.state == "23.5"
+
+    assert not ha_state.attributes.get(ATTR_TEMPERATURE_OFFSET)
+    await async_manipulate_test_data(hass, hmip_device, "temperatureOffset", 10)
+    ha_state = hass.states.get(entity_id)
+    assert ha_state.attributes[ATTR_TEMPERATURE_OFFSET] == 10
+
+
 async def test_hmip_power_sensor(hass, default_mock_hap_factory):
     """Test HomematicipPowerSensor."""
     entity_id = "sensor.flur_oben_power"
