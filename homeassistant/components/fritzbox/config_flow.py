@@ -21,7 +21,10 @@ DATA_SCHEMA_USER = vol.Schema(
 )
 
 DATA_SCHEMA_CONFIRM = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
 )
 
 RESULT_AUTH_FAILED = "auth_failed"
