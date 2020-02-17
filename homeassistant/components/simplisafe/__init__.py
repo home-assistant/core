@@ -1,12 +1,8 @@
 """Support for SimpliSafe alarm systems."""
 import asyncio
-from dataclasses import InitVar, asdict, dataclass, field
-from datetime import datetime
 import logging
-from typing import Optional
 
 from simplipy import API
-from simplipy.entity import EntityTypes
 from simplipy.errors import InvalidCredentialsError, SimplipyError, WebsocketError
 from simplipy.websocket import (
     EVENT_CAMERA_MOTION_DETECTED,
@@ -15,7 +11,6 @@ from simplipy.websocket import (
     EVENT_LOCK_LOCKED,
     EVENT_LOCK_UNLOCKED,
     EVENT_MOTION_DETECTED,
-    get_event_type_from_payload,
 )
 import voluptuous as vol
 
@@ -38,7 +33,6 @@ from homeassistant.helpers.service import (
     async_register_admin_service,
     verify_domain_control,
 )
-from homeassistant.util.dt import utc_from_timestamp
 
 from .config_flow import configured_instances
 from .const import (
@@ -77,10 +71,14 @@ WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT = [
     EVENT_MOTION_DETECTED,
 ]
 
+ATTR_LAST_EVENT_CHANGED_BY = "last_event_changed_by"
 ATTR_LAST_EVENT_INFO = "last_event_info"
 ATTR_LAST_EVENT_SENSOR_NAME = "last_event_sensor_name"
+ATTR_LAST_EVENT_SENSOR_SERIAL = "last_event_sensor_serial"
 ATTR_LAST_EVENT_SENSOR_TYPE = "last_event_sensor_type"
 ATTR_LAST_EVENT_TIMESTAMP = "last_event_timestamp"
+ATTR_LAST_EVENT_TYPE = "last_event_type"
+ATTR_LAST_EVENT_TYPE = "last_event_type"
 ATTR_PIN_LABEL = "label"
 ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
 ATTR_PIN_VALUE = "pin"
@@ -317,46 +315,6 @@ async def async_unload_entry(hass, entry):
     return True
 
 
-@dataclass(frozen=True)
-class SimpliSafeWebsocketEvent:
-    """Define a representation of a parsed websocket event."""
-
-    event_data: InitVar[dict]
-
-    changed_by: Optional[str] = field(init=False)
-    event_type: Optional[str] = field(init=False)
-    info: str = field(init=False)
-    sensor_name: str = field(init=False)
-    sensor_serial: str = field(init=False)
-    sensor_type: EntityTypes = field(init=False)
-    system_id: int = field(init=False)
-    timestamp: datetime = field(init=False)
-
-    def __post_init__(self, event_data):
-        """Initialize."""
-        object.__setattr__(self, "changed_by", event_data["pinName"])
-        object.__setattr__(self, "event_type", get_event_type_from_payload(event_data))
-        object.__setattr__(self, "info", event_data["info"])
-        object.__setattr__(self, "sensor_name", event_data["sensorName"])
-        object.__setattr__(self, "sensor_serial", event_data["sensorSerial"])
-        try:
-            object.__setattr__(
-                self, "sensor_type", EntityTypes(event_data["sensorType"]).name
-            )
-        except ValueError:
-            _LOGGER.warning(
-                'Encountered unknown entity type: %s ("%s"). Please report it at'
-                "https://github.com/home-assistant/home-assistant/issues.",
-                event_data["sensorType"],
-                event_data["sensorName"],
-            )
-            object.__setattr__(self, "sensor_type", None)
-        object.__setattr__(self, "system_id", event_data["sid"])
-        object.__setattr__(
-            self, "timestamp", utc_from_timestamp(event_data["eventTimestamp"])
-        )
-
-
 class SimpliSafeWebsocket:
     """Define a SimpliSafe websocket "manager" object."""
 
@@ -410,15 +368,11 @@ class SimpliSafeWebsocket:
         """Define a handler to fire when the websocket is disconnected."""
         _LOGGER.info("Disconnected from websocket")
 
-    def _on_event(self, data):
+    def _on_event(self, event):
         """Define a handler to fire when a new SimpliSafe event arrives."""
-        event = SimpliSafeWebsocketEvent(data)
         _LOGGER.debug("New websocket event: %s", event)
-        self.last_events[data["sid"]] = event
-        async_dispatcher_send(self._hass, TOPIC_UPDATE.format(data["sid"]))
-
-        if event.event_type in WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT:
-            self._hass.bus.async_fire(EVENT_SIMPLISAFE_EVENT, event_data=asdict(event))
+        self.last_events[event.system_id] = event
+        async_dispatcher_send(self._hass, TOPIC_UPDATE.format(event.system_id))
 
         _LOGGER.debug("Resetting websocket watchdog")
         self._websocket_watchdog_listener()
@@ -426,6 +380,28 @@ class SimpliSafeWebsocket:
             self._hass, DEFAULT_WATCHDOG_SECONDS, self._async_websocket_reconnect
         )
         self._websocket_reconnect_delay = DEFAULT_SOCKET_MIN_RETRY
+
+        if event.event_type not in WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT:
+            return
+
+        if event.sensor_type:
+            sensor_type = event.sensor_type.name
+        else:
+            sensor_type = None
+
+        self._hass.bus.async_fire(
+            EVENT_SIMPLISAFE_EVENT,
+            event_data={
+                ATTR_LAST_EVENT_CHANGED_BY: event.changed_by,
+                ATTR_LAST_EVENT_TYPE: event.event_type,
+                ATTR_LAST_EVENT_INFO: event.info,
+                ATTR_LAST_EVENT_SENSOR_NAME: event.sensor_name,
+                ATTR_LAST_EVENT_SENSOR_SERIAL: event.sensor_serial,
+                ATTR_LAST_EVENT_SENSOR_TYPE: sensor_type,
+                ATTR_SYSTEM_ID: event.system_id,
+                ATTR_LAST_EVENT_TIMESTAMP: event.timestamp,
+            },
+        )
 
     async def async_websocket_connect(self):
         """Register handlers and connect to the websocket."""
@@ -669,11 +645,17 @@ class SimpliSafeEntity(Entity):
             return
 
         self._last_processed_websocket_event = last_websocket_event
+
+        if last_websocket_event.sensor_type:
+            sensor_type = last_websocket_event.sensor_type.name
+        else:
+            sensor_type = None
+
         self._attrs.update(
             {
                 ATTR_LAST_EVENT_INFO: last_websocket_event.info,
                 ATTR_LAST_EVENT_SENSOR_NAME: last_websocket_event.sensor_name,
-                ATTR_LAST_EVENT_SENSOR_TYPE: last_websocket_event.sensor_type,
+                ATTR_LAST_EVENT_SENSOR_TYPE: sensor_type,
                 ATTR_LAST_EVENT_TIMESTAMP: last_websocket_event.timestamp,
             }
         )
