@@ -125,6 +125,7 @@ class NukiLock(LockDevice):
                 self._nuki_lock.update(aggressive=level)
             except RequestException:
                 _LOGGER.warning("Network issues detect with %s", self.name)
+                self._available = False
                 continue
 
             # If in error state, we force an update and repoll data
