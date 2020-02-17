@@ -161,7 +161,7 @@ class CoolmasterClimate(ClimateDevice):
 
     @property
     def precision(self):
-        """Returns the temperature precision."""
+        """Return the temperature precision."""
         return PRECISION_WHOLE
 
     def set_temperature(self, **kwargs):
