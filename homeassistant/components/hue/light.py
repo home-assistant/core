@@ -6,6 +6,7 @@ import logging
 import random
 
 import aiohue
+from aiohue.groups import Groups
 import async_timeout
 
 from homeassistant.components.light import (
@@ -170,7 +171,19 @@ def async_update_items(bridge, api, current, async_add_entities, create_item):
         if item_id in current:
             continue
 
-        current[item_id] = create_item(api[item_id])
+        if isinstance(api, Groups):
+            supported_features = 0
+            for light_id in api[item_id].lights:
+                if light_id not in bridge.api.lights:
+                    continue
+                light = bridge.api.lights[light_id]
+                supported_features |= SUPPORT_HUE.get(light.type, SUPPORT_HUE_EXTENDED)
+            supported_features = supported_features or SUPPORT_HUE_EXTENDED
+        else:
+            supported_features = SUPPORT_HUE.get(
+                api[item_id].type, SUPPORT_HUE_EXTENDED
+            )
+        current[item_id] = create_item(api[item_id], supported_features)
         new_items.append(current[item_id])
 
     bridge.hass.async_create_task(remove_devices(bridge, api, current))
@@ -182,12 +195,20 @@ def async_update_items(bridge, api, current, async_add_entities, create_item):
 class HueLight(Light):
     """Representation of a Hue light."""
 
-    def __init__(self, coordinator, bridge, is_group, light):
+    def __init__(
+        self,
+        coordinator,
+        bridge,
+        is_group,
+        light,
+        supported_features=SUPPORT_HUE_EXTENDED,
+    ):
         """Initialize the light."""
         self.light = light
         self.coordinator = coordinator
         self.bridge = bridge
         self.is_group = is_group
+        self._supported_features = supported_features
 
         if is_group:
             self.is_osram = False
@@ -290,7 +311,7 @@ class HueLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_HUE.get(self.light.type, SUPPORT_HUE_EXTENDED)
+        return self._supported_features
 
     @property
     def effect(self):
