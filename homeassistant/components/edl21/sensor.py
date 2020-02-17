@@ -9,9 +9,13 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import Optional
-from homeassistant.util import Throttle
+from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,6 +23,7 @@ DOMAIN = "edl21"
 CONF_SERIAL_PORT = "serial_port"
 ICON_POWER = "mdi:flash"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SIGNAL_EDL21_TELEGRAM = "edl21_telegram"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_SERIAL_PORT): cv.string})
 
@@ -98,8 +103,8 @@ class EDL21:
                         obis,
                     )
                     self._OBIS_BLACKLIST.add(obis)
-            elif entity.update_telegram(telegram):
-                self._hass.async_create_task(entity.async_update_ha_state())
+            else:
+                async_dispatcher_send(self._hass, SIGNAL_EDL21_TELEGRAM, telegram)
 
         if new_entities:
             self._async_add_entities(new_entities, update_before_add=True)
@@ -113,6 +118,28 @@ class EDL21Entity(Entity):
         self._obis = obis
         self._name = name
         self._telegram = telegram
+        self._min_time = MIN_TIME_BETWEEN_UPDATES
+        self._last_update = utcnow()
+
+    async def async_added_to_hass(self):
+        """Run when entity about to be added to hass."""
+
+        def handle_telegram(telegram):
+            """Update attributes from last received telegram for this object."""
+            if self._obis != telegram.get("objName"):
+                return
+            if self._telegram == telegram:
+                return
+
+            now = utcnow()
+            if now - self._last_update < self._min_time:
+                return
+
+            self._telegram = telegram
+            self._last_update = now
+            self.schedule_update_ha_state()
+
+        async_dispatcher_connect(self.hass, SIGNAL_EDL21_TELEGRAM, handle_telegram)
 
     @property
     def should_poll(self) -> bool:
@@ -152,11 +179,3 @@ class EDL21Entity(Entity):
     def icon(self):
         """Return an icon."""
         return ICON_POWER
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update_telegram(self, telegram: dict) -> bool:
-        """Update attributes from last received telegram for this object."""
-        if self._telegram == telegram:
-            return False
-        self._telegram = telegram
-        return True
