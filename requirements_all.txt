@@ -1213,9 +1213,6 @@ pydoods==1.0.2
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==0.8
 
-# homeassistant.components.duke_energy
-pydukeenergy==0.0.6
-
 # homeassistant.components.ebox
 pyebox==1.1.4
 
