@@ -8,13 +8,16 @@ from requests.exceptions import ConnectTimeout
 
 from homeassistant.components import abode
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from .common import setup_platform
 
 
 async def test_abode_setup_from_config(hass, requests_mock):
     """Test setup from configuration yaml file."""
-    config = {"abode": {"username": "foo", "password": "bar", "polling": True}}
+    config = {
+        abode.DOMAIN: {CONF_USERNAME: "foo", CONF_PASSWORD: "bar", "polling": True}
+    }
     response = await abode.async_setup(hass, config)
     assert response
 
@@ -33,8 +36,8 @@ async def test_change_settings(hass, requests_mock):
 
     with patch("abodepy.Abode.set_setting") as mock_set_setting:
         await hass.services.async_call(
-            "abode",
-            "change_setting",
+            abode.DOMAIN,
+            abode.SERVICE_SETTINGS,
             {"setting": "confirm_snd", "value": "loud"},
             blocking=True,
         )
@@ -45,8 +48,8 @@ async def test_change_settings(hass, requests_mock):
     # Tried using 'with pytest.raises(AbodeException):' but
     # AbodeException is not being raised
     await hass.services.async_call(
-        "abode",
-        "change_setting",
+        abode.DOMAIN,
+        abode.SERVICE_SETTINGS,
         {"setting": "confirm_snd", "value": "loud"},
         blocking=True,
     )

@@ -1,6 +1,16 @@
 """Tests for the Abode binary sensor device."""
+from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.abode.const import ATTRIBUTION
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASS_DOOR,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    STATE_OFF,
+)
 
 from .common import setup_platform
 
@@ -19,11 +29,11 @@ async def test_attributes(hass, requests_mock):
     await setup_platform(hass, BINARY_SENSOR_DOMAIN)
 
     state = hass.states.get("binary_sensor.front_door")
-    assert state.state == "off"
-    assert state.attributes.get("attribution") == ATTRIBUTION
-    assert state.attributes.get("device_id") == "RF:01430030"
+    assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_ATTRIBUTION) == ATTRIBUTION
+    assert state.attributes.get(ATTR_DEVICE_ID) == "RF:01430030"
     assert not state.attributes.get("battery_low")
     assert not state.attributes.get("no_response")
     assert state.attributes.get("device_type") == "Door Contact"
-    assert state.attributes.get("friendly_name") == "Front Door"
-    assert state.attributes.get("device_class") == "door"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Front Door"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_DOOR

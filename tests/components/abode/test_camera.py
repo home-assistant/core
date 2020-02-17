@@ -1,7 +1,9 @@
 """Tests for the Abode camera device."""
 from unittest.mock import patch
 
+from homeassistant.components.abode.const import DOMAIN as ABODE_DOMAIN
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.const import ATTR_ENTITY_ID, STATE_IDLE
 
 from .common import setup_platform
 
@@ -20,7 +22,7 @@ async def test_camera_attributes(hass, requests_mock):
     await setup_platform(hass, CAMERA_DOMAIN)
 
     state = hass.states.get("camera.test_cam")
-    assert state.state == "idle"
+    assert state.state == STATE_IDLE
 
 
 async def test_capture_image(hass, requests_mock):
@@ -29,6 +31,9 @@ async def test_capture_image(hass, requests_mock):
 
     with patch("abodepy.AbodeCamera.capture") as mock_capture:
         await hass.services.async_call(
-            "abode", "capture_image", {"entity_id": "camera.test_cam"}, blocking=True,
+            ABODE_DOMAIN,
+            "capture_image",
+            {ATTR_ENTITY_ID: "camera.test_cam"},
+            blocking=True,
         )
         mock_capture.assert_called_once()

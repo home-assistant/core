@@ -1,7 +1,17 @@
 """Tests for the Abode alarm control panel device."""
 from unittest.mock import patch
 
+from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_SUPPORTED_FEATURES,
+    SERVICE_ALARM_ARM_AWAY,
+    SERVICE_ALARM_ARM_HOME,
+    SERVICE_ALARM_DISARM,
+    STATE_ALARM_DISARMED,
+)
 
 from .common import setup_platform
 
@@ -21,12 +31,12 @@ async def test_automation_attributes(hass, requests_mock):
     await setup_platform(hass, ALARM_DOMAIN)
 
     state = hass.states.get("alarm_control_panel.abode_alarm")
-    assert state.state == "disarmed"
-    assert state.attributes.get("device_id") == "area_1"
+    assert state.state == STATE_ALARM_DISARMED
+    assert state.attributes.get(ATTR_DEVICE_ID) == "area_1"
     assert not state.attributes.get("battery_backup")
     assert not state.attributes.get("cellular_backup")
-    assert state.attributes.get("friendly_name") == "Abode Alarm"
-    assert state.attributes.get("supported_features") == 3
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Abode Alarm"
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 3
 
 
 async def test_set_alarm_away(hass, requests_mock):
@@ -36,8 +46,8 @@ async def test_set_alarm_away(hass, requests_mock):
     with patch("abodepy.ALARM.AbodeAlarm.set_away") as mock_set_away:
         await hass.services.async_call(
             "alarm_control_panel",
-            "alarm_arm_away",
-            {"entity_id": "alarm_control_panel.abode_alarm"},
+            SERVICE_ALARM_ARM_AWAY,
+            {ATTR_ENTITY_ID: "alarm_control_panel.abode_alarm"},
             blocking=True,
         )
         mock_set_away.assert_called_once()
@@ -50,8 +60,8 @@ async def test_set_alarm_home(hass, requests_mock):
     with patch("abodepy.ALARM.AbodeAlarm.set_home") as mock_set_home:
         await hass.services.async_call(
             "alarm_control_panel",
-            "alarm_arm_home",
-            {"entity_id": "alarm_control_panel.abode_alarm"},
+            SERVICE_ALARM_ARM_HOME,
+            {ATTR_ENTITY_ID: "alarm_control_panel.abode_alarm"},
             blocking=True,
         )
         mock_set_home.assert_called_once()
@@ -64,8 +74,8 @@ async def test_set_alarm_standby(hass, requests_mock):
     with patch("abodepy.ALARM.AbodeAlarm.set_standby") as mock_set_standby:
         await hass.services.async_call(
             "alarm_control_panel",
-            "alarm_disarm",
-            {"entity_id": "alarm_control_panel.abode_alarm"},
+            SERVICE_ALARM_DISARM,
+            {ATTR_ENTITY_ID: "alarm_control_panel.abode_alarm"},
             blocking=True,
         )
         mock_set_standby.assert_called_once()

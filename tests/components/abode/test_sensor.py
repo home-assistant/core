@@ -1,5 +1,12 @@
 """Tests for the Abode sensor device."""
+from homeassistant.components.abode import ATTR_DEVICE_ID
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    DEVICE_CLASS_HUMIDITY,
+)
 
 from .common import setup_platform
 
@@ -19,19 +26,19 @@ async def test_attributes(hass, requests_mock):
 
     state = hass.states.get("sensor.environment_sensor_humidity")
     assert state.state == "32.0"
-    assert state.attributes.get("device_id") == "RF:02148e70"
+    assert state.attributes.get(ATTR_DEVICE_ID) == "RF:02148e70"
     assert not state.attributes.get("battery_low")
     assert not state.attributes.get("no_response")
     assert state.attributes.get("device_type") == "LM"
-    assert state.attributes.get("unit_of_measurement") == "%"
-    assert state.attributes.get("friendly_name") == "Environment Sensor Humidity"
-    assert state.attributes.get("device_class") == "humidity"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "%"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Environment Sensor Humidity"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == DEVICE_CLASS_HUMIDITY
 
     state = hass.states.get("sensor.environment_sensor_lux")
     assert state.state == "1.0"
-    assert state.attributes.get("unit_of_measurement") == "lux"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "lux"
 
     state = hass.states.get("sensor.environment_sensor_temperature")
     # Abodepy device JSON reports 19.5, but Home Assistant shows 19.5
     assert state.state == "19.4"
-    assert state.attributes.get("unit_of_measurement") == "°C"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "°C"
