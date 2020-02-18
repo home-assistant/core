@@ -25,21 +25,26 @@
     },
     "options": {
         "step": {
+            "init": {
+                "data": {}
+            },
             "device_tracker": {
                 "data": {
                     "detection_time": "Time in seconds from last seen until considered away",
-                    "ssid_filter": "Select SSIDs for tracking clients",
+                    "ssid_filter": "Select SSIDs to track wireless clients on",
                     "track_clients": "Track network clients",
                     "track_devices": "Track network devices (Ubiquiti devices)",
                     "track_wired_clients": "Include wired network clients"
                 },
-                "title": "Device tracking"
+                "description": "Configure device tracking",
+                "title": "UniFi options"
             },
             "statistics_sensors": {
                 "data": {
                     "allow_bandwidth_sensors": "Bandwidth usage sensors for network clients"
                 },
-                "title": "Statistics sensors"
+                "description": "Configure statistics sensors",
+                "title": "UniFi options"
             }
         }
     }
