@@ -145,7 +145,7 @@ class EDL21Entity(Entity):
 
             self._telegram = telegram
             self._last_update = now
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
 
         self._async_remove_dispatcher = async_dispatcher_connect(
             self.hass, SIGNAL_EDL21_TELEGRAM, handle_telegram
