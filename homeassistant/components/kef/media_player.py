@@ -1,14 +1,16 @@
 """Platform for the KEF Wireless Speakers."""
 
-from datetime import timedelta
-from functools import partial
 import ipaddress
 import logging
+from datetime import timedelta
+from functools import partial
 
-from aiokef import AsyncKefSpeaker
-from getmac import get_mac_address
 import voluptuous as vol
 
+from aiokef import AsyncKefSpeaker
+from aiokef.aiokef import DSP_OPTION_MAPPING
+
+from getmac import get_mac_address
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     SUPPORT_NEXT_TRACK,
@@ -24,6 +26,7 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
@@ -33,6 +36,17 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import config_validation as cv
 
+from .const import (
+    DOMAIN,
+    SERVICE_DESK_DB,
+    SERVICE_HIGH_HZ,
+    SERVICE_LOW_HZ,
+    SERVICE_MODE,
+    SERVICE_SUB_DB,
+    SERVICE_TREBLE_DB,
+    SERVICE_WALL_DB,
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = "KEF"
@@ -41,8 +55,6 @@ DEFAULT_MAX_VOLUME = 0.5
 DEFAULT_VOLUME_STEP = 0.05
 DEFAULT_INVERSE_SPEAKER_MODE = False
 DEFAULT_SUPPORTS_ON = True
-
-DOMAIN = "kef"
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -127,6 +139,58 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     else:
         hass.data[DOMAIN][host] = media_player
         async_add_entities([media_player], update_before_add=True)
+
+    async def service_handler(service):
+        """Handle service."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+
+        media_player = next(
+            (d for d in hass.data[DOMAIN] if d.entity_id == entity_id), None,
+        )
+
+        if media_player is None:
+            _LOGGER.warning("Unable to find KEF speaker with entity_id: %s", entity_id)
+            return
+
+        if service.service == SERVICE_MODE:
+            # XXX: fix modes
+            await media_player.set_mode()
+        elif service.service == SERVICE_DESK_DB:
+            db = service.data.get("db")
+            await media_player.set_desk_db()
+        elif service.service == SERVICE_WALL_DB:
+            db = service.data.get("db")
+            await media_player.set_wall_db(db)
+        elif service.service == SERVICE_TREBLE_DB:
+            db = service.data.get("db")
+            await media_player.set_treble_db(db)
+        elif service.service == SERVICE_HIGH_HZ:
+            hz = service.data.get("hz")
+            await media_player.set_high_hz(hz)
+        elif service.service == SERVICE_LOW_HZ:
+            hz = service.data.get("hz")
+            await media_player.set_low_hz(hz)
+        elif service.service == SERVICE_SUB_DB:
+            db = service.data.get("db")
+            await media_player.set_sub_db(db)
+
+    def add_service(name, which, option):
+        schema = vol.Schema(
+            {
+                vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+                vol.Required(option): vol.In(DSP_OPTION_MAPPING[which]),
+            }
+        )
+        hass.services.async_register_admin_service(
+            DOMAIN, name, service_handler, schema=schema,
+        )
+
+    add_service(SERVICE_DESK_DB, "desk_db", "db")
+    add_service(SERVICE_WALL_DB, "wall_db", "db")
+    add_service(SERVICE_TREBLE_DB, "treble_db", "db")
+    add_service(SERVICE_HIGH_HZ, "high_db", "hz")
+    add_service(SERVICE_LOW_HZ, "low_db", "hz")
+    add_service(SERVICE_SUB_DB, "sub_db", "db")
 
 
 class KefMediaPlayer(MediaPlayerDevice):
