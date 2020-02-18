@@ -304,7 +304,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                     available_accounts[user] += " [New]"
 
         if not self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS]:
-            for new_user in plex_server.accounts - default_accounts:
+            for new_user in plex_server.accounts - known_accounts:
                 default_accounts.add(new_user)
 
         return self.async_show_form(
