@@ -292,18 +292,18 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
         available_accounts[plex_server.owner] += " [Owner]"
 
         default_accounts = plex_server.accounts
-        known_accounts = set(self.options[MP_DOMAIN].get(CONF_MONITORED_USERS, []))
+        known_accounts = set(plex_server.option_monitored_users)
         if known_accounts:
             default_accounts = {
                 user
-                for user in self.options[MP_DOMAIN][CONF_MONITORED_USERS]
-                if self.options[MP_DOMAIN][CONF_MONITORED_USERS][user]["enabled"]
+                for user in plex_server.option_monitored_users
+                if plex_server.option_monitored_users[user]["enabled"]
             }
             for user in plex_server.accounts:
                 if user not in known_accounts:
                     available_accounts[user] += " [New]"
 
-        if not self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS]:
+        if not plex_server.option_ignore_new_shared_users:
             for new_user in plex_server.accounts - known_accounts:
                 default_accounts.add(new_user)
 
@@ -313,20 +313,18 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                 {
                     vol.Required(
                         CONF_USE_EPISODE_ART,
-                        default=self.options[MP_DOMAIN][CONF_USE_EPISODE_ART],
+                        default=plex_server.option_use_episode_art,
                     ): bool,
                     vol.Required(
                         CONF_SHOW_ALL_CONTROLS,
-                        default=self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS],
+                        default=plex_server.option_show_all_controls,
                     ): bool,
                     vol.Optional(
                         CONF_MONITORED_USERS, default=default_accounts
                     ): cv.multi_select(available_accounts),
                     vol.Required(
                         CONF_IGNORE_NEW_SHARED_USERS,
-                        default=self.options[MP_DOMAIN].get(
-                            CONF_IGNORE_NEW_SHARED_USERS, False
-                        ),
+                        default=plex_server.option_ignore_new_shared_users,
                     ): bool,
                 }
             ),

@@ -134,15 +134,15 @@ class PlexServer:
         new_clients = set()
 
         monitored_users = self.accounts
-        known_accounts = set(self.options[MP_DOMAIN].get(CONF_MONITORED_USERS, []))
+        known_accounts = set(self.option_monitored_users)
         if known_accounts:
             monitored_users = {
                 user
-                for user in self.options[MP_DOMAIN][CONF_MONITORED_USERS]
-                if self.options[MP_DOMAIN][CONF_MONITORED_USERS][user]["enabled"]
+                for user in self.option_monitored_users
+                if self.option_monitored_users[user]["enabled"]
             }
 
-        if not self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS]:
+        if not self.option_ignore_new_shared_users:
             for new_user in self.accounts - known_accounts:
                 monitored_users.add(new_user)
 
@@ -255,19 +255,24 @@ class PlexServer:
         return self._plex_server._baseurl  # pylint: disable=protected-access
 
     @property
-    def ignore_new_shared_users(self):
+    def option_ignore_new_shared_users(self):
         """Return ignore_new_shared_users option."""
         return self.options[MP_DOMAIN].get(CONF_IGNORE_NEW_SHARED_USERS, False)
 
     @property
-    def use_episode_art(self):
+    def option_use_episode_art(self):
         """Return use_episode_art option."""
         return self.options[MP_DOMAIN][CONF_USE_EPISODE_ART]
 
     @property
-    def show_all_controls(self):
+    def option_show_all_controls(self):
         """Return show_all_controls option."""
         return self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS]
+
+    @property
+    def option_monitored_users(self):
+        """Return dict of monitored users option."""
+        return self.options[MP_DOMAIN].get(CONF_MONITORED_USERS, {})
 
     @property
     def library(self):
