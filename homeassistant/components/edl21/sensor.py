@@ -8,6 +8,7 @@ from sml.asyncio import SmlProtocol
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -130,6 +131,7 @@ class EDL21Entity(Entity):
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
 
+        @callback
         def handle_telegram(telegram):
             """Update attributes from last received telegram for this object."""
             if self._obis != telegram.get("objName"):
