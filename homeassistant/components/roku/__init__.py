@@ -11,19 +11,16 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "roku"
-
-SERVICE_SCAN = "roku_scan"
-
-ATTR_ROKU = "roku"
-
-DATA_ROKU = "data_roku"
-
-NOTIFICATION_ID = "roku_notification"
-NOTIFICATION_TITLE = "Roku Setup"
-NOTIFICATION_SCAN_ID = "roku_scan_notification"
-NOTIFICATION_SCAN_TITLE = "Roku Scan"
-
+from .const import (
+    DOMAIN,
+    SERVICE_SCAN,
+    ATTR_ROKU,
+    DATA_ROKU,
+    NOTIFICATION_ID,
+    NOTIFICATION_SCAN_ID,
+    NOTIFICATION_SCAN_TITLE,
+    NOTIFICATION_TITLE,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {

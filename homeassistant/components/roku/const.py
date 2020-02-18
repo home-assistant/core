@@ -1,2 +1,13 @@
 """Constants for the Roku integration."""
-DEFAULT_PORT = 8060
+DOMAIN = "roku"
+
+SERVICE_SCAN = "roku_scan"
+
+ATTR_ROKU = "roku"
+
+DATA_ROKU = "data_roku"
+
+NOTIFICATION_ID = "roku_notification"
+NOTIFICATION_TITLE = "Roku Setup"
+NOTIFICATION_SCAN_ID = "roku_scan_notification"
+NOTIFICATION_SCAN_TITLE = "Roku Scan"
