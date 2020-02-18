@@ -7,12 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core
 
 # pylint: disable=unused-import
-from .const import (
-    DEFAULT_BAUDRATE,
-    CONF_SERIAL_PORT,
-    CONF_BAUDRATE,
-    DOMAIN,
-)
+from .const import CONF_BAUDRATE, CONF_SERIAL_PORT, DEFAULT_BAUDRATE, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
