@@ -12,7 +12,7 @@ from . import DATA_AUGUST
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def _async_retrieve_door_state(data, lock):
@@ -51,10 +51,14 @@ async def _async_activity_time_based_state(data, doorbell, activity_types):
 
     if latest is not None:
         start = latest.activity_start_time
-        end = latest.activity_end_time + timedelta(seconds=30)
+        end = latest.activity_end_time + timedelta(seconds=45)
         return start <= datetime.now() <= end
     return None
 
+
+SENSOR_NAME = 0
+SENSOR_DEVICE_CLASS = 1
+SENSOR_STATE_PROVIDER = 2
 
 # sensor_type: [name, device_class, async_state_provider]
 SENSOR_TYPES_DOOR = {"door_open": ["Open", "door", _async_retrieve_door_state]}
@@ -73,18 +77,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     for door in data.locks:
         for sensor_type in SENSOR_TYPES_DOOR:
-            async_state_provider = SENSOR_TYPES_DOOR[sensor_type][2]
-            if await async_state_provider(data, door) is LockDoorStatus.UNKNOWN:
+            if not data.lock_has_doorsense(door.device_id):
                 _LOGGER.debug(
                     "Not adding sensor class %s for lock %s ",
-                    SENSOR_TYPES_DOOR[sensor_type][1],
+                    SENSOR_TYPES_DOOR[sensor_type][SENSOR_DEVICE_CLASS],
                     door.device_name,
                 )
                 continue
 
             _LOGGER.debug(
                 "Adding sensor class %s for %s",
-                SENSOR_TYPES_DOOR[sensor_type][1],
+                SENSOR_TYPES_DOOR[sensor_type][SENSOR_DEVICE_CLASS],
                 door.device_name,
             )
             devices.append(AugustDoorBinarySensor(data, sensor_type, door))
@@ -93,7 +96,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         for sensor_type in SENSOR_TYPES_DOORBELL:
             _LOGGER.debug(
                 "Adding doorbell sensor class %s for %s",
-                SENSOR_TYPES_DOORBELL[sensor_type][1],
+                SENSOR_TYPES_DOORBELL[sensor_type][SENSOR_DEVICE_CLASS],
                 doorbell.device_name,
             )
             devices.append(AugustDoorbellBinarySensor(data, sensor_type, doorbell))
@@ -125,22 +128,25 @@ class AugustDoorBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return SENSOR_TYPES_DOOR[self._sensor_type][1]
+        return SENSOR_TYPES_DOOR[self._sensor_type][SENSOR_DEVICE_CLASS]
 
     @property
     def name(self):
         """Return the name of the binary sensor."""
         return "{} {}".format(
-            self._door.device_name, SENSOR_TYPES_DOOR[self._sensor_type][0]
+            self._door.device_name, SENSOR_TYPES_DOOR[self._sensor_type][SENSOR_NAME]
         )
 
     async def async_update(self):
         """Get the latest state of the sensor and update activity."""
-        async_state_provider = SENSOR_TYPES_DOOR[self._sensor_type][2]
-        self._state = await async_state_provider(self._data, self._door)
-        self._available = self._state is not None
-
-        self._state = self._state == LockDoorStatus.OPEN
+        async_state_provider = SENSOR_TYPES_DOOR[self._sensor_type][
+            SENSOR_STATE_PROVIDER
+        ]
+        lock_door_state = await async_state_provider(self._data, self._door)
+        self._available = (
+            lock_door_state is not None and lock_door_state != LockDoorStatus.UNKNOWN
+        )
+        self._state = lock_door_state == LockDoorStatus.OPEN
 
         door_activity = await self._data.async_get_latest_device_activity(
             self._door.device_id, ActivityType.DOOR_OPERATION
@@ -193,7 +199,8 @@ class AugustDoorBinarySensor(BinarySensorDevice):
     def unique_id(self) -> str:
         """Get the unique of the door open binary sensor."""
         return "{:s}_{:s}".format(
-            self._door.device_id, SENSOR_TYPES_DOOR[self._sensor_type][0].lower()
+            self._door.device_id,
+            SENSOR_TYPES_DOOR[self._sensor_type][SENSOR_NAME].lower(),
         )
 
 
@@ -221,25 +228,31 @@ class AugustDoorbellBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return SENSOR_TYPES_DOORBELL[self._sensor_type][1]
+        return SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_DEVICE_CLASS]
 
     @property
     def name(self):
         """Return the name of the binary sensor."""
         return "{} {}".format(
-            self._doorbell.device_name, SENSOR_TYPES_DOORBELL[self._sensor_type][0]
+            self._doorbell.device_name,
+            SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME],
         )
 
     async def async_update(self):
         """Get the latest state of the sensor."""
-        async_state_provider = SENSOR_TYPES_DOORBELL[self._sensor_type][2]
+        async_state_provider = SENSOR_TYPES_DOORBELL[self._sensor_type][
+            SENSOR_STATE_PROVIDER
+        ]
         self._state = await async_state_provider(self._data, self._doorbell)
-        self._available = self._doorbell.is_online
+        # The doorbell will go into standby mode when there is no motion
+        # for a short while. It will wake by itself when needed so we need
+        # to consider is available or we will not report motion or dings
+        self._available = self._doorbell.is_online or self._doorbell.status == "standby"
 
     @property
     def unique_id(self) -> str:
         """Get the unique id of the doorbell sensor."""
         return "{:s}_{:s}".format(
             self._doorbell.device_id,
-            SENSOR_TYPES_DOORBELL[self._sensor_type][0].lower(),
+            SENSOR_TYPES_DOORBELL[self._sensor_type][SENSOR_NAME].lower(),
         )
