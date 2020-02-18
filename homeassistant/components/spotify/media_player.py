@@ -303,8 +303,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             kwargs["context_uri"] = media_id
             if self._start_random:
                 response = self._spotify.playlist_tracks(media_id,
-                                                     offset=0,
-                                                     fields='total')
+                                                         offset=0,
+                                                         fields='total')
                 song_count = response.get('total', 1)
                 position = randint(0, song_count - 1)
                 kwargs["offset"] = {"position": position}
