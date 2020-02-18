@@ -136,13 +136,11 @@ class PlexServer:
         monitored_users = self.accounts
         known_accounts = set(self.options[MP_DOMAIN].get(CONF_MONITORED_USERS, []))
         if known_accounts:
-            monitored_users = set(
-                [
-                    user
-                    for user in self.options[MP_DOMAIN][CONF_MONITORED_USERS]
-                    if self.options[MP_DOMAIN][CONF_MONITORED_USERS][user]["enabled"]
-                ]
-            )
+            monitored_users = {
+                user
+                for user in self.options[MP_DOMAIN][CONF_MONITORED_USERS]
+                if self.options[MP_DOMAIN][CONF_MONITORED_USERS][user]["enabled"]
+            }
 
         if not self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS]:
             for new_user in self.accounts - known_accounts:

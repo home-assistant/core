@@ -282,12 +282,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             account_data = {}
             for user in plex_server.accounts:
                 account_data.setdefault(
-                    user,
-                    {
-                        "enabled": True
-                        if user in user_input[CONF_MONITORED_USERS]
-                        else False
-                    },
+                    user, {"enabled": bool(user in user_input[CONF_MONITORED_USERS])},
                 )
             self.options[MP_DOMAIN][CONF_MONITORED_USERS] = account_data
 
@@ -299,13 +294,11 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
         default_accounts = plex_server.accounts
         known_accounts = set(self.options[MP_DOMAIN].get(CONF_MONITORED_USERS, []))
         if known_accounts:
-            default_accounts = set(
-                [
-                    user
-                    for user in self.options[MP_DOMAIN][CONF_MONITORED_USERS]
-                    if self.options[MP_DOMAIN][CONF_MONITORED_USERS][user]["enabled"]
-                ]
-            )
+            default_accounts = {
+                user
+                for user in self.options[MP_DOMAIN][CONF_MONITORED_USERS]
+                if self.options[MP_DOMAIN][CONF_MONITORED_USERS][user]["enabled"]
+            }
             for user in plex_server.accounts:
                 if user not in known_accounts:
                     available_accounts[user] += " [New]"
