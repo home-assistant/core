@@ -132,9 +132,21 @@ class PlexServer:
         available_clients = {}
         ignored_clients = set()
         new_clients = set()
-        monitored_users = self.options[MP_DOMAIN].get(
-            CONF_MONITORED_USERS, self.accounts
-        )
+
+        monitored_users = self.accounts
+        known_accounts = set(self.options[MP_DOMAIN].get(CONF_MONITORED_USERS, []))
+        if known_accounts:
+            monitored_users = set(
+                [
+                    user
+                    for user in self.options[MP_DOMAIN][CONF_MONITORED_USERS]
+                    if self.options[MP_DOMAIN][CONF_MONITORED_USERS][user]["enabled"]
+                ]
+            )
+
+        if not self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS]:
+            for new_user in self.accounts - known_accounts:
+                monitored_users.add(new_user)
 
         try:
             devices = self._plex_server.clients()
@@ -217,7 +229,7 @@ class PlexServer:
     @property
     def accounts(self):
         """Return accounts associated with the Plex server."""
-        return self._accounts
+        return set(self._accounts)
 
     @property
     def owner(self):

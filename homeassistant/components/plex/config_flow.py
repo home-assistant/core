@@ -266,6 +266,8 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_plex_mp_settings(self, user_input=None):
         """Manage the Plex media_player options."""
+        plex_server = self.hass.data[DOMAIN][SERVERS][self.server_id]
+
         if user_input is not None:
             self.options[MP_DOMAIN][CONF_USE_EPISODE_ART] = user_input[
                 CONF_USE_EPISODE_ART
@@ -276,13 +278,41 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
             self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS] = user_input[
                 CONF_IGNORE_NEW_SHARED_USERS
             ]
-            self.options[MP_DOMAIN][CONF_MONITORED_USERS] = user_input[
-                CONF_MONITORED_USERS
-            ]
+
+            account_data = {}
+            for user in plex_server.accounts:
+                account_data.setdefault(
+                    user,
+                    {
+                        "enabled": True
+                        if user in user_input[CONF_MONITORED_USERS]
+                        else False
+                    },
+                )
+            self.options[MP_DOMAIN][CONF_MONITORED_USERS] = account_data
+
             return self.async_create_entry(title="", data=self.options)
 
-        plex_server = self.hass.data[DOMAIN][SERVERS][self.server_id]
         available_accounts = {name: name for name in plex_server.accounts}
+        available_accounts[plex_server.owner] += " [Owner]"
+
+        default_accounts = plex_server.accounts
+        known_accounts = set(self.options[MP_DOMAIN].get(CONF_MONITORED_USERS, []))
+        if known_accounts:
+            default_accounts = set(
+                [
+                    user
+                    for user in self.options[MP_DOMAIN][CONF_MONITORED_USERS]
+                    if self.options[MP_DOMAIN][CONF_MONITORED_USERS][user]["enabled"]
+                ]
+            )
+            for user in plex_server.accounts:
+                if user not in known_accounts:
+                    available_accounts[user] += " [New]"
+
+        if not self.options[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS]:
+            for new_user in plex_server.accounts - default_accounts:
+                default_accounts.add(new_user)
 
         return self.async_show_form(
             step_id="plex_mp_settings",
@@ -296,15 +326,15 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_SHOW_ALL_CONTROLS,
                         default=self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS],
                     ): bool,
+                    vol.Optional(
+                        CONF_MONITORED_USERS, default=default_accounts
+                    ): cv.multi_select(available_accounts),
                     vol.Required(
                         CONF_IGNORE_NEW_SHARED_USERS,
                         default=self.options[MP_DOMAIN].get(
                             CONF_IGNORE_NEW_SHARED_USERS, False
                         ),
                     ): bool,
-                    vol.Optional(CONF_MONITORED_USERS): cv.multi_select(
-                        available_accounts
-                    ),
                 }
             ),
         )
