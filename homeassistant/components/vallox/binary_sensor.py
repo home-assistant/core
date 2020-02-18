@@ -104,9 +104,12 @@ class ValloxFilterOverdueBinarySensor(ValloxBinarySensor):
         """Fetch state from the ventilation unit."""
         try:
             days_remaining = int(self._state_proxy.fetch_metric(self._metric_key))
+            self._available = True
+
             if days_remaining == 0:
                 self._is_on = True
-                self._available = True
+            else:
+                self._is_on = False
 
         except (OSError, KeyError) as err:
             self._available = False
