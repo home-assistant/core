@@ -363,6 +363,8 @@ class AugustData:
         """Determine if a lock has doorsense installed and can tell when the door is open or closed."""
         # We do not update here since this is not expected
         # to change until restart
+        if self._lock_detail_by_id[lock_id] is None:
+            return False
         return self._lock_detail_by_id[lock_id].doorsense
 
     async def async_get_lock_status(self, lock_id):

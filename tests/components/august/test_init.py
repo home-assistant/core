@@ -2,6 +2,9 @@
 import asyncio
 from unittest.mock import MagicMock
 
+from august.lock import LockDetail
+from requests import RequestException
+
 from homeassistant.components import august
 from homeassistant.exceptions import HomeAssistantError
 
@@ -75,11 +78,23 @@ def test_lock_has_doorsense():
         [
             _mock_doorsense_enabled_august_lock_detail("doorsenselock1"),
             _mock_doorsense_missing_august_lock_detail("nodoorsenselock1"),
+            RequestException("mocked request error"),
+            RequestException("mocked request error"),
         ]
     )
 
     assert data.lock_has_doorsense("doorsenselock1") is True
-    assert data.lock_has_doorsense("nodoorsenselock1") is not True
+    assert data.lock_has_doorsense("nodoorsenselock1") is False
+
+    # The api calls are mocked to fail on the second
+    # run of async_get_lock_detail
+    #
+    # This will be switched to await data.async_get_lock_detail("doorsenselock1")
+    # once we mock the full home assistant setup
+    data._update_locks_detail()
+    # doorsenselock1 should be false if we cannot tell due
+    # to an api error
+    assert data.lock_has_doorsense("doorsenselock1") is False
 
 
 async def test__refresh_access_token(hass):
@@ -107,7 +122,8 @@ async def test__refresh_access_token(hass):
 def _create_august_data_with_lock_details(lock_details):
     locks = []
     for lock in lock_details:
-        locks.append(_mock_august_lock(lock.device_id))
+        if isinstance(lock, LockDetail):
+            locks.append(_mock_august_lock(lock.device_id))
     authentication = _mock_august_authentication("original_token", 1234)
     authenticator = _mock_august_authenticator()
     token_refresh_lock = MagicMock()
