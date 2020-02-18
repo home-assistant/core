@@ -3,8 +3,8 @@ from asyncio import run_coroutine_threadsafe
 import datetime as dt
 from datetime import timedelta
 import logging
-from typing import Any, Callable, Dict, List, Optional
 from random import randint
+from typing import Any, Callable, Dict, List, Optional
 
 from aiohttp import ClientError
 from spotipy import Spotify, SpotifyException
@@ -301,9 +301,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         elif media_type == MEDIA_TYPE_PLAYLIST:
             kwargs["context_uri"] = media_id
             if self.shuffle():
-                response = self._spotify.playlist_tracks(media_id,
-                                                         offset=0,
-                                                         fields='total')
+                response = self._spotify.playlist_tracks(
+                    media_id, offset=0, fields='total'
+                )
                 song_count = response.get('total', 1)
                 position = randint(0, song_count - 1)
                 kwargs["offset"] = {"position": position}
