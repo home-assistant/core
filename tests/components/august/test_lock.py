@@ -21,10 +21,7 @@ from tests.components.august.mocks import (
 
 def test__sync_lock_activity_locked_via_onetouchlock():
     """Test _sync_lock_activity locking."""
-    data = MockAugustComponentData(last_lock_status_update_timestamp=1)
-    august_lock = _mock_august_lock()
-    data.set_mocked_locks([august_lock])
-    lock = MockAugustComponentLock(data, august_lock)
+    lock = _mocked_august_component_lock()
     lock_activity_start_timestamp = 1234
     lock_activity = MockActivity(
         action=ACTION_LOCK_ONETOUCHLOCK,
@@ -40,10 +37,7 @@ def test__sync_lock_activity_locked_via_onetouchlock():
 
 def test__sync_lock_activity_locked_via_lock():
     """Test _sync_lock_activity locking."""
-    data = MockAugustComponentData(last_lock_status_update_timestamp=1)
-    august_lock = _mock_august_lock()
-    data.set_mocked_locks([august_lock])
-    lock = MockAugustComponentLock(data, august_lock)
+    lock = _mocked_august_component_lock()
     lock_activity_start_timestamp = 1234
     lock_activity = MockActivity(
         action=ACTION_LOCK_LOCK,
@@ -59,10 +53,7 @@ def test__sync_lock_activity_locked_via_lock():
 
 def test__sync_lock_activity_unlocked():
     """Test _sync_lock_activity unlocking."""
-    data = MockAugustComponentData(last_lock_status_update_timestamp=1)
-    august_lock = _mock_august_lock()
-    data.set_mocked_locks([august_lock])
-    lock = MockAugustComponentLock(data, august_lock)
+    lock = _mocked_august_component_lock()
     lock_activity_timestamp = 1234
     lock_activity = MockActivity(
         action=ACTION_LOCK_UNLOCK,
@@ -110,3 +101,10 @@ def test__sync_lock_activity_ignores_old_data():
     assert lock.last_update_lock_status["activity_start_time_utc"] == dt.as_utc(
         datetime.datetime.fromtimestamp(first_lock_activity_timestamp)
     )
+
+
+def _mocked_august_component_lock():
+    data = MockAugustComponentData(last_lock_status_update_timestamp=1)
+    august_lock = _mock_august_lock()
+    data.set_mocked_locks([august_lock])
+    return MockAugustComponentLock(data, august_lock)
