@@ -86,7 +86,7 @@ async def async_setup_entry(hass, entry):
         """Close connections to this fritzbox."""
         fritz.logout()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, logout_fritzbox)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, logout_fritzbox)
 
     return True
 
