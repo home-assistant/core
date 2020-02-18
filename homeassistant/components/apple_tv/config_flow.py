@@ -44,7 +44,7 @@ CREDENTIAL_MAPPING = {
 
 
 async def device_scan(identifier, loop, cache=None):
-    """Scan for a specific device using identifer as filter."""
+    """Scan for a specific device using identifier as filter."""
 
     def _filter_device(dev):
         if identifier is None:
