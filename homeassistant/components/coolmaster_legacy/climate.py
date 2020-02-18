@@ -13,7 +13,6 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_OFF,
     SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
 )
 from homeassistant.const import (
