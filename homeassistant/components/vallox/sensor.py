@@ -224,11 +224,8 @@ class ValloxFilterRemainingSensor(ValloxSensor):
         try:
             days_remaining = int(self._state_proxy.fetch_metric(self._metric_key))
             if days_remaining == 0:
-                self._device_class = None
-                self._state = "overdue"
-                self._available = True
+                self._available = False
             else:
-                self._device_class = DEVICE_CLASS_TIMESTAMP
                 days_remaining_delta = timedelta(days=days_remaining)
 
                 # Since only a delta of days is received from the device, fix the

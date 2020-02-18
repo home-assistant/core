@@ -121,12 +121,15 @@ async def async_setup(hass, config):
     # The vallox hardware expects quite strict timings for websocket
     # requests. Timings that machines with less processing power, like
     # Raspberries, cannot live up to during the busy start phase of Home
-    # Asssistant. Hence, async_add_entities() for fan and sensor in respective
-    # code will be called with update_before_add=False to intentionally delay
-    # the first request, increasing chance that it is issued only when the
-    # machine is less busy again.
+    # Assistant. Hence, async_add_entities() for fan, sensor and binary sensor
+    # in respective code will be called with update_before_add=False to
+    # intentionally delay the first request, increasing chance that it is
+    # issued only when the machine is less busy again.
     hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
     hass.async_create_task(async_load_platform(hass, "fan", DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
+    )
 
     async_track_time_interval(hass, state_proxy.async_update, SCAN_INTERVAL)
 
