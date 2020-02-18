@@ -1,39 +1,23 @@
 """Support for Apple TV media player."""
 import logging
 
-import pyatv.const as atv_const
-
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-)
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-    STATE_STANDBY,
-)
-from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
+from homeassistant.components.media_player import MediaPlayerDevice
+from homeassistant.components.media_player.const import (
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+from homeassistant.const import (CONF_NAME, STATE_IDLE, STATE_OFF,
+                                 STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
+                                 STATE_UNKNOWN)
+from homeassistant.core import callback
+from pyatv.const import DeviceState, MediaType
 
-from . import ATTR_ATV, ATTR_POWER, DATA_APPLE_TV, DATA_ENTITIES
+from .const import CONF_IDENTIFIER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 SUPPORT_APPLE_TV = (
     SUPPORT_TURN_ON
@@ -48,49 +32,52 @@ SUPPORT_APPLE_TV = (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Apple TV platform."""
-    if not discovery_info:
-        return
-
-    # Manage entity cache for service handler
-    if DATA_ENTITIES not in hass.data:
-        hass.data[DATA_ENTITIES] = []
-
-    name = discovery_info[CONF_NAME]
-    host = discovery_info[CONF_HOST]
-    atv = hass.data[DATA_APPLE_TV][host][ATTR_ATV]
-    power = hass.data[DATA_APPLE_TV][host][ATTR_POWER]
-    entity = AppleTvDevice(atv, name, power)
-
-    @callback
-    def on_hass_stop(event):
-        """Stop push updates when hass stops."""
-        atv.push_updater.stop()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
-
-    if entity not in hass.data[DATA_ENTITIES]:
-        hass.data[DATA_ENTITIES].append(entity)
-
-    async_add_entities([entity])
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Load Apple TV media player based on a config entry."""
+    identifier = config_entry.data[CONF_IDENTIFIER]
+    name = config_entry.data[CONF_NAME]
+    manager = hass.data[DOMAIN][identifier]
+    async_add_entities([AppleTvDevice(name, identifier, manager)])
 
 
 class AppleTvDevice(MediaPlayerEntity):
     """Representation of an Apple TV device."""
 
-    def __init__(self, atv, name, power):
+    def __init__(self, name, identifier, manager):
         """Initialize the Apple TV device."""
-        self.atv = atv
+        self.atv = None
         self._name = name
+        self._identifier = identifier
         self._playing = None
-        self._power = power
-        self._power.listeners.append(self)
-        self.atv.push_updater.listener = self
+        self._manager = manager
 
     async def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
-        self._power.init()
+        self._manager.listeners.append(self)
+        await self._manager.init()
+
+    @callback
+    def device_connected(self):
+        """Handle when connection is made to device."""
+        self.atv = self._manager.atv
+        self.atv.push_updater.listener = self
+
+    @callback
+    def device_disconnected(self):
+        """Handle when connection was lost to device."""
+        self.atv = None
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self._identifier)},
+            "manufacturer": "Apple",
+            "model": "Media Player",
+            "name": self.name,
+            "sw_version": "0.0",
+            "via_device": (DOMAIN, self._identifier),
+        }
 
     @property
     def name(self):
@@ -100,7 +87,7 @@ class AppleTvDevice(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self.atv.metadata.device_id
+        return "mp_" + self._identifier
 
     @property
     def should_poll(self):
@@ -110,46 +97,32 @@ class AppleTvDevice(MediaPlayerEntity):
     @property
     def state(self):
         """Return the state of the device."""
-        if not self._power.turned_on:
+        if self._manager.is_connecting:
+            return STATE_UNKNOWN
+        if self.atv is None:
             return STATE_OFF
 
         if self._playing:
 
-            state = self._playing.play_state
-            if state in (
-                atv_const.PLAY_STATE_IDLE,
-                atv_const.PLAY_STATE_NO_MEDIA,
-                atv_const.PLAY_STATE_LOADING,
-            ):
+            state = self._playing.device_state
+            if state in (DeviceState.Idle, DeviceState.Loading):
                 return STATE_IDLE
-            if state == atv_const.PLAY_STATE_PLAYING:
+            if state == DeviceState.Playing:
                 return STATE_PLAYING
-            if state in (
-                atv_const.PLAY_STATE_PAUSED,
-                atv_const.PLAY_STATE_FAST_FORWARD,
-                atv_const.PLAY_STATE_FAST_BACKWARD,
-                atv_const.PLAY_STATE_STOPPED,
-            ):
-                # Catch fast forward/backward here so "play" is default action
+            if state in (DeviceState.Paused, DeviceState.Seeking, DeviceState.Stopped):
                 return STATE_PAUSED
             return STATE_STANDBY  # Bad or unknown state?
 
     @callback
-    def playstatus_update(self, updater, playing):
+    def playstatus_update(self, _, playing):
         """Print what is currently playing when it changes."""
         self._playing = playing
         self.async_write_ha_state()
 
     @callback
-    def playstatus_error(self, updater, exception):
+    def playstatus_error(self, _, exception):
         """Inform about an error and restart push updates."""
         _LOGGER.warning("A %s error occurred: %s", exception.__class__, exception)
-
-        # This will wait 10 seconds before restarting push updates. If the
-        # connection continues to fail, it will flood the log (every 10
-        # seconds) until it succeeds. A better approach should probably be
-        # implemented here later.
-        updater.start(initial_delay=10)
         self._playing = None
         self.async_write_ha_state()
 
@@ -159,11 +132,11 @@ class AppleTvDevice(MediaPlayerEntity):
         if self._playing:
 
             media_type = self._playing.media_type
-            if media_type == atv_const.MEDIA_TYPE_VIDEO:
+            if media_type == MediaType.Video:
                 return MEDIA_TYPE_VIDEO
-            if media_type == atv_const.MEDIA_TYPE_MUSIC:
+            if media_type == MediaType.Music:
                 return MEDIA_TYPE_MUSIC
-            if media_type == atv_const.MEDIA_TYPE_TV:
+            if media_type == MediaType.TV:
                 return MEDIA_TYPE_TVSHOW
 
     @property
@@ -181,26 +154,27 @@ class AppleTvDevice(MediaPlayerEntity):
     @property
     def media_position_updated_at(self):
         """Last valid time of media position."""
-        state = self.state
-        if state in (STATE_PLAYING, STATE_PAUSED):
+        if self.state in (STATE_PLAYING, STATE_PAUSED):
             return dt_util.utcnow()
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        await self.atv.airplay.play_url(media_id)
+        await self.atv.stream.play_url(media_id)
 
     @property
     def media_image_hash(self):
         """Hash value for media image."""
         state = self.state
-        if self._playing and state not in [STATE_OFF, STATE_IDLE]:
-            return self._playing.hash
+        if self._playing and state not in [STATE_UNKNOWN, STATE_OFF, STATE_IDLE]:
+            return self.atv.metadata.artwork_id
 
     async def async_get_media_image(self):
         """Fetch media image of current playing image."""
         state = self.state
         if self._playing and state not in [STATE_OFF, STATE_IDLE]:
-            return (await self.atv.metadata.artwork()), "image/png"
+            artwork = await self.atv.metadata.artwork()
+            if artwork:
+                return artwork.bytes, artwork.mimetype
 
         return None, None
 
@@ -213,7 +187,7 @@ class AppleTvDevice(MediaPlayerEntity):
             title = self._playing.title
             return title if title else "No title"
 
-        return f"Establishing a connection to {self._name}..."
+        return self._manager.message
 
     @property
     def supported_features(self):
@@ -222,22 +196,21 @@ class AppleTvDevice(MediaPlayerEntity):
 
     async def async_turn_on(self):
         """Turn the media player on."""
-        self._power.set_power_on(True)
+        await self._manager.connect()
 
     async def async_turn_off(self):
         """Turn the media player off."""
         self._playing = None
-        self._power.set_power_on(False)
+        await self._manager.disconnect()
 
     async def async_media_play_pause(self):
         """Pause media on media player."""
-        if not self._playing:
-            return
-        state = self.state
-        if state == STATE_PAUSED:
-            await self.atv.remote_control.play()
-        elif state == STATE_PLAYING:
-            await self.atv.remote_control.pause()
+        if self._playing:
+            state = self.state
+            if state == STATE_PAUSED:
+                await self.atv.remote_control.play()
+            elif state == STATE_PLAYING:
+                await self.atv.remote_control.pause()
 
     async def async_media_play(self):
         """Play media."""

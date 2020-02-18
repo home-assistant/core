@@ -606,6 +606,9 @@ pyatag==0.3.3.4
 # homeassistant.components.netatmo
 pyatmo==4.0.0
 
+# homeassistant.components.apple_tv
+pyatv==0.4.0a16
+
 # homeassistant.components.blackbird
 pyblackbird==0.5
 

@@ -16,6 +16,9 @@ ZEROCONF = {
             "domain": "guardian"
         }
     ],
+    "_appletv-v2._tcp.local.": [
+        "apple_tv"
+    ],
     "_axis-video._tcp.local.": [
         {
             "domain": "axis",
@@ -103,6 +106,9 @@ ZEROCONF = {
             "domain": "plugwise"
         }
     ],
+    "_mediaremotetv._tcp.local.": [
+        "apple_tv"
+    ],
     "_printer._tcp.local.": [
         {
             "domain": "brother",
@@ -123,6 +129,9 @@ ZEROCONF = {
             "domain": "smappee",
             "name": "smappee2*"
         }
+    ],
+    "_touch-able._tcp.local.": [
+        "apple_tv"
     ],
     "_viziocast._tcp.local.": [
         {
