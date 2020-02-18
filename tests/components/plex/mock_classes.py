@@ -84,6 +84,16 @@ class MockPlexServer:
         return [self._systemAccount]
 
     @property
+    def accounts(self):
+        """Mock the accounts property."""
+        return set(["a", "b", "c"])
+
+    @property
+    def owner(self):
+        """Mock the owner property."""
+        return "a"
+
+    @property
     def url_in_use(self):
         """Return URL used by PlexServer."""
         return self._baseurl
