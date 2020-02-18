@@ -306,7 +306,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                                                      offset=0,
                                                      fields='total')
                 song_count = response.get('total', 1)
-                position = randint(0, N_songs - 1)
+                position = randint(0, song_count - 1)
                 kwargs["offset"] = {"position": position}
         else:
             _LOGGER.error("Media type %s is not supported", media_type)
