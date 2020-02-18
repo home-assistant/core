@@ -279,11 +279,11 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_IGNORE_NEW_SHARED_USERS
             ]
 
-            account_data = {}
-            for user in plex_server.accounts:
-                account_data.setdefault(
-                    user, {"enabled": bool(user in user_input[CONF_MONITORED_USERS])},
-                )
+            account_data = {
+                user: {"enabled": bool(user in user_input[CONF_MONITORED_USERS])}
+                for user in plex_server.accounts
+            }
+
             self.options[MP_DOMAIN][CONF_MONITORED_USERS] = account_data
 
             return self.async_create_entry(title="", data=self.options)
