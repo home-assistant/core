@@ -39,7 +39,6 @@ async def test_async_setup_failed(hass):
             dynalite.DOMAIN,
             {dynalite.DOMAIN: {dynalite.CONF_BRIDGES: [{dynalite.CONF_HOST: host}]}},
         )
-    dynalite.LOGGER.error("XXX - %s", hass.data[dynalite.DOMAIN])
     assert hass.data[dynalite.DOMAIN] == {}
 
 
