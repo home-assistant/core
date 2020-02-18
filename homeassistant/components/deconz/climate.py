@@ -44,6 +44,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                     gateway.option_allow_clip_sensor
                     or not sensor.type.startswith("CLIP")
                 )
+                and sensor.deconz_id not in gateway.deconz_ids.values()
             ):
                 entities.append(DeconzThermostat(sensor, gateway))
 
