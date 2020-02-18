@@ -2,6 +2,7 @@
 import aiounifi
 from asynctest import patch
 
+from homeassistant import data_entry_flow
 from homeassistant.components import unifi
 from homeassistant.components.unifi import config_flow
 from homeassistant.components.unifi.const import CONF_CONTROLLER, CONF_SITE_ID
@@ -242,31 +243,32 @@ async def test_option_flow(hass):
     """Test config flow options."""
     controller = await setup_unifi_integration(hass, wlans_response=WLANS)
 
-    flow = await hass.config_entries.options.async_create_flow(
-        controller.config_entry.entry_id, context={"source": "test"}, data=None
+    result = await hass.config_entries.options.async_init(
+        controller.config_entry.entry_id
     )
-    flow.hass = hass
 
-    result = await flow.async_step_init()
-    assert result["type"] == "form"
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "device_tracker"
 
-    result = await flow.async_step_device_tracker(
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
         user_input={
             config_flow.CONF_TRACK_CLIENTS: False,
             config_flow.CONF_TRACK_WIRED_CLIENTS: False,
             config_flow.CONF_TRACK_DEVICES: False,
             config_flow.CONF_SSID_FILTER: ["SSID 1"],
             config_flow.CONF_DETECTION_TIME: 100,
-        }
+        },
     )
-    assert result["type"] == "form"
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "statistics_sensors"
 
-    result = await flow.async_step_statistics_sensors(
-        user_input={config_flow.CONF_ALLOW_BANDWIDTH_SENSORS: True}
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={config_flow.CONF_ALLOW_BANDWIDTH_SENSORS: True}
     )
-    assert result["type"] == "create_entry"
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         config_flow.CONF_TRACK_CLIENTS: False,
         config_flow.CONF_TRACK_WIRED_CLIENTS: False,
