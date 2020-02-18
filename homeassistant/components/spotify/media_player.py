@@ -300,11 +300,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             kwargs["uris"] = [media_id]
         elif media_type == MEDIA_TYPE_PLAYLIST:
             kwargs["context_uri"] = media_id
-            try:
-                spotify_type = media_id.split(":")[1]
-            except IndexError:
-                spotify_type = None
-            if self.shuffle and spotify_type == "playlist":
+            if self.shuffle and "playlist" in media_id:
                 response = self._spotify.playlist_tracks(
                     media_id, offset=0, fields="total"
                 )
