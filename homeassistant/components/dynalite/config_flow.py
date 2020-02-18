@@ -1,5 +1,5 @@
 """Config flow to configure Dynalite hub."""
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
 
 from .bridge import DynaliteBridge
@@ -22,15 +22,8 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a new bridge as a config entry."""
         LOGGER.debug("Starting async_step_import - %s", import_info)
         host = import_info[CONF_HOST]
-        entry = await self.async_set_unique_id(host)
-        if entry:
-            LOGGER.debug("Entry already configured - %s", entry.data)
-            if entry.data != import_info:
-                LOGGER.debug("Entry configured with different info - updating")
-                await self.hass.config_entries.async_unload(entry.entry_id)
-                return self.async_create_entry(title=host, data=import_info)
-            LOGGER.debug("Entry has the same info - doing nothing")
-            raise data_entry_flow.AbortFlow("already_configured")
+        await self.async_set_unique_id(host)
+        self._abort_if_unique_id_configured(import_info)
         # New entry
         bridge = DynaliteBridge(self.hass, import_info)
         if not await bridge.async_setup():
