@@ -517,7 +517,12 @@ class AugustData:
         operative_locks = []
         for lock in self._locks:
             lock_detail = self._lock_detail_by_id.get(lock.device_id)
-            if lock_detail.bridge is None:
+            if lock_detail is None:
+                _LOGGER.info(
+                    "The lock %s could not be setup because the system could not fetch details about the lock.",
+                    lock.device_name,
+                )
+            elif lock_detail.bridge is None:
                 _LOGGER.info(
                     "The lock %s could not be setup because it does not have a bridge (Connect).",
                     lock.device_name,
