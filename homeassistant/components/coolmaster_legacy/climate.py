@@ -1,4 +1,4 @@
-"""coolmaster_serial platform to control of CoolMaste Climate Devices."""
+"""coolmaster_legacy platform to control of CoolMaster Climate Devices."""
 
 import logging
 
@@ -56,7 +56,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
 
 class CoolmasterClimate(ClimateDevice):
-    """Representation of a coolmaster_serial climate device."""
+    """Representation of a coolmaster_legacy climate device."""
 
     def __init__(self, device):
         """Initialize the climate device."""

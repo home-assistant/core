@@ -1,4 +1,4 @@
-"""Config flow for coolmaster_serial."""
+"""Config flow for coolmaster_legacy."""
 
 
 from pycoolmaster import CoolMaster

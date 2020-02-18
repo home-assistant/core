@@ -1,4 +1,4 @@
-"""The coolmaster_serial integration."""
+"""The coolmaster_legacy integration."""
 
 
 from homeassistant.config_entries import ConfigEntry
@@ -6,12 +6,12 @@ from homeassistant.core import HomeAssistant
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the coolmaster_serial component."""
+    """Set up the coolmaster_legacy component."""
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up coolmaster_serial from a config entry."""
+    """Set up coolmaster_legacy from a config entry."""
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "climate")
     )

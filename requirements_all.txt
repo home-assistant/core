@@ -1183,7 +1183,7 @@ pycmus==0.1.1
 # homeassistant.components.comfoconnect
 pycomfoconnect==0.3
 
-# homeassistant.components.coolmaster_serial
+# homeassistant.components.coolmaster_legacy
 pycoolmaster==0.2.1
 
 # homeassistant.components.coolmaster

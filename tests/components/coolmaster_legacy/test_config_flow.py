@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries, setup
-from homeassistant.components.coolmaster_serial.const import DOMAIN
+from homeassistant.components.coolmaster_legacy.const import DOMAIN
 
 from tests.common import mock_coro
 
@@ -22,13 +22,13 @@ async def test_form(hass):
     assert result["errors"] is None
 
     with patch(
-        "homeassistant.components.coolmaster_serial.config_flow.CoolMaster.devices",
+        "homeassistant.components.coolmaster_legacy.config_flow.CoolMaster.devices",
         return_value=[1],
     ), patch(
-        "homeassistant.components.coolmaster_serial.async_setup",
+        "homeassistant.components.coolmaster_legacy.async_setup",
         return_value=mock_coro(True),
     ) as mock_setup, patch(
-        "homeassistant.components.coolmaster_serial.async_setup_entry",
+        "homeassistant.components.coolmaster_legacy.async_setup_entry",
         return_value=mock_coro(True),
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
@@ -50,7 +50,7 @@ async def test_form_timeout(hass):
     )
 
     with patch(
-        "homeassistant.components.coolmaster_serial.config_flow.CoolMaster.devices",
+        "homeassistant.components.coolmaster_legacy.config_flow.CoolMaster.devices",
         side_effect=TimeoutError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -68,7 +68,7 @@ async def test_form_connection_refused(hass):
     )
 
     with patch(
-        "homeassistant.components.coolmaster_serial.config_flow.CoolMaster.devices",
+        "homeassistant.components.coolmaster_legacy.config_flow.CoolMaster.devices",
         side_effect=ConnectionRefusedError(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -86,7 +86,7 @@ async def test_form_no_units(hass):
     )
 
     with patch(
-        "homeassistant.components.coolmaster_serial.config_flow.CoolMaster.devices",
+        "homeassistant.components.coolmaster_legacy.config_flow.CoolMaster.devices",
         return_value=[],
     ):
         result2 = await hass.config_entries.flow.async_configure(

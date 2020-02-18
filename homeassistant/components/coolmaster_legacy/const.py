@@ -1,4 +1,4 @@
-"""Constants for the coolmaster_serial integration."""
+"""Constants for the coolmaster_legacy integration."""
 
 from homeassistant.components.climate.const import (
     HVAC_MODE_COOL,
@@ -22,4 +22,4 @@ AVAILABLE_MODES = [
     HVAC_MODE_FAN_ONLY,
 ]
 
-DOMAIN = "coolmaster_serial"
+DOMAIN = "coolmaster_legacy"
