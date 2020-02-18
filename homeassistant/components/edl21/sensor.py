@@ -119,7 +119,12 @@ class EDL21Entity(Entity):
         self._telegram = telegram
         self._min_time = MIN_TIME_BETWEEN_UPDATES
         self._last_update = utcnow()
-        self._state_attrs = {"status", "valTime", "scaler", "valueSignature"}
+        self._state_attrs = {
+            "status": "status",
+            "valTime": "val_time",
+            "scaler": "scaler",
+            "valueSignature": "value_signature",
+        }
         self._async_remove_dispatcher = None
 
     async def async_added_to_hass(self):
@@ -172,7 +177,11 @@ class EDL21Entity(Entity):
     @property
     def device_state_attributes(self):
         """Enumerate supported attributes."""
-        return {k: v for k, v in self._telegram.items() if k in self._state_attrs}
+        return {
+            self._state_attrs[k]: v
+            for k, v in self._telegram.items()
+            if k in self._state_attrs
+        }
 
     @property
     def unit_of_measurement(self):
