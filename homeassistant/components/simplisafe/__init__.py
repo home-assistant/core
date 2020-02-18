@@ -15,7 +15,13 @@ from simplipy.websocket import (
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
+from homeassistant.const import (
+    ATTR_CODE,
+    CONF_CODE,
+    CONF_PASSWORD,
+    CONF_TOKEN,
+    CONF_USERNAME,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -59,6 +65,7 @@ DATA_LISTENER = "listener"
 TOPIC_UPDATE = "simplisafe_update_data_{0}"
 
 EVENT_SIMPLISAFE_EVENT = "SIMPLISAFE_EVENT"
+EVENT_SIMPLISAFE_NOTIFICATION = "SIMPLISAFE_NOTIFICATION"
 
 DEFAULT_SOCKET_MIN_RETRY = 15
 DEFAULT_WATCHDOG_SECONDS = 5 * 60
@@ -71,6 +78,7 @@ WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT = [
     EVENT_MOTION_DETECTED,
 ]
 
+ATTR_CATEGORY = "category"
 ATTR_LAST_EVENT_CHANGED_BY = "last_event_changed_by"
 ATTR_LAST_EVENT_INFO = "last_event_info"
 ATTR_LAST_EVENT_SENSOR_NAME = "last_event_sensor_name"
@@ -79,10 +87,12 @@ ATTR_LAST_EVENT_SENSOR_TYPE = "last_event_sensor_type"
 ATTR_LAST_EVENT_TIMESTAMP = "last_event_timestamp"
 ATTR_LAST_EVENT_TYPE = "last_event_type"
 ATTR_LAST_EVENT_TYPE = "last_event_type"
+ATTR_MESSAGE = "message"
 ATTR_PIN_LABEL = "label"
 ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
 ATTR_PIN_VALUE = "pin"
 ATTR_SYSTEM_ID = "system_id"
+ATTR_TIMESTAMP = "timestamp"
 
 SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
 
@@ -428,9 +438,42 @@ class SimpliSafe:
         self._config_entry = config_entry
         self._emergency_refresh_token_used = False
         self._hass = hass
+        self._system_notifications = {}
         self.initial_event_to_use = {}
-        self.systems = None
+        self.systems = {}
         self.websocket = SimpliSafeWebsocket(hass, api.websocket)
+
+    @callback
+    def _async_process_new_notifications(self, system):
+        """Act on any new system notifications."""
+        old_notifications = self._system_notifications.get(system.system_id, [])
+        latest_notifications = system.notifications
+
+        # Save the latest notifications:
+        self._system_notifications[system.system_id] = latest_notifications
+
+        # Process any notifications that are new:
+        to_add = set(latest_notifications) - set(old_notifications)
+
+        if not to_add:
+            return
+
+        _LOGGER.debug("New system notifications: %s", to_add)
+
+        for notification in to_add:
+            text = notification.text
+            if notification.link:
+                text = f"{text} For more information: {notification.link}"
+
+            self._hass.bus.async_fire(
+                EVENT_SIMPLISAFE_NOTIFICATION,
+                event_data={
+                    ATTR_CATEGORY: notification.category,
+                    ATTR_CODE: notification.code,
+                    ATTR_MESSAGE: text,
+                    ATTR_TIMESTAMP: notification.timestamp,
+                },
+            )
 
     async def async_init(self):
         """Initialize the data class."""
@@ -471,6 +514,7 @@ class SimpliSafe:
         async def update_system(system):
             """Update a system."""
             await system.update()
+            self._async_process_new_notifications(system)
             _LOGGER.debug('Updated REST API data for "%s"', system.address)
             async_dispatcher_send(self._hass, TOPIC_UPDATE.format(system.system_id))
 
