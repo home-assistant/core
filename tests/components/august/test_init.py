@@ -1,6 +1,5 @@
 """The tests for the august platform."""
 import asyncio
-import unittest.mock
 from unittest.mock import MagicMock
 
 from homeassistant.components import august
@@ -59,30 +58,28 @@ def test_lock_throws_august_api_http_error():
     )
 
 
-class TestAugustData(unittest.TestCase):
-    """Tests for AugustData."""
+def test_inoperative_locks_are_filtered_out():
+    """Ensure inoperative locks do not get setup."""
+    august_operative_lock = _mock_operative_august_lock_detail("oplockid1")
+    data = _create_august_data_with_lock_details(
+        [august_operative_lock, _mock_inoperative_august_lock_detail("inoplockid1")]
+    )
 
-    def test_inoperative_locks_are_filtered_out(self):
-        """Ensure inoperative locks do not get setup."""
-        august_operative_lock = _mock_operative_august_lock_detail("oplockid1")
-        data = _create_august_data_with_lock_details(
-            [august_operative_lock, _mock_inoperative_august_lock_detail("inoplockid1")]
-        )
+    assert len(data.locks) == 1
+    assert data.locks[0].device_id == "oplockid1"
 
-        self.assertEqual(len(data.locks), 1)
-        self.assertEqual(data.locks[0].device_id, "oplockid1")
 
-    def test_lock_has_doorsense(self):
-        """Check to see if a lock has doorsense."""
-        data = _create_august_data_with_lock_details(
-            [
-                _mock_doorsense_enabled_august_lock_detail("doorsenselock1"),
-                _mock_doorsense_missing_august_lock_detail("nodoorsenselock1"),
-            ]
-        )
+def test_lock_has_doorsense():
+    """Check to see if a lock has doorsense."""
+    data = _create_august_data_with_lock_details(
+        [
+            _mock_doorsense_enabled_august_lock_detail("doorsenselock1"),
+            _mock_doorsense_missing_august_lock_detail("nodoorsenselock1"),
+        ]
+    )
 
-        self.assertTrue(data.lock_has_doorsense("doorsenselock1"))
-        self.assertFalse(data.lock_has_doorsense("nodoorsenselock1"))
+    assert data.lock_has_doorsense("doorsenselock1") is True
+    assert data.lock_has_doorsense("nodoorsenselock1") is not True
 
 
 async def test__refresh_access_token(hass):
