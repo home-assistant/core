@@ -1,0 +1,8 @@
+{
+  "domain": "forked_daapd",
+  "name": "forked-daapd",
+  "documentation": "https://www.home-assistant.io/integrations/forked-daapd",
+  "dependencies": [],
+  "codeowners": ["@uvjustin"],
+  "requirements": ["pyforked-daapd==0.1.2"]
+}

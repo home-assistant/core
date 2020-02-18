@@ -130,6 +130,7 @@ homeassistant/components/flick_electric/* @ZephireNZ
 homeassistant/components/flock/* @fabaff
 homeassistant/components/flume/* @ChrisMandich @bdraco
 homeassistant/components/flunearyou/* @bachya
+homeassistant/components/forked_daapd/* @uvjustin
 homeassistant/components/fortigate/* @kifeo
 homeassistant/components/fortios/* @kimfrellsen
 homeassistant/components/foscam/* @skgsergio
