@@ -78,7 +78,6 @@ WEBSOCKET_EVENTS_TO_TRIGGER_HASS_EVENT = [
     EVENT_MOTION_DETECTED,
 ]
 
-ATTR_TIMESTAMP = "timestamp"
 ATTR_CATEGORY = "category"
 ATTR_LAST_EVENT_CHANGED_BY = "last_event_changed_by"
 ATTR_LAST_EVENT_INFO = "last_event_info"
@@ -88,11 +87,12 @@ ATTR_LAST_EVENT_SENSOR_TYPE = "last_event_sensor_type"
 ATTR_LAST_EVENT_TIMESTAMP = "last_event_timestamp"
 ATTR_LAST_EVENT_TYPE = "last_event_type"
 ATTR_LAST_EVENT_TYPE = "last_event_type"
+ATTR_MESSAGE = "message"
 ATTR_PIN_LABEL = "label"
 ATTR_PIN_LABEL_OR_VALUE = "label_or_pin"
 ATTR_PIN_VALUE = "pin"
 ATTR_SYSTEM_ID = "system_id"
-ATTR_NOTIFICATION_TEXT = "notification_text"
+ATTR_TIMESTAMP = "timestamp"
 
 SERVICE_BASE_SCHEMA = vol.Schema({vol.Required(ATTR_SYSTEM_ID): cv.positive_int})
 
@@ -470,7 +470,7 @@ class SimpliSafe:
                 event_data={
                     ATTR_CATEGORY: notification.category,
                     ATTR_CODE: notification.code,
-                    ATTR_NOTIFICATION_TEXT: text,
+                    ATTR_MESSAGE: text,
                     ATTR_TIMESTAMP: notification.timestamp,
                 },
             )
