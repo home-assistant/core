@@ -2,12 +2,10 @@
 # pylint: disable=protected-access
 import asyncio
 from datetime import timedelta
-import functools as ft
 import logging
 from unittest import mock
 
 import asynctest
-import jinja2
 import pytest
 import voluptuous as vol
 
@@ -106,14 +104,9 @@ async def test_calling_service(hass):
 
     hass.services.async_register("test", "script", record_call)
 
-    hass.async_add_job(
-        ft.partial(
-            script.call_from_config,
-            hass,
-            {"service": "test.script", "data": {"hello": "world"}},
-            context=context,
-        )
-    )
+    await script.Script(
+        hass, cv.SCRIPT_SCHEMA({"service": "test.script", "data": {"hello": "world"}})
+    ).async_run(context=context)
 
     await hass.async_block_till_done()
 
@@ -134,10 +127,8 @@ async def test_activating_scene(hass):
 
     hass.services.async_register(scene.DOMAIN, SERVICE_TURN_ON, record_call)
 
-    hass.async_add_job(
-        ft.partial(
-            script.call_from_config, hass, {"scene": "scene.hello"}, context=context
-        )
+    await script.Script(hass, cv.SCRIPT_SCHEMA({"scene": "scene.hello"})).async_run(
+        context=context
     )
 
     await hass.async_block_till_done()
@@ -159,10 +150,9 @@ async def test_calling_service_template(hass):
 
     hass.services.async_register("test", "script", record_call)
 
-    hass.async_add_job(
-        ft.partial(
-            script.call_from_config,
-            hass,
+    await script.Script(
+        hass,
+        cv.SCRIPT_SCHEMA(
             {
                 "service_template": """
                 {% if True %}
@@ -180,10 +170,8 @@ async def test_calling_service_template(hass):
                 """
                 },
             },
-            {"is_world": "yes"},
-            context=context,
-        )
-    )
+        ),
+    ).async_run({"is_world": "yes"}, context=context)
 
     await hass.async_block_till_done()
 
@@ -386,7 +374,7 @@ async def test_delay_template(hass):
     assert len(events) == 2
 
 
-async def test_delay_invalid_template(hass):
+async def test_delay_invalid_template(hass, caplog):
     """Test the delay as a template that fails."""
     event = "test_event"
     events = []
@@ -408,12 +396,15 @@ async def test_delay_invalid_template(hass):
                 {"event": event},
             ]
         ),
+        logger=logging.getLogger("TEST"),
     )
 
-    with mock.patch.object(script, "_LOGGER") as mock_logger:
-        await script_obj.async_run()
-        await hass.async_block_till_done()
-        assert mock_logger.error.called
+    await script_obj.async_run()
+    await hass.async_block_till_done()
+    # TODO: Check error message???
+    assert any(
+        rec.levelname == "ERROR" and rec.name == "TEST" for rec in caplog.records
+    )
 
     assert not script_obj.is_running
     assert len(events) == 1
@@ -459,7 +450,7 @@ async def test_delay_complex_template(hass):
     assert len(events) == 2
 
 
-async def test_delay_complex_invalid_template(hass):
+async def test_delay_complex_invalid_template(hass, caplog):
     """Test the delay with a complex template that fails."""
     event = "test_event"
     events = []
@@ -471,6 +462,7 @@ async def test_delay_complex_invalid_template(hass):
 
     hass.bus.async_listen(event, record_event)
 
+    # TODO: Use invalid timedelta???
     script_obj = script.Script(
         hass,
         cv.SCRIPT_SCHEMA(
@@ -481,12 +473,15 @@ async def test_delay_complex_invalid_template(hass):
                 {"event": event},
             ]
         ),
+        logger=logging.getLogger("TEST"),
     )
 
-    with mock.patch.object(script, "_LOGGER") as mock_logger:
-        await script_obj.async_run()
-        await hass.async_block_till_done()
-        assert mock_logger.error.called
+    await script_obj.async_run()
+    await hass.async_block_till_done()
+    # TODO: Check error message???
+    assert any(
+        rec.levelname == "ERROR" and rec.name == "TEST" for rec in caplog.records
+    )
 
     assert not script_obj.is_running
     assert len(events) == 1
@@ -1048,7 +1043,7 @@ async def test_last_triggered(hass):
     assert script_obj.last_triggered is None
 
     time = dt_util.utcnow()
-    with mock.patch("homeassistant.helpers.script.date_util.utcnow", return_value=time):
+    with mock.patch("homeassistant.helpers.script.utcnow", return_value=time):
         await script_obj.async_run()
         await hass.async_block_till_done()
 
@@ -1073,7 +1068,7 @@ async def test_propagate_error_service_not_found(hass):
         await script_obj.async_run()
 
     assert len(events) == 0
-    assert script_obj._cur == -1
+    assert not script_obj.is_running
 
 
 async def test_propagate_error_invalid_service_data(hass):
@@ -1109,7 +1104,7 @@ async def test_propagate_error_invalid_service_data(hass):
 
     assert len(events) == 0
     assert len(calls) == 0
-    assert script_obj._cur == -1
+    assert not script_obj.is_running
 
 
 async def test_propagate_error_service_exception(hass):
@@ -1140,39 +1135,7 @@ async def test_propagate_error_service_exception(hass):
 
     assert len(events) == 0
     assert len(calls) == 0
-    assert script_obj._cur == -1
-
-
-def test_log_exception():
-    """Test logged output."""
-    script_obj = script.Script(
-        None, cv.SCRIPT_SCHEMA([{"service": "test.script"}, {"event": "test_event"}])
-    )
-    script_obj._exception_step = 1
-
-    for exc, msg in (
-        (vol.Invalid("Invalid number"), "Invalid data"),
-        (
-            exceptions.TemplateError(jinja2.TemplateError("Unclosed bracket")),
-            "Error rendering template",
-        ),
-        (exceptions.Unauthorized(), "Unauthorized"),
-        (exceptions.ServiceNotFound("light", "turn_on"), "Service not found"),
-        (ValueError("Cannot parse JSON"), "Unknown error"),
-    ):
-        logger = mock.Mock()
-        script_obj.async_log_exception(logger, "Test error", exc)
-
-        assert len(logger.mock_calls) == 1
-        _, _, p_error_desc, p_action_type, p_step, p_error = logger.mock_calls[0][1]
-
-        assert p_error_desc == msg
-        assert p_action_type == script.ACTION_FIRE_EVENT
-        assert p_step == 2
-        if isinstance(exc, ValueError):
-            assert p_error == ""
-        else:
-            assert p_error == str(exc)
+    assert not script_obj.is_running
 
 
 async def test_referenced_entities():
