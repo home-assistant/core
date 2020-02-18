@@ -1,11 +1,11 @@
 """Test config flow."""
-import logging
 
-from pyatv import conf, exceptions, interface
-from pyatv.const import Protocol
 from tests.common import MockConfigEntry, mock_coro
 
-### USER FLOWS
+from pyatv import exceptions
+from pyatv.const import Protocol
+
+# User Flows
 
 
 async def test_user_input_device_not_found(flow, mrp_device):
@@ -80,7 +80,7 @@ async def test_user_adds_dmap_device(flow, dmap_device, dmap_pin, pairing):
             "address": "127.0.0.1",
             "protocol": Protocol.DMAP.value,
             "name": "DMAP Device",
-            "credentials": {Protocol.DMAP.value: "dmap_creds",},
+            "credentials": {Protocol.DMAP.value: "dmap_creds"},
         }
     )
 
@@ -112,7 +112,7 @@ async def test_user_adds_device_with_credentials(flow, dmap_device_with_credenti
             "address": "127.0.0.1",
             "protocol": Protocol.DMAP.value,
             "name": "DMAP Device",
-            "credentials": {Protocol.DMAP.value: "dummy_creds",},
+            "credentials": {Protocol.DMAP.value: "dummy_creds"},
         }
     )
 
@@ -131,7 +131,7 @@ async def test_user_adds_device_with_ip_filter(
             "address": "127.0.0.1",
             "protocol": Protocol.DMAP.value,
             "name": "DMAP Device",
-            "credentials": {Protocol.DMAP.value: "dummy_creds",},
+            "credentials": {Protocol.DMAP.value: "dummy_creds"},
         }
     )
 
@@ -235,7 +235,7 @@ async def test_user_pair_begin_unexpected_error(flow, mrp_device, pairing_mock):
     (await flow().step_confirm()).gives_abort(reason="unrecoverable_error")
 
 
-### IMPORT DEVICE
+# Import Device
 
 
 async def test_import_mrp_device(flow, mrp_device):
@@ -254,12 +254,12 @@ async def test_import_mrp_device(flow, mrp_device):
             "address": "127.0.0.1",
             "protocol": Protocol.MRP.value,
             "name": "Kitchen",
-            "credentials": {Protocol.MRP.value: "mrp_creds",},
+            "credentials": {Protocol.MRP.value: "mrp_creds"},
         }
     )
 
 
-### Zeroconf
+# Zeroconf
 
 
 async def test_zeroconf_unsupported_service_aborts(flow):
@@ -276,7 +276,7 @@ async def test_zeroconf_add_mrp_device(flow, mrp_device, pairing):
     """Test add MRP device discovered by zeroconf."""
     service_info = {
         "type": "_mediaremotetv._tcp.local.",
-        "properties": {"UniqueIdentifier": "mrp_id", "Name": "Kitchen",},
+        "properties": {"UniqueIdentifier": "mrp_id", "Name": "Kitchen"},
     }
 
     (await flow().step_zeroconf(**service_info)).gives_form_confirm(
@@ -293,7 +293,7 @@ async def test_zeroconf_add_mrp_device(flow, mrp_device, pairing):
             "address": "127.0.0.1",
             "protocol": Protocol.MRP.value,
             "name": "MRP Device",
-            "credentials": {Protocol.MRP.value: "mrp_creds",},
+            "credentials": {Protocol.MRP.value: "mrp_creds"},
         }
     )
 
@@ -303,7 +303,7 @@ async def test_zeroconf_add_dmap_device(flow, dmap_device):
     service_info = {
         "type": "_touch-able._tcp.local.",
         "name": "dmap_id.something",
-        "properties": {"CtlN": "Apple TV",},
+        "properties": {"CtlN": "Apple TV"},
     }
 
     (await flow().step_zeroconf(**service_info)).gives_form_confirm(
@@ -318,7 +318,7 @@ async def test_zeroconf_add_dmap_device_with_credentials(
     service_info = {
         "type": "_appletv-v2._tcp.local.",
         "name": "dmap_id.something",
-        "properties": {"Name": "Apple TV",},
+        "properties": {"Name": "Apple TV"},
     }
 
     (await flow().step_zeroconf(**service_info)).gives_form_confirm(
@@ -331,7 +331,7 @@ async def test_zeroconf_add_existing_aborts(flow, dmap_device):
     service_info = {
         "type": "_touch-able._tcp.local.",
         "name": "dmap_id.something",
-        "properties": {"CtlN": "Apple TV",},
+        "properties": {"CtlN": "Apple TV"},
     }
 
     (await flow().init_zeroconf(**service_info)).gives_form_confirm()
@@ -343,7 +343,7 @@ async def test_zeroconf_add_but_device_not_found(flow, mock_scan):
     service_info = {
         "type": "_touch-able._tcp.local.",
         "name": "dmap_id.something",
-        "properties": {"CtlN": "Apple TV",},
+        "properties": {"CtlN": "Apple TV"},
     }
 
     (await flow().step_zeroconf(**service_info)).gives_abort(reason="device_not_found")
@@ -354,7 +354,7 @@ async def test_zeroconf_add_existing_device(hass, flow, dmap_device):
     service_info = {
         "type": "_touch-able._tcp.local.",
         "name": "dmap_id.something",
-        "properties": {"CtlN": "Apple TV",},
+        "properties": {"CtlN": "Apple TV"},
     }
 
     MockConfigEntry(domain="apple_tv", data={"identifier": "dmap_id"}).add_to_hass(hass)
@@ -369,7 +369,7 @@ async def test_zeroconf_unexpected_error(flow, mock_scan):
     service_info = {
         "type": "_touch-able._tcp.local.",
         "name": "dmap_id.something",
-        "properties": {"CtlN": "Apple TV",},
+        "properties": {"CtlN": "Apple TV"},
     }
 
     mock_scan.side_effect = Exception
@@ -379,7 +379,7 @@ async def test_zeroconf_unexpected_error(flow, mock_scan):
     )
 
 
-### Reconfiguration
+# Re-configuration
 
 
 async def test_reconfigure_ongoing_aborts(hass, flow, mrp_device):
@@ -413,11 +413,11 @@ async def test_reconfigure_update_credentials(hass, flow, mrp_device, pairing):
         "address": "127.0.0.1",
         "protocol": Protocol.MRP.value,
         "name": "MRP Device",
-        "credentials": {Protocol.MRP.value: "mrp_creds",},
+        "credentials": {Protocol.MRP.value: "mrp_creds"},
     }
 
 
-### Options
+# Options
 
 
 async def test_option_start_off(options):

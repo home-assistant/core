@@ -1,12 +1,12 @@
 """Fixtures for component."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
+from tests.common import MockConfigEntry, mock_coro
 
 from homeassistant.components.apple_tv import config_flow
 from pyatv import conf
-from tests.common import MockConfigEntry, mock_coro
 
 from .common import FlowInteraction, MockPairingHandler, create_conf
 
@@ -124,6 +124,7 @@ def airplay_device(mock_scan):
 
 @pytest.fixture
 def flow(hass):
+    """Return config flow wrapped in FlowInteraction."""
     flow = config_flow.AppleTVConfigFlow()
     flow.hass = hass
     flow.context = {}

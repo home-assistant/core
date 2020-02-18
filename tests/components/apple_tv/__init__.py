@@ -1,1 +1,1 @@
-"""Tests for esphome."""
+"""Tests for Apple TV."""

@@ -74,6 +74,7 @@ class FlowInteraction:
         self.result = None
 
     def __getattr__(self, attr):
+        """Return correct action method dynamically based on name."""
         prefix, name = attr.split("_", 1)
         if prefix == "step":
             self.name = name

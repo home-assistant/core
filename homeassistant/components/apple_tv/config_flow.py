@@ -1,22 +1,32 @@
 """Config flow for Apple TV integration."""
-import asyncio
 import logging
 from ipaddress import ip_address
 from random import randrange
 
 import voluptuous as vol
 
-from homeassistant import config_entries, core
-from homeassistant.const import (CONF_ADDRESS, CONF_NAME, CONF_PIN,
-                                 CONF_PROTOCOL, CONF_TYPE)
+from homeassistant import config_entries
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_NAME,
+    CONF_PIN,
+    CONF_PROTOCOL,
+    CONF_TYPE,
+)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from pyatv import conf, const, convert, exceptions, pair, scan
+from pyatv import const, convert, exceptions, pair, scan
 
-from .const import (CONF_CREDENTIALS, CONF_CREDENTIALS_AIRPLAY,
-                    CONF_CREDENTIALS_DMAP, CONF_CREDENTIALS_MRP,
-                    CONF_IDENTIFIER, CONF_START_OFF, DOMAIN)
+from .const import (
+    CONF_CREDENTIALS,
+    CONF_CREDENTIALS_AIRPLAY,
+    CONF_CREDENTIALS_DMAP,
+    CONF_CREDENTIALS_MRP,
+    CONF_IDENTIFIER,
+    CONF_START_OFF,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +44,8 @@ CREDENTIAL_MAPPING = {
 
 
 async def device_scan(identifier, loop, cache=None):
+    """Scan for a specific device using identifer as filter."""
+
     def _filter_device(dev):
         if identifier is None:
             return True
@@ -55,7 +67,7 @@ async def device_scan(identifier, loop, cache=None):
             return cache, matches[0]
 
     for hosts in [_host_filter(), None]:
-        scan_result = atvs = await scan(loop, timeout=3, hosts=hosts)
+        scan_result = await scan(loop, timeout=3, hosts=hosts)
         matches = [atv for atv in scan_result if _filter_device(atv)]
 
         if matches:
@@ -65,6 +77,7 @@ async def device_scan(identifier, loop, cache=None):
 
 
 def is_valid_credentials(credentials):
+    """Verify that credentials are valid for establishing a connection."""
     return (
         credentials.get(const.Protocol.MRP.value) is not None
         or credentials.get(const.Protocol.DMAP.value) is not None

@@ -9,17 +9,28 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
-from homeassistant.const import (CONF_ADDRESS, CONF_NAME, CONF_PROTOCOL,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    CONF_ADDRESS,
+    CONF_NAME,
+    CONF_PROTOCOL,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import callback
+from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from pyatv import connect, exceptions, scan
 from pyatv.const import Protocol
 
-from .const import (CONF_CREDENTIALS, CONF_CREDENTIALS_AIRPLAY,
-                    CONF_CREDENTIALS_DMAP, CONF_CREDENTIALS_MRP,
-                    CONF_IDENTIFIER, CONF_START_OFF, DOMAIN,
-                    SOURCE_INVALID_CREDENTIALS)
+from .const import (
+    CONF_CREDENTIALS,
+    CONF_CREDENTIALS_AIRPLAY,
+    CONF_CREDENTIALS_DMAP,
+    CONF_CREDENTIALS_MRP,
+    CONF_IDENTIFIER,
+    CONF_START_OFF,
+    DOMAIN,
+    SOURCE_INVALID_CREDENTIALS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
