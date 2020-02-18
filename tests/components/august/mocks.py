@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, PropertyMock
 from august.activity import Activity
 from august.api import Api
 from august.exceptions import AugustApiHTTPError
-from august.lock import Lock
+from august.lock import Lock, LockDetail
 
 from homeassistant.components.august import AugustData
 from homeassistant.components.august.binary_sensor import AugustDoorBinarySensor
@@ -13,15 +13,7 @@ from homeassistant.components.august.lock import AugustLock
 from homeassistant.util import dt
 
 
-class MockAugustApi(Api):
-    """A mock for py-august Api class."""
-
-    def _call_api(self, *args, **kwargs):
-        """Mock the time activity started."""
-        raise AugustApiHTTPError("This should bubble up as its user consumable")
-
-
-class MockAugustApiFailing(MockAugustApi):
+class MockAugustApiFailing(Api):
     """A mock for py-august Api class that always has an AugustApiHTTPError."""
 
     def _call_api(self, *args, **kwargs):
@@ -94,7 +86,7 @@ class MockAugustComponentData(AugustData):
         self,
         last_lock_status_update_timestamp=1,
         last_door_state_update_timestamp=1,
-        api=MockAugustApi(),
+        api=MockAugustApiFailing(),
         access_token="mocked_access_token",
         locks=[],
         doorbells=[],
@@ -158,8 +150,46 @@ def _mock_august_authentication(token_text, token_timestamp):
     return authentication
 
 
-def _mock_august_lock():
-    return Lock(
-        "mockdeviceid1",
-        {"LockName": "Mocked Lock 1", "HouseID": "mockhouseid1", "UserType": "owner"},
-    )
+def _mock_august_lock(lockid="mocklockid1", houseid="mockhouseid1"):
+    return Lock(lockid, _mock_august_lock_data(lockid=lockid, houseid=houseid))
+
+
+def _mock_august_lock_data(lockid="mocklockid1", houseid="mockhouseid1"):
+    return {
+        "_id": lockid,
+        "LockID": lockid,
+        "LockName": lockid + " Name",
+        "HouseID": houseid,
+        "UserType": "owner",
+        "SerialNumber": "mockserial",
+        "battery": 90,
+        "currentFirmwareVersion": "mockfirmware",
+        "Bridge": {
+            "_id": "bridgeid1",
+            "firmwareVersion": "mockfirm",
+            "operative": True,
+        },
+        "LockStatus": {"doorState": "open"},
+    }
+
+
+def _mock_operative_august_lock_detail(lockid):
+    operative_lock_detail_data = _mock_august_lock_data(lockid=lockid)
+    return LockDetail(operative_lock_detail_data)
+
+
+def _mock_inoperative_august_lock_detail(lockid):
+    inoperative_lock_detail_data = _mock_august_lock_data(lockid=lockid)
+    del inoperative_lock_detail_data["Bridge"]
+    return LockDetail(inoperative_lock_detail_data)
+
+
+def _mock_doorsense_enabled_august_lock_detail(lockid):
+    doorsense_lock_detail_data = _mock_august_lock_data(lockid=lockid)
+    return LockDetail(doorsense_lock_detail_data)
+
+
+def _mock_doorsense_missing_august_lock_detail(lockid):
+    doorsense_lock_detail_data = _mock_august_lock_data(lockid=lockid)
+    del doorsense_lock_detail_data["LockStatus"]["doorState"]
+    return LockDetail(doorsense_lock_detail_data)
