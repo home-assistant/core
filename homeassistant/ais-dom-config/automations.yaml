@@ -42,8 +42,6 @@
      data:
        entity_id: camera.remote_access
    - delay: '1'
-   - service: ais_drives_service.refresh_files
-   - delay: '1'
    - service: ais_bookmarks.get_favorites
    - delay: '1'
    - service: ais_bookmarks.get_bookmarks
@@ -83,6 +81,8 @@
    - service: ais_ai_service.check_night_mode
      data:
        timer: false
+   - delay: '1'
+   - service: ais_drives_service.rclone_mount_drives
    - delay: '6000'
    - service: ais_updater.check_version
      data:

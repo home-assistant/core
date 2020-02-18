@@ -4,17 +4,11 @@ browse_path:
   fields:
     path:
       description: Śeieżka
-      example: '"dyski-zdalne:"'
+      example: '/data/data/pl.sviete.dom/files/home/dom/dysk-wewnętrzny'
 
-sync_locations:
-  description: Synchronizacja folderu źródłowego i docelowego, modyfikowane jest tylko miejsce docelowe
+rclone_mount_drive:
+  description: Montowanie dysku zdalnego lokalnie
   fields:
-    source_path:
-      description: Śeieżka źródłowa
-      example: 'Dysk-Google:'
-    dest_path:
-      description: Śeieżka docelowa
-      example: '/sdcard/dom/kopia_dysku_google'
-    say:
-      description: Zwrotne informacje głosowe
-      example: 'true'
+    name:
+      description: Nazwa dysku
+      example: 'drive'
