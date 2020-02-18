@@ -19,7 +19,7 @@ ATTR_SUBSCRIPTION_SINCE = "subscribed_since"
 ATTR_SUBSCRIPTION_GIFTED = "subscription_is_gifted"
 ATTR_FOLLOW = "following"
 ATTR_FOLLOW_SINCE = "following_since"
-ATTR_FOLLOWING = "follower"
+ATTR_FOLLOWING = "followers"
 ATTR_VIEWS = "views"
 
 CONF_CHANNELS = "channels"

@@ -61,7 +61,7 @@ async def test_init(hass):
     assert sensor_state.attributes["icon"] == "mdi:twitch"
     assert sensor_state.attributes["friendly_name"] == "channel123"
     assert sensor_state.attributes["views"] == 24
-    assert sensor_state.attributes["follower"] == 42
+    assert sensor_state.attributes["followers"] == 42
 
 
 async def test_offline(hass):
