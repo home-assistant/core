@@ -458,6 +458,8 @@ class SimpliSafe:
         if not to_add:
             return
 
+        _LOGGER.debug("New system notifications: %s", to_add)
+
         for notification in to_add:
             text = notification.text
             if notification.link:
@@ -512,6 +514,7 @@ class SimpliSafe:
         async def update_system(system):
             """Update a system."""
             await system.update()
+            self._async_process_new_notifications(system)
             _LOGGER.debug('Updated REST API data for "%s"', system.address)
             async_dispatcher_send(self._hass, TOPIC_UPDATE.format(system.system_id))
 
