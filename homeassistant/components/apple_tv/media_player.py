@@ -52,7 +52,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Load Apple TV media player based on a config entry."""
     identifier = config_entry.data[CONF_IDENTIFIER]
     name = config_entry.data[CONF_NAME]
-    manager = hass.data[DOMAIN][identifier]
+    manager = hass.data[DOMAIN][config_entry.unique_id]
     async_add_entities([AppleTvDevice(name, identifier, manager)])
 
 
@@ -103,7 +103,7 @@ class AppleTvDevice(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "mp_" + self._identifier
+        return f"mp_{self._identifier}"
 
     @property
     def should_poll(self):

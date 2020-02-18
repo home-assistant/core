@@ -10,4 +10,7 @@ CONF_CREDENTIALS_AIRPLAY = "airplay"
 
 CONF_START_OFF = "start_off"
 
+PROTOCOL_DMAP = "DMAP"
+PROTOCOL_MRP = "MRP"
+
 SOURCE_INVALID_CREDENTIALS = "invalid_credentials"

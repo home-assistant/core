@@ -84,8 +84,7 @@ def is_valid_credentials(credentials):
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AppleTVConfigFlow(config_entries.ConfigFlow):
+class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Apple TV."""
 
     VERSION = 1
@@ -111,9 +110,8 @@ class AppleTVConfigFlow(config_entries.ConfigFlow):
         self.identifier = info.get(CONF_IDENTIFIER)
         self.context["title_placeholders"] = {"name": info.get(CONF_NAME)}
 
-        for flow in self._async_in_progress():
-            if flow["context"].get("identifier") == self.identifier:
-                return self.async_abort(reason="already_configured")
+        await self.async_set_unique_id(self.identifier)
+        self._abort_if_unique_id_configured()
 
         self.context["identifier"] = self.identifier
         return await self.async_step_reconfigure()
@@ -424,10 +422,6 @@ class AppleTVOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the Apple TV options."""
-        return await self.async_step_device_options()
-
-    async def async_step_device_options(self, user_input=None):
-        """Manage the devices options."""
         if user_input is not None:
             self.options[CONF_START_OFF] = user_input[CONF_START_OFF]
             return self.async_create_entry(title="", data=self.options)

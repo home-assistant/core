@@ -5,7 +5,7 @@
     "step": {
       "user": {
         "title": "Setup a new Apple TV",
-        "description": "Start by entering the device name (e.g. Kitchen or Bedroom) or IP-address of the Apple TV you want to add. If any devices were automatically found on your network, they are shown below.\n\nIf you cannot see your device or experience any issues, try specifying the device IP-address.\n\n{devices}",
+        "description": "Start by entering the device name (e.g. Kitchen or Bedroom) or IP address of the Apple TV you want to add. If any devices were automatically found on your network, they are shown below.\n\nIf you cannot see your device or experience any issues, try specifying the device IP address.\n\n{devices}",
         "data": {
           "identifier": "Device"
         }
@@ -40,7 +40,7 @@
     "error": {
       "device_not_found": "Device could not be found on network, please try again.",
       "device_already_configured": "This device has already been configured. Please pick another device.",
-      "no_usable_service": "A device was found but could not identify any way to establish a connection to it. If you keep seeing this message, try specifying it's IP-address or restarting your Apple TV.",
+      "no_usable_service": "A device was found but could not identify any way to establish a connection to it. If you keep seeing this message, try specifying its IP address or restarting your Apple TV.",
       "unknown": "Unexpected error! Check log file for further details.",
       "auth": "Authentication error (you might have entered an invalid PIN code)."
     },
@@ -48,11 +48,12 @@
       "device_not_found": "Device could not be found on network, please try again.",
       "already_configured": "Device is already configured!",
       "updated_configuration": "Updated existing configuration!",
-      "unrecoverable_error": "An unrecoverable occurred! Check log file for further details.",
+      "unrecoverable_error": "An unrecoverable error occurred! Check log file for further details.",
       "device_did_not_pair": "No attempt to finish pairing process was made from the device.",
       "backoff": "Device does not accept pairing reqests at this time (you might have entered an invalid PIN code too many times), try again later.",
       "invalid_config": "The configuration for this device is incomplete. Please try adding it again.",
-      "auth": "Authentication error. You might have entered an invalid PIN code or not have permission to pair this protocol. Please check access settings on your Apple TV."
+      "auth": "Authentication error. You might have entered an invalid PIN code or not have permission to pair via this protocol. Please check access settings on your Apple TV.",
+      "already_in_progress": "Config flow for device is already in progress."
     }
   },
   "options": {
@@ -60,7 +61,7 @@
       "device_options": {
         "description": "Configure General Device Settings",
         "data": {
-          "start_off": "Do not turn on device when starting Home Assistant"
+          "start_off": "Do not turn device on when starting Home Assistant"
         }
       }
     }

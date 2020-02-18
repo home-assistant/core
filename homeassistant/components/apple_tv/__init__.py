@@ -9,6 +9,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
+from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_NAME,
@@ -16,7 +18,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from pyatv import connect, exceptions, scan
 from pyatv.const import Protocol
@@ -29,6 +30,8 @@ from .const import (
     CONF_IDENTIFIER,
     CONF_START_OFF,
     DOMAIN,
+    PROTOCOL_DMAP,
+    PROTOCOL_MRP,
     SOURCE_INVALID_CREDENTIALS,
 )
 
@@ -40,6 +43,8 @@ BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
 
 NOTIFICATION_TITLE = "Apple TV Notification"
 NOTIFICATION_ID = "apple_tv_notification"
+
+SUPPORTED_PLATFORMS = [MP_DOMAIN, REMOTE_DOMAIN]
 
 T = TypeVar("T")
 
@@ -69,7 +74,9 @@ CONFIG_SCHEMA = vol.Schema(
                     {
                         vol.Required(CONF_ADDRESS): cv.string,
                         vol.Required(CONF_IDENTIFIER): cv.string,
-                        vol.Required(CONF_PROTOCOL): vol.In(["DMAP", "MRP"]),
+                        vol.Required(CONF_PROTOCOL): vol.In(
+                            [PROTOCOL_DMAP, PROTOCOL_MRP]
+                        ),
                         vol.Required(CONF_CREDENTIALS): CREDENTIALS_SCHEMA,
                         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
                         vol.Optional(CONF_START_OFF, default=False): cv.boolean,
@@ -99,9 +106,8 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up a config entry for Apple TV."""
-    identifier = entry.data[CONF_IDENTIFIER]
     manager = AppleTVManager(hass, entry)
-    hass.data.setdefault(DOMAIN, {})[identifier] = manager
+    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = manager
 
     @callback
     def on_hass_stop(event):
@@ -110,25 +116,21 @@ async def async_setup_entry(hass, entry):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "media_player")
-    )
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "remote")
-    )
+    for domain in SUPPORTED_PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, domain)
+        )
 
     return True
 
 
 async def async_unload_entry(hass, entry):
     """Unload Twente Milieu config entry."""
-    identifier = entry.data[CONF_IDENTIFIER]
-    manager = hass.data[DOMAIN].pop(identifier)
+    manager = hass.data[DOMAIN].pop(entry.unique_id)
     await manager.disconnect()
 
-    await hass.config_entries.async_forward_entry_unload(entry, "media_player")
-    await hass.config_entries.async_forward_entry_unload(entry, "remote")
+    for domain in SUPPORTED_PLATFORMS:
+        await hass.config_entries.async_forward_entry_unload(entry, domain)
 
     return True
 

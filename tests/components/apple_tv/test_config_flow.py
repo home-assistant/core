@@ -390,7 +390,7 @@ async def test_reconfigure_ongoing_aborts(hass, flow, mrp_device):
     }
 
     (await flow().init_invalid_credentials(**data)).gives_form_reconfigure()
-    (await flow().init_invalid_credentials(**data)).gives_abort("already_configured")
+    (await flow().init_invalid_credentials(**data)).gives_abort("already_in_progress")
 
 
 async def test_reconfigure_update_credentials(hass, flow, mrp_device, pairing):
@@ -422,8 +422,4 @@ async def test_reconfigure_update_credentials(hass, flow, mrp_device, pairing):
 
 async def test_option_start_off(options):
     """Test start off-option flag."""
-    (await options().step_init()).gives_form_device_options()
-
-    (await options().step_device_options(start_off=True)).gives_create_entry(
-        {"start_off": True}
-    )
+    (await options().step_init(start_off=True)).gives_create_entry({"start_off": True})
