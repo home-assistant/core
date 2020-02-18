@@ -60,9 +60,7 @@ async def async_setup(hass, config):
     if DOMAIN not in config:
         return True
 
-    hass.data[DOMAIN][CONF_OPTIMISTIC] = False
-    if CONF_OPTIMISTIC in config[DOMAIN]:
-        hass.data[DOMAIN][CONF_OPTIMISTIC] = config[DOMAIN][CONF_OPTIMISTIC]
+    hass.data[DOMAIN][CONF_OPTIMISTIC] = config[DOMAIN][CONF_OPTIMISTIC]
 
     config_flow.SomfyFlowHandler.async_register_implementation(
         hass,
