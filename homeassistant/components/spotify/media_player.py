@@ -105,7 +105,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._devices: Optional[List[dict]] = []
         self._playlist: Optional[dict] = None
         self._spotify: Spotify = None
-        self._start_random = False
 
         self.player_available = False
 
@@ -301,7 +300,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             kwargs["uris"] = [media_id]
         elif media_type == MEDIA_TYPE_PLAYLIST:
             kwargs["context_uri"] = media_id
-            if self._start_random:
+            if self.shuffle():
                 response = self._spotify.playlist_tracks(media_id,
                                                          offset=0,
                                                          fields='total')
@@ -327,7 +326,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @spotify_exception_handler
     def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
-        self._start_random = shuffle
         self._spotify.shuffle(shuffle)
 
     @spotify_exception_handler
