@@ -120,6 +120,7 @@ class EDL21Entity(Entity):
         self._min_time = MIN_TIME_BETWEEN_UPDATES
         self._last_update = utcnow()
         self._state_attrs = {"status", "valTime", "scaler", "valueSignature"}
+        self._async_remove_dispatcher = None
 
     async def async_added_to_hass(self):
         """Run when entity about to be added to hass."""
@@ -139,7 +140,14 @@ class EDL21Entity(Entity):
             self._last_update = now
             self.schedule_update_ha_state()
 
-        async_dispatcher_connect(self.hass, SIGNAL_EDL21_TELEGRAM, handle_telegram)
+        self._async_remove_dispatcher = async_dispatcher_connect(
+            self.hass, SIGNAL_EDL21_TELEGRAM, handle_telegram
+        )
+
+    async def async_will_remove_from_hass(self):
+        """Run when entity will be removed from hass."""
+        if self._async_remove_dispatcher:
+            self._async_remove_dispatcher()
 
     @property
     def should_poll(self) -> bool:
