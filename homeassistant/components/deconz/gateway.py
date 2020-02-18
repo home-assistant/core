@@ -20,6 +20,8 @@ from .const import (
     DOMAIN,
     LOGGER,
     NEW_DEVICE,
+    NEW_GROUP,
+    NEW_SENSOR,
     SUPPORTED_PLATFORMS,
 )
 from .errors import AuthenticationRequired, CannotConnect
@@ -44,6 +46,9 @@ class DeconzGateway:
         self.deconz_ids = {}
         self.events = []
         self.listeners = []
+
+        self._current_option_allow_clip_sensor = self.option_allow_clip_sensor
+        self._current_option_allow_deconz_groups = self.option_allow_deconz_groups
 
     @property
     def bridgeid(self) -> str:
@@ -108,22 +113,64 @@ class DeconzGateway:
 
         self.api.start()
 
-        self.config_entry.add_update_listener(self.async_new_address)
+        self.config_entry.add_update_listener(self.async_config_entry_updated)
 
         return True
 
     @staticmethod
-    async def async_new_address(hass, entry) -> None:
-        """Handle signals of gateway getting new address.
+    async def async_config_entry_updated(hass, entry) -> None:
+        """Handle signals of config entry being updated.
 
-        This is a static method because a class method (bound method),
-        can not be used with weak references.
+        This is a static method because a class method (bound method), can not be used with weak references.
+        Causes for this is either discovery updating host address or config entry options changing.
         """
         gateway = get_gateway_from_config_entry(hass, entry)
         if gateway.api.host != entry.data[CONF_HOST]:
             gateway.api.close()
             gateway.api.host = entry.data[CONF_HOST]
             gateway.api.start()
+            return
+
+        await gateway.options_updated()
+
+    async def options_updated(self):
+        """Manage entities affected by config entry options."""
+        deconz_ids = []
+
+        if self._current_option_allow_clip_sensor != self.option_allow_clip_sensor:
+            self._current_option_allow_clip_sensor = self.option_allow_clip_sensor
+
+            sensors = [
+                sensor
+                for sensor in self.api.sensors.values()
+                if sensor.type.startswith("CLIP")
+            ]
+
+            if self.option_allow_clip_sensor:
+                self.async_add_device_callback(NEW_SENSOR, sensors)
+            else:
+                deconz_ids += [sensor.deconz_id for sensor in sensors]
+
+        if self._current_option_allow_deconz_groups != self.option_allow_deconz_groups:
+            self._current_option_allow_deconz_groups = self.option_allow_deconz_groups
+
+            groups = list(self.api.groups.values())
+
+            if self.option_allow_deconz_groups:
+                self.async_add_device_callback(NEW_GROUP, groups)
+            else:
+                deconz_ids += [group.deconz_id for group in groups]
+
+        if deconz_ids:
+            async_dispatcher_send(self.hass, self.signal_remove_entity, deconz_ids)
+
+        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+
+        for entity_id, deconz_id in self.deconz_ids.items():
+            if deconz_id in deconz_ids and entity_registry.async_is_registered(
+                entity_id
+            ):
+                entity_registry.async_remove(entity_id)
 
     @property
     def signal_reachable(self) -> str:
@@ -140,6 +187,11 @@ class DeconzGateway:
     def async_signal_new_device(self, device_type) -> str:
         """Gateway specific event to signal new device."""
         return NEW_DEVICE[device_type].format(self.bridgeid)
+
+    @property
+    def signal_remove_entity(self) -> str:
+        """Gateway specific event to signal removal of entity."""
+        return f"deconz-remove-{self.bridgeid}"
 
     @callback
     def async_add_device_callback(self, device_type, device) -> None:
