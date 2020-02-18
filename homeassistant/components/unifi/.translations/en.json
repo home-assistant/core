@@ -32,12 +32,14 @@
                     "track_clients": "Track network clients",
                     "track_devices": "Track network devices (Ubiquiti devices)",
                     "track_wired_clients": "Include wired network clients"
-                }
+                },
+                "title": "Device tracking"
             },
             "statistics_sensors": {
                 "data": {
-                    "allow_bandwidth_sensors": "Create bandwidth usage sensors for network clients"
-                }
+                    "allow_bandwidth_sensors": "Bandwidth usage sensors for network clients"
+                },
+                "title": "Statistics sensors"
             }
         }
     }
