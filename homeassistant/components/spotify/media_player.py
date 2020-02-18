@@ -305,7 +305,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                 response = self._spotify.playlist_tracks(media_id,
                                                      offset=0,
                                                      fields='total')
-                N_songs = response.get('total', 1)
+                song_count = response.get('total', 1)
                 position = randint(0, N_songs - 1)
                 kwargs["offset"] = {"position": position}
         else:
