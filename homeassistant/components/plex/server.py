@@ -98,14 +98,11 @@ class PlexServer:
         else:
             _connect_with_token()
 
-        self._accounts = sorted(
-            [
-                account.name
-                for account in self._plex_server.systemAccounts()
-                if account.name
-            ],
-            key=str.lower,
-        )
+        self._accounts = [
+            account.name
+            for account in self._plex_server.systemAccounts()
+            if account.name
+        ]
 
         owner_account = [
             account.name
@@ -114,8 +111,6 @@ class PlexServer:
         ]
         if owner_account:
             self._owner_username = owner_account[0]
-            self._accounts.remove(self.owner)
-            self._accounts.insert(0, self.owner)
 
         self._version = self._plex_server.version
 
