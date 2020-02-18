@@ -29,6 +29,10 @@
         "abort": {
             "not_konn_panel": "No es un dispositivo Konnected.io reconocido"
         },
+        "error": {
+            "one": "",
+            "other": "otros"
+        },
         "step": {
             "options_binary": {
                 "data": {

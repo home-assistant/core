@@ -12,8 +12,8 @@
         },
         "error": {
             "cant_connect": "No s'ha pogut connectar amb el dispositiu. [Comprova la documentaci\u00f3](https://www.home-assistant.io/integrations/vizio/) i torna a verificar que: \n - El dispositiu est\u00e0 engegat \n - El dispositiu est\u00e0 connectat a la xarxa \n - Els valors que has intridu\u00eft s\u00f3n correctes\n   abans d\u2019intentar tornar a presentar.",
-            "host_exists": "L'amfitri\u00f3 ja est\u00e0 configurat.",
-            "name_exists": "El nom ja est\u00e0 configurat.",
+            "host_exists": "Dispositiu Vizio amb aquest nom d'amfitri\u00f3 ja configurat.",
+            "name_exists": "Dispositiu Vizio amb aquest nom ja configurat.",
             "tv_needs_token": "Si el tipus de dispositiu \u00e9s 'tv', cal un testimoni d'acc\u00e9s v\u00e0lid (token)."
         },
         "step": {

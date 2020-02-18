@@ -25,13 +25,16 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from . import DATA, DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
+from . import DOMAIN, SIGNAL_TADO_UPDATE_RECEIVED
 from .const import (
     CONST_MODE_OFF,
     CONST_MODE_SMART_SCHEDULE,
     CONST_OVERLAY_MANUAL,
     CONST_OVERLAY_TADO_MODE,
+    CONST_OVERLAY_TIMER,
+    DATA,
     TYPE_AIR_CONDITIONING,
+    TYPE_HEATING,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,25 +42,25 @@ _LOGGER = logging.getLogger(__name__)
 FAN_MAP_TADO = {"HIGH": FAN_HIGH, "MIDDLE": FAN_MIDDLE, "LOW": FAN_LOW}
 
 HVAC_MAP_TADO_HEAT = {
-    "MANUAL": HVAC_MODE_HEAT,
-    "TIMER": HVAC_MODE_HEAT,
-    "TADO_MODE": HVAC_MODE_HEAT,
-    "SMART_SCHEDULE": HVAC_MODE_AUTO,
-    "OFF": HVAC_MODE_OFF,
+    CONST_OVERLAY_MANUAL: HVAC_MODE_HEAT,
+    CONST_OVERLAY_TIMER: HVAC_MODE_HEAT,
+    CONST_OVERLAY_TADO_MODE: HVAC_MODE_HEAT,
+    CONST_MODE_SMART_SCHEDULE: HVAC_MODE_AUTO,
+    CONST_MODE_OFF: HVAC_MODE_OFF,
 }
 HVAC_MAP_TADO_COOL = {
-    "MANUAL": HVAC_MODE_COOL,
-    "TIMER": HVAC_MODE_COOL,
-    "TADO_MODE": HVAC_MODE_COOL,
-    "SMART_SCHEDULE": HVAC_MODE_AUTO,
-    "OFF": HVAC_MODE_OFF,
+    CONST_OVERLAY_MANUAL: HVAC_MODE_COOL,
+    CONST_OVERLAY_TIMER: HVAC_MODE_COOL,
+    CONST_OVERLAY_TADO_MODE: HVAC_MODE_COOL,
+    CONST_MODE_SMART_SCHEDULE: HVAC_MODE_AUTO,
+    CONST_MODE_OFF: HVAC_MODE_OFF,
 }
 HVAC_MAP_TADO_HEAT_COOL = {
-    "MANUAL": HVAC_MODE_HEAT_COOL,
-    "TIMER": HVAC_MODE_HEAT_COOL,
-    "TADO_MODE": HVAC_MODE_HEAT_COOL,
-    "SMART_SCHEDULE": HVAC_MODE_AUTO,
-    "OFF": HVAC_MODE_OFF,
+    CONST_OVERLAY_MANUAL: HVAC_MODE_HEAT_COOL,
+    CONST_OVERLAY_TIMER: HVAC_MODE_HEAT_COOL,
+    CONST_OVERLAY_TADO_MODE: HVAC_MODE_HEAT_COOL,
+    CONST_MODE_SMART_SCHEDULE: HVAC_MODE_AUTO,
+    CONST_MODE_OFF: HVAC_MODE_OFF,
 }
 
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
@@ -70,14 +73,18 @@ SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME]
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tado climate platform."""
+    if discovery_info is None:
+        return
+
     api_list = hass.data[DOMAIN][DATA]
     entities = []
 
     for tado in api_list:
         for zone in tado.zones:
-            entity = create_climate_entity(tado, zone["name"], zone["id"])
-            if entity:
-                entities.append(entity)
+            if zone["type"] in [TYPE_HEATING, TYPE_AIR_CONDITIONING]:
+                entity = create_climate_entity(tado, zone["name"], zone["id"])
+                if entity:
+                    entities.append(entity)
 
     if entities:
         add_entities(entities, True)
@@ -154,11 +161,9 @@ class TadoClimate(ClimateDevice):
         self._target_temp = None
 
         if tado.fallback:
-            _LOGGER.debug("Default overlay is set to TADO MODE")
             # Fallback to Smart Schedule at next Schedule switch
             self._default_overlay = CONST_OVERLAY_TADO_MODE
         else:
-            _LOGGER.debug("Default overlay is set to MANUAL MODE")
             # Don't fallback to Smart Schedule, but keep in manual mode
             self._default_overlay = CONST_OVERLAY_MANUAL
 
@@ -354,11 +359,7 @@ class TadoClimate(ClimateDevice):
     def update(self):
         """Handle update callbacks."""
         _LOGGER.debug("Updating climate platform for zone %d", self.zone_id)
-        try:
-            data = self._tado.data["zone"][self.zone_id]
-        except KeyError:
-            _LOGGER.debug("No data")
-            return
+        data = self._tado.data["zone"][self.zone_id]
 
         if "sensorDataPoints" in data:
             sensor_data = data["sensorDataPoints"]
@@ -371,13 +372,13 @@ class TadoClimate(ClimateDevice):
                 humidity = float(sensor_data["humidity"]["percentage"])
                 self._cur_humidity = humidity
 
-            # temperature setting will not exist when device is off
-            if (
-                "temperature" in data["setting"]
-                and data["setting"]["temperature"] is not None
-            ):
-                setting = float(data["setting"]["temperature"]["celsius"])
-                self._target_temp = setting
+        # temperature setting will not exist when device is off
+        if (
+            "temperature" in data["setting"]
+            and data["setting"]["temperature"] is not None
+        ):
+            setting = float(data["setting"]["temperature"]["celsius"])
+            self._target_temp = setting
 
         if "tadoMode" in data:
             mode = data["tadoMode"]

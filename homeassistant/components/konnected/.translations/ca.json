@@ -18,7 +18,9 @@
                 "data": {
                     "host": "Adre\u00e7a IP del dispositiu Konnected",
                     "port": "Port del dispositiu Konnected"
-                }
+                },
+                "description": "Introdueix la informaci\u00f3 d'amfitri\u00f3 del panell Konnected.",
+                "title": "Descoberta de dispositiu Konnected"
             }
         },
         "title": "Konnected.io"
@@ -57,6 +59,7 @@
                     "7": "Zona 7",
                     "out": "OUT (sortida)"
                 },
+                "description": "S'ha descobert {model} a {host}. Selecciona la configuraci\u00f3 b\u00e0sica de cada Entrada/Sortida (I/O), en funci\u00f3 del tipus que sigui pot ser que et permeti sensors binaris (contactes oberts/tancats), sensors digitals (DHT i ds18b20) o sortides commutables. M\u00e9s endavant les podr\u00e0s configurar de manera m\u00e9s detallada.",
                 "title": "Configuraci\u00f3 E/S (I/O)"
             },
             "options_io_ext": {
@@ -69,16 +72,20 @@
                     "alarm1": "ALARMA1",
                     "alarm2_out2": "OUT2/ALARMA2",
                     "out1": "OUT1"
-                }
+                },
+                "description": "Selecciona la configuraci\u00f3 de les  E/S restants. Podr\u00e0s configurar opcions m\u00e9s detallades en els passos seg\u00fcents.",
+                "title": "Configuraci\u00f3 E/S (I/O) ampliades"
             },
             "options_misc": {
                 "data": {
                     "blink": "Parpelleja el LED del panell quan s'envien canvis d'estat"
                 },
-                "description": "Selecciona el comportament desitjat del panell"
+                "description": "Selecciona el comportament desitjat del panell",
+                "title": "Configuraci\u00f3 diversos"
             },
             "options_switch": {
                 "data": {
+                    "activation": "Sortida quan estigui ON",
                     "momentary": "Durada del pols (ms) (opcional)",
                     "name": "Nom (opcional)",
                     "pause": "Pausa entre polsos (ms) (opcional)",

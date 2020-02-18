@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up August locks."""
     data = hass.data[DATA_AUGUST]
     devices = []
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.debug("Adding lock for %s", lock.device_name)
         devices.append(AugustLock(data, lock))
 
-    add_entities(devices, True)
+    async_add_entities(devices, True)
 
 
 class AugustLock(LockDevice):
@@ -40,16 +40,20 @@ class AugustLock(LockDevice):
         self._changed_by = None
         self._available = False
 
-    def lock(self, **kwargs):
+    async def async_lock(self, **kwargs):
         """Lock the device."""
         update_start_time_utc = dt.utcnow()
-        lock_status = self._data.lock(self._lock.device_id)
+        lock_status = await self.hass.async_add_executor_job(
+            self._data.lock, self._lock.device_id
+        )
         self._update_lock_status(lock_status, update_start_time_utc)
 
-    def unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs):
         """Unlock the device."""
         update_start_time_utc = dt.utcnow()
-        lock_status = self._data.unlock(self._lock.device_id)
+        lock_status = await self.hass.async_add_executor_job(
+            self._data.unlock, self._lock.device_id
+        )
         self._update_lock_status(lock_status, update_start_time_utc)
 
     def _update_lock_status(self, lock_status, update_start_time_utc):
@@ -60,14 +64,13 @@ class AugustLock(LockDevice):
             )
             self.schedule_update_ha_state()
 
-    def update(self):
-        """Get the latest state of the sensor."""
-        self._lock_status = self._data.get_lock_status(self._lock.device_id)
+    async def async_update(self):
+        """Get the latest state of the sensor and update activity."""
+        self._lock_status = await self._data.async_get_lock_status(self._lock.device_id)
         self._available = self._lock_status is not None
+        self._lock_detail = await self._data.async_get_lock_detail(self._lock.device_id)
 
-        self._lock_detail = self._data.get_lock_detail(self._lock.device_id)
-
-        lock_activity = self._data.get_latest_device_activity(
+        lock_activity = await self._data.async_get_latest_device_activity(
             self._lock.device_id, ActivityType.LOCK_OPERATION
         )
 

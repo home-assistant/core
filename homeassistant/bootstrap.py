@@ -71,6 +71,7 @@ async def async_setup_hass(
     _LOGGER.info("Config directory: %s", config_dir)
 
     config_dict = None
+    basic_setup_success = False
 
     if not safe_mode:
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
@@ -86,11 +87,13 @@ async def async_setup_hass(
             if not is_virtual_env():
                 await async_mount_local_lib_path(config_dir)
 
-            await async_from_config_dict(config_dict, hass)
+            basic_setup_success = (
+                await async_from_config_dict(config_dict, hass) is not None
+            )
         finally:
             clear_secret_cache()
 
-    if safe_mode or config_dict is None:
+    if safe_mode or config_dict is None or not basic_setup_success:
         _LOGGER.info("Starting in safe mode")
 
         http_conf = (await http.async_get_last_config(hass)) or {}
@@ -112,6 +115,25 @@ async def async_from_config_dict(
     """
     start = monotonic()
 
+    hass.config_entries = config_entries.ConfigEntries(hass, config)
+    await hass.config_entries.async_initialize()
+
+    # Set up core.
+    _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
+
+    if not all(
+        await asyncio.gather(
+            *(
+                async_setup_component(hass, domain, config)
+                for domain in CORE_INTEGRATIONS
+            )
+        )
+    ):
+        _LOGGER.error("Home Assistant core failed to initialize. ")
+        return None
+
+    _LOGGER.debug("Home Assistant core initialized")
+
     core_config = config.get(core.DOMAIN, {})
 
     try:
@@ -125,9 +147,6 @@ async def async_from_config_dict(
             "Further initialization aborted"
         )
         return None
-
-    hass.config_entries = config_entries.ConfigEntries(hass, config)
-    await hass.config_entries.async_initialize()
 
     await _async_set_up_integrations(hass, config)
 
@@ -295,25 +314,6 @@ async def _async_set_up_integrations(
         *(loader.async_component_dependencies(hass, domain) for domain in domains),
         return_exceptions=True,
     )
-
-    # Set up core.
-    _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
-
-    if not all(
-        await asyncio.gather(
-            *(
-                async_setup_component(hass, domain, config)
-                for domain in CORE_INTEGRATIONS
-            )
-        )
-    ):
-        _LOGGER.error(
-            "Home Assistant core failed to initialize. "
-            "Further initialization aborted"
-        )
-        return
-
-    _LOGGER.debug("Home Assistant core initialized")
 
     # Finish resolving domains
     for dep_domains in await resolved_domains_task:

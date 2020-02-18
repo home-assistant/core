@@ -45,7 +45,7 @@ def get_and_check_entity_basics(hass, mock_hap, entity_id, entity_name, device_m
         if isinstance(hmip_device, AsyncDevice):
             assert ha_state.attributes[ATTR_IS_GROUP] is False
         elif isinstance(hmip_device, AsyncGroup):
-            assert ha_state.attributes[ATTR_IS_GROUP] is True
+            assert ha_state.attributes[ATTR_IS_GROUP]
     return ha_state, hmip_device
 
 
@@ -106,7 +106,7 @@ class HomeFactory:
             "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.get_hap",
             return_value=mock_home,
         ):
-            assert await async_setup_component(self.hass, HMIPC_DOMAIN, {}) is True
+            assert await async_setup_component(self.hass, HMIPC_DOMAIN, {})
 
         await self.hass.async_block_till_done()
 

@@ -197,7 +197,6 @@ class DeviceTracker:
             self.track_new,
             dev_id,
             mac,
-            (host_name or dev_id).replace("_", " "),
             picture=picture,
             icon=icon,
             hide_if_away=self.defaults.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE),
@@ -342,7 +341,7 @@ class Device(RestoreEntity):
     @property
     def name(self):
         """Return the name of the entity."""
-        return self.config_name or self.host_name or DEVICE_DEFAULT_NAME
+        return self.config_name or self.host_name or self.dev_id or DEVICE_DEFAULT_NAME
 
     @property
     def state(self):
@@ -393,7 +392,7 @@ class Device(RestoreEntity):
         """Mark the device as seen."""
         self.source_type = source_type
         self.last_seen = dt_util.utcnow()
-        self.host_name = host_name
+        self.host_name = host_name or self.host_name
         self.location_name = location_name
         self.consider_home = consider_home or self.consider_home
 
