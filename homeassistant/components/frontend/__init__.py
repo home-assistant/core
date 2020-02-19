@@ -508,6 +508,23 @@ def websocket_get_themes(hass, connection, msg):
 
     Async friendly.
     """
+    if hass.config.safe_mode:
+        connection.send_message(
+            websocket_api.result_message(
+                msg["id"],
+                {
+                    "themes": {
+                        "safe_mode": {
+                            "primary-color": "#db4437",
+                            "accent-color": "#eeee02",
+                        }
+                    },
+                    "default_theme": "safe_mode",
+                },
+            )
+        )
+        return
+
     connection.send_message(
         websocket_api.result_message(
             msg["id"],

@@ -89,6 +89,9 @@ class LovelaceStorage:
 
     async def async_load(self, force):
         """Load config."""
+        if self._hass.config.safe_mode:
+            raise ConfigNotFound
+
         if self._data is None:
             await self._load()
 
