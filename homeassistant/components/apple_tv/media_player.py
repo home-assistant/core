@@ -147,14 +147,11 @@ class AppleTvDevice(MediaPlayerEntity):
     def media_content_type(self):
         """Content type of current playing media."""
         if self._playing:
-
-            media_type = self._playing.media_type
-            if media_type == MediaType.Video:
-                return MEDIA_TYPE_VIDEO
-            if media_type == MediaType.Music:
-                return MEDIA_TYPE_MUSIC
-            if media_type == MediaType.TV:
-                return MEDIA_TYPE_TVSHOW
+            return {
+                MediaType.Video: MEDIA_TYPE_VIDEO,
+                MediaType.Music: MEDIA_TYPE_MUSIC,
+                MediaType.TV: MEDIA_TYPE_TVSHOW
+            }.get(self._playing.media_type)
 
     @property
     def media_duration(self):

@@ -2,8 +2,38 @@
 
 from pyatv import exceptions
 from pyatv.const import Protocol
+import pytest
+
+from homeassistant.components.apple_tv import config_flow
+
+from .common import FlowInteraction
 
 from tests.common import MockConfigEntry, mock_coro
+
+
+@pytest.fixture(name="flow")
+def flow_fixture(hass):
+    """Return config flow wrapped in FlowInteraction."""
+    flow = config_flow.AppleTVConfigFlow()
+    flow.hass = hass
+    flow.context = {}
+    return lambda: FlowInteraction(flow)
+
+
+@pytest.fixture(name="options")
+def options_fixture(hass):
+    """Test updating options."""
+    entry = MockConfigEntry(
+        domain="apple_tv", title="Apple TV", data={}, options={"start_off": False},
+    )
+
+    flow = config_flow.AppleTVConfigFlow()
+    flow.hass = hass
+    flow.context = {}
+    options_flow = flow.async_get_options_flow(entry)
+
+    return lambda: FlowInteraction(options_flow)
+
 
 # User Flows
 
@@ -31,7 +61,7 @@ async def test_user_input_unexpected_error(flow, mock_scan):
     )
 
 
-async def test_user_adds_full_device(flow, full_device, pairing):
+async def test_user_adds_full_device(flow, full_device, pairing_handler):
     """Test adding device with all services."""
     (await flow().step_user(identifier="MRP Device")).gives_form_confirm(
         description_placeholders={"name": "MRP Device"}
@@ -64,7 +94,7 @@ async def test_user_adds_full_device(flow, full_device, pairing):
     )
 
 
-async def test_user_adds_dmap_device(flow, dmap_device, dmap_pin, pairing):
+async def test_user_adds_dmap_device(flow, dmap_device, dmap_pin, pairing_handler):
     """Test adding device with only DMAP service."""
     (await flow().step_user(identifier="DMAP Device")).gives_form_confirm(
         description_placeholders={"name": "DMAP Device"}
@@ -85,9 +115,11 @@ async def test_user_adds_dmap_device(flow, dmap_device, dmap_pin, pairing):
     )
 
 
-async def test_user_adds_dmap_device_failed(flow, dmap_device, dmap_pin, pairing):
+async def test_user_adds_dmap_device_failed(
+    flow, dmap_device, dmap_pin, pairing_handler
+):
     """Test adding DMAP device where remote device did not attempt to pair."""
-    pairing.always_fail = True
+    pairing_handler.always_fail = True
 
     (await flow().step_user(identifier="DMAP Device")).gives_form_confirm(
         description_placeholders={"name": "DMAP Device"}
@@ -272,7 +304,7 @@ async def test_zeroconf_unsupported_service_aborts(flow):
     (await flow().step_zeroconf(**service_info)).gives_abort("unrecoverable_error")
 
 
-async def test_zeroconf_add_mrp_device(flow, mrp_device, pairing):
+async def test_zeroconf_add_mrp_device(flow, mrp_device, pairing_handler):
     """Test add MRP device discovered by zeroconf."""
     service_info = {
         "type": "_mediaremotetv._tcp.local.",
@@ -393,7 +425,7 @@ async def test_reconfigure_ongoing_aborts(hass, flow, mrp_device):
     (await flow().init_invalid_credentials(**data)).gives_abort("already_in_progress")
 
 
-async def test_reconfigure_update_credentials(hass, flow, mrp_device, pairing):
+async def test_reconfigure_update_credentials(hass, flow, mrp_device, pairing_handler):
     """Test that reconfigure flow updates config entry."""
     config_entry = MockConfigEntry(domain="apple_tv", data={"identifier": "mrp_id"})
     config_entry.add_to_hass(hass)

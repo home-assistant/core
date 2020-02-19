@@ -5,15 +5,13 @@ from unittest.mock import patch
 from pyatv import conf
 import pytest
 
-from homeassistant.components.apple_tv import config_flow
+from .common import MockPairingHandler, create_conf
 
-from .common import FlowInteraction, MockPairingHandler, create_conf
-
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import mock_coro
 
 
-@pytest.fixture
-def mock_scan():
+@pytest.fixture(name="mock_scan")
+def mock_scan_fixture():
     """Mock pyatv.scan."""
     with patch("homeassistant.components.apple_tv.config_flow.scan") as mock_scan:
 
@@ -28,17 +26,17 @@ def mock_scan():
         yield mock_scan
 
 
-@pytest.fixture
-def dmap_pin():
-    """Mock pyatv.scan."""
+@pytest.fixture(name="dmap_pin")
+def dmap_pin_fixture():
+    """Configure DMAP pin statically to 1111."""
     with patch("homeassistant.components.apple_tv.config_flow.randrange") as mock_pin:
         mock_pin.side_effect = lambda start, stop: 1111
         yield mock_pin
 
 
-@pytest.fixture
-def pairing():
-    """Mock pyatv.scan."""
+@pytest.fixture(name="pairing_handler")
+def pairing_handler_fixture():
+    """Return smart pairing handler."""
     with patch("homeassistant.components.apple_tv.config_flow.pair") as mock_pair:
 
         async def _pair(config, protocol, loop, session=None, **kwargs):
@@ -51,9 +49,9 @@ def pairing():
         yield mock_pair
 
 
-@pytest.fixture
-def pairing_mock():
-    """Mock pyatv.scan."""
+@pytest.fixture(name="pairing_mock")
+def pairing_mock_fixture():
+    """Mock pyatv.pair."""
     with patch("homeassistant.components.apple_tv.config_flow.pair") as mock_pair:
 
         async def _pair(config, protocol, loop, session=None, **kwargs):
@@ -64,9 +62,9 @@ def pairing_mock():
         yield mock_pair
 
 
-@pytest.fixture
-def full_device(mock_scan, dmap_pin):
-    """Mock pyatv.scan."""
+@pytest.fixture(name="full_device")
+def full_device_fixture(mock_scan, dmap_pin):
+    """Mock device supporting all protocols in scan."""
     mock_scan.result.append(
         create_conf(
             "127.0.0.1",
@@ -79,18 +77,18 @@ def full_device(mock_scan, dmap_pin):
     yield mock_scan
 
 
-@pytest.fixture
-def mrp_device(mock_scan):
-    """Mock pyatv.scan."""
+@pytest.fixture(name="mrp_device")
+def mrp_device_fixture(mock_scan):
+    """Mock device supporting MRP in scan."""
     mock_scan.result.append(
         create_conf("127.0.0.1", "MRP Device", conf.MrpService("mrp_id", 5555))
     )
     yield mock_scan
 
 
-@pytest.fixture
-def dmap_device(mock_scan):
-    """Mock pyatv.scan."""
+@pytest.fixture(name="dmap_device")
+def dmap_device_fixture(mock_scan):
+    """Mock device supporting DMAP in scan."""
     mock_scan.result.append(
         create_conf(
             "127.0.0.1", "DMAP Device", conf.DmapService("dmap_id", None, port=6666),
@@ -99,9 +97,9 @@ def dmap_device(mock_scan):
     yield mock_scan
 
 
-@pytest.fixture
-def dmap_device_with_credentials(mock_scan):
-    """Mock pyatv.scan."""
+@pytest.fixture(name="dmap_device_with_credentials")
+def dmap_device_with_credentials_fixture(mock_scan):
+    """Mock DMAP device with credentials in scan."""
     mock_scan.result.append(
         create_conf(
             "127.0.0.1",
@@ -112,36 +110,12 @@ def dmap_device_with_credentials(mock_scan):
     yield mock_scan
 
 
-@pytest.fixture
-def airplay_device(mock_scan):
-    """Mock pyatv.scan."""
+@pytest.fixture(name="airplay_device")
+def airplay_device_fixture(mock_scan):
+    """Mock device supporting AirPlay in scan."""
     mock_scan.result.append(
         create_conf(
             "127.0.0.1", "AirPlay Device", conf.AirPlayService("airplay_id", port=7777)
         )
     )
     yield mock_scan
-
-
-@pytest.fixture
-def flow(hass):
-    """Return config flow wrapped in FlowInteraction."""
-    flow = config_flow.AppleTVConfigFlow()
-    flow.hass = hass
-    flow.context = {}
-    return lambda: FlowInteraction(flow)
-
-
-@pytest.fixture
-def options(hass):
-    """Test updating options."""
-    entry = MockConfigEntry(
-        domain="apple_tv", title="Apple TV", data={}, options={"start_off": False},
-    )
-
-    flow = config_flow.AppleTVConfigFlow()
-    flow.hass = hass
-    flow.context = {}
-    options_flow = flow.async_get_options_flow(entry)
-
-    return lambda: FlowInteraction(options_flow)

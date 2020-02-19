@@ -5,6 +5,8 @@ from functools import partial
 from pyatv import conf, interface
 from pyatv.const import Protocol
 
+from homeassistant.components.apple_tv.const import DOMAIN
+
 
 class MockPairingHandler(interface.PairingHandler):
     """Mock for PairingHandler in pyatv."""
@@ -12,12 +14,13 @@ class MockPairingHandler(interface.PairingHandler):
     def __init__(self, *args):
         """Initialize a new MockPairingHandler."""
         super().__init__(*args)
+        self.pin_code = None
+        self.paired = False
         self.always_fail = False
 
     def pin(self, pin):
         """Pin code used for pairing."""
         self.pin_code = pin
-        self.paired = False
 
     @property
     def device_provides_pin(self):
@@ -93,7 +96,7 @@ class FlowInteraction:
 
     async def _init(self, **data):
         self.result = await self.flow.hass.config_entries.flow.async_init(
-            "apple_tv", data={**data}, context={"source": self.name}
+            DOMAIN, data={**data}, context={"source": self.name}
         )
         return self
 
@@ -117,9 +120,9 @@ class FlowInteraction:
         assert self.result["reason"] == reason
 
 
-def create_conf(name, address, *services):
+def create_conf(address, name, *services):
     """Create an Apple TV configuration."""
-    atv = conf.AppleTV(name, address)
+    atv = conf.AppleTV(address, name)
     for service in services:
         atv.add_service(service)
     return atv

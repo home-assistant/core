@@ -125,7 +125,7 @@ async def async_setup_entry(hass, entry):
 
 
 async def async_unload_entry(hass, entry):
-    """Unload Twente Milieu config entry."""
+    """Unload an Apple TV config entry."""
     manager = hass.data[DOMAIN].pop(entry.unique_id)
     await manager.disconnect()
 
@@ -221,7 +221,7 @@ class AppleTVManager:
                 break
             except asyncio.CancelledError:
                 pass
-            except Exception:
+            except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Failed to connect")
                 self.atv = None
 

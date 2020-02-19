@@ -25,7 +25,7 @@ from .const import (
     CONF_CREDENTIALS_MRP,
     CONF_IDENTIFIER,
     CONF_START_OFF,
-    DOMAIN,
+    DOMAIN
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ async def device_scan(identifier, loop, cache=None):
             return True
         if identifier == dev.name:
             return True
-        return any([x.identifier == identifier for x in dev.services])
+        return any([service.identifier == identifier for service in dev.services])
 
     def _host_filter():
         try:
@@ -108,11 +108,14 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_invalid_credentials(self, info):
         """Handle initial step when updating invalid credentials."""
         self.identifier = info.get(CONF_IDENTIFIER)
+
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["title_placeholders"] = {"name": info.get(CONF_NAME)}
 
         await self.async_set_unique_id(self.identifier)
         self._abort_if_unique_id_configured()
 
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["identifier"] = self.identifier
         return await self.async_step_reconfigure()
 
@@ -182,6 +185,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if flow["context"].get("identifier") == self.identifier:
                 return self.async_abort(reason="already_configured")
 
+        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         self.context["identifier"] = self.identifier
         self.context["title_placeholders"] = {"name": name}
         return await self.async_find_device_wrapper(self.async_step_confirm)
@@ -198,7 +202,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="device_not_found")
         except DeviceAlreadyConfigured:
             return self.async_abort(reason="already_configured")
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             return self.async_abort(reason="unrecoverable_error")
 
@@ -265,7 +269,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             abort_reason = "backoff"
         except exceptions.PairingError:
             abort_reason = "auth"
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
             abort_reason = "unrecoverable_error"
 
@@ -389,9 +393,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def _devices_str(self):
         return ", ".join(
             [
-                f"`{x.name} ({x.address})`"
-                for x in self.scan_result
-                if not self._is_already_configured(x.identifier)
+                f"`{atv.name} ({atv.address})`"
+                for atv in self.scan_result
+                if not self._is_already_configured(atv.identifier)
             ]
         )
 
