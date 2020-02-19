@@ -73,6 +73,7 @@ class SteamSensor(Entity):
         self._account = account
         self._profile = None
         self._game = None
+        self._game_id = None
         self._state = None
         self._name = None
         self._avatar = None
@@ -104,6 +105,7 @@ class SteamSensor(Entity):
         try:
             self._profile = self._steamod.user.profile(self._account)
             self._game = self._get_current_game()
+            self._game_id = self._profile.current_game[0]
             self._state = {
                 1: STATE_ONLINE,
                 2: STATE_BUSY,
@@ -170,6 +172,10 @@ class SteamSensor(Entity):
         attr = {}
         if self._game is not None:
             attr["game"] = self._game
+        if self._game_id is not None:
+            attr["game_id"] = self._game_id
+            attr["game_image_header"] = f"https://steamcdn-a.akamaihd.net/steam/apps/{self._game_id}/header.jpg"
+            attr["game_image_main"] = f"https://steamcdn-a.akamaihd.net/steam/apps/{self._game_id}/capsule_616x353.jpg"
         if self._last_online is not None:
             attr["last_online"] = self._last_online
         if self._level is not None:
