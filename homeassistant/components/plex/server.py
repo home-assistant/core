@@ -13,6 +13,8 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import (
     CONF_CLIENT_IDENTIFIER,
+    CONF_IGNORE_NEW_SHARED_USERS,
+    CONF_MONITORED_USERS,
     CONF_SERVER,
     CONF_SHOW_ALL_CONTROLS,
     CONF_USE_EPISODE_ART,
@@ -51,6 +53,7 @@ class PlexServer:
         self._verify_ssl = server_config.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
         self.options = options
         self.server_choice = None
+        self._accounts = []
         self._owner_username = None
         self._version = None
 
@@ -95,6 +98,12 @@ class PlexServer:
         else:
             _connect_with_token()
 
+        self._accounts = [
+            account.name
+            for account in self._plex_server.systemAccounts()
+            if account.name
+        ]
+
         owner_account = [
             account.name
             for account in self._plex_server.systemAccounts()
@@ -121,7 +130,21 @@ class PlexServer:
         _LOGGER.debug("Updating devices")
 
         available_clients = {}
+        ignored_clients = set()
         new_clients = set()
+
+        monitored_users = self.accounts
+        known_accounts = set(self.option_monitored_users)
+        if known_accounts:
+            monitored_users = {
+                user
+                for user in self.option_monitored_users
+                if self.option_monitored_users[user]["enabled"]
+            }
+
+        if not self.option_ignore_new_shared_users:
+            for new_user in self.accounts - known_accounts:
+                monitored_users.add(new_user)
 
         try:
             devices = self._plex_server.clients()
@@ -147,7 +170,12 @@ class PlexServer:
             if session.TYPE == "photo":
                 _LOGGER.debug("Photo session detected, skipping: %s", session)
                 continue
+            session_username = session.usernames[0]
             for player in session.players:
+                if session_username not in monitored_users:
+                    ignored_clients.add(player.machineIdentifier)
+                    _LOGGER.debug("Ignoring Plex client owned by %s", session_username)
+                    continue
                 self._known_idle.discard(player.machineIdentifier)
                 available_clients.setdefault(
                     player.machineIdentifier, {"device": player}
@@ -160,6 +188,8 @@ class PlexServer:
 
         new_entity_configs = []
         for client_id, client_data in available_clients.items():
+            if client_id in ignored_clients:
+                continue
             if client_id in new_clients:
                 new_entity_configs.append(client_data)
             else:
@@ -167,11 +197,11 @@ class PlexServer:
                     client_id, client_data["device"], client_data.get("session")
                 )
 
-        self._known_clients.update(new_clients)
+        self._known_clients.update(new_clients | ignored_clients)
 
-        idle_clients = (self._known_clients - self._known_idle).difference(
-            available_clients
-        )
+        idle_clients = (
+            self._known_clients - self._known_idle - ignored_clients
+        ).difference(available_clients)
         for client_id in idle_clients:
             self.refresh_entity(client_id, None, None)
             self._known_idle.add(client_id)
@@ -193,6 +223,11 @@ class PlexServer:
     def plex_server(self):
         """Return the plexapi PlexServer instance."""
         return self._plex_server
+
+    @property
+    def accounts(self):
+        """Return accounts associated with the Plex server."""
+        return set(self._accounts)
 
     @property
     def owner(self):
@@ -220,14 +255,24 @@ class PlexServer:
         return self._plex_server._baseurl  # pylint: disable=protected-access
 
     @property
-    def use_episode_art(self):
+    def option_ignore_new_shared_users(self):
+        """Return ignore_new_shared_users option."""
+        return self.options[MP_DOMAIN].get(CONF_IGNORE_NEW_SHARED_USERS, False)
+
+    @property
+    def option_use_episode_art(self):
         """Return use_episode_art option."""
         return self.options[MP_DOMAIN][CONF_USE_EPISODE_ART]
 
     @property
-    def show_all_controls(self):
+    def option_show_all_controls(self):
         """Return show_all_controls option."""
         return self.options[MP_DOMAIN][CONF_SHOW_ALL_CONTROLS]
+
+    @property
+    def option_monitored_users(self):
+        """Return dict of monitored users option."""
+        return self.options[MP_DOMAIN].get(CONF_MONITORED_USERS, {})
 
     @property
     def library(self):

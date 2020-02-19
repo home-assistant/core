@@ -27,6 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_TARGET_TEMP = "target_temp_register"
 CONF_CURRENT_TEMP = "current_temp_register"
+CONF_CURRENT_TEMP_REGISTER_TYPE = "current_temp_register_type"
 CONF_DATA_TYPE = "data_type"
 CONF_COUNT = "data_count"
 CONF_PRECISION = "precision"
@@ -42,6 +43,9 @@ CONF_STEP = "temp_step"
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 HVAC_MODES = [HVAC_MODE_AUTO]
 
+DEFAULT_REGISTER_TYPE_HOLDING = "holding"
+DEFAULT_REGISTER_TYPE_INPUT = "input"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_CURRENT_TEMP): cv.positive_int,
@@ -49,6 +53,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_SLAVE): cv.positive_int,
         vol.Required(CONF_TARGET_TEMP): cv.positive_int,
         vol.Optional(CONF_COUNT, default=2): cv.positive_int,
+        vol.Optional(
+            CONF_CURRENT_TEMP_REGISTER_TYPE, default=DEFAULT_REGISTER_TYPE_HOLDING
+        ): vol.In([DEFAULT_REGISTER_TYPE_HOLDING, DEFAULT_REGISTER_TYPE_INPUT]),
         vol.Optional(CONF_DATA_TYPE, default=DATA_TYPE_FLOAT): vol.In(
             [DATA_TYPE_INT, DATA_TYPE_UINT, DATA_TYPE_FLOAT]
         ),
@@ -66,20 +73,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus Thermostat Platform."""
-    name = config.get(CONF_NAME)
-    modbus_slave = config.get(CONF_SLAVE)
-    target_temp_register = config.get(CONF_TARGET_TEMP)
-    current_temp_register = config.get(CONF_CURRENT_TEMP)
-    data_type = config.get(CONF_DATA_TYPE)
-    count = config.get(CONF_COUNT)
-    precision = config.get(CONF_PRECISION)
-    scale = config.get(CONF_SCALE)
-    offset = config.get(CONF_OFFSET)
-    unit = config.get(CONF_UNIT)
-    max_temp = config.get(CONF_MAX_TEMP)
-    min_temp = config.get(CONF_MIN_TEMP)
-    temp_step = config.get(CONF_STEP)
-    hub_name = config.get(CONF_HUB)
+    name = config[CONF_NAME]
+    modbus_slave = config[CONF_SLAVE]
+    target_temp_register = config[CONF_TARGET_TEMP]
+    current_temp_register = config[CONF_CURRENT_TEMP]
+    current_temp_register_type = config[CONF_CURRENT_TEMP_REGISTER_TYPE]
+    data_type = config[CONF_DATA_TYPE]
+    count = config[CONF_COUNT]
+    precision = config[CONF_PRECISION]
+    scale = config[CONF_SCALE]
+    offset = config[CONF_OFFSET]
+    unit = config[CONF_UNIT]
+    max_temp = config[CONF_MAX_TEMP]
+    min_temp = config[CONF_MIN_TEMP]
+    temp_step = config[CONF_STEP]
+    hub_name = config[CONF_HUB]
     hub = hass.data[MODBUS_DOMAIN][hub_name]
 
     add_entities(
@@ -90,6 +98,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 modbus_slave,
                 target_temp_register,
                 current_temp_register,
+                current_temp_register_type,
                 data_type,
                 count,
                 precision,
@@ -115,6 +124,7 @@ class ModbusThermostat(ClimateDevice):
         modbus_slave,
         target_temp_register,
         current_temp_register,
+        current_temp_register_type,
         data_type,
         count,
         precision,
@@ -131,6 +141,7 @@ class ModbusThermostat(ClimateDevice):
         self._slave = modbus_slave
         self._target_temperature_register = target_temp_register
         self._current_temperature_register = current_temp_register
+        self._current_temperature_register_type = current_temp_register_type
         self._target_temperature = None
         self._current_temperature = None
         self._data_type = data_type
@@ -161,10 +172,10 @@ class ModbusThermostat(ClimateDevice):
     def update(self):
         """Update Target & Current Temperature."""
         self._target_temperature = self._read_register(
-            self._target_temperature_register
+            DEFAULT_REGISTER_TYPE_HOLDING, self._target_temperature_register
         )
         self._current_temperature = self._read_register(
-            self._current_temperature_register
+            self._current_temperature_register_type, self._current_temperature_register
         )
 
     @property
@@ -228,12 +239,17 @@ class ModbusThermostat(ClimateDevice):
         """Return True if entity is available."""
         return self._available
 
-    def _read_register(self, register) -> Optional[float]:
-        """Read holding register using the Modbus hub slave."""
+    def _read_register(self, register_type, register) -> Optional[float]:
+        """Read register using the Modbus hub slave."""
         try:
-            result = self._hub.read_holding_registers(
-                self._slave, register, self._count
-            )
+            if register_type == DEFAULT_REGISTER_TYPE_INPUT:
+                result = self._hub.read_input_registers(
+                    self._slave, register, self._count
+                )
+            else:
+                result = self._hub.read_holding_registers(
+                    self._slave, register, self._count
+                )
         except ConnectionException:
             self._set_unavailable(register)
             return

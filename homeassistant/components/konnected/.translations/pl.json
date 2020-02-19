@@ -2,7 +2,26 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane.",
+            "already_in_progress": "Konfiguracja urz\u0105dzenia jest ju\u017c w toku.",
+            "not_konn_panel": "Nie rozpoznano urz\u0105dzenia Konnected.io",
             "unknown": "Wyst\u0105pi\u0142 nieznany b\u0142\u0105d."
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z panelem Konnected na {host}:{port}"
+        },
+        "step": {
+            "confirm": {
+                "description": "Model: {model} \nHost: {host} \nPort: {port} \n\nMo\u017cesz skonfigurowa\u0107 IO i zachowanie  panelu w ustawieniach Konnected Alarm Panel.",
+                "title": "Urz\u0105dzenie Konnected gotowe"
+            },
+            "user": {
+                "data": {
+                    "host": "Adres IP urz\u0105dzenia Konnected",
+                    "port": "Port urz\u0105dzenia Konnected urz\u0105dzenia"
+                },
+                "description": "Wprowad\u017a informacje o ho\u015bcie panelu Konnected.",
+                "title": "Wykryj urz\u0105dzenie Konnected"
+            }
         },
         "title": "Konnected.io"
     },

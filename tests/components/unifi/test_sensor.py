@@ -54,7 +54,7 @@ async def test_no_clients(hass):
         hass, options={unifi.const.CONF_ALLOW_BANDWIDTH_SENSORS: True},
     )
 
-    assert len(controller.mock_requests) == 3
+    assert len(controller.mock_requests) == 4
     assert len(hass.states.async_all()) == 1
 
 
@@ -70,7 +70,7 @@ async def test_sensors(hass):
         clients_response=CLIENTS,
     )
 
-    assert len(controller.mock_requests) == 3
+    assert len(controller.mock_requests) == 4
     assert len(hass.states.async_all()) == 5
 
     wired_client_rx = hass.states.get("sensor.wired_client_name_rx")

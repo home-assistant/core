@@ -1288,6 +1288,9 @@ class Config:
         # List of allowed external dirs to access
         self.whitelist_external_dirs: Set[str] = set()
 
+        # If Home Assistant is running in safe mode
+        self.safe_mode: bool = False
+
     def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.
 
@@ -1350,6 +1353,7 @@ class Config:
             "whitelist_external_dirs": self.whitelist_external_dirs,
             "version": __version__,
             "config_source": self.config_source,
+            "safe_mode": self.safe_mode,
         }
 
     def set_time_zone(self, time_zone_str: str) -> None:
