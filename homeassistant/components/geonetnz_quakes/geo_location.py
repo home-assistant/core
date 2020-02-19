@@ -146,6 +146,11 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         return SOURCE
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID (latitude/longitude of manager and own external id)."""
+        return f"{self._feed_manager.unique_id}_{self._external_id}"
+
+    @property
     def name(self) -> Optional[str]:
         """Return the name of the entity."""
         return self._title

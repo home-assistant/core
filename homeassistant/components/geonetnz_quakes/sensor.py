@@ -109,6 +109,11 @@ class GeonetnzQuakesSensor(Entity):
         return self._total
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique ID (name contains longitude/latitude)."""
+        return self.name
+
+    @property
     def name(self) -> Optional[str]:
         """Return the name of the entity."""
         return f"GeoNet NZ Quakes ({self._config_title})"
