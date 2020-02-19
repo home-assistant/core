@@ -6,6 +6,7 @@ from pyqvrpro import Client
 from pyqvrpro.client import AuthenticationError, InsufficientPermissionsError
 import voluptuous as vol
 
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
@@ -61,7 +62,7 @@ def setup(hass, config):
 
     hass.data[DOMAIN] = {"channels": channels, "client": qvrpro}
 
-    load_platform(hass, "camera", DOMAIN, {}, config)
+    load_platform(hass, CAMERA_DOMAIN, DOMAIN, {}, config)
 
     # Register services
     def handle_start_record(call):
