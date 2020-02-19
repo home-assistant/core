@@ -33,7 +33,7 @@ SENSOR_UNIT = "unit"
 SENSOR_ICON = "icon"
 SENSOR_DEVICE_CLASS = "device_class"
 
-CONN_SENSORS = {
+CONNECTION_SENSORS = {
     "rate_down": {
         SENSOR_NAME: "Freebox download speed",
         SENSOR_UNIT: DATA_RATE_KILOBYTES_PER_SECOND,
@@ -48,7 +48,7 @@ CONN_SENSORS = {
     },
 }
 
-TEMP_SENSOR_TEMPLATE = {
+TEMPERATURE_SENSOR_TEMPLATE = {
     SENSOR_NAME: None,
     SENSOR_UNIT: TEMP_CELSIUS,
     SENSOR_ICON: "mdi:thermometer",

@@ -18,7 +18,7 @@ from homeassistant.util import slugify
 from .const import (
     API_VERSION,
     APP_DESC,
-    CONN_SENSORS,
+    CONNECTION_SENSORS,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
     SENSOR_DEVICE_CLASS,
@@ -28,7 +28,7 @@ from .const import (
     SENSOR_UPDATE,
     STORAGE_KEY,
     STORAGE_VERSION,
-    TEMP_SENSOR_TEMPLATE,
+    TEMPERATURE_SENSOR_TEMPLATE,
     TRACKER_UPDATE,
 )
 
@@ -56,8 +56,8 @@ class FreeboxRouter:
         self._devices: Dict[str, FreeboxDevice] = {}
 
         # Sensors
-        self._temp_sensors: Dict[str, FreeboxSensor] = {}
-        self._conn_sensors: Dict[str, FreeboxSensor] = {}
+        self._temperature_sensors: Dict[str, FreeboxSensor] = {}
+        self._connection_sensors: Dict[str, FreeboxSensor] = {}
         self._attrs = {}
 
     async def setup(self) -> None:
@@ -123,7 +123,6 @@ class FreeboxRouter:
                     "Adding Freebox device: %s [MAC: %s]", device_name, device_mac,
                 )
                 self._devices[device_mac] = FreeboxDevice(fbx_device)
-                self._devices[device_mac].update(fbx_device)
 
         dispatcher_send(self.hass, TRACKER_UPDATE)
 
@@ -134,45 +133,54 @@ class FreeboxRouter:
 
         # System sensors
         syst_datas: Dict[str, any] = await self._api.system.get_config()
-        temp_datas = {item["id"]: item for item in syst_datas["sensors"]}
-        # According to the doc it is only temperature sensors in celsius degree, name and id of the sensors may vary under Freebox devices
+        temperature_datas = {item["id"]: item for item in syst_datas["sensors"]}
+        # According to the doc it is only temperature sensors in celsius degree.
+        # Name and id of the sensors may vary under Freebox devices.
 
-        for sensor_key, sensor_attrs in temp_datas.items():
-            if self._temp_sensors.get(sensor_key) is not None:
+        for sensor_key, sensor_attrs in temperature_datas.items():
+            if self._temperature_sensors.get(sensor_key) is not None:
                 # Seen sensor -> updating
                 _LOGGER.debug("Updating Freebox sensor: %s", sensor_key)
-                self._temp_sensors[sensor_key].update(temp_datas[sensor_key]["value"])
+                self._temperature_sensors[sensor_key].update(
+                    temperature_datas[sensor_key]["value"]
+                )
             else:
                 # New sensor, should be unique
                 _LOGGER.debug("Adding Freebox sensor: %s", sensor_key)
-                self._temp_sensors[sensor_key] = FreeboxSensor(
+                self._temperature_sensors[sensor_key] = FreeboxSensor(
                     {
-                        **TEMP_SENSOR_TEMPLATE,
+                        **TEMPERATURE_SENSOR_TEMPLATE,
                         **{
                             SENSOR_NAME: f"Freebox {sensor_attrs['name']}",
                             "value": sensor_attrs["value"],
                         },
                     }
                 )
-                self._temp_sensors[sensor_key].update(temp_datas[sensor_key]["value"])
+                self._temperature_sensors[sensor_key].update(
+                    temperature_datas[sensor_key]["value"]
+                )
 
         # Connection sensors
-        conn_datas: Dict[str, any] = await self._api.connection.get_status()
-        for sensor_key, sensor_attrs in CONN_SENSORS.items():
-            if self._conn_sensors.get(sensor_key) is not None:
+        connection_datas: Dict[str, any] = await self._api.connection.get_status()
+        for sensor_key, sensor_attrs in CONNECTION_SENSORS.items():
+            if self._connection_sensors.get(sensor_key) is not None:
                 # Seen sensor -> updating
                 _LOGGER.debug("Updating Freebox sensor: %s", sensor_key)
-                self._conn_sensors[sensor_key].update(conn_datas[sensor_key])
+                self._connection_sensors[sensor_key].update(
+                    connection_datas[sensor_key]
+                )
             else:
                 # New sensor, should be unique
                 _LOGGER.debug("Adding Freebox sensor: %s", sensor_key)
-                self._conn_sensors[sensor_key] = FreeboxSensor(sensor_attrs)
-                self._conn_sensors[sensor_key].update(conn_datas[sensor_key])
+                self._connection_sensors[sensor_key] = FreeboxSensor(sensor_attrs)
+                self._connection_sensors[sensor_key].update(
+                    connection_datas[sensor_key]
+                )
 
         self._attrs = {
-            "IPv4": conn_datas.get("ipv4"),
-            "IPv6": conn_datas.get("ipv6"),
-            "connection_type": conn_datas["media"],
+            "IPv4": connection_datas.get("ipv4"),
+            "IPv6": connection_datas.get("ipv6"),
+            "connection_type": connection_datas["media"],
             "uptime": datetime.fromtimestamp(
                 round(datetime.now().timestamp()) - syst_datas["uptime_val"]
             ),
@@ -231,7 +239,7 @@ class FreeboxRouter:
     @property
     def sensors(self) -> Dict[str, any]:
         """Return all sensors."""
-        return {**self._temp_sensors, **self._conn_sensors}
+        return {**self._temperature_sensors, **self._connection_sensors}
 
     @property
     def wifi(self) -> Wifi:
@@ -249,23 +257,13 @@ class FreeboxDevice:
         self._manufacturer = device["vendor_name"]
         self._icon = icon_for_freebox_device(device)
 
-        self._active = device["active"]
-        if device.get("attrs") is None:
-            self._reachable = device["reachable"]
-            self._attrs = {
-                "reachable": self._reachable,
-                "last_time_reachable": datetime.fromtimestamp(
-                    device["last_time_reachable"]
-                ),
-                "last_time_activity": datetime.fromtimestamp(device["last_activity"]),
-            }
-        else:
-            self._attrs = device["attrs"]
+        self.update(device)
 
     def update(self, device: Dict[str, any]) -> None:
         """Update the Freebox device."""
         self._active = device["active"]
         if device.get("attrs") is None:
+            # device
             self._reachable = device["reachable"]
             self._attrs = {
                 "reachable": self._reachable,
@@ -275,6 +273,7 @@ class FreeboxDevice:
                 "last_time_activity": datetime.fromtimestamp(device["last_activity"]),
             }
         else:
+            # router
             self._attrs = device["attrs"]
 
     @property

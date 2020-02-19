@@ -6,7 +6,7 @@ from aiofreepybox.exceptions import HttpRequestError
 import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_FREEBOX
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_DISCOVERY, SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import HomeAssistantType
@@ -39,7 +39,7 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": SOURCE_IMPORT},
+                    context={"source": SOURCE_DISCOVERY},
                     data={CONF_HOST: host, CONF_PORT: port},
                 )
             )
