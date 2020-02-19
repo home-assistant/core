@@ -79,6 +79,7 @@ FLOWS = [
     "ps4",
     "rainmachine",
     "ring",
+    "roku",
     "samsungtv",
     "sense",
     "sentry",

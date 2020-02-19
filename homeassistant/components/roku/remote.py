@@ -2,8 +2,12 @@
 import requests.exceptions
 from roku import Roku
 
-from homeassistant.components import remote
-from homeassistant.const import CONF_HOST
+from homeassistant.components.remote import RemoteDevice
+from homeassistant.const import CONF_IP_ADDRESS
+from .const import (
+    DEFAULT_MANUFACTURER,
+    DOMAIN as ROKU_DOMAIN,
+)
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
@@ -11,11 +15,17 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     if not discovery_info:
         return
 
-    host = discovery_info[CONF_HOST]
-    async_add_entities([RokuRemote(host)], True)
+    ip_address = discovery_info[CONF_IP_ADDRESS]
+    async_add_entities([RokuRemote(ip_address)], True)
 
 
-class RokuRemote(remote.RemoteDevice):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Load Roku remote based on a config entry."""
+    ip_address = config_entry[CONF_IP_ADDRESS]
+    async_add_entities([RokuRemote(ip_address)], True)
+
+
+class RokuRemote(RemoteDevice):
     """Device that sends commands to an Roku."""
 
     def __init__(self, host):
@@ -42,6 +52,18 @@ class RokuRemote(remote.RemoteDevice):
     def unique_id(self):
         """Return a unique ID."""
         return self._device_info.serial_num
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(ROKU_DOMAIN, self.unique_id)},
+            "manufacturer": DEFAULT_MANUFACTURER,
+            "model": self._device_info.model_num,
+            "sw_version": self._device_info.software_version,
+            "via_device": (ROKU_DOMAIN, self.unique_id),
+        }
 
     @property
     def is_on(self):

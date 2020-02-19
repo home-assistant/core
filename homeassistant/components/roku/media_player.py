@@ -17,16 +17,18 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_SET,
 )
 from homeassistant.const import (
-    CONF_HOST,
+    CONF_IP_ADDRESS,
     STATE_HOME,
     STATE_IDLE,
     STATE_PLAYING,
     STATE_STANDBY,
 )
 
-from .const import DEFAULT_PORT
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    DEFAULT_MANUFACTURER,
+    DEFAULT_PORT,
+    DOMAIN as ROKU_DOMAIN,
+)
 
 SUPPORT_ROKU = (
     SUPPORT_PREVIOUS_TRACK
@@ -40,13 +42,10 @@ SUPPORT_ROKU = (
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Roku platform."""
-    if not discovery_info:
-        return
-
-    host = discovery_info[CONF_HOST]
-    async_add_entities([RokuDevice(host)], True)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Roku config entry."""
+    ip_address = config_entry.data[CONF_IP_ADDRESS]
+    async_add_entities([RokuDevice(ip_address)], True)
 
 
 class RokuDevice(MediaPlayerDevice):
@@ -54,7 +53,6 @@ class RokuDevice(MediaPlayerDevice):
 
     def __init__(self, host):
         """Initialize the Roku device."""
-
         self.roku = Roku(host)
         self.ip_address = host
         self.channels = []
@@ -129,6 +127,17 @@ class RokuDevice(MediaPlayerDevice):
     def unique_id(self):
         """Return a unique, Home Assistant friendly identifier for this entity."""
         return self._device_info.serial_num
+
+    @property
+    def device_info(self):
+        """Return device specific attributes."""
+        return {
+            "name": self.name,
+            "identifiers": {(ROKU_DOMAIN, self.unique_id)},
+            "manufacturer": DEFAULT_MANUFACTURER,
+            "model": self._device_info.model_num,
+            "sw_version": self._device_info.software_version,
+        }
 
     @property
     def media_content_type(self):

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "This Roku device is already configured.",
+            "already_in_progress": "Roku configuration is already in progress.",
+            "not_found": "No supported Roku devices found on the network."
+        },
+        "error": {
+            "roku_error": "Unable to communicate with the device."
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "confirm": {
+                "data": {},
+                "description": "Do you want to set up {name}? Manual configurations for this device in the yaml files will be overwritten.",
+                "title": "Roku"
+            },
+            "user": {
+                "data": {
+                    "host": "IP address"
+                },
+                "description": "Enter your Roku information.",
+                "title": "Roku"
+            }
+        },
+        "title": "Roku"
+    }
+}

@@ -4,22 +4,17 @@ import logging
 from roku import Roku, RokuException
 import voluptuous as vol
 
-from homeassistant.components.discovery import SERVICE_ROKU
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-
-_LOGGER = logging.getLogger(__name__)
+from homeassistant.helpers import config_validation as cv, discovery
 
 from .const import (
     DOMAIN,
     SERVICE_SCAN,
+    CONF_DEVICES,
+    DEFAULT_PORT,
+    SUPPORTED_DOMAINS,
     ATTR_ROKU,
     DATA_ROKU,
-    NOTIFICATION_ID,
-    NOTIFICATION_SCAN_ID,
-    NOTIFICATION_SCAN_TITLE,
-    NOTIFICATION_TITLE,
 )
 
 CONFIG_SCHEMA = vol.Schema(
@@ -31,77 +26,35 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# Currently no attributes but it might change later
-ROKU_SCAN_SCHEMA = vol.Schema({})
 
-
-def setup(hass, config):
-    """Set up the Roku component."""
-    hass.data[DATA_ROKU] = {}
-
-    def service_handler(service):
-        """Handle service calls."""
-        if service.service == SERVICE_SCAN:
-            scan_for_rokus(hass)
-
-    def roku_discovered(service, info):
-        """Set up an Roku that was auto discovered."""
-        _setup_roku(hass, config, {CONF_HOST: info["host"]})
-
-    discovery.listen(hass, SERVICE_ROKU, roku_discovered)
-
-    for conf in config.get(DOMAIN, []):
-        _setup_roku(hass, config, conf)
-
-    hass.services.register(
-        DOMAIN, SERVICE_SCAN, service_handler, schema=ROKU_SCAN_SCHEMA
-    )
+async def async_setup(hass, config):
+    """Set up the Roku integration."""
+    if DOMAIN in config:
+        for entry_config in config[DOMAIN]:
+            hass.async_create_task(
+                hass.config_entries.flow.async_init(
+                    DOMAIN, context={"source": "import"}, data=entry_config
+                )
+            )
 
     return True
 
 
-def scan_for_rokus(hass):
-    """Scan for devices and present a notification of the ones found."""
+async def async_setup_entry(hass, entry):
+    """Set up a config entry for Roku."""
+    hass.data.setdefault(DOMAIN, {})
 
-    rokus = Roku.discover()
-
-    devices = []
-    for roku in rokus:
-        try:
-            r_info = roku.device_info
-        except RokuException:  # skip non-roku device
-            continue
-        devices.append(
-            "Name: {0}<br />Host: {1}<br />".format(
-                r_info.userdevicename
-                if r_info.userdevicename
-                else f"{r_info.modelname} {r_info.serial_num}",
-                roku.host,
-            )
+    for domain in SUPPORTED_DOMAINS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, domain)
         )
-    if not devices:
-        devices = ["No device(s) found"]
 
-    hass.components.persistent_notification.create(
-        "The following devices were found:<br /><br />" + "<br /><br />".join(devices),
-        title=NOTIFICATION_SCAN_TITLE,
-        notification_id=NOTIFICATION_SCAN_ID,
-    )
+    return True
 
 
-def _setup_roku(hass, hass_config, roku_config):
-    """Set up a Roku."""
+async def async_unload_entry(hass, entry):
+    """Unload Roku config entry."""
+    for domain in SUPPORTED_DOMAINS:
+        await hass.config_entries.async_forward_entry_unload(entry, domain)
 
-    host = roku_config[CONF_HOST]
-
-    if host in hass.data[DATA_ROKU]:
-        return
-
-    roku = Roku(host)
-    r_info = roku.device_info
-
-    hass.data[DATA_ROKU][host] = {ATTR_ROKU: r_info.serial_num}
-
-    discovery.load_platform(hass, "media_player", DOMAIN, roku_config, hass_config)
-
-    discovery.load_platform(hass, "remote", DOMAIN, roku_config, hass_config)
+    return True
