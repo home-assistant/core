@@ -488,6 +488,12 @@ class Entity(ABC):
             self._on_remove = []
         self._on_remove.append(func)
 
+    async def async_removed_from_registry(self) -> None:
+        """Run when entity has been removed from entity registry.
+
+        To be extended by integrations.
+        """
+
     async def async_remove(self) -> None:
         """Remove entity from Home Assistant."""
         assert self.hass is not None
@@ -534,6 +540,9 @@ class Entity(ABC):
     async def _async_registry_updated(self, event):
         """Handle entity registry update."""
         data = event.data
+        if data["action"] == "remove" and data["entity_id"] == self.entity_id:
+            await self.async_removed_from_registry()
+
         if (
             data["action"] != "update"
             or data.get("old_entity_id", data["entity_id"]) != self.entity_id
