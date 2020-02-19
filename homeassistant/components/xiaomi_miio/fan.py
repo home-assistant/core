@@ -83,6 +83,7 @@ MODEL_AIRPURIFIER_SA1 = "zhimi.airpurifier.sa1"
 MODEL_AIRPURIFIER_SA2 = "zhimi.airpurifier.sa2"
 MODEL_AIRPURIFIER_2S = "zhimi.airpurifier.mc1"
 MODEL_AIRPURIFIER_3 = "zhimi.airpurifier.ma4"
+MODEL_AIRPURIFIER_3H = "zhimi.airpurifier.mb3"
 
 MODEL_AIRHUMIDIFIER_V1 = "zhimi.humidifier.v1"
 MODEL_AIRHUMIDIFIER_CA1 = "zhimi.humidifier.ca1"
@@ -111,6 +112,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 MODEL_AIRPURIFIER_SA2,
                 MODEL_AIRPURIFIER_2S,
                 MODEL_AIRPURIFIER_3,
+                MODEL_AIRPURIFIER_3H,
                 MODEL_AIRHUMIDIFIER_V1,
                 MODEL_AIRHUMIDIFIER_CA1,
                 MODEL_AIRHUMIDIFIER_CB1,
@@ -162,14 +164,14 @@ ATTR_TRANS_LEVEL = "trans_level"
 ATTR_HARDWARE_VERSION = "hardware_version"
 
 # Air Humidifier CA
-ATTR_MOTOR_SPEED = "motor_speed"
+# ATTR_MOTOR_SPEED = "motor_speed"
 ATTR_DEPTH = "depth"
 ATTR_DRY = "dry"
 
 # Air Fresh
 ATTR_CO2 = "co2"
 
-PURIFIER_MIOT = [MODEL_AIRPURIFIER_3]
+PURIFIER_MIOT = [MODEL_AIRPURIFIER_3, MODEL_AIRPURIFIER_3H]
 
 # Map attributes to properties of the state object
 AVAILABLE_ATTRIBUTES_AIRPURIFIER_COMMON = {
@@ -399,6 +401,7 @@ FEATURE_FLAGS_AIRPURIFIER_3 = (
     | FEATURE_SET_CHILD_LOCK
     | FEATURE_SET_LED
     | FEATURE_SET_FAVORITE_LEVEL
+    | FEATURE_SET_LED_BRIGHTNESS
 )
 
 FEATURE_FLAGS_AIRPURIFIER_V3 = (
@@ -733,7 +736,7 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_2S
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_2S
             self._speed_list = OPERATION_MODES_AIRPURIFIER_2S
-        elif self._model == MODEL_AIRPURIFIER_3:
+        elif self._model == MODEL_AIRPURIFIER_3 or self._model == MODEL_AIRPURIFIER_3H:
             self._device_features = FEATURE_FLAGS_AIRPURIFIER_3
             self._available_attributes = AVAILABLE_ATTRIBUTES_AIRPURIFIER_3
             self._speed_list = OPERATION_MODES_AIRPURIFIER_3
