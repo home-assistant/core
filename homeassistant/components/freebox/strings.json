@@ -15,7 +15,6 @@
             }
         },
         "error":{
-            "already_configured": "Host already configured",
             "register_failed": "Failed to register, please try again",
             "connection_failed": "Failed to connect, please try again",
             "unknown": "Unknown error: please retry later"
