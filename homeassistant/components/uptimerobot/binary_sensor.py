@@ -1,6 +1,7 @@
 """A platform that to monitor Uptime Robot monitors."""
 import logging
 
+from pyuptimerobot import UptimeRobot
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorDevice
@@ -18,7 +19,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string}
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Uptime Robot binary_sensors."""
-    from pyuptimerobot import UptimeRobot
 
     up_robot = UptimeRobot()
     api_key = config.get(CONF_API_KEY)

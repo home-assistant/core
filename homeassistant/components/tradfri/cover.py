@@ -1,14 +1,9 @@
 """Support for IKEA Tradfri covers."""
 
-from homeassistant.components.cover import (
-    CoverDevice,
-    ATTR_POSITION,
-    SUPPORT_OPEN,
-    SUPPORT_CLOSE,
-    SUPPORT_SET_POSITION,
-)
+from homeassistant.components.cover import ATTR_POSITION, CoverDevice
+
 from .base_class import TradfriBaseDevice
-from .const import KEY_GATEWAY, KEY_API, CONF_GATEWAY_ID
+from .const import CONF_GATEWAY_ID, KEY_API, KEY_GATEWAY
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -35,11 +30,6 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
         self._refresh(device)
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
-
-    @property
     def current_cover_position(self):
         """Return current position of cover.
 
@@ -58,6 +48,10 @@ class TradfriCover(TradfriBaseDevice, CoverDevice):
     async def async_close_cover(self, **kwargs):
         """Close cover."""
         await self._api(self._device_control.set_state(100))
+
+    async def async_stop_cover(self, **kwargs):
+        """Close cover."""
+        await self._api(self._device_control.trigger_blind())
 
     @property
     def is_closed(self):

@@ -144,6 +144,7 @@ async def test_firing_bus_event(hass, monkeypatch):
     # test event for new unconfigured sensor
     event_callback({"id": "protocol_0_0", "command": "down"})
     await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert calls[0].data == {"state": "down", "entity_id": DOMAIN + ".test"}
 

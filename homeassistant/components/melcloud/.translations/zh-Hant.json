@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5df2\u4f7f\u7528\u6b64\u90f5\u4ef6\u8a2d\u5b9a MELCloud \u6574\u5408\u3002\u5b58\u53d6\u5bc6\u9470\u5df2\u66f4\u65b0\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "MELCloud \u5bc6\u78bc\u3002",
+                    "username": "MELCloud \u767b\u5165\u90f5\u4ef6\u3002"
+                },
+                "description": "\u4f7f\u7528 MELCloud \u5e33\u865f\u9032\u884c\u9023\u7dda\u3002",
+                "title": "\u9023\u7dda\u81f3 MELCloud"
+            }
+        },
+        "title": "MELCloud"
+    }
+}

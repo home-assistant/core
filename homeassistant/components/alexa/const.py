@@ -1,10 +1,9 @@
 """Constants for the Alexa integration."""
 from collections import OrderedDict
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.components.climate import const as climate
 from homeassistant.components import fan
-
+from homeassistant.components.climate import const as climate
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
 DOMAIN = "alexa"
 
@@ -20,6 +19,7 @@ CONF_ENTITY_CONFIG = "entity_config"
 CONF_ENDPOINT = "endpoint"
 CONF_CLIENT_ID = "client_id"
 CONF_CLIENT_SECRET = "client_secret"
+CONF_LOCALE = "locale"
 
 ATTR_UID = "uid"
 ATTR_UPDATE_DATE = "updateDate"
@@ -43,6 +43,20 @@ API_CHANGE = "change"
 
 CONF_DESCRIPTION = "description"
 CONF_DISPLAY_CATEGORIES = "display_categories"
+CONF_SUPPORTED_LOCALES = (
+    "de-DE",
+    "en-AU",
+    "en-CA",
+    "en-GB",
+    "en-IN",
+    "en-US",
+    "es-ES",
+    "es-MX",
+    "fr-CA",
+    "fr-FR",
+    "it-IT",
+    "ja-JP",
+)
 
 API_TEMP_UNITS = {TEMP_FAHRENHEIT: "FAHRENHEIT", TEMP_CELSIUS: "CELSIUS"}
 
@@ -57,9 +71,10 @@ API_THERMOSTAT_MODES = OrderedDict(
         (climate.HVAC_MODE_AUTO, "AUTO"),
         (climate.HVAC_MODE_OFF, "OFF"),
         (climate.HVAC_MODE_FAN_ONLY, "OFF"),
-        (climate.HVAC_MODE_DRY, "OFF"),
+        (climate.HVAC_MODE_DRY, "CUSTOM"),
     ]
 )
+API_THERMOSTAT_MODES_CUSTOM = {climate.HVAC_MODE_DRY: "DEHUMIDIFY"}
 API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
 
 PERCENTAGE_FAN_MAP = {
@@ -101,3 +116,92 @@ class Cause:
     # Indicates that the event was caused by a voice interaction with Alexa.
     # For example a user speaking to their Echo device.
     VOICE_INTERACTION = "VOICE_INTERACTION"
+
+
+class Inputs:
+    """Valid names for the InputController.
+
+    https://developer.amazon.com/docs/device-apis/alexa-property-schemas.html#input
+    """
+
+    VALID_SOURCE_NAME_MAP = {
+        "aux": "AUX 1",
+        "aux1": "AUX 1",
+        "aux2": "AUX 2",
+        "aux3": "AUX 3",
+        "aux4": "AUX 4",
+        "aux5": "AUX 5",
+        "aux6": "AUX 6",
+        "aux7": "AUX 7",
+        "bluray": "BLURAY",
+        "cable": "CABLE",
+        "cd": "CD",
+        "coax": "COAX 1",
+        "coax1": "COAX 1",
+        "coax2": "COAX 2",
+        "composite": "COMPOSITE 1",
+        "composite1": "COMPOSITE 1",
+        "dvd": "DVD",
+        "game": "GAME",
+        "gameconsole": "GAME",
+        "hdradio": "HD RADIO",
+        "hdmi": "HDMI 1",
+        "hdmi1": "HDMI 1",
+        "hdmi2": "HDMI 2",
+        "hdmi3": "HDMI 3",
+        "hdmi4": "HDMI 4",
+        "hdmi5": "HDMI 5",
+        "hdmi6": "HDMI 6",
+        "hdmi7": "HDMI 7",
+        "hdmi8": "HDMI 8",
+        "hdmi9": "HDMI 9",
+        "hdmi10": "HDMI 10",
+        "hdmiarc": "HDMI ARC",
+        "input": "INPUT 1",
+        "input1": "INPUT 1",
+        "input2": "INPUT 2",
+        "input3": "INPUT 3",
+        "input4": "INPUT 4",
+        "input5": "INPUT 5",
+        "input6": "INPUT 6",
+        "input7": "INPUT 7",
+        "input8": "INPUT 8",
+        "input9": "INPUT 9",
+        "input10": "INPUT 10",
+        "ipod": "IPOD",
+        "line": "LINE 1",
+        "line1": "LINE 1",
+        "line2": "LINE 2",
+        "line3": "LINE 3",
+        "line4": "LINE 4",
+        "line5": "LINE 5",
+        "line6": "LINE 6",
+        "line7": "LINE 7",
+        "mediaplayer": "MEDIA PLAYER",
+        "optical": "OPTICAL 1",
+        "optical1": "OPTICAL 1",
+        "optical2": "OPTICAL 2",
+        "phono": "PHONO",
+        "playstation": "PLAYSTATION",
+        "playstation3": "PLAYSTATION 3",
+        "playstation4": "PLAYSTATION 4",
+        "satellite": "SATELLITE",
+        "satellitetv": "SATELLITE",
+        "smartcast": "SMARTCAST",
+        "tuner": "TUNER",
+        "tv": "TV",
+        "usbdac": "USB DAC",
+        "video": "VIDEO 1",
+        "video1": "VIDEO 1",
+        "video2": "VIDEO 2",
+        "video3": "VIDEO 3",
+        "xbox": "XBOX",
+    }
+
+    VALID_SOUND_MODE_MAP = {
+        "movie": "MOVIE",
+        "music": "MUSIC",
+        "night": "NIGHT",
+        "sport": "SPORT",
+        "tv": "TV",
+    }

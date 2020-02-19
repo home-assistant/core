@@ -200,4 +200,4 @@ async def test_suffix(hass):
     assert state is not None
 
     # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes
-    assert round(float(state.state), config["sensor"]["round"]) == 10.0
+    assert round(float(state.state)) == 10

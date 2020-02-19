@@ -4,17 +4,18 @@ from unittest.mock import patch
 
 from homeassistant.components import geo_location
 from homeassistant.components.demo.geo_location import (
-    NUMBER_OF_DEMO_DEVICES,
     DEFAULT_UNIT_OF_MEASUREMENT,
     DEFAULT_UPDATE_INTERVAL,
+    NUMBER_OF_DEMO_DEVICES,
 )
 from homeassistant.setup import setup_component
+import homeassistant.util.dt as dt_util
+
 from tests.common import (
-    get_test_home_assistant,
     assert_setup_component,
     fire_time_changed,
+    get_test_home_assistant,
 )
-import homeassistant.util.dt as dt_util
 
 CONFIG = {geo_location.DOMAIN: [{"platform": "demo"}]}
 

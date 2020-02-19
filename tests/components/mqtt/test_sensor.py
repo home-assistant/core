@@ -14,8 +14,8 @@ import homeassistant.util.dt as dt_util
 from tests.common import (
     MockConfigEntry,
     async_fire_mqtt_message,
-    async_mock_mqtt_component,
     async_fire_time_changed,
+    async_mock_mqtt_component,
     mock_registry,
 )
 
@@ -63,7 +63,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     assert state.state == "unknown"
 
     now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
-    with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now):
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "100")
         await hass.async_block_till_done()
@@ -82,7 +82,7 @@ async def test_setting_sensor_value_expires(hass, mqtt_mock, caplog):
     assert state.state == "100"
 
     # Next message resets timer
-    with patch(("homeassistant.helpers.event." "dt_util.utcnow"), return_value=now):
+    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=now):
         async_fire_time_changed(hass, now)
         async_fire_mqtt_message(hass, "test-topic", "101")
         await hass.async_block_till_done()
@@ -268,12 +268,12 @@ async def test_setting_sensor_attribute_via_legacy_mqtt_json_message(hass, mqtt_
                 "name": "test",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
-                "json_attributes": "val",
+                "json_attributes_topic": "test-attributes-topic",
             }
         },
     )
 
-    async_fire_mqtt_message(hass, "test-topic", '{ "val": "100" }')
+    async_fire_mqtt_message(hass, "test-attributes-topic", '{ "val": "100" }')
     state = hass.states.get("sensor.test")
 
     assert state.attributes.get("val") == "100"
@@ -290,12 +290,12 @@ async def test_update_with_legacy_json_attrs_not_dict(hass, mqtt_mock, caplog):
                 "name": "test",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
-                "json_attributes": "val",
+                "json_attributes_topic": "test-attributes-topic",
             }
         },
     )
 
-    async_fire_mqtt_message(hass, "test-topic", '[ "list", "of", "things"]')
+    async_fire_mqtt_message(hass, "test-attributes-topic", '[ "list", "of", "things"]')
     state = hass.states.get("sensor.test")
 
     assert state.attributes.get("val") is None
@@ -313,12 +313,12 @@ async def test_update_with_legacy_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
                 "name": "test",
                 "state_topic": "test-topic",
                 "unit_of_measurement": "fav unit",
-                "json_attributes": "val",
+                "json_attributes_topic": "test-attributes-topic",
             }
         },
     )
 
-    async_fire_mqtt_message(hass, "test-topic", "This is not JSON")
+    async_fire_mqtt_message(hass, "test-attributes-topic", "This is not JSON")
 
     state = hass.states.get("sensor.test")
     assert state.attributes.get("val") is None

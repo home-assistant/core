@@ -1,13 +1,14 @@
 """Details about crypto currencies from CoinMarketCap."""
-import logging
 from datetime import timedelta
+import logging
 from urllib.error import HTTPError
 
+from coinmarketcap import Market
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_DISPLAY_CURRENCY
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -159,6 +160,5 @@ class CoinMarketCapData:
 
     def update(self):
         """Get the latest data from coinmarketcap.com."""
-        from coinmarketcap import Market
 
         self.ticker = Market().ticker(self.currency_id, convert=self.display_currency)

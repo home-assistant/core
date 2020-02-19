@@ -14,22 +14,25 @@ from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
+    PRESET_AWAY,
+    PRESET_NONE,
     SUPPORT_AUX_HEAT,
     SUPPORT_FAN_MODE,
     SUPPORT_PRESET_MODE,
     SUPPORT_SWING_MODE,
     SUPPORT_TARGET_TEMPERATURE,
-    PRESET_AWAY,
     SUPPORT_TARGET_TEMPERATURE_RANGE,
-    PRESET_NONE,
 )
-from homeassistant.components.fan import SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICE,
@@ -165,8 +168,7 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_DEVICE): mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA,
             vol.Optional(CONF_FAN_MODE_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(
-                CONF_FAN_MODE_LIST,
-                default=[HVAC_MODE_AUTO, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH],
+                CONF_FAN_MODE_LIST, default=[FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
             ): cv.ensure_list,
             vol.Optional(CONF_FAN_MODE_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_FAN_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -214,7 +216,9 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_TEMP_HIGH_COMMAND_TOPIC): mqtt.valid_publish_topic,
             vol.Optional(CONF_TEMP_HIGH_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_TEMP_HIGH_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_TEMP_LOW_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_TEMP_LOW_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_TEMP_LOW_STATE_TOPIC): mqtt.valid_subscribe_topic,
             vol.Optional(CONF_TEMP_STATE_TEMPLATE): cv.template,
             vol.Optional(CONF_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -303,7 +307,7 @@ class MqttClimate(
         MqttEntityDeviceInfo.__init__(self, device_config, config_entry)
 
     async def async_added_to_hass(self):
-        """Handle being added to home assistant."""
+        """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
         await self._subscribe_topics()
 
@@ -337,7 +341,7 @@ class MqttClimate(
             self._target_temp_high = config[CONF_TEMP_INITIAL]
 
         if self._topic[CONF_FAN_MODE_STATE_TOPIC] is None:
-            self._current_fan_mode = SPEED_LOW
+            self._current_fan_mode = FAN_LOW
         if self._topic[CONF_SWING_MODE_STATE_TOPIC] is None:
             self._current_swing_mode = HVAC_MODE_OFF
         if self._topic[CONF_MODE_STATE_TOPIC] is None:
@@ -754,12 +758,14 @@ class MqttClimate(
         if self._away:
             optimistic_update = optimistic_update or self._set_away_mode(False)
         elif preset_mode == PRESET_AWAY:
+            if self._hold:
+                self._set_hold_mode(None)
             optimistic_update = optimistic_update or self._set_away_mode(True)
-
-        if self._hold:
-            optimistic_update = optimistic_update or self._set_hold_mode(None)
-        elif preset_mode not in (None, PRESET_AWAY):
-            optimistic_update = optimistic_update or self._set_hold_mode(preset_mode)
+        else:
+            hold_mode = preset_mode
+            if preset_mode == PRESET_NONE:
+                hold_mode = None
+            optimistic_update = optimistic_update or self._set_hold_mode(hold_mode)
 
         if optimistic_update:
             self.async_write_ha_state()

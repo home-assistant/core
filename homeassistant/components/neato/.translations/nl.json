@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Al geconfigureerd",
             "invalid_credentials": "Ongeldige gebruikersgegevens"
         },
         "create_entry": {
@@ -12,6 +13,12 @@
         },
         "step": {
             "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam",
+                    "vendor": "Leverancier"
+                },
+                "description": "Zie [Neato-documentatie] ({docs_url}).",
                 "title": "Neato-account info"
             }
         },

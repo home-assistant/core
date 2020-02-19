@@ -2,17 +2,18 @@
 from unittest.mock import patch
 
 import pytest
+import zigpy.zcl.clusters.general as general
+import zigpy.zcl.clusters.security as security
+import zigpy.zcl.foundation as zcl_f
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import (
     _async_get_device_automations as async_get_device_automations,
 )
 from homeassistant.components.zha import DOMAIN
-from homeassistant.components.zha.core.const import CHANNEL_ON_OFF
+from homeassistant.components.zha.core.const import CHANNEL_EVENT_RELAY
 from homeassistant.helpers.device_registry import async_get_registry
 from homeassistant.setup import async_setup_component
-
-from .common import async_enable_traffic, async_init_zigpy_device
 
 from tests.common import async_mock_service, mock_coro
 
@@ -22,31 +23,30 @@ COMMAND_SINGLE = "single"
 
 
 @pytest.fixture
-def calls(hass):
-    """Track calls to a mock serivce."""
-    return async_mock_service(hass, "zha", "warning_device_warn")
+async def device_ias(hass, zigpy_device_mock, zha_device_joined_restored):
+    """IAS device fixture."""
 
-
-async def test_get_actions(hass, config_entry, zha_gateway):
-    """Test we get the expected actions from a zha device."""
-    from zigpy.zcl.clusters.general import Basic
-    from zigpy.zcl.clusters.security import IasZone, IasWd
-
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass,
-        [Basic.cluster_id, IasZone.cluster_id, IasWd.cluster_id],
-        [],
-        None,
-        zha_gateway,
+    clusters = [general.Basic, security.IasZone, security.IasWd]
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                "in_clusters": [c.cluster_id for c in clusters],
+                "out_clusters": [general.OnOff.cluster_id],
+                "device_type": 0,
+            }
+        },
     )
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, "binary_sensor")
+    zha_device = await zha_device_joined_restored(zigpy_device)
+    zha_device.update_available(True)
     await hass.async_block_till_done()
-    hass.config_entries._entries.append(config_entry)
+    return zigpy_device, zha_device
 
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
-    ieee_address = str(zha_device.ieee)
+
+async def test_get_actions(hass, device_ias):
+    """Test we get the expected actions from a zha device."""
+
+    ieee_address = str(device_ias[0].ieee)
 
     ha_device_registry = await async_get_registry(hass)
     reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)}, set())
@@ -61,42 +61,22 @@ async def test_get_actions(hass, config_entry, zha_gateway):
     assert actions == expected_actions
 
 
-async def test_action(hass, config_entry, zha_gateway, calls):
+async def test_action(hass, device_ias):
     """Test for executing a zha device action."""
-
-    from zigpy.zcl.clusters.general import Basic, OnOff
-    from zigpy.zcl.clusters.security import IasZone, IasWd
-    from zigpy.zcl.foundation import Status
-
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass,
-        [Basic.cluster_id, IasZone.cluster_id, IasWd.cluster_id],
-        [OnOff.cluster_id],
-        None,
-        zha_gateway,
-    )
+    zigpy_device, zha_device = device_ias
 
     zigpy_device.device_automation_triggers = {
         (SHORT_PRESS, SHORT_PRESS): {COMMAND: COMMAND_SINGLE}
     }
 
-    await hass.config_entries.async_forward_entry_setup(config_entry, "switch")
-    await hass.async_block_till_done()
-
-    hass.config_entries._entries.append(config_entry)
-
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
     ieee_address = str(zha_device.ieee)
 
     ha_device_registry = await async_get_registry(hass)
     reg_device = ha_device_registry.async_get_device({(DOMAIN, ieee_address)}, set())
 
-    # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
-
     with patch(
-        "zigpy.zcl.Cluster.request", return_value=mock_coro([0x00, Status.SUCCESS])
+        "zigpy.zcl.Cluster.request",
+        return_value=mock_coro([0x00, zcl_f.Status.SUCCESS]),
     ):
         assert await async_setup_component(
             hass,
@@ -122,9 +102,10 @@ async def test_action(hass, config_entry, zha_gateway, calls):
         )
 
         await hass.async_block_till_done()
+        calls = async_mock_service(hass, DOMAIN, "warning_device_warn")
 
-        on_off_channel = zha_device.cluster_channels[CHANNEL_ON_OFF]
-        on_off_channel.zha_send_event(on_off_channel.cluster, COMMAND_SINGLE, [])
+        channel = {ch.name: ch for ch in zha_device.all_channels}[CHANNEL_EVENT_RELAY]
+        channel.zha_send_event(channel.cluster, COMMAND_SINGLE, [])
         await hass.async_block_till_done()
 
         assert len(calls) == 1

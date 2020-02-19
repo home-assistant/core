@@ -1,14 +1,15 @@
 """Test data purging."""
-import json
 from datetime import datetime, timedelta
+import json
 import unittest
 from unittest.mock import patch
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.components.recorder.models import Events, States
 from homeassistant.components.recorder.purge import purge_old_data
-from homeassistant.components.recorder.models import States, Events
 from homeassistant.components.recorder.util import session_scope
+
 from tests.common import get_test_home_assistant, init_recorder_component
 
 
@@ -174,5 +175,5 @@ class TestRecorderPurge(unittest.TestCase):
                 self.hass.data[DATA_INSTANCE].block_till_done()
                 assert (
                     mock_logger.debug.mock_calls[3][1][0]
-                    == "Vacuuming SQLite to free space"
+                    == "Vacuuming SQL DB to free space"
                 )

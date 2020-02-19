@@ -9,8 +9,8 @@
         },
         "step": {
             "user": {
-                "description": "Czy na pewno chcesz skonfigurowa\u0107 Locative Webhook?",
-                "title": "Skonfiguruj Locative Webhook"
+                "description": "Na pewno chcesz skonfigurowa\u0107 Locative Webhook?",
+                "title": "Konfiguracja Locative Webhook"
             }
         },
         "title": "Locative Webhook"

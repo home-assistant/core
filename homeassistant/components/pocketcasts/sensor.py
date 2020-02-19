@@ -1,13 +1,13 @@
 """Support for Pocket Casts."""
+from datetime import timedelta
 import logging
 
-from datetime import timedelta
-
+import pocketcasts
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,8 +25,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the pocketcasts platform for sensors."""
-    import pocketcasts
-
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 

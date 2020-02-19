@@ -16,11 +16,6 @@ SCAN_INTERVAL = timedelta(minutes=SCAN_INTERVAL_MINUTES)
 BATTERY = "Battery"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Neato sensor."""
-    pass
-
-
 async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Neato sensor using config entry."""
     dev = []
@@ -41,22 +36,14 @@ class NeatoSensor(Entity):
     def __init__(self, neato, robot):
         """Initialize Neato sensor."""
         self.robot = robot
-        self.neato = neato
-        self._available = self.neato.logged_in if self.neato is not None else False
+        self._available = neato.logged_in if neato is not None else False
         self._robot_name = f"{self.robot.name} {BATTERY}"
         self._robot_serial = self.robot.serial
         self._state = None
 
     def update(self):
         """Update Neato Sensor."""
-        if self.neato is None:
-            _LOGGER.error("Error while updating sensor")
-            self._state = None
-            self._available = False
-            return
-
         try:
-            self.neato.update_robots()
             self._state = self.robot.state
         except NeatoRobotException as ex:
             if self._available:

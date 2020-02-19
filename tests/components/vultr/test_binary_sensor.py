@@ -3,25 +3,25 @@ import json
 import unittest
 from unittest.mock import patch
 
-import requests_mock
 import pytest
+import requests_mock
 import voluptuous as vol
 
-from homeassistant.components.vultr import binary_sensor as vultr
 from homeassistant.components import vultr as base_vultr
 from homeassistant.components.vultr import (
     ATTR_ALLOWED_BANDWIDTH,
     ATTR_AUTO_BACKUPS,
-    ATTR_IPV4_ADDRESS,
     ATTR_COST_PER_MONTH,
     ATTR_CREATED_AT,
+    ATTR_IPV4_ADDRESS,
     ATTR_SUBSCRIPTION_ID,
     CONF_SUBSCRIPTION,
+    binary_sensor as vultr,
 )
-from homeassistant.const import CONF_PLATFORM, CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_PLATFORM
 
-from tests.components.vultr.test_init import VALID_CONFIG
 from tests.common import get_test_home_assistant, load_fixture
+from tests.components.vultr.test_init import VALID_CONFIG
 
 
 class TestVultrBinarySensorSetup(unittest.TestCase):

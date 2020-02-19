@@ -1,5 +1,6 @@
 """Constants for Google Assistant."""
 from homeassistant.components import (
+    alarm_control_panel,
     binary_sensor,
     camera,
     climate,
@@ -15,7 +16,6 @@ from homeassistant.components import (
     sensor,
     switch,
     vacuum,
-    alarm_control_panel,
 )
 
 DOMAIN = "google_assistant"
@@ -32,6 +32,10 @@ CONF_API_KEY = "api_key"
 CONF_ROOM_HINT = "room"
 CONF_ALLOW_UNLOCK = "allow_unlock"
 CONF_SECURE_DEVICES_PIN = "secure_devices_pin"
+CONF_REPORT_STATE = "report_state"
+CONF_SERVICE_ACCOUNT = "service_account"
+CONF_CLIENT_EMAIL = "client_email"
+CONF_PRIVATE_KEY = "private_key"
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
@@ -72,7 +76,10 @@ TYPE_ALARM = PREFIX_TYPES + "SECURITYSYSTEM"
 
 SERVICE_REQUEST_SYNC = "request_sync"
 HOMEGRAPH_URL = "https://homegraph.googleapis.com/"
+HOMEGRAPH_SCOPE = "https://www.googleapis.com/auth/homegraph"
+HOMEGRAPH_TOKEN_URL = "https://accounts.google.com/o/oauth2/token"
 REQUEST_SYNC_BASE_URL = HOMEGRAPH_URL + "v1/devices:requestSync"
+REPORT_STATE_BASE_URL = HOMEGRAPH_URL + "v1/devices:reportStateAndNotification"
 
 # Error codes used for SmartHomeError class
 # https://developers.google.com/actions/reference/smarthome/errors-exceptions
@@ -126,10 +133,17 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_OPENING): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.DEVICE_CLASS_WINDOW): TYPE_SENSOR,
     (media_player.DOMAIN, media_player.DEVICE_CLASS_TV): TYPE_TV,
-    (media_player.DOMAIN, media_player.DEVICE_CLASS_SPEAKER): TYPE_SPEAKER,
     (sensor.DOMAIN, sensor.DEVICE_CLASS_TEMPERATURE): TYPE_SENSOR,
+    (sensor.DOMAIN, sensor.DEVICE_CLASS_HUMIDITY): TYPE_SENSOR,
 }
 
 CHALLENGE_ACK_NEEDED = "ackNeeded"
 CHALLENGE_PIN_NEEDED = "pinNeeded"
 CHALLENGE_FAILED_PIN_NEEDED = "challengeFailedPinNeeded"
+
+STORE_AGENT_USER_IDS = "agent_user_ids"
+
+SOURCE_CLOUD = "cloud"
+SOURCE_LOCAL = "local"
+
+NOT_EXPOSE_LOCAL = {TYPE_ALARM, TYPE_LOCK}

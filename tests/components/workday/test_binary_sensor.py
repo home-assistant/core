@@ -1,12 +1,14 @@
-"""Tests the HASS workday binary sensor."""
+"""Tests the Home Assistant workday binary sensor."""
 from datetime import date
 from unittest.mock import patch
 
-from homeassistant.components.workday.binary_sensor import day_to_string
+import pytest
+import voluptuous as vol
+
+import homeassistant.components.workday.binary_sensor as binary_sensor
 from homeassistant.setup import setup_component
 
-from tests.common import get_test_home_assistant, assert_setup_component
-
+from tests.common import assert_setup_component, get_test_home_assistant
 
 FUNCTION_PATH = "homeassistant.components.workday.binary_sensor.get_date"
 
@@ -68,6 +70,20 @@ class TestWorkdaySetup:
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
+
+    def test_valid_country(self):
+        """Test topic name/filter validation."""
+        # Invalid UTF-8, must not contain U+D800 to U+DFFF
+        with pytest.raises(vol.Invalid):
+            binary_sensor.valid_country("\ud800")
+        with pytest.raises(vol.Invalid):
+            binary_sensor.valid_country("\udfff")
+        # Country MUST NOT be empty
+        with pytest.raises(vol.Invalid):
+            binary_sensor.valid_country("")
+        # Country must be supported by holidays
+        with pytest.raises(vol.Invalid):
+            binary_sensor.valid_country("HomeAssistantLand")
 
     def test_setup_component_province(self):
         """Set up workday component."""
@@ -215,7 +231,7 @@ class TestWorkdaySetup:
 
     def test_day_to_string(self):
         """Test if day_to_string is behaving correctly."""
-        assert day_to_string(0) == "mon"
-        assert day_to_string(1) == "tue"
-        assert day_to_string(7) == "holiday"
-        assert day_to_string(8) is None
+        assert binary_sensor.day_to_string(0) == "mon"
+        assert binary_sensor.day_to_string(1) == "tue"
+        assert binary_sensor.day_to_string(7) == "holiday"
+        assert binary_sensor.day_to_string(8) is None
