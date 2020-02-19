@@ -400,8 +400,9 @@ async def test_setup_safe_mode_if_no_frontend(
     log_no_color = Mock()
 
     with patch(
-        "homeassistant.config.async_hass_config_yaml", return_value={"map": {}}
-    ), patch("homeassistant.components.person.async_setup", side_effect=[False, True]):
+        "homeassistant.config.async_hass_config_yaml",
+        return_value={"map": {}, "person": {"invalid": True}},
+    ):
         hass = await bootstrap.async_setup_hass(
             config_dir=get_test_config_dir(),
             verbose=verbose,
