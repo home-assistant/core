@@ -14,8 +14,12 @@
         "error": {
             "host_port_exists": "This host and port combination is already configured",
             "resolve_failed": "This host can not be resolved",
+            "connection_refused": "Connection refused when connecting to this host",
             "connection_timeout": "Timeout when connecting to this host",
+            "certificate_badroot": "Bad root in certificate chain",
             "certificate_error": "Certificate could not be validated",
+            "certificate_expired": "Certificate has expired",
+            "certificate_selfsigned": "Certificate is self-signed",
             "wrong_host": "Certificate does not match hostname"
         },
         "abort": {

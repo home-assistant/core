@@ -17,8 +17,11 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .errors import PermanentFailure, TemporaryFailure
 from .helper import get_cert
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,11 +74,22 @@ class SSLCertificate(Entity):
         self._state = None
         self._available = False
         self._valid = False
+        self._retry_attempts = 0
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def next_check(self):
+        """Return the timestamp of the next update retry attempt ."""
+        return dt_util.utcnow() + timedelta(seconds=self.retry_delay)
+
+    @property
+    def retry_delay(self):
+        """Return the retry delay in seconds."""
+        return int(min(2 ** (self._retry_attempts - 1) * 30, 3600))
 
     @property
     def unique_id(self):
@@ -116,23 +130,52 @@ class SSLCertificate(Entity):
             # Delay until HA is fully started in case we're checking our own cert.
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, do_update)
 
-    def update(self):
+    async def async_update(self):
         """Fetch the certificate information."""
         try:
-            cert = get_cert(self.server_name, self.server_port)
-        except socket.gaierror:
-            _LOGGER.error("Cannot resolve hostname: %s", self.server_name)
+            try:
+                cert = await self.hass.async_add_executor_job(
+                    get_cert, self.server_name, self.server_port
+                )
+            except socket.gaierror:
+                raise TemporaryFailure("Cannot resolve hostname: %s, will retry in %ds")
+            except socket.timeout:
+                raise TemporaryFailure(
+                    "Connection timeout with server: %s, will retry in %ds"
+                )
+            except ConnectionRefusedError:
+                raise TemporaryFailure(
+                    "Connection refused by server: %s, will retry in %ds"
+                )
+            except ssl.CertificateError as e:
+                raise PermanentFailure(
+                    "Certificate error with server: %s [%s]", e.verify_message
+                )
+            except ssl.SSLError as e:
+                raise PermanentFailure("SSL error with server: %s [%s]", e.args[0])
+
+        except TemporaryFailure as e:
+
+            async def scheduled_update(_):
+                await self.async_update()
+
+            _LOGGER.error(e, self.server_name, self.retry_delay)
             self._available = False
             self._valid = False
+            async_track_point_in_utc_time(self.hass, scheduled_update, self.next_check)
+            self._retry_attempts += 1
             return
-        except socket.timeout:
-            _LOGGER.error("Connection timeout with server: %s", self.server_name)
-            self._available = False
-            self._valid = False
-            return
-        except (ssl.CertificateError, ssl.SSLError):
+
+        except PermanentFailure as e:
+            _LOGGER.error(e.args[0], self.server_name, e.args[1])
             self._available = True
             self._state = 0
+            self._valid = False
+            return
+
+        except Exception:
+            _LOGGER.exception("Unknown error checking server: %s", self.server_name)
+            self._available = False
             self._valid = False
             return
 
@@ -140,6 +183,7 @@ class SSLCertificate(Entity):
         timestamp = datetime.fromtimestamp(ts_seconds)
         expiry = timestamp - datetime.today()
         self._available = True
+        self._retry_attempts = 0
         self._state = expiry.days
         self._valid = True
 

@@ -17,6 +17,14 @@ PORT = 443
 HOST = "example.com"
 
 
+class MockCertificateError(ssl.CertificateError):
+    """Mock a ssl.CertificateError exception to insert attributes."""
+
+    def __init__(self, msg):
+        """Init the mocked exception."""
+        self.verify_message = msg
+
+
 @pytest.fixture(name="test_connect")
 def mock_controller():
     """Mock a successful _prt_in_configuration_exists."""
@@ -43,9 +51,10 @@ async def test_user(hass, test_connect):
     assert result["step_id"] == "user"
 
     # tets with all provided
-    result = await flow.async_step_user(
-        {CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT}
-    )
+    with patch("socket.create_connection"):
+        result = await flow.async_step_user(
+            {CONF_NAME: NAME, CONF_HOST: HOST, CONF_PORT: PORT}
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -57,21 +66,24 @@ async def test_import(hass, test_connect):
     flow = init_config_flow(hass)
 
     # import with only host
-    result = await flow.async_step_import({CONF_HOST: HOST})
+    with patch("socket.create_connection"):
+        result = await flow.async_step_import({CONF_HOST: HOST})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
 
     # import with host and name
-    result = await flow.async_step_import({CONF_HOST: HOST, CONF_NAME: NAME})
+    with patch("socket.create_connection"):
+        result = await flow.async_step_import({CONF_HOST: HOST, CONF_NAME: NAME})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_HOST] == HOST
     assert result["data"][CONF_PORT] == DEFAULT_PORT
 
     # improt with host and port
-    result = await flow.async_step_import({CONF_HOST: HOST, CONF_PORT: PORT})
+    with patch("socket.create_connection"):
+        result = await flow.async_step_import({CONF_HOST: HOST, CONF_PORT: PORT})
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"][CONF_HOST] == HOST
@@ -96,23 +108,26 @@ async def test_abort_if_already_setup(hass, test_connect):
     ).add_to_hass(hass)
 
     # Should fail, same HOST and PORT (default)
-    result = await flow.async_step_import(
-        {CONF_HOST: HOST, CONF_NAME: NAME, CONF_PORT: DEFAULT_PORT}
-    )
+    with patch("socket.create_connection"):
+        result = await flow.async_step_import(
+            {CONF_HOST: HOST, CONF_NAME: NAME, CONF_PORT: DEFAULT_PORT}
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "host_port_exists"
 
     # Should be the same HOST and PORT (default)
-    result = await flow.async_step_user(
-        {CONF_HOST: HOST, CONF_NAME: NAME, CONF_PORT: DEFAULT_PORT}
-    )
+    with patch("socket.create_connection"):
+        result = await flow.async_step_user(
+            {CONF_HOST: HOST, CONF_NAME: NAME, CONF_PORT: DEFAULT_PORT}
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {CONF_HOST: "host_port_exists"}
 
     # SHOULD pass, same Host diff PORT
-    result = await flow.async_step_import(
-        {CONF_HOST: HOST, CONF_NAME: NAME, CONF_PORT: 888}
-    )
+    with patch("socket.create_connection"):
+        result = await flow.async_step_import(
+            {CONF_HOST: HOST, CONF_NAME: NAME, CONF_PORT: 888}
+        )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == NAME
     assert result["data"][CONF_HOST] == HOST
@@ -133,16 +148,50 @@ async def test_abort_on_socket_failed(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_HOST: "connection_timeout"}
 
+    with patch("socket.create_connection", side_effect=ConnectionRefusedError):
+        result = await flow.async_step_user({CONF_HOST: HOST})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "connection_refused"}
+
     with patch(
         "socket.create_connection",
-        side_effect=ssl.CertificateError(f"{HOST} doesn't match somethingelse.com"),
+        side_effect=MockCertificateError(
+            msg=f"Hostname mismatch, certificate is not valid for '{HOST}'"
+        ),
     ):
         result = await flow.async_step_user({CONF_HOST: HOST})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {CONF_HOST: "wrong_host"}
 
     with patch(
-        "socket.create_connection", side_effect=ssl.CertificateError("different error")
+        "socket.create_connection",
+        side_effect=MockCertificateError(msg="certificate has expired"),
+    ):
+        result = await flow.async_step_user({CONF_HOST: HOST})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "certificate_expired"}
+
+    with patch(
+        "socket.create_connection",
+        side_effect=MockCertificateError(
+            msg="self signed certificate in certificate chain"
+        ),
+    ):
+        result = await flow.async_step_user({CONF_HOST: HOST})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "certificate_badroot"}
+
+    with patch(
+        "socket.create_connection",
+        side_effect=MockCertificateError(msg="self signed certificate"),
+    ):
+        result = await flow.async_step_user({CONF_HOST: HOST})
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {CONF_HOST: "certificate_selfsigned"}
+
+    with patch(
+        "socket.create_connection",
+        side_effect=MockCertificateError(msg="different error"),
     ):
         result = await flow.async_step_user({CONF_HOST: HOST})
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM

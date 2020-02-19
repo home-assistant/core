@@ -56,15 +56,31 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except socket.timeout:
             _LOGGER.error("Timed out connecting to %s", host)
             self._errors[CONF_HOST] = "connection_timeout"
+        except ConnectionRefusedError:
+            _LOGGER.error("Connection refused: %s", host)
+            self._errors[CONF_HOST] = "connection_refused"
         except ssl.CertificateError as err:
-            if "doesn't match" in err.args[0]:
+            if "Hostname mismatch" in err.verify_message:
                 _LOGGER.error("Certificate does not match host: %s", host)
                 self._errors[CONF_HOST] = "wrong_host"
+            elif "certificate has expired" in err.verify_message:
+                _LOGGER.error("Certificate has expired: %s", host)
+                self._errors[CONF_HOST] = "certificate_expired"
+            elif "self signed certificate in certificate chain" in err.verify_message:
+                _LOGGER.error("Bad root in certificate chain: %s", host)
+                self._errors[CONF_HOST] = "certificate_badroot"
+            elif "self signed certificate" in err.verify_message:
+                _LOGGER.error("Self-signed certificate: %s", host)
+                self._errors[CONF_HOST] = "certificate_selfsigned"
             else:
-                _LOGGER.error("Certificate could not be validated: %s", host)
+                _LOGGER.error(
+                    "Certificate could not be validated: %s [%s]",
+                    host,
+                    err.verify_message,
+                )
                 self._errors[CONF_HOST] = "certificate_error"
         except ssl.SSLError:
-            _LOGGER.error("Certificate could not be validated: %s", host)
+            _LOGGER.exception("Certificate could not be validated: %s", host)
             self._errors[CONF_HOST] = "certificate_error"
         return False
 
