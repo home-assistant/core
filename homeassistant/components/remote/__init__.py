@@ -66,7 +66,9 @@ def is_on(hass: HomeAssistantType, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Track states and offer events for remotes."""
-    component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = hass.data[DOMAIN] = EntityComponent(
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL
+    )
     await component.async_setup(config)
 
     component.async_register_entity_service(
