@@ -10,10 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-from .const import CONF_EXCLUDE_CHANNELS, DOMAIN
-
-STOP_RECORD = "stop_record"
-START_RECORD = "start_record"
+from .const import CONF_EXCLUDE_CHANNELS, DOMAIN, SHORT_NAME, START_RECORD, STOP_RECORD
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +82,7 @@ class QVRChannel:
 
     def __init__(self, name, model, brand, channel_index, guid):
         """Initialize QVRChannel."""
-        self.name = f"QVR {name}"
+        self.name = f"{SHORT_NAME} {name}"
         self.model = model
         self.brand = brand
         self.index = channel_index
