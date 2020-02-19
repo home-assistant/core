@@ -274,7 +274,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
         thumb_url = self.session.thumbUrl
         if (
             self.media_content_type is MEDIA_TYPE_TVSHOW
-            and not self.plex_server.use_episode_art
+            and not self.plex_server.option_use_episode_art
         ):
             thumb_url = self.session.url(self.session.grandparentThumb)
 
@@ -481,7 +481,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         # force show all controls
-        if self.plex_server.show_all_controls:
+        if self.plex_server.option_show_all_controls:
             return (
                 SUPPORT_PAUSE
                 | SUPPORT_PREVIOUS_TRACK

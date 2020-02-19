@@ -27,6 +27,7 @@ from homeassistant.helpers.dispatcher import (
 )
 
 from .const import (
+    CONF_IGNORE_NEW_SHARED_USERS,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     CONF_SHOW_ALL_CONTROLS,
@@ -50,6 +51,7 @@ MEDIA_PLAYER_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_USE_EPISODE_ART, default=False): cv.boolean,
         vol.Optional(CONF_SHOW_ALL_CONTROLS, default=False): cv.boolean,
+        vol.Optional(CONF_IGNORE_NEW_SHARED_USERS, default=False): cv.boolean,
     }
 )
 
