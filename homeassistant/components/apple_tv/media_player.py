@@ -150,7 +150,7 @@ class AppleTvDevice(MediaPlayerEntity):
             return {
                 MediaType.Video: MEDIA_TYPE_VIDEO,
                 MediaType.Music: MEDIA_TYPE_MUSIC,
-                MediaType.TV: MEDIA_TYPE_TVSHOW
+                MediaType.TV: MEDIA_TYPE_TVSHOW,
             }.get(self._playing.media_type)
 
     @property
