@@ -437,11 +437,11 @@ def file_tags_extract(path):
     try:
         id3 = mutagen.id3.ID3(path)
         open(G_COVER_FILE, "wb").write(id3.getall("APIC")[0].data)
-    except mutagen.id3.ID3NoHeaderError:
+    except Exception:
         try:
             flac = mutagen.flac.FLAC(path)
             open(G_COVER_FILE, "wb").write(flac.pictures[0].data)
-        except mutagen.flac.FLACNoHeaderError:
+        except Exception:
             try:
                 mp4 = mutagen.mp4.MP4(path)
                 open(G_COVER_FILE, "wb").write(mp4["covr"][0])
@@ -673,6 +673,11 @@ class LocalData:
                 )
 
             else:
+                # fix permissions
+                os.system(
+                    'su -c "chown ' + uid + ":" + gid + " " + G_RCLONE_CONF_FILE + '"'
+                )
+                # prepare mount command
                 rclone_cmd_mount = (
                     'su -mm -c "export PATH=$PATH:/data/data/pl.sviete.dom/files/usr/bin/; rclone mount '
                     + name
@@ -687,8 +692,6 @@ class LocalData:
                     + G_RCLONE_CONF
                     + '"'
                 )
-
-            _LOGGER.info(rclone_cmd_mount)
             os.system("mkdir -p /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
             os.system("fusermount -u /data/data/pl.sviete.dom/dom_cloud_drives/" + name)
             os.system(rclone_cmd_mount)
