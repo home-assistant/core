@@ -1,10 +1,8 @@
 """Support for interface with an Samsung TV."""
-import asyncio
 from datetime import timedelta
+from functools import partial
 
-from samsungctl import Remote as SamsungRemote, exceptions as samsung_exceptions
 import voluptuous as vol
-from websocket import WebSocketException
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV, MediaPlayerDevice
 from homeassistant.components.media_player.const import (
@@ -20,21 +18,19 @@ from homeassistant.components.media_player.const import (
     SUPPORT_VOLUME_MUTE,
     SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_ID,
-    CONF_IP_ADDRESS,
-    CONF_METHOD,
-    CONF_NAME,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import CONF_ID, CONF_IP_ADDRESS, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_MANUFACTURER, CONF_MODEL, CONF_ON_ACTION, DOMAIN, LOGGER
+from .const import (
+    CONF_MANUFACTURER,
+    CONF_MODEL,
+    CONF_ON_ACTION,
+    DOMAIN,
+    KEY_REMOTE,
+    LOGGER,
+)
 
 KEY_PRESS_TIMEOUT = 1.2
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}
@@ -90,91 +86,29 @@ class SamsungTVDevice(MediaPlayerDevice):
         # Assume that the TV is in Play mode
         self._playing = True
         self._state = None
-        self._remote = None
         # Mark the end of a shutdown command (need to wait 15 seconds before
         # sending the next command to avoid turning the TV back ON).
         self._end_of_power_off = None
-        # Generate a configuration for the Samsung library
-        self._config = {
-            "name": "HomeAssistant",
-            "description": "HomeAssistant",
-            "id": "ha.component.samsung",
-            "method": config_entry.data[CONF_METHOD],
-            "port": config_entry.data.get(CONF_PORT),
-            "host": config_entry.data[CONF_HOST],
-            "timeout": 1,
-        }
+
+    @property
+    def _remote(self):
+        return self.hass.data[DOMAIN][self._config_entry.entry_id][KEY_REMOTE]
 
     def update(self):
         """Update state of device."""
         if self._power_off_in_progress():
             self._state = STATE_OFF
+        elif self._remote.reconnect():
+            self._state = STATE_ON
         else:
-            if self._remote is not None:
-                # Close the current remote connection
-                self._remote.close()
-                self._remote = None
-
-            try:
-                self.get_remote()
-                if self._remote:
-                    self._state = STATE_ON
-            except (
-                samsung_exceptions.UnhandledResponse,
-                samsung_exceptions.AccessDenied,
-            ):
-                # We got a response so it's working.
-                self._state = STATE_ON
-            except (OSError, WebSocketException):
-                # Different reasons, e.g. hostname not resolveable
-                self._state = STATE_OFF
-
-    def get_remote(self):
-        """Create or return a remote control instance."""
-        if self._remote is None:
-            # We need to create a new instance to reconnect.
-            try:
-                self._remote = SamsungRemote(self._config.copy())
-            # This is only happening when the auth was switched to DENY
-            # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
-            except samsung_exceptions.AccessDenied:
-                self.hass.async_create_task(
-                    self.hass.config_entries.flow.async_init(
-                        DOMAIN,
-                        context={"source": "reauth"},
-                        data=self._config_entry.data,
-                    )
-                )
-                raise
-
-        return self._remote
+            self._state = STATE_OFF
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
         if self._power_off_in_progress() and key not in ("KEY_POWER", "KEY_POWEROFF"):
             LOGGER.info("TV is powering off, not sending command: %s", key)
             return
-        try:
-            # recreate connection if connection was dead
-            retry_count = 1
-            for _ in range(retry_count + 1):
-                try:
-                    self.get_remote().control(key)
-                    break
-                except (
-                    samsung_exceptions.ConnectionClosed,
-                    BrokenPipeError,
-                    WebSocketException,
-                ):
-                    # BrokenPipe can occur when the commands is sent to fast
-                    # WebSocketException can occur when timed out
-                    self._remote = None
-        except (samsung_exceptions.UnhandledResponse, samsung_exceptions.AccessDenied):
-            # We got a response so it's on.
-            LOGGER.debug("Failed sending command %s", key, exc_info=True)
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            pass
+        self._remote.send_command(key)
 
     def _power_off_in_progress(self):
         return (
@@ -239,8 +173,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             self.send_key("KEY_POWEROFF")
         # Force closing of remote session to provide instant UI feedback
         try:
-            self.get_remote().close()
-            self._remote = None
+            self._remote.close()
         except OSError:
             LOGGER.debug("Could not establish connection.")
 
@@ -294,10 +227,10 @@ class SamsungTVDevice(MediaPlayerDevice):
             LOGGER.error("Media ID must be positive integer")
             return
 
-        for digit in media_id:
-            await self.hass.async_add_executor_job(self.send_key, f"KEY_{digit}")
-            await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
-        await self.hass.async_add_executor_job(self.send_key, "KEY_ENTER")
+        keys = list(f"KEY_{digit}" for digit in media_id) + ["KEY_ENTER"]
+        await self.hass.async_add_executor_job(
+            partial(self._remote.send_commands, keys, KEY_PRESS_TIMEOUT)
+        )
 
     async def async_turn_on(self):
         """Turn the media player on."""
