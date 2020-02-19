@@ -1,4 +1,4 @@
 """Constants for QVR Pro component."""
 
-DOMAIN = "qvrpro"
+DOMAIN = "qvr_pro"
 CONF_EXCLUDE_CHANNELS = "exclude_channels"

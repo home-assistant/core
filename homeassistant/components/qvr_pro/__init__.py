@@ -12,6 +12,9 @@ from homeassistant.helpers.discovery import load_platform
 
 from .const import CONF_EXCLUDE_CHANNELS, DOMAIN
 
+STOP_RECORD = "stop_record"
+START_RECORD = "start_record"
+
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema(
@@ -71,8 +74,8 @@ def setup(hass, config):
         guid = call.data.get("guid")
         qvrpro.stop_recording(guid)
 
-    hass.services.register(DOMAIN, "start_record", handle_start_record)
-    hass.services.register(DOMAIN, "stop_record", handle_stop_record)
+    hass.services.register(DOMAIN, START_RECORD, handle_start_record)
+    hass.services.register(DOMAIN, STOP_RECORD, handle_stop_record)
 
     return True
 
@@ -82,7 +85,7 @@ class QVRChannel:
 
     def __init__(self, name, model, brand, channel_index, guid):
         """Initialize QVRChannel."""
-        self.name = "QVR {}".format(name)
+        self.name = f"QVR {name}"
         self.model = model
         self.brand = brand
         self.index = channel_index
