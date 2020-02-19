@@ -5,7 +5,7 @@ from roku import Roku, RokuException
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     DOMAIN,
