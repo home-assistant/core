@@ -218,6 +218,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             if session_device:
                 self._make = session_device.device or ""
                 self._player_state = session_device.state
+                self._device_platform = self._device_platform or session_device.platform
                 self._device_product = self._device_product or session_device.product
                 self._device_title = self._device_title or session_device.title
                 self._device_version = self._device_version or session_device.version
@@ -243,7 +244,7 @@ class PlexMediaPlayer(MediaPlayerDevice):
             self._media_content_id = self.session.ratingKey
             self._media_content_rating = getattr(self.session, "contentRating", None)
 
-        name_parts = [self._device_product, self._device_title]
+        name_parts = [self._device_product, self._device_title or self._device_platform]
         if (self._device_product in COMMON_PLAYERS) and self.make:
             # Add more context in name for likely duplicates
             name_parts.append(self.make)
@@ -738,8 +739,8 @@ class PlexMediaPlayer(MediaPlayerDevice):
 
         return {
             "identifiers": {(PLEX_DOMAIN, self.machine_identifier)},
-            "manufacturer": "Plex",
-            "model": self._device_product or self._device_platform or self.make,
+            "manufacturer": self._device_platform or "Plex",
+            "model": self._device_product or self.make,
             "name": self.name,
             "sw_version": self._device_version,
             "via_device": (PLEX_DOMAIN, self.plex_server.machine_identifier),
