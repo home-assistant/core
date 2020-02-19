@@ -231,8 +231,6 @@ class Doods(ImageProcessingEntity):
 
     def _save_image(self, image, matches, paths):
         img = convert_to_pil_image(image)
-        if not img:
-            return
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
 
@@ -277,6 +275,7 @@ class Doods(ImageProcessingEntity):
         """Process the image."""
         img = convert_to_pil_image(image)
         if not img:
+            _LOGGER.error("Bad image data, unable to process")
             return
         img_width, img_height = img.size
 

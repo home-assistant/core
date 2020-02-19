@@ -238,8 +238,6 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
     def _save_image(self, image, matches, paths):
         img = convert_to_pil_image(image)
-        if not img:
-            return
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
 
@@ -290,6 +288,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         except ImportError:
             img = convert_to_pil_image(image)
             if not img:
+                _LOGGER.error("Bad image data, unable to process")
                 return
             img.thumbnail((460, 460), Image.ANTIALIAS)
             img_width, img_height = img.size
