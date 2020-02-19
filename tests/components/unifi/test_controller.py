@@ -63,6 +63,7 @@ async def setup_unifi_integration(
     clients_response=None,
     devices_response=None,
     clients_all_response=None,
+    wlans_response=None,
     known_wireless_clients=None,
     controllers=None,
 ):
@@ -98,6 +99,10 @@ async def setup_unifi_integration(
     if clients_all_response:
         mock_client_all_responses.append(clients_all_response)
 
+    mock_wlans_responses = deque()
+    if wlans_response:
+        mock_wlans_responses.append(wlans_response)
+
     mock_requests = []
 
     async def mock_request(self, method, path, json=None):
@@ -109,6 +114,8 @@ async def setup_unifi_integration(
             return mock_device_responses.popleft()
         if path == "s/{site}/rest/user" and mock_client_all_responses:
             return mock_client_all_responses.popleft()
+        if path == "s/{site}/rest/wlanconf" and mock_wlans_responses:
+            return mock_wlans_responses.popleft()
         return {}
 
     # "aiounifi.Controller.start_websocket", return_value=True
@@ -128,6 +135,7 @@ async def setup_unifi_integration(
     controller.mock_client_responses = mock_client_responses
     controller.mock_device_responses = mock_device_responses
     controller.mock_client_all_responses = mock_client_all_responses
+    controller.mock_wlans_responses = mock_wlans_responses
     controller.mock_requests = mock_requests
 
     return controller

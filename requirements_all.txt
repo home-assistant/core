@@ -123,13 +123,13 @@ adguardhome==0.4.1
 afsapi==0.0.4
 
 # homeassistant.components.geonetnz_quakes
-aio_geojson_geonetnz_quakes==0.11
+aio_geojson_geonetnz_quakes==0.12
 
 # homeassistant.components.geonetnz_volcano
 aio_geojson_geonetnz_volcano==0.5
 
 # homeassistant.components.nsw_rural_fire_service_feed
-aio_geojson_nsw_rfs_incidents==0.1
+aio_geojson_nsw_rfs_incidents==0.3
 
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.3
@@ -199,7 +199,7 @@ aiopylgtv==0.3.3
 aioswitcher==2019.4.26
 
 # homeassistant.components.unifi
-aiounifi==12
+aiounifi==13
 
 # homeassistant.components.wwlln
 aiowwlln==2.0.2
@@ -305,7 +305,7 @@ beewi_smartclim==0.0.7
 bellows-homeassistant==0.13.2
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.7.0
+bimmer_connected==0.7.1
 
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
@@ -683,7 +683,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200217.0
+home-assistant-frontend==20200219.0
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -1072,7 +1072,7 @@ pushetta==1.0.15
 pushover_complete==1.1.1
 
 # homeassistant.components.rpi_gpio_pwm
-pwmled==1.4.1
+pwmled==1.5.0
 
 # homeassistant.components.august
 py-august==0.14.0
@@ -1460,7 +1460,7 @@ pypjlink2==1.2.0
 pypoint==1.1.2
 
 # homeassistant.components.ps4
-pyps4-2ndscreen==1.0.6
+pyps4-2ndscreen==1.0.7
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
@@ -2025,7 +2025,7 @@ uscisstatus==0.1.1
 uvcclient==0.11.0
 
 # homeassistant.components.vallox
-vallox-websocket-api==2.2.0
+vallox-websocket-api==2.4.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.12

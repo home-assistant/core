@@ -904,6 +904,7 @@ class TestConfig(unittest.TestCase):
             "whitelist_external_dirs": set(),
             "version": __version__,
             "config_source": "default",
+            "safe_mode": False,
         }
 
         assert expected == self.config.as_dict()
