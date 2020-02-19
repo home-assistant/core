@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     client = Avri(
         postal_code=config[CONF_POSTCODE],
         house_nr=config[CONF_HOUSE_NUMBER],
-        house_nr_extension=config[CONF_HOUSE_NUMBER_EXTENSION],
+        house_nr_extension=config.get(CONF_HOUSE_NUMBER_EXTENSION),
         country_code=config[CONF_COUNTRY_CODE],
     )
 
