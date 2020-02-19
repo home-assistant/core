@@ -10,17 +10,14 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import mqtt
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
-from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_when_setup
-from homeassistant.util import slugify
 
 from .config_flow import CONF_SECRET
 from .const import DOMAIN
-from .messages import _parse_topic, async_handle_message, encrypt_message
+from .messages import async_handle_message, encrypt_message
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +27,6 @@ CONF_WAYPOINT_WHITELIST = "waypoint_whitelist"
 CONF_MQTT_TOPIC = "mqtt_topic"
 CONF_REGION_MAPPING = "region_mapping"
 CONF_EVENTS_ONLY = "events_only"
-CONF_FRIENDS = "friends"
 BEACON_DEV_ID = "beacon"
 
 DEFAULT_OWNTRACKS_TOPIC = "owntracks/#"
@@ -50,7 +46,6 @@ CONFIG_SCHEMA = vol.Schema(
             ),
             vol.Optional(CONF_REGION_MAPPING, default={}): dict,
             vol.Optional(CONF_WEBHOOK_ID): cv.string,
-            vol.Optional(CONF_FRIENDS, default=False): cv.boolean,
         }
     },
     extra=vol.ALLOW_EXTRA,
@@ -80,7 +75,6 @@ async def async_setup_entry(hass, entry):
     region_mapping = config.get(CONF_REGION_MAPPING)
     events_only = config.get(CONF_EVENTS_ONLY)
     mqtt_topic = config.get(CONF_MQTT_TOPIC)
-    friends = config.get(CONF_FRIENDS)
 
     context = OwnTracksContext(
         hass,
@@ -91,7 +85,6 @@ async def async_setup_entry(hass, entry):
         region_mapping,
         events_only,
         mqtt_topic,
-        friends,
     )
 
     webhook_id = config.get(CONF_WEBHOOK_ID) or entry.data[CONF_WEBHOOK_ID]
@@ -191,58 +184,18 @@ async def handle_webhook(hass, webhook_id, request):
 
     response = []
 
-    if context.friends:
-        persons = (
-            hass.data[PERSON_DOMAIN].storage_persons
-            + hass.data[PERSON_DOMAIN].config_persons
-        )
-        user, device = _parse_topic(message["topic"], context.mqtt_topic)
-        dev_id = "device_tracker." + slugify(f"{user}_{device}")
+    persons = list(filter(lambda x: x.domain == "person", hass.states.async_all()))
 
-        for person in persons:
-            person_location = {
+    for person in persons:
+        response.append(
+            {
                 "_type": "location",
-                "lat": "",
-                "lon": "",
-                "tid": "",
-                "tst": int(time.time()),
+                "lat": person.attributes["latitude"],
+                "lon": person.attributes["longitude"],
+                "tid": person.attributes["id"][0:2],
+                "tst": int(time.mktime(person.last_updated.timetuple())),
             }
-
-            if not person["device_trackers"]:
-                continue
-
-            # Check whether this is the same person as the poster and skip it
-            if dev_id in person["device_trackers"]:
-                continue
-
-            # Get location of person from device trackers
-            for device_tracker_id in person["device_trackers"]:
-                device_tracker_entity = hass.data[DEVICE_TRACKER_DOMAIN].get_entity(
-                    device_tracker_id
-                )
-
-                if hasattr(device_tracker_entity, "latitude") and hasattr(
-                    device_tracker_entity, "longitude"
-                ):
-                    person_location["lat"] = device_tracker_entity.latitude
-                    person_location["lon"] = device_tracker_entity.longitude
-
-                    # If tracker ID can be extracted, set it
-                    try:
-                        person_location[
-                            "tid"
-                        ] = device_tracker_entity.device_state_attributes["tid"]
-                    except TypeError:
-                        pass
-
-                # Fallback if none of the device trackers has a TID
-                if not person_location["tid"] and hasattr(
-                    device_tracker_entity, "name"
-                ):
-                    person_location["tid"] = device_tracker_entity.name[0:2]
-
-                if person_location["lat"] and person_location["lon"]:
-                    response.append(person_location)
+        )
 
     if message["_type"] == "encrypted" and context.secret:
         return json_response(
@@ -270,7 +223,6 @@ class OwnTracksContext:
         region_mapping,
         events_only,
         mqtt_topic,
-        friends,
     ):
         """Initialize an OwnTracks context."""
         self.hass = hass
@@ -283,7 +235,6 @@ class OwnTracksContext:
         self.region_mapping = region_mapping
         self.events_only = events_only
         self.mqtt_topic = mqtt_topic
-        self.friends = friends
         self._pending_msg = []
 
     @callback
