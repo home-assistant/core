@@ -22,6 +22,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
+from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
     CHANNEL_ELECTRICAL_MEASUREMENT,
@@ -68,15 +69,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation sensor from config entry."""
     entities = hass.data[DATA_ZHA][DOMAIN] = []
 
-    async def async_discover():
-        """Add enqueued entities."""
-        if not entities:
-            return
-        to_add = [ent(*args) for ent, args in entities]
-        async_add_entities(to_add, update_before_add=True)
-        entities.clear()
-
-    unsub = async_dispatcher_connect(hass, SIGNAL_ADD_ENTITIES, async_discover)
+    unsub = async_dispatcher_connect(
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(discovery.async_add_entities, async_add_entities, entities),
+    )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 

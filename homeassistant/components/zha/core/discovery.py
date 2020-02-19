@@ -6,6 +6,7 @@ https://home-assistant.io/integrations/zha/
 """
 
 import logging
+from typing import Callable, List, Tuple
 
 from homeassistant import const as ha_const
 from homeassistant.core import callback
@@ -15,6 +16,24 @@ from . import const as zha_const, registries as zha_regs, typing as zha_typing
 from .channels import base
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@callback
+async def async_add_entities(
+    _async_add_entities: Callable,
+    entities: List[
+        Tuple[
+            zha_typing.ZhaEntityType,
+            Tuple[str, zha_typing.ZhaDeviceType, List[zha_typing.ChannelType]],
+        ]
+    ],
+) -> None:
+    """Add entities helper."""
+    if not entities:
+        return
+    to_add = [ent(*args) for ent, args in entities]
+    _async_add_entities(to_add, update_before_add=True)
+    entities.clear()
 
 
 class ProbeEndpoint:
