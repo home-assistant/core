@@ -5,5 +5,5 @@ SHORT_NAME = "QVR"
 
 CONF_EXCLUDE_CHANNELS = "exclude_channels"
 
-STOP_RECORD = "stop_record"
-START_RECORD = "start_record"
+SERVICE_STOP_RECORD = "stop_record"
+SERVICE_START_RECORD = "start_record"

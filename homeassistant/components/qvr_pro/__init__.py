@@ -11,7 +11,14 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-from .const import CONF_EXCLUDE_CHANNELS, DOMAIN, SHORT_NAME, START_RECORD, STOP_RECORD
+from .const import (
+    CONF_EXCLUDE_CHANNELS,
+    DOMAIN,
+    SERVICE_START_RECORD,
+    SERVICE_STOP_RECORD,
+)
+
+CHANNEL_GUID = "guid"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +37,8 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+SERVICE_SCHEMA_CHANNEL_RECORD = vol.Schema({vol.Required(CHANNEL_GUID): cv.string})
 
 
 def setup(hass, config):
@@ -58,7 +67,7 @@ def setup(hass, config):
         if channel["channel_index"] + 1 in excluded_channels:
             continue
 
-        channels.append(QVRChannel(**channel))
+        channels.append(channel)
 
     hass.data[DOMAIN] = {"channels": channels, "client": qvrpro}
 
@@ -66,26 +75,24 @@ def setup(hass, config):
 
     # Register services
     def handle_start_record(call):
-        guid = call.data.get("guid")
+        guid = call.data.get(CHANNEL_GUID)
         qvrpro.start_recording(guid)
 
     def handle_stop_record(call):
-        guid = call.data.get("guid")
+        guid = call.data.get(CHANNEL_GUID)
         qvrpro.stop_recording(guid)
 
-    hass.services.register(DOMAIN, START_RECORD, handle_start_record)
-    hass.services.register(DOMAIN, STOP_RECORD, handle_stop_record)
+    hass.services.register(
+        DOMAIN,
+        SERVICE_START_RECORD,
+        handle_start_record,
+        schema=SERVICE_SCHEMA_CHANNEL_RECORD,
+    )
+    hass.services.register(
+        DOMAIN,
+        SERVICE_STOP_RECORD,
+        handle_stop_record,
+        schema=SERVICE_SCHEMA_CHANNEL_RECORD,
+    )
 
     return True
-
-
-class QVRChannel:
-    """Representation of a QVR channel."""
-
-    def __init__(self, name, model, brand, channel_index, guid):
-        """Initialize QVRChannel."""
-        self.name = f"{SHORT_NAME} {name}"
-        self.model = model
-        self.brand = brand
-        self.index = channel_index
-        self.guid = guid
