@@ -147,9 +147,6 @@ def _decrypt_payload(secret, topic, ciphertext):
 def encrypt_message(secret, topic, message):
     """Encrypt message."""
 
-    from nacl.secret import SecretBox
-    from nacl.encoding import Base64Encoder
-
     keylen = SecretBox.KEY_SIZE
 
     if isinstance(secret, dict):
