@@ -11,6 +11,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, NAME
 
@@ -31,19 +32,56 @@ ICON = "mdi:gas-station"
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the tankerkoenig sensors."""
+
+    if not discovery_info:
+        return
+
     tankerkoenig = hass.data[DOMAIN]
-    _LOGGER.debug("Setup platform. Stations: %s ", tankerkoenig.entity_list)
-    async_add_entities(tankerkoenig.entity_list)
+
+    async def async_update_data():
+        """Fetch data from API endpoint."""
+        try:
+            return await tankerkoenig.fetch_data()
+        except LookupError:
+            raise UpdateFailed
+
+    coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=NAME,
+        update_method=async_update_data,
+        update_interval=tankerkoenig.update_interval,
+    )
+
+    station_list = discovery_info.values()
+    entity_list = []
+    for station in station_list:
+        for fuel in tankerkoenig.fuel_types:
+            if fuel not in station.keys():
+                _LOGGER.warning(
+                    "Station %s does not offer %s fuel", station["id"], fuel
+                )
+                continue
+            sensor = FuelPriceSensor(
+                fuel, station, coordinator, f"{NAME}_{station['name']}_{fuel}"
+            )
+            _LOGGER.debug("Added sensor %s", sensor.name)
+            entity_list.append(sensor)
+
+    # Fetch initial data so we have data when entities subscribe
+    await coordinator.async_refresh()
+    async_add_entities(entity_list)
 
 
 class FuelPriceSensor(Entity):
     """Contains prices for fuel in a given station."""
 
-    def __init__(self, fuel_type, station, name=NAME):
+    def __init__(self, fuel_type, station, coordinator, name=NAME):
         """Initialize the sensor."""
         self._station = station
         self._station_id = station["id"]
         self._fuel_type = fuel_type
+        self._coordinator = coordinator
         self._name = name
         self._latitude = station["lat"]
         self._longitude = station["lng"]
@@ -52,7 +90,6 @@ class FuelPriceSensor(Entity):
         self._house_number = station["houseNumber"]
         self._postcode = station["postCode"]
         self._street = station["street"]
-        _LOGGER.debug("Setup sensor %s", name)
         self._price = station[fuel_type]
 
     @property
@@ -71,13 +108,25 @@ class FuelPriceSensor(Entity):
         return "€"
 
     @property
+    def should_poll(self):
+        """No need to poll. Coordinator notifies of updates."""
+        return False
+
+    @property
     def state(self):
         """Return the state of the device."""
-        return self._price
+        # key Fuel_type is not available when the fuel station is closed, use "get" instead of "[]" to avoid exceptions
+        return self._coordinator.data[self._station_id].get(self._fuel_type)
 
     @property
     def device_state_attributes(self):
         """Return the attributes of the device."""
+        data = self._coordinator.data[self._station_id]
+        if data is None or "status" not in data.keys():
+            self._is_open = STATE_UNKNOWN
+        else:
+            self._is_open = STATE_OPEN if data["status"] == "open" else STATE_CLOSED
+
         attrs = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_BRAND: self._station["brand"],
@@ -93,17 +142,19 @@ class FuelPriceSensor(Entity):
         }
         return attrs
 
-    def new_data(self, data):
-        """Update the internal sensor data."""
-        if data is None or "status" not in data.keys():
-            _LOGGER.warning("Received no data for station %s", self._station_id)
-            self._is_open = STATE_UNKNOWN
-            self._price = None
-        else:
-            self._is_open = STATE_OPEN if data["status"] == "open" else STATE_CLOSED
-            self._price = data.get(self._fuel_type)
-        self.update()
+    @property
+    def available(self):
+        """Return if entity is available."""
+        return self._coordinator.last_update_success
 
-    def update(self):
-        """Update the data in the HASS backend."""
-        pass
+    async def async_added_to_hass(self):
+        """When entity is added to hass."""
+        self._coordinator.async_add_listener(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """When entity will be removed from hass."""
+        self._coordinator.async_remove_listener(self.async_write_ha_state)
+
+    async def async_update(self):
+        """Update the entity."""
+        await self._coordinator.async_request_refresh()

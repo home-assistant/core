@@ -16,22 +16,22 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_FUEL_TYPES, CONF_STATIONS, DOMAIN, FUEL_TYPES, NAME
-from .sensor import FuelPriceSensor
+from .const import CONF_FUEL_TYPES, CONF_STATIONS, DOMAIN, FUEL_TYPES
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_RADIUS = 2
-SCAN_INTERVAL = timedelta(minutes=30)
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Required(CONF_API_KEY): cv.string,
-                vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+                ): cv.time_period,
                 vol.Optional(CONF_FUEL_TYPES, default=FUEL_TYPES): vol.All(
                     cv.ensure_list, [vol.In(FUEL_TYPES)]
                 ),
@@ -65,22 +65,30 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
 
-    _LOGGER.debug("Setting up platform")
+    _LOGGER.debug("Setting up integration")
 
     tankerkoenig = await hass.async_add_executor_job(
         partial(TankerkoenigData, hass, conf)
     )
 
-    if not tankerkoenig.entity_list:
-        _LOGGER.error("Could not find any fuel station to track")
+    latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
+    radius = conf[CONF_RADIUS]
+    additional_stations = conf[CONF_STATIONS]
+
+    if not tankerkoenig.setup(latitude, longitude, radius, additional_stations):
+        _LOGGER.error("Could not setup integration")
         return False
 
     hass.data[DOMAIN] = tankerkoenig
-    async_track_time_interval(hass, tankerkoenig.update, conf[CONF_SCAN_INTERVAL])
 
     hass.async_create_task(
         async_load_platform(
-            hass, SENSOR_DOMAIN, DOMAIN, discovered=None, hass_config=conf
+            hass,
+            SENSOR_DOMAIN,
+            DOMAIN,
+            discovered=tankerkoenig.stations,
+            hass_config=conf,
         )
     )
 
@@ -93,17 +101,16 @@ class TankerkoenigData:
     def __init__(self, hass, conf):
         """Initialize the data object."""
         self._api_key = conf[CONF_API_KEY]
-        self._entities = {}
-        self._fuel_types = conf[CONF_FUEL_TYPES]
+        self.stations = {}
+        self.fuel_types = conf[CONF_FUEL_TYPES]
+        self.update_interval = conf[CONF_SCAN_INTERVAL]
 
-        latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
-        longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
-        radius = conf[CONF_RADIUS]
+    def setup(self, latitude, longitude, radius, additional_stations):
+        """Set up the tankerkoenig API.
 
-        additional_stations = conf[CONF_STATIONS]
-
-        _LOGGER.debug("Fetching data for (%s,%s) rad: %s", latitude, longitude, radius)
-
+        Read the initial data from the server, to initialize the list of fuel stations to monitor.
+        """
+        _LOGGER.debug("Fetching data for (%s, %s) rad: %s", latitude, longitude, radius)
         try:
             data = pytankerkoenig.getNearbyStations(
                 self._api_key, latitude, longitude, radius, "all", "dist"
@@ -116,13 +123,19 @@ class TankerkoenigData:
                 "Setup for sensors was unsuccessful. Error occurred while fetching data from tankerkoenig.de: %s",
                 data["message"],
             )
-            return
+            return False
 
         # Add stations found via location + radius
         nearby_stations = data["stations"]
         if not nearby_stations:
+            if not additional_stations:
+                _LOGGER.error(
+                    "Could not find any station in range."
+                    "Try with a bigger radius or manually specify stations in additional_stations"
+                )
+                return False
             _LOGGER.warning(
-                "Could not find any station in range. Try with a bigger radius"
+                "Could not find any station in range. Will only use manually specified stations"
             )
         else:
             for station in data["stations"]:
@@ -147,58 +160,36 @@ class TankerkoenigData:
                     station_id,
                     additional_station_data["message"],
                 )
-                # Clear entity dictionary, so that the platform setup fails / no sensors get loaded in hass
-                self._entities = {}
-            else:
-                self.add_station(additional_station_data["station"])
+                return False
+            self.add_station(additional_station_data["station"])
+        return True
 
-    @property
-    def entity_list(self):
-        """Get the list of all entities the platform is monitoring."""
-
-        # Get flat list from the dictionary of lists
-        return [
-            sensor_entity
-            for sublist in self._entities.values()
-            for sensor_entity in sublist
-        ]
-
-    def update(self, now=None):
+    async def fetch_data(self):
         """Get the latest data from tankerkoenig.de."""
         _LOGGER.debug("Fetching new data from tankerkoenig.de")
-        entity_list = list(self._entities.keys())
-        data = pytankerkoenig.getPriceList(self._api_key, entity_list)
+        station_id_list = list(self.stations.keys())
+        data = pytankerkoenig.getPriceList(self._api_key, station_id_list)
 
         if data["ok"]:
             _LOGGER.debug("Received data: %s", data)
-            for station_id, station_list in self._entities.items():
-                for station in station_list:
-                    station.new_data(data["prices"].get(station_id))
+            if "prices" not in data.keys():
+                _LOGGER.error("Did not receive price information from tankerkoenig.de")
+                raise LookupError("No prices in data")
         else:
             _LOGGER.error(
                 "Error fetching data from tankerkoenig.de: %s", data["message"]
             )
+            raise LookupError(data["message"])
+        return data["prices"]
 
     def add_station(self, station: dict):
         """Add fuel station to the entity list."""
         station_id = station["id"]
-        if station_id in self._entities.keys():
+        if station_id in self.stations.keys():
             _LOGGER.warning(
                 "Sensor for station with id %s was already created", station_id
             )
             return
 
-        self._entities[station_id] = []
-        _LOGGER.debug(
-            "add_station called for station: %s and fuel types: %s",
-            station,
-            self._fuel_types,
-        )
-        for fuel in self._fuel_types:
-            if fuel in station.keys():
-                station_sensor = FuelPriceSensor(
-                    fuel, station, f"{NAME}_{station['name']}_{fuel}"
-                )
-                self._entities[station_id].append(station_sensor)
-            else:
-                _LOGGER.warning("Station %s does not offer %s fuel", station_id, fuel)
+        self.stations[station_id] = station
+        _LOGGER.debug("add_station called for station: %s", station)
