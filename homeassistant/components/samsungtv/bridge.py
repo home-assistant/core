@@ -20,6 +20,9 @@ from homeassistant.const import (
 )
 
 from .const import (
+    CONF_DESCRIPTION,
+    CONFIG_ID,
+    CONFIG_NAME,
     LOGGER,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
@@ -124,9 +127,9 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         if port is not None and port != self.port:
             return RESULT_NOT_SUCCESSFUL
         config = {
-            CONF_NAME: "HomeAssistant",
-            "description": "HomeAssistant",
-            CONF_ID: "ha.component.samsung",
+            CONF_NAME: CONFIG_NAME,
+            CONF_DESCRIPTION: CONFIG_NAME,
+            CONF_ID: CONFIG_ID,
             CONF_HOST: self.host,
             CONF_METHOD: self.method,
             CONF_PORT: self.port,
@@ -190,6 +193,14 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         self._get_remote().control(key)
 
 
+def _hide_token(config):
+    if config[CONF_TOKEN]:
+        copy = config.copy()
+        copy[CONF_TOKEN] = "XXXXX"
+        return copy
+    return config
+
+
 class SamsungTVWSBridge(SamsungTVBridge):
     """The Bridge for WebSocket TVs."""
 
@@ -204,8 +215,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
             if port is not None and port != self.port:
                 continue
             config = {
-                CONF_NAME: "HomeAssistant",
-                "description": "HomeAssistant",
+                CONF_NAME: CONFIG_NAME,
+                CONF_DESCRIPTION: CONFIG_NAME,
                 CONF_HOST: self.host,
                 CONF_METHOD: self.method,
                 CONF_PORT: self.port,
@@ -214,23 +225,23 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 CONF_TOKEN: self.token,
             }
             try:
-                LOGGER.debug("Try config: %s", config)
+                LOGGER.debug("Try config: %s", _hide_token(config))
                 with SamsungTVWS(
                     host=self.host,
                     port=self.port,
                     token=self.token,
-                    timeout=config["timeout"],
-                    name=config["name"],
+                    timeout=config[CONF_TIMEOUT],
+                    name=config[CONF_NAME],
                 ) as remote:
                     remote.open()
-                LOGGER.debug("Working config: %s", config)
-                LOGGER.debug("Token: %s", self.token)
+                    self.token = remote.token
+                LOGGER.debug("Working config: %s", _hide_token(config))
                 return RESULT_SUCCESS
             except WebSocketException:
-                LOGGER.debug("Working but unsupported config: %s", config)
+                LOGGER.debug("Working but unsupported config: %s", _hide_token(config))
                 return RESULT_NOT_SUPPORTED
             except (OSError, ConnectionFailure) as err:
-                LOGGER.debug("Failing config: %s, error: %s", config, err)
+                LOGGER.debug("Failing config: %s, error: %s", _hide_token(config), err)
 
         return RESULT_NOT_SUCCESSFUL
 
@@ -239,7 +250,7 @@ class SamsungTVWSBridge(SamsungTVBridge):
         try:
             ping_url = f"http://{self.host}:8001/api/v2/"
 
-            requests.get(ping_url, timeout=1)
+            requests.head(ping_url, timeout=1)
             return True
         except RequestException:
             return False
@@ -254,13 +265,19 @@ class SamsungTVWSBridge(SamsungTVBridge):
         """Create or return a remote control instance."""
         if self._remote is None:
             # We need to create a new instance to reconnect.
-            LOGGER.debug("Create SamsungTVWS")
-            self._remote = SamsungTVWS(
-                host=self.config[CONF_HOST],
-                port=self.config[CONF_PORT],
-                token=self.config[CONF_TOKEN],
-                timeout=self.config[CONF_TIMEOUT],
-                name=self.config[CONF_NAME],
-            )
-            self._remote.open()
+            try:
+                LOGGER.debug("Create SamsungTVWS")
+                self._remote = SamsungTVWS(
+                    host=self.config[CONF_HOST],
+                    port=self.config[CONF_PORT],
+                    token=self.config[CONF_TOKEN],
+                    timeout=self.config[CONF_TIMEOUT],
+                    name=self.config[CONF_NAME],
+                )
+                self._remote.open()
+            # This is only happening when the auth was switched to DENY
+            # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket
+            except ConnectionFailure:
+                self._notify_callback()
+                raise
         return self._remote

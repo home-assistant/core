@@ -64,6 +64,17 @@ MOCK_CONFIG = {
     ]
 }
 
+MOCK_CONFIGWS = {
+    SAMSUNGTV_DOMAIN: [
+        {
+            CONF_HOST: "fake",
+            CONF_NAME: "fake",
+            CONF_PORT: 8001,
+            CONF_ON_ACTION: [{"delay": "00:00:01"}],
+        }
+    ]
+}
+
 ENTITY_ID_NOTURNON = f"{DOMAIN}.fake_noturnon"
 MOCK_CONFIG_NOTURNON = {
     SAMSUNGTV_DOMAIN: [
@@ -77,6 +88,25 @@ def remote_fixture():
     """Patch the samsungctl Remote."""
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote"
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ) as socket1, patch(
+        "homeassistant.components.samsungtv.socket"
+    ) as socket2:
+        remote = mock.Mock()
+        remote.__enter__ = mock.Mock()
+        remote.__exit__ = mock.Mock()
+        remote_class.return_value = remote
+        socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
+        socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
+        yield remote
+
+
+@pytest.fixture(name="remotews")
+def remotews_fixture():
+    """Patch the samsungtvws SamsungTVWS."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.SamsungTVWS"
     ) as remote_class, patch(
         "homeassistant.components.samsungtv.config_flow.socket"
     ) as socket1, patch(
@@ -336,34 +366,30 @@ async def test_device_class(hass, remote):
     assert state.attributes[ATTR_DEVICE_CLASS] == DEVICE_CLASS_TV
 
 
-async def test_turn_off_websocket(hass, remote):
+async def test_turn_off_websocket(hass, remotews):
     """Test for turn_off."""
-    await setup_samsungtv(hass, MOCK_CONFIG)
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=[OSError("Boom"), mock.DEFAULT],
+    ):
+        await setup_samsungtv(hass, MOCK_CONFIGWS)
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        # key called
+        assert remotews.send_key.call_count == 1
+        assert remotews.send_key.call_args_list == [call("KEY_POWER")]
+
+
+async def test_turn_off_legacy(hass, remote):
+    """Test for turn_off."""
+    await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
     assert await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
     )
     # key called
     assert remote.control.call_count == 1
-    assert remote.control.call_args_list == [call("KEY_POWER")]
-
-
-async def test_turn_off_legacy(hass):
-    """Test for turn_off."""
-    with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
-        "homeassistant.components.samsungtv.bridge.Remote",
-        side_effect=[OSError("Boom"), mock.DEFAULT],
-    ), patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class, patch(
-        "homeassistant.components.samsungtv.socket"
-    ):
-        remote = mock.Mock()
-        remote_class.return_value = remote
-        await setup_samsungtv(hass, MOCK_CONFIG_NOTURNON)
-        assert await hass.services.async_call(
-            DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID_NOTURNON}, True
-        )
-        # key called
-        assert remote.control.call_count == 1
-        assert remote.control.call_args_list == [call("KEY_POWEROFF")]
+    assert remote.control.call_args_list == [call("KEY_POWEROFF")]
 
 
 async def test_turn_off_os_error(hass, remote, caplog):
@@ -531,8 +557,7 @@ async def test_play_media_invalid_type(hass, remote):
     ):
         url = "https://example.com"
         await setup_samsungtv(hass, MOCK_CONFIG)
-        # config flow called
-        assert remote.call_count == 1
+        remote.reset_mock()
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -546,7 +571,7 @@ async def test_play_media_invalid_type(hass, remote):
         # only update called
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
-        assert remote.call_count == 2
+        assert remote.call_count == 1
 
 
 async def test_play_media_channel_as_string(hass):
@@ -556,8 +581,7 @@ async def test_play_media_channel_as_string(hass):
     ):
         url = "https://example.com"
         await setup_samsungtv(hass, MOCK_CONFIG)
-        # config flow called
-        assert remote.call_count == 1
+        remote.reset_mock()
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -571,7 +595,7 @@ async def test_play_media_channel_as_string(hass):
         # only update called
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
-        assert remote.call_count == 2
+        assert remote.call_count == 1
 
 
 async def test_play_media_channel_as_non_positive(hass):
@@ -580,8 +604,7 @@ async def test_play_media_channel_as_non_positive(hass):
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
         await setup_samsungtv(hass, MOCK_CONFIG)
-        # config flow called
-        assert remote.call_count == 1
+        remote.reset_mock()
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -595,7 +618,7 @@ async def test_play_media_channel_as_non_positive(hass):
         # only update called
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
-        assert remote.call_count == 2
+        assert remote.call_count == 1
 
 
 async def test_select_source(hass, remote):
@@ -620,8 +643,7 @@ async def test_select_source_invalid_source(hass):
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
         await setup_samsungtv(hass, MOCK_CONFIG)
-        # config flow called
-        assert remote.call_count == 1
+        remote.reset_mock()
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -631,4 +653,4 @@ async def test_select_source_invalid_source(hass):
         # only update called
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
-        assert remote.call_count == 2
+        assert remote.call_count == 1
