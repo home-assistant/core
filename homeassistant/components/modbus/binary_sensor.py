@@ -25,8 +25,8 @@ CONF_INPUTS = "inputs"
 CONF_INPUT_TYPE = "input_type"
 CONF_ADDRESS = "address"
 
-INPUT_TYPE_COIL = "coil"
-INPUT_TYPE_DISCRETE = "discrete_input"
+DEFAULT_INPUT_TYPE_COIL = "coil"
+DEFAULT_INPUT_TYPE_DISCRETE = "discrete_input"
 
 PLATFORM_SCHEMA = vol.All(
     cv.deprecated(CONF_DEPRECATED_COILS, CONF_INPUTS),
@@ -43,8 +43,10 @@ PLATFORM_SCHEMA = vol.All(
                             vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
                             vol.Optional(CONF_SLAVE): cv.positive_int,
                             vol.Optional(
-                                CONF_INPUT_TYPE, default=INPUT_TYPE_COIL
-                            ): vol.In([INPUT_TYPE_COIL, INPUT_TYPE_DISCRETE]),
+                                CONF_INPUT_TYPE, default=DEFAULT_INPUT_TYPE_COIL
+                            ): vol.In(
+                                [DEFAULT_INPUT_TYPE_COIL, DEFAULT_INPUT_TYPE_DISCRETE]
+                            ),
                         }
                     ),
                 )
@@ -57,16 +59,16 @@ PLATFORM_SCHEMA = vol.All(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
-    for entry in config.get(CONF_INPUTS):
-        hub = hass.data[MODBUS_DOMAIN][entry.get(CONF_HUB)]
+    for entry in config[CONF_INPUTS]:
+        hub = hass.data[MODBUS_DOMAIN][entry[CONF_HUB]]
         sensors.append(
             ModbusBinarySensor(
                 hub,
-                entry.get(CONF_NAME),
+                entry[CONF_NAME],
                 entry.get(CONF_SLAVE),
-                entry.get(CONF_ADDRESS),
+                entry[CONF_ADDRESS],
                 entry.get(CONF_DEVICE_CLASS),
-                entry.get(CONF_INPUT_TYPE),
+                entry[CONF_INPUT_TYPE],
             )
         )
 
@@ -110,7 +112,7 @@ class ModbusBinarySensor(BinarySensorDevice):
     def update(self):
         """Update the state of the sensor."""
         try:
-            if self._input_type == INPUT_TYPE_COIL:
+            if self._input_type == DEFAULT_INPUT_TYPE_COIL:
                 result = self._hub.read_coils(self._slave, self._address, 1)
             else:
                 result = self._hub.read_discrete_inputs(self._slave, self._address, 1)
