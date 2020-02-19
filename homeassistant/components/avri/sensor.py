@@ -6,7 +6,7 @@ from avri.api import Avri, AvriException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -100,12 +100,12 @@ class AvriWasteUpcoming(Entity):
             _LOGGER.error(
                 "There was an error retrieving upcoming garbage pickups: %s", ex
             )
-            self._state = False
+            self._state = None
         else:
             matched_events = list(
                 filter(lambda event: event.name == self._waste_type, pickup_events)
             )
             if not matched_events:
-                self._state = False
+                self._state = STATE_UNKNOWN
             else:
                 self._state = matched_events[0].day.date()
