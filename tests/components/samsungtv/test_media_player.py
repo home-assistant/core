@@ -350,7 +350,7 @@ async def test_turn_off_websocket(hass, remote):
 async def test_turn_off_legacy(hass):
     """Test for turn_off."""
     with patch("homeassistant.components.samsungtv.config_flow.socket"), patch(
-        "homeassistant.components.samsungtv.config_flow.Remote",
+        "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=[OSError("Boom"), mock.DEFAULT],
     ), patch("homeassistant.components.samsungtv.bridge.Remote") as remote_class, patch(
         "homeassistant.components.samsungtv.socket"

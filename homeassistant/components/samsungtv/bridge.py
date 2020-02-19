@@ -9,8 +9,20 @@ from samsungtvws import SamsungTVWS
 from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketException
 
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_ID,
+    CONF_METHOD,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_TIMEOUT,
+    CONF_TOKEN,
+)
+
 from .const import (
     LOGGER,
+    METHOD_LEGACY,
+    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_NOT_SUCCESSFUL,
     RESULT_NOT_SUPPORTED,
@@ -25,9 +37,9 @@ class SamsungTVBridge(ABC):
     def get_bridge(config):
         """Get Bridge instance."""
         if config:
-            if config["method"] == "legacy":
+            if config[CONF_METHOD] == METHOD_LEGACY:
                 return SamsungTVLegacyBridge(config)
-            if config["method"] == "websocket":
+            if config[CONF_METHOD] == METHOD_WEBSOCKET:
                 return SamsungTVWSBridge(config)
         return None
 
@@ -36,8 +48,8 @@ class SamsungTVBridge(ABC):
         self.port = None
         self.token = None
         self.config = config
-        self.method = config["method"]
-        self.host = config["host"]
+        self.method = config[CONF_METHOD]
+        self.host = config[CONF_HOST]
         self._remote = None
         self._callback = None
 
@@ -87,7 +99,11 @@ class SamsungTVBridge(ABC):
 
     def close_remote(self):
         """Close remote object."""
-        self._get_remote().close()
+        try:
+            self._get_remote().close()
+            self._remote = None
+        except OSError:
+            LOGGER.debug("Could not establish connection.")
 
     def _notify_callback(self):
         """Notify access denied callback."""
@@ -108,14 +124,14 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         if port is not None and port != self.port:
             return RESULT_NOT_SUCCESSFUL
         config = {
-            "name": "HomeAssistant",
+            CONF_NAME: "HomeAssistant",
             "description": "HomeAssistant",
-            "id": "ha.component.samsung",
-            "host": self.host,
-            "method": self.method,
-            "port": self.port,
+            CONF_ID: "ha.component.samsung",
+            CONF_HOST: self.host,
+            CONF_METHOD: self.method,
+            CONF_PORT: self.port,
             # We need this high timeout because waiting for auth popup is just an open socket
-            "timeout": 31,
+            CONF_TIMEOUT: 31,
         }
         try:
             LOGGER.debug("Try config: %s", config)
@@ -188,14 +204,14 @@ class SamsungTVWSBridge(SamsungTVBridge):
             if port is not None and port != self.port:
                 continue
             config = {
-                "name": "HomeAssistant",
+                CONF_NAME: "HomeAssistant",
                 "description": "HomeAssistant",
-                "host": self.host,
-                "method": self.method,
-                "port": self.port,
+                CONF_HOST: self.host,
+                CONF_METHOD: self.method,
+                CONF_PORT: self.port,
                 # We need this high timeout because waiting for auth popup is just an open socket
-                "timeout": 31,
-                "token": self.token,
+                CONF_TIMEOUT: 31,
+                CONF_TOKEN: self.token,
             }
             try:
                 LOGGER.debug("Try config: %s", config)
@@ -240,11 +256,11 @@ class SamsungTVWSBridge(SamsungTVBridge):
             # We need to create a new instance to reconnect.
             LOGGER.debug("Create SamsungTVWS")
             self._remote = SamsungTVWS(
-                host=self.config["host"],
-                port=self.config["port"],
-                token=self.config["token"],
-                timeout=self.config["timeout"],
-                name=self.config["name"],
+                host=self.config[CONF_HOST],
+                port=self.config[CONF_PORT],
+                token=self.config[CONF_TOKEN],
+                timeout=self.config[CONF_TIMEOUT],
+                name=self.config[CONF_NAME],
             )
             self._remote.open()
         return self._remote

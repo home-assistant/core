@@ -9,9 +9,11 @@ DEFAULT_NAME = "Samsung TV"
 CONF_MANUFACTURER = "manufacturer"
 CONF_MODEL = "model"
 CONF_ON_ACTION = "turn_on_action"
-CONF_TOKEN = "token"
 
 RESULT_AUTH_MISSING = "auth_missing"
 RESULT_SUCCESS = "success"
 RESULT_NOT_SUCCESSFUL = "not_successful"
 RESULT_NOT_SUPPORTED = "not_supported"
+
+METHOD_LEGACY = "legacy"
+METHOD_WEBSOCKET = "websocket"

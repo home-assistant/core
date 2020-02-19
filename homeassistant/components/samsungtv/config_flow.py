@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_METHOD,
     CONF_NAME,
     CONF_PORT,
+    CONF_TOKEN,
 )
 
 # pylint:disable=unused-import
@@ -25,16 +26,17 @@ from .bridge import SamsungTVBridge
 from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
-    CONF_TOKEN,
     DOMAIN,
     LOGGER,
+    METHOD_LEGACY,
+    METHOD_WEBSOCKET,
     RESULT_AUTH_MISSING,
     RESULT_NOT_SUCCESSFUL,
     RESULT_SUCCESS,
 )
 
 DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str, vol.Required(CONF_NAME): str})
-SUPPORTED_METHODS = ["legacy", "websocket"]
+SUPPORTED_METHODS = [METHOD_LEGACY, METHOD_WEBSOCKET]
 
 
 def _get_ip(host):
@@ -83,8 +85,8 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Try to connect and check auth."""
         for method in SUPPORTED_METHODS:
             config = {
-                "method": method,
-                "host": self._host,
+                CONF_METHOD: method,
+                CONF_HOST: self._host,
             }
             self._bridge = SamsungTVBridge.get_bridge(config)
             result = self._bridge.try_connect(self._port)
