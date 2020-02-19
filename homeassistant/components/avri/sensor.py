@@ -72,7 +72,7 @@ class AvriWasteUpcoming(Entity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return (
-            f"{self.name}"
+            f"avri_{self._waste_type}"
             f"{self.client.country_code}{self.client.postal_code}"
             f"{self.client.house_nr}{self.client.house_nr_extension}"
         )
@@ -81,6 +81,11 @@ class AvriWasteUpcoming(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(self._state)
 
     @property
     def icon(self):
@@ -95,12 +100,12 @@ class AvriWasteUpcoming(Entity):
             _LOGGER.error(
                 "There was an error retrieving upcoming garbage pickups: %s", ex
             )
-            self._state = None
+            self._state = False
         else:
             matched_events = list(
                 filter(lambda event: event.name == self._waste_type, pickup_events)
             )
             if not matched_events:
-                self._state = None
-                return
-            self._state = matched_events[0].day.date()
+                self._state = False
+            else:
+                self._state = matched_events[0].day.date()
