@@ -1,9 +1,9 @@
 """Test config flow."""
 
-from tests.common import MockConfigEntry, mock_coro
-
 from pyatv import exceptions
 from pyatv.const import Protocol
+
+from tests.common import MockConfigEntry, mock_coro
 
 # User Flows
 
