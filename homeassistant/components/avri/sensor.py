@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 CONF_COUNTRY_CODE = "country_code"
-CONF_POSTCODE = "postcode"
+CONF_ZIP_CODE = "zip_code"
 CONF_HOUSE_NUMBER = "house_number"
 CONF_HOUSE_NUMBER_EXTENSION = "house_number_extension"
 DEFAULT_NAME = "avri"
@@ -23,7 +23,7 @@ DEFAULT_COUNTRY_CODE = "NL"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_POSTCODE): cv.string,
+        vol.Required(CONF_ZIP_CODE): cv.string,
         vol.Required(CONF_HOUSE_NUMBER): cv.positive_int,
         vol.Optional(CONF_HOUSE_NUMBER_EXTENSION): cv.string,
         vol.Optional(CONF_COUNTRY_CODE, default=DEFAULT_COUNTRY_CODE): cv.string,
@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Avri Waste platform."""
     client = Avri(
-        postal_code=config[CONF_POSTCODE],
+        postal_code=config[CONF_ZIP_CODE],
         house_nr=config[CONF_HOUSE_NUMBER],
         house_nr_extension=config.get(CONF_HOUSE_NUMBER_EXTENSION),
         country_code=config[CONF_COUNTRY_CODE],
