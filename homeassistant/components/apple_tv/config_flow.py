@@ -18,7 +18,7 @@ from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
+from .const import (  # pylint: disable=unused-import
     CONF_CREDENTIALS,
     CONF_CREDENTIALS_AIRPLAY,
     CONF_CREDENTIALS_DMAP,
