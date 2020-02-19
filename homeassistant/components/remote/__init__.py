@@ -108,6 +108,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     return True
 
+
 async def async_setup_entry(hass, entry):
     """Setup a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
