@@ -147,33 +147,35 @@ class SSLCertificate(Entity):
                 raise TemporaryFailure(
                     "Connection refused by server: %s, will retry in %ds"
                 )
-            except ssl.CertificateError as e:
-                raise PermanentFailure(
-                    "Certificate error with server: %s [%s]", e.verify_message
+            except ssl.CertificateError as err:
+                raise PermanentFailure(  # pylint: disable=raising-format-tuple
+                    "Certificate error with server: %s [%s]", err.verify_message
                 )
-            except ssl.SSLError as e:
-                raise PermanentFailure("SSL error with server: %s [%s]", e.args[0])
+            except ssl.SSLError as err:
+                raise PermanentFailure(  # pylint: disable=raising-format-tuple
+                    "SSL error with server: %s [%s]", err.args[0]
+                )
 
-        except TemporaryFailure as e:
+        except TemporaryFailure as err:
 
             async def scheduled_update(_):
                 await self.async_update()
 
-            _LOGGER.error(e, self.server_name, self.retry_delay)
+            _LOGGER.error(err, self.server_name, self.retry_delay)
             self._available = False
             self._valid = False
             async_track_point_in_utc_time(self.hass, scheduled_update, self.next_check)
             self._retry_attempts += 1
             return
 
-        except PermanentFailure as e:
-            _LOGGER.error(e.args[0], self.server_name, e.args[1])
+        except PermanentFailure as err:
+            _LOGGER.error(err.args[0], self.server_name, err.args[1])
             self._available = True
             self._state = 0
             self._valid = False
             return
 
-        except Exception:
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unknown error checking server: %s", self.server_name)
             self._available = False
             self._valid = False
