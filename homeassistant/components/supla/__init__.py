@@ -143,7 +143,19 @@ class SuplaChannel(Entity):
     @property
     def hidden(self) -> bool:
         """Return True if the entity should be hidden from UIs."""
-        return self.channel_data["hidden"]
+        if self.channel_data is None:
+            return False
+        return self.channel_data.get("hidden")
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self.channel_data is None:
+            return False
+        state = self.channel_data.get("state")
+        if state is None:
+            return False
+        return state.get("connected")
 
     def action(self, action, **add_pars):
         """
