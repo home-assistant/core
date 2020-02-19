@@ -50,6 +50,16 @@ fan_set_favorite_level:
       description: Level, between 0 and 16.
       example: 1
 
+fan_set_fan_level:
+  description: Set the fan level.
+  fields:
+    entity_id:
+      description: Name of the xiaomi miio entity.
+      example: 'fan.xiaomi_miio_device'
+    level:
+      description: Level, between 1 and 3.
+      example: 1
+
 fan_set_led_brightness:
   description: Set the led brightness.
   fields:
