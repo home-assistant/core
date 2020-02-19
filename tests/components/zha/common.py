@@ -72,6 +72,7 @@ class FakeDevice:
         self.last_seen = time.time()
         self.status = 2
         self.initializing = False
+        self.skip_configuration = False
         self.manufacturer = manufacturer
         self.model = model
         self.node_desc = zigpy.zdo.types.NodeDescriptor()
