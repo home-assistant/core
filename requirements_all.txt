@@ -272,7 +272,7 @@ avea==1.4
 # avion==0.10
 
 # homeassistant.components.avri
-avri-api==0.1.5
+avri-api==0.1.6
 
 # homeassistant.components.axis
 axis==25
