@@ -20,7 +20,7 @@ from homeassistant.const import (
     REQUIRED_NEXT_PYTHON_VER,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
+from homeassistant.setup import DATA_SETUP, async_setup_component
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
@@ -102,7 +102,10 @@ async def async_setup_hass(
         _LOGGER.warning("Unable to set up core integrations. Activating safe mode")
         safe_mode = True
 
-    elif "frontend" not in hass.config.components:
+    elif (
+        "frontend" in hass.data.get(DATA_SETUP, {})
+        and "frontend" not in hass.config.components
+    ):
         _LOGGER.warning("Detected that frontend did not load. Activating safe mode")
         # Ask integrations to shut down. It's messy but we can't
         # do a clean stop without knowing what is broken
