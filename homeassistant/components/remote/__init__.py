@@ -66,7 +66,7 @@ def is_on(hass: HomeAssistantType, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Track states and offer events for remotes."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
 
     component.async_register_entity_service(
@@ -107,6 +107,10 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     )
 
     return True
+
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
 class RemoteDevice(ToggleEntity):
