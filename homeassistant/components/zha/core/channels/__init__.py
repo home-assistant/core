@@ -220,7 +220,7 @@ class ChannelPool:
         pool = cls(channels, ep_id)
         pool.add_all_channels()
         pool.add_relay_channels()
-        zha_disc.probe.discover_entities(pool)
+        zha_disc.PROBE.discover_entities(pool)
         return pool
 
     @callback
@@ -238,17 +238,17 @@ class ChannelPool:
             ):
                 channel_class = base.AttributeListeningChannel
             # end of ugly hack
-            ch = channel_class(cluster, self)
-            if ch.name == const.CHANNEL_POWER_CONFIGURATION:
+            channel = channel_class(cluster, self)
+            if channel.name == const.CHANNEL_POWER_CONFIGURATION:
                 if (
                     self._channels.power_configuration_ch
                     or self._channels.zha_device.is_mains_powered
                 ):
                     # on power configuration channel per device
                     continue
-                self._channels.power_configuration_ch = ch
+                self._channels.power_configuration_ch = channel
 
-            self.all_channels[ch.id] = ch
+            self.all_channels[channel.id] = channel
 
     @callback
     def add_relay_channels(self) -> None:
@@ -256,8 +256,8 @@ class ChannelPool:
         for cluster_id in zha_regs.EVENT_RELAY_CLUSTERS:
             cluster = self.endpoint.out_clusters.get(cluster_id)
             if cluster is not None:
-                ch = base.EventRelayChannel(cluster, self)
-                self.relay_channels[ch.id] = ch
+                channel = base.EventRelayChannel(cluster, self)
+                self.relay_channels[channel.id] = channel
 
     async def async_initialize(self, from_cache: bool = False) -> None:
         """Initialize claimed channels."""
@@ -277,11 +277,11 @@ class ChannelPool:
         channels = [*self.claimed_channels.values(), *self.relay_channels.values()]
         tasks = [_throttle(getattr(ch, func_name)(*args)) for ch in channels]
         results = await asyncio.gather(*tasks, return_exceptions=True)
-        for ch, outcome in zip(channels, results):
+        for channel, outcome in zip(channels, results):
             if isinstance(outcome, Exception):
-                ch.warning("'%s' stage failed: %s", func_name, str(outcome))
+                channel.warning("'%s' stage failed: %s", func_name, str(outcome))
                 continue
-            ch.debug("'%s' stage succeeded", func_name)
+            channel.debug("'%s' stage succeeded", func_name)
 
     @callback
     def async_new_entity(

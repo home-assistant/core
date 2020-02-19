@@ -243,7 +243,7 @@ def test_epch_claim_channels(channel):
 
 @mock.patch("homeassistant.components.zha.core.channels.ChannelPool.add_relay_channels")
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.probe.discover_entities",
+    "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
 def test_ep_channels_all_channels(m1, zha_device_mock):
@@ -288,7 +288,7 @@ def test_ep_channels_all_channels(m1, zha_device_mock):
 
 @mock.patch("homeassistant.components.zha.core.channels.ChannelPool.add_relay_channels")
 @mock.patch(
-    "homeassistant.components.zha.core.discovery.probe.discover_entities",
+    "homeassistant.components.zha.core.discovery.PROBE.discover_entities",
     mock.MagicMock(),
 )
 def test_channel_power_config(m1, zha_device_mock):

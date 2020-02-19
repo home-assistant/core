@@ -114,7 +114,7 @@ class ZHAGateway:
 
     async def async_initialize(self):
         """Initialize controller and connect radio."""
-        discovery.probe.initialize(self._hass)
+        discovery.PROBE.initialize(self._hass)
 
         self.zha_storage = await async_get_registry(self._hass)
         self.ha_device_registry = await get_dev_reg(self._hass)

@@ -7,7 +7,8 @@ import zigpy.endpoint
 import zigpy.zcl
 import zigpy.zdo
 
-CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)  # pylint: disable=invalid-name
+# pylint: disable=invalid-name
+CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 ChannelType = "ZigbeeChannel"
 ChannelsType = "Channels"
 ChannelPoolType = "ChannelPool"

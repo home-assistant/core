@@ -108,7 +108,7 @@ async def test_devices(
 def test_discover_entities(m1, m2):
     """Test discover endpoint class method."""
     ep_channels = mock.MagicMock()
-    disc.probe.discover_entities(ep_channels)
+    disc.PROBE.discover_entities(ep_channels)
     assert m1.call_count == 1
     assert m1.call_args[0][0] is ep_channels
     assert m2.call_count == 1
@@ -140,7 +140,7 @@ def test_discover_by_device_type(device_type, component, hit):
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
     ):
-        disc.probe.discover_by_device_type(ep_channels)
+        disc.PROBE.discover_by_device_type(ep_channels)
     if hit:
         assert get_entity_mock.call_count == 1
         assert ep_channels.claim_channels.call_count == 1
@@ -167,8 +167,8 @@ def test_discover_by_device_type_override():
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
     ):
-        with mock.patch.dict(disc.probe._device_configs, overrides, clear=True):
-            disc.probe.discover_by_device_type(ep_channels)
+        with mock.patch.dict(disc.PROBE._device_configs, overrides, clear=True):
+            disc.PROBE.discover_by_device_type(ep_channels)
             assert get_entity_mock.call_count == 1
             assert ep_channels.claim_channels.call_count == 1
             assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
@@ -194,7 +194,7 @@ def test_discover_probe_single_cluster():
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
         get_entity_mock,
     ):
-        disc.probe.probe_single_cluster(zha_const.SWITCH, channel_mock, ep_channels)
+        disc.PROBE.probe_single_cluster(zha_const.SWITCH, channel_mock, ep_channels)
 
     assert get_entity_mock.call_count == 1
     assert ep_channels.claim_channels.call_count == 1

@@ -48,7 +48,6 @@ from .const import (
     ATTR_QUIRK_CLASS,
     ATTR_RSSI,
     ATTR_VALUE,
-    CHANNEL_BASIC,
     CLUSTER_COMMAND_SERVER,
     CLUSTER_COMMANDS_CLIENT,
     CLUSTER_COMMANDS_SERVER,
@@ -242,11 +241,6 @@ class ZHADevice(LogMixin):
         return self._zha_gateway
 
     @property
-    def all_channels(self):
-        """Return cluster channels and relay channels for device."""
-        return self._all_channels
-
-    @property
     def device_automation_triggers(self):
         """Return the device automation triggers for this device."""
         if hasattr(self._zigpy_device, "device_automation_triggers"):
@@ -288,10 +282,7 @@ class ZHADevice(LogMixin):
             if difference > _KEEP_ALIVE_INTERVAL:
                 if self._checkins_missed_count < _CHECKIN_GRACE_PERIODS:
                     self._checkins_missed_count += 1
-                    if (
-                        CHANNEL_BASIC in self.cluster_channels
-                        and self.manufacturer != "LUMI"
-                    ):
+                    if self.manufacturer != "LUMI":
                         self.debug(
                             "Attempting to checkin with device - missed checkins: %s",
                             self._checkins_missed_count,

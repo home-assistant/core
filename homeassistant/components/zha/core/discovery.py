@@ -152,4 +152,4 @@ class ProbeEndpoint:
             self._device_configs.update(overrides)
 
 
-probe = ProbeEndpoint()
+PROBE = ProbeEndpoint()
