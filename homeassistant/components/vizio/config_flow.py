@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import validate_auth
 from .const import (
@@ -30,8 +31,8 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_config_flow_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
-    """Return schema defaults based on user input/config dict. Retain info already provided for future form views by setting them as defaults in schema."""
+def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
+    """Return schema defaults for config data based on user input/config dict. Retain info already provided for future form views by setting them as defaults in schema."""
     if input_dict is None:
         input_dict = {}
 
@@ -41,7 +42,7 @@ def _get_config_flow_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
                 CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
             ): str,
             vol.Required(CONF_HOST, default=input_dict.get(CONF_HOST)): str,
-            vol.Optional(
+            vol.Required(
                 CONF_DEVICE_CLASS,
                 default=input_dict.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
             ): vol.All(str, vol.Lower, vol.In([DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER])),
@@ -109,7 +110,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
-            self._user_schema = _get_config_flow_schema(user_input)
+            self._user_schema = _get_config_schema(user_input)
 
             # Check if new config entry matches any existing config entries
             for entry in self.hass.config_entries.async_entries(DOMAIN):
@@ -131,6 +132,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         user_input[CONF_HOST],
                         user_input.get(CONF_ACCESS_TOKEN),
                         user_input[CONF_DEVICE_CLASS],
+                        session=async_get_clientsession(self.hass, False),
                     ):
                         errors["base"] = "cant_connect"
                 except vol.Invalid:
@@ -148,6 +150,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         user_input[CONF_HOST],
                         user_input.get(CONF_ACCESS_TOKEN),
                         user_input[CONF_DEVICE_CLASS],
+                        session=async_get_clientsession(self.hass, False),
                     )
 
                     if await self.async_set_unique_id(
@@ -162,7 +165,7 @@ class VizioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     )
 
         # Use user_input params as default values for schema if user_input is non-empty, otherwise use default schema
-        schema = self._user_schema or _get_config_flow_schema()
+        schema = self._user_schema or _get_config_schema()
 
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 

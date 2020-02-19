@@ -3,7 +3,7 @@
         "title": "Vizio SmartCast",
         "step": {
             "user": {
-                "title": "Setup Vizio SmartCast Client",
+                "title": "Setup Vizio SmartCast Device",
                 "data": {
                     "name": "Name",
                     "host": "<Host/IP>:<Port>",

@@ -71,7 +71,7 @@ async def async_setup_entry(
         timeout=DEFAULT_TIMEOUT,
     )
 
-    if not await device.can_connect():
+    if not await device.can_connect_with_auth_check():
         _LOGGER.warning("Failed to connect to %s", host)
         raise PlatformNotReady
 
@@ -113,7 +113,7 @@ class VizioDevice(MediaPlayerDevice):
     async def async_update(self) -> None:
         """Retrieve latest state of the device."""
         if not self._model:
-            self._model = await self._device.get_model()
+            self._model = await self._device.get_model_name()
 
         if not self._sw_version:
             self._sw_version = await self._device.get_version()
