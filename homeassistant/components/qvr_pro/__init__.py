@@ -33,10 +33,11 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up the QVR Pro component."""
-    user = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
-    host = config[DOMAIN][CONF_HOST]
-    excluded_channels = config[DOMAIN][CONF_EXCLUDE_CHANNELS]
+    conf = config[DOMAIN]
+    user = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
+    host = conf[CONF_HOST]
+    excluded_channels = conf[CONF_EXCLUDE_CHANNELS]
 
     try:
         qvrpro = Client(user, password, host)
