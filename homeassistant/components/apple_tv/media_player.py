@@ -1,7 +1,8 @@
 """Support for Apple TV media player."""
 import logging
 
-import homeassistant.util.dt as dt_util
+from pyatv.const import DeviceState, MediaType
+
 from homeassistant.components.media_player import MediaPlayerDevice
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MUSIC,
@@ -27,7 +28,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import callback
-from pyatv.const import DeviceState, MediaType
+import homeassistant.util.dt as dt_util
 
 from .const import CONF_IDENTIFIER, DOMAIN
 

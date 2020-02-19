@@ -1,8 +1,9 @@
 """Config flow for Apple TV integration."""
-import logging
 from ipaddress import ip_address
+import logging
 from random import randrange
 
+from pyatv import const, convert, exceptions, pair, scan
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -16,7 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from pyatv import const, convert, exceptions, pair, scan
 
 from .const import (
     CONF_CREDENTIALS,
