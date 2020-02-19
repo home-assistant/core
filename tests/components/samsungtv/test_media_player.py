@@ -531,6 +531,8 @@ async def test_play_media_invalid_type(hass, remote):
     ):
         url = "https://example.com"
         await setup_samsungtv(hass, MOCK_CONFIG)
+        # config flow called
+        assert remote.call_count == 1
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -544,16 +546,18 @@ async def test_play_media_invalid_type(hass, remote):
         # only update called
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
-        assert remote.call_count == 1
+        assert remote.call_count == 2
 
 
-async def test_play_media_channel_as_string(hass, remote):
+async def test_play_media_channel_as_string(hass):
     """Test for play_media with invalid channel as string."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
         url = "https://example.com"
         await setup_samsungtv(hass, MOCK_CONFIG)
+        # config flow called
+        assert remote.call_count == 1
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -567,15 +571,17 @@ async def test_play_media_channel_as_string(hass, remote):
         # only update called
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
-        assert remote.call_count == 1
+        assert remote.call_count == 2
 
 
-async def test_play_media_channel_as_non_positive(hass, remote):
+async def test_play_media_channel_as_non_positive(hass):
     """Test for play_media with invalid channel as non positive integer."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
         await setup_samsungtv(hass, MOCK_CONFIG)
+        # config flow called
+        assert remote.call_count == 1
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -589,7 +595,7 @@ async def test_play_media_channel_as_non_positive(hass, remote):
         # only update called
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
-        assert remote.call_count == 1
+        assert remote.call_count == 2
 
 
 async def test_select_source(hass, remote):
@@ -608,12 +614,14 @@ async def test_select_source(hass, remote):
     assert remote.close.call_args_list == [call()]
 
 
-async def test_select_source_invalid_source(hass, remote):
+async def test_select_source_invalid_source(hass):
     """Test for select_source with invalid source."""
     with patch("homeassistant.components.samsungtv.bridge.Remote") as remote, patch(
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
         await setup_samsungtv(hass, MOCK_CONFIG)
+        # config flow called
+        assert remote.call_count == 1
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_SELECT_SOURCE,
@@ -623,4 +631,4 @@ async def test_select_source_invalid_source(hass, remote):
         # only update called
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
-        assert remote.call_count == 1
+        assert remote.call_count == 2
