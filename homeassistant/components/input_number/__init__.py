@@ -290,7 +290,8 @@ class InputNumber(RestoreEntity):
         num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
             _LOGGER.warning(
-                "Invalid value: %s (range %s - %s)",
+                "Invalid value for %s: %s (range %s - %s)",
+                self.entity_id,
                 num_value,
                 self._minimum,
                 self._maximum,
@@ -304,7 +305,8 @@ class InputNumber(RestoreEntity):
         new_value = self._current_value + self._step
         if new_value > self._maximum:
             _LOGGER.warning(
-                "Invalid value: %s (range %s - %s)",
+                "Invalid value for %s: %s (range %s - %s)",
+                self.entity_id,
                 new_value,
                 self._minimum,
                 self._maximum,
@@ -318,7 +320,8 @@ class InputNumber(RestoreEntity):
         new_value = self._current_value - self._step
         if new_value < self._minimum:
             _LOGGER.warning(
-                "Invalid value: %s (range %s - %s)",
+                "Invalid value for %s: %s (range %s - %s)",
+                self.entity_id,
                 new_value,
                 self._minimum,
                 self._maximum,

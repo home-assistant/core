@@ -110,7 +110,7 @@ async def test_config(hass):
         assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
 
 
-async def test_set_value(hass):
+async def test_set_value(hass, caplog):
     """Test set_value method."""
     assert await async_setup_component(
         hass, DOMAIN, {DOMAIN: {"test_1": {"initial": 50, "min": 0, "max": 100}}}
@@ -134,6 +134,10 @@ async def test_set_value(hass):
 
     set_value(hass, entity_id, "110")
     await hass.async_block_till_done()
+    assert (
+        "Invalid value for input_number.test_1: 110.0 (range 0.0 - 100.0)"
+        in caplog.text
+    )
 
     state = hass.states.get(entity_id)
     assert 70 == float(state.state)
