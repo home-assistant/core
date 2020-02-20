@@ -87,7 +87,9 @@ SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {
     zcl.clusters.smartenergy.Metering.cluster_id: SENSOR,
 }
 
-SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {zcl.clusters.general.OnOff: BINARY_SENSOR}
+SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {
+    zcl.clusters.general.OnOff.cluster_id: BINARY_SENSOR
+}
 
 SWITCH_CLUSTERS = SetRegistry()
 
