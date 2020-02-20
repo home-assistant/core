@@ -1,9 +1,10 @@
 """Support for performing TensorFlow classification on images."""
+import io
 import logging
 import os
 import sys
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, UnidentifiedImageError
 import numpy as np
 import voluptuous as vol
 
@@ -18,7 +19,7 @@ from homeassistant.components.image_processing import (
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.pil import convert_to_pil_image, draw_box
+from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -237,7 +238,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
         }
 
     def _save_image(self, image, matches, paths):
-        img = convert_to_pil_image(image)
+        img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
 
@@ -286,9 +287,10 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
         except ImportError:
-            img = convert_to_pil_image(image)
-            if not img:
-                _LOGGER.error("Bad image data, unable to process")
+            try:
+                img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+            except UnidentifiedImageError:
+                _LOGGER.warning("Unable to process image, bad data")
                 return
             img.thumbnail((460, 460), Image.ANTIALIAS)
             img_width, img_height = img.size

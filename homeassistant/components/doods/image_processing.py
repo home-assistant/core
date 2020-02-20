@@ -1,8 +1,9 @@
 """Support for the DOODS service."""
+import io
 import logging
 import time
 
-from PIL import ImageDraw
+from PIL import Image, ImageDraw, UnidentifiedImageError
 from pydoods import PyDOODS
 import voluptuous as vol
 
@@ -18,7 +19,7 @@ from homeassistant.const import CONF_TIMEOUT
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.pil import convert_to_pil_image, draw_box
+from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -230,7 +231,7 @@ class Doods(ImageProcessingEntity):
         }
 
     def _save_image(self, image, matches, paths):
-        img = convert_to_pil_image(image)
+        img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
         img_width, img_height = img.size
         draw = ImageDraw.Draw(img)
 
@@ -273,9 +274,10 @@ class Doods(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        img = convert_to_pil_image(image)
-        if not img:
-            _LOGGER.error("Bad image data, unable to process")
+        try:
+            img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+        except UnidentifiedImageError:
+            _LOGGER.warning("Unable to process image, bad data")
             return
         img_width, img_height = img.size
 

@@ -2,18 +2,9 @@
 
 Can only be used by integrations that have pillow in their requirements.
 """
-import io
-from typing import Tuple, Union
+from typing import Tuple
 
-from PIL import Image, ImageDraw, UnidentifiedImageError
-
-
-def convert_to_pil_image(image: bytes) -> Union[Image.Image, None]:
-    """Convert a camera image to a PIL Image."""
-    try:
-        return Image.open(io.BytesIO(bytearray(image))).convert("RGB")
-    except UnidentifiedImageError:
-        return None
+from PIL import ImageDraw
 
 
 def draw_box(
