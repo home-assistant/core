@@ -196,22 +196,6 @@ async def finish_setup(hass, config):
         switches = sorted(hass.states.async_entity_ids("switch"))
         lights = sorted(hass.states.async_entity_ids("light"))
 
-    # Set up history graph
-    await bootstrap.async_setup_component(
-        hass,
-        "history_graph",
-        {
-            "history_graph": {
-                "switches": {
-                    "name": "Recent Switches",
-                    "entities": switches,
-                    "hours_to_show": 1,
-                    "refresh": 60,
-                }
-            }
-        },
-    )
-
     # Set up scripts
     await bootstrap.async_setup_component(
         hass,
