@@ -2,6 +2,7 @@
 from collections import namedtuple
 from datetime import timedelta
 import logging
+import time
 
 from elmo.api.client import ElmoClient
 from elmo.api.exceptions import PermissionDenied
@@ -28,6 +29,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 _LOGGER = logging.getLogger(__name__)
+
+SLEEP_TIME = 10
 
 DOMAIN = "elmo_alarm"
 
@@ -156,21 +159,27 @@ class ElmoClientWrapper(ElmoClient):
 
     async def update(self):
         """Get updates and refresh internal states."""
-        try:
-            data = self.check()
-        except (PermissionDenied, HTTPError) as exception:
-            _LOGGER.warning("Invalid session, trying to authenticate: %s", exception)
+        while True:
             try:
-                self.auth(self._username, self._password)
-                data = self.check()
+                self._data = self.check()
+                break
             except (PermissionDenied, HTTPError) as exception:
                 _LOGGER.warning(
-                    "Got error when authenticating: %s", exception,
+                    "Invalid session, trying to authenticate: %s", exception
                 )
+                try:
+                    self.auth(self._username, self._password)
+                    await self._configure_states()
+                except (PermissionDenied, HTTPError) as exception:
+                    _LOGGER.warning(
+                        "Got error when authenticating: %s", exception,
+                    )
+                    _LOGGER.warning(
+                        "Retrying in %s seconds", SLEEP_TIME,
+                    )
+                    time.sleep(SLEEP_TIME)
+                    continue
 
-        if self._data is None:
-            await self._configure_states()
-        self._data = data
         await self._update_arm_state()
         await self._update_zone_state()
         await self._update_input_state()
