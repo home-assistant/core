@@ -1,9 +1,0 @@
-{
-  "domain": "weblink",
-  "name": "Weblink",
-  "documentation": "https://www.home-assistant.io/integrations/weblink",
-  "requirements": [],
-  "dependencies": [],
-  "codeowners": ["@home-assistant/core"],
-  "quality_scale": "internal"
-}
