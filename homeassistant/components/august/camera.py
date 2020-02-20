@@ -64,11 +64,13 @@ class AugustCamera(Camera):
 
         if self._image_url is not latest.image_url:
             self._image_url = latest.image_url
-            self._image_content = requests.get(
-                self._image_url, timeout=self._timeout
-            ).content
+            self._image_content = await self.hass.async_add_job(self._camera_image)
 
         return self._image_content
+
+    def _camera_image(self):
+        """Return bytes of camera image via http get."""
+        return requests.get(self._image_url, timeout=self._timeout).content
 
     @property
     def unique_id(self) -> str:
