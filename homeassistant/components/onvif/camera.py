@@ -65,7 +65,7 @@ CONTINUOUS_MOVE = "ContinuousMove"
 RELATIVE_MOVE = "RelativeMove"
 ABSOLUTE_MOVE = "AbsoluteMove"
 
-SERVICE_PTZ = "onvif_ptz"
+SERVICE_PTZ = "ptz"
 
 DOMAIN = "onvif"
 ONVIF_DATA = "onvif"
