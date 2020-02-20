@@ -13,7 +13,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPLA_SHUTTER = "CONTROLLINGTHEROLLERSHUTTER"
 SUPLA_GATE = "CONTROLLINGTHEGATE"
-SUPLA_GATE_SENSOR = "OPENINGSENSOR_GATE"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
