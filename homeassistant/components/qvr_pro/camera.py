@@ -1,8 +1,14 @@
 """Support for QVR Pro streams."""
 
+import logging
+
+from pyqvrpro.client import QVRResponseError
+
 from homeassistant.components.camera import SUPPORT_STREAM, Camera
 
 from .const import DOMAIN, SHORT_NAME
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -32,6 +38,14 @@ class QVRProCamera(Camera):
         self.index = channel_index
         self.guid = guid
         self._client = client
+
+        try:
+            self._stream_source = self._client.get_channel_live_stream(guid)
+        except QVRResponseError as e:
+            self._stream_source = None
+            _LOGGER.error(e)
+
+        self._supported_features = SUPPORT_STREAM if self._stream_source else 0
 
         super().__init__()
 
@@ -63,9 +77,9 @@ class QVRProCamera(Camera):
 
     def stream_source(self):
         """Get stream source."""
-        return self._client.get_channel_live_stream(self.guid)
+        return self._stream_source
 
     @property
     def supported_features(self):
         """Get supported features."""
-        return SUPPORT_STREAM
+        return self._supported_features

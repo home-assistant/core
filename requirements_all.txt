@@ -1463,7 +1463,7 @@ pypoint==1.1.2
 pyps4-2ndscreen==1.0.7
 
 # homeassistant.components.qvr_pro
-pyqvrpro==0.49
+pyqvrpro==0.5
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.93
