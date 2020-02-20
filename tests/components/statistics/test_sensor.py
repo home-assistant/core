@@ -215,6 +215,79 @@ class TestStatisticsSensor(unittest.TestCase):
         assert 6 == state.attributes.get("min_value")
         assert 14 == state.attributes.get("max_value")
 
+    def test_explicit_scan_interval(self):
+        """
+        Test sensor with fixed scan_interval.
+
+        Compare it with the default behavior of updating state for each incoming sample.
+        By minutely feeding both twin sensors, the one with scan_interval of 2 min
+        will match the default one only in even numbers,
+        while generating half of the state updates.
+        """
+        mock_data = {"return_time": datetime(2020, 2, 20, 12, 23, tzinfo=dt_util.UTC)}
+
+        def mock_now():
+            return mock_data["return_time"]
+
+        with patch(
+            "homeassistant.components.statistics.sensor.dt_util.utcnow", new=mock_now
+        ):
+            assert setup_component(
+                self.hass,
+                "sensor",
+                {
+                    "sensor": [
+                        {
+                            "platform": "statistics",
+                            "name": "test_fixed_scan_interval",
+                            "entity_id": "sensor.test_monitored",
+                            "max_age": {"minutes": 3},
+                            "scan_interval": {"minutes": 2},
+                        },
+                        {
+                            "platform": "statistics",
+                            "name": "test_no_scan_interval",
+                            "entity_id": "sensor.test_monitored",
+                            "max_age": {"minutes": 3},
+                        },
+                    ],
+                },
+            )
+
+            self.hass.start()
+            self.hass.block_till_done()
+
+            for i, value in enumerate(self.values):
+                self.hass.states.set(
+                    "sensor.test_monitored",
+                    value,
+                    {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS},
+                )
+                fire_time_changed(self.hass, mock_data["return_time"])
+                self.hass.block_till_done()
+                state_1 = self.hass.states.get("sensor.test_no_scan_interval")
+                state_2 = self.hass.states.get("sensor.test_fixed_scan_interval")
+                if i > 0 and i % 2 == 0:
+                    # both sensors must match in even minutes
+                    assert state_1.state == state_2.state
+                    for attrib in ("min_value", "max_value", "count"):
+                        at_1 = state_1.attributes.get(attrib)
+                        at_2 = state_2.attributes.get(attrib)
+                        assert at_1 == at_2
+                else:
+                    assert state_1.state != state_2.state
+                    c1 = state_1.attributes.get("count")
+                    c2 = state_2.attributes.get("count")
+                    assert c1 >= c2
+
+                # insert the next value one minute later
+                mock_data["return_time"] += timedelta(minutes=1)
+
+        assert 14 == state_1.attributes.get("max_value")
+        assert 6 == state_1.attributes.get("min_value")
+        assert 14 == state_2.attributes.get("max_value")
+        assert 6 == state_2.attributes.get("min_value")
+
     def test_max_age_without_sensor_change(self):
         """Test value deprecation."""
         mock_data = {"return_time": datetime(2017, 8, 2, 12, 23, tzinfo=dt_util.UTC)}
