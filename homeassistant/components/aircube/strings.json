@@ -1,0 +1,36 @@
+{
+    "config": {
+        "title": "airCube",
+        "step": {
+            "user": {
+                "title": "Set up airCube Router",
+                "data": {
+                    "name": "Name",
+                    "host": "Host",
+                    "username": "Username",
+                    "password": "Password",
+                    "verify_ssl": "Use SSL"
+                }
+            }
+        },
+        "error": {
+            "name_exists": "Name Exists",
+            "cannot_connect": "Connection Unsuccessful",
+            "timeout": "Connection Timed Out: Check Host",
+            "wrong_credentials": "Wrong Credentials",
+            "ssl_error": "SSL Error"
+        },
+        "abort": {
+            "already_configured": "airCube is already configured"
+        }
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "detection_time": "Consider home interval (seconds)"
+                }
+            }
+        }
+    }
+}

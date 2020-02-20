@@ -1,193 +1,140 @@
-"""Support for Ubiquiti airCube routers."""
-import json
+"""Support for airCube routers as device tracker."""
 import logging
-import re
 
-import requests
-import voluptuous as vol
-
-from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA,
-    DeviceScanner,
+from homeassistant.components.device_tracker.config_entry import ScannerEntity
+from homeassistant.components.device_tracker.const import (
+    DOMAIN as DEVICE_TRACKER,
+    SOURCE_TYPE_ROUTER,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
+from homeassistant.helpers import entity_registry
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import homeassistant.util.dt as dt_util
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_VERIFY_SSL = True
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
-)
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up device tracker for airCube component."""
+    router = hass.data[DOMAIN][config_entry.entry_id]
 
+    tracked = {}
 
-def get_scanner(hass, config):
-    """Validate the configuration and return an airCube scanner."""
-    scanner = AirCubeDeviceScanner(config[DOMAIN])
+    registry = await entity_registry.async_get_registry(hass)
 
-    return scanner if scanner.success_init else None
+    # Restore clients that is not a part of active clients list.
+    for entity in registry.entities.values():
 
-
-def _refresh_on_access_denied(func):
-    """If session timed out, need new session_id."""
-
-    def decorator(self, *args, **kwargs):
-        """Wrap the function to refresh session_id on error."""
-        try:
-            return func(self, *args, **kwargs)
-        except (
-            PermissionError,
-            KeyError,
-            NameError,
-            requests.exceptions.ConnectionError,
+        if (
+            entity.config_entry_id == config_entry.entry_id
+            and entity.domain == DEVICE_TRACKER
         ):
-            _LOGGER.debug(
-                "Possible authentication error."
-                "Trying to refresh session_id and rerun."
-            )
-            self.session_id = _get_session_id(
-                self.url, self.username, self.password, self.verify_ssl
-            )
-            return func(self, *args, **kwargs)
 
-    return decorator
+            if (
+                entity.unique_id in router.api.devices
+                or entity.unique_id not in router.api.all_devices
+            ):
+                continue
+            router.api.restore_device(entity.unique_id)
 
+    @callback
+    def update_router():
+        """Update the status of the device."""
+        update_items(router, async_add_entities, tracked)
 
-class AirCubeDeviceScanner(DeviceScanner):
-    """
-    This class queries an Ubiquiti airCube wireless router.
+    async_dispatcher_connect(hass, router.signal_update, update_router)
 
-    Script adapted from ubus (OpenWrt) device tracker.
-    """
-
-    def __init__(self, config):
-        """Initialize the scanner."""
-        host = config[CONF_HOST]
-        self.username = config[CONF_USERNAME]
-        self.password = config[CONF_PASSWORD]
-        self.verify_ssl = config[CONF_VERIFY_SSL]
-
-        self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
-        self.last_results = {}
-        self.url = f"https://{host}/ubus"
-
-        self.session_id = _get_session_id(
-            self.url, self.username, self.password, self.verify_ssl
-        )
-        self.clients = []
-        self.mac2name = None
-        self.success_init = self.session_id is not None
-
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-        return self.last_results
-
-    def _generate_mac2name(self):
-        """Return empty MAC to name dict."""
-        self.mac2name = dict()
-
-    @_refresh_on_access_denied
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        if self.mac2name is None:
-            self._generate_mac2name()
-        if self.mac2name is None:
-            return None
-        name = self.mac2name.get(device.upper(), None)
-        return name
-
-    @_refresh_on_access_denied
-    def _update_info(self):
-        """
-        Ensure the information from the router is up to date.
-
-        Returns boolean if scanning successful.
-        """
-        if not self.success_init:
-            return False
-
-        _LOGGER.info("Checking for clients")
-
-        self.last_results = []
-        results = 0
-
-        result = _req_json_rpc(
-            self.url, self.session_id, "call", "ubnt", "stats", self.verify_ssl
-        )
-
-        mac_data0 = result["result"][1]["results"]["wireless"]["interface"]["wlan0"][
-            "assoclist"
-        ]
-        for i in mac_data0:
-            self.last_results.append(i["mac"])
-            results = results + 1
-        # Only airCube AC has 5GHz radio
-        try:
-            mac_data1 = result["result"][1]["results"]["wireless"]["interface"][
-                "wlan1"
-            ]["assoclist"]
-            for i in mac_data1:
-                self.last_results.append(i["mac"])
-                results = results + 1
-        except KeyError:
-            pass
-
-        return bool(results)
+    update_router()
 
 
-def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, verify_ssl, **params):
-    """Perform one JSON RPC operation."""
-    data = json.dumps(
-        {
-            "jsonrpc": "2.0",
-            "id": 1,
-            "method": rpcmethod,
-            "params": [session_id, subsystem, method, params],
+@callback
+def update_items(router, async_add_entities, tracked):
+    """Update tracked device state from the router."""
+    new_tracked = []
+    for mac, device in router.api.devices.items():
+        if mac not in tracked:
+            tracked[mac] = AirCubeRouterTracker(device, router)
+            new_tracked.append(tracked[mac])
+
+    if new_tracked:
+        async_add_entities(new_tracked)
+
+
+class AirCubeRouterTracker(ScannerEntity):
+    """Representation of network device."""
+
+    def __init__(self, device, router):
+        """Initialize the tracked device."""
+        self.device = device
+        self.router = router
+        self.unsub_dispatcher = None
+
+    @property
+    def is_connected(self):
+        """Return true if the client is connected to the network."""
+        if (
+            self.device.last_seen
+            and (dt_util.utcnow() - self.device.last_seen)
+            < self.router.option_detection_time
+        ):
+            return True
+        return False
+
+    @property
+    def source_type(self):
+        """Return the source type of the client."""
+        return SOURCE_TYPE_ROUTER
+
+    @property
+    def name(self) -> str:
+        """Return the name of the client."""
+        return self.device.name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique identifier for this device."""
+        return self.device.mac
+
+    @property
+    def available(self) -> bool:
+        """Return if controller is available."""
+        return self.router.available
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        if self.is_connected:
+            return self.device.attrs
+        return None
+
+    @property
+    def device_info(self):
+        """Return a client description for device registry."""
+        info = {
+            "connections": {(CONNECTION_NETWORK_MAC, self.device.mac)},
+            "identifiers": {(DOMAIN, self.device.mac)},
+            "name": self.name,
         }
-    )
+        return info
 
-    try:
-        res = requests.post(url, data=data, timeout=5, verify=verify_ssl)
-
-    except (requests.exceptions.Timeout):
-        _LOGGER.warning(
-            "Connection to airCube timed out. Check that IP address is correct"
-            "and that device is accessible."
+    async def async_added_to_hass(self):
+        """Client entity created."""
+        _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
+        self.unsub_dispatcher = async_dispatcher_connect(
+            self.hass, self.router.signal_update, self.async_write_ha_state
         )
-    except (requests.exceptions.SSLError):
-        _LOGGER.warning("SSL error. Set VERIFY_SSL to False.")
-    except (requests.exceptions.ConnectionError):
-        _LOGGER.warning("Error connecting to airCube.")
-    else:
-        return res.json()
 
-
-def _get_session_id(url, username, password, verify_ssl):
-    """Get the authentication token for the given host+username+password."""
-    res = []
-    try:
-        res = _req_json_rpc(
-            url,
-            "00000000000000000000000000000000",
-            "call",
-            "session",
-            "login",
-            verify_ssl=verify_ssl,
-            username=username,
-            password=password,
+    async def async_update(self):
+        """Synchronize state with router."""
+        _LOGGER.debug(
+            "Updating airCube tracked client %s (%s)", self.entity_id, self.unique_id
         )
-    finally:
-        pass
-    if res is not None:
-        try:
-            return res["result"][1]["ubus_rpc_session"]
-        except IndexError:
-            return _LOGGER.warning("Authentication error: Check username and password.")
+        await self.router.request_update()
+
+    async def will_remove_from_hass(self):
+        """Disconnect from dispatcher."""
+        if self.unsub_dispatcher:
+            self.unsub_dispatcher()

@@ -1,8 +1,11 @@
 {
   "domain": "aircube",
   "name": "Ubiquiti airCube",
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/aircube",
   "requirements": [],
   "dependencies": [],
-  "codeowners": ["@petroffc"]
+  "codeowners": [
+    "@petroffc"
+  ]
 }
