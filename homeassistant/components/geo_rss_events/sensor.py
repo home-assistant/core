@@ -6,7 +6,7 @@ shows information on events filtered by distance to the HA instance's location
 and grouped by category.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.geo_rss_events/
+https://home-assistant.io/integrations/sensor.geo_rss_events/
 """
 from datetime import timedelta
 import logging

@@ -1,7 +1,7 @@
 """Support for Dyson Pure Cool link fan.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/fan.dyson/
+https://home-assistant.io/integrations/fan.dyson/
 """
 import logging
 

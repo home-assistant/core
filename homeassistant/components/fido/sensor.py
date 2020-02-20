@@ -5,7 +5,7 @@ Get data from 'Usage Summary' page:
 https://www.fido.ca/pages/#/my-account/wireless
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.fido/
+https://home-assistant.io/integrations/sensor.fido/
 """
 from datetime import timedelta
 import logging

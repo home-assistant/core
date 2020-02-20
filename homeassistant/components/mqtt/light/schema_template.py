@@ -2,7 +2,7 @@
 Support for MQTT Template lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.mqtt_template/
+https://home-assistant.io/integrations/light.mqtt_template/
 """
 import logging
 

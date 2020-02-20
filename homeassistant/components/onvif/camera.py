@@ -2,7 +2,7 @@
 Support for ONVIF Cameras with FFmpeg as decoder.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.onvif/
+https://home-assistant.io/integrations/camera.onvif/
 """
 import asyncio
 import datetime as dt

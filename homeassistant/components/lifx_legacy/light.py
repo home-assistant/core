@@ -5,7 +5,7 @@ This is a legacy platform, included because the current lifx platform does
 not yet support Windows.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lifx/
+https://home-assistant.io/integrations/light.lifx/
 """
 import logging
 

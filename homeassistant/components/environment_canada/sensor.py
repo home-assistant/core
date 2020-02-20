@@ -2,7 +2,7 @@
 Support for the Environment Canada weather service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.environment_canada/
+https://home-assistant.io/integrations/sensor.environment_canada/
 """
 from datetime import datetime, timedelta
 import logging

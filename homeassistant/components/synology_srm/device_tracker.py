@@ -1,7 +1,7 @@
 """Device tracker for Synology SRM routers.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.synology_srm/
+https://home-assistant.io/integrations/device_tracker.synology_srm/
 """
 import logging
 

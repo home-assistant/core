@@ -1,7 +1,7 @@
 """Pencom relay control.
 
 For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/switch.pencom
+http://home-assistant.io/integrations/switch.pencom
 """
 import logging
 

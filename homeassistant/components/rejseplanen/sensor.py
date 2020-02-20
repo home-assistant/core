@@ -5,7 +5,7 @@ For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rejseplanen/
+https://home-assistant.io/integrations/sensor.rejseplanen/
 """
 from datetime import datetime, timedelta
 import logging

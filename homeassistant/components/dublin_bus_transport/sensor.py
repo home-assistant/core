@@ -5,7 +5,7 @@ For more info on the API see :
 https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-bus-eireann-luas-and-irish-rail/resource/4b9f2c4f-6bf5-4958-a43a-f12dab04cf61
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dublin_public_transport/
+https://home-assistant.io/integrations/sensor.dublin_public_transport/
 """
 from datetime import datetime, timedelta
 import logging

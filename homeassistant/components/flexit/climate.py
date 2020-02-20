@@ -9,7 +9,7 @@ climate:
     slave: 21
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.flexit/
+https://home-assistant.io/integrations/climate.flexit/
 """
 import logging
 from typing import List

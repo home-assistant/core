@@ -2,7 +2,7 @@
 Support for MQTT JSON lights.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.mqtt_json/
+https://home-assistant.io/integrations/light.mqtt_json/
 """
 import json
 import logging
