@@ -42,7 +42,7 @@ def _get_config_schema(input_dict: Dict[str, Any] = None) -> vol.Schema:
                 CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
             ): str,
             vol.Required(CONF_HOST, default=input_dict.get(CONF_HOST)): str,
-            vol.Required(
+            vol.Optional(
                 CONF_DEVICE_CLASS,
                 default=input_dict.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
             ): vol.All(str, vol.Lower, vol.In([DEVICE_CLASS_TV, DEVICE_CLASS_SPEAKER])),
