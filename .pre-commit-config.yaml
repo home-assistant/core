@@ -1,53 +1,58 @@
 repos:
--   repo: https://github.com/psf/black
+  - repo: https://github.com/psf/black
     rev: 19.10b0
     hooks:
-    -   id: black
+      - id: black
         args:
           - --safe
           - --quiet
         files: ^((homeassistant|script|tests)/.+)?[^/]+\.py$
--   repo: https://github.com/codespell-project/codespell
+  - repo: https://github.com/codespell-project/codespell
     rev: v1.16.0
     hooks:
-    -   id: codespell
+      - id: codespell
         args:
           - --ignore-words-list=hass,alot,datas,dof,dur,farenheit,hist,iff,ines,ist,lightsensor,mut,nd,pres,referer,ser,serie,te,technik,ue,uint,visability,wan,wanna,withing
           - --skip="./.*,*.json"
           - --quiet-level=2
         exclude_types: [json]
--   repo: https://gitlab.com/pycqa/flake8
+  - repo: https://gitlab.com/pycqa/flake8
     rev: 3.7.9
     hooks:
-    -   id: flake8
+      - id: flake8
         additional_dependencies:
           - flake8-docstrings==1.5.0
           - pydocstyle==5.0.2
         files: ^(homeassistant|script|tests)/.+\.py$
--   repo: https://github.com/PyCQA/bandit
+  - repo: https://github.com/PyCQA/bandit
     rev: 1.6.2
     hooks:
-    -   id: bandit
+      - id: bandit
         args:
           - --quiet
           - --format=custom
           - --configfile=tests/bandit.yaml
         files: ^(homeassistant|script|tests)/.+\.py$
--   repo: https://github.com/pre-commit/mirrors-isort
+  - repo: https://github.com/pre-commit/mirrors-isort
     rev: v4.3.21
     hooks:
-    -   id: isort
--   repo: https://github.com/pre-commit/pre-commit-hooks
+      - id: isort
+  - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v2.4.0
     hooks:
-    -   id: check-json
--   repo: local
+      - id: check-json
+      - id: no-commit-to-branch
+        args:
+          - --branch=dev
+          - --branch=master
+          - --branch=rc
+  - repo: local
     hooks:
-    # Run mypy through our wrapper script in order to get the possible
-    # pyenv and/or virtualenv activated; it may not have been e.g. if
-    # committing from a GUI tool that was not launched from an activated
-    # shell.
-    -   id: mypy
+      # Run mypy through our wrapper script in order to get the possible
+      # pyenv and/or virtualenv activated; it may not have been e.g. if
+      # committing from a GUI tool that was not launched from an activated
+      # shell.
+      - id: mypy
         name: mypy
         entry: script/run-in-env.sh mypy
         language: script
