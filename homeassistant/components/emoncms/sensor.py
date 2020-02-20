@@ -34,10 +34,11 @@ ATTR_USERID = "UserId"
 CONF_EXCLUDE_FEEDID = "exclude_feed_id"
 CONF_ONLY_INCLUDE_FEEDID = "include_only_feed_id"
 CONF_SENSOR_NAMES = "sensor_names"
+CONF_USE_EMONCMS_UNIT = "use_emoncms_unit"
 
 DECIMALS = 2
 DEFAULT_UNIT = POWER_WATT
-
+DEFAULT_CONF_USE_EMONCMS_UNIT = False
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 ONLY_INCL_EXCL_NONE = "only_include_exclude_or_none"
@@ -57,7 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
             {cv.positive_int: vol.All(cv.string, vol.Length(min=1))}
         ),
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=""): cv.string,
+        vol.Optional(CONF_UNIT_OF_MEASUREMENT,default=DEFAULT_UNIT): cv.string,
+        vol.Optional(CONF_USE_EMONCMS_UNIT,default=DEFAULT_CONF_USE_EMONCMS_UNIT): cv.boolean,
     }
 )
 
@@ -75,7 +77,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     url = config.get(CONF_URL)
     sensorid = config.get(CONF_ID)
     value_template = config.get(CONF_VALUE_TEMPLATE)
-    unit_of_measurement = ""
+    unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     exclude_feeds = config.get(CONF_EXCLUDE_FEEDID)
     include_only_feeds = config.get(CONF_ONLY_INCLUDE_FEEDID)
     sensor_names = config.get(CONF_SENSOR_NAMES)
@@ -107,14 +109,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if sensor_names is not None:
             name = sensor_names.get(int(elem["id"]), None)
 
-        # Use specified Unit in preference to Emoncms Feed Unit else default unit
-        # For backward compatibility
-        if config.get(CONF_UNIT_OF_MEASUREMENT) != "":
-            unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-        elif 'unit' in elem and elem["unit"] != "":
-            unit_of_measurement = elem["unit"]
-        else:
-            unit_of_measurement = DEFAULT_UNIT
+        if config.get(CONF_USE_EMONCMS_UNIT):
+            unit_of_measurement = elem.get("unit","")
 
         sensors.append(
             EmonCmsSensor(
