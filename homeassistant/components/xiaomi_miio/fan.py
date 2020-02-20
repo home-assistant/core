@@ -54,6 +54,7 @@ from .const import (
     SERVICE_SET_DRY_ON,
     SERVICE_SET_EXTRA_FEATURES,
     SERVICE_SET_FAVORITE_LEVEL,
+    SERVICE_SET_FAN_LEVEL,
     SERVICE_SET_LEARN_MODE_OFF,
     SERVICE_SET_LEARN_MODE_ON,
     SERVICE_SET_LED_BRIGHTNESS,
@@ -362,6 +363,7 @@ FEATURE_RESET_FILTER = 256
 FEATURE_SET_EXTRA_FEATURES = 512
 FEATURE_SET_TARGET_HUMIDITY = 1024
 FEATURE_SET_DRY = 2048
+FEATURE_SET_FAN_LEVEL = 4096
 
 FEATURE_FLAGS_AIRPURIFIER = (
     FEATURE_SET_BUZZER
@@ -401,6 +403,7 @@ FEATURE_FLAGS_AIRPURIFIER_3 = (
     | FEATURE_SET_CHILD_LOCK
     | FEATURE_SET_LED
     | FEATURE_SET_FAVORITE_LEVEL
+    | FEATURE_SET_FAN_LEVEL
     | FEATURE_SET_LED_BRIGHTNESS
 )
 
@@ -435,6 +438,10 @@ SERVICE_SCHEMA_LED_BRIGHTNESS = AIRPURIFIER_SERVICE_SCHEMA.extend(
 
 SERVICE_SCHEMA_FAVORITE_LEVEL = AIRPURIFIER_SERVICE_SCHEMA.extend(
     {vol.Required(ATTR_LEVEL): vol.All(vol.Coerce(int), vol.Clamp(min=0, max=17))}
+)
+
+SERVICE_SCHEMA_FAN_LEVEL = AIRPURIFIER_SERVICE_SCHEMA.extend(
+    {vol.Required(ATTR_LEVEL): vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3))}
 )
 
 SERVICE_SCHEMA_VOLUME = AIRPURIFIER_SERVICE_SCHEMA.extend(
@@ -472,6 +479,10 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_FAVORITE_LEVEL: {
         "method": "async_set_favorite_level",
         "schema": SERVICE_SCHEMA_FAVORITE_LEVEL,
+    },
+    SERVICE_SET_FAN_LEVEL: {
+        "method": "async_set_fan_level",
+        "schema": SERVICE_SCHEMA_FAN_LEVEL,
     },
     SERVICE_SET_VOLUME: {"method": "async_set_volume", "schema": SERVICE_SCHEMA_VOLUME},
     SERVICE_SET_EXTRA_FEATURES: {
@@ -849,6 +860,17 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
         await self._try_command(
             "Setting the favorite level of the miio device failed.",
             self._device.set_favorite_level,
+            level,
+        )
+
+    async def async_set_fan_level(self, level: int = 1):
+        """Set the favorite level."""
+        if self._device_features & FEATURE_SET_FAN_LEVEL == 0:
+            return
+
+        await self._try_command(
+            "Setting the fan level of the miio device failed.",
+            self._device.set_fan_level,
             level,
         )
 
