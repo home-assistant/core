@@ -6,7 +6,7 @@ from avri.api import Avri, AvriException
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, STATE_UNKNOWN
+from homeassistant.const import CONF_NAME
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -20,6 +20,7 @@ DEFAULT_NAME = "avri"
 ICON = "mdi:trash-can-outline"
 SCAN_INTERVAL = timedelta(hours=4)
 DEFAULT_COUNTRY_CODE = "NL"
+UNIQUE_ID_DELIMITER = "_"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -61,7 +62,8 @@ class AvriWasteUpcoming(Entity):
         self._waste_type = waste_type
         self._name = f"{name}_{self._waste_type}"
         self._state = None
-        self.client = client
+        self._client = client
+        self._state_available = False
 
     @property
     def name(self):
@@ -72,9 +74,11 @@ class AvriWasteUpcoming(Entity):
     def unique_id(self) -> str:
         """Return a unique ID."""
         return (
-            f"avri_{self._waste_type}"
-            f"{self.client.country_code}{self.client.postal_code}"
-            f"{self.client.house_nr}{self.client.house_nr_extension}"
+            f"{self._waste_type}"
+            f"{UNIQUE_ID_DELIMITER}{self._client.country_code}"
+            f"{UNIQUE_ID_DELIMITER}{self._client.postal_code}"
+            f"{UNIQUE_ID_DELIMITER}{self._client.house_nr}"
+            f"{UNIQUE_ID_DELIMITER}{self._client.house_nr_extension}"
         )
 
     @property
@@ -85,7 +89,7 @@ class AvriWasteUpcoming(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return bool(self._state)
+        return self._state_available
 
     @property
     def icon(self):
@@ -95,17 +99,19 @@ class AvriWasteUpcoming(Entity):
     def update(self):
         """Update device state."""
         try:
-            pickup_events = self.client.upcoming_of_each()
+            pickup_events = self._client.upcoming_of_each()
         except AvriException as ex:
             _LOGGER.error(
                 "There was an error retrieving upcoming garbage pickups: %s", ex
             )
+            self._state_available = False
             self._state = None
         else:
+            self._state_available = True
             matched_events = list(
                 filter(lambda event: event.name == self._waste_type, pickup_events)
             )
             if not matched_events:
-                self._state = STATE_UNKNOWN
+                self._state = None
             else:
                 self._state = matched_events[0].day.date()
