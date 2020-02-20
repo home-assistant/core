@@ -128,7 +128,7 @@ class DataUpdateCoordinator:
         else:
             if not self.last_update_success:
                 self.last_update_success = True
-                self.logger.info("Fetching %s data recovered")
+                self.logger.info("Fetching %s data recovered", self.name)
 
         finally:
             self.logger.debug(
