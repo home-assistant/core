@@ -11,6 +11,8 @@ import homeassistant.components.zha.core.channels.base as base_channels
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.registries as registries
 
+from .common import get_zha_gateway
+
 
 @pytest.fixture
 def ieee():
@@ -22,6 +24,13 @@ def ieee():
 def nwk():
     """NWK fixture."""
     return t.NWK(0xBEEF)
+
+
+@pytest.fixture
+async def zha_gateway(hass, setup_zha):
+    """Return ZhaGateway fixture."""
+    await setup_zha()
+    return get_zha_gateway(hass)
 
 
 @pytest.fixture
@@ -77,7 +86,7 @@ def channel_pool():
     ],
 )
 async def test_in_channel_config(
-    cluster_id, bind_count, attrs, channel_pool, zigpy_device_mock
+    cluster_id, bind_count, attrs, channel_pool, zigpy_device_mock, zha_gateway
 ):
     """Test ZHA core channel configuration for input clusters."""
     zigpy_dev = zigpy_device_mock(
@@ -134,7 +143,7 @@ async def test_in_channel_config(
     ],
 )
 async def test_out_channel_config(
-    cluster_id, bind_count, channel_pool, zigpy_device_mock
+    cluster_id, bind_count, channel_pool, zigpy_device_mock, zha_gateway
 ):
     """Test ZHA core channel configuration for output clusters."""
     zigpy_dev = zigpy_device_mock(

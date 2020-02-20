@@ -133,7 +133,7 @@ class ProbeEndpoint:
 
         for cluster_id, cluster in ep_channels.endpoint.out_clusters.items():
             component = zha_regs.SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS.get(
-                cluster.__class__
+                cluster.cluster_id
             )
             if component is None:
                 continue

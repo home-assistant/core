@@ -9,11 +9,19 @@ import zigpy.zcl.clusters.closures
 import zigpy.zcl.clusters.general
 import zigpy.zcl.clusters.security
 
+import homeassistant.components.zha.binary_sensor
 import homeassistant.components.zha.core.channels as zha_channels
 import homeassistant.components.zha.core.channels.base as base_channels
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.discovery as disc
 import homeassistant.components.zha.core.registries as zha_regs
+import homeassistant.components.zha.cover
+import homeassistant.components.zha.device_tracker
+import homeassistant.components.zha.fan
+import homeassistant.components.zha.light
+import homeassistant.components.zha.lock
+import homeassistant.components.zha.sensor
+import homeassistant.components.zha.switch
 import homeassistant.helpers.entity_registry
 
 from .common import get_zha_gateway
