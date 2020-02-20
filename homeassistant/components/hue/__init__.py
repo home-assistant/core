@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_BRIDGES): vol.All(
-                    cv.ensure_list, [BRIDGE_CONFIG_SCHEMA]
+                    cv.ensure_list, [BRIDGE_CONFIG_SCHEMA],
                 )
             }
         )
