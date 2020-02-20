@@ -79,9 +79,7 @@ async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             data[ATTR_ENTITY_ID] = list(ent_ids)
 
             tasks.append(
-                asyncio.shield(
-                    hass.services.async_call(domain, service.service, data, blocking)
-                )
+                hass.services.async_call(domain, service.service, data, blocking)
             )
 
         if tasks:
