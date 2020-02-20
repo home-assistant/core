@@ -90,7 +90,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
                 hass.async_create_task(entity.async_remove())
 
-            if len(update) != option_block_clients:
+            if len(update) != len(option_block_clients):
                 update_controller()
 
     controller.listeners.append(

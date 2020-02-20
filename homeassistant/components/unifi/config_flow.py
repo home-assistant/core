@@ -239,7 +239,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
             else:
                 return await self.async_step_statistics_sensors()
 
-        clients_to_block = {mac: mac for mac in self.options[CONF_BLOCK_CLIENT]}
+        clients_to_block = {}
 
         for mac in self.options[CONF_BLOCK_CLIENT]:
 
