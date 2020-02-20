@@ -273,7 +273,12 @@ class TestBayesianBinarySensor(unittest.TestCase):
                         "to_state": "off",
                         "prob_given_true": 0.8,
                         "prob_given_false": 0.4,
-                    }
+                    },
+                    {
+                        "platform": "template",
+                        "value_template": "{{is_state('sensor.test_monitored1','on') and is_state('sensor.test_monitored','off')}}",
+                        "prob_given_true": 0.9,
+                    },
                 ],
                 "prior": 0.2,
                 "probability_threshold": 0.32,
@@ -284,6 +289,8 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         self.hass.states.set("sensor.test_monitored", "on")
         self.hass.block_till_done()
+        self.hass.states.set("sensor.test_monitored1", "off")
+        self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
         assert [] == state.attributes.get("observed_entities")
@@ -293,3 +300,12 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         state = self.hass.states.get("binary_sensor.test_binary")
         assert ["sensor.test_monitored"] == state.attributes.get("observed_entities")
+
+        self.hass.states.set("sensor.test_monitored1", "on")
+        self.hass.block_till_done()
+
+        state = self.hass.states.get("binary_sensor.test_binary")
+        assert [
+            "sensor.test_monitored",
+            {"sensor.test_monitored1", "sensor.test_monitored"},
+        ] == state.attributes.get("observed_entities")
