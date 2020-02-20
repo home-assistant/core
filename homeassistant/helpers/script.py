@@ -142,11 +142,13 @@ class _ScriptRunBase(ABC):
         script: "Script",
         variables: Optional[Sequence],
         context: Optional[Context],
+        log_exceptions: bool,
     ) -> None:
         self._hass = hass
         self._script = script
         self._variables = variables
         self._context = context
+        self._log_exceptions = log_exceptions
         self._step = -1
         self._action: Optional[Dict[str, Any]] = None
 
@@ -161,11 +163,13 @@ class _ScriptRunBase(ABC):
     async def async_run(self) -> None:
         """Run script."""
 
-    async def _async_step(self):
+    async def _async_step(self, log_exceptions):
         try:
             await getattr(self, f"_async_{_determine_action(self._action)}_step")()
         except Exception as err:
-            if not isinstance(err, (_SuspendScript, _StopScript)):
+            if not isinstance(err, (_SuspendScript, _StopScript)) and (
+                self._log_exceptions or log_exceptions
+            ):
                 self._log_exception(err)
             raise
 
@@ -208,7 +212,7 @@ class _ScriptRunBase(ABC):
     async def _async_delay_step(self):
         """Handle delay."""
 
-    def _start_delay_step(self):
+    def _prep_delay_step(self):
         try:
             delay = vol.All(cv.time_period, cv.positive_timedelta)(
                 template.render_complex(self._action[CONF_DELAY], self._variables)
@@ -230,7 +234,7 @@ class _ScriptRunBase(ABC):
     async def _async_wait_template_step(self):
         """Handle a wait template."""
 
-    def _start_wait_template_step(self, async_script_wait):
+    def _prep_wait_template_step(self, async_script_wait):
         wait_template = self._action[CONF_WAIT_TEMPLATE]
         wait_template.hass = self._hass
 
@@ -337,20 +341,24 @@ class _ScriptRun(_ScriptRunBase):
         script: "Script",
         variables: Optional[Sequence],
         context: Optional[Context],
+        log_exceptions: bool,
     ) -> None:
-        super().__init__(hass, script, variables, context)
+        super().__init__(hass, script, variables, context, log_exceptions)
         self._stop = asyncio.Event()
         self._stopped = asyncio.Event()
 
-    async def _async_run(self) -> None:
+    async def _async_run(self, propagate_exceptions=True):
         self._log("Running script")
         try:
             for self._step, self._action in enumerate(self._script.sequence):
                 if self._stop.is_set():
                     break
-                await self._async_step()
+                await self._async_step(not propagate_exceptions)
         except _StopScript:
             pass
+        except Exception:  # pylint: disable=broad-except
+            if propagate_exceptions:
+                raise
         finally:
             if not self._stop.is_set():
                 self._changed()
@@ -365,7 +373,7 @@ class _ScriptRun(_ScriptRunBase):
     async def _async_delay_step(self):
         """Handle delay."""
         await asyncio.wait(
-            {self._stop.wait()}, timeout=self._start_delay_step().total_seconds()
+            {self._stop.wait()}, timeout=self._prep_delay_step().total_seconds()
         )
 
     async def _async_wait_template_step(self):
@@ -377,7 +385,7 @@ class _ScriptRun(_ScriptRunBase):
             nonlocal done
             done.set()
 
-        unsub = self._start_wait_template_step(async_script_wait)
+        unsub = self._prep_wait_template_step(async_script_wait)
         if not unsub:
             return
 
@@ -407,7 +415,7 @@ class _BackgroundScriptRun(_ScriptRun):
 
     async def async_run(self) -> None:
         """Run script."""
-        self._hass.async_create_task(self._async_run())
+        self._hass.async_create_task(self._async_run(False))
 
 
 class _BlockingScriptRun(_ScriptRun):
@@ -431,9 +439,10 @@ class _LegacyScriptRun(_ScriptRunBase):
         script: "Script",
         variables: Optional[Sequence],
         context: Optional[Context],
+        log_exceptions: bool,
         shared: Optional["_LegacyScriptRun"],
     ) -> None:
-        super().__init__(hass, script, variables, context)
+        super().__init__(hass, script, variables, context, log_exceptions)
         if shared:
             self._shared = shared
         else:
@@ -458,6 +467,9 @@ class _LegacyScriptRun(_ScriptRunBase):
 
     async def async_run(self) -> None:
         """Run script."""
+        await self._async_run()
+
+    async def _async_run(self, propagate_exceptions=True):
         if self._cur == -1:
             self._log("Running script")
             self._cur = 0
@@ -471,7 +483,7 @@ class _LegacyScriptRun(_ScriptRunBase):
             for self._step, self._action in islice(
                 enumerate(self._script.sequence), self._cur, None
             ):
-                await self._async_step()
+                await self._async_step(not propagate_exceptions)
         except _StopScript:
             pass
         except _SuspendScript:
@@ -479,6 +491,9 @@ class _LegacyScriptRun(_ScriptRunBase):
             self._cur = self._step + 1
             suspended = True
             return
+        except Exception:  # pylint: disable=broad-except
+            if propagate_exceptions:
+                raise
         finally:
             if self._cur != -1:
                 self._changed()
@@ -497,14 +512,14 @@ class _LegacyScriptRun(_ScriptRunBase):
 
     async def _async_delay_step(self):
         """Handle delay."""
-        delay = self._start_delay_step()
+        delay = self._prep_delay_step()
 
         @callback
         def async_script_delay(now):
             """Handle delay."""
             with suppress(ValueError):
                 self._async_listener.remove(unsub)
-            self._hass.async_create_task(self.async_run())
+            self._hass.async_create_task(self._async_run(False))
 
         unsub = async_track_point_in_utc_time(
             self._hass, async_script_delay, utcnow() + delay
@@ -519,7 +534,7 @@ class _LegacyScriptRun(_ScriptRunBase):
         def async_script_wait(entity_id, from_s, to_s):
             """Handle script after template condition is true."""
             self._async_remove_listener()
-            self._hass.async_create_task(self.async_run())
+            self._hass.async_create_task(self._async_run(False))
 
         @callback
         def async_script_timeout(now):
@@ -530,12 +545,12 @@ class _LegacyScriptRun(_ScriptRunBase):
             # Check if we want to continue to execute
             # the script after the timeout
             if self._action.get(CONF_CONTINUE, True):
-                self._hass.async_create_task(self.async_run())
+                self._hass.async_create_task(self._async_run(False))
             else:
                 self._log(_TIMEOUT_MSG)
                 self._hass.async_create_task(self.async_stop())
 
-        unsub_wait = self._start_wait_template_step(async_script_wait)
+        unsub_wait = self._prep_wait_template_step(async_script_wait)
         if not unsub_wait:
             return
         self._async_listener.append(unsub_wait)
@@ -567,6 +582,7 @@ class Script:
         if_running: Optional[str] = None,
         run_mode: Optional[str] = None,
         logger: Optional[logging.Logger] = None,
+        log_exceptions: bool = True,
     ) -> None:
         """Initialize the script."""
         self._logger = logger or logging.getLogger(__name__)
@@ -590,6 +606,7 @@ class Script:
             self._if_running = if_running or IF_RUNNING_CHOICES[0]
             self._run_mode = run_mode or RUN_MODE_CHOICES[0]
         self._runs: List[_ScriptRunBase] = []
+        self._log_exceptions = log_exceptions
         self._config_cache: Dict[Set[Tuple], Callable[..., bool]] = {}
         self._referenced_entities: Optional[Set[str]] = None
         self._referenced_devices: Optional[Set[str]] = None
@@ -671,36 +688,38 @@ class Script:
 
     async def async_run(
         self, variables: Optional[Sequence] = None, context: Optional[Context] = None
-    ) -> bool:
+    ) -> None:
         """Run script."""
         if self.is_running:
             if self._if_running == IF_RUNNING_IGNORE:
                 self._log("Skipping script")
-                return False
 
             if self._if_running == IF_RUNNING_ERROR:
                 self._raise("Already running")
             if self._if_running == IF_RUNNING_RESTART:
                 self._log("Restarting script")
-                self.async_stop()
+                await self.async_stop()
 
         self.last_triggered = utcnow()
         if self._run_mode == RUN_MODE_LEGACY:
-            if self.is_running:
+            if self._runs:
                 shared = cast(Optional[_LegacyScriptRun], self._runs[0])
             else:
                 shared = None
             run: _ScriptRunBase = _LegacyScriptRun(
-                self._hass, self, variables, context, shared
+                self._hass, self, variables, context, self._log_exceptions, shared
             )
         else:
             if self._run_mode == RUN_MODE_BACKGROUND:
-                run = _BackgroundScriptRun(self._hass, self, variables, context)
+                run = _BackgroundScriptRun(
+                    self._hass, self, variables, context, self._log_exceptions
+                )
             else:
-                run = _BlockingScriptRun(self._hass, self, variables, context)
+                run = _BlockingScriptRun(
+                    self._hass, self, variables, context, self._log_exceptions
+                )
         self._runs.append(run)
         await run.async_run()
-        return True
 
     async def async_stop(self) -> None:
         """Stop running script."""
