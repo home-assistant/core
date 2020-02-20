@@ -274,12 +274,11 @@ class ScriptEntity(ToggleEntity):
 
     async def async_turn_off(self, **kwargs):
         """Turn script off."""
-        self.script.async_stop()
+        await self.script.async_stop()
 
     async def async_will_remove_from_hass(self):
         """Stop script and remove service when it will be removed from Home Assistant."""
-        if self.script.is_running:
-            self.script.async_stop()
+        await self.script.async_stop()
 
         # remove service
         self.hass.services.async_remove(DOMAIN, self.object_id)

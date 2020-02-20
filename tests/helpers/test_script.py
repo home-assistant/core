@@ -509,7 +509,7 @@ async def test_cancel_while_delay(hass):
     assert script_obj.is_running
     assert len(events) == 0
 
-    script_obj.async_stop()
+    await script_obj.async_stop()
 
     assert not script_obj.is_running
 
@@ -644,7 +644,7 @@ async def test_wait_template_cancel(hass):
     assert script_obj.last_action == wait_alias
     assert len(events) == 1
 
-    script_obj.async_stop()
+    await script_obj.async_stop()
 
     assert not script_obj.is_running
     assert len(events) == 1
