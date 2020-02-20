@@ -1161,49 +1161,46 @@ class MqttDiscoveryUpdate(Entity):
 
     def __init__(self, discovery_data, discovery_update=None) -> None:
         """Initialize the discovery update mixin."""
-        self._discovery_hash = (
-            discovery_data[ATTR_DISCOVERY_HASH] if discovery_data else None
-        )
-        self._discovery_topic = (
-            discovery_data[ATTR_DISCOVERY_TOPIC] if discovery_data else None
-        )
+        self._discovery_data = discovery_data
         self._discovery_update = discovery_update
         self._remove_signal = None
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to discovery updates."""
         await super().async_added_to_hass()
+        discovery_hash = (
+            self._discovery_data[ATTR_DISCOVERY_HASH] if self._discovery_data else None
+        )
 
         @callback
         def discovery_callback(payload):
             """Handle discovery update."""
             _LOGGER.info(
-                "Got update for entity with hash: %s '%s'",
-                self._discovery_hash,
-                payload,
+                "Got update for entity with hash: %s '%s'", discovery_hash, payload,
             )
             if not payload:
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
                 self.hass.async_create_task(self.async_remove())
-                clear_discovery_hash(self.hass, self._discovery_hash)
+                clear_discovery_hash(self.hass, discovery_hash)
                 self._remove_signal()
             elif self._discovery_update:
                 # Non-empty payload: Notify component
                 _LOGGER.info("Updating component: %s", self.entity_id)
                 self.hass.async_create_task(self._discovery_update(payload))
 
-        if self._discovery_hash:
+        if discovery_hash:
             self._remove_signal = async_dispatcher_connect(
                 self.hass,
-                MQTT_DISCOVERY_UPDATED.format(self._discovery_hash),
+                MQTT_DISCOVERY_UPDATED.format(discovery_hash),
                 discovery_callback,
             )
 
     async def async_removed_from_registry(self) -> None:
         """Clear retained discovery topic in broker."""
-        async_publish(
-            self.hass, self._discovery_topic, "", retain=True,
+        discovery_topic = self._discovery_data[ATTR_DISCOVERY_TOPIC]
+        publish(
+            self.hass, discovery_topic, "", retain=True,
         )
 
     async def async_will_remove_from_hass(self) -> None:
@@ -1273,8 +1270,15 @@ async def websocket_remove_device(hass, connection, msg):
     """Delete device."""
     device_id = msg["device_id"]
     dev_registry = await get_dev_reg(hass)
-    dev_registry.async_remove_device(device_id)
-    connection.send_message(websocket_api.result_message(msg["id"]))
+
+    device = dev_registry.async_get(device_id)
+    for config_entry in device.config_entries:
+        config_entry = hass.config_entries.async_get_entry(config_entry)
+        # Only delete the device if it belongs to an MQTT device entry
+        if config_entry.domain == DOMAIN:
+            dev_registry.async_remove_device(device_id)
+            connection.send_message(websocket_api.result_message(msg["id"]))
+            break
 
 
 @websocket_api.async_response

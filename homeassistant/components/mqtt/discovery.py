@@ -141,7 +141,7 @@ async def async_start(
                 ATTR_DISCOVERY_HASH: discovery_hash,
                 ATTR_DISCOVERY_TOPIC: topic,
             }
-            setattr(payload, "__discovery_data__", discovery_data)
+            setattr(payload, "discovery_data", discovery_data)
 
             if CONF_PLATFORM in payload and "schema" not in payload:
                 platform = payload[CONF_PLATFORM]

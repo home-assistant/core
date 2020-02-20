@@ -233,6 +233,71 @@ async def test_non_duplicate_discovery(hass, mqtt_mock, caplog):
     assert "Component has already been discovered: binary_sensor bla" in caplog.text
 
 
+async def test_removal(hass, mqtt_mock, caplog):
+    """Test removal of component through empty discovery message."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+
+    await async_start(hass, "homeassistant", {}, entry)
+
+    async_fire_mqtt_message(
+        hass, "homeassistant/binary_sensor/bla/config", '{ "name": "Beer" }'
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+    assert state is not None
+
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+    assert state is None
+
+
+async def test_rediscover(hass, mqtt_mock, caplog):
+    """Test rediscover of removed component."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+
+    await async_start(hass, "homeassistant", {}, entry)
+
+    async_fire_mqtt_message(
+        hass, "homeassistant/binary_sensor/bla/config", '{ "name": "Beer" }'
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+    assert state is not None
+
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+    assert state is None
+
+    async_fire_mqtt_message(
+        hass, "homeassistant/binary_sensor/bla/config", '{ "name": "Beer" }'
+    )
+    await hass.async_block_till_done()
+    state = hass.states.get("binary_sensor.beer")
+    assert state is not None
+
+
+async def test_duplicate_removal(hass, mqtt_mock, caplog):
+    """Test for a non duplicate component."""
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+
+    await async_start(hass, "homeassistant", {}, entry)
+
+    async_fire_mqtt_message(
+        hass, "homeassistant/binary_sensor/bla/config", '{ "name": "Beer" }'
+    )
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    await hass.async_block_till_done()
+    assert "Component has already been discovered: binary_sensor bla" in caplog.text
+    caplog.clear()
+    async_fire_mqtt_message(hass, "homeassistant/binary_sensor/bla/config", "")
+    await hass.async_block_till_done()
+
+    assert "Component has already been discovered: binary_sensor bla" not in caplog.text
+
+
 async def test_cleanup_device(hass, device_reg, entity_reg, mqtt_mock):
     """Test discvered device is cleaned up when removed from registry."""
     config_entry = MockConfigEntry(domain=mqtt.DOMAIN)

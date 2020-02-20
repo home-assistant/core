@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry):
 
     async def async_discover(discovery_payload):
         """Discover and add an MQTT device automation."""
-        discovery_data = discovery_payload.__discovery_data__
+        discovery_data = discovery_payload.discovery_data
         try:
             config = PLATFORM_SCHEMA(discovery_payload)
             if config[CONF_AUTOMATION_TYPE] == AUTOMATION_TYPE_TRIGGER:

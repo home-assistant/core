@@ -76,7 +76,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def async_discover_sensor(discovery_payload):
         """Discover and add a discovered MQTT sensor."""
-        discovery_data = discovery_payload.__discovery_data__
+        discovery_data = discovery_payload.discovery_data
         try:
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
