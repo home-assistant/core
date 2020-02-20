@@ -42,7 +42,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
     password = conf.get(CONF_PASSWORD)
     client = TotalConnectClient.TotalConnectClient(username, password)
 
-    if client.token is False:
+    if not client.is_logged_in():
         _LOGGER.error("TotalConnect authentication failed")
         return False
 
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     password = conf.get(CONF_PASSWORD)
     client = TotalConnectClient.TotalConnectClient(username, password)
 
-    if client.token is False:
+    if not client.is_logged_in():
         _LOGGER.error("TotalConnect authentication failed")
         return False
 
