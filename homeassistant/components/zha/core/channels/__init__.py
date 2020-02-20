@@ -1,9 +1,4 @@
-"""
-Channels module for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Channels module for Zigbee Home Automation."""
 import asyncio
 import logging
 from typing import Any, Dict, List, Optional, Union

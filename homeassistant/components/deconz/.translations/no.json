@@ -108,7 +108,8 @@
                     "allow_clip_sensor": "Tillat deCONZ CLIP-sensorer",
                     "allow_deconz_groups": "Tillat deCONZ lys grupper"
                 },
-                "description": "Konfigurere synlighet av deCONZ enhetstyper"
+                "description": "Konfigurere synlighet av deCONZ enhetstyper",
+                "title": "deCONZ alternativer"
             }
         }
     }

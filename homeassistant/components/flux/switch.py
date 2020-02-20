@@ -2,9 +2,6 @@
 Flux for Home-Assistant.
 
 The idea was taken from https://github.com/KpaBap/hue-flux/
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.flux/
 """
 import datetime
 import logging

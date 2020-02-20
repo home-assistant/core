@@ -97,7 +97,7 @@ async def _test_setup(
 async def _test_setup_failure(hass: HomeAssistantType, config: str) -> None:
     """Test generic Vizio entity setup failure."""
     with patch(
-        "homeassistant.components.vizio.media_player.VizioAsync.can_connect",
+        "homeassistant.components.vizio.media_player.VizioAsync.can_connect_with_auth_check",
         return_value=False,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, data=config, unique_id=UNIQUE_ID)
@@ -133,42 +133,54 @@ async def _test_service(
 
 
 async def test_speaker_on(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_update: pytest.fixture,
 ) -> None:
     """Test Vizio Speaker entity setup when on."""
     await _test_setup(hass, DEVICE_CLASS_SPEAKER, True)
 
 
 async def test_speaker_off(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_update: pytest.fixture,
 ) -> None:
     """Test Vizio Speaker entity setup when off."""
     await _test_setup(hass, DEVICE_CLASS_SPEAKER, False)
 
 
 async def test_speaker_unavailable(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_update: pytest.fixture,
 ) -> None:
     """Test Vizio Speaker entity setup when unavailable."""
     await _test_setup(hass, DEVICE_CLASS_SPEAKER, None)
 
 
 async def test_init_tv_on(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_update: pytest.fixture,
 ) -> None:
     """Test Vizio TV entity setup when on."""
     await _test_setup(hass, DEVICE_CLASS_TV, True)
 
 
 async def test_init_tv_off(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_update: pytest.fixture,
 ) -> None:
     """Test Vizio TV entity setup when off."""
     await _test_setup(hass, DEVICE_CLASS_TV, False)
 
 
 async def test_init_tv_unavailable(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_update: pytest.fixture,
 ) -> None:
     """Test Vizio TV entity setup when unavailable."""
     await _test_setup(hass, DEVICE_CLASS_TV, None)
@@ -189,7 +201,9 @@ async def test_setup_failure_tv(
 
 
 async def test_services(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_update: pytest.fixture,
 ) -> None:
     """Test all Vizio media player entity services."""
     await _test_setup(hass, DEVICE_CLASS_TV, True)
@@ -218,7 +232,9 @@ async def test_services(
 
 
 async def test_options_update(
-    hass: HomeAssistantType, vizio_connect: pytest.fixture, vizio_update: pytest.fixture
+    hass: HomeAssistantType,
+    vizio_connect: pytest.fixture,
+    vizio_update: pytest.fixture,
 ) -> None:
     """Test when config entry update event fires."""
     await _test_setup(hass, DEVICE_CLASS_SPEAKER, True)

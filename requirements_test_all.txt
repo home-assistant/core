@@ -254,7 +254,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200219.0
+home-assistant-frontend==20200220.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -425,7 +425,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==3.2.2
+pyatmo==3.2.4
 
 # homeassistant.components.blackbird
 pyblackbird==0.5
@@ -471,7 +471,7 @@ pyhaversion==3.2.0
 pyheos==0.6.0
 
 # homeassistant.components.homematic
-pyhomematic==0.1.64
+pyhomematic==0.1.65
 
 # homeassistant.components.icloud
 pyicloud==0.9.2
@@ -560,7 +560,7 @@ pysonos==0.0.24
 pyspcwebgw==0.4.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.1.4
+python-ecobee-api==0.2.1
 
 # homeassistant.components.darksky
 python-forecastio==1.4.0
@@ -596,7 +596,7 @@ pyvera==0.3.7
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.21
+pyvizio==0.1.26
 
 # homeassistant.components.html5
 pywebpush==1.9.2
