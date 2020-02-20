@@ -307,5 +307,5 @@ class TestBayesianBinarySensor(unittest.TestCase):
         state = self.hass.states.get("binary_sensor.test_binary")
         assert [
             "sensor.test_monitored",
-            {"sensor.test_monitored1", "sensor.test_monitored"},
+            "sensor.test_monitored1",
         ] == state.attributes.get("observed_entities")

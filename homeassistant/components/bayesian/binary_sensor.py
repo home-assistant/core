@@ -1,5 +1,6 @@
 """Use Bayesian Inference to trigger a binary sensor."""
 from collections import OrderedDict
+from itertools import chain
 
 import voluptuous as vol
 
@@ -131,10 +132,10 @@ class BayesianBinarySensor(BinarySensorDevice):
 
         for obs in self._observations:
             if "entity_id" in obs:
-                self.entity_obs_dict.append(obs.get("entity_id"))
+                self.entity_obs_dict.append([obs.get("entity_id")])
             if "value_template" in obs:
                 self.entity_obs_dict.append(
-                    set(obs.get(CONF_VALUE_TEMPLATE).extract_entities())
+                    list(obs.get(CONF_VALUE_TEMPLATE).extract_entities())
                 )
 
         to_observe = set()
@@ -262,7 +263,11 @@ class BayesianBinarySensor(BinarySensorDevice):
         return {
             ATTR_OBSERVATIONS: list(self.current_obs.values()),
             ATTR_ENTITY_ID: list(
-                self.entity_obs_dict[obs] for obs in self.current_obs.keys()
+                set(
+                    chain.from_iterable(
+                        self.entity_obs_dict[obs] for obs in self.current_obs.keys()
+                    )
+                )
             ),
             ATTR_PROBABILITY: round(self.probability, 2),
             ATTR_PROBABILITY_THRESHOLD: self._probability_threshold,
