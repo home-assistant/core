@@ -143,7 +143,7 @@ class AugustDoorBinarySensor(BinarySensorDevice):
     @property
     def unique_id(self) -> str:
         """Get the unique of the door open binary sensor."""
-        return "{:s}_open".format(self._door.device_id)
+        return f"{self._door.device_id}_open"
 
 
 class AugustDoorbellBinarySensor(BinarySensorDevice):
