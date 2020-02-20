@@ -1,10 +1,11 @@
 """Config flow for the Total Connect component."""
 import logging
 
+from total_connect_client import TotalConnectClient
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from total_connect_client import TotalConnectClient
 
 from .const import DOMAIN
 
@@ -30,7 +31,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow):
             self._abort_if_unique_id_configured()
 
             valid = await self.is_valid(username, password)
-    
+
             if valid:
                 # authentication success / valid
                 return self.async_create_entry(
@@ -40,11 +41,8 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow):
             # authentication failed / invalid
             errors["base"] = "login"
 
-        data_schema=vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): str,
-                vol.Required(CONF_PASSWORD): str,
-            }
+        data_schema = vol.Schema(
+            {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
         )
 
         return self.async_show_form(
@@ -54,4 +52,4 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow):
     async def is_valid(self, username="", password=""):
         """Return true if the given username and password are valid."""
         client = TotalConnectClient.TotalConnectClient(username, password)
-        return client.token is not False
+        return client.is_logged_in()
