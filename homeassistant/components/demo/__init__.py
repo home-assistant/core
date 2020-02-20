@@ -124,19 +124,6 @@ async def async_setup(hass, config):
         )
     )
 
-    # Set up weblink
-    tasks.append(
-        bootstrap.async_setup_component(
-            hass,
-            "weblink",
-            {
-                "weblink": {
-                    "entities": [{"name": "Router", "url": "http://192.168.1.1"}]
-                }
-            },
-        )
-    )
-
     results = await asyncio.gather(*tasks)
 
     if any(not result for result in results):
