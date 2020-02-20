@@ -11,6 +11,8 @@ CONF_PUBLIC = "public_sensor_config"
 CAMERA_DATA = "netatmo_camera"
 HOME_DATA = "netatmo_home_data"
 
+CONF_CLOUDHOOK_URL = "cloudhook_url"
+
 OAUTH2_AUTHORIZE = "https://api.netatmo.com/oauth2/authorize"
 OAUTH2_TOKEN = "https://api.netatmo.com/oauth2/token"
 

@@ -1,6 +1,7 @@
 """The Netatmo integration."""
 import asyncio
 import logging
+import secrets
 
 import voluptuous as vol
 
@@ -10,12 +11,20 @@ from homeassistant.const import (
     CONF_CLIENT_SECRET,
     CONF_DISCOVERY,
     CONF_USERNAME,
+    CONF_WEBHOOK_ID,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
 
 from . import api, config_flow
-from .const import AUTH, DATA_PERSONS, DOMAIN, OAUTH2_AUTHORIZE, OAUTH2_TOKEN
+from .const import (
+    AUTH,
+    CONF_CLOUDHOOK_URL,
+    DATA_PERSONS,
+    DOMAIN,
+    OAUTH2_AUTHORIZE,
+    OAUTH2_TOKEN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -73,6 +82,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = {
         AUTH: api.ConfigEntryNetatmoAuth(hass, entry, implementation)
     }
+
+    webhook_id = secrets.token_hex()
+
+    if hass.components.cloud.async_active_subscription():
+        hass.data[DOMAIN][entry.entry_id][
+            CONF_CLOUDHOOK_URL
+        ] = await hass.components.cloud.async_create_cloudhook(webhook_id)
+
+    hass.data[DOMAIN][entry.entry_id][CONF_WEBHOOK_ID] = webhook_id
 
     for component in PLATFORMS:
         hass.async_create_task(
