@@ -3,9 +3,6 @@ Support for the LIFX platform that implements lights.
 
 This is a legacy platform, included because the current lifx platform does
 not yet support Windows.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lifx/
 """
 import logging
 

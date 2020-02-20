@@ -1,9 +1,4 @@
-"""
-Mapping registries for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Mapping registries for Zigbee Home Automation."""
 import collections
 from typing import Callable, Set, Union
 
