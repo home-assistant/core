@@ -107,6 +107,8 @@ class AFSAPIDevice(MediaPlayerDevice):
         self._source = None
         self._source_list = None
         self._media_image_url = None
+        self._volume_steps = None
+        self._volume = None
 
     # Properties
     @property
@@ -176,6 +178,14 @@ class AFSAPIDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         return self._media_image_url
 
+    @property
+    def volume_level(self):
+        """Volume level of the media player (0..1)."""
+        if self._volume is None:
+            return None
+        else:
+            return float(self._volume) / (self._volume_steps - 1)
+
     async def async_update(self):
         """Get the latest date and update device state."""
         fs_device = self.fs_device
@@ -185,6 +195,9 @@ class AFSAPIDevice(MediaPlayerDevice):
 
         if not self._source_list:
             self._source_list = await fs_device.get_mode_list()
+
+        if not self._volume_steps:
+            self._volume_steps = await fs_device.get_volume_steps()
 
         status = await fs_device.get_play_status()
         self._state = {
@@ -206,6 +219,8 @@ class AFSAPIDevice(MediaPlayerDevice):
             self._source = await fs_device.get_mode()
             self._mute = await fs_device.get_mute()
             self._media_image_url = await fs_device.get_play_graphic()
+
+            self._volume = await self.fs_device.get_volume()
         else:
             self._title = None
             self._artist = None
@@ -214,6 +229,8 @@ class AFSAPIDevice(MediaPlayerDevice):
             self._source = None
             self._mute = None
             self._media_image_url = None
+
+            self._volume = None
 
     # Management actions
     # power control
@@ -275,7 +292,7 @@ class AFSAPIDevice(MediaPlayerDevice):
 
     async def async_set_volume_level(self, volume):
         """Set volume command."""
-        await self.fs_device.set_volume(int(volume * 20))
+        await self.fs_device.set_volume(int(volume * int(self._volume_steps - 1)))
 
     async def async_select_source(self, source):
         """Select input source."""
