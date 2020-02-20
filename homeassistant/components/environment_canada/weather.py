@@ -1,9 +1,4 @@
-"""
-Platform for retrieving meteorological data from Environment Canada.
-
-For more details about this platform, please refer to the documentation
-https://home-assistant.io/integrations/weather.environmentcanada/
-"""
+"""Platform for retrieving meteorological data from Environment Canada."""
 import datetime
 import logging
 import re
