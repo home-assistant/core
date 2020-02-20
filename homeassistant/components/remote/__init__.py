@@ -6,6 +6,7 @@ from typing import Any, Iterable
 
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -111,12 +112,12 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     """Unload a config entry."""
     return await hass.data[DOMAIN].async_unload_entry(entry)
 
