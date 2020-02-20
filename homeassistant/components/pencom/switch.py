@@ -1,8 +1,4 @@
-"""Pencom relay control.
-
-For more details about this component, please refer to the documentation at
-http://home-assistant.io/components/switch.pencom
-"""
+"""Pencom relay control."""
 import logging
 
 from pencompy.pencompy import Pencompy

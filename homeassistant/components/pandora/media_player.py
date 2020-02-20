@@ -384,6 +384,6 @@ def _pianobar_exists():
     _LOGGER.warning(
         "The Pandora integration depends on the Pianobar client, which "
         "cannot be found. Please install using instructions at "
-        "https://home-assistant.io/components/media_player.pandora/"
+        "https://home-assistant.io/integrations/media_player.pandora/"
     )
     return False
