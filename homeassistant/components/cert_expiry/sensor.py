@@ -158,8 +158,8 @@ class SSLCertificate(Entity):
 
         except TemporaryFailure as err:
 
-            async def scheduled_update(_):
-                await self.async_update()
+            def scheduled_update(_):
+                self.async_schedule_update_ha_state(True)
 
             _LOGGER.error(err, self.server_name, self.retry_delay)
             self._available = False
