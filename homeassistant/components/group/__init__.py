@@ -244,7 +244,7 @@ async def async_setup(hass, config):
 
             extra_arg = {
                 attr: service.data[attr]
-                for attr in (ATTR_ICON)
+                for attr in (ATTR_ICON,)
                 if service.data.get(attr) is not None
             }
 
