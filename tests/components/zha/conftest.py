@@ -64,7 +64,7 @@ async def config_entry_fixture(hass):
 @pytest.fixture
 def setup_zha(hass, config_entry, zigpy_app_controller, zigpy_radio):
     """Set up ZHA component."""
-    zha_config = {zha_const.DOMAIN: {zha_const.CONF_ENABLE_QUIRKS: False}}
+    zha_config = {zha_const.CONF_ENABLE_QUIRKS: False}
 
     radio_details = {
         zha_const.ZHA_GW_RADIO: mock.MagicMock(return_value=zigpy_radio),
@@ -72,9 +72,12 @@ def setup_zha(hass, config_entry, zigpy_app_controller, zigpy_radio):
         zha_const.ZHA_GW_RADIO_DESCRIPTION: "mock radio",
     }
 
-    async def _setup():
+    async def _setup(config=None):
+        config = config or {}
         with mock.patch.dict(zha_regs.RADIO_TYPES, {"MockRadio": radio_details}):
-            status = await async_setup_component(hass, zha_const.DOMAIN, zha_config)
+            status = await async_setup_component(
+                hass, zha_const.DOMAIN, {zha_const.DOMAIN: {**zha_config, **config}}
+            )
             assert status is True
             await hass.async_block_till_done()
 

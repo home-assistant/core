@@ -16,6 +16,7 @@ import homeassistant.components.zha.core.discovery as disc
 import homeassistant.components.zha.core.registries as zha_regs
 import homeassistant.helpers.entity_registry
 
+from .common import get_zha_gateway
 from .zha_devices_list import DEVICES
 
 NO_TAIL_ID = re.compile("_\\d$")
@@ -314,3 +315,39 @@ def test_single_input_cluster_device_class_by_cluster_class():
         zha_regs.SINGLE_INPUT_CLUSTER_DEVICE_CLASS, mock_reg, clear=True
     ):
         _test_single_input_cluster_device_class()
+
+
+@pytest.mark.parametrize(
+    "override, entity_id",
+    [
+        (None, "light.manufacturer_model_77665544_level_light_color_on_off"),
+        ("switch", "switch.manufacturer_model_77665544_on_off"),
+    ],
+)
+async def test_device_override(hass, zigpy_device_mock, setup_zha, override, entity_id):
+    """Test device discovery override."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                "device_type": 258,
+                "endpoint_id": 1,
+                "in_clusters": [0, 3, 4, 5, 6, 8, 768, 2821, 64513],
+                "out_clusters": [25],
+                "profile_id": 260,
+            }
+        },
+        "00:11:22:33:44:55:66:77",
+        "manufacturer",
+        "model",
+    )
+
+    if override is not None:
+        override = {"device_config": {"00:11:22:33:44:55:66:77-1": {"type": override}}}
+
+    await setup_zha(override)
+    assert hass.states.get(entity_id) is None
+    zha_gateway = get_zha_gateway(hass)
+    await zha_gateway.async_device_initialized(zigpy_device)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id) is not None
