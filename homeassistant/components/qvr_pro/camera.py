@@ -36,11 +36,9 @@ class QVRProCamera(Camera):
         super().__init__()
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Get the state attributes."""
-        attrs = super().state_attributes
-
-        attrs["qvr_guid"] = self.guid
+        attrs = {"qvr_guid": self.guid}
 
         return attrs
 
