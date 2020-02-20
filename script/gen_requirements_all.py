@@ -58,6 +58,9 @@ CONSTRAINT_PATH = os.path.join(
 CONSTRAINT_BASE = """
 pycryptodome>=3.6.6
 
+# Constrain urllib3 to ensure we deal with CVE-2019-11236 & CVE-2019-11324
+urllib3>=1.24.3
+
 # Not needed for our supported Python versions
 enum34==1000000000.0.0
 
