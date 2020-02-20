@@ -160,12 +160,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 entity_ids,
             )
         )
-    if not covers:
-        _LOGGER.error("No covers added")
-        return False
 
     async_add_entities(covers)
-    return True
 
 
 class CoverTemplate(CoverDevice):
