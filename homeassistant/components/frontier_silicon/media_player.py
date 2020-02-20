@@ -183,7 +183,7 @@ class AFSAPIDevice(MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         if self._volume is None:
             return None
-        
+
         return float(self._volume) / (self._volume_steps - 1)
 
     async def async_update(self):
