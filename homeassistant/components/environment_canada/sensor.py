@@ -1,9 +1,4 @@
-"""
-Support for the Environment Canada weather service.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.environment_canada/
-"""
+"""Support for the Environment Canada weather service."""
 from datetime import datetime, timedelta
 import logging
 import re

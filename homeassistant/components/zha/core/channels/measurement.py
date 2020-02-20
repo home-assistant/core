@@ -1,9 +1,4 @@
-"""
-Measurement channels module for Zigbee Home Automation.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/zha/
-"""
+"""Measurement channels module for Zigbee Home Automation."""
 import logging
 
 import zigpy.zcl.clusters.measurement as measurement
