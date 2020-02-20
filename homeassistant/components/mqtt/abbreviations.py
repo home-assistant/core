@@ -129,6 +129,7 @@ ABBREVIATIONS = {
     "set_pos_t": "set_position_topic",
     "pos_t": "position_topic",
     "spd_cmd_t": "speed_command_topic",
+    "spd_cmd_tpl": "speed_command_template",
     "spd_stat_t": "speed_state_topic",
     "spd_val_tpl": "speed_value_template",
     "spds": "speeds",
