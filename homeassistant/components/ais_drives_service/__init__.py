@@ -167,9 +167,20 @@ def get_remotes_types_by_name(remote_name):
     return drive_type
 
 
+def fix_rclone_config_permissions():
+    # fix permissions
+    uid = str(os.getuid())
+    gid = str(os.getgid())
+    os.system('su -c "chown ' + uid + ":" + gid + " " + G_RCLONE_CONF_FILE + '"')
+
+
 def rclone_get_remotes_long():
     global G_RCLONE_REMOTES_LONG
     G_RCLONE_REMOTES_LONG = []
+
+    #
+    fix_rclone_config_permissions()
+
     rclone_cmd = ["rclone", "listremotes", "--long", G_RCLONE_CONF]
     proc = subprocess.run(
         rclone_cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -192,7 +203,9 @@ def rclone_get_remotes_long():
 def rclone_get_auth_url(drive_name, drive_type):
     import pexpect
 
-    # code, icon = DRIVES_TYPES[drive_type]
+    #
+    fix_rclone_config_permissions()
+
     rclone_cmd = (
         "rclone config create "
         + drive_name
@@ -223,6 +236,9 @@ def rclone_set_auth_gdrive(drive_name, code):
     try:
         import pexpect
 
+        #
+        fix_rclone_config_permissions()
+        #
         rclone_cmd = "rclone config " + G_RCLONE_CONF
         child = pexpect.spawn(rclone_cmd)
         # Current remotes:
@@ -291,6 +307,9 @@ def rclone_set_auth_mega(drive_name, user, passwd):
     try:
         import pexpect
 
+        #
+        fix_rclone_config_permissions()
+        #
         rclone_cmd = "rclone config " + G_RCLONE_CONF
         child = pexpect.spawn(rclone_cmd)
         # Current remotes:
@@ -344,6 +363,9 @@ def rclone_set_auth_ftp(drive_name, host, port, user_name, password):
     try:
         import pexpect
 
+        #
+        fix_rclone_config_permissions()
+        #
         if len(password) == 0:
             password = "guest"
         rclone_cmd = "rclone config " + G_RCLONE_CONF
@@ -673,10 +695,8 @@ class LocalData:
                 )
 
             else:
-                # fix permissions
-                os.system(
-                    'su -c "chown ' + uid + ":" + gid + " " + G_RCLONE_CONF_FILE + '"'
-                )
+                #
+                fix_rclone_config_permissions()
                 # prepare mount command
                 rclone_cmd_mount = (
                     'su -mm -c "export PATH=$PATH:/data/data/pl.sviete.dom/files/usr/bin/; rclone mount '
@@ -730,6 +750,9 @@ class LocalData:
             "--stats=0",
             G_RCLONE_CONF,
         ]
+        #
+        fix_rclone_config_permissions()
+        #
         proc = subprocess.run(
             rclone_cmd, encoding="utf-8", stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
