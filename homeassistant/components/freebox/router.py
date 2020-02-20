@@ -8,7 +8,7 @@ from aiofreepybox import Freepybox
 from aiofreepybox.api.wifi import Wifi
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, DATA_RATE_KILOBYTES_PER_SECOND
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -21,16 +21,15 @@ from .const import (
     CONNECTION_SENSORS,
     DEFAULT_DEVICE_NAME,
     DOMAIN,
-    SENSOR_DEVICE_CLASS,
-    SENSOR_ICON,
     SENSOR_NAME,
-    SENSOR_UNIT,
     SENSOR_UPDATE,
     STORAGE_KEY,
     STORAGE_VERSION,
     TEMPERATURE_SENSOR_TEMPLATE,
     TRACKER_UPDATE,
 )
+from .device_tracker import FreeboxDevice
+from .sensor import FreeboxSensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +115,7 @@ class FreeboxRouter:
             if self._devices.get(device_mac) is not None:
                 # Seen device -> updating
                 _LOGGER.debug("Updating Freebox device: %s", device_name)
-                self._devices[device_mac].update(fbx_device)
+                self._devices[device_mac].update_state(fbx_device)
             else:
                 # New device, should be unique
                 _LOGGER.debug(
@@ -141,22 +140,23 @@ class FreeboxRouter:
             if self._temperature_sensors.get(sensor_key) is not None:
                 # Seen sensor -> updating
                 _LOGGER.debug("Updating Freebox sensor: %s", sensor_key)
-                self._temperature_sensors[sensor_key].update(
+                self._temperature_sensors[sensor_key].update_state(
                     temperature_datas[sensor_key]["value"]
                 )
             else:
                 # New sensor, should be unique
                 _LOGGER.debug("Adding Freebox sensor: %s", sensor_key)
                 self._temperature_sensors[sensor_key] = FreeboxSensor(
+                    self,
                     {
                         **TEMPERATURE_SENSOR_TEMPLATE,
                         **{
                             SENSOR_NAME: f"Freebox {sensor_attrs['name']}",
                             "value": sensor_attrs["value"],
                         },
-                    }
+                    },
                 )
-                self._temperature_sensors[sensor_key].update(
+                self._temperature_sensors[sensor_key].update_state(
                     temperature_datas[sensor_key]["value"]
                 )
 
@@ -166,14 +166,14 @@ class FreeboxRouter:
             if self._connection_sensors.get(sensor_key) is not None:
                 # Seen sensor -> updating
                 _LOGGER.debug("Updating Freebox sensor: %s", sensor_key)
-                self._connection_sensors[sensor_key].update(
+                self._connection_sensors[sensor_key].update_state(
                     connection_datas[sensor_key]
                 )
             else:
                 # New sensor, should be unique
                 _LOGGER.debug("Adding Freebox sensor: %s", sensor_key)
-                self._connection_sensors[sensor_key] = FreeboxSensor(sensor_attrs)
-                self._connection_sensors[sensor_key].update(
+                self._connection_sensors[sensor_key] = FreeboxSensor(self, sensor_attrs)
+                self._connection_sensors[sensor_key].update_state(
                     connection_datas[sensor_key]
                 )
 
@@ -245,137 +245,3 @@ class FreeboxRouter:
     def wifi(self) -> Wifi:
         """Return the wifi."""
         return self._api.wifi
-
-
-class FreeboxDevice:
-    """Representation of a Freebox device."""
-
-    def __init__(self, device: Dict[str, any]):
-        """Initialize a Freebox device."""
-        self._name = device["primary_name"].strip() or DEFAULT_DEVICE_NAME
-        self._mac = device["l2ident"]["id"]
-        self._manufacturer = device["vendor_name"]
-        self._icon = icon_for_freebox_device(device)
-
-        self.update(device)
-
-    def update(self, device: Dict[str, any]) -> None:
-        """Update the Freebox device."""
-        self._active = device["active"]
-        if device.get("attrs") is None:
-            # device
-            self._reachable = device["reachable"]
-            self._attrs = {
-                "reachable": self._reachable,
-                "last_time_reachable": datetime.fromtimestamp(
-                    device["last_time_reachable"]
-                ),
-                "last_time_activity": datetime.fromtimestamp(device["last_activity"]),
-            }
-        else:
-            # router
-            self._attrs = device["attrs"]
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def mac(self) -> str:
-        """Return the MAC address."""
-        return self._mac
-
-    @property
-    def manufacturer(self) -> str:
-        """Return the manufacturer."""
-        return self._manufacturer
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def active(self) -> bool:
-        """Return true if the host sends traffic to the Freebox."""
-        return self._active
-
-    @property
-    def reachable(self) -> bool:
-        """Return true if the host can receive traffic from the Freebox."""
-        return self._reachable
-
-    @property
-    def state_attributes(self) -> Dict[str, any]:
-        """Return the attributes."""
-        return self._attrs
-
-
-class FreeboxSensor:
-    """Representation of a Freebox sensor."""
-
-    def __init__(self, sensor: Dict[str, any]):
-        """Initialize a Freebox sensor."""
-        self._state = None
-        self._name = sensor[SENSOR_NAME]
-        self._unit = sensor[SENSOR_UNIT]
-        self._icon = sensor[SENSOR_ICON]
-        self._device_class = sensor[SENSOR_DEVICE_CLASS]
-
-    def update(self, state: any) -> None:
-        """Update the Freebox sensor."""
-        if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
-            self._state = round(state / 1000, 2)
-        else:
-            self._state = state
-
-    @property
-    def state(self) -> str:
-        """Return the state."""
-        return self._state
-
-    @property
-    def name(self) -> str:
-        """Return the name."""
-        return self._name
-
-    @property
-    def unit(self) -> str:
-        """Return the unit."""
-        return self._unit
-
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
-
-    @property
-    def device_class(self) -> str:
-        """Return the device_class."""
-        return self._device_class
-
-
-def icon_for_freebox_device(device) -> str:
-    """Return a host icon from his type."""
-    switcher = {
-        "freebox_delta": "mdi:television-guide",
-        "freebox_hd": "mdi:television-guide",
-        "freebox_mini": "mdi:television-guide",
-        "freebox_player": "mdi:television-guide",
-        "ip_camera": "mdi:cctv",
-        "ip_phone": "mdi:phone-voip",
-        "laptop": "mdi:laptop",
-        "multimedia_device": "mdi:play-network",
-        "nas": "mdi:nas",
-        "networking_device": "mdi:network",
-        "printer": "mdi:printer",
-        "router": "mdi:router-wireless",
-        "smartphone": "mdi:cellphone",
-        "tablet": "mdi:tablet",
-        "television": "mdi:television",
-        "vg_console": "mdi:gamepad-variant",
-        "workstation": "mdi:desktop-tower-monitor",
-    }
-
-    return switcher.get(device["host_type"], "mdi:help-network")

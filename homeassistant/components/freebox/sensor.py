@@ -3,12 +3,19 @@ import logging
 from typing import Dict
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import DATA_RATE_KILOBYTES_PER_SECOND
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import HomeAssistantType
 
-from .const import DOMAIN, SENSOR_UPDATE
-from .router import FreeboxRouter, FreeboxSensor
+from .const import (
+    DOMAIN,
+    SENSOR_DEVICE_CLASS,
+    SENSOR_ICON,
+    SENSOR_NAME,
+    SENSOR_UNIT,
+    SENSOR_UPDATE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,20 +34,31 @@ async def async_setup_entry(
     entities = []
 
     for sensor in fbx.sensors.values():
-        entities.append(FbxSensor(fbx, sensor))
+        entities.append(sensor)
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-class FbxSensor(Entity):
-    """Representation of a freebox sensor."""
+class FreeboxSensor(Entity):
+    """Representation of a Freebox sensor."""
 
-    def __init__(self, fbx: FreeboxRouter, fbx_sensor: FreeboxSensor):
-        """Initialize the sensor."""
-        self._fbx = fbx
-        self._fbx_sensor = fbx_sensor
-        self._unique_id = f"{self._fbx.mac} {self._fbx_sensor.name}"
+    def __init__(self, fbx_router, sensor: Dict[str, any]):
+        """Initialize a Freebox sensor."""
+        self._state = None
+        self._router = fbx_router
+        self._name = sensor[SENSOR_NAME]
+        self._unit = sensor[SENSOR_UNIT]
+        self._icon = sensor[SENSOR_ICON]
+        self._device_class = sensor[SENSOR_DEVICE_CLASS]
+        self._unique_id = f"{self._router.mac} {self._name}"
         self._unsub_dispatcher = None
+
+    def update_state(self, state: any) -> None:
+        """Update the Freebox sensor."""
+        if self._unit == DATA_RATE_KILOBYTES_PER_SECOND:
+            self._state = round(state / 1000, 2)
+        else:
+            self._state = state
 
     @property
     def unique_id(self) -> str:
@@ -48,29 +66,34 @@ class FbxSensor(Entity):
         return self._unique_id
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._fbx_sensor.name
+    def name(self) -> str:
+        """Return the name."""
+        return self._name
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of the sensor."""
-        return self._fbx_sensor.unit
+    def state(self) -> str:
+        """Return the state."""
+        return self._state
 
     @property
-    def icon(self):
-        """Return the icon of the sensor."""
-        return self._fbx_sensor.icon
+    def unit_of_measurement(self) -> str:
+        """Return the unit."""
+        return self._unit
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._fbx_sensor.state
+    def icon(self) -> str:
+        """Return the icon."""
+        return self._icon
+
+    @property
+    def device_class(self) -> str:
+        """Return the device_class."""
+        return self._device_class
 
     @property
     def device_info(self) -> Dict[str, any]:
         """Return the device information."""
-        return self._fbx.device_info
+        return self._router.device_info
 
     @property
     def should_poll(self) -> bool:
