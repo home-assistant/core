@@ -111,7 +111,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # For backward compatibility
         if config.get(CONF_UNIT_OF_MEASUREMENT) != "":
             unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
-        elif elem["unit"] != "":
+        elif 'unit' in elem and elem["unit"] != "":
             unit_of_measurement = elem["unit"]
         else:
             unit_of_measurement = DEFAULT_UNIT
