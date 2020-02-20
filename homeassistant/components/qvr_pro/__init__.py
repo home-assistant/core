@@ -18,7 +18,7 @@ from .const import (
     SERVICE_STOP_RECORD,
 )
 
-CHANNEL_GUID = "guid"
+SERVICE_CHANNEL_GUID = "guid"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,9 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SERVICE_SCHEMA_CHANNEL_RECORD = vol.Schema({vol.Required(CHANNEL_GUID): cv.string})
+SERVICE_CHANNEL_RECORD_SCHEMA = vol.Schema(
+    {vol.Required(SERVICE_CHANNEL_GUID): cv.string}
+)
 
 
 def setup(hass, config):
@@ -75,24 +77,24 @@ def setup(hass, config):
 
     # Register services
     def handle_start_record(call):
-        guid = call.data.get(CHANNEL_GUID)
+        guid = call.data[SERVICE_CHANNEL_GUID]
         qvrpro.start_recording(guid)
 
     def handle_stop_record(call):
-        guid = call.data.get(CHANNEL_GUID)
+        guid = call.data[SERVICE_CHANNEL_GUID]
         qvrpro.stop_recording(guid)
 
     hass.services.register(
         DOMAIN,
         SERVICE_START_RECORD,
         handle_start_record,
-        schema=SERVICE_SCHEMA_CHANNEL_RECORD,
+        schema=SERVICE_CHANNEL_RECORD_SCHEMA,
     )
     hass.services.register(
         DOMAIN,
         SERVICE_STOP_RECORD,
         handle_stop_record,
-        schema=SERVICE_SCHEMA_CHANNEL_RECORD,
+        schema=SERVICE_CHANNEL_RECORD_SCHEMA,
     )
 
     return True

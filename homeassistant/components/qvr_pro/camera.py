@@ -7,6 +7,9 @@ from .const import DOMAIN, SHORT_NAME
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the QVR Pro camera platform."""
+    if discovery_info is None:
+        return
+
     client = hass.data[DOMAIN]["client"]
 
     entities = []
@@ -23,29 +26,14 @@ class QVRProCamera(Camera):
     def __init__(self, name, model, brand, channel_index, guid, client):
         """Init QVR Pro camera."""
 
-        self.camera_name = f"{SHORT_NAME} {name}"
-        self.camera_model = model
-        self.camera_brand = brand
+        self.name = f"{SHORT_NAME} {name}"
+        self.model = model
+        self.brand = brand
         self.index = channel_index
         self.guid = guid
         self._client = client
 
         super().__init__()
-
-    @property
-    def name(self):
-        """Get the name of the camera."""
-        return self.camera_name
-
-    @property
-    def model(self):
-        """Get the model of the camera."""
-        return self.camera_model
-
-    @property
-    def brand(self):
-        """Get the brand of the camera."""
-        return self.camera_brand
 
     @property
     def state_attributes(self):
