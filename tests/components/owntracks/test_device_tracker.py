@@ -1516,6 +1516,26 @@ async def test_customized_mqtt_topic(hass, setup_comp):
     assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
 
 
+async def test_customized_mqtt_topic_single_level(hass, setup_comp):
+    """Test subscribing to a custom mqtt topic."""
+    await setup_owntracks(hass, {CONF_MQTT_TOPIC: "mytracks/+/+"})
+
+    topic = "mytracks/{}/{}".format(USER, DEVICE)
+
+    await send_message(hass, topic, LOCATION_MESSAGE)
+    assert_location_latitude(hass, LOCATION_MESSAGE["lat"])
+
+
+async def test_customized_mqtt_topic_no_wildcard(hass, setup_comp):
+    """Test subscribing to a custom mqtt topic without a wildcard segment."""
+    topic = "mytracks/{}/{}".format(USER, DEVICE)
+
+    await setup_owntracks(hass, {CONF_MQTT_TOPIC: topic})
+
+    await send_message(hass, topic, LOCATION_MESSAGE)
+    assert hass.states.get(DEVICE_TRACKER_STATE) is None
+
+
 async def test_region_mapping(hass, setup_comp):
     """Test region to zone mapping."""
     await setup_owntracks(hass, {CONF_REGION_MAPPING: {"foo": "inner"}})

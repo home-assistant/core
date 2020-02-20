@@ -39,11 +39,15 @@ def _parse_topic(topic, subscribe_topic):
     Async friendly.
     """
     subscription = subscribe_topic.split("/")
-    try:
-        user_index = subscription.index("#")
-    except ValueError:
+
+    user_index = None
+    for index, segment in enumerate(subscription):
+        if segment in ("#", "+"):
+            user_index = index
+            break
+    if user_index is None:
         _LOGGER.error("Can't parse subscription topic: '%s'", subscribe_topic)
-        raise
+        raise ValueError("Topic does not contain # or + segment")
 
     topic_list = topic.split("/")
     try:
