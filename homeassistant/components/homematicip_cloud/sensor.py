@@ -14,6 +14,7 @@ from homematicip.aio.device import (
     AsyncPassageDetector,
     AsyncPlugableSwitchMeasuring,
     AsyncPresenceDetectorIndoor,
+    AsyncRoomControlDeviceAnalog,
     AsyncTemperatureHumiditySensorDisplay,
     AsyncTemperatureHumiditySensorOutdoor,
     AsyncTemperatureHumiditySensorWithoutDisplay,
@@ -79,6 +80,8 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipTemperatureSensor(hap, device))
             entities.append(HomematicipHumiditySensor(hap, device))
+        elif isinstance(device, (AsyncRoomControlDeviceAnalog,)):
+            entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
             device,
             (
@@ -305,7 +308,7 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Representation of the HomematicIP power comsumption value."""
+        """Representation of the HomematicIP power consumption value."""
         return self._device.currentPowerConsumption
 
     @property
@@ -356,7 +359,7 @@ class HomematicipTodayRainSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Representation of the HomematicIP todays rain value."""
+        """Representation of the HomematicIP today's rain value."""
         return round(self._device.todayRainCounter, 2)
 
     @property

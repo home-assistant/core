@@ -377,7 +377,7 @@ class Camera(Entity):
     async def handle_async_mjpeg_stream(self, request):
         """Serve an HTTP MJPEG stream from the camera.
 
-        This method can be overridden by camera plaforms to proxy
+        This method can be overridden by camera platforms to proxy
         a direct stream from the camera.
         """
         return await self.handle_async_still_stream(request, self.frame_interval)
@@ -400,19 +400,17 @@ class Camera(Entity):
         """Turn off camera."""
         raise NotImplementedError()
 
-    @callback
-    def async_turn_off(self):
+    async def async_turn_off(self):
         """Turn off camera."""
-        return self.hass.async_add_job(self.turn_off)
+        await self.hass.async_add_job(self.turn_off)
 
     def turn_on(self):
         """Turn off camera."""
         raise NotImplementedError()
 
-    @callback
-    def async_turn_on(self):
+    async def async_turn_on(self):
         """Turn off camera."""
-        return self.hass.async_add_job(self.turn_on)
+        await self.hass.async_add_job(self.turn_on)
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""

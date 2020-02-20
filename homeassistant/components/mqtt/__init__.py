@@ -36,7 +36,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType, ServiceDataType
@@ -68,6 +68,7 @@ DATA_MQTT_CONFIG = "mqtt_config"
 DATA_MQTT_HASS_CONFIG = "mqtt_hass_config"
 
 SERVICE_PUBLISH = "publish"
+SERVICE_DUMP = "dump"
 
 CONF_EMBEDDED = "embedded"
 
@@ -567,7 +568,7 @@ async def async_setup_entry(hass, entry):
         conf = CONFIG_SCHEMA({DOMAIN: entry.data})[DOMAIN]
     elif any(key in conf for key in entry.data):
         _LOGGER.warning(
-            "Data in your config entry is going to override your "
+            "Data in your configuration entry is going to override your "
             "configuration.yaml: %s",
             entry.data,
         )
@@ -651,7 +652,7 @@ async def async_setup_entry(hass, entry):
     if result == CONNECTION_FAILED_RECOVERABLE:
         raise ConfigEntryNotReady
 
-    async def async_stop_mqtt(event: Event):
+    async def async_stop_mqtt(_event: Event):
         """Stop MQTT component."""
         await hass.data[DATA_MQTT].async_disconnect()
 
@@ -681,6 +682,40 @@ async def async_setup_entry(hass, entry):
 
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service, schema=MQTT_PUBLISH_SCHEMA
+    )
+
+    async def async_dump_service(call: ServiceCall):
+        """Handle MQTT dump service calls."""
+        messages = []
+
+        @callback
+        def collect_msg(msg):
+            messages.append((msg.topic, msg.payload.replace("\n", "")))
+
+        unsub = await async_subscribe(hass, call.data["topic"], collect_msg)
+
+        def write_dump():
+            with open(hass.config.path("mqtt_dump.txt"), "wt") as fp:
+                for msg in messages:
+                    fp.write(",".join(msg) + "\n")
+
+        async def finish_dump(_):
+            """Write dump to file."""
+            unsub()
+            await hass.async_add_executor_job(write_dump)
+
+        event.async_call_later(hass, call.data["duration"], finish_dump)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_DUMP,
+        async_dump_service,
+        schema=vol.Schema(
+            {
+                vol.Required("topic"): valid_subscribe_topic,
+                vol.Optional("duration", default=5): int,
+            }
+        ),
     )
 
     if conf.get(CONF_DISCOVERY):
@@ -1159,6 +1194,34 @@ class MqttDiscoveryUpdate(Entity):
             )
 
 
+def device_info_from_config(config):
+    """Return a device description for device registry."""
+    if not config:
+        return None
+
+    info = {
+        "identifiers": {(DOMAIN, id_) for id_ in config[CONF_IDENTIFIERS]},
+        "connections": {tuple(x) for x in config[CONF_CONNECTIONS]},
+    }
+
+    if CONF_MANUFACTURER in config:
+        info["manufacturer"] = config[CONF_MANUFACTURER]
+
+    if CONF_MODEL in config:
+        info["model"] = config[CONF_MODEL]
+
+    if CONF_NAME in config:
+        info["name"] = config[CONF_NAME]
+
+    if CONF_SW_VERSION in config:
+        info["sw_version"] = config[CONF_SW_VERSION]
+
+    if CONF_VIA_DEVICE in config:
+        info["via_device"] = (DOMAIN, config[CONF_VIA_DEVICE])
+
+    return info
+
+
 class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
@@ -1181,32 +1244,7 @@ class MqttEntityDeviceInfo(Entity):
     @property
     def device_info(self):
         """Return a device description for device registry."""
-        if not self._device_config:
-            return None
-
-        info = {
-            "identifiers": {
-                (DOMAIN, id_) for id_ in self._device_config[CONF_IDENTIFIERS]
-            },
-            "connections": {tuple(x) for x in self._device_config[CONF_CONNECTIONS]},
-        }
-
-        if CONF_MANUFACTURER in self._device_config:
-            info["manufacturer"] = self._device_config[CONF_MANUFACTURER]
-
-        if CONF_MODEL in self._device_config:
-            info["model"] = self._device_config[CONF_MODEL]
-
-        if CONF_NAME in self._device_config:
-            info["name"] = self._device_config[CONF_NAME]
-
-        if CONF_SW_VERSION in self._device_config:
-            info["sw_version"] = self._device_config[CONF_SW_VERSION]
-
-        if CONF_VIA_DEVICE in self._device_config:
-            info["via_device"] = (DOMAIN, self._device_config[CONF_VIA_DEVICE])
-
-        return info
+        return device_info_from_config(self._device_config)
 
 
 @websocket_api.async_response

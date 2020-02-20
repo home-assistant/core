@@ -52,6 +52,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_METRIC,
     CONF_VALUE_TEMPLATE,
     ENTITY_MATCH_ALL,
+    ENTITY_MATCH_NONE,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
     TEMP_CELSIUS,
@@ -231,7 +232,9 @@ def entity_ids(value: Union[str, List]) -> List[str]:
     return [entity_id(ent_id) for ent_id in value]
 
 
-comp_entity_ids = vol.Any(vol.All(vol.Lower, ENTITY_MATCH_ALL), entity_ids)
+comp_entity_ids = vol.Any(
+    vol.All(vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_NONE)), entity_ids
+)
 
 
 def entity_domain(domain: str) -> Callable[[Any], str]:
@@ -585,6 +588,25 @@ def ensure_list_csv(value: Any) -> List:
     return ensure_list(value)
 
 
+class multi_select:
+    """Multi select validator returning list of selected values."""
+
+    def __init__(self, options: dict) -> None:
+        """Initialize multi select."""
+        self.options = options
+
+    def __call__(self, selected: list) -> list:
+        """Validate input."""
+        if not isinstance(selected, list):
+            raise vol.Invalid("Not a list")
+
+        for value in selected:
+            if value not in self.options:
+                raise vol.Invalid(f"{value} is not a valid option")
+
+        return selected
+
+
 def deprecated(
     key: str,
     replacement_key: Optional[str] = None,
@@ -710,6 +732,9 @@ def custom_serializer(schema: Any) -> Any:
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
 
+    if isinstance(schema, multi_select):
+        return {"type": "multi_select", "options": schema.options}
+
     return voluptuous_serialize.UNSUPPORTED
 
 
@@ -724,6 +749,8 @@ PLATFORM_SCHEMA = vol.Schema(
 
 PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
+ENTITY_SERVICE_FIELDS = (ATTR_ENTITY_ID, ATTR_AREA_ID)
+
 
 def make_entity_service_schema(
     schema: dict, *, extra: int = vol.PREVENT_EXTRA
@@ -734,11 +761,13 @@ def make_entity_service_schema(
             {
                 **schema,
                 vol.Optional(ATTR_ENTITY_ID): comp_entity_ids,
-                vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
+                vol.Optional(ATTR_AREA_ID): vol.Any(
+                    ENTITY_MATCH_NONE, vol.All(ensure_list, [str])
+                ),
             },
             extra=extra,
         ),
-        has_at_least_one_key(ATTR_ENTITY_ID, ATTR_AREA_ID),
+        has_at_least_one_key(*ENTITY_SERVICE_FIELDS),
     )
 
 

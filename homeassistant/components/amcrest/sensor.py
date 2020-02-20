@@ -1,4 +1,4 @@
-"""Suppoort for Amcrest IP camera sensors."""
+"""Support for Amcrest IP camera sensors."""
 from datetime import timedelta
 import logging
 

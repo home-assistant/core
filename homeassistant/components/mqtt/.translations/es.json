@@ -27,5 +27,17 @@
             }
         },
         "title": "MQTT"
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primer bot\u00f3n",
+            "button_2": "Segundo bot\u00f3n",
+            "button_3": "Tercer bot\u00f3n",
+            "button_4": "Cuarto bot\u00f3n",
+            "button_5": "Quinto bot\u00f3n",
+            "button_6": "Sexto bot\u00f3n",
+            "turn_off": "Apagar",
+            "turn_on": "Encender"
+        }
     }
 }

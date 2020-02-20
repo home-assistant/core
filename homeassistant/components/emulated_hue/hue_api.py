@@ -688,26 +688,25 @@ def entity_to_json(config, entity):
         retval["state"].update(
             {HUE_API_STATE_COLORMODE: "ct", HUE_API_STATE_CT: state[STATE_COLOR_TEMP]}
         )
-    elif (
-        entity_features
-        & (
-            SUPPORT_BRIGHTNESS
-            | SUPPORT_SET_POSITION
-            | SUPPORT_SET_SPEED
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_TARGET_TEMPERATURE
-        )
-    ) or entity.domain == script.DOMAIN:
+    elif entity_features & (
+        SUPPORT_BRIGHTNESS
+        | SUPPORT_SET_POSITION
+        | SUPPORT_SET_SPEED
+        | SUPPORT_VOLUME_SET
+        | SUPPORT_TARGET_TEMPERATURE
+    ):
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming
         retval["type"] = "Dimmable light"
         retval["modelid"] = "HASS123"
         retval["state"].update({HUE_API_STATE_BRI: state[STATE_BRIGHTNESS]})
     else:
-        # On/off light (Zigbee Device ID: 0x0000)
-        # Supports groups, scenes and on/off control
-        retval["type"] = "On/off light"
-        retval["modelid"] = "HASS321"
+        # Dimmable light (Zigbee Device ID: 0x0100)
+        # Supports groups, scenes, on/off and dimming
+        # Reports fixed brightness for compatibility with Alexa.
+        retval["type"] = "Dimmable light"
+        retval["modelid"] = "HASS123"
+        retval["state"].update({HUE_API_STATE_BRI: HUE_API_STATE_BRI_MAX})
 
     return retval
 
@@ -719,7 +718,7 @@ def create_hue_success_response(entity_id, attr, value):
 
 
 def create_list_of_entities(config, request):
-    """Create a list of all entites."""
+    """Create a list of all entities."""
     hass = request.app["hass"]
     json_response = {}
 

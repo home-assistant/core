@@ -1,5 +1,4 @@
 """Provides functionality to interact with lights."""
-import asyncio
 import csv
 from datetime import timedelta
 import logging
@@ -8,15 +7,12 @@ from typing import Dict, Optional, Tuple
 
 import voluptuous as vol
 
-from homeassistant.auth.permissions.const import POLICY_CONTROL
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.exceptions import Unauthorized, UnknownUser
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
@@ -61,6 +57,8 @@ ATTR_WHITE_VALUE = "white_value"
 # Brightness of the light, 0..255 or percentage
 ATTR_BRIGHTNESS = "brightness"
 ATTR_BRIGHTNESS_PCT = "brightness_pct"
+ATTR_BRIGHTNESS_STEP = "brightness_step"
+ATTR_BRIGHTNESS_STEP_PCT = "brightness_step_pct"
 
 # String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
@@ -87,12 +85,16 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
+VALID_BRIGHTNESS_STEP = vol.All(vol.Coerce(int), vol.Clamp(min=-255, max=255))
+VALID_BRIGHTNESS_STEP_PCT = vol.All(vol.Coerce(float), vol.Clamp(min=-100, max=100))
 
 LIGHT_TURN_ON_SCHEMA = {
     vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
-    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
-    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
+    vol.Exclusive(ATTR_BRIGHTNESS, ATTR_BRIGHTNESS): VALID_BRIGHTNESS,
+    vol.Exclusive(ATTR_BRIGHTNESS_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_PCT,
+    vol.Exclusive(ATTR_BRIGHTNESS_STEP, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP,
+    vol.Exclusive(ATTR_BRIGHTNESS_STEP_PCT, ATTR_BRIGHTNESS): VALID_BRIGHTNESS_STEP_PCT,
     vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
     vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP): vol.All(
         vol.ExactSequence((cv.byte, cv.byte, cv.byte)), vol.Coerce(tuple)
@@ -169,7 +171,7 @@ def preprocess_turn_off(params):
     """Process data for turning light off if brightness is 0."""
     if ATTR_BRIGHTNESS in params and params[ATTR_BRIGHTNESS] == 0:
         # Zero brightness: Light will be turned off
-        params = {k: v for k, v in params.items() if k in [ATTR_TRANSITION, ATTR_FLASH]}
+        params = {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
         return (True, params)  # Light should be turned off
 
     return (False, None)  # Light should be turned on
@@ -187,70 +189,65 @@ async def async_setup(hass, config):
     if not profiles_valid:
         return False
 
-    async def async_handle_light_on_service(service):
-        """Handle a turn light on service call."""
-        # Get the validated data
-        params = service.data.copy()
+    def preprocess_data(data):
+        """Preprocess the service data."""
+        base = {}
 
-        # Convert the entity ids to valid light ids
-        target_lights = await component.async_extract_from_service(service)
-        params.pop(ATTR_ENTITY_ID, None)
+        for entity_field in cv.ENTITY_SERVICE_FIELDS:
+            if entity_field in data:
+                base[entity_field] = data.pop(entity_field)
 
-        if service.context.user_id:
-            user = await hass.auth.async_get_user(service.context.user_id)
-            if user is None:
-                raise UnknownUser(context=service.context)
+        preprocess_turn_on_alternatives(data)
+        turn_lights_off, off_params = preprocess_turn_off(data)
 
-            entity_perms = user.permissions.check_entity
+        base["params"] = data
+        base["turn_lights_off"] = turn_lights_off
+        base["off_params"] = off_params
 
-            for light in target_lights:
-                if not entity_perms(light, POLICY_CONTROL):
-                    raise Unauthorized(
-                        context=service.context,
-                        entity_id=light,
-                        permission=POLICY_CONTROL,
-                    )
+        return base
 
-        preprocess_turn_on_alternatives(params)
-        turn_lights_off, off_params = preprocess_turn_off(params)
+    async def async_handle_light_on_service(light, call):
+        """Handle turning a light on.
 
-        poll_lights = []
-        change_tasks = []
-        for light in target_lights:
-            light.async_set_context(service.context)
+        If brightness is set to 0, this service will turn the light off.
+        """
+        params = call.data["params"]
+        turn_light_off = call.data["turn_lights_off"]
+        off_params = call.data["off_params"]
 
-            pars = params
-            off_pars = off_params
-            turn_light_off = turn_lights_off
-            if not pars:
-                pars = params.copy()
-                pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
-                preprocess_turn_on_alternatives(pars)
-                turn_light_off, off_pars = preprocess_turn_off(pars)
-            if turn_light_off:
-                task = light.async_request_call(light.async_turn_off(**off_pars))
+        if not params:
+            default_profile = Profiles.get_default(light.entity_id)
+
+            if default_profile is not None:
+                params = {ATTR_PROFILE: default_profile}
+                preprocess_turn_on_alternatives(params)
+                turn_light_off, off_params = preprocess_turn_off(params)
+
+        elif ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params:
+            brightness = light.brightness if light.is_on else 0
+
+            params = params.copy()
+
+            if ATTR_BRIGHTNESS_STEP in params:
+                brightness += params.pop(ATTR_BRIGHTNESS_STEP)
+
             else:
-                task = light.async_request_call(light.async_turn_on(**pars))
+                brightness += int(params.pop(ATTR_BRIGHTNESS_STEP_PCT) / 100 * 255)
 
-            change_tasks.append(task)
+            params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
+            turn_light_off, off_params = preprocess_turn_off(params)
 
-            if light.should_poll:
-                poll_lights.append(light)
-
-        if change_tasks:
-            await asyncio.wait(change_tasks)
-
-        if poll_lights:
-            await asyncio.wait(
-                [light.async_update_ha_state(True) for light in poll_lights]
-            )
+        if turn_light_off:
+            await light.async_turn_off(**off_params)
+        else:
+            await light.async_turn_on(**params)
 
     # Listen for light on and light off service calls.
-    hass.services.async_register(
-        DOMAIN,
+
+    component.async_register_entity_service(
         SERVICE_TURN_ON,
+        vol.All(cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA), preprocess_data),
         async_handle_light_on_service,
-        schema=cv.make_entity_service_schema(LIGHT_TURN_ON_SCHEMA),
     )
 
     component.async_register_entity_service(

@@ -187,6 +187,7 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(hass, scanne
         # person home switches on
         hass.states.async_set(device_1, STATE_HOME)
         await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
         assert all(
             light.is_on(hass, ent_id)

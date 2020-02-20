@@ -1,4 +1,5 @@
 """Tests for Plex config flow."""
+import copy
 from unittest.mock import patch
 
 import asynctest
@@ -26,6 +27,7 @@ DEFAULT_OPTIONS = {
     config_flow.MP_DOMAIN: {
         config_flow.CONF_USE_EPISODE_ART: False,
         config_flow.CONF_SHOW_ALL_CONTROLS: False,
+        config_flow.CONF_IGNORE_NEW_SHARED_USERS: False,
     }
 }
 
@@ -457,9 +459,20 @@ async def test_all_available_servers_configured(hass):
 
 
 async def test_option_flow(hass):
-    """Test config flow selection of one of two bridges."""
+    """Test config options flow selection."""
 
-    entry = MockConfigEntry(domain=config_flow.DOMAIN, data={}, options=DEFAULT_OPTIONS)
+    mock_plex_server = MockPlexServer(load_users=False)
+
+    MOCK_SERVER_ID = MOCK_SERVERS[0][config_flow.CONF_SERVER_IDENTIFIER]
+    hass.data[config_flow.DOMAIN] = {
+        config_flow.SERVERS: {MOCK_SERVER_ID: mock_plex_server}
+    }
+
+    entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data={config_flow.CONF_SERVER_IDENTIFIER: MOCK_SERVER_ID},
+        options=DEFAULT_OPTIONS,
+    )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(
@@ -473,6 +486,8 @@ async def test_option_flow(hass):
         user_input={
             config_flow.CONF_USE_EPISODE_ART: True,
             config_flow.CONF_SHOW_ALL_CONTROLS: True,
+            config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
+            config_flow.CONF_MONITORED_USERS: list(mock_plex_server.accounts),
         },
     )
     assert result["type"] == "create_entry"
@@ -480,6 +495,105 @@ async def test_option_flow(hass):
         config_flow.MP_DOMAIN: {
             config_flow.CONF_USE_EPISODE_ART: True,
             config_flow.CONF_SHOW_ALL_CONTROLS: True,
+            config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
+            config_flow.CONF_MONITORED_USERS: {
+                user: {"enabled": True} for user in mock_plex_server.accounts
+            },
+        }
+    }
+
+
+async def test_option_flow_loading_saved_users(hass):
+    """Test config options flow selection when loading existing user config."""
+
+    mock_plex_server = MockPlexServer(load_users=True)
+
+    MOCK_SERVER_ID = MOCK_SERVERS[0][config_flow.CONF_SERVER_IDENTIFIER]
+    hass.data[config_flow.DOMAIN] = {
+        config_flow.SERVERS: {MOCK_SERVER_ID: mock_plex_server}
+    }
+
+    entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data={config_flow.CONF_SERVER_IDENTIFIER: MOCK_SERVER_ID},
+        options=DEFAULT_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "plex_mp_settings"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            config_flow.CONF_USE_EPISODE_ART: True,
+            config_flow.CONF_SHOW_ALL_CONTROLS: True,
+            config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
+            config_flow.CONF_MONITORED_USERS: list(mock_plex_server.accounts),
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        config_flow.MP_DOMAIN: {
+            config_flow.CONF_USE_EPISODE_ART: True,
+            config_flow.CONF_SHOW_ALL_CONTROLS: True,
+            config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
+            config_flow.CONF_MONITORED_USERS: {
+                user: {"enabled": True} for user in mock_plex_server.accounts
+            },
+        }
+    }
+
+
+async def test_option_flow_new_users_available(hass):
+    """Test config options flow selection when new Plex accounts available."""
+
+    mock_plex_server = MockPlexServer(load_users=True, num_users=2)
+
+    MOCK_SERVER_ID = MOCK_SERVERS[0][config_flow.CONF_SERVER_IDENTIFIER]
+    hass.data[config_flow.DOMAIN] = {
+        config_flow.SERVERS: {MOCK_SERVER_ID: mock_plex_server}
+    }
+
+    OPTIONS_WITH_USERS = copy.deepcopy(DEFAULT_OPTIONS)
+    OPTIONS_WITH_USERS[config_flow.MP_DOMAIN][config_flow.CONF_MONITORED_USERS] = {
+        "a": {"enabled": True}
+    }
+
+    entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data={config_flow.CONF_SERVER_IDENTIFIER: MOCK_SERVER_ID},
+        options=OPTIONS_WITH_USERS,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"source": "test"}, data=None
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "plex_mp_settings"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            config_flow.CONF_USE_EPISODE_ART: True,
+            config_flow.CONF_SHOW_ALL_CONTROLS: True,
+            config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
+            config_flow.CONF_MONITORED_USERS: list(mock_plex_server.accounts),
+        },
+    )
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        config_flow.MP_DOMAIN: {
+            config_flow.CONF_USE_EPISODE_ART: True,
+            config_flow.CONF_SHOW_ALL_CONTROLS: True,
+            config_flow.CONF_IGNORE_NEW_SHARED_USERS: True,
+            config_flow.CONF_MONITORED_USERS: {
+                user: {"enabled": True} for user in mock_plex_server.accounts
+            },
         }
     }
 

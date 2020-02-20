@@ -75,18 +75,20 @@ def async_setup_service(hass, host, device):
 
     async def _learn_command(call):
         """Learn a packet from remote."""
+
         device = hass.data[DOMAIN][call.data[CONF_HOST]]
 
-        try:
-            auth = await hass.async_add_executor_job(device.auth)
-        except socket.timeout:
-            _LOGGER.error("Failed to connect to device, timeout")
-            return
-        if not auth:
-            _LOGGER.error("Failed to connect to device")
-            return
-
-        await hass.async_add_executor_job(device.enter_learning)
+        for retry in range(DEFAULT_RETRY):
+            try:
+                await hass.async_add_executor_job(device.enter_learning)
+                break
+            except (socket.timeout, ValueError):
+                try:
+                    await hass.async_add_executor_job(device.auth)
+                except socket.timeout:
+                    if retry == DEFAULT_RETRY - 1:
+                        _LOGGER.error("Failed to enter learning mode")
+                        return
 
         _LOGGER.info("Press the key you want Home Assistant to learn")
         start_time = utcnow()

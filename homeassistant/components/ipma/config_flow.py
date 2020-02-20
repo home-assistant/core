@@ -2,10 +2,11 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, HOME_LOCATION_NAME
+from .weather import FORECAST_MODE
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -49,6 +50,7 @@ class IpmaFlowHandler(config_entries.ConfigFlow):
                     vol.Required(CONF_NAME, default=name): str,
                     vol.Required(CONF_LATITUDE, default=latitude): cv.latitude,
                     vol.Required(CONF_LONGITUDE, default=longitude): cv.longitude,
+                    vol.Required(CONF_MODE, default="daily"): vol.In(FORECAST_MODE),
                 }
             ),
             errors=self._errors,

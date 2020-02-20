@@ -95,7 +95,7 @@ async def test_climate_devices(hass):
         "id": "1",
         "config": {"mode": "off"},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
@@ -109,7 +109,7 @@ async def test_climate_devices(hass):
         "config": {"mode": "other"},
         "state": {"on": True},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
@@ -122,7 +122,7 @@ async def test_climate_devices(hass):
         "id": "1",
         "state": {"on": False},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
@@ -214,6 +214,30 @@ async def test_clip_climate_device(hass):
     clip_thermostat = hass.states.get("climate.clip_thermostat")
     assert clip_thermostat.state == "heat"
 
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: False}
+    )
+    await hass.async_block_till_done()
+
+    assert "climate.thermostat" in gateway.deconz_ids
+    assert "sensor.thermostat" not in gateway.deconz_ids
+    assert "sensor.thermostat_battery_level" in gateway.deconz_ids
+    assert "climate.presence_sensor" not in gateway.deconz_ids
+    assert "climate.clip_thermostat" not in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 3
+
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
+    )
+    await hass.async_block_till_done()
+
+    assert "climate.thermostat" in gateway.deconz_ids
+    assert "sensor.thermostat" not in gateway.deconz_ids
+    assert "sensor.thermostat_battery_level" in gateway.deconz_ids
+    assert "climate.presence_sensor" not in gateway.deconz_ids
+    assert "climate.clip_thermostat" in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 4
+
 
 async def test_verify_state_update(hass):
     """Test that state update properly."""
@@ -232,7 +256,7 @@ async def test_verify_state_update(hass):
         "id": "1",
         "state": {"on": False},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     thermostat = hass.states.get("climate.thermostat")
@@ -252,7 +276,7 @@ async def test_add_new_climate_device(hass):
         "id": "1",
         "sensor": deepcopy(SENSORS["1"]),
     }
-    gateway.api.async_event_handler(state_added_event)
+    gateway.api.event_handler(state_added_event)
     await hass.async_block_till_done()
 
     assert "climate.thermostat" in gateway.deconz_ids

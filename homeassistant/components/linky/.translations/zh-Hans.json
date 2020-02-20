@@ -1,8 +1,5 @@
 {
     "config": {
-        "abort": {
-            "username_exists": "\u8d26\u6237\u5df2\u914d\u7f6e\u5b8c\u6210"
-        },
         "step": {
             "user": {
                 "data": {

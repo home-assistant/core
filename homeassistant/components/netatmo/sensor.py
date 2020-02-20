@@ -1,7 +1,6 @@
 """Support for the Netatmo Weather Service."""
 from datetime import timedelta
 import logging
-from time import time
 
 import pyatmo
 
@@ -217,7 +216,7 @@ class NetatmoSensor(Entity):
 
         if data is None:
             _LOGGER.info("No data found for %s (%s)", self.module_name, self._module_id)
-            _LOGGER.error("data: %s", self.netatmo_data.data)
+            _LOGGER.debug("data: %s", self.netatmo_data.data)
             self._state = None
             return
 
@@ -519,7 +518,6 @@ class NetatmoData:
         """Initialize the data object."""
         self.data = {}
         self.station_data = station_data
-        self._next_update = time()
         self.auth = auth
 
     def get_module_infos(self):

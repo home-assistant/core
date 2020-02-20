@@ -96,7 +96,7 @@ async def test_binary_sensors(hass):
         "id": "1",
         "state": {"presence": True},
     }
-    gateway.api.async_event_handler(state_changed_event)
+    gateway.api.event_handler(state_changed_event)
     await hass.async_block_till_done()
 
     presence_sensor = hass.states.get("binary_sensor.presence_sensor")
@@ -134,6 +134,28 @@ async def test_allow_clip_sensor(hass):
     vibration_sensor = hass.states.get("binary_sensor.vibration_sensor")
     assert vibration_sensor.state == "on"
 
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: False}
+    )
+    await hass.async_block_till_done()
+
+    assert "binary_sensor.presence_sensor" in gateway.deconz_ids
+    assert "binary_sensor.temperature_sensor" not in gateway.deconz_ids
+    assert "binary_sensor.clip_presence_sensor" not in gateway.deconz_ids
+    assert "binary_sensor.vibration_sensor" in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 3
+
+    hass.config_entries.async_update_entry(
+        gateway.config_entry, options={deconz.gateway.CONF_ALLOW_CLIP_SENSOR: True}
+    )
+    await hass.async_block_till_done()
+
+    assert "binary_sensor.presence_sensor" in gateway.deconz_ids
+    assert "binary_sensor.temperature_sensor" not in gateway.deconz_ids
+    assert "binary_sensor.clip_presence_sensor" in gateway.deconz_ids
+    assert "binary_sensor.vibration_sensor" in gateway.deconz_ids
+    assert len(hass.states.async_all()) == 4
+
 
 async def test_add_new_binary_sensor(hass):
     """Test that adding a new binary sensor works."""
@@ -147,7 +169,7 @@ async def test_add_new_binary_sensor(hass):
         "id": "1",
         "sensor": deepcopy(SENSORS["1"]),
     }
-    gateway.api.async_event_handler(state_added_event)
+    gateway.api.event_handler(state_added_event)
     await hass.async_block_till_done()
 
     assert "binary_sensor.presence_sensor" in gateway.deconz_ids

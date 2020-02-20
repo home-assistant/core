@@ -1,6 +1,7 @@
 """Test zha switch."""
 from unittest.mock import call, patch
 
+import pytest
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
@@ -9,8 +10,7 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 
 from .common import (
     async_enable_traffic,
-    async_init_zigpy_device,
-    async_test_device_join,
+    async_test_rejoin,
     find_entity_id,
     make_attribute,
     make_zcl_header,
@@ -22,24 +22,24 @@ ON = 1
 OFF = 0
 
 
-async def test_switch(hass, config_entry, zha_gateway):
+@pytest.fixture
+def zigpy_device(zigpy_device_mock):
+    """Device tracker zigpy device."""
+    endpoints = {
+        1: {
+            "in_clusters": [general.Basic.cluster_id, general.OnOff.cluster_id],
+            "out_clusters": [],
+            "device_type": 0,
+        }
+    }
+    return zigpy_device_mock(endpoints)
+
+
+async def test_switch(hass, zha_device_joined_restored, zigpy_device):
     """Test zha switch platform."""
 
-    # create zigpy device
-    zigpy_device = await async_init_zigpy_device(
-        hass,
-        [general.OnOff.cluster_id, general.Basic.cluster_id],
-        [],
-        None,
-        zha_gateway,
-    )
-
-    # load up switch domain
-    await hass.config_entries.async_forward_entry_setup(config_entry, DOMAIN)
-    await hass.async_block_till_done()
-
+    zha_device = await zha_device_joined_restored(zigpy_device)
     cluster = zigpy_device.endpoints.get(1).on_off
-    zha_device = zha_gateway.get_device(zigpy_device.ieee)
     entity_id = await find_entity_id(DOMAIN, zha_device, hass)
     assert entity_id is not None
 
@@ -47,7 +47,7 @@ async def test_switch(hass, config_entry, zha_gateway):
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # allow traffic to flow through the gateway and device
-    await async_enable_traffic(hass, zha_gateway, [zha_device])
+    await async_enable_traffic(hass, [zha_device])
 
     # test that the state has changed from unavailable to off
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -94,4 +94,4 @@ async def test_switch(hass, config_entry, zha_gateway):
         )
 
     # test joining a new switch to the network and HA
-    await async_test_device_join(hass, zha_gateway, general.OnOff.cluster_id, entity_id)
+    await async_test_rejoin(hass, zigpy_device, [cluster], (1,))

@@ -28,7 +28,7 @@
             "device_tracker": {
                 "data": {
                     "arp_ping": "Aktiver ARP-ping",
-                    "detection_time": "Betragt som hjemme-interval",
+                    "detection_time": "'Betragt som hjemme'-interval",
                     "force_dhcp": "Gennemtving scanning ved hj\u00e6lp af DHCP"
                 }
             }

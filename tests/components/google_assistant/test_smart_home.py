@@ -92,7 +92,10 @@ async def test_sync_message(hass):
             "devices": [
                 {
                     "id": "light.demo_light",
-                    "name": {"name": "Demo Light", "nicknames": ["Hello", "World"]},
+                    "name": {
+                        "name": "Demo Light",
+                        "nicknames": ["Demo Light", "Hello", "World"],
+                    },
                     "traits": [
                         trait.TRAIT_BRIGHTNESS,
                         trait.TRAIT_ONOFF,
@@ -679,7 +682,6 @@ async def test_device_class_cover(hass, device_class, google_type):
     "device_class,google_type",
     [
         ("non_existing_class", "action.devices.types.SWITCH"),
-        ("speaker", "action.devices.types.SPEAKER"),
         ("tv", "action.devices.types.TV"),
     ],
 )

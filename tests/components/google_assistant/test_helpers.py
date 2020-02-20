@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.google_assistant import helpers
 from homeassistant.components.google_assistant.const import (  # noqa: F401
     EVENT_COMMAND_RECEIVED,
+    NOT_EXPOSE_LOCAL,
 )
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
@@ -45,6 +46,15 @@ async def test_google_entity_sync_serialize_with_local_sdk(hass):
         "proxyDeviceId": None,
         "webhookId": "mock-webhook-id",
     }
+
+    for device_type in NOT_EXPOSE_LOCAL:
+        with patch(
+            "homeassistant.components.google_assistant.helpers.get_google_type",
+            return_value=device_type,
+        ):
+            serialized = await entity.sync_serialize(None)
+            assert "otherDeviceIds" not in serialized
+            assert "customData" not in serialized
 
 
 async def test_config_local_sdk(hass, hass_client):

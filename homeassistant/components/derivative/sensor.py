@@ -27,9 +27,19 @@ CONF_ROUND_DIGITS = "round"
 CONF_UNIT_PREFIX = "unit_prefix"
 CONF_UNIT_TIME = "unit_time"
 CONF_UNIT = "unit"
+CONF_TIME_WINDOW = "time_window"
 
 # SI Metric prefixes
-UNIT_PREFIXES = {None: 1, "k": 10 ** 3, "G": 10 ** 6, "T": 10 ** 9}
+UNIT_PREFIXES = {
+    None: 1,
+    "n": 1e-9,
+    "µ": 1e-6,
+    "m": 1e-3,
+    "k": 1e3,
+    "M": 1e6,
+    "G": 1e9,
+    "T": 1e12,
+}
 
 # SI Time prefixes
 UNIT_TIME = {"s": 1, "min": 60, "h": 60 * 60, "d": 24 * 60 * 60}
@@ -37,6 +47,7 @@ UNIT_TIME = {"s": 1, "min": 60, "h": 60 * 60, "d": 24 * 60 * 60}
 ICON = "mdi:chart-line"
 
 DEFAULT_ROUND = 3
+DEFAULT_TIME_WINDOW = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -46,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_UNIT_PREFIX, default=None): vol.In(UNIT_PREFIXES),
         vol.Optional(CONF_UNIT_TIME, default="h"): vol.In(UNIT_TIME),
         vol.Optional(CONF_UNIT): cv.string,
+        vol.Optional(CONF_TIME_WINDOW, default=DEFAULT_TIME_WINDOW): cv.time_period,
     }
 )
 
@@ -53,12 +65,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the derivative sensor."""
     derivative = DerivativeSensor(
-        config[CONF_SOURCE],
-        config.get(CONF_NAME),
-        config[CONF_ROUND_DIGITS],
-        config[CONF_UNIT_PREFIX],
-        config[CONF_UNIT_TIME],
-        config.get(CONF_UNIT),
+        source_entity=config[CONF_SOURCE],
+        name=config.get(CONF_NAME),
+        round_digits=config[CONF_ROUND_DIGITS],
+        unit_prefix=config[CONF_UNIT_PREFIX],
+        unit_time=config[CONF_UNIT_TIME],
+        unit_of_measurement=config.get(CONF_UNIT),
+        time_window=config[CONF_TIME_WINDOW],
     )
 
     async_add_entities([derivative])
@@ -75,11 +88,13 @@ class DerivativeSensor(RestoreEntity):
         unit_prefix,
         unit_time,
         unit_of_measurement,
+        time_window,
     ):
         """Initialize the derivative sensor."""
         self._sensor_source_id = source_entity
         self._round_digits = round_digits
         self._state = 0
+        self._state_list = []  # List of tuples with (timestamp, sensor_value)
 
         self._name = name if name is not None else f"{source_entity} derivative"
 
@@ -93,6 +108,7 @@ class DerivativeSensor(RestoreEntity):
 
         self._unit_prefix = UNIT_PREFIXES[unit_prefix]
         self._unit_time = UNIT_TIME[unit_time]
+        self._time_window = time_window.total_seconds()
 
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
@@ -114,6 +130,19 @@ class DerivativeSensor(RestoreEntity):
             ):
                 return
 
+            now = new_state.last_updated
+            # Filter out the tuples that are older than (and outside of the) `time_window`
+            self._state_list = [
+                (timestamp, state)
+                for timestamp, state in self._state_list
+                if (now - timestamp).total_seconds() < self._time_window
+            ]
+            # It can happen that the list is now empty, in that case
+            # we use the old_state, because we cannot do anything better.
+            if len(self._state_list) == 0:
+                self._state_list.append((old_state.last_updated, old_state.state))
+            self._state_list.append((new_state.last_updated, new_state.state))
+
             if self._unit_of_measurement is None:
                 unit = new_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
                 self._unit_of_measurement = self._unit_template.format(
@@ -122,13 +151,16 @@ class DerivativeSensor(RestoreEntity):
 
             try:
                 # derivative of previous measures.
-                gradient = 0
-                elapsed_time = (
-                    new_state.last_updated - old_state.last_updated
-                ).total_seconds()
-                gradient = Decimal(new_state.state) - Decimal(old_state.state)
-                derivative = gradient / (
-                    Decimal(elapsed_time) * (self._unit_prefix * self._unit_time)
+                last_time, last_value = self._state_list[-1]
+                first_time, first_value = self._state_list[0]
+
+                elapsed_time = (last_time - first_time).total_seconds()
+                delta_value = Decimal(last_value) - Decimal(first_value)
+                derivative = (
+                    delta_value
+                    / Decimal(elapsed_time)
+                    / Decimal(self._unit_prefix)
+                    * Decimal(self._unit_time)
                 )
                 assert isinstance(derivative, Decimal)
             except ValueError as err:

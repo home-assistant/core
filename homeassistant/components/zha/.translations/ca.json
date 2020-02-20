@@ -54,14 +54,14 @@
             "device_shaken": "Dispositiu sacsejat",
             "device_slid": "Dispositiu lliscat a \"{subtype}\"",
             "device_tilted": "Dispositiu inclinat",
-            "remote_button_double_press": "Bot\u00f3 \"{subtype}\" clicat dues vegades consecutives",
-            "remote_button_long_press": "Bot\u00f3 \"{subtype}\" premut continuament",
+            "remote_button_double_press": "Bot\u00f3 \"{subtype}\" clicat dues vegades",
+            "remote_button_long_press": "Bot\u00f3 \"{subtype}\" premut cont\u00ednuament",
             "remote_button_long_release": "Bot\u00f3 \"{subtype}\" alliberat despr\u00e9s d'una estona premut",
-            "remote_button_quadruple_press": "Bot\u00f3 \"{subtype}\" clicat quatre vegades consecutives",
-            "remote_button_quintuple_press": "Bot\u00f3 \"{subtype}\" clicat cinc vegades consecutives",
+            "remote_button_quadruple_press": "Bot\u00f3 \"{subtype}\" clicat quatre vegades",
+            "remote_button_quintuple_press": "Bot\u00f3 \"{subtype}\" clicat cinc vegades",
             "remote_button_short_press": "Bot\u00f3 \"{subtype}\" premut",
             "remote_button_short_release": "Bot\u00f3 \"{subtype}\" alliberat",
-            "remote_button_triple_press": "Bot\u00f3 \"{subtype}\" clicat tres vegades consecutives"
+            "remote_button_triple_press": "Bot\u00f3 \"{subtype}\" clicat tres vegades"
         }
     }
 }

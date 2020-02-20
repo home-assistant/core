@@ -178,15 +178,14 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     async def async_discover(discovery_payload):
         """Discover and add an MQTT cover."""
+        discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
         try:
-            discovery_hash = discovery_payload.pop(ATTR_DISCOVERY_HASH)
             config = PLATFORM_SCHEMA(discovery_payload)
             await _async_setup_entity(
                 config, async_add_entities, config_entry, discovery_hash
             )
         except Exception:
-            if discovery_hash:
-                clear_discovery_hash(hass, discovery_hash)
+            clear_discovery_hash(hass, discovery_hash)
             raise
 
     async_dispatcher_connect(

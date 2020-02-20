@@ -197,7 +197,6 @@ class DeviceTracker:
             self.track_new,
             dev_id,
             mac,
-            (host_name or dev_id).replace("_", " "),
             picture=picture,
             icon=icon,
             hide_if_away=self.defaults.get(CONF_AWAY_HIDE, DEFAULT_AWAY_HIDE),
@@ -342,7 +341,7 @@ class Device(RestoreEntity):
     @property
     def name(self):
         """Return the name of the entity."""
-        return self.config_name or self.host_name or DEVICE_DEFAULT_NAME
+        return self.config_name or self.host_name or self.dev_id or DEVICE_DEFAULT_NAME
 
     @property
     def state(self):
@@ -393,7 +392,7 @@ class Device(RestoreEntity):
         """Mark the device as seen."""
         self.source_type = source_type
         self.last_seen = dt_util.utcnow()
-        self.host_name = host_name
+        self.host_name = host_name or self.host_name
         self.location_name = location_name
         self.consider_home = consider_home or self.consider_home
 
@@ -519,24 +518,21 @@ async def async_load_config(
 
     This method is a coroutine.
     """
-    dev_schema = vol.All(
-        cv.deprecated(CONF_AWAY_HIDE, invalidation_version="0.107.0"),
-        vol.Schema(
-            {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_ICON, default=None): vol.Any(None, cv.icon),
-                vol.Optional("track", default=False): cv.boolean,
-                vol.Optional(CONF_MAC, default=None): vol.Any(
-                    None, vol.All(cv.string, vol.Upper)
-                ),
-                vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
-                vol.Optional("gravatar", default=None): vol.Any(None, cv.string),
-                vol.Optional("picture", default=None): vol.Any(None, cv.string),
-                vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
-                    cv.time_period, cv.positive_timedelta
-                ),
-            }
-        ),
+    dev_schema = vol.Schema(
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_ICON, default=None): vol.Any(None, cv.icon),
+            vol.Optional("track", default=False): cv.boolean,
+            vol.Optional(CONF_MAC, default=None): vol.Any(
+                None, vol.All(cv.string, vol.Upper)
+            ),
+            vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
+            vol.Optional("gravatar", default=None): vol.Any(None, cv.string),
+            vol.Optional("picture", default=None): vol.Any(None, cv.string),
+            vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
+                cv.time_period, cv.positive_timedelta
+            ),
+        }
     )
     result = []
     try:
