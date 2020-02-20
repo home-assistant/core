@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     entities = []
     for device in discovery_info:
-        device_name = device.get("function").get("name")
+        device_name = device["function"]["name"]
         if device_name == SUPLA_SHUTTER:
             entities.append(SuplaCover(device))
         elif device_name == SUPLA_GATE:
