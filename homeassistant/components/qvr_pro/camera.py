@@ -26,14 +26,29 @@ class QVRProCamera(Camera):
     def __init__(self, name, model, brand, channel_index, guid, client):
         """Init QVR Pro camera."""
 
-        self.name = f"{SHORT_NAME} {name}"
-        self.model = model
-        self.brand = brand
+        self._name = f"{SHORT_NAME} {name}"
+        self._model = model
+        self._brand = brand
         self.index = channel_index
         self.guid = guid
         self._client = client
 
         super().__init__()
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._name
+
+    @property
+    def model(self):
+        """Return the model of the entity."""
+        return self._model
+
+    @property
+    def brand(self):
+        """Return the brand of the entity."""
+        return self._brand
 
     @property
     def device_state_attributes(self):
