@@ -49,3 +49,12 @@ if [ ! -e "/data/data/pl.sviete.dom/files/home/AIS/.dom/rclone.conf" ] ; then
 fi
 
 # ln -s /sdcard/dom dysk-wewnętrzny
+
+
+if [ ! -e "/data/data/pl.sviete.dom/dom_cloud_drives" ] ; then
+    mkdir -p /data/data/pl.sviete.dom/dom_cloud_drives
+fi
+
+if [ ! -e "/data/data/pl.sviete.dom/files/home/dom/dyski-zdalne" ] ; then
+    ln -s /data/data/pl.sviete.dom/dom_cloud_drives/  /data/data/pl.sviete.dom/files/home/dom/dyski-zdalne
+fi
