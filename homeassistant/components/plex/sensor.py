@@ -113,8 +113,8 @@ class PlexSensor(Entity):
                 # example:
                 # "Supernatural (2005) - s01e13 - Route 666"
                 season_title = sess.grandparentTitle
-                if sess.year is not None:
-                    season_title += f" ({sess.year!s})"
+                if sess.show().year is not None:
+                    season_title += f" ({sess.show().year!s})"
                 season_episode = sess.seasonEpisode
                 episode_title = sess.title
                 now_playing_title = (
