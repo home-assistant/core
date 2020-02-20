@@ -12,6 +12,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_START,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -70,10 +71,16 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
     max_age = config.get(CONF_MAX_AGE, None)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, None)
     precision = config.get(CONF_PRECISION)
 
     async_add_entities(
-        [StatisticsSensor(entity_id, name, sampling_size, max_age, precision)], True
+        [
+            StatisticsSensor(
+                entity_id, name, sampling_size, max_age, precision, scan_interval
+            )
+        ],
+        True,
     )
 
     return True
@@ -82,7 +89,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class StatisticsSensor(Entity):
     """Representation of a Statistics sensor."""
 
-    def __init__(self, entity_id, name, sampling_size, max_age, precision):
+    def __init__(
+        self, entity_id, name, sampling_size, max_age, precision, scan_interval=None
+    ):
         """Initialize the Statistics sensor."""
         self._entity_id = entity_id
         self.is_binary = self._entity_id.split(".")[0] == "binary_sensor"
@@ -91,6 +100,7 @@ class StatisticsSensor(Entity):
         self._max_age = max_age
         self._precision = precision
         self._unit_of_measurement = None
+        self._fixed_update_interval = scan_interval
         self.states = deque(maxlen=self._sampling_size)
         self.ages = deque(maxlen=self._sampling_size)
 
@@ -112,8 +122,7 @@ class StatisticsSensor(Entity):
             )
 
             self._add_state_to_queue(new_state)
-
-            self.async_schedule_update_ha_state(True)
+            self.hass.async_create_task(self._async_process_samples())
 
         @callback
         def async_stats_sensor_startup(event):
@@ -168,8 +177,8 @@ class StatisticsSensor(Entity):
 
     @property
     def should_poll(self):
-        """No polling needed."""
-        return False
+        """No polling needed, unless a explicit scan interval is set."""
+        return self._fixed_update_interval is not None
 
     @property
     def device_state_attributes(self):
@@ -227,8 +236,8 @@ class StatisticsSensor(Entity):
             return self.ages[0] + self._max_age
         return None
 
-    async def async_update(self):
-        """Get the latest data and updates the states."""
+    async def _async_process_samples(self, *_args):
+        """Process the data, generating new internal state and attributes."""
         _LOGGER.debug("%s: updating statistics.", self.entity_id)
         if self._max_age is not None:
             self._purge_old()
@@ -290,15 +299,13 @@ class StatisticsSensor(Entity):
                 "%s: scheduling update at %s", self.entity_id, self._next_purge
             )
 
-            @callback
-            def _scheduled_update(now):
-                """Timer callback for sensor update."""
-                _LOGGER.debug("%s: executing scheduled update", self.entity_id)
-                self.async_schedule_update_ha_state(True)
-
             async_track_point_in_utc_time(
-                self.hass, _scheduled_update, next_to_purge_timestamp
+                self.hass, self._async_process_samples, next_to_purge_timestamp
             )
+
+        if self._fixed_update_interval is None:
+            # without explicit scan interval, each sample generates a new state
+            self.async_schedule_update_ha_state()
 
     async def _async_initialize_from_database(self):
         """Initialize the list of states from the database.
@@ -337,6 +344,7 @@ class StatisticsSensor(Entity):
         for state in reversed(states):
             self._add_state_to_queue(state)
 
-        self.async_schedule_update_ha_state(True)
+        await self._async_process_samples()
+        await self.async_update_ha_state()
 
         _LOGGER.debug("%s: initializing from database completed", self.entity_id)
