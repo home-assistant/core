@@ -43,7 +43,6 @@ GROUP_NAME_ALL_AUTOMATIONS = "all automations"
 
 CONF_ALIAS = "alias"
 CONF_DESCRIPTION = "description"
-CONF_HIDE_ENTITY = "hide_entity"
 
 CONF_CONDITION = "condition"
 CONF_ACTION = "action"
@@ -57,7 +56,6 @@ CONDITION_TYPE_AND = "and"
 CONDITION_TYPE_OR = "or"
 
 DEFAULT_CONDITION_TYPE = CONDITION_TYPE_AND
-DEFAULT_HIDE_ENTITY = False
 DEFAULT_INITIAL_STATE = True
 
 ATTR_LAST_TRIGGERED = "last_triggered"
@@ -94,7 +92,6 @@ _TRIGGER_SCHEMA = vol.All(
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_HIDE_ENTITY, invalidation_version="0.107"),
     vol.Schema(
         {
             # str on purpose
@@ -102,7 +99,6 @@ PLATFORM_SCHEMA = vol.All(
             CONF_ALIAS: cv.string,
             vol.Optional(CONF_DESCRIPTION): cv.string,
             vol.Optional(CONF_INITIAL_STATE): cv.boolean,
-            vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
             vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
             vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
             vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
@@ -237,7 +233,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         trigger_config,
         cond_func,
         action_script,
-        hidden,
         initial_state,
     ):
         """Initialize an automation entity."""
@@ -248,7 +243,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
         self._cond_func = cond_func
         self.action_script = action_script
         self._last_triggered = None
-        self._hidden = hidden
         self._initial_state = initial_state
         self._is_enabled = False
         self._referenced_entities: Optional[Set[str]] = None
@@ -273,11 +267,6 @@ class AutomationEntity(ToggleEntity, RestoreEntity):
     def state_attributes(self):
         """Return the entity state attributes."""
         return {ATTR_LAST_TRIGGERED: self._last_triggered}
-
-    @property
-    def hidden(self) -> bool:
-        """Return True if the automation entity should be hidden from UIs."""
-        return self._hidden
 
     @property
     def is_on(self) -> bool:
@@ -505,7 +494,6 @@ async def _async_process_config(hass, config, component):
             automation_id = config_block.get(CONF_ID)
             name = config_block.get(CONF_ALIAS) or f"{config_key} {list_no}"
 
-            hidden = config_block[CONF_HIDE_ENTITY]
             initial_state = config_block.get(CONF_INITIAL_STATE)
 
             action_script = script.Script(hass, config_block.get(CONF_ACTION, {}), name)
@@ -524,7 +512,6 @@ async def _async_process_config(hass, config, component):
                 config_block[CONF_TRIGGER],
                 cond_func,
                 action_script,
-                hidden,
                 initial_state,
             )
 
