@@ -46,13 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_BRIDGES): vol.All(
-                    cv.ensure_list,
-                    [
-                        vol.All(
-                            cv.deprecated("filename", invalidation_version="0.106.0"),
-                            BRIDGE_CONFIG_SCHEMA,
-                        ),
-                    ],
+                    cv.ensure_list, [BRIDGE_CONFIG_SCHEMA],
                 )
             }
         )
