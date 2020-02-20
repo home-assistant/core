@@ -11,8 +11,6 @@ import homeassistant.components.zha.core.channels.base as base_channels
 import homeassistant.components.zha.core.const as zha_const
 import homeassistant.components.zha.core.registries as registries
 
-from .common import get_zha_gateway
-
 
 @pytest.fixture
 def ieee():
@@ -27,18 +25,12 @@ def nwk():
 
 
 @pytest.fixture
-async def zha_gateway(hass, setup_zha):
-    """Return ZhaGateway fixture."""
-    await setup_zha()
-    return get_zha_gateway(hass)
-
-
-@pytest.fixture
-def ep_channels():
+def channel_pool():
     """Endpoint Channels fixture."""
-    ep_ch_mock = mock.MagicMock(spec_set=zha_channels.ChannelPool)
-    ep_ch_mock.id = 1
-    return ep_ch_mock
+    ch_pool_mock = mock.MagicMock(spec_set=zha_channels.ChannelPool)
+    type(ch_pool_mock).skip_configuration = mock.PropertyMock(return_value=False)
+    ch_pool_mock.id = 1
+    return ch_pool_mock
 
 
 @pytest.mark.parametrize(
@@ -85,7 +77,7 @@ def ep_channels():
     ],
 )
 async def test_in_channel_config(
-    cluster_id, bind_count, attrs, hass, ep_channels, zigpy_device_mock, zha_gateway
+    cluster_id, bind_count, attrs, channel_pool, zigpy_device_mock
 ):
     """Test ZHA core channel configuration for input clusters."""
     zigpy_dev = zigpy_device_mock(
@@ -99,7 +91,7 @@ async def test_in_channel_config(
     channel_class = registries.ZIGBEE_CHANNEL_REGISTRY.get(
         cluster_id, base_channels.AttributeListeningChannel
     )
-    channel = channel_class(cluster, ep_channels)
+    channel = channel_class(cluster, channel_pool)
 
     await channel.async_configure()
 
@@ -142,7 +134,7 @@ async def test_in_channel_config(
     ],
 )
 async def test_out_channel_config(
-    cluster_id, bind_count, zha_gateway, hass, ep_channels, zigpy_device_mock
+    cluster_id, bind_count, channel_pool, zigpy_device_mock
 ):
     """Test ZHA core channel configuration for output clusters."""
     zigpy_dev = zigpy_device_mock(
@@ -157,7 +149,7 @@ async def test_out_channel_config(
     channel_class = registries.ZIGBEE_CHANNEL_REGISTRY.get(
         cluster_id, base_channels.AttributeListeningChannel
     )
-    channel = channel_class(cluster, ep_channels)
+    channel = channel_class(cluster, channel_pool)
 
     await channel.async_configure()
 
