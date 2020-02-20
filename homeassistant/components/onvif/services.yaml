@@ -1,4 +1,4 @@
-onvif_ptz:
+ptz:
   description: If your ONVIF camera supports PTZ, you will be able to pan, tilt or zoom your camera.
   fields:
     entity_id:
