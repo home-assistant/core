@@ -71,7 +71,7 @@ class LightwaveBattery(Entity):
     def device_state_attributes(self):
         """Return the device state attributes."""
         return {
-            "Device Type": "LightwaveRF TRV",
+            "device_type": "LightwaveRF TRV",
         }
 
     def update(self):
