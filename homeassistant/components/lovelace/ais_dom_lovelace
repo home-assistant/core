@@ -1,6 +1,7 @@
 {
     "data": {
         "config": {
+            "background": "center / cover no-repeat url(\"/static/ais_dom/ais_backgroud.jpg\") fixed",
             "resources": [],
             "title": "Asystent domowy",
             "views": [
@@ -14,9 +15,19 @@
                     ],
                     "cards": [
                         {
-                            "content": "**Witaj [[ {user} ]]**. Mi\u0142o nam Ci\u0119 poinformowa\u0107, \u017ce mo\u017cesz dostosowa\u0107 wygl\u0105d aplikacji. \n\n\nW instrukcji wyja\u015bniamy [jak w\u0142\u0105czy\u0107 tryb konfiguracji](https://sviete.github.io/AIS-docs/docs/en/ais_app_ui_config.html).\n\nW przyk\u0142adowym widoku  <ha-icon icon=\"mdi:google-circles-extended\"></ha-icon> **Jednostki** automatycznie wype\u0142niamy karty pozycjami spe\u0142niaj\u0105cymi okre\u015blone kryteria, w ten spos\u00f3b podpowiadamy jak mo\u017cesz tworzy\u0107 w\u0142asne karty <ha-icon icon=\"mdi:cat\"></ha-icon> <ha-icon icon=\"mdi:auto-fix\"></ha-icon>. Sprawdz konfiguracj\u0119 kart na tym widoku i j\u0105 kopiuj do w\u0142asnych widok\u00f3w <ha-icon icon=\"mdi:certificate\"></ha-icon>  \n\nReszta nale\u017cy do Ciebie- nadszed\u0142 czas, \u017ceby\u015b przej\u0105\u0142/przej\u0119\u0142a kontrol\u0119 nad konfiguracj\u0105 interfejsu!\n\n<p>\nAI-Speaker\n<img src=\"/static/icons/favicon-50x50.png\">\n</p>\n\n\n",
-                            "title": "Dostosuj sw\u00f3j interfejs!",
-                            "type": "markdown"
+                            "cards": [
+                                {
+                                    "content": "#  **Cze\u015b\u0107 [[ {user} ]]**. \n\n### Witamy w systemie Asystent domowy  <ha-icon icon=\"mdi:party-popper\" ></ha-icon> \n#### Dzi\u0119kujemy, \u017ce nam zaufa\u0142e\u015b i wybra\u0142e\u015b naszego **Asystenta domowego**! \n Mam nadziej\u0119, \u017ce spe\u0142ni\u0105 si\u0119 Twoje wszystkie oczekiwania i \u017ce uprzyjemnimy Ci dotwarzanie multimedi\u00f3w i sterowanie urz\u0105dzeniami w domu :)\n\n------------------------\nWiadomo\u015b\u0107, kt\u00f3r\u0105 teraz czytasz, umieszczona jest na **karcie**  <ha-icon icon=\"mdi:card-bulleted-outline\" ></ha-icon>    na pierwszym **widoku** <ha-icon icon=\"mdi:home\" ></ha-icon> interfejsu u\u017cytkownika **Asystenta domowego**. \n\nInterfejs dzia\u0142a na urz\u0105dzeniach mobilnych oraz stacjonarnych i jest konfigurowalny, tak \u017ceby\u015b\u00a0m\u00f3g\u0142 w szybki i \u0142atwy spos\u00f3b doda\u0107 tu, w\u0142asne widoki oraz karty, a nast\u0119pnie umie\u015bci\u0142 na nich swoje sterowalne urz\u0105dzenia domowe. \n\n\nW instrukcji wyja\u015bniamy [jak w\u0142\u0105czy\u0107 tryb konfiguracji interfejsu](https://sviete.github.io/AIS-docs/docs/en/ais_app_ui_config.html), by dostosowa\u0107 wygl\u0105d do w\u0142asnych preferencji. \nNa drugim widoku **Jednostki**  <ha-icon icon=\"mdi:google-circles-extended\" ></ha-icon> prezentujemy przyk\u0142adowe karty, kt\u00f3re mo\u017cesz kopiowa\u0107 do w\u0142asnych widok\u00f3w. \n\n------------------------\n AI-Speaker [[ sensor.daytodisplay ]]\n",
+                                    "style": "ha-card {\n  background: #323232cc;\n }\n",
+                                    "type": "markdown"
+                                },
+                                {
+                                    "content": "<img src=\"/static/icons/favicon-50x50.png\">",
+                                    "style": "@keyframes animateAisLogo {\n  0% {\n  opacity:1;\n  transform: scale(0.2);\n  }\n  30% {\n  opacity:0.8;\n  transform: scale(0.3);\n  }\n  45% {\n  opacity:0.6;\n  transform: scale(0.6);\n  }\n  65% {\n  opacity:0.3;\n  transform: scale(0.8);\n  }\n  100% {\n  opacity:0;\n  transform: scale(1.2);\n  }\n}\nha-card {\n  position: absolute;\n  bottom: 20px;\n  right: 20px;\n  background: none;\n  box-shadow: none;\n}\nha-card img {\n  animation: animateAisLogo 20s linear infinite;\n}\n",
+                                    "type": "markdown"
+                                }
+                            ],
+                            "type": "vertical-stack"
                         }
                     ],
                     "icon": "mdi:home-outline",
