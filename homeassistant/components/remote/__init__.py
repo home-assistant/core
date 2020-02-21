@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.loader import bind_hass
 
-# mypy: allow-untyped-calls, no-check-untyped-defs
+# mypy: allow-untyped-calls, no-check-untyped-defs, allow-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
 
