@@ -2,29 +2,15 @@
 from unittest.mock import patch
 
 from homeassistant.components.asuswrt import (
-    CONF_MODE,
-    CONF_PORT,
-    CONF_PROTOCOL,
+    CONF_DNSMASQ,
+    CONF_INTERFACE,
     DATA_ASUSWRT,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro_func
-
-FAKEFILE = None
-
-VALID_CONFIG_ROUTER_SSH = {
-    DOMAIN: {
-        CONF_PLATFORM: "asuswrt",
-        CONF_HOST: "fake_host",
-        CONF_USERNAME: "fake_user",
-        CONF_PROTOCOL: "ssh",
-        CONF_MODE: "router",
-        CONF_PORT: "22",
-    }
-}
 
 
 async def test_password_or_pub_key_required(hass):
@@ -33,7 +19,9 @@ async def test_password_or_pub_key_required(hass):
         AsusWrt().connection.async_connect = mock_coro_func()
         AsusWrt().is_connected = False
         result = await async_setup_component(
-            hass, DOMAIN, {DOMAIN: {CONF_HOST: "fake_host", CONF_USERNAME: "fake_user"}}
+            hass,
+            DOMAIN,
+            {DOMAIN: {CONF_HOST: "fake_host", CONF_USERNAME: "fake_user"}},
         )
         assert not result
 
@@ -53,8 +41,74 @@ async def test_get_scanner_with_password_no_pubkey(hass):
                     CONF_HOST: "fake_host",
                     CONF_USERNAME: "fake_user",
                     CONF_PASSWORD: "4321",
+                    CONF_DNSMASQ: "/",
                 }
             },
         )
         assert result
         assert hass.data[DATA_ASUSWRT] is not None
+
+
+async def test_specify_non_directory_path_for_dnsmasq(hass):
+    """Test creating an AsusWRT scanner with a dnsmasq location which is not a valid directory."""
+    with patch("homeassistant.components.asuswrt.AsusWrt") as AsusWrt:
+        AsusWrt().connection.async_connect = mock_coro_func()
+        AsusWrt().is_connected = False
+        result = await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    CONF_HOST: "fake_host",
+                    CONF_USERNAME: "fake_user",
+                    CONF_PASSWORD: "4321",
+                    CONF_DNSMASQ: "?non_directory?",
+                }
+            },
+        )
+        assert not result
+
+
+async def test_interface(hass):
+    """Test creating an AsusWRT scanner using interface eth1."""
+    with patch("homeassistant.components.asuswrt.AsusWrt") as AsusWrt:
+        AsusWrt().connection.async_connect = mock_coro_func()
+        AsusWrt().connection.async_get_connected_devices = mock_coro_func(
+            return_value={}
+        )
+        result = await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    CONF_HOST: "fake_host",
+                    CONF_USERNAME: "fake_user",
+                    CONF_PASSWORD: "4321",
+                    CONF_DNSMASQ: "/",
+                    CONF_INTERFACE: "eth1",
+                }
+            },
+        )
+        assert result
+        assert hass.data[DATA_ASUSWRT] is not None
+
+
+async def test_no_interface(hass):
+    """Test creating an AsusWRT scanner using no interface."""
+    with patch("homeassistant.components.asuswrt.AsusWrt") as AsusWrt:
+        AsusWrt().connection.async_connect = mock_coro_func()
+        AsusWrt().is_connected = False
+        result = await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    CONF_HOST: "fake_host",
+                    CONF_USERNAME: "fake_user",
+                    CONF_PASSWORD: "4321",
+                    CONF_DNSMASQ: "/",
+                    CONF_INTERFACE: None,
+                }
+            },
+        )
+        assert not result
