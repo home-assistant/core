@@ -343,7 +343,7 @@ bravia-tv==1.0
 broadlink==0.12.0
 
 # homeassistant.components.brother
-brother==0.1.4
+brother==0.1.6
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==0.0.1
@@ -683,7 +683,7 @@ hole==0.5.0
 holidays==0.10.1
 
 # homeassistant.components.frontend
-home-assistant-frontend==20200219.0
+home-assistant-frontend==20200220.1
 
 # homeassistant.components.zwave
 homeassistant-pyozw==0.1.8
@@ -1075,7 +1075,7 @@ pushover_complete==1.1.1
 pwmled==1.5.0
 
 # homeassistant.components.august
-py-august==0.14.0
+py-august==0.17.0
 
 # homeassistant.components.canary
 py-canary==0.5.0
@@ -1145,7 +1145,7 @@ pyalmond==0.0.2
 pyarlo==0.2.3
 
 # homeassistant.components.netatmo
-pyatmo==3.2.2
+pyatmo==3.2.4
 
 # homeassistant.components.atome
 pyatome==0.1.1
@@ -1701,7 +1701,7 @@ pyversasense==0.0.6
 pyvesync==1.1.0
 
 # homeassistant.components.vizio
-pyvizio==0.1.21
+pyvizio==0.1.26
 
 # homeassistant.components.velux
 pyvlx==0.2.12

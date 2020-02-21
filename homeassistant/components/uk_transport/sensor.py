@@ -1,8 +1,4 @@
-"""Support for UK public transport data provided by transportapi.com.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.uk_transport/
-"""
+"""Support for UK public transport data provided by transportapi.com."""
 from datetime import datetime, timedelta
 import logging
 import re
