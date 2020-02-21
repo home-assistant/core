@@ -107,7 +107,7 @@ class AFSAPIDevice(MediaPlayerDevice):
         self._source = None
         self._source_list = None
         self._media_image_url = None
-        self._volume_steps = None
+        self._max_volume = None
         self._volume_level = None
 
     # Properties
@@ -194,9 +194,9 @@ class AFSAPIDevice(MediaPlayerDevice):
             self._source_list = await fs_device.get_mode_list()
 
         # The API seems to include 'zero' in the number of steps (e.g. if the range is
-        # 0-40 then get_volume_steps returns 41) subtract one to get max volume step.
-        if not self._volume_steps:
-            self._volume_steps = int(await fs_device.get_volume_steps()) - 1
+        # 0-40 then get_volume_steps returns 41) subtract one to get the max volume.
+        if not self._max_volume:
+            self._max_volume = int(await fs_device.get_volume_steps()) - 1
 
         status = await fs_device.get_play_status()
         self._state = {
@@ -221,7 +221,7 @@ class AFSAPIDevice(MediaPlayerDevice):
 
             volume = await self.fs_device.get_volume()
 
-            self._volume_level = float(volume or 0) / self._volume_steps
+            self._volume_level = float(volume or 0) / self._max_volume
         else:
             self._title = None
             self._artist = None
@@ -285,7 +285,7 @@ class AFSAPIDevice(MediaPlayerDevice):
         """Send volume up command."""
         volume = await self.fs_device.get_volume()
         volume = int(volume or 0) + 1
-        await self.fs_device.set_volume(min(volume, self._volume_steps))
+        await self.fs_device.set_volume(min(volume, self._max_volume))
 
     async def async_volume_down(self):
         """Send volume down command."""
@@ -295,7 +295,7 @@ class AFSAPIDevice(MediaPlayerDevice):
 
     async def async_set_volume_level(self, volume):
         """Set volume command."""
-        volume = int(volume * self._volume_steps)
+        volume = int(volume * self._max_volume)
         await self.fs_device.set_volume(volume)
 
     async def async_select_source(self, source):
