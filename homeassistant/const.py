@@ -348,6 +348,8 @@ TIME_SECONDS = "s"
 TIME_MINUTES = "min"
 TIME_HOURS = "h"
 TIME_DAYS = "d"
+TIME_MONTHS = "m"
+TIME_YEARS = "y"
 
 # Length units
 LENGTH_CENTIMETERS: str = "cm"
