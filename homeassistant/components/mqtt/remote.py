@@ -25,7 +25,6 @@ from . import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    CONF_UNIQUE_ID,
     MqttAttributes,
     MqttAvailability,
     MqttEntityDeviceInfo,
@@ -38,7 +37,8 @@ DEFAULT_NAME = "MQTT Remote"
 DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_ON = "ON"
 DEFAULT_PAYLOAD_OFF = "OFF"
-
+CONF_STATE_ON = "state_on"
+CONF_STATE_OFF = "state_off"
 CONF_COMMANDS = "commands"
 
 COMMAND_SCHEMA = vol.Schema(
@@ -55,6 +55,8 @@ PLATFORM_SCHEMA = (
             vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
             vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
             vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+            vol.Optional(CONF_STATE_OFF): cv.string,
+            vol.Optional(CONF_STATE_ON): cv.string,
             vol.Optional(CONF_COMMANDS, default={}): cv.schema_with_slug_keys(
                 COMMAND_SCHEMA
             ),
@@ -87,16 +89,18 @@ class MqttRemote(
         """Initialize the MQTT remote."""
         self._state = False
         self._sub_state = None
-
-        self._state_on = None
-        self._state_off = None
         self._optimistic = None
-        self._unique_id = config.get(CONF_UNIQUE_ID)
 
         # Load config
         self._config = config
         self._optimistic = config[CONF_OPTIMISTIC]
         self._commands = config.get(CONF_COMMANDS)
+
+        state_on = config.get(CONF_STATE_ON)
+        self._state_on = state_on if state_on else config[CONF_PAYLOAD_ON]
+
+        state_off = config.get(CONF_STATE_OFF)
+        self._state_off = state_off if state_off else config[CONF_PAYLOAD_OFF]
 
         device_config = config.get(CONF_DEVICE)
 
@@ -188,11 +192,6 @@ class MqttRemote(
     def assumed_state(self):
         """Return true if we do optimistic updates."""
         return self._optimistic
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self._unique_id
 
     @property
     def icon(self):

@@ -31,6 +31,7 @@ ABBREVIATIONS = {
     "cmd_on_tpl": "command_on_template",
     "cmd_t": "command_topic",
     "cmd_tpl": "command_template",
+    "cmds": "commands",
     "cod_arm_req": "code_arm_required",
     "cod_dis_req": "code_disarm_required",
     "curr_temp_t": "current_temperature_topic",

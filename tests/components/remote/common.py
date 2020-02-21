@@ -48,6 +48,25 @@ def turn_off(hass, activity=None, entity_id=ENTITY_MATCH_ALL):
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
+async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL):
+    """Turn all or specified switch on."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data, blocking=True)
+
+
+async def async_turn_off(hass, entity_id=ENTITY_MATCH_ALL):
+    """Turn all or specified switch off."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data, blocking=True)
+
+
+async def async_send_command(hass, command, entity_id=ENTITY_MATCH_ALL):
+    """Send command to all or specified vacuum."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data[ATTR_COMMAND] = command
+    await hass.services.async_call(DOMAIN, SERVICE_SEND_COMMAND, data, blocking=True)
+
+
 @bind_hass
 def send_command(
     hass,
