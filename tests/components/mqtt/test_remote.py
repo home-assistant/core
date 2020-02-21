@@ -101,6 +101,59 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock):
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
+async def test_receiving_mqtt_state_with_optimistic_off(hass, mqtt_mock):
+    """Test optimistic mode without state topic."""
+    assert await async_setup_component(
+        hass,
+        remote.DOMAIN,
+        {
+            remote.DOMAIN: {
+                "platform": "mqtt",
+                "name": "test",
+                "command_topic": "command-topic",
+                "payload_on": "ON",
+                "payload_off": "OFF",
+                "state_topic": "state-topic",
+                "state_on": "STATE_ON",
+                "state_off": "STATE_OFF",
+                "optimistic": False,
+            }
+        },
+    )
+
+    state = hass.states.get("remote.test")
+    assert state.state is STATE_OFF
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Try with payload_on command, shouldn't work since state_on was defined
+    async_fire_mqtt_message(hass, "state-topic", "ON")
+
+    state = hass.states.get("remote.test")
+    assert state.state is STATE_OFF
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Try with state_on command, should work
+    async_fire_mqtt_message(hass, "state-topic", "STATE_ON")
+
+    state = hass.states.get("remote.test")
+    assert state.state is STATE_ON
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Try with payload_off command, shouldn't work since state_off was defined
+    async_fire_mqtt_message(hass, "state-topic", "OFF")
+
+    state = hass.states.get("remote.test")
+    assert state.state is STATE_ON
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+    # Try with state_off command, should work
+    async_fire_mqtt_message(hass, "state-topic", "STATE_OFF")
+
+    state = hass.states.get("remote.test")
+    assert state.state is STATE_OFF
+    assert not state.attributes.get(ATTR_ASSUMED_STATE)
+
+
 async def test_default_availability_payload(hass, mqtt_mock):
     """Test availability by default payload with defined topic."""
     assert await async_setup_component(

@@ -71,7 +71,7 @@ async def async_setup_platform(
     hass: HomeAssistantType, config: ConfigType, async_add_entities, discovery_info=None
 ):
     """Set up MQTT remote through configuration.yaml."""
-    await _async_setup_entity(config, async_add_entities, discovery_info)
+    await _async_setup_entity(config, async_add_entities)
 
 
 async def _async_setup_entity(config, async_add_entities, config_entry=None):
@@ -94,7 +94,7 @@ class MqttRemote(
         # Load config
         self._config = config
         self._optimistic = config[CONF_OPTIMISTIC]
-        self._commands = config.get(CONF_COMMANDS)
+        self._commands = config[CONF_COMMANDS]
 
         state_on = config.get(CONF_STATE_ON)
         self._state_on = state_on if state_on else config[CONF_PAYLOAD_ON]
@@ -113,16 +113,6 @@ class MqttRemote(
         await super().async_added_to_hass()
         await self._subscribe_topics()
 
-    async def discovery_update(self, discovery_payload):
-        """Handle updated discovery message."""
-        config = PLATFORM_SCHEMA(discovery_payload)
-        self._config = config
-        await self.attributes_discovery_update(config)
-        await self.availability_discovery_update(config)
-        await self.device_info_discovery_update(config)
-        await self._subscribe_topics()
-        self.async_write_ha_state()
-
     async def _subscribe_topics(self):
         """(Re)Subscribe to topics."""
         value_template = self._config.get(CONF_VALUE_TEMPLATE)
@@ -139,9 +129,9 @@ class MqttRemote(
                 payload = value_template.async_render_with_possible_json_value(
                     payload, variables={"entity_id": self.entity_id}
                 )
-            if payload == self._config[CONF_PAYLOAD_ON]:
+            if payload == self._state_on:
                 self._state = True
-            elif payload == self._config[CONF_PAYLOAD_OFF]:
+            elif payload == self._state_off:
                 self._state = False
             else:  # Payload is not for this entity
                 _LOGGER.warning(
