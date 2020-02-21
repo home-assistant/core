@@ -38,7 +38,7 @@ def get_stream_source(guid, client):
         full_url = resp["resourceUris"]
 
         protocol = full_url[:7]
-        auth = f"{client._user}:{client._password}@"
+        auth = f"{client.get_auth_string()}@"
         url = full_url[7:]
 
         return f"{protocol}{auth}{url}"
