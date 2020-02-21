@@ -20,7 +20,6 @@ DEFAULT_NAME = "avri"
 ICON = "mdi:trash-can-outline"
 SCAN_INTERVAL = timedelta(hours=4)
 DEFAULT_COUNTRY_CODE = "NL"
-UNIQUE_ID_DELIMITER = "_"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -75,10 +74,10 @@ class AvriWasteUpcoming(Entity):
         """Return a unique ID."""
         return (
             f"{self._waste_type}"
-            f"{UNIQUE_ID_DELIMITER}{self._client.country_code}"
-            f"{UNIQUE_ID_DELIMITER}{self._client.postal_code}"
-            f"{UNIQUE_ID_DELIMITER}{self._client.house_nr}"
-            f"{UNIQUE_ID_DELIMITER}{self._client.house_nr_extension}"
+            f"-{self._client.country_code}"
+            f"-{self._client.postal_code}"
+            f"-{self._client.house_nr}"
+            f"-{self._client.house_nr_extension}"
         )
 
     @property
