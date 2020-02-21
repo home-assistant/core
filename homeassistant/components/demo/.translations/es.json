@@ -13,7 +13,8 @@
             "options_2": {
                 "data": {
                     "multi": "Multiselecci\u00f3n",
-                    "select": "Selecciona una opci\u00f3n"
+                    "select": "Selecciona una opci\u00f3n",
+                    "string": "Valor de cadena"
                 }
             }
         }
