@@ -101,7 +101,7 @@ class LightwaveTrv(ClimateDevice):
         """Return the device state attributes."""
         return {
             ATTR_BATTERY_LEVEL: self._battery,
-            "Device Type": "LightwaveRF TRV",
+            "device_type": "LightwaveRF TRV",
         }
 
     @property
