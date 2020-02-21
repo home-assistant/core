@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 from pyairvisual import Client
-from pyairvisual.errors import AirVisualError
+from pyairvisual.errors import AirVisualError, InvalidKeyError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -117,7 +118,12 @@ async def async_setup_entry(hass, config_entry):
         config_entry.data[CONF_GEOGRAPHIES],
         config_entry.options.get(CONF_SHOW_ON_MAP, config_entry.data[CONF_SHOW_ON_MAP]),
     )
-    await hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id].async_update()
+
+    try:
+        await hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id].async_update()
+    except InvalidKeyError:
+        _LOGGER.error("Invalid API key provided")
+        raise ConfigEntryNotReady
 
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(config_entry, "sensor")
