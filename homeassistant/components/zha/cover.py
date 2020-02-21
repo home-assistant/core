@@ -10,6 +10,7 @@ from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_O
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
+from .core import discovery
 from .core.const import (
     CHANNEL_COVER,
     DATA_ZHA,
@@ -28,17 +29,15 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation cover from config entry."""
-    entities = hass.data[DATA_ZHA][DOMAIN] = []
+    entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
 
-    async def async_discover():
-        """Add enqueued entities."""
-        if not entities:
-            return
-        to_add = [ent(*args) for ent, args in entities]
-        async_add_entities(to_add, update_before_add=True)
-        entities.clear()
-
-    unsub = async_dispatcher_connect(hass, SIGNAL_ADD_ENTITIES, async_discover)
+    unsub = async_dispatcher_connect(
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(
+            discovery.async_add_entities, async_add_entities, entities_to_create
+        ),
+    )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
 

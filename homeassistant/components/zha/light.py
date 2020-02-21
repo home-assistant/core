@@ -45,12 +45,14 @@ PARALLEL_UPDATES = 5
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation light from config entry."""
-    entities = hass.data[DATA_ZHA][light.DOMAIN] = []
+    entities_to_create = hass.data[DATA_ZHA][light.DOMAIN] = []
 
     unsub = async_dispatcher_connect(
         hass,
         SIGNAL_ADD_ENTITIES,
-        functools.partial(discovery.async_add_entities, async_add_entities, entities),
+        functools.partial(
+            discovery.async_add_entities, async_add_entities, entities_to_create
+        ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
