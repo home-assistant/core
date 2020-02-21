@@ -1,15 +1,26 @@
 """Support for Dynalite channels as lights."""
 from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import DOMAIN, LOGGER
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Record the async_add_entities function to add them later when received from Dynalite."""
-    LOGGER.debug("async_setup_entry light entry = %s", config_entry.data)
+    LOGGER.debug("Setting up light entry = %s", config_entry.data)
     bridge = hass.data[DOMAIN][config_entry.entry_id]
-    bridge.register_add_entities(async_add_entities)
+
+    @callback
+    def async_add_lights(devices):
+        added_lights = []
+        for device in devices:
+            if device.category == "light":
+                added_lights.append(DynaliteLight(device, bridge))
+        if added_lights:
+            async_add_entities(added_lights)
+
+    bridge.register_add_devices(async_add_lights)
 
 
 class DynaliteLight(Light):
@@ -19,11 +30,6 @@ class DynaliteLight(Light):
         """Initialize the base class."""
         self._device = device
         self._bridge = bridge
-
-    @property
-    def device(self):
-        """Return the underlying device - mostly for testing."""
-        return self._device
 
     @property
     def name(self):
@@ -40,11 +46,6 @@ class DynaliteLight(Light):
         """Return if entity is available."""
         return self._device.available
 
-    @property
-    def hidden(self):
-        """Return true if this entity should be hidden from UI."""
-        return self._device.hidden
-
     async def async_update(self):
         """Update the entity."""
         return
@@ -52,7 +53,11 @@ class DynaliteLight(Light):
     @property
     def device_info(self):
         """Device info for this entity."""
-        return self._device.device_info
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "Dynalite",
+        }
 
     @property
     def brightness(self):
@@ -77,8 +82,15 @@ class DynaliteLight(Light):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
 
-    @callback
-    def try_schedule_ha(self):
-        """Schedule update HA state if configured."""
-        if self.hass:
-            self.schedule_update_ha_state()
+    async def async_added_to_hass(self):
+        """Added to hass so need to register to dispatch."""
+        # register for device specific update
+        async_dispatcher_connect(
+            self.hass,
+            self._bridge.update_signal(self._device),
+            self.async_schedule_update_ha_state,
+        )
+        # register for wide update
+        async_dispatcher_connect(
+            self.hass, self._bridge.update_signal(), self.async_schedule_update_ha_state
+        )
