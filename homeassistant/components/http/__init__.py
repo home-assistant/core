@@ -1,5 +1,5 @@
 """Support to serve the Home Assistant API as WSGI application."""
-from ipaddress import ip_network
+from ipaddress import IPv6Address, ip_address, ip_network
 import logging
 import os
 import ssl
@@ -112,10 +112,16 @@ class ApiConfig:
         host = host.rstrip("/")
         if host.startswith(("http://", "https://")):
             self.base_url = host
-        elif use_ssl:
-            self.base_url = f"https://{host}"
         else:
-            self.base_url = f"http://{host}"
+            try:
+                if isinstance(ip_address(host), IPv6Address):
+                    host = f"[{host}]"
+            except ValueError:
+                pass
+            if use_ssl:
+                self.base_url = f"https://{host}"
+            else:
+                self.base_url = f"http://{host}"
 
         if port is not None:
             self.base_url += f":{port}"
@@ -186,7 +192,7 @@ async def async_setup(hass, config):
     if host:
         port = None
     elif server_host != DEFAULT_SERVER_HOST:
-        host = server_host
+        host = server_host.split(",")[0]
         port = server_port
     else:
         host = hass_util.get_local_ip()
@@ -242,7 +248,7 @@ class HomeAssistantHTTP:
         self.ssl_profile = ssl_profile
         self._handler = None
         self.runner = None
-        self.site = None
+        self.sites = []
 
     def register_view(self, view):
         """Register a view with the WSGI server.
@@ -342,17 +348,25 @@ class HomeAssistantHTTP:
 
         self.runner = web.AppRunner(self.app)
         await self.runner.setup()
-        self.site = web.TCPSite(
-            self.runner, self.server_host, self.server_port, ssl_context=context
-        )
-        try:
-            await self.site.start()
-        except OSError as error:
-            _LOGGER.error(
-                "Failed to create HTTP server at port %d: %s", self.server_port, error
+
+        for server_host in self.server_host.split(","):
+            site = web.TCPSite(
+                self.runner, server_host, self.server_port, ssl_context=context
             )
+            try:
+                await site.start()
+            except OSError as error:
+                _LOGGER.error(
+                    "Failed to create HTTP server at address %s, port %d: %s",
+                    server_host,
+                    self.server_port,
+                    error,
+                )
+            else:
+                self.sites.append(site)
 
     async def stop(self):
         """Stop the aiohttp server."""
-        await self.site.stop()
+        for site in self.sites:
+            await site.stop()
         await self.runner.cleanup()

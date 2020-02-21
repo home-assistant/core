@@ -46,6 +46,11 @@ class TestApiConfig(unittest.TestCase):
         api_config = http.ApiConfig("1.1.1.1")
         assert api_config.base_url == "http://1.1.1.1:8123"
 
+    def test_api_base_url_with_ipv6(hass):
+        """Test setting API URL with IP."""
+        api_config = http.ApiConfig("fe80::0101:0101")
+        assert api_config.base_url == "http://[fe80::0101:0101]:8123"
+
     def test_api_base_url_with_ip_and_port(hass):
         """Test setting API URL with IP and port."""
         api_config = http.ApiConfig("1.1.1.1", 8124)
@@ -95,6 +100,15 @@ async def test_api_base_url_with_ip(hass):
     """Test setting api url."""
     result = await async_setup_component(
         hass, "http", {"http": {"server_host": "1.1.1.1"}}
+    )
+    assert result
+    assert hass.config.api.base_url == "http://1.1.1.1:8123"
+
+
+async def test_api_base_url_with_multiple_ips(hass):
+    """Test setting api url."""
+    result = await async_setup_component(
+        hass, "http", {"http": {"server_host": "1.1.1.1,fe80::0101:0101"}}
     )
     assert result
     assert hass.config.api.base_url == "http://1.1.1.1:8123"
