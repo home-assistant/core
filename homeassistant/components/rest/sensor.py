@@ -201,11 +201,13 @@ class RestSensor(Entity):
 
         self.rest.update()
         value = self.rest.data
+        _LOGGER.debug("Data fetched from resource: %s", value)
         content_type = self.rest.headers.get("content-type")
 
         if content_type and content_type.startswith("text/xml"):
             try:
                 value = json.dumps(xmltodict.parse(value))
+                _LOGGER.debug("JSON converted from XML: %s", value)
             except ExpatError:
                 _LOGGER.warning(
                     "REST xml result could not be parsed and converted to JSON."
