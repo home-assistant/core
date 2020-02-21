@@ -25,11 +25,15 @@ EZVIZ_DATA = "ezviz"
 ENTITIES = "entities"
 
 
+CAMERA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
+)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_CAMERAS, default={}): dict,
-        vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_CAMERAS, default={}): {cv.string: CAMERA_SCHEMA},
     }
 )
 
