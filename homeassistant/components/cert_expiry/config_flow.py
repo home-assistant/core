@@ -1,16 +1,16 @@
 """Config flow for the Cert Expiry platform."""
 import logging
 import socket
-import ssl
 
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
-from .helper import get_cert
+from .const import DEFAULT_PORT, DOMAIN
+from .errors import TemporaryFailure, ValidationFailure
+from .helper import get_cert_time_to_expiry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,50 +43,51 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return False
 
     async def _test_connection(self, user_input=None):
-        """Test connection to the server and try to get the certtificate."""
-        host = user_input[CONF_HOST]
+        """Test connection to the server and try to get the certificate."""
         try:
-            await self.hass.async_add_executor_job(
-                get_cert, host, user_input.get(CONF_PORT, DEFAULT_PORT)
+            await get_cert_time_to_expiry(
+                self.hass,
+                user_input[CONF_HOST],
+                user_input.get(CONF_PORT, DEFAULT_PORT),
             )
             return True
-        except socket.gaierror:
-            _LOGGER.error("Host cannot be resolved: %s", host)
-            self._errors[CONF_HOST] = "resolve_failed"
-        except socket.timeout:
-            _LOGGER.error("Timed out connecting to %s", host)
-            self._errors[CONF_HOST] = "connection_timeout"
-        except ssl.CertificateError as err:
-            if "doesn't match" in err.args[0]:
-                _LOGGER.error("Certificate does not match host: %s", host)
-                self._errors[CONF_HOST] = "wrong_host"
-            else:
-                _LOGGER.error("Certificate could not be validated: %s", host)
-                self._errors[CONF_HOST] = "certificate_error"
-        except ssl.SSLError:
-            _LOGGER.error("Certificate could not be validated: %s", host)
-            self._errors[CONF_HOST] = "certificate_error"
+        except TemporaryFailure as err:
+            cause = type(err.__cause__)
+            if cause is socket.gaierror:
+                self._errors[CONF_HOST] = "resolve_failed"
+            elif cause is socket.timeout:
+                self._errors[CONF_HOST] = "connection_timeout"
+            elif cause is ConnectionRefusedError:
+                self._errors[CONF_HOST] = "connection_refused"
+        except ValidationFailure:
+            return True
         return False
 
     async def async_step_user(self, user_input=None):
         """Step when user initializes a integration."""
         self._errors = {}
         if user_input is not None:
-            # set some defaults in case we need to return to the form
             if self._prt_in_configuration_exists(user_input):
-                self._errors[CONF_HOST] = "host_port_exists"
-            else:
-                if await self._test_connection(user_input):
-                    return self.async_create_entry(
-                        title=user_input.get(CONF_NAME, DEFAULT_NAME),
-                        data={
-                            CONF_HOST: user_input[CONF_HOST],
-                            CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
-                        },
-                    )
+                return self.async_abort(reason="host_port_exists")
+
+            if await self._test_connection(user_input):
+                host = user_input[CONF_HOST]
+                port = user_input.get(CONF_PORT, DEFAULT_PORT)
+                title = host + (f":{port}" if port != DEFAULT_PORT else "")
+                return self.async_create_entry(
+                    title=title,
+                    data={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input.get(CONF_PORT, DEFAULT_PORT),
+                    },
+                )
+            if (  # pylint: disable=no-member
+                self.context["source"] == config_entries.SOURCE_IMPORT
+            ):
+                _LOGGER.error("Config import failed for %s", user_input[CONF_HOST])
+                return self.async_abort(reason="import_failed")
         else:
             user_input = {}
-            user_input[CONF_NAME] = DEFAULT_NAME
             user_input[CONF_HOST] = ""
             user_input[CONF_PORT] = DEFAULT_PORT
 
@@ -94,9 +95,6 @@ class CertexpiryConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-                    ): str,
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
                     vol.Required(
                         CONF_PORT, default=user_input.get(CONF_PORT, DEFAULT_PORT)
