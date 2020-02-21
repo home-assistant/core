@@ -79,6 +79,9 @@ class DriveFlowHandler(config_entries.ConfigFlow):
             if slugify(DRIVE_NAME_INPUT) in configured_drivers(self.hass):
                 errors = {CONF_NAME: "identifier_exists"}
 
+            if slugify(DRIVE_NAME_INPUT) != DRIVE_NAME_INPUT:
+                errors = {CONF_NAME: "drive_name_error"}
+
             if errors == {}:
                 if DRIVE_TYPE_INPUT == TYPE_DRIVE:
                     # get url from rclone

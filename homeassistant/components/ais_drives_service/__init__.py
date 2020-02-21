@@ -629,6 +629,8 @@ class LocalData:
         self.file_path = None
         self.seek_position = 0
         say = True
+        if "say" in call.data:
+            say = call.data["say"]
         if "file_path" in call.data:
             self.file_path = call.data["file_path"]
             say = False
@@ -671,6 +673,11 @@ class LocalData:
             self.hass.services.call(
                 "ais_drives_service", "rclone_mount_drive", {"name": r["name"]}
             )
+        self.hass.services.call(
+            "ais_drives_service",
+            "browse_path",
+            {"path": G_LOCAL_FILES_ROOT, "say": False},
+        )
 
     def rclone_mount_drive(self, name):
         remotes = rclone_get_remotes_long()

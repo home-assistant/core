@@ -7,7 +7,7 @@
                   "title": "Dyski zdalne"
              },
             "drive_name": {
-                "description": "Wybierz dostawcę oraz podaj nazwę dysku\n\n ![AIS logo](/static/icons/favicon-100x100.png)",
+                "description": "Wybierz dostawcę oraz podaj nazwę dysku\n(nazwa dysku nie może zawierać spacji i znaków specjalnych)\n\n ![AIS logo](/static/icons/favicon-100x100.png)",
                 "title": "Nazwa dysku",
                 "data": {
                     "type": "Serwis",
@@ -41,9 +41,10 @@
             }
         },
         "error": {
-          "identifier_exists": "Dysk z taką nazwą jest już dodany",
-          "token_error": "Błędny token",
-          "rclone_error": "Błąd połączenia"
+            "identifier_exists": "Dysk z taką nazwą jest już dodany",
+            "drive_name_error": "Nazwa dysku nie może zawierać spacji i znaków specjalnych",
+            "token_error": "Błędny token",
+            "rclone_error": "Błąd połączenia"
         }
     }
 }

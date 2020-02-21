@@ -41,9 +41,10 @@
             }
         },
         "error": {
-          "identifier_exists": "Name already registered",
-          "token_error": "Bad token",
-          "rclone_error": "Connection error"
+            "identifier_exists": "Name already registered",
+            "drive_name_error": "Drive name cannot contain spaces or special characters",
+            "token_error": "Bad token",
+            "rclone_error": "Connection error"
         }
     }
 }
