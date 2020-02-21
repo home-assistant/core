@@ -4,11 +4,9 @@ import logging
 import zigpy.zcl.clusters.general as general
 
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
-from . import AttributeListeningChannel, ZigbeeChannel, parse_and_log_command
-from .. import registries
+from .. import registries, typing as zha_typing
 from ..const import (
     REPORT_CONFIG_ASAP,
     REPORT_CONFIG_BATTERY_SAVE,
@@ -20,6 +18,7 @@ from ..const import (
     SIGNAL_STATE_ATTR,
 )
 from ..helpers import get_attr_id_by_name
+from .base import AttributeListeningChannel, ZigbeeChannel, parse_and_log_command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,9 +76,11 @@ class BasicChannel(ZigbeeChannel):
         6: "Emergency mains and transfer switch",
     }
 
-    def __init__(self, cluster, device):
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+    ) -> None:
         """Initialize BasicChannel."""
-        super().__init__(cluster, device)
+        super().__init__(cluster, ch_pool)
         self._power_source = None
 
     async def async_configure(self):
@@ -193,9 +194,7 @@ class LevelControlChannel(ZigbeeChannel):
 
     def dispatch_level_change(self, command, level):
         """Dispatch level change."""
-        async_dispatcher_send(
-            self._zha_device.hass, f"{self.unique_id}_{command}", level
-        )
+        self.async_send_signal(f"{self.unique_id}_{command}", level)
 
     async def async_initialize(self, from_cache):
         """Initialize channel."""
@@ -236,9 +235,11 @@ class OnOffChannel(ZigbeeChannel):
     ON_OFF = 0
     REPORT_CONFIG = ({"attr": "on_off", "config": REPORT_CONFIG_IMMEDIATE},)
 
-    def __init__(self, cluster, device):
+    def __init__(
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType,
+    ) -> None:
         """Initialize OnOffChannel."""
-        super().__init__(cluster, device)
+        super().__init__(cluster, ch_pool)
         self._state = None
         self._off_listener = None
 
@@ -279,9 +280,7 @@ class OnOffChannel(ZigbeeChannel):
     def attribute_updated(self, attrid, value):
         """Handle attribute updates on this cluster."""
         if attrid == self.ON_OFF:
-            async_dispatcher_send(
-                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
-            )
+            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
             self._state = bool(value)
 
     async def async_initialize(self, from_cache):
@@ -293,10 +292,11 @@ class OnOffChannel(ZigbeeChannel):
 
     async def async_update(self):
         """Initialize channel."""
-        from_cache = not self.device.is_mains_powered
-        self.debug("attempting to update onoff state - from cache: %s", from_cache)
+        if self.cluster.is_client:
+            return
+        self.debug("attempting to update onoff state - from cache: False")
         self._state = bool(
-            await self.get_attribute_value(self.ON_OFF, from_cache=from_cache)
+            await self.get_attribute_value(self.ON_OFF, from_cache=False)
         )
         await super().async_update()
 
@@ -348,16 +348,11 @@ class PowerConfigurationChannel(ZigbeeChannel):
         else:
             attr_id = attr
         if attrid == attr_id:
-            async_dispatcher_send(
-                self._zha_device.hass, f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value
-            )
+            self.async_send_signal(f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", value)
             return
         attr_name = self.cluster.attributes.get(attrid, [attrid])[0]
-        async_dispatcher_send(
-            self._zha_device.hass,
-            f"{self.unique_id}_{SIGNAL_STATE_ATTR}",
-            attr_name,
-            value,
+        self.async_send_signal(
+            f"{self.unique_id}_{SIGNAL_STATE_ATTR}", attr_name, value
         )
 
     async def async_initialize(self, from_cache):

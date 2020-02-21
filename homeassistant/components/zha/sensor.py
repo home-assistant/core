@@ -22,7 +22,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util.temperature import fahrenheit_to_celsius
 
+from .core import discovery
 from .core.const import (
+    CHANNEL_ANALOG_INPUT,
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
@@ -33,9 +35,9 @@ from .core.const import (
     CHANNEL_TEMPERATURE,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_STATE_ATTR,
-    ZHA_DISCOVERY_NEW,
 )
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import ZhaEntity
@@ -65,45 +67,16 @@ STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, DOMAIN)
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation sensor from config entry."""
-
-    async def async_discover(discovery_info):
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, [discovery_info]
-        )
+    entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
 
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(
+            discovery.async_add_entities, async_add_entities, entities_to_create
+        ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
-
-    sensors = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
-    if sensors is not None:
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, sensors.values()
-        )
-        del hass.data[DATA_ZHA][DOMAIN]
-
-
-async def _async_setup_entities(
-    hass, config_entry, async_add_entities, discovery_infos
-):
-    """Set up the ZHA sensors."""
-    entities = []
-    for discovery_info in discovery_infos:
-        entities.append(await make_sensor(discovery_info))
-
-    if entities:
-        async_add_entities(entities, update_before_add=True)
-
-
-async def make_sensor(discovery_info):
-    """Create ZHA sensors factory."""
-
-    zha_dev = discovery_info["zha_device"]
-    channels = discovery_info["channels"]
-
-    entity = ZHA_ENTITIES.get_entity(DOMAIN, zha_dev, channels, Sensor)
-    return entity(**discovery_info)
 
 
 class Sensor(ZhaEntity):
@@ -174,6 +147,13 @@ class Sensor(ZhaEntity):
                 float(value * self._multiplier) / self._divisor, self._decimals
             )
         return round(float(value * self._multiplier) / self._divisor)
+
+
+@STRICT_MATCH(channel_names=CHANNEL_ANALOG_INPUT)
+class AnalogInput(Sensor):
+    """Sensor that displays analog input values."""
+
+    pass
 
 
 @STRICT_MATCH(channel_names=CHANNEL_POWER_CONFIGURATION)
