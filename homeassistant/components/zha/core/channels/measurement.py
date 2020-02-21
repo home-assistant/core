@@ -3,7 +3,6 @@ import logging
 
 import zigpy.zcl.clusters.measurement as measurement
 
-from . import AttributeListeningChannel
 from .. import registries
 from ..const import (
     REPORT_CONFIG_DEFAULT,
@@ -11,6 +10,7 @@ from ..const import (
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
 )
+from .base import AttributeListeningChannel
 
 _LOGGER = logging.getLogger(__name__)
 

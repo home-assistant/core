@@ -3,8 +3,8 @@ import logging
 
 import zigpy.zcl.clusters.lightlink as lightlink
 
-from . import ZigbeeChannel
 from .. import registries
+from .base import ZigbeeChannel
 
 _LOGGER = logging.getLogger(__name__)
 

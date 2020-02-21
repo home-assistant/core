@@ -841,6 +841,7 @@ omit =
     homeassistant/components/zha/core/helpers.py
     homeassistant/components/zha/core/patches.py
     homeassistant/components/zha/core/registries.py
+    homeassistant/components/zha/core/typing.py
     homeassistant/components/zha/entity.py
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py
