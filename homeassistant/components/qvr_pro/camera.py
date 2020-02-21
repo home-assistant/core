@@ -4,7 +4,7 @@ import logging
 
 from pyqvrpro.client import QVRResponseError
 
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera
 
 from .const import DOMAIN, SHORT_NAME
 
@@ -21,15 +21,37 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     entities = []
 
     for channel in hass.data[DOMAIN]["channels"]:
-        entities.append(QVRProCamera(**channel, client=client))
+
+        stream_source = get_stream_source(channel["guid"], client)
+        entities.append(
+            QVRProCamera(**channel, stream_source=stream_source, client=client)
+        )
 
     add_entities(entities)
+
+
+def get_stream_source(guid, client):
+    """Get channel stream source."""
+    try:
+        resp = client.get_channel_live_stream(guid, protocol="rtsp")
+
+        full_url = resp["resourceUris"]
+
+        protocol = full_url[:7]
+        auth = f"{client._user}:{client._password}@"
+        url = full_url[7:]
+
+        return f"{protocol}{auth}{url}"
+
+    except QVRResponseError as ex:
+        _LOGGER.error(ex)
+        return None
 
 
 class QVRProCamera(Camera):
     """Representation of a QVR Pro camera."""
 
-    def __init__(self, name, model, brand, channel_index, guid, client):
+    def __init__(self, name, model, brand, channel_index, guid, stream_source, client):
         """Init QVR Pro camera."""
 
         self._name = f"{SHORT_NAME} {name}"
@@ -38,14 +60,9 @@ class QVRProCamera(Camera):
         self.index = channel_index
         self.guid = guid
         self._client = client
+        self._stream_source = stream_source
 
-        try:
-            self._stream_source = self._client.get_channel_live_stream(guid)
-        except QVRResponseError as e:
-            self._stream_source = None
-            _LOGGER.error(e)
-
-        self._supported_features = SUPPORT_STREAM if self._stream_source else 0
+        self._supported_features = 0
 
         super().__init__()
 
@@ -75,7 +92,7 @@ class QVRProCamera(Camera):
         """Get image bytes from camera."""
         return self._client.get_snapshot(self.guid)
 
-    def stream_source(self):
+    async def stream_source(self):
         """Get stream source."""
         return self._stream_source
 
