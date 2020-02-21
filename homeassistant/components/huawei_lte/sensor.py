@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_SIGNAL_STRENGTH,
     DOMAIN as SENSOR_DOMAIN,
 )
-from homeassistant.const import CONF_URL, DATA_BYTES, STATE_UNKNOWN
+from homeassistant.const import CONF_URL, DATA_BYTES, STATE_UNKNOWN, TIME_SECONDS
 
 from . import HuaweiLteBaseEntity
 from .const import (
@@ -18,7 +18,6 @@ from .const import (
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
     KEY_MONITORING_TRAFFIC_STATISTICS,
-    UNIT_SECONDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,7 +121,7 @@ SENSOR_META = {
         exclude=re.compile(r"^showtraffic$", re.IGNORECASE)
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentConnectTime"): dict(
-        name="Current connection duration", unit=UNIT_SECONDS, icon="mdi:timer"
+        name="Current connection duration", unit=TIME_SECONDS, icon="mdi:timer"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "CurrentDownload"): dict(
         name="Current connection download", unit=DATA_BYTES, icon="mdi:download"
@@ -131,7 +130,7 @@ SENSOR_META = {
         name="Current connection upload", unit=DATA_BYTES, icon="mdi:upload"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalConnectTime"): dict(
-        name="Total connected duration", unit=UNIT_SECONDS, icon="mdi:timer"
+        name="Total connected duration", unit=TIME_SECONDS, icon="mdi:timer"
     ),
     (KEY_MONITORING_TRAFFIC_STATISTICS, "TotalDownload"): dict(
         name="Total download", unit=DATA_BYTES, icon="mdi:download"

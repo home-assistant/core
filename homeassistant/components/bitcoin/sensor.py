@@ -6,7 +6,12 @@ from blockchain import exchangerates, statistics
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_CURRENCY, CONF_DISPLAY_OPTIONS
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_CURRENCY,
+    CONF_DISPLAY_OPTIONS,
+    TIME_MINUTES,
+)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -27,7 +32,7 @@ OPTION_TYPES = {
     "btc_mined": ["Mined", "BTC"],
     "trade_volume_usd": ["Trade volume", "USD"],
     "difficulty": ["Difficulty", None],
-    "minutes_between_blocks": ["Time between Blocks", "min"],
+    "minutes_between_blocks": ["Time between Blocks", TIME_MINUTES],
     "number_of_transactions": ["No. of Transactions", None],
     "hash_rate": ["Hash rate", "PH/s"],
     "timestamp": ["Timestamp", None],

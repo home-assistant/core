@@ -6,7 +6,12 @@ from hydrawiser.core import Hydrawiser
 from requests.exceptions import ConnectTimeout, HTTPError
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_ACCESS_TOKEN, CONF_SCAN_INTERVAL
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    CONF_ACCESS_TOKEN,
+    CONF_SCAN_INTERVAL,
+    TIME_MINUTES,
+)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
@@ -40,7 +45,7 @@ DEVICE_MAP = {
     "manual_watering": ["Manual Watering", "mdi:water-pump", "", ""],
     "next_cycle": ["Next Cycle", "mdi:calendar-clock", "", ""],
     "status": ["Status", "", "connectivity", ""],
-    "watering_time": ["Watering Time", "mdi:water-pump", "", "min"],
+    "watering_time": ["Watering Time", "mdi:water-pump", "", TIME_MINUTES],
     "rain_sensor": ["Rain Sensor", "", "moisture", ""],
 }
 

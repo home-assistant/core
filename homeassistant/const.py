@@ -343,6 +343,12 @@ ENERGY_WATT_HOUR = "Wh"
 TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
 
+# Time units
+TIME_DAYS = "d"
+TIME_HOURS = "h"
+TIME_MINUTES = "min"
+TIME_SECONDS = "s"
+
 # Length units
 LENGTH_CENTIMETERS: str = "cm"
 LENGTH_METERS: str = "m"
