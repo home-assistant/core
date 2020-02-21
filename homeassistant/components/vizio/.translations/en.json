@@ -24,7 +24,7 @@
                     "host": "<Host/IP>:<Port>",
                     "name": "Name"
                 },
-                "title": "Setup Vizio SmartCast Client"
+                "title": "Setup Vizio SmartCast Device"
             }
         },
         "title": "Vizio SmartCast"
