@@ -31,7 +31,7 @@ async def async_add_entities(
     """Add entities helper."""
     if not entities:
         return
-    to_add = [ent(*args) for ent, args in entities]
+    to_add = [ent_cls(*args) for ent_cls, args in entities]
     _async_add_entities(to_add, update_before_add=True)
     entities.clear()
 
@@ -63,13 +63,13 @@ class ProbeEndpoint:
 
         if component and component in zha_const.COMPONENTS:
             channels = channel_pool.unclaimed_channels()
-            entity, claimed = zha_regs.ZHA_ENTITIES.get_entity(
+            entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
                 component, channel_pool.manufacturer, channel_pool.model, channels
             )
-            if entity is None:
+            if entity_class is None:
                 return
             channel_pool.claim_channels(claimed)
-            channel_pool.async_new_entity(component, entity, unique_id, claimed)
+            channel_pool.async_new_entity(component, entity_class, unique_id, claimed)
 
     @callback
     def discover_by_cluster_id(self, channel_pool: zha_typing.ChannelPoolType) -> None:
@@ -113,13 +113,13 @@ class ProbeEndpoint:
         channel_list = [channel]
         unique_id = f"{ep_channels.unique_id}-{channel.cluster.cluster_id}"
 
-        entity, claimed = zha_regs.ZHA_ENTITIES.get_entity(
+        entity_class, claimed = zha_regs.ZHA_ENTITIES.get_entity(
             component, ep_channels.manufacturer, ep_channels.model, channel_list
         )
-        if entity is None:
+        if entity_class is None:
             return
         ep_channels.claim_channels(claimed)
-        ep_channels.async_new_entity(component, entity, unique_id, claimed)
+        ep_channels.async_new_entity(component, entity_class, unique_id, claimed)
 
     def handle_on_off_output_cluster_exception(
         self, ep_channels: zha_typing.ChannelPoolType

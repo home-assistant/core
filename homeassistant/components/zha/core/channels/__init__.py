@@ -117,7 +117,7 @@ class Channels:
     def async_new_entity(
         self,
         component: str,
-        entity: zha_typing.CALLABLE_T,
+        entity_class: zha_typing.CALLABLE_T,
         unique_id: str,
         channels: List[zha_typing.ChannelType],
     ):
@@ -126,7 +126,7 @@ class Channels:
             return
 
         self.zha_device.hass.data[const.DATA_ZHA][component].append(
-            (entity, (unique_id, self.zha_device, channels))
+            (entity_class, (unique_id, self.zha_device, channels))
         )
 
     @callback
@@ -287,12 +287,12 @@ class ChannelPool:
     def async_new_entity(
         self,
         component: str,
-        entity: zha_typing.CALLABLE_T,
+        entity_class: zha_typing.CALLABLE_T,
         unique_id: str,
         channels: List[zha_typing.ChannelType],
     ):
         """Signal new entity addition."""
-        self._channels.async_new_entity(component, entity, unique_id, channels)
+        self._channels.async_new_entity(component, entity_class, unique_id, channels)
 
     @callback
     def async_send_signal(self, signal: str, *args: Any) -> None:

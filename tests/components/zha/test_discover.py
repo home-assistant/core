@@ -77,7 +77,7 @@ async def test_devices(
 
     entity_ids = hass.states.async_entity_ids()
     await hass.async_block_till_done()
-    zha_entities = {
+    zha_entity_ids = {
         ent for ent in entity_ids if ent.split(".")[0] in zha_const.COMPONENTS
     }
 
@@ -86,7 +86,7 @@ async def test_devices(
     }
 
     entity_map = device["entity_map"]
-    assert zha_entities == set(
+    assert zha_entity_ids == set(
         [
             e["entity_id"]
             for e in entity_map.values()
@@ -143,7 +143,7 @@ def test_discover_by_device_type(device_type, component, hit):
     type(ep_channels).endpoint = ep_mock
 
     get_entity_mock = mock.MagicMock(
-        return_value=(mock.sentinel.entity, mock.sentinel.claimed)
+        return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
     )
     with mock.patch(
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
@@ -156,7 +156,7 @@ def test_discover_by_device_type(device_type, component, hit):
         assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
         assert ep_channels.async_new_entity.call_count == 1
         assert ep_channels.async_new_entity.call_args[0][0] == component
-        assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity
+        assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
 
 
 def test_discover_by_device_type_override():
@@ -170,7 +170,7 @@ def test_discover_by_device_type_override():
 
     overrides = {ep_channels.unique_id: {"type": zha_const.SWITCH}}
     get_entity_mock = mock.MagicMock(
-        return_value=(mock.sentinel.entity, mock.sentinel.claimed)
+        return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
     )
     with mock.patch(
         "homeassistant.components.zha.core.registries.ZHA_ENTITIES.get_entity",
@@ -183,7 +183,9 @@ def test_discover_by_device_type_override():
             assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
             assert ep_channels.async_new_entity.call_count == 1
             assert ep_channels.async_new_entity.call_args[0][0] == zha_const.SWITCH
-            assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity
+            assert (
+                ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
+            )
 
 
 def test_discover_probe_single_cluster():
@@ -196,7 +198,7 @@ def test_discover_probe_single_cluster():
     type(ep_channels).endpoint = ep_mock
 
     get_entity_mock = mock.MagicMock(
-        return_value=(mock.sentinel.entity, mock.sentinel.claimed)
+        return_value=(mock.sentinel.entity_cls, mock.sentinel.claimed)
     )
     channel_mock = mock.MagicMock(spec_set=base_channels.ZigbeeChannel)
     with mock.patch(
@@ -210,7 +212,7 @@ def test_discover_probe_single_cluster():
     assert ep_channels.claim_channels.call_args[0][0] is mock.sentinel.claimed
     assert ep_channels.async_new_entity.call_count == 1
     assert ep_channels.async_new_entity.call_args[0][0] == zha_const.SWITCH
-    assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity
+    assert ep_channels.async_new_entity.call_args[0][1] == mock.sentinel.entity_cls
     assert ep_channels.async_new_entity.call_args[0][3] == mock.sentinel.claimed
 
 
