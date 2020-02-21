@@ -1,8 +1,6 @@
 """samsungctl and samsungtvws bridge classes."""
 from abc import ABC, abstractmethod
 
-import requests
-from requests import RequestException
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
 from samsungtvws import SamsungTVWS
@@ -21,8 +19,6 @@ from homeassistant.const import (
 
 from .const import (
     CONF_DESCRIPTION,
-    CONFIG_ID,
-    CONFIG_NAME,
     LOGGER,
     METHOD_LEGACY,
     METHOD_WEBSOCKET,
@@ -30,6 +26,8 @@ from .const import (
     RESULT_NOT_SUCCESSFUL,
     RESULT_NOT_SUPPORTED,
     RESULT_SUCCESS,
+    VALUE_CONF_ID,
+    VALUE_CONF_NAME,
 )
 
 
@@ -64,9 +62,26 @@ class SamsungTVBridge(ABC):
     def try_connect(self, port):
         """Try to connect to the TV."""
 
-    @abstractmethod
     def is_on(self):
         """Tells if the TV is on."""
+        if self._remote is not None:
+            # Close the current remote connection
+            self._remote.close()
+            self._remote = None
+
+        try:
+            self._get_remote()
+            return self._remote is not None
+        except (
+            UnhandledResponse,
+            AccessDenied,
+            ConnectionFailure,
+        ):
+            # We got a response so it's working.
+            return True
+        except OSError:
+            # Different reasons, e.g. hostname not resolveable
+            return False
 
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
@@ -127,9 +142,9 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         if port is not None and port != self.port:
             return RESULT_NOT_SUCCESSFUL
         config = {
-            CONF_NAME: CONFIG_NAME,
-            CONF_DESCRIPTION: CONFIG_NAME,
-            CONF_ID: CONFIG_ID,
+            CONF_NAME: VALUE_CONF_NAME,
+            CONF_DESCRIPTION: VALUE_CONF_NAME,
+            CONF_ID: VALUE_CONF_ID,
             CONF_HOST: self.host,
             CONF_METHOD: self.method,
             CONF_PORT: self.port,
@@ -150,29 +165,6 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         except OSError as err:
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_NOT_SUCCESSFUL
-
-    def is_on(self):
-        """Tells if the TV is on."""
-        if self._remote is not None:
-            # Close the current remote connection
-            self._remote.close()
-            self._remote = None
-
-        try:
-            self._get_remote()
-            if self._remote:
-                return True
-        except (
-            UnhandledResponse,
-            AccessDenied,
-        ):
-            # We got a response so it's working.
-            return True
-        except OSError:
-            # Different reasons, e.g. hostname not resolveable
-            return False
-
-        return False
 
     def _get_remote(self):
         """Create or return a remote control instance."""
@@ -215,8 +207,8 @@ class SamsungTVWSBridge(SamsungTVBridge):
             if port is not None and port != self.port:
                 continue
             config = {
-                CONF_NAME: CONFIG_NAME,
-                CONF_DESCRIPTION: CONFIG_NAME,
+                CONF_NAME: VALUE_CONF_NAME,
+                CONF_DESCRIPTION: VALUE_CONF_NAME,
                 CONF_HOST: self.host,
                 CONF_METHOD: self.method,
                 CONF_PORT: self.port,
@@ -244,16 +236,6 @@ class SamsungTVWSBridge(SamsungTVBridge):
                 LOGGER.debug("Failing config: %s, error: %s", _hide_token(config), err)
 
         return RESULT_NOT_SUCCESSFUL
-
-    def is_on(self):
-        """Get TV state."""
-        try:
-            ping_url = f"http://{self.host}:8001/api/v2/"
-
-            requests.head(ping_url, timeout=1)
-            return True
-        except RequestException:
-            return False
 
     def _send_key(self, key):
         """Send the key using websocket protocol."""

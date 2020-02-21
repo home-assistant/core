@@ -40,10 +40,10 @@ from .const import (
     CONF_MANUFACTURER,
     CONF_MODEL,
     CONF_ON_ACTION,
-    CONFIG_ID,
-    CONFIG_NAME,
     DOMAIN,
     LOGGER,
+    VALUE_CONF_ID,
+    VALUE_CONF_NAME,
 )
 
 KEY_PRESS_TIMEOUT = 1.2
@@ -105,9 +105,9 @@ class SamsungTVDevice(MediaPlayerDevice):
         self._end_of_power_off = None
         # Generate a configuration for the Samsung library
         config = {
-            CONF_NAME: CONFIG_NAME,
-            CONF_DESCRIPTION: CONFIG_NAME,
-            CONF_ID: CONFIG_ID,
+            CONF_NAME: VALUE_CONF_NAME,
+            CONF_DESCRIPTION: VALUE_CONF_NAME,
+            CONF_ID: VALUE_CONF_ID,
             CONF_METHOD: config_entry.data[CONF_METHOD],
             CONF_PORT: config_entry.data.get(CONF_PORT),
             CONF_HOST: config_entry.data[CONF_HOST],

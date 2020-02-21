@@ -7,6 +7,7 @@ from asynctest import mock
 from asynctest.mock import call, patch
 import pytest
 from samsungctl import exceptions
+from samsungtvws.exceptions import ConnectionFailure
 from websocket import WebSocketException
 
 from homeassistant.components.media_player import DEVICE_CLASS_TV
@@ -186,17 +187,40 @@ async def test_update_off(hass, remote, mock_now):
 
 
 async def test_update_access_denied(hass, remote, mock_now):
-    """Testing update tv unhandled response exception."""
+    """Testing update tv access denied exception."""
     await setup_samsungtv(hass, MOCK_CONFIG)
 
     with patch(
         "homeassistant.components.samsungtv.bridge.Remote",
         side_effect=exceptions.AccessDenied("Boom"),
     ):
-
         next_update = mock_now + timedelta(minutes=5)
         with patch("homeassistant.util.dt.utcnow", return_value=next_update):
             async_fire_time_changed(hass, next_update)
+            await hass.async_block_till_done()
+
+    assert [
+        flow
+        for flow in hass.config_entries.flow.async_progress()
+        if flow["context"]["source"] == "reauth"
+    ]
+
+
+async def test_update_connection_failure(hass, remotews, mock_now):
+    """Testing update tv connection failure exception."""
+    with patch(
+        "homeassistant.components.samsungtv.bridge.Remote",
+        side_effect=[OSError("Boom"), mock.DEFAULT],
+    ):
+        await setup_samsungtv(hass, MOCK_CONFIGWS)
+
+        with patch(
+            "homeassistant.components.samsungtv.bridge.SamsungTVWS",
+            side_effect=ConnectionFailure("Boom"),
+        ):
+            next_update = mock_now + timedelta(minutes=5)
+            with patch("homeassistant.util.dt.utcnow", return_value=next_update):
+                async_fire_time_changed(hass, next_update)
             await hass.async_block_till_done()
 
     assert [
