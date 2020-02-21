@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -129,7 +130,7 @@ async def async_setup_entry(hass, entry):
             server_config[CONF_URL],
             error,
         )
-        return False
+        raise ConfigEntryNotReady
     except (
         plexapi.exceptions.BadRequest,
         plexapi.exceptions.Unauthorized,
