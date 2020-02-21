@@ -150,6 +150,13 @@ async def async_setup(hass, config):
     # wdd = wm.add_watch("/dev/bus", mask, rec=True, exclude_filter=excl)
     wdd = wm.add_watch("/dev/bus", mask, rec=True)
 
+    async def stop_devices(call):
+        # remove zigbee service on start - to prevent pm2 for restarting when usb is not connected
+        os.system("pm2 stop zigbee")
+        os.system("pm2 delete zigbee")
+        os.system("pm2 save")
+        #
+
     async def lsusb(call):
         # check if the call was from scheduler or service / web app
         devices = _lsusb()
@@ -158,6 +165,7 @@ async def async_setup(hass, config):
                 # USB zigbee dongle
                 prepare_usb_device(hass, device)
 
+    hass.services.async_register(DOMAIN, "stop_devices", stop_devices)
     hass.services.async_register(DOMAIN, "lsusb", lsusb)
     return True
 

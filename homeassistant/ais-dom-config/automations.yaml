@@ -58,7 +58,7 @@
    - service: ais_ai_service.check_local_ip
    - service: ais_amplifier_service.get_audio_mono
    - service: ais_shell_command.hdmi_control_disable
-   - service: ais_usb.lsusb
+   - service: ais_usb.stop_devices
    - service: mqtt.publish
      data:
        payload: 1
@@ -82,6 +82,7 @@
      data:
        timer: false
    - delay: '1'
+   - service: ais_usb.lsusb
    - service: ais_drives_service.rclone_mount_drives
    - delay: '6000'
    - service: ais_updater.check_version
