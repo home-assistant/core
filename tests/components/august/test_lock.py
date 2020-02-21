@@ -1,110 +1,46 @@
 """The lock tests for the august platform."""
 
-import datetime
-
-from august.activity import (
-    ACTION_LOCK_LOCK,
-    ACTION_LOCK_ONETOUCHLOCK,
-    ACTION_LOCK_UNLOCK,
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_UNLOCK,
+    STATE_LOCKED,
+    STATE_ON,
+    STATE_UNLOCKED,
 )
-from august.lock import LockStatus
-
-from homeassistant.util import dt
 
 from tests.components.august.mocks import (
-    MockActivity,
-    MockAugustComponentData,
-    MockAugustComponentLock,
-    _mock_august_lock,
+    _create_august_with_devices,
+    _mock_lock_from_fixture,
 )
 
 
-def test__sync_lock_activity_locked_via_onetouchlock():
-    """Test _sync_lock_activity locking."""
-    lock = _mocked_august_component_lock()
-    lock_activity_start_timestamp = 1234
-    lock_activity = MockActivity(
-        action=ACTION_LOCK_ONETOUCHLOCK,
-        activity_start_timestamp=lock_activity_start_timestamp,
-        activity_end_timestamp=5678,
+async def test_one_lock_unlock_happy_path(hass):
+    """Test creation of a lock with doorsense and bridge."""
+    lock_one = await _mock_lock_from_fixture(
+        hass, "get_lock.online_with_doorsense.json"
     )
-    lock._sync_lock_activity(lock_activity)
-    assert lock.last_update_lock_status["lock_status"] == LockStatus.LOCKED
-    assert lock.last_update_lock_status["activity_start_time_utc"] == dt.as_utc(
-        datetime.datetime.fromtimestamp(lock_activity_start_timestamp)
+    lock_details = [lock_one]
+    await _create_august_with_devices(hass, lock_details=lock_details)
+
+    lock_abc_name = hass.states.get("lock.abc_name")
+
+    assert lock_abc_name.state == STATE_LOCKED
+
+    assert lock_abc_name.attributes.get("battery_level") == 92
+    assert lock_abc_name.attributes.get("friendly_name") == "ABC Name"
+
+    data = {}
+    data[ATTR_ENTITY_ID] = "lock.abc_name"
+    assert await hass.services.async_call(
+        LOCK_DOMAIN, SERVICE_UNLOCK, data, blocking=True
     )
 
+    lock_abc_name = hass.states.get("lock.abc_name")
+    assert lock_abc_name.state == STATE_UNLOCKED
 
-def test__sync_lock_activity_locked_via_lock():
-    """Test _sync_lock_activity locking."""
-    lock = _mocked_august_component_lock()
-    lock_activity_start_timestamp = 1234
-    lock_activity = MockActivity(
-        action=ACTION_LOCK_LOCK,
-        activity_start_timestamp=lock_activity_start_timestamp,
-        activity_end_timestamp=5678,
-    )
-    lock._sync_lock_activity(lock_activity)
-    assert lock.last_update_lock_status["lock_status"] == LockStatus.LOCKED
-    assert lock.last_update_lock_status["activity_start_time_utc"] == dt.as_utc(
-        datetime.datetime.fromtimestamp(lock_activity_start_timestamp)
-    )
+    assert lock_abc_name.attributes.get("battery_level") == 92
+    assert lock_abc_name.attributes.get("friendly_name") == "ABC Name"
 
-
-def test__sync_lock_activity_unlocked():
-    """Test _sync_lock_activity unlocking."""
-    lock = _mocked_august_component_lock()
-    lock_activity_timestamp = 1234
-    lock_activity = MockActivity(
-        action=ACTION_LOCK_UNLOCK,
-        activity_start_timestamp=lock_activity_timestamp,
-        activity_end_timestamp=lock_activity_timestamp,
-    )
-    lock._sync_lock_activity(lock_activity)
-    assert lock.last_update_lock_status["lock_status"] == LockStatus.UNLOCKED
-    assert lock.last_update_lock_status["activity_start_time_utc"] == dt.as_utc(
-        datetime.datetime.fromtimestamp(lock_activity_timestamp)
-    )
-
-
-def test__sync_lock_activity_ignores_old_data():
-    """Test _sync_lock_activity unlocking."""
-    data = MockAugustComponentData(last_lock_status_update_timestamp=1)
-    august_lock = _mock_august_lock()
-    data.set_mocked_locks([august_lock])
-    lock = MockAugustComponentLock(data, august_lock)
-    first_lock_activity_timestamp = 1234
-    lock_activity = MockActivity(
-        action=ACTION_LOCK_UNLOCK,
-        activity_start_timestamp=first_lock_activity_timestamp,
-        activity_end_timestamp=first_lock_activity_timestamp,
-    )
-    lock._sync_lock_activity(lock_activity)
-    assert lock.last_update_lock_status["lock_status"] == LockStatus.UNLOCKED
-    assert lock.last_update_lock_status["activity_start_time_utc"] == dt.as_utc(
-        datetime.datetime.fromtimestamp(first_lock_activity_timestamp)
-    )
-
-    # Now we do the update with an older start time to
-    # make sure it ignored
-    data.set_last_lock_status_update_time_utc(
-        august_lock.device_id, dt.as_utc(datetime.datetime.fromtimestamp(1000))
-    )
-    lock_activity_timestamp = 2
-    lock_activity = MockActivity(
-        action=ACTION_LOCK_LOCK,
-        activity_start_timestamp=lock_activity_timestamp,
-        activity_end_timestamp=lock_activity_timestamp,
-    )
-    lock._sync_lock_activity(lock_activity)
-    assert lock.last_update_lock_status["lock_status"] == LockStatus.UNLOCKED
-    assert lock.last_update_lock_status["activity_start_time_utc"] == dt.as_utc(
-        datetime.datetime.fromtimestamp(first_lock_activity_timestamp)
-    )
-
-
-def _mocked_august_component_lock():
-    data = MockAugustComponentData(last_lock_status_update_timestamp=1)
-    august_lock = _mock_august_lock()
-    data.set_mocked_locks([august_lock])
-    return MockAugustComponentLock(data, august_lock)
+    binary_sensor_abc_name = hass.states.get("binary_sensor.abc_name_open")
+    assert binary_sensor_abc_name.state == STATE_ON
