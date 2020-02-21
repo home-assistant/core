@@ -219,7 +219,7 @@ class AFSAPIDevice(MediaPlayerDevice):
 
             volume = await self.fs_device.get_volume()
 
-            self._volume_level = float(volume or 0) / int(self._volume_steps)
+            self._volume_level = float(volume or 0) / self._volume_steps
         else:
             self._title = None
             self._artist = None
@@ -283,7 +283,7 @@ class AFSAPIDevice(MediaPlayerDevice):
         """Send volume up command."""
         volume = await self.fs_device.get_volume()
         await self.fs_device.set_volume(
-            min(int(volume or 0) + 1, int(self._volume_steps))
+            min(int(volume or 0) + 1, self._volume_steps)
         )
 
     async def async_volume_down(self):
@@ -293,7 +293,7 @@ class AFSAPIDevice(MediaPlayerDevice):
 
     async def async_set_volume_level(self, volume):
         """Set volume command."""
-        await self.fs_device.set_volume(int(volume * int(self._volume_steps)))
+        await self.fs_device.set_volume(int(volume * self._volume_steps))
 
     async def async_select_source(self, source):
         """Select input source."""
