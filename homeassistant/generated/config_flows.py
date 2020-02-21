@@ -9,6 +9,7 @@ FLOWS = [
     "abode",
     "adguard",
     "airly",
+    "airvisual",
     "almond",
     "ambiclimate",
     "ambient_station",

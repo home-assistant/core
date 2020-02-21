@@ -1,0 +1,30 @@
+{
+    "config": {
+        "error": {
+            "identifier_exists": "API key already registered",
+            "invalid_api_key": "Invalid API key"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "show_on_map": "Show monitored geographies on the map"
+                },
+                "title": "Configure AirVisual"
+            }
+        },
+        "title": "AirVisual"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_on_map": "Show monitored geographies on the map"
+                },
+                "description": "Options for AirVisual"
+            }
+        }
+    }
+}
