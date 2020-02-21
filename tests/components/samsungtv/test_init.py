@@ -38,6 +38,7 @@ REMOTE_CALL = {
     "port": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_PORT],
     "host": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_HOST],
     "timeout": 1,
+    "token": None,
 }
 
 
@@ -62,22 +63,24 @@ def remote_fixture():
 
 async def test_setup(hass, remote):
     """Test Samsung TV integration is setup."""
-    await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
-    await hass.async_block_till_done()
-    state = hass.states.get(ENTITY_ID)
+    with patch("homeassistant.components.samsungtv.bridge.Remote") as remote:
+        await async_setup_component(hass, SAMSUNGTV_DOMAIN, MOCK_CONFIG)
+        await hass.async_block_till_done()
+        state = hass.states.get(ENTITY_ID)
 
-    # test name and turn_on
-    assert state
-    assert state.name == "fake_name"
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
-    )
+        # test name and turn_on
+        assert state
+        assert state.name == "fake_name"
+        assert (
+            state.attributes[ATTR_SUPPORTED_FEATURES]
+            == SUPPORT_SAMSUNGTV | SUPPORT_TURN_ON
+        )
 
-    # test host and port
-    assert await hass.services.async_call(
-        DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
-    )
-    assert remote.mock_calls[0] == call(REMOTE_CALL)
+        # test host and port
+        assert await hass.services.async_call(
+            DOMAIN, SERVICE_VOLUME_UP, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        )
+        assert remote.call_args == call(REMOTE_CALL)
 
 
 async def test_setup_duplicate_config(hass, remote, caplog):
