@@ -108,7 +108,7 @@ class AFSAPIDevice(MediaPlayerDevice):
         self._source_list = None
         self._media_image_url = None
         self._volume_steps = None
-        self._volume = None
+        self._volume_level = None
 
     # Properties
     @property
@@ -181,10 +181,7 @@ class AFSAPIDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        if self._volume is None:
-            return None
-
-        return float(self._volume) / (self._volume_steps - 1)
+        return self._volume_level
 
     async def async_update(self):
         """Get the latest date and update device state."""
@@ -197,7 +194,7 @@ class AFSAPIDevice(MediaPlayerDevice):
             self._source_list = await fs_device.get_mode_list()
 
         if not self._volume_steps:
-            self._volume_steps = await fs_device.get_volume_steps()
+            self._volume_steps = int(await fs_device.get_volume_steps()) - 1
 
         status = await fs_device.get_play_status()
         self._state = {
@@ -220,7 +217,9 @@ class AFSAPIDevice(MediaPlayerDevice):
             self._mute = await fs_device.get_mute()
             self._media_image_url = await fs_device.get_play_graphic()
 
-            self._volume = await self.fs_device.get_volume()
+            volume = await self.fs_device.get_volume()
+
+            self._volume_level = float(volume or 0) / int(self._volume_steps)
         else:
             self._title = None
             self._artist = None
@@ -230,7 +229,7 @@ class AFSAPIDevice(MediaPlayerDevice):
             self._mute = None
             self._media_image_url = None
 
-            self._volume = None
+            self._volume_level = None
 
     # Management actions
     # power control
@@ -283,16 +282,18 @@ class AFSAPIDevice(MediaPlayerDevice):
     async def async_volume_up(self):
         """Send volume up command."""
         volume = await self.fs_device.get_volume()
-        await self.fs_device.set_volume(volume + 1)
+        await self.fs_device.set_volume(
+            min(int(volume or 0) + 1, int(self._volume_steps))
+        )
 
     async def async_volume_down(self):
         """Send volume down command."""
         volume = await self.fs_device.get_volume()
-        await self.fs_device.set_volume(volume - 1)
+        await self.fs_device.set_volume(max(int(volume or 0) - 1, 0))
 
     async def async_set_volume_level(self, volume):
         """Set volume command."""
-        await self.fs_device.set_volume(int(volume * int(self._volume_steps - 1)))
+        await self.fs_device.set_volume(int(volume * int(self._volume_steps)))
 
     async def async_select_source(self, source):
         """Select input source."""
