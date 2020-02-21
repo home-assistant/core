@@ -147,7 +147,6 @@ homeassistant/components/hikvision/* @mezz64
 homeassistant/components/hikvisioncam/* @fbradyirl
 homeassistant/components/hisense_aehw4a1/* @bannhead
 homeassistant/components/history/* @home-assistant/core
-homeassistant/components/history_graph/* @andrey-git
 homeassistant/components/hive/* @Rendili @KJonline
 homeassistant/components/homeassistant/* @home-assistant/core
 homeassistant/components/homekit_controller/* @Jc2k
@@ -365,7 +364,7 @@ homeassistant/components/traccar/* @ludeeus
 homeassistant/components/tradfri/* @ggravlingen
 homeassistant/components/trafikverket_train/* @endor-force
 homeassistant/components/transmission/* @engrbm87 @JPHutchins
-homeassistant/components/tts/* @robbiet480
+homeassistant/components/tts/* @pvizeli
 homeassistant/components/twentemilieu/* @frenck
 homeassistant/components/twilio_call/* @robbiet480
 homeassistant/components/twilio_sms/* @robbiet480
@@ -392,7 +391,6 @@ homeassistant/components/vlc_telnet/* @rodripf
 homeassistant/components/waqi/* @andrey-git
 homeassistant/components/watson_tts/* @rutkai
 homeassistant/components/weather/* @fabaff
-homeassistant/components/weblink/* @home-assistant/core
 homeassistant/components/webostv/* @bendavid
 homeassistant/components/websocket_api/* @home-assistant/core
 homeassistant/components/wemo/* @sqldiablo

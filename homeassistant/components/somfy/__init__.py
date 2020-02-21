@@ -1,9 +1,4 @@
-"""
-Support for Somfy hubs.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/integrations/somfy/
-"""
+"""Support for Somfy hubs."""
 import asyncio
 from datetime import timedelta
 import logging

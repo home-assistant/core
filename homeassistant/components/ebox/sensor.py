@@ -2,9 +2,6 @@
 Support for EBox.
 
 Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.ebox/
 """
 from datetime import timedelta
 import logging

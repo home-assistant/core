@@ -1,9 +1,6 @@
 """
 Support for getting statistical data from a DWD Weather Warnings.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.dwd_weather_warnings/
-
 Data is fetched from DWD:
 https://rcccm.dwd.de/DE/wetter/warnungen_aktuell/objekt_einbindung/objekteinbindung.html
 
