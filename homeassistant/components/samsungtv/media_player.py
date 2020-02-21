@@ -120,7 +120,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     def access_denied(self):
         """Access denied callbck."""
         LOGGER.debug("Access denied in getting remote object")
-        self.hass.async_create_task(
+        self.hass.add_job(
             self.hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": "reauth"}, data=self._config_entry.data,
             )

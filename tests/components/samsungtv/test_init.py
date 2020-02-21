@@ -1,6 +1,6 @@
 """Tests for the Samsung TV Integration."""
-from unittest.mock import call, patch
-
+from asynctest import mock
+from asynctest.mock import call, patch
 import pytest
 
 from homeassistant.components.media_player.const import DOMAIN, SUPPORT_TURN_ON
@@ -25,7 +25,7 @@ MOCK_CONFIG = {
         {
             CONF_HOST: "fake_host",
             CONF_NAME: "fake_name",
-            CONF_PORT: 1234,
+            CONF_PORT: 55000,
             CONF_ON_ACTION: [{"delay": "00:00:01"}],
         }
     ]
@@ -34,7 +34,7 @@ REMOTE_CALL = {
     "name": "HomeAssistant",
     "description": "HomeAssistant",
     "id": "ha.component.samsung",
-    "method": "websocket",
+    "method": "legacy",
     "port": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_PORT],
     "host": MOCK_CONFIG[SAMSUNGTV_DOMAIN][0][CONF_HOST],
     "timeout": 1,
@@ -44,11 +44,17 @@ REMOTE_CALL = {
 @pytest.fixture(name="remote")
 def remote_fixture():
     """Patch the samsungctl Remote."""
-    with patch("homeassistant.components.samsungtv.socket") as socket1, patch(
-        "homeassistant.components.samsungtv.config_flow.socket"
-    ) as socket2, patch("homeassistant.components.samsungtv.config_flow.Remote"), patch(
+    with patch(
         "homeassistant.components.samsungtv.bridge.Remote"
-    ) as remote:
+    ) as remote_class, patch(
+        "homeassistant.components.samsungtv.config_flow.socket"
+    ) as socket1, patch(
+        "homeassistant.components.samsungtv.socket"
+    ) as socket2:
+        remote = mock.Mock()
+        remote.__enter__ = mock.Mock()
+        remote.__exit__ = mock.Mock()
+        remote_class.return_value = remote
         socket1.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         socket2.gethostbyname.return_value = "FAKE_IP_ADDRESS"
         yield remote
