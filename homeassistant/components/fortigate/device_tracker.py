@@ -18,12 +18,12 @@ async def async_get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["hostname", "mac"])
+Device = namedtuple("Device", ["mac_firewall_address", "mac"])
 
 
 def _build_device(device_dict):
     """Return a Device from data."""
-    return Device(device_dict["hostname"], device_dict["mac"])
+    return Device(device_dict["mac_firewall_address"], device_dict["mac"])
 
 
 class FortigateDeviceScanner(DeviceScanner):
@@ -42,7 +42,7 @@ class FortigateDeviceScanner(DeviceScanner):
 
         ret = []
         for result in results:
-            if "hostname" not in result:
+            if "mac_firewall_address" not in result:
                 continue
 
             ret.append(result)
@@ -63,7 +63,11 @@ class FortigateDeviceScanner(DeviceScanner):
     async def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         name = next(
-            (result.hostname for result in self.last_results if result.mac == device),
+            (
+                result.mac_firewall_address
+                for result in self.last_results
+                if result.mac == device
+            ),
             None,
         )
         return name
@@ -79,7 +83,7 @@ class FortigateDeviceScanner(DeviceScanner):
         # If the 'devices' configuration field is filled
         if self.devices is not None:
             last_results = [
-                device for device in all_results if device.hostname in self.devices
+                device for device in all_results if device.mac in self.devices
             ]
             _LOGGER.debug(last_results)
         # If the 'devices' configuration field is not filled
