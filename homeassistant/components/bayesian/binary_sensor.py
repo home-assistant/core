@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_state_change
 
 ATTR_OBSERVATIONS = "observations"
-ATTR_OBSERVED_ENTITIES = "observed_entities"
+ATTR_OCCURRED_OBSERVATION_ENTITIES = "occurred_observation_entities"
 ATTR_PROBABILITY = "probability"
 ATTR_PROBABILITY_THRESHOLD = "probability_threshold"
 
@@ -262,7 +262,7 @@ class BayesianBinarySensor(BinarySensorDevice):
         """Return the state attributes of the sensor."""
         return {
             ATTR_OBSERVATIONS: list(self.current_obs.values()),
-            ATTR_OBSERVED_ENTITIES: list(
+            ATTR_OCCURRED_OBSERVATION_ENTITIES: list(
                 set(
                     chain.from_iterable(
                         self.entity_obs_dict[obs] for obs in self.current_obs.keys()

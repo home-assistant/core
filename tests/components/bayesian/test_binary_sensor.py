@@ -293,19 +293,20 @@ class TestBayesianBinarySensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert [] == state.attributes.get("observed_entities")
+        assert [] == state.attributes.get("occurred_observation_entities")
 
         self.hass.states.set("sensor.test_monitored", "off")
         self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert ["sensor.test_monitored"] == state.attributes.get("observed_entities")
+        assert ["sensor.test_monitored"] == state.attributes.get(
+            "occurred_observation_entities"
+        )
 
         self.hass.states.set("sensor.test_monitored1", "on")
         self.hass.block_till_done()
 
         state = self.hass.states.get("binary_sensor.test_binary")
-        assert [
-            "sensor.test_monitored",
-            "sensor.test_monitored1",
-        ] == state.attributes.get("observed_entities")
+        assert ["sensor.test_monitored", "sensor.test_monitored1"] == sorted(
+            state.attributes.get("occurred_observation_entities")
+        )
