@@ -102,11 +102,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # Attempt to discover additional RVU units
         _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
 
-        discovery_dtv = DIRECTV(host, DEFAULT_PORT)
+        dtv = DIRECTV(host, DEFAULT_PORT)
 
         try:
-            discovery_dtv_version = _get_receiver_version(discovery_dtv)
-            resp = discovery_dtv.get_locations()
+            dtv_version = _get_receiver_version(dtv)
+            resp = dtv.get_locations()
         except requests.exceptions.RequestException as ex:
             # Bail out and just go forward with uPnP data
             # Make sure that this device is not already configured
@@ -138,10 +138,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     loc_name,
                     loc["clientAddr"],
                 )
-                dtv = DIRECTV(host, DEFAULT_PORT, loc["clientAddr"])
+                dtv = 
                 entities.append(
                     DirecTvDevice(
-                        loc_name, loc["clientAddr"], dtv, discovery_dtv_version,
+                        loc_name, 
+                        loc["clientAddr"], 
+                        DIRECTV(host, DEFAULT_PORT, loc["clientAddr"]),
+                        dtv_version,
                     )
                 )
                 known_devices.add((host, loc["clientAddr"]))
@@ -176,7 +179,7 @@ class DirecTvDevice(MediaPlayerDevice):
         self._assumed_state = None
         self._available = False
         self._first_error_timestamp = None
-        
+
         if version_info:
             receiver_id = "".join(version_info.get("receiverId").split())
             self._unique_id = f"{receiver_id}-{device}"
