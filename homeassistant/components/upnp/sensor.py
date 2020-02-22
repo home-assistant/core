@@ -1,8 +1,7 @@
 """Support for UPnP/IGD Sensors."""
 import logging
 
-from homeassistan.const import TIME_SECONDS
-
+from homeassistant.const import TIME_SECONDS
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
