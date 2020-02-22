@@ -73,7 +73,7 @@ DEMO_VACUUM_MOST = "1_First_floor"
 DEMO_VACUUM_BASIC = "2_Second_floor"
 DEMO_VACUUM_MINIMAL = "3_Third_floor"
 DEMO_VACUUM_NONE = "4_Fourth_floor"
-DEMO_VACUUM_STATE = "5_Fourth_floor"
+DEMO_VACUUM_STATE = "5_Fifth_floor"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
