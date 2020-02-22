@@ -87,7 +87,7 @@ class Touchline(ClimateDevice):
         self._preset_mode = self.map_mode_touchline_hass(self._current_operation_mode, self._current_week_program)
 
     @property
-    def hvac_mode(self) -> str:
+    def hvac_mode(self):
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
