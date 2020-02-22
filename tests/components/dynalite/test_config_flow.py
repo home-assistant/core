@@ -4,6 +4,8 @@ from asynctest import patch
 from homeassistant import config_entries
 from homeassistant.components import dynalite
 
+from .common import get_bridge_from_hass
+
 from tests.common import MockConfigEntry
 
 
@@ -70,21 +72,28 @@ async def test_existing(hass):
 async def test_existing_update(hass):
     """Test when the entry exists with the same config."""
     host = "1.2.3.4"
-    mock_entry = MockConfigEntry(
-        domain=dynalite.DOMAIN, unique_id=host, data={dynalite.CONF_HOST: host}
-    )
-    mock_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.async_setup",
         return_value=True,
     ), patch(
         "homeassistant.components.dynalite.bridge.DynaliteDevices.available", True
     ):
+        assert await hass.config_entries.flow.async_init(
+            dynalite.DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={dynalite.CONF_HOST: host},
+        )
+        await hass.async_block_till_done()
+        old_bridge = get_bridge_from_hass(hass)
+        assert "aaa" not in old_bridge.dynalite_devices.config
         result = await hass.config_entries.flow.async_init(
             dynalite.DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={dynalite.CONF_HOST: host, "aaa": "bbb"},
         )
+        await hass.async_block_till_done()
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
-    assert mock_entry.data.get("aaa") == "bbb"
+    bridge = get_bridge_from_hass(hass)
+    assert old_bridge is not bridge
+    assert bridge.dynalite_devices.config.get("aaa") == "bbb"
