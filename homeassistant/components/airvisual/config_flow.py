@@ -41,7 +41,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_LATITUDE, default=self.hass.config.latitude)
         ] = cv.latitude
         schema[
-            vol.Optional(CONF_LONGITUDE, default=self.hass.config.longitude)
+            vol.Required(CONF_LONGITUDE, default=self.hass.config.longitude)
         ] = cv.longitude
         schema[vol.Optional(CONF_SHOW_ON_MAP, default=True)] = bool
 
