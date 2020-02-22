@@ -13,6 +13,7 @@ from homeassistant.const import (
     TIME_MINUTES,
     TIME_MONTHS,
     TIME_SECONDS,
+    TIME_YEARS,
     UNIT_UV_INDEX,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -90,7 +91,7 @@ UOM_FRIENDLY_NAME = {
     "74": "W/m²",
     "75": "weekday",
     "76": "Wind Direction (°)",
-    "77": TIME_DAYS,
+    "77": TIME_YEARS,
     "82": "mm",
     "83": "km",
     "85": "ohm",
