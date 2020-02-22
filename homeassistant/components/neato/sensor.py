@@ -5,15 +5,10 @@ import logging
 from pybotvac.exceptions import NeatoRobotException
 
 from homeassistant.components.sensor import DEVICE_CLASS_BATTERY
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    NEATO_DOMAIN,
-    NEATO_LOGIN,
-    NEATO_ROBOTS,
-    SCAN_INTERVAL_MINUTES,
-    UNIT_PERCENTAGE,
-)
+from .const import NEATO_DOMAIN, NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
 
 _LOGGER = logging.getLogger(__name__)
 
