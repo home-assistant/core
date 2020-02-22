@@ -210,7 +210,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     def post(self, request, data):
         """Create a new shopping list item."""
         item = request.app["hass"].data[DOMAIN].async_add(data["name"])
-        request.app["hass"].bus.async_fire(EVENT,{"action":"item_added", "item":item})
+        request.app["hass"].bus.async_fire(EVENT, {"action":"item_added", "item":item})
         return self.json(item)
 
 
@@ -225,7 +225,7 @@ class ClearCompletedItemsView(http.HomeAssistantView):
         """Retrieve if API is running."""
         hass = request.app["hass"]
         hass.data[DOMAIN].async_clear_completed()
-        hass.bus.async_fire(EVENT,{"action":"cleared_completed"})
+        hass.bus.async_fire(EVENT, {"action":"cleared_completed"})
         return self.json_message("Cleared completed items.")
 
 
@@ -241,7 +241,7 @@ def websocket_handle_items(hass, connection, msg):
 def websocket_handle_add(hass, connection, msg):
     """Handle add item to shopping_list."""
     item = hass.data[DOMAIN].async_add(msg["name"])
-    hass.bus.async_fire(EVENT,{"action":"item_added", "item":item})
+    hass.bus.async_fire(EVENT, {"action":"item_added", "item":item})
     connection.send_message(websocket_api.result_message(msg["id"], item))
 
 
@@ -255,7 +255,7 @@ async def websocket_handle_update(hass, connection, msg):
 
     try:
         item = hass.data[DOMAIN].async_update(item_id, data)
-        hass.bus.async_fire(EVENT,{"action":"item_updated", "item":item})
+        hass.bus.async_fire(EVENT, {"action":"item_updated", "item":item})
         connection.send_message(websocket_api.result_message(msg_id, item))
     except KeyError:
         connection.send_message(
@@ -267,5 +267,5 @@ async def websocket_handle_update(hass, connection, msg):
 def websocket_handle_clear(hass, connection, msg):
     """Handle clearing shopping_list items."""
     hass.data[DOMAIN].async_clear_completed()
-    hass.bus.async_fire(EVENT,{"action":"cleared_completed"})
+    hass.bus.async_fire(EVENT, {"action":"cleared_completed"})
     connection.send_message(websocket_api.result_message(msg["id"]))
