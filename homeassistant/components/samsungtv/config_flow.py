@@ -90,7 +90,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             }
             self._bridge = SamsungTVBridge.get_bridge(config)
             result = self._bridge.try_connect(self._port)
-            if result == RESULT_SUCCESS:
+            if result != RESULT_NOT_SUCCESSFUL:
                 return result
         LOGGER.debug("No working config found")
         return RESULT_NOT_SUCCESSFUL
