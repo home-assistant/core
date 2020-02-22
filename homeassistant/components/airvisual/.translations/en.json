@@ -17,15 +17,5 @@
             }
         },
         "title": "AirVisual"
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "show_on_map": "Show monitored geographies on the map"
-                },
-                "description": "Configure options for the AirVisual integration."
-            }
-        }
     }
 }
