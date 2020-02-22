@@ -26,7 +26,7 @@ from .config_flow import configured_instances
 from .const import (
     CONF_CITY,
     CONF_COUNTRY,
-    CONF_STATIONS,
+    CONF_GEOGRAPHIES,
     DATA_CLIENT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -57,7 +57,7 @@ GEOGRAPHY_SCHEMA = vol.All(
 CLOUD_API_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_STATIONS, default=[]): vol.All(
+        vol.Optional(CONF_GEOGRAPHIES, default=[]): vol.All(
             cv.ensure_list, [GEOGRAPHY_SCHEMA]
         ),
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
@@ -115,7 +115,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id] = AirVisualData(
         hass,
         Client(websession, api_key=config_entry.data[CONF_API_KEY]),
-        config_entry.data[CONF_STATIONS],
+        config_entry.data[CONF_GEOGRAPHIES],
         config_entry.options.get(CONF_SHOW_ON_MAP, config_entry.data[CONF_SHOW_ON_MAP]),
     )
 

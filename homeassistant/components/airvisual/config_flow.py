@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import CONF_STATIONS, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_GEOGRAPHIES, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 
 @callback
@@ -80,14 +80,14 @@ class AirVisualFlowHandler(config_entries.ConfigFlow):
 
         data = {
             CONF_API_KEY: user_input[CONF_API_KEY],
-            CONF_STATIONS: user_input.get(CONF_STATIONS, []),
+            CONF_GEOGRAPHIES: user_input.get(CONF_GEOGRAPHIES, []),
             CONF_SCAN_INTERVAL: user_input.get(
                 CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.total_seconds()
             ),
             CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, True),
         }
         if user_input.get(CONF_LATITUDE):
-            data[CONF_STATIONS].append(
+            data[CONF_GEOGRAPHIES].append(
                 {
                     CONF_LATITUDE: user_input[CONF_LATITUDE],
                     CONF_LONGITUDE: user_input[CONF_LONGITUDE],

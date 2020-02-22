@@ -5,7 +5,7 @@ DOMAIN = "airvisual"
 
 CONF_CITY = "city"
 CONF_COUNTRY = "country"
-CONF_STATIONS = "stations"
+CONF_GEOGRAPHIES = "geographies"
 
 DATA_CLIENT = "client"
 
