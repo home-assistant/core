@@ -1,9 +1,23 @@
 """Test the Monoprice 6-Zone Amplifier config flow."""
 from asynctest import patch
+from serial import SerialException
 
 from homeassistant import config_entries, setup
-from homeassistant.components.monoprice.config_flow import CannotConnect, InvalidAuth
-from homeassistant.components.monoprice.const import DOMAIN
+from homeassistant.components.monoprice.const import (
+    CONF_SOURCE_1,
+    CONF_SOURCE_4,
+    CONF_SOURCE_5,
+    CONF_SOURCES,
+    DOMAIN,
+)
+from homeassistant.const import CONF_PORT
+
+CONFIG = {
+    CONF_PORT: "/test/port",
+    CONF_SOURCE_1: "one",
+    CONF_SOURCE_4: "four",
+    CONF_SOURCE_5: "    ",
+}
 
 
 async def test_form(hass):
@@ -16,7 +30,7 @@ async def test_form(hass):
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.monoprice.config_flow.PlaceholderHub.authenticate",
+        "homeassistant.components.monoprice.config_flow.get_monoprice",
         return_value=True,
     ), patch(
         "homeassistant.components.monoprice.async_setup", return_value=True
@@ -24,47 +38,18 @@ async def test_form(hass):
         "homeassistant.components.monoprice.async_setup_entry", return_value=True,
     ) as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            result["flow_id"], CONFIG
         )
 
     assert result2["type"] == "create_entry"
-    assert result2["title"] == "Name of the device"
+    assert result2["title"] == CONFIG[CONF_PORT]
     assert result2["data"] == {
-        "host": "1.1.1.1",
-        "username": "test-username",
-        "password": "test-password",
+        CONF_PORT: CONFIG[CONF_PORT],
+        CONF_SOURCES: {1: CONFIG[CONF_SOURCE_1], 4: CONFIG[CONF_SOURCE_4]},
     }
     await hass.async_block_till_done()
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_invalid_auth(hass):
-    """Test we handle invalid auth."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    with patch(
-        "homeassistant.components.monoprice.config_flow.PlaceholderHub.authenticate",
-        side_effect=InvalidAuth,
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-
-    assert result2["type"] == "form"
-    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_cannot_connect(hass):
@@ -74,16 +59,11 @@ async def test_form_cannot_connect(hass):
     )
 
     with patch(
-        "homeassistant.components.monoprice.config_flow.PlaceholderHub.authenticate",
-        side_effect=CannotConnect,
+        "homeassistant.components.monoprice.config_flow.get_monoprice",
+        side_effect=SerialException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "host": "1.1.1.1",
-                "username": "test-username",
-                "password": "test-password",
-            },
+            result["flow_id"], CONFIG
         )
 
     assert result2["type"] == "form"
