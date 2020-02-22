@@ -53,6 +53,8 @@
         "step": {
             "plex_mp_settings": {
                 "data": {
+                    "ignore_new_shared_users": "\uc0c8\ub85c\uc6b4 \uad00\ub9ac/\uacf5\uc720 \uc0ac\uc6a9\uc790 \ubb34\uc2dc",
+                    "monitored_users": "\ubaa8\ub2c8\ud130\ub9c1\ub418\ub294 \uc0ac\uc6a9\uc790",
                     "show_all_controls": "\ubaa8\ub4e0 \ucee8\ud2b8\ub864 \ud45c\uc2dc\ud558\uae30",
                     "use_episode_art": "\uc5d0\ud53c\uc18c\ub4dc \uc544\ud2b8 \uc0ac\uc6a9"
                 },
