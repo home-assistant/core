@@ -344,6 +344,7 @@ TEMP_CELSIUS = "°C"
 TEMP_FAHRENHEIT = "°F"
 
 # Time units
+TIME_MILLISECONDS = "ms"
 TIME_SECONDS = "s"
 TIME_MINUTES = "min"
 TIME_HOURS = "h"

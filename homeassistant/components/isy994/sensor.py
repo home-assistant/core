@@ -7,6 +7,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    TIME_MILLISECONDS,
     TIME_MINUTES,
     UNIT_UV_INDEX,
 )
@@ -55,7 +56,7 @@ UOM_FRIENDLY_NAME = {
     "39": "m³/hr",
     "40": "m/s",
     "41": "mA",
-    "42": "ms",
+    "42": TIME_MILLISECONDS,
     "43": "mV",
     "44": "min",
     "45": "min",

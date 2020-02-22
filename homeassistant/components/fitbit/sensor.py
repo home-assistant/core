@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM, TIME_MILLISECONDS
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -99,7 +99,7 @@ FITBIT_RESOURCES_LIST = {
 
 FITBIT_MEASUREMENTS = {
     "en_US": {
-        "duration": "ms",
+        "duration": TIME_MILLISECONDS,
         "distance": "mi",
         "elevation": "ft",
         "height": "in",
