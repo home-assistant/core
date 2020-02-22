@@ -3,7 +3,13 @@ import logging
 from typing import Callable
 
 from homeassistant.components.sensor import DOMAIN
-from homeassistant.const import POWER_WATT, TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX
+from homeassistant.const import (
+    POWER_WATT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    TIME_MINUTES,
+    UNIT_UV_INDEX,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from . import ISY994_NODES, ISY994_WEATHER, ISYDevice
@@ -16,7 +22,7 @@ UOM_FRIENDLY_NAME = {
     "4": TEMP_CELSIUS,
     "5": "cm",
     "6": "ft³",
-    "7": "ft³/min",
+    "7": f"ft³/{TIME_MINUTES}",
     "8": "m³",
     "9": "day",
     "10": "days",

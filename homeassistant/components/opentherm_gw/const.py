@@ -1,7 +1,12 @@
 """Constants for the opentherm_gw integration."""
 import pyotgw.vars as gw_vars
 
-from homeassistant.const import DEVICE_CLASS_TEMPERATURE, TEMP_CELSIUS, TIME_HOURS
+from homeassistant.const import (
+    DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS,
+    TIME_HOURS,
+    TIME_MINUTES,
+)
 
 ATTR_GW_ID = "gateway_id"
 ATTR_LEVEL = "level"
@@ -32,7 +37,7 @@ SERVICE_SET_SB_TEMP = "set_setback_temperature"
 
 UNIT_BAR = "bar"
 UNIT_KW = "kW"
-UNIT_L_MIN = "L/min"
+UNIT_L_MIN = f"L/{TIME_MINUTES}"
 UNIT_PERCENT = "%"
 
 BINARY_SENSOR_INFO = {
