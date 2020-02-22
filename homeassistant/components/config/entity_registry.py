@@ -114,7 +114,7 @@ async def websocket_update_entity(hass, connection, msg):
         )
     else:
         connection.send_message(
-            websocket_api.result_message(msg["id"], _entry_dict(entry))
+            websocket_api.result_message(msg["id"], _entry_ext_dict(entry))
         )
 
 
@@ -160,16 +160,9 @@ def _entry_dict(entry):
 @callback
 def _entry_ext_dict(entry):
     """Convert entry to API format."""
-    return {
-        "config_entry_id": entry.config_entry_id,
-        "device_id": entry.device_id,
-        "disabled_by": entry.disabled_by,
-        "entity_id": entry.entity_id,
-        "name": entry.name,
-        "icon": entry.icon,
-        "platform": entry.platform,
-        "original_name": entry.original_name,
-        "original_icon": entry.original_icon,
-        "unique_id": entry.unique_id,
-        "capabilities": entry.capabilities,
-    }
+    data = _entry_dict(entry)
+    data["original_name"] = entry.original_name
+    data["original_icon"] = entry.original_icon
+    data["unique_id"] = entry.unique_id
+    data["capabilities"] = entry.capabilities
+    return data
