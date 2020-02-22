@@ -156,21 +156,9 @@ class AirVisualData:
         self.data = {}
         self.show_on_map = show_on_map
 
-        if geographies:
-            self.geographies = {
-                async_get_geography_id(geography): geography
-                for geography in geographies
-            }
-        else:
-            default_geography = GEOGRAPHY_SCHEMA(
-                {
-                    CONF_LATITUDE: hass.config.latitude,
-                    CONF_LONGITUDE: hass.config.longitude,
-                }
-            )
-            self.geographies = {
-                async_get_geography_id(default_geography): default_geography
-            }
+        self.geographies = {
+            async_get_geography_id(geography): geography for geography in geographies
+        }
 
     async def async_update(self):
         """Get new data for all locations from the AirVisual cloud API."""

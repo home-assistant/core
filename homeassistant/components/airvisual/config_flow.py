@@ -33,28 +33,44 @@ class AirVisualFlowHandler(config_entries.ConfigFlow):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
-    def __init__(self):
-        """Initialize the config flow."""
-        self.data_schema = OrderedDict()
-        self.data_schema[vol.Required(CONF_API_KEY)] = str
-        self.data_schema[vol.Optional(CONF_LATITUDE)] = cv.latitude
-        self.data_schema[vol.Optional(CONF_LONGITUDE)] = cv.longitude
-        self.data_schema[vol.Optional(CONF_SHOW_ON_MAP, default=True)] = bool
+    @property
+    def cloud_api_schema(self):
+        """Return the data schema for the cloud API."""
+        schema = OrderedDict()
+        schema[vol.Required(CONF_API_KEY)] = str
+        schema[
+            vol.Optional(CONF_LATITUDE, default=self.hass.config.latitude)
+        ] = cv.latitude
+        schema[
+            vol.Optional(CONF_LONGITUDE, default=self.hass.config.longitude)
+        ] = cv.longitude
+        schema[vol.Optional(CONF_SHOW_ON_MAP, default=True)] = bool
+
+        return schema
 
     @callback
     async def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(self.data_schema),
+            data_schema=vol.Schema(self.cloud_api_schema),
             errors=errors or {},
         )
 
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
+        data = {**import_config}
+        if not data[CONF_GEOGRAPHIES]:
+            data[CONF_GEOGRAPHIES].append(
+                {
+                    CONF_LATITUDE: self.hass.config.latitude,
+                    CONF_LONGITUDE: self.hass.config.longitude,
+                }
+            )
+
         return self.async_create_entry(
             title=f"Cloud API (API key: {import_config[CONF_API_KEY][:4]}...)",
-            data=import_config,
+            data=data,
         )
 
     async def async_step_user(self, user_input=None):
@@ -63,7 +79,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow):
             return await self._show_form()
 
         if user_input[CONF_API_KEY] in configured_instances(self.hass):
-            return await self._show_form({CONF_API_KEY: "identifier_exists"})
+            return await self._show_form(errors={CONF_API_KEY: "identifier_exists"})
 
         websession = aiohttp_client.async_get_clientsession(self.hass)
 
@@ -72,7 +88,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow):
         try:
             await client.api.nearest_city()
         except InvalidKeyError:
-            return await self._show_form({CONF_API_KEY: "invalid_api_key"})
+            return await self._show_form(errors={CONF_API_KEY: "invalid_api_key"})
 
         return self.async_create_entry(
             title=f"Cloud API (API key: {user_input[CONF_API_KEY][:4]}...)",

@@ -110,12 +110,14 @@ class AirVisualSensor(Entity):
             ATTR_COUNTRY: airvisual.data[geography_id].get(CONF_COUNTRY),
         }
 
-        if airvisual.data[geography_id].get(CONF_LATITUDE) and airvisual.show_on_map:
-            self._attrs[ATTR_LATITUDE] = airvisual.data[geography_id][CONF_LATITUDE]
-            self._attrs[ATTR_LONGITUDE] = airvisual.data[geography_id][CONF_LONGITUDE]
-        else:
-            self._attrs["lati"] = airvisual.data[geography_id][CONF_LATITUDE]
-            self._attrs["long"] = airvisual.data[geography_id][CONF_LONGITUDE]
+        geography = airvisual.geographies[geography_id]
+        if geography.get(CONF_LATITUDE):
+            if airvisual.show_on_map:
+                self._attrs[ATTR_LATITUDE] = geography[CONF_LATITUDE]
+                self._attrs[ATTR_LONGITUDE] = geography[CONF_LONGITUDE]
+            else:
+                self._attrs["lati"] = geography[CONF_LATITUDE]
+                self._attrs["long"] = geography[CONF_LONGITUDE]
 
     @property
     def available(self):
