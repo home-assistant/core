@@ -1,7 +1,7 @@
 """Support for LightwaveRF TRV - Associated Battery."""
 import logging
 
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY
 from homeassistant.helpers.entity import Entity
 
 from . import CONF_SERIAL, LIGHTWAVE_LINK, LIGHTWAVE_TRV_PROXY, LIGHTWAVE_TRV_PROXY_PORT
@@ -42,7 +42,7 @@ class LightwaveBattery(Entity):
         self._state = None
         self._lwlink = lwlink
         self._serial = serial
-        self._device_class = "battery"
+        self._device_class = DEVICE_CLASS_BATTERY
         self._unit_of_measurement = "%"
         self._proxy_ip = trv_proxy_ip
         self._proxy_port = trv_proxy_port
@@ -80,5 +80,4 @@ class LightwaveBattery(Entity):
         (dummy_temp, dummy_targ, battery, dummy_output) = self._lwlink.read_trv_status(
             self._serial
         )
-        if battery is not None:
-            self._state = battery
+        self._state = battery

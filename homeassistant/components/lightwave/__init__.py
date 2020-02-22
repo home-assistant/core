@@ -2,21 +2,23 @@
 from lightwave.lightwave import LWLink
 import voluptuous as vol
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_LIGHTS, CONF_NAME, CONF_SWITCHES
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
 CONF_SERIAL = "serial"
+CONF_PROXY_IP = "proxy_ip"
+CONF_PROXY_PORT = "proxy_port"
 CONF_TRV = "trv"
 CONF_TRVS = "trvs"
-DEFAULT_PORT = 7878
-DEFAULT_IP = "127.0.0.1"
+DEFAULT_PROXY_PORT = 7878
+DEFAULT_PROXY_IP = "127.0.0.1"
 DOMAIN = "lightwave"
-LIGHTWAVE_LINK = "lightwave_link"
-LIGHTWAVE_TRV_PROXY = "lightwave_proxy"
-LIGHTWAVE_TRV_PROXY_PORT = "lightwave_proxy_port"
-PROXY_IP = "proxy_ip"
-PROXY_PORT = "proxy_port"
+LIGHTWAVE_LINK = f"{DOMAIN}_link"
+LIGHTWAVE_TRV_PROXY = f"{DOMAIN}_proxy"
+LIGHTWAVE_TRV_PROXY_PORT = f"{DOMAIN}_proxy_port"
 
 
 CONFIG_SCHEMA = vol.Schema(
@@ -33,8 +35,12 @@ CONFIG_SCHEMA = vol.Schema(
                         cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string})
                     },
                     vol.Optional(CONF_TRV, default={}): {
-                        vol.Optional(PROXY_PORT, default=DEFAULT_PORT): cv.port,
-                        vol.Optional(PROXY_IP, default=DEFAULT_IP): cv.string,
+                        vol.Optional(
+                            CONF_PROXY_PORT, default=DEFAULT_PROXY_PORT
+                        ): cv.port,
+                        vol.Optional(
+                            CONF_PROXY_IP, default=DEFAULT_PROXY_IP
+                        ): cv.string,
                         vol.Required(CONF_TRVS, default={}): {
                             cv.string: vol.Schema(
                                 {
@@ -73,16 +79,14 @@ async def async_setup(hass, config):
     trv = config[DOMAIN][CONF_TRV]
     trvs = trv[CONF_TRVS]
     if trv:
-        proxy_ip = trv[PROXY_IP]
-        proxy_port = trv[PROXY_PORT]
+        proxy_ip = trv[CONF_PROXY_IP]
+        proxy_port = trv[CONF_PROXY_PORT]
         hass.data[LIGHTWAVE_TRV_PROXY] = proxy_ip
         hass.data[LIGHTWAVE_TRV_PROXY_PORT] = proxy_port
         lwlink.set_trv_proxy(proxy_ip, proxy_port)
-        hass.async_create_task(
-            async_load_platform(hass, "climate", DOMAIN, trvs, config)
-        )
-        hass.async_create_task(
-            async_load_platform(hass, "sensor", DOMAIN, trvs, config)
-        )
+
+        entities = [CLIMATE_DOMAIN, SENSOR_DOMAIN]
+        for ent in entities:
+            hass.async_create_task(async_load_platform(hass, ent, DOMAIN, trvs, config))
 
     return True
