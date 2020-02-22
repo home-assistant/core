@@ -41,13 +41,14 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.temperature import convert_temperature
 
+from .core import discovery
 from .core.const import (
     CHANNEL_FAN,
     CHANNEL_THERMOSTAT,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
-    ZHA_DISCOVERY_NEW,
 )
 from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
@@ -136,53 +137,20 @@ SECS_2000_01_01 = 946_702_800
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation sensors."""
-    pass
-
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation sensor from config entry."""
-
-    async def async_discover(discovery_info):
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, [discovery_info]
-        )
-
+    entities_to_create = hass.data[DATA_ZHA][DOMAIN] = []
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(DOMAIN), async_discover
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(
+            discovery.async_add_entities, async_add_entities, entities_to_create
+        ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
-    climate_entities = hass.data.get(DATA_ZHA, {}).get(DOMAIN)
-    if climate_entities is not None:
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, climate_entities.values()
-        )
-        del hass.data[DATA_ZHA][DOMAIN]
 
-
-async def _async_setup_entities(
-    hass, config_entry, async_add_entities, discovery_infos
-):
-    """Set up the ZHA sensors."""
-    entities = []
-    for discovery_info in discovery_infos:
-        entities.append(await get_climate(discovery_info))
-
-    if entities:
-        async_add_entities(entities)
-
-
-async def get_climate(discovery_info):
-    """Create ZHA climate entity."""
-    zha_dev = discovery_info.get("zha_device")
-    channels = discovery_info["channels"]
-
-    entity = ZHA_ENTITIES.get_entity(DOMAIN, zha_dev, channels, Thermostat)
-    return entity(**discovery_info)
-
-
+@STRICT_MATCH(channel_names=CHANNEL_THERMOSTAT, aux_channels=CHANNEL_FAN)
 class Thermostat(ZhaEntity, ClimateDevice):
     """Representation of a ZHA Thermostat device."""
 
@@ -192,9 +160,9 @@ class Thermostat(ZhaEntity, ClimateDevice):
     _domain = DOMAIN
     value_attribute = 0x0000
 
-    def __init__(self, **kwargs):
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize ZHA Thermostat instance."""
-        super().__init__(**kwargs)
+        super().__init__(unique_id, zha_device, channels, **kwargs)
         self._thrm = self.cluster_channels.get(CHANNEL_THERMOSTAT)
         self._preset = PRESET_NONE
         self._presets = None
@@ -545,9 +513,9 @@ class SinopeTechnologiesThermostat(Thermostat):
     manufacturer = 0x119C
     update_time_interval = timedelta(minutes=15)
 
-    def __init__(self, **kwargs):
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize ZHA Thermostat instance."""
-        super().__init__(**kwargs)
+        super().__init__(unique_id, zha_device, channels, **kwargs)
         self._presets = [PRESET_AWAY, PRESET_NONE]
         self._supported_flags |= SUPPORT_PRESET_MODE
 
