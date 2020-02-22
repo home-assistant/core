@@ -71,7 +71,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Frontier Silicon platform."""
     if discovery_info is not None:
         async_add_entities(
-            [AFSAPIDevice(discovery_info["ssdp_description"], DEFAULT_PASSWORD)], True
+            [AFSAPIDevice(discovery_info["ssdp_description"], DEFAULT_PASSWORD, DEFAULT_NAME)], True
         )
         return True
 
