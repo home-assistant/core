@@ -59,13 +59,13 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         data = {**import_config}
-        if not data[CONF_GEOGRAPHIES]:
-            data[CONF_GEOGRAPHIES].append(
+        if not data.get(CONF_GEOGRAPHIES):
+            data[CONF_GEOGRAPHIES] = [
                 {
                     CONF_LATITUDE: self.hass.config.latitude,
                     CONF_LONGITUDE: self.hass.config.longitude,
                 }
-            )
+            ]
 
         return self.async_create_entry(
             title=f"Cloud API (API key: {import_config[CONF_API_KEY][:4]}...)",
