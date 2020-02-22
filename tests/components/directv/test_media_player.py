@@ -305,6 +305,24 @@ class MockDirectvClass:
         }
         return test_attributes
 
+    def get_version(self):
+        """Mock for get_version method."""
+        test_version = {
+            "accessCardId": "0021-1495-6572",
+            "receiverId": "0288 7745 5858",
+            "status": {
+                "code": 200,
+                "commandResult": 0,
+                "msg": "OK.",
+                "query": "/info/getVersion",
+            },
+            "stbSoftwareVersion": "0x4ed7",
+            "systemTime": 1281625203,
+            "version": "1.2",
+        }
+
+        return test_version
+
     def key_press(self, keypress):
         """Mock for key_press method."""
         if keypress == "poweron":
@@ -411,10 +429,10 @@ async def test_unique_id(hass, platforms):
     entity_registry = await hass.helpers.entity_registry.async_get_registry()
 
     main = entity_registry.async_get(MAIN_ENTITY_ID)
-    assert main.unique_id == "9999999999"
+    assert main.unique_id == "028877455858-0"
 
     client = entity_registry.async_get(CLIENT_ENTITY_ID)
-    assert client.unique_id == "9999999999-1"
+    assert client.unique_id == "028877455858-1"
 
 
 async def test_supported_features(hass, platforms):

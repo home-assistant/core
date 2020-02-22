@@ -37,8 +37,6 @@ from .const import (
     ATTR_MEDIA_RECORDED,
     ATTR_MEDIA_START_TIME,
     DATA_DIRECTV,
-    DATA_HOST_SERIAL_NUMBERS,
-    DATA_KNOWN_DEVICES,
     DEFAULT_DEVICE,
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -79,31 +77,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DirecTV platform."""
     hass.data.setdefault(
-        DATA_DIRECTV, {DATA_KNOWN_DEVICES: set(), DATA_HOST_SERIAL_NUMBERS: {}},
+        DATA_DIRECTV, set(),
     )
 
-    known_devices = hass.data[DATA_DIRECTV][DATA_KNOWN_DEVICES]
-    host_serials = hass.data[DATA_DIRECTV][DATA_HOST_SERIAL_NUMBERS]
-    hosts = []
+    known_devices = hass.data[DATA_DIRECTV]
+    devices = []
 
     if CONF_HOST in config:
-        device = config.get(CONF_DEVICE)
-        host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
+        host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
+        device = config.get(CONF_DEVICE)
 
         _LOGGER.debug(
-            "Adding configured device %s with client address %s ", name, device,
+            "Adding configured device %s with client address %s", name, device,
         )
 
-        if host not in host_serials:
-            _LOGGER.debug(
-                "Doing lookup of serial number of DirecTV receiver on %s", host
-            )
-            dtv = DIRECTV(host, port)
-            host_serials[host] = _get_receiver_serial_number(dtv)
+        dtv = DIRECTV(host, port, device)
+        dtv_version = _get_receiver_version(dtv)
 
-        hosts.append([name, host, port, device, host_serials[host]])
+        devices.append(DirecTvDevice(name, device, dtv, dtv_version,))
+        known_devices.add((host, device))
 
     elif discovery_info:
         host = discovery_info.get("host")
@@ -112,16 +106,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         # Attempt to discover additional RVU units
         _LOGGER.debug("Doing discovery of DirecTV devices on %s", host)
 
-        dtv = DIRECTV(host, DEFAULT_PORT)
-
-        if host not in host_serials:
-            _LOGGER.debug(
-                "Doing lookup of serial number of DirecTV receiver on %s", host
-            )
-            host_serials[host] = _get_receiver_serial_number(dtv)
+        discovery_dtv = DIRECTV(host, DEFAULT_PORT)
 
         try:
-            resp = dtv.get_locations()
+            discovery_dtv_version = _get_receiver_version(discovery_dtv)
+            resp = discovery_dtv.get_locations()
         except requests.exceptions.RequestException as ex:
             # Bail out and just go forward with uPnP data
             # Make sure that this device is not already configured
@@ -134,6 +123,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             if "locationName" not in loc or "clientAddr" not in loc:
                 continue
 
+            loc_name = str.title(loc["locationName"])
+
             # Make sure that this device is not already configured
             # Comparing based on host (IP) and clientAddr.
             if (host, loc["clientAddr"]) in known_devices:
@@ -141,52 +132,43 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     "Discovered device %s on host %s with "
                     "client address %s is already "
                     "configured",
-                    str.title(loc["locationName"]),
+                    loc_name,
                     host,
                     loc["clientAddr"],
                 )
             else:
                 _LOGGER.debug(
                     "Adding discovered device %s with client address %s",
-                    str.title(loc["locationName"]),
+                    loc_name,
                     loc["clientAddr"],
                 )
-                hosts.append(
-                    [
-                        str.title(loc["locationName"]),
-                        host,
-                        DEFAULT_PORT,
-                        loc["clientAddr"],
-                        host_serials[host],
-                    ]
+                dtv = DIRECTV(host, DEFAULT_PORT, loc["clientAddr"])
+                devices.append(
+                    DirecTvDevice(
+                        loc_name, loc["clientAddr"], dtv, discovery_dtv_version,
+                    )
                 )
+                known_devices.add((host, loc["clientAddr"]))
 
-    dtvs = []
-
-    for host in hosts:
-        dtvs.append(DirecTvDevice(*host))
-        known_devices.add((host[1], host[3]))
-
-    add_entities(dtvs)
+    add_entities(devices)
 
 
-def _get_receiver_serial_number(client):
-    """Return the serial number of the DirectTV receiver."""
+def _get_receiver_version(client):
+    """Return the version of the DirectTV receiver."""
     try:
-        resp = client.get_serial_num()
-        return resp.get("serialNum")
+        return client.get_version()
     except requests.exceptions.RequestException as ex:
-        _LOGGER.debug("Request exception %s trying to get receiver serial number", ex)
+        _LOGGER.debug("Request exception %s trying to get receiver version", ex)
         return None
 
 
 class DirecTvDevice(MediaPlayerDevice):
     """Representation of a DirecTV receiver on the network."""
 
-    def __init__(self, name, host, port, device, receiver_serial=None):
+    def __init__(self, name, device, dtv, version_info=None):
         """Initialize the device."""
-
-        self.dtv = DIRECTV(host, port, device)
+        self.dtv = dtv
+        self._client_addr = device
         self._name = name
         self._unique_id = None
         self._is_standby = True
@@ -195,20 +177,22 @@ class DirecTvDevice(MediaPlayerDevice):
         self._paused = None
         self._last_position = None
         self._is_recorded = None
-        self._is_client = device != "0"
+        self._is_client = self._client_addr != "0"
         self._assumed_state = None
         self._available = False
         self._first_error_timestamp = None
+        self._receiver_id = None
+        self._version_info = version_info
+
+        if self._version_info:
+            self._receiver_id = "".join(self._version_info.get("receiverId").split())
+            self._unique_id = f"{self._receiver_id}-{self._client_addr}"
 
         if self._is_client:
-            if receiver_serial is not None:
-                self._unique_id = f"{receiver_serial}-{device}"
-
-            _LOGGER.debug("Created DirecTV client %s for device %s", self._name, device)
+            _LOGGER.debug(
+                "Created DirecTV client %s for device %s", self._name, self._client_addr
+            )
         else:
-            if receiver_serial is not None:
-                self._unique_id = receiver_serial
-
             _LOGGER.debug("Created DirecTV device for %s", self._name)
 
     def update(self):
