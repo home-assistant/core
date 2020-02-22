@@ -14,3 +14,5 @@ set_value:
     entity_id: {description: Entity id of the input number to set the new value.,
       example: input_number.threshold}
     value: {description: The target value the entity should be set to., example: 42}
+reload:
+  description: Reload the input_number configuration.

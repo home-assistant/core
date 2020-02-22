@@ -1,0 +1,34 @@
+{
+    "config": {
+        "error": {
+            "login": "Bejelentkez\u00e9si hiba: k\u00e9rj\u00fck, ellen\u0151rizze e-mail c\u00edm\u00e9t \u00e9s jelszav\u00e1t",
+            "send_verification_code": "Nem siker\u00fclt elk\u00fcldeni az ellen\u0151rz\u0151 k\u00f3dot",
+            "validate_verification_code": "Nem siker\u00fclt ellen\u0151rizni az ellen\u0151rz\u0151 k\u00f3dot, ki kell v\u00e1lasztania egy megb\u00edzhat\u00f3s\u00e1gi eszk\u00f6zt, \u00e9s \u00fajra kell ind\u00edtania az ellen\u0151rz\u00e9st"
+        },
+        "step": {
+            "trusted_device": {
+                "data": {
+                    "trusted_device": "Megb\u00edzhat\u00f3 eszk\u00f6z"
+                },
+                "description": "V\u00e1lassza ki a megb\u00edzhat\u00f3 eszk\u00f6zt",
+                "title": "iCloud megb\u00edzhat\u00f3 eszk\u00f6z"
+            },
+            "user": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "E-mail"
+                },
+                "description": "Adja meg hiteles\u00edt\u0151 adatait",
+                "title": "iCloud hiteles\u00edt\u0151 adatok"
+            },
+            "verification_code": {
+                "data": {
+                    "verification_code": "Ellen\u0151rz\u0151 k\u00f3d"
+                },
+                "description": "K\u00e9rj\u00fck, \u00edrja be az iCloud-t\u00f3l \u00e9ppen kapott ellen\u0151rz\u0151 k\u00f3dot",
+                "title": "iCloud ellen\u0151rz\u0151 k\u00f3d"
+            }
+        },
+        "title": "Apple iCloud"
+    }
+}

@@ -1,6 +1,6 @@
 """Sensor for Xbox Live account status."""
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 from xboxapi import xbox_api

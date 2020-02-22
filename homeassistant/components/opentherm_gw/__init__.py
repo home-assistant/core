@@ -1,16 +1,16 @@
 """Support for OpenTherm Gateway devices."""
 import asyncio
+from datetime import date, datetime
 import logging
-from datetime import datetime, date
 
 import pyotgw
 import pyotgw.vars as gw_vars
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.components.binary_sensor import DOMAIN as COMP_BINARY_SENSOR
 from homeassistant.components.climate import DOMAIN as COMP_CLIMATE
 from homeassistant.components.sensor import DOMAIN as COMP_SENSOR
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DATE,
     ATTR_ID,
@@ -25,14 +25,13 @@ from homeassistant.const import (
     PRECISION_TENTHS,
     PRECISION_WHOLE,
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-import homeassistant.helpers.config_validation as cv
-
 from .const import (
+    ATTR_DHW_OVRD,
     ATTR_GW_ID,
     ATTR_LEVEL,
-    ATTR_DHW_OVRD,
     CONF_CLIMATE,
     CONF_FLOOR_TEMP,
     CONF_PRECISION,
@@ -42,14 +41,13 @@ from .const import (
     SERVICE_RESET_GATEWAY,
     SERVICE_SET_CLOCK,
     SERVICE_SET_CONTROL_SETPOINT,
-    SERVICE_SET_HOT_WATER_OVRD,
     SERVICE_SET_GPIO_MODE,
+    SERVICE_SET_HOT_WATER_OVRD,
     SERVICE_SET_LED_MODE,
     SERVICE_SET_MAX_MOD,
     SERVICE_SET_OAT,
     SERVICE_SET_SB_TEMP,
 )
-
 
 _LOGGER = logging.getLogger(__name__)
 

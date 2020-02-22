@@ -14,6 +14,7 @@ from homematicip.aio.device import (
     AsyncPassageDetector,
     AsyncPlugableSwitchMeasuring,
     AsyncPresenceDetectorIndoor,
+    AsyncRoomControlDeviceAnalog,
     AsyncTemperatureHumiditySensorDisplay,
     AsyncTemperatureHumiditySensorOutdoor,
     AsyncTemperatureHumiditySensorWithoutDisplay,
@@ -34,7 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericDevice
 from .device import ATTR_IS_GROUP, ATTR_MODEL_TYPE
 from .hap import HomematicipHAP
 
@@ -56,18 +57,11 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
 }
 
 
-async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
-) -> None:
-    """Set up the HomematicIP Cloud sensors devices."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP Cloud sensors from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
     entities = [HomematicipAccesspointStatus(hap)]
     for device in hap.home.devices:
         if isinstance(device, (AsyncHeatingThermostat, AsyncHeatingThermostatCompact)):
@@ -86,6 +80,8 @@ async def async_setup_entry(
         ):
             entities.append(HomematicipTemperatureSensor(hap, device))
             entities.append(HomematicipHumiditySensor(hap, device))
+        elif isinstance(device, (AsyncRoomControlDeviceAnalog,)):
+            entities.append(HomematicipTemperatureSensor(hap, device))
         if isinstance(
             device,
             (
@@ -312,7 +308,7 @@ class HomematicipPowerSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Representation of the HomematicIP power comsumption value."""
+        """Representation of the HomematicIP power consumption value."""
         return self._device.currentPowerConsumption
 
     @property
@@ -363,7 +359,7 @@ class HomematicipTodayRainSensor(HomematicipGenericDevice):
 
     @property
     def state(self) -> float:
-        """Representation of the HomematicIP todays rain value."""
+        """Representation of the HomematicIP today's rain value."""
         return round(self._device.todayRainCounter, 2)
 
     @property

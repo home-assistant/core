@@ -5,26 +5,27 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
-from homeassistant.core import split_entity_id
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA,
-    ImageProcessingFaceEntity,
     ATTR_CONFIDENCE,
-    CONF_SOURCE,
     CONF_ENTITY_ID,
     CONF_NAME,
+    CONF_SOURCE,
+    PLATFORM_SCHEMA,
+    ImageProcessingFaceEntity,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_NAME,
     CONF_IP_ADDRESS,
-    CONF_PORT,
     CONF_PASSWORD,
+    CONF_PORT,
     CONF_USERNAME,
     HTTP_BAD_REQUEST,
     HTTP_OK,
     HTTP_UNAUTHORIZED,
 )
+from homeassistant.core import split_entity_id
+import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, SERVICE_TEACH_FACE
 

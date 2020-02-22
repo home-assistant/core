@@ -1,12 +1,10 @@
 """The tests for the Conversation component."""
-# pylint: disable=protected-access
 import pytest
 
-from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
-from homeassistant.setup import async_setup_component
 from homeassistant.components import conversation
-from homeassistant.components.cover import SERVICE_OPEN_COVER
+from homeassistant.core import DOMAIN as HASS_DOMAIN, Context
 from homeassistant.helpers import intent
+from homeassistant.setup import async_setup_component
 
 from tests.common import async_mock_intent, async_mock_service
 
@@ -153,32 +151,6 @@ async def test_turn_on_intent(hass, sentence):
     assert call.data == {"entity_id": "light.kitchen"}
 
 
-async def test_cover_intents_loading(hass):
-    """Test Cover Intents Loading."""
-    with pytest.raises(intent.UnknownIntent):
-        await intent.async_handle(
-            hass, "test", "HassOpenCover", {"name": {"value": "garage door"}}
-        )
-
-    result = await async_setup_component(hass, "cover", {})
-    assert result
-
-    hass.states.async_set("cover.garage_door", "closed")
-    calls = async_mock_service(hass, "cover", SERVICE_OPEN_COVER)
-
-    response = await intent.async_handle(
-        hass, "test", "HassOpenCover", {"name": {"value": "garage door"}}
-    )
-    await hass.async_block_till_done()
-
-    assert response.speech["plain"]["speech"] == "Opened garage door"
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == "cover"
-    assert call.service == "open_cover"
-    assert call.data == {"entity_id": "cover.garage_door"}
-
-
 @pytest.mark.parametrize("sentence", ("turn off kitchen", "turn kitchen off"))
 async def test_turn_off_intent(hass, sentence):
     """Test calling the turn on intent."""
@@ -229,11 +201,9 @@ async def test_toggle_intent(hass, sentence):
 
 async def test_http_api(hass, hass_client):
     """Test the HTTP conversation API."""
-    result = await async_setup_component(hass, "homeassistant", {})
-    assert result
-
-    result = await async_setup_component(hass, "conversation", {})
-    assert result
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, "intent", {})
 
     client = await hass_client()
     hass.states.async_set("light.kitchen", "off")

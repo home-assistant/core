@@ -1,6 +1,7 @@
 """StarLine Account."""
-from datetime import timedelta, datetime
-from typing import Callable, Optional, Dict, Any
+from datetime import datetime, timedelta
+from typing import Any, Callable, Dict, Optional
+
 from starline import StarlineApi, StarlineDevice
 
 from homeassistant.config_entries import ConfigEntry
@@ -8,13 +9,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
+    DATA_EXPIRES,
+    DATA_SLID_TOKEN,
+    DATA_SLNET_TOKEN,
+    DATA_USER_ID,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     LOGGER,
-    DEFAULT_SCAN_INTERVAL,
-    DATA_USER_ID,
-    DATA_SLNET_TOKEN,
-    DATA_SLID_TOKEN,
-    DATA_EXPIRES,
 )
 
 
@@ -22,7 +23,7 @@ class StarlineAccount:
     """StarLine Account class."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry):
-        """Constructor."""
+        """Initialize StarLine account."""
         self._hass: HomeAssistant = hass
         self._config_entry: ConfigEntry = config_entry
         self._update_interval: int = DEFAULT_SCAN_INTERVAL

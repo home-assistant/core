@@ -12,7 +12,7 @@
                     "password": "Passwort",
                     "username": "Benutzername/E-Mail-Adresse"
                 },
-                "description": "Bitte geben Sie den Benutzernamen und das Passwort f\u00fcr Ihr iAqualink-Konto ein.",
+                "description": "Bitte gib den Benutzernamen und das Passwort f\u00fcr dein iAqualink-Konto ein.",
                 "title": "Mit iAqualink verbinden"
             }
         },

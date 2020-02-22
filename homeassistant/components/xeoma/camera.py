@@ -1,8 +1,8 @@
 """Support for Xeoma Cameras."""
 import logging
 
-import voluptuous as vol
 from pyxeoma.xeoma import Xeoma, XeomaError
+import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME

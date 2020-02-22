@@ -1,16 +1,16 @@
 """Support for Lutron Caseta fans."""
 import logging
 
-from pylutron_caseta import FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH
+from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF
 
 from homeassistant.components.fan import (
-    SUPPORT_SET_SPEED,
-    FanEntity,
     DOMAIN,
     SPEED_HIGH,
     SPEED_LOW,
     SPEED_MEDIUM,
     SPEED_OFF,
+    SUPPORT_SET_SPEED,
+    FanEntity,
 )
 
 from . import LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice

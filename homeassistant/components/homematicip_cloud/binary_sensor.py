@@ -10,6 +10,7 @@ from homematicip.aio.device import (
     AsyncMotionDetectorIndoor,
     AsyncMotionDetectorOutdoor,
     AsyncMotionDetectorPushButton,
+    AsyncPluggableMainsFailureSurveillance,
     AsyncPresenceDetectorIndoor,
     AsyncRotaryHandleSensor,
     AsyncShutterContact,
@@ -31,6 +32,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_MOTION,
     DEVICE_CLASS_MOVING,
     DEVICE_CLASS_OPENING,
+    DEVICE_CLASS_POWER,
     DEVICE_CLASS_PRESENCE,
     DEVICE_CLASS_SAFETY,
     DEVICE_CLASS_SMOKE,
@@ -39,7 +41,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.typing import HomeAssistantType
 
-from . import DOMAIN as HMIPC_DOMAIN, HMIPC_HAPID, HomematicipGenericDevice
+from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericDevice
 from .hap import HomematicipHAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,18 +75,11 @@ SAM_DEVICE_ATTRIBUTES = {
 }
 
 
-async def async_setup_platform(
-    hass, config, async_add_entities, discovery_info=None
-) -> None:
-    """Set up the HomematicIP Cloud binary sensor devices."""
-    pass
-
-
 async def async_setup_entry(
     hass: HomeAssistantType, config_entry: ConfigEntry, async_add_entities
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
-    hap = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]]
+    hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
     entities = []
     for device in hap.home.devices:
         if isinstance(device, AsyncAccelerationSensor):
@@ -105,6 +100,10 @@ async def async_setup_entry(
             ),
         ):
             entities.append(HomematicipMotionDetector(hap, device))
+        if isinstance(device, AsyncPluggableMainsFailureSurveillance):
+            entities.append(
+                HomematicipPluggableMainsFailureSurveillanceSensor(hap, device)
+            )
         if isinstance(device, AsyncPresenceDetectorIndoor):
             entities.append(HomematicipPresenceDetector(hap, device))
         if isinstance(device, AsyncSmokeDetector):
@@ -228,7 +227,11 @@ class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self) -> bool:
         """Return true if smoke is detected."""
-        return self._device.smokeDetectorAlarmType != SmokeDetectorAlarmType.IDLE_OFF
+        if self._device.smokeDetectorAlarmType:
+            return (
+                self._device.smokeDetectorAlarmType != SmokeDetectorAlarmType.IDLE_OFF
+            )
+        return False
 
 
 class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):
@@ -326,6 +329,26 @@ class HomematicipBatterySensor(HomematicipGenericDevice, BinarySensorDevice):
     def is_on(self) -> bool:
         """Return true if battery is low."""
         return self._device.lowBat
+
+
+class HomematicipPluggableMainsFailureSurveillanceSensor(
+    HomematicipGenericDevice, BinarySensorDevice
+):
+    """Representation of a HomematicIP Cloud pluggable mains failure surveillance sensor."""
+
+    def __init__(self, hap: HomematicipHAP, device) -> None:
+        """Initialize pluggable mains failure surveillance sensor."""
+        super().__init__(hap, device)
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this sensor."""
+        return DEVICE_CLASS_POWER
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if power mains fails."""
+        return not self._device.powerMainsFailure
 
 
 class HomematicipSecurityZoneSensorGroup(HomematicipGenericDevice, BinarySensorDevice):

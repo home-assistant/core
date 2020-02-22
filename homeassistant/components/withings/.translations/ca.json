@@ -1,12 +1,17 @@
 {
     "config": {
         "abort": {
+            "authorize_url_timeout": "S'ha acabat el temps d'espera durant la generaci\u00f3 de l'URL d'autoritzaci\u00f3.",
+            "missing_configuration": "La integraci\u00f3 Withings no est\u00e0 configurada. Mira'n la documentaci\u00f3.",
             "no_flows": "Necessites configurar Withings abans de poder autenticar't-hi. Llegeix la documentaci\u00f3."
         },
         "create_entry": {
             "default": "Autenticaci\u00f3 exitosa amb Withings per al perfil seleccionat."
         },
         "step": {
+            "pick_implementation": {
+                "title": "Selecci\u00f3 del m\u00e8tode d'autenticaci\u00f3"
+            },
             "profile": {
                 "data": {
                     "profile": "Perfil"

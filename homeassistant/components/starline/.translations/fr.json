@@ -1,6 +1,7 @@
 {
     "config": {
         "error": {
+            "error_auth_app": "ID applicatif ou code secret incorrect",
             "error_auth_mfa": "code incorrect",
             "error_auth_user": "identifiant ou mot de passe incorrect"
         },
@@ -10,6 +11,7 @@
                     "app_id": "ID de l'application",
                     "app_secret": "Secret"
                 },
+                "description": "ID applicatif et code secret du <a href=\"https://my.starline.ru/developer\" target=\"_blank\">compte d\u00e9veloppeur StarLine</a>",
                 "title": "Informations d'identification de l'application"
             },
             "auth_captcha": {
@@ -23,6 +25,7 @@
                 "data": {
                     "mfa_code": "Code SMS"
                 },
+                "description": "Entrez le code envoy\u00e9 au t\u00e9l\u00e9phone {phone_number}",
                 "title": "Autorisation \u00e0 deux facteurs"
             },
             "auth_user": {

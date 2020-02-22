@@ -1,0 +1,1 @@
+"""Intesishome platform."""

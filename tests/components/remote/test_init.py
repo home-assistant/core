@@ -3,17 +3,17 @@
 
 import unittest
 
+import homeassistant.components.remote as remote
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    STATE_ON,
-    STATE_OFF,
     CONF_PLATFORM,
-    SERVICE_TURN_ON,
     SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
 )
-import homeassistant.components.remote as remote
 
-from tests.common import mock_service, get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_service
 from tests.components.remote import common
 
 TEST_PLATFORM = {remote.DOMAIN: {CONF_PLATFORM: "test"}}
@@ -41,12 +41,6 @@ class TestRemote(unittest.TestCase):
 
         self.hass.states.set("remote.test", STATE_OFF)
         assert not remote.is_on(self.hass, "remote.test")
-
-        self.hass.states.set(remote.ENTITY_ID_ALL_REMOTES, STATE_ON)
-        assert remote.is_on(self.hass)
-
-        self.hass.states.set(remote.ENTITY_ID_ALL_REMOTES, STATE_OFF)
-        assert not remote.is_on(self.hass)
 
     def test_turn_on(self):
         """Test turn_on."""

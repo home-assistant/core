@@ -1,12 +1,17 @@
 """Custom loader."""
+from collections import OrderedDict
+import fnmatch
 import logging
 import os
 import sys
-import fnmatch
-from collections import OrderedDict
-from typing import Union, List, Dict, Iterator, overload, TypeVar
+from typing import Dict, Iterator, List, TypeVar, Union, overload
 
 import yaml
+
+from homeassistant.exceptions import HomeAssistantError
+
+from .const import _SECRET_NAMESPACE, SECRET_YAML
+from .objects import NodeListClass, NodeStrClass
 
 try:
     import keyring
@@ -17,11 +22,6 @@ try:
     import credstash
 except ImportError:
     credstash = None
-
-from homeassistant.exceptions import HomeAssistantError
-
-from .const import _SECRET_NAMESPACE, SECRET_YAML
-from .objects import NodeListClass, NodeStrClass
 
 
 # mypy: allow-untyped-calls, no-warn-return-any
@@ -258,7 +258,7 @@ def _load_secret_yaml(secret_path: str) -> JSON_TYPE:
                 _LOGGER.setLevel(logging.DEBUG)
             else:
                 _LOGGER.error(
-                    "secrets.yaml: 'logger: debug' expected," " but 'logger: %s' found",
+                    "secrets.yaml: 'logger: debug' expected, but 'logger: %s' found",
                     logger,
                 )
             del secrets["logger"]
@@ -276,7 +276,7 @@ def secret_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> JSON_TYPE:
 
         if node.value in secrets:
             _LOGGER.debug(
-                "Secret %s retrieved from secrets.yaml in " "folder %s",
+                "Secret %s retrieved from secrets.yaml in folder %s",
                 node.value,
                 secret_path,
             )

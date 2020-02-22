@@ -1,25 +1,24 @@
 """Support for Vera devices."""
-import logging
 from collections import defaultdict
+import logging
 
 import pyvera as veraApi
-import voluptuous as vol
 from requests.exceptions import RequestException
+import voluptuous as vol
 
-from homeassistant.util.dt import utc_from_timestamp
-from homeassistant.util import convert, slugify
-from homeassistant.helpers import discovery
-from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
     ATTR_ARMED,
     ATTR_BATTERY_LEVEL,
     ATTR_LAST_TRIP_TIME,
     ATTR_TRIPPED,
-    EVENT_HOMEASSISTANT_STOP,
-    CONF_LIGHTS,
     CONF_EXCLUDE,
+    CONF_LIGHTS,
+    EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import convert, slugify
+from homeassistant.util.dt import utc_from_timestamp
 
 _LOGGER = logging.getLogger(__name__)
 

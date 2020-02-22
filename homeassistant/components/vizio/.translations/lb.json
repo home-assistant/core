@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Konfiguratioun's Oflaf fir Vizio Komponent ass schonn am gaangen.",
+            "already_setup": "D\u00ebs Entr\u00e9e ass scho konfigur\u00e9iert.",
+            "already_setup_with_diff_host_and_name": "D\u00ebs Entr\u00e9e ass scho konfigur\u00e9iert mat engem aneren Host an Numm bas\u00e9ierend unhand vu\u00a0senger Seriennummer. L\u00e4scht w.e.g. al Entr\u00e9e vun \u00e4rer configuration.yaml a\u00a0vum Integratioun's Men\u00fc ier dir prob\u00e9iert d\u00ebsen Apparate r\u00ebm b\u00e4i ze setzen.",
+            "host_exists": "Vizio Komponent mam Host ass schon konfigur\u00e9iert.",
+            "name_exists": "Vizio Komponent mam Numm ass scho konfigur\u00e9iert.",
+            "updated_entry": "D\u00ebs Entr\u00e9e ass scho konfigur\u00e9iert mee d\u00e9i defin\u00e9ierten Numm an/oder Optiounen an der Konfiguratioun st\u00ebmmen net mat deene virdrun import\u00e9ierten Optiounen iwwereneen, esou gouf d'Entr\u00e9e deementspriechend aktualis\u00e9iert.",
+            "updated_options": "D\u00ebs Entr\u00e9e ass scho konfigur\u00e9iert mee d\u00e9i defin\u00e9iert Optiounen an der Konfiguratioun st\u00ebmmen net mat deene virdrun import\u00e9ierten Optiounen iwwereneen, esou gouf d'Entr\u00e9e deementspriechend aktualis\u00e9iert.",
+            "updated_volume_step": "D\u00ebs Entr\u00e9e ass scho konfigur\u00e9iert mee d\u00e9i defin\u00e9iert Lautst\u00e4erkt Schr\u00ebtt Gr\u00e9isst an der Konfiguratioun st\u00ebmmt net mat der Konfiguratioun iwwereneen, esou gouf d'Entr\u00e9e deementspriechend aktualis\u00e9iert."
+        },
+        "error": {
+            "cant_connect": "Konnt sech net mam Apparat verbannen. [Iwwerpr\u00e9ift Dokumentatioun] (https://www.home-assistant.io/integrations/vizio/) a stellt s\u00e9cher dass:\n- Den Apparat ass un\n- Den Apparat ass mam Netzwierk verbonnen\n- D'Optiounen d\u00e9i dir aginn hutt si korrekt\nier dir d'Verbindung nees prob\u00e9iert",
+            "host_exists": "Vizio Apparat mat d\u00ebsem Host ass scho konfigur\u00e9iert.",
+            "name_exists": "Vizio Apparat mat d\u00ebsen Numm ass scho konfigur\u00e9iert.",
+            "tv_needs_token": "Wann den Typ vum Apparat `tv`ass da g\u00ebtt ee g\u00ebltegen Acc\u00e8s Jeton ben\u00e9idegt."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Acc\u00e8ss Jeton",
+                    "device_class": "Typ vun Apparat",
+                    "host": "<Host/IP>:<Port>",
+                    "name": "Numm"
+                },
+                "title": "Vizo Smartcast ariichten"
+            }
+        },
+        "title": "Vizio SmartCast"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Z\u00e4itiwwerscheidung bei der Ufro vun der API (sekonnen)",
+                    "volume_step": "Lautst\u00e4erkt Schr\u00ebtt Gr\u00e9isst"
+                },
+                "title": "Vizo Smartcast Optiounen aktualis\u00e9ieren"
+            }
+        },
+        "title": "Vizo Smartcast Optiounen aktualis\u00e9ieren"
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kiszolg\u00e1l\u00f3 m\u00e1r konfigur\u00e1lva van."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Kiszolg\u00e1l\u00f3",
+                    "name": "N\u00e9v",
+                    "port": "Port"
+                },
+                "title": "Kapcsolja \u00f6ssze a Minecraft szervert"
+            }
+        },
+        "title": "Minecraft szerver"
+    }
+}

@@ -119,7 +119,7 @@ class BMWConnectedDriveAccount:
     def __init__(
         self, username: str, password: str, region_str: str, name: str, read_only
     ) -> None:
-        """Constructor."""
+        """Initialize account."""
 
         region = get_region_from_name(region_str)
 

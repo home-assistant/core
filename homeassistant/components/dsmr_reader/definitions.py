@@ -3,7 +3,9 @@
 
 def dsmr_transform(value):
     """Transform DSMR version value to right format."""
-    return float(value) / 10
+    if value.isdigit():
+        return float(value) / 10
+    return value
 
 
 def tariff_transform(value):

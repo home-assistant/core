@@ -7,10 +7,9 @@ from unittest import mock
 from urllib.parse import parse_qs
 
 from aiohttp import ClientSession
+from aiohttp.client_exceptions import ClientResponseError
 from aiohttp.streams import StreamReader
 from yarl import URL
-
-from aiohttp.client_exceptions import ClientResponseError
 
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 

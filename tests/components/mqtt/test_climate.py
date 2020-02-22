@@ -11,19 +11,19 @@ from homeassistant.components import mqtt
 from homeassistant.components.climate import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
 from homeassistant.components.climate.const import (
     DOMAIN as CLIMATE_DOMAIN,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     HVAC_MODE_AUTO,
     HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
     HVAC_MODE_DRY,
     HVAC_MODE_FAN_ONLY,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
-    PRESET_NONE,
+    HVAC_MODE_HEAT,
     PRESET_ECO,
+    PRESET_NONE,
+    SUPPORT_AUX_HEAT,
+    SUPPORT_FAN_MODE,
+    SUPPORT_PRESET_MODE,
+    SUPPORT_SWING_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_TARGET_TEMPERATURE_RANGE,
 )
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
@@ -113,7 +113,7 @@ async def test_set_operation_bad_attr_and_state(hass, mqtt_mock, caplog):
     assert state.state == "off"
     with pytest.raises(vol.Invalid) as excinfo:
         await common.async_set_hvac_mode(hass, None, ENTITY_CLIMATE)
-    assert ("value is not allowed for dictionary value @ " "data['hvac_mode']") in str(
+    assert ("value is not allowed for dictionary value @ data['hvac_mode']") in str(
         excinfo.value
     )
     state = hass.states.get(ENTITY_CLIMATE)

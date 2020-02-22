@@ -17,7 +17,7 @@
                 "title": "\u00c4ren WLED verbannen"
             },
             "zeroconf_confirm": {
-                "description": "W\u00ebllt dir den WLED  mam Numm `{name}` am 'Home Assistant dob\u00e4isetzen?",
+                "description": "W\u00ebllt dir den WLED  mam Numm `{name}` am Home Assistant dob\u00e4isetzen?",
                 "title": "Entdeckten WLED Apparat"
             }
         },

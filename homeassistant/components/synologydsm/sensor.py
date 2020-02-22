@@ -8,6 +8,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    CONF_API_VERSION,
     CONF_DISKS,
     CONF_HOST,
     CONF_MONITORED_CONDITIONS,
@@ -16,6 +17,8 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    DATA_MEGABYTES,
+    DATA_RATE_KILOBYTES_PER_SECOND,
     EVENT_HOMEASSISTANT_START,
     TEMP_CELSIUS,
 )
@@ -42,14 +45,14 @@ _UTILISATION_MON_COND = {
     "cpu_5min_load": ["CPU Load (5 min)", "%", "mdi:chip"],
     "cpu_15min_load": ["CPU Load (15 min)", "%", "mdi:chip"],
     "memory_real_usage": ["Memory Usage (Real)", "%", "mdi:memory"],
-    "memory_size": ["Memory Size", "Mb", "mdi:memory"],
-    "memory_cached": ["Memory Cached", "Mb", "mdi:memory"],
-    "memory_available_swap": ["Memory Available (Swap)", "Mb", "mdi:memory"],
-    "memory_available_real": ["Memory Available (Real)", "Mb", "mdi:memory"],
-    "memory_total_swap": ["Memory Total (Swap)", "Mb", "mdi:memory"],
-    "memory_total_real": ["Memory Total (Real)", "Mb", "mdi:memory"],
-    "network_up": ["Network Up", "Kbps", "mdi:upload"],
-    "network_down": ["Network Down", "Kbps", "mdi:download"],
+    "memory_size": ["Memory Size", DATA_MEGABYTES, "mdi:memory"],
+    "memory_cached": ["Memory Cached", DATA_MEGABYTES, "mdi:memory"],
+    "memory_available_swap": ["Memory Available (Swap)", DATA_MEGABYTES, "mdi:memory"],
+    "memory_available_real": ["Memory Available (Real)", DATA_MEGABYTES, "mdi:memory"],
+    "memory_total_swap": ["Memory Total (Swap)", DATA_MEGABYTES, "mdi:memory"],
+    "memory_total_real": ["Memory Total (Real)", DATA_MEGABYTES, "mdi:memory"],
+    "network_up": ["Network Up", DATA_RATE_KILOBYTES_PER_SECOND, "mdi:upload"],
+    "network_down": ["Network Down", DATA_RATE_KILOBYTES_PER_SECOND, "mdi:download"],
 }
 _STORAGE_VOL_MON_COND = {
     "volume_status": ["Status", None, "mdi:checkbox-marked-circle-outline"],
@@ -82,6 +85,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=True): cv.boolean,
+        vol.Optional(CONF_API_VERSION): cv.positive_int,
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(
@@ -110,8 +114,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         use_ssl = config.get(CONF_SSL)
         unit = hass.config.units.temperature_unit
         monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+        api_version = config.get(CONF_API_VERSION)
 
-        api = SynoApi(host, port, username, password, unit, use_ssl)
+        api = SynoApi(host, port, username, password, unit, use_ssl, api_version)
 
         sensors = [
             SynoNasUtilSensor(api, name, variable, _UTILISATION_MON_COND[variable])
@@ -150,13 +155,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class SynoApi:
     """Class to interface with Synology DSM API."""
 
-    def __init__(self, host, port, username, password, temp_unit, use_ssl):
+    def __init__(self, host, port, username, password, temp_unit, use_ssl, api_version):
         """Initialize the API wrapper class."""
 
         self.temp_unit = temp_unit
 
         try:
-            self._api = SynologyDSM(host, port, username, password, use_https=use_ssl)
+            self._api = SynologyDSM(
+                host,
+                port,
+                username,
+                password,
+                use_https=use_ssl,
+                debugmode=False,
+                dsm_version=api_version,
+            )
         except:  # noqa: E722 pylint: disable=bare-except
             _LOGGER.error("Error setting up Synology DSM")
 
@@ -230,6 +243,9 @@ class SynoNasUtilSensor(SynoNasSensor):
 
         if self.var_id in network_sensors or self.var_id in memory_sensors:
             attr = getattr(self._api.utilisation, self.var_id)(False)
+
+            if attr is None:
+                return None
 
             if self.var_id in network_sensors:
                 return round(attr / 1024.0, 1)

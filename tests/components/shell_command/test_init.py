@@ -2,12 +2,12 @@
 import asyncio
 import os
 import tempfile
-import unittest
 from typing import Tuple
+import unittest
 from unittest.mock import Mock, patch
 
-from homeassistant.setup import setup_component
 from homeassistant.components import shell_command
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -111,7 +111,7 @@ class TestShellCommand(unittest.TestCase):
             shell_command.DOMAIN,
             {
                 shell_command.DOMAIN: {
-                    "test_service": ("ls /bin {{ states.sensor" ".test_state.state }}")
+                    "test_service": ("ls /bin {{ states.sensor.test_state.state }}")
                 }
             },
         )

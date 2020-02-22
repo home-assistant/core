@@ -5,6 +5,7 @@ import time
 
 from proxmoxer import ProxmoxAPI
 from proxmoxer.backends.https import AuthenticationError
+from requests.exceptions import SSLError
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -17,6 +18,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
 
 DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
@@ -94,6 +96,11 @@ def setup(hass, config):
                 "Invalid credentials for proxmox instance %s:%d", host, port
             )
             continue
+        except SSLError:
+            _LOGGER.error(
+                'Unable to verify proxmox server SSL. Try using "verify_ssl: false"'
+            )
+            continue
 
         hass.data[PROXMOX_CLIENTS][f"{host}:{port}"] = proxmox_client
 
@@ -140,12 +147,12 @@ class ProxmoxClient:
             verify_ssl=self._verify_ssl,
         )
 
-        self._connection_start_time = time.time()
+        self._connection_start_time = time.monotonic()
 
     def get_api_client(self):
         """Return the ProxmoxAPI client and rebuild it if necessary."""
 
-        connection_age = time.time() - self._connection_start_time
+        connection_age = time.monotonic() - self._connection_start_time
 
         # Workaround for the Proxmoxer bug where the connection stops working after some time
         if connection_age > 30 * 60:

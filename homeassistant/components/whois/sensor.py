@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 "WHOIS lookup for %s didn't contain an expiration date", domain
             )
             return
-    except whois.BaseException as ex:
+    except whois.BaseException as ex:  # pylint: disable=broad-except
         _LOGGER.error("Exception %s occurred during WHOIS lookup for %s", ex, domain)
         return
 
@@ -96,7 +96,7 @@ class WhoisSensor(Entity):
         """Get the current WHOIS data for the domain."""
         try:
             response = self.whois(self._domain)
-        except whois.BaseException as ex:
+        except whois.BaseException as ex:  # pylint: disable=broad-except
             _LOGGER.error("Exception %s occurred during WHOIS lookup", ex)
             self._empty_state_and_attributes()
             return

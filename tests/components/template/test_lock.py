@@ -1,13 +1,12 @@
 """The tests for the Template lock platform."""
 import logging
 
-from homeassistant.core import callback
 from homeassistant import setup
 from homeassistant.components import lock
-from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.core import callback
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import assert_setup_component, get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
 

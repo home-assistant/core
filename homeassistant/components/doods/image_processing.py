@@ -3,11 +3,10 @@ import io
 import logging
 import time
 
-import voluptuous as vol
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, UnidentifiedImageError
 from pydoods import PyDOODS
+import voluptuous as vol
 
-from homeassistant.const import CONF_TIMEOUT
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
     CONF_ENTITY_ID,
@@ -15,11 +14,12 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
-    draw_box,
 )
+from homeassistant.const import CONF_TIMEOUT
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -274,7 +274,11 @@ class Doods(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image."""
-        img = Image.open(io.BytesIO(bytearray(image)))
+        try:
+            img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+        except UnidentifiedImageError:
+            _LOGGER.warning("Unable to process image, bad data")
+            return
         img_width, img_height = img.size
 
         if self._aspect and abs((img_width / img_height) - self._aspect) > 0.1:
@@ -285,7 +289,7 @@ class Doods(ImageProcessingEntity):
             )
 
         # Run detection
-        start = time.time()
+        start = time.monotonic()
         response = self._doods.detect(
             image, dconfig=self._dconfig, detector_name=self._detector_name
         )
@@ -293,7 +297,7 @@ class Doods(ImageProcessingEntity):
             "doods detect: %s response: %s duration: %s",
             self._dconfig,
             response,
-            time.time() - start,
+            time.monotonic() - start,
         )
 
         matches = {}

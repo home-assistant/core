@@ -22,12 +22,12 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     ATTR_TORRENT,
+    DATA_UPDATED,
     DEFAULT_NAME,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     SERVICE_ADD_TORRENT,
-    DATA_UPDATED,
 )
 from .errors import AuthenticationError, CannotConnect, UnknownError
 

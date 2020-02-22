@@ -1,5 +1,6 @@
 """Support for StarLine switch."""
 from homeassistant.components.switch import SwitchDevice
+
 from .account import StarlineAccount, StarlineDevice
 from .const import DOMAIN
 from .entity import StarlineEntity

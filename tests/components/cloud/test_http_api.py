@@ -1,27 +1,26 @@
 """Tests for the HTTP API for the cloud component."""
 import asyncio
-from unittest.mock import patch, MagicMock
 from ipaddress import ip_network
+from unittest.mock import MagicMock, Mock, patch
 
-import pytest
-from jose import jwt
+from hass_nabucasa import thingtalk
 from hass_nabucasa.auth import Unauthenticated, UnknownError
 from hass_nabucasa.const import STATE_CONNECTED
-from hass_nabucasa import thingtalk
+from jose import jwt
+import pytest
 
-from homeassistant.core import State
 from homeassistant.auth.providers import trusted_networks as tn_auth
+from homeassistant.components.alexa import errors as alexa_errors
+from homeassistant.components.alexa.entities import LightCapabilities
 from homeassistant.components.cloud.const import DOMAIN, RequireRelink
 from homeassistant.components.google_assistant.helpers import GoogleEntity
-from homeassistant.components.alexa.entities import LightCapabilities
-from homeassistant.components.alexa import errors as alexa_errors
+from homeassistant.core import State
+
+from . import mock_cloud, mock_cloud_prefs
 
 from tests.common import mock_coro
 from tests.components.google_assistant import MockConfig
 
-from . import mock_cloud, mock_cloud_prefs
-
-GOOGLE_ACTIONS_SYNC_URL = "https://api-test.hass.io/google_actions_sync"
 SUBSCRIPTION_INFO_URL = "https://api-test.hass.io/subscription_info"
 
 
@@ -59,7 +58,6 @@ def setup_api(hass, aioclient_mock):
                 "user_pool_id": "user_pool_id",
                 "region": "region",
                 "relayer": "relayer",
-                "google_actions_sync_url": GOOGLE_ACTIONS_SYNC_URL,
                 "subscription_info_url": SUBSCRIPTION_INFO_URL,
                 "google_actions": {"filter": {"include_domains": "light"}},
                 "alexa": {
@@ -85,22 +83,26 @@ def mock_cognito():
         yield mock_cog()
 
 
-async def test_google_actions_sync(
-    mock_cognito, mock_cloud_login, cloud_client, aioclient_mock
-):
+async def test_google_actions_sync(mock_cognito, mock_cloud_login, cloud_client):
     """Test syncing Google Actions."""
-    aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL)
-    req = await cloud_client.post("/api/cloud/google_actions/sync")
-    assert req.status == 200
+    with patch(
+        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
+        return_value=mock_coro(Mock(status=200)),
+    ) as mock_request_sync:
+        req = await cloud_client.post("/api/cloud/google_actions/sync")
+        assert req.status == 200
+        assert len(mock_request_sync.mock_calls) == 1
 
 
-async def test_google_actions_sync_fails(
-    mock_cognito, mock_cloud_login, cloud_client, aioclient_mock
-):
+async def test_google_actions_sync_fails(mock_cognito, mock_cloud_login, cloud_client):
     """Test syncing Google Actions gone bad."""
-    aioclient_mock.post(GOOGLE_ACTIONS_SYNC_URL, status=403)
-    req = await cloud_client.post("/api/cloud/google_actions/sync")
-    assert req.status == 403
+    with patch(
+        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
+        return_value=mock_coro(Mock(status=500)),
+    ) as mock_request_sync:
+        req = await cloud_client.post("/api/cloud/google_actions/sync")
+        assert req.status == 500
+        assert len(mock_request_sync.mock_calls) == 1
 
 
 async def test_login_view(hass, cloud_client):
@@ -321,7 +323,7 @@ async def test_websocket_status(
     client = await hass_ws_client(hass)
 
     with patch.dict(
-        "homeassistant.components.google_assistant.const." "DOMAIN_TO_GOOGLE_TYPES",
+        "homeassistant.components.google_assistant.const.DOMAIN_TO_GOOGLE_TYPES",
         {"light": None},
         clear=True,
     ), patch.dict(
@@ -683,7 +685,7 @@ async def test_list_google_entities(hass, hass_ws_client, setup_api, mock_cloud_
         hass, MockConfig(should_expose=lambda *_: False), State("light.kitchen", "on")
     )
     with patch(
-        "homeassistant.components.google_assistant.helpers" ".async_get_entities",
+        "homeassistant.components.google_assistant.helpers.async_get_entities",
         return_value=[entity],
     ):
         await client.send_json({"id": 5, "type": "cloud/google_assistant/entities"})
@@ -779,7 +781,7 @@ async def test_list_alexa_entities(hass, hass_ws_client, setup_api, mock_cloud_l
         hass, MagicMock(entity_config={}), State("light.kitchen", "on")
     )
     with patch(
-        "homeassistant.components.alexa.entities" ".async_get_entities",
+        "homeassistant.components.alexa.entities.async_get_entities",
         return_value=[entity],
     ):
         await client.send_json({"id": 5, "type": "cloud/alexa/entities"})

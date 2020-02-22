@@ -1,15 +1,15 @@
 """The tests for the APNS component."""
 import io
 import unittest
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import Mock, mock_open, patch
 
 from apns2.errors import Unregistered
 import yaml
 
-import homeassistant.components.notify as notify
-from homeassistant.setup import setup_component
 import homeassistant.components.apns.notify as apns
+import homeassistant.components.notify as notify
 from homeassistant.core import State
+from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
 

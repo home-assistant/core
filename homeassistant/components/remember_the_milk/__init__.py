@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "remember_the_milk"
 DEFAULT_NAME = DOMAIN
-GROUP_NAME_RTM = "remember the milk accounts"
 
 CONF_SHARED_SECRET = "shared_secret"
 CONF_ID_MAP = "id_map"
@@ -50,7 +49,7 @@ SERVICE_SCHEMA_COMPLETE_TASK = vol.Schema({vol.Required(CONF_ID): cv.string})
 
 def setup(hass, config):
     """Set up the Remember the milk component."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, group_name=GROUP_NAME_RTM)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     stored_rtm_config = RememberTheMilkConfiguration(hass)
     for rtm_config in config[DOMAIN]:
@@ -166,7 +165,7 @@ class RememberTheMilkConfiguration:
                 self._config = json.load(config_file)
         except ValueError:
             _LOGGER.error(
-                "Failed to load configuration file, creating a " "new one: %s",
+                "Failed to load configuration file, creating a new one: %s",
                 self._config_file_path,
             )
             self._config = dict()
@@ -258,7 +257,7 @@ class RememberTheMilk(Entity):
         valid = self._rtm_api.token_valid()
         if not valid:
             _LOGGER.error(
-                "Token for account %s is invalid. You need to " "register again!",
+                "Token for account %s is invalid. You need to register again!",
                 self.name,
             )
             self._rtm_config.delete_token(self._name)
@@ -306,14 +305,14 @@ class RememberTheMilk(Entity):
                     timeline=timeline,
                 )
                 _LOGGER.debug(
-                    "Updated task with id '%s' in account " "%s to name %s",
+                    "Updated task with id '%s' in account %s to name %s",
                     hass_id,
                     self.name,
                     task_name,
                 )
         except RtmRequestFailedException as rtm_exception:
             _LOGGER.error(
-                "Error creating new Remember The Milk task for " "account %s: %s",
+                "Error creating new Remember The Milk task for account %s: %s",
                 self._name,
                 rtm_exception,
             )
@@ -347,7 +346,7 @@ class RememberTheMilk(Entity):
             )
         except RtmRequestFailedException as rtm_exception:
             _LOGGER.error(
-                "Error creating new Remember The Milk task for " "account %s: %s",
+                "Error creating new Remember The Milk task for account %s: %s",
                 self._name,
                 rtm_exception,
             )

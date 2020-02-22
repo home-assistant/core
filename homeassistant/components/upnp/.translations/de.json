@@ -14,7 +14,7 @@
         },
         "step": {
             "confirm": {
-                "description": "M\u00f6chten Sie UPnP/IGD einrichten?",
+                "description": "M\u00f6chtest du UPnP/IGD einrichten?",
                 "title": "UPnP/IGD"
             },
             "init": {

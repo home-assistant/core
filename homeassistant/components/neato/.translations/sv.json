@@ -1,0 +1,27 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Redan konfigurerad",
+            "invalid_credentials": "Ogiltiga autentiseringsuppgifter"
+        },
+        "create_entry": {
+            "default": "Se [Neato-dokumentation]({docs_url})."
+        },
+        "error": {
+            "invalid_credentials": "Ogiltiga autentiseringsuppgifter",
+            "unexpected_error": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn",
+                    "vendor": "Leverant\u00f6r"
+                },
+                "description": "Se [Neato-dokumentation] ({docs_url}).",
+                "title": "Neato-kontoinfo"
+            }
+        },
+        "title": "Neato"
+    }
+}
