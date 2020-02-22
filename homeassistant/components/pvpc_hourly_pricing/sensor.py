@@ -17,7 +17,7 @@ from pytz import timezone
 import xmltodict
 
 from homeassistant import config_entries
-from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.components.sensor import ENTITY_ID_FORMAT, PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -29,9 +29,12 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.dt as dt_util
 
+from . import SENSOR_SCHEMA
 from .const import ATTR_TARIFF, DOMAIN, TARIFFS
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(SENSOR_SCHEMA.schema)
 
 _RESOURCE = "https://api.esios.ree.es/archives/80/download?date={day:%Y-%m-%d}"
 _ATTRIBUTION = "Data retrieved from api.esios.ree.es by REE"

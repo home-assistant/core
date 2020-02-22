@@ -74,6 +74,7 @@ FLOWS = [
     "plex",
     "point",
     "ps4",
+    "pvpc_hourly_pricing",
     "rainmachine",
     "ring",
     "samsungtv",
