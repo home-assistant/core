@@ -26,8 +26,7 @@ def configured_instances(hass):
     )
 
 
-@config_entries.HANDLERS.register(DOMAIN)
-class AirVisualFlowHandler(config_entries.ConfigFlow):
+class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a AirVisual config flow."""
 
     VERSION = 1
