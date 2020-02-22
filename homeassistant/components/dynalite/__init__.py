@@ -10,18 +10,38 @@ from homeassistant.helpers import config_validation as cv
 from .bridge import DynaliteBridge
 from .const import (
     CONF_ACTIVE,
+    CONF_ACTIVE_INIT,
+    CONF_ACTIVE_OFF,
+    CONF_ACTIVE_ON,
     CONF_AREA,
     CONF_AUTO_DISCOVER,
     CONF_BRIDGES,
     CONF_CHANNEL,
+    CONF_CHANNEL_CLASS,
+    CONF_CHANNEL_COVER,
+    CONF_CHANNEL_TYPE,
+    CONF_CLOSE_PRESET,
     CONF_DEFAULT,
+    CONF_DURATION,
     CONF_FADE,
     CONF_NAME,
+    CONF_NODEFAULT,
+    CONF_OPEN_PRESET,
     CONF_POLLTIMER,
     CONF_PORT,
+    CONF_PRESET,
+    CONF_ROOM_OFF,
+    CONF_ROOM_ON,
+    CONF_STOP_PRESET,
+    CONF_TEMPLATE,
+    CONF_TILT_TIME,
+    CONF_TRIGGER,
+    DEFAULT_CHANNEL_TYPE,
     DEFAULT_NAME,
     DEFAULT_PORT,
+    DEFAULT_TEMPLATES,
     DOMAIN,
+    ENTITY_PLATFORMS,
     LOGGER,
 )
 
@@ -35,17 +55,89 @@ def num_string(value):
 
 
 CHANNEL_DATA_SCHEMA = vol.Schema(
-    {vol.Optional(CONF_NAME): cv.string, vol.Optional(CONF_FADE): vol.Coerce(float)}
+    {
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_FADE): vol.Coerce(float),
+        vol.Optional(CONF_CHANNEL_TYPE, default=DEFAULT_CHANNEL_TYPE): vol.Any(
+            "light", "switch"
+        ),
+    }
 )
 
 CHANNEL_SCHEMA = vol.Schema({num_string: CHANNEL_DATA_SCHEMA})
 
-AREA_DATA_SCHEMA = vol.Schema(
+PRESET_DATA_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_NAME): cv.string, vol.Optional(CONF_FADE): vol.Coerce(float)}
+)
+
+PRESET_SCHEMA = vol.Schema({num_string: vol.Any(PRESET_DATA_SCHEMA, None)})
+
+
+TEMPLATE_ROOM_SCHEMA = vol.Schema(
+    {vol.Optional(CONF_ROOM_ON): num_string, vol.Optional(CONF_ROOM_OFF): num_string}
+)
+
+TEMPLATE_TRIGGER_SCHEMA = vol.Schema({vol.Optional(CONF_TRIGGER): num_string})
+
+TEMPLATE_TIMECOVER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_FADE): vol.Coerce(float),
-        vol.Optional(CONF_CHANNEL): CHANNEL_SCHEMA,
-    },
+        vol.Optional(CONF_CHANNEL_COVER): num_string,
+        vol.Optional(CONF_CHANNEL_CLASS): cv.string,
+        vol.Optional(CONF_OPEN_PRESET): num_string,
+        vol.Optional(CONF_CLOSE_PRESET): num_string,
+        vol.Optional(CONF_STOP_PRESET): num_string,
+        vol.Optional(CONF_DURATION): vol.Coerce(float),
+        vol.Optional(CONF_TILT_TIME): vol.Coerce(float),
+    }
+)
+
+TEMPLATE_DATA_SCHEMA = vol.Any(
+    TEMPLATE_ROOM_SCHEMA, TEMPLATE_TRIGGER_SCHEMA, TEMPLATE_TIMECOVER_SCHEMA
+)
+
+TEMPLATE_SCHEMA = vol.Schema({str: TEMPLATE_DATA_SCHEMA})
+
+
+def validate_area(config):
+    """Validate that template parameters are only used if area is using the relevant template."""
+    conf_set = set()
+    for template in DEFAULT_TEMPLATES:
+        for conf in DEFAULT_TEMPLATES[template]:
+            conf_set.add(conf)
+    if config.get(CONF_TEMPLATE):
+        for conf in DEFAULT_TEMPLATES[config[CONF_TEMPLATE]]:
+            conf_set.remove(conf)
+    for conf in conf_set:
+        if config.get(conf):
+            raise vol.Invalid(
+                f"{conf} cannot should not be part of area {config[CONF_NAME]} config"
+            )
+    return config
+
+
+AREA_DATA_SCHEMA = vol.Schema(
+    vol.All(
+        {
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional(CONF_TEMPLATE): cv.string,
+            vol.Optional(CONF_FADE): vol.Coerce(float),
+            vol.Optional(CONF_NODEFAULT): vol.Coerce(bool),
+            vol.Optional(CONF_CHANNEL): CHANNEL_SCHEMA,
+            vol.Optional(CONF_PRESET): PRESET_SCHEMA,
+            # the next ones can be part of the templates
+            vol.Optional(CONF_ROOM_ON): num_string,
+            vol.Optional(CONF_ROOM_OFF): num_string,
+            vol.Optional(CONF_TRIGGER): num_string,
+            vol.Optional(CONF_CHANNEL_COVER): num_string,
+            vol.Optional(CONF_CHANNEL_CLASS): cv.string,
+            vol.Optional(CONF_OPEN_PRESET): num_string,
+            vol.Optional(CONF_CLOSE_PRESET): num_string,
+            vol.Optional(CONF_STOP_PRESET): num_string,
+            vol.Optional(CONF_DURATION): vol.Coerce(float),
+            vol.Optional(CONF_TILT_TIME): vol.Coerce(float),
+        },
+        validate_area,
+    )
 )
 
 AREA_SCHEMA = vol.Schema({num_string: vol.Any(AREA_DATA_SCHEMA, None)})
@@ -55,14 +147,18 @@ PLATFORM_DEFAULTS_SCHEMA = vol.Schema({vol.Optional(CONF_FADE): vol.Coerce(float
 
 BRIDGE_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_AUTO_DISCOVER, default=False): vol.Coerce(bool),
+        vol.Optional(CONF_ACTIVE, default=False): vol.Any(
+            CONF_ACTIVE_ON, CONF_ACTIVE_OFF, CONF_ACTIVE_INIT, bool
+        ),
         vol.Optional(CONF_POLLTIMER, default=1.0): vol.Coerce(float),
         vol.Optional(CONF_AREA): AREA_SCHEMA,
         vol.Optional(CONF_DEFAULT): PLATFORM_DEFAULTS_SCHEMA,
-        vol.Optional(CONF_ACTIVE, default=False): vol.Coerce(bool),
+        vol.Optional(CONF_PRESET): PRESET_SCHEMA,
+        vol.Optional(CONF_TEMPLATE, default=DEFAULT_TEMPLATES): TEMPLATE_SCHEMA,
     }
 )
 
@@ -119,14 +215,15 @@ async def async_setup_entry(hass, entry):
         return False
 
     if not await bridge.try_connection():
-        LOGGER.errot("Could not connect with entry %s", entry)
+        LOGGER.error("Could not connect with entry %s", entry)
         raise ConfigEntryNotReady
 
     hass.data[DOMAIN][entry.entry_id] = bridge
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "light")
-    )
+    for platform in ENTITY_PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, platform)
+        )
     return True
 
 

@@ -1,7 +1,6 @@
 """Test Dynalite bridge."""
-from unittest.mock import Mock, call
 
-from asynctest import patch
+from asynctest import Mock, call, patch
 from dynalite_lib import CONF_ALL
 import pytest
 
@@ -39,34 +38,27 @@ async def test_update_device(dyn_bridge):
         )
 
 
-async def test_add_devices_then_register(dyn_bridge):
+async def test_add_devices(dyn_bridge):
     """Test that add_devices work."""
     # First test empty
     dyn_bridge.add_devices_when_registered([])
     assert not dyn_bridge.waiting_devices
-    # Now with devices
+    # register light function
+    reg_func_light = Mock()
+    dyn_bridge.register_add_devices("light", reg_func_light)
+    # Now add the devices
     device1 = Mock()
     device1.category = "light"
     device2 = Mock()
     device2.category = "switch"
     dyn_bridge.add_devices_when_registered([device1, device2])
-    reg_func = Mock()
-    dyn_bridge.register_add_devices(reg_func)
-    reg_func.assert_called_once()
-    assert reg_func.mock_calls[0][1][0][0] is device1
-
-
-async def test_register_then_add_devices(dyn_bridge):
-    """Test that add_devices work after register_add_entities."""
-    device1 = Mock()
-    device1.category = "light"
-    device2 = Mock()
-    device2.category = "switch"
-    reg_func = Mock()
-    dyn_bridge.register_add_devices(reg_func)
-    dyn_bridge.add_devices_when_registered([device1, device2])
-    reg_func.assert_called_once()
-    assert reg_func.mock_calls[0][1][0][0] is device1
+    reg_func_light.assert_called_once()
+    assert reg_func_light.mock_calls[0][1][0][0] is device1
+    # now register switch (with a waiting device)
+    reg_func_switch = Mock()
+    dyn_bridge.register_add_devices("switch", reg_func_switch)
+    reg_func_switch.assert_called_once()
+    assert reg_func_switch.mock_calls[0][1][0][0] is device2
 
 
 async def test_try_connection(dyn_bridge):

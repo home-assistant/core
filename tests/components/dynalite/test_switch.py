@@ -1,9 +1,7 @@
-"""Test Dynalite light."""
+"""Test Dynalite switch."""
 
-from dynalite_devices_lib.light import DynaliteChannelLightDevice
+from dynalite_devices_lib.switch import DynalitePresetSwitchDevice
 import pytest
-
-from homeassistant.components.light import SUPPORT_BRIGHTNESS
 
 from .common import (
     ATTR_METHOD,
@@ -17,20 +15,18 @@ from .common import (
 @pytest.fixture
 def mock_device():
     """Mock a Dynalite device."""
-    return create_mock_device("light", DynaliteChannelLightDevice)
+    return create_mock_device("switch", DynalitePresetSwitchDevice)
 
 
-async def test_light_setup(hass, mock_device):
+async def test_switch_setup(hass, mock_device):
     """Test a successful setup."""
     await create_entity_from_device(hass, mock_device)
-    entity_state = hass.states.get("light.name")
+    entity_state = hass.states.get("switch.name")
     assert entity_state.attributes["friendly_name"] == mock_device.name
-    assert entity_state.attributes["brightness"] == mock_device.brightness
-    assert entity_state.attributes["supported_features"] == SUPPORT_BRIGHTNESS
     await run_service_tests(
         hass,
         mock_device,
-        "light",
+        "switch",
         [
             {ATTR_SERVICE: "turn_on", ATTR_METHOD: "async_turn_on"},
             {ATTR_SERVICE: "turn_off", ATTR_METHOD: "async_turn_off"},
