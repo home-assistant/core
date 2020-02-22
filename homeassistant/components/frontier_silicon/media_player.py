@@ -195,8 +195,9 @@ class AFSAPIDevice(MediaPlayerDevice):
 
         # The API seems to include 'zero' in the number of steps (e.g. if the range is
         # 0-40 then get_volume_steps returns 41) subtract one to get the max volume.
+        # If call to get_volume fails set to 0 and try again next time.
         if not self._max_volume:
-            self._max_volume = int(await fs_device.get_volume_steps()) - 1
+            self._max_volume = int(await fs_device.get_volume_steps() or 1) - 1
 
         status = await fs_device.get_play_status()
         self._state = {
@@ -221,7 +222,8 @@ class AFSAPIDevice(MediaPlayerDevice):
 
             volume = await self.fs_device.get_volume()
 
-            self._volume_level = float(volume or 0) / self._max_volume
+            # Prevent division by zero if max_volume not known yet
+            self._volume_level = float(volume or 0) / (self._max_volume or 1)
         else:
             self._title = None
             self._artist = None
@@ -295,8 +297,9 @@ class AFSAPIDevice(MediaPlayerDevice):
 
     async def async_set_volume_level(self, volume):
         """Set volume command."""
-        volume = int(volume * self._max_volume)
-        await self.fs_device.set_volume(volume)
+        if self._max_volume:  # Can't do anything sensible if not set
+            volume = int(volume * self._max_volume)
+            await self.fs_device.set_volume(volume)
 
     async def async_select_source(self, source):
         """Select input source."""
