@@ -255,7 +255,7 @@ async def websocket_handle_update(hass, connection, msg):
 
     try:
         item = hass.data[DOMAIN].async_update(item_id, data)
-        hass.bus.async_fire(EVENT, {"action":  "item_updated", "item": item})
+        hass.bus.async_fire(EVENT, {"action": "item_updated", "item": item})
         connection.send_message(websocket_api.result_message(msg_id, item))
     except KeyError:
         connection.send_message(
