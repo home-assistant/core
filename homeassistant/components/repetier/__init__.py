@@ -108,7 +108,7 @@ def has_all_unique_names(value):
 
 
 SENSOR_TYPES = {
-    # Type, Unit, Icon
+    # Type, Unit, Icon, post
     "bed_temperature": ["temperature", TEMP_CELSIUS, "mdi:thermometer", "_bed_"],
     "extruder_temperature": [
         "temperature",
@@ -248,12 +248,12 @@ class PrinterAPI:
                     if prop_data is None:
                         continue
                     for idx, _ in enumerate(prop_data):
-                        info["temp_id"] = idx
-                        sensor_info.append(info)
+                        prop_info = info.copy()
+                        prop_info["temp_id"] = idx
+                        sensor_info.append(prop_info)
                 else:
                     info["temp_id"] = None
                     sensor_info.append(info)
-
                 self._known_entities.add(known)
 
         if not sensor_info:

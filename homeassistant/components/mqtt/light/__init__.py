@@ -1,9 +1,4 @@
-"""
-Support for MQTT lights.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.mqtt/
-"""
+"""Support for MQTT lights."""
 import logging
 
 import voluptuous as vol
@@ -15,7 +10,8 @@ from homeassistant.components.mqtt.discovery import (
     clear_discovery_hash,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+
 from .schema import CONF_SCHEMA, MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import PLATFORM_SCHEMA_BASIC, async_setup_entity_basic
 from .schema_json import PLATFORM_SCHEMA_JSON, async_setup_entity_json

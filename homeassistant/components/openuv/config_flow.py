@@ -1,5 +1,6 @@
 """Config flow to configure the OpenUV component."""
-
+from pyopenuv import Client
+from pyopenuv.errors import OpenUvError
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -31,7 +32,7 @@ def configured_instances(hass):
 class OpenUvFlowHandler(config_entries.ConfigFlow):
     """Handle an OpenUV config flow."""
 
-    VERSION = 1
+    VERSION = 2
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     def __init__(self):
@@ -59,8 +60,6 @@ class OpenUvFlowHandler(config_entries.ConfigFlow):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
-        from pyopenuv import Client
-        from pyopenuv.errors import OpenUvError
 
         if not user_input:
             return await self._show_form()

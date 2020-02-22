@@ -20,7 +20,7 @@
                 "title": "Vel Hue bru"
             },
             "link": {
-                "description": "Trykk p\u00e5 knappen p\u00e5 brua, for \u00e5 registrere Philips Hue med Home Assistant.\n\n![Lokasjon til knappen p\u00e5 brua]\n(/statisk/bilete/konfiguer_philips_hue.jpg)",
+                "description": "Trykk p\u00e5 knappen p\u00e5 brua, for \u00e5 registrere Philips Hue med Home Assistant.\n\n![Lokasjon til knappen p\u00e5 brua](/statisk/bilete/konfiguer_philips_hue.jpg)",
                 "title": "Link Hub"
             }
         },

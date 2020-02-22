@@ -81,7 +81,6 @@ class EsphomeFan(EsphomeEntity, FanEntity):
             data["speed"] = _fan_speeds.from_hass(speed)
         await self._client.fan_command(**data)
 
-    # pylint: disable=arguments-differ
     async def async_turn_off(self, **kwargs) -> None:
         """Turn off the fan."""
         await self._client.fan_command(key=self._static_info.key, state=False)

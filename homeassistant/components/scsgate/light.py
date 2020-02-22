@@ -1,10 +1,11 @@
 """Support for SCSGate lights."""
 import logging
 
+from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
 
 from homeassistant.components import scsgate
-from homeassistant.components.light import Light, PLATFORM_SCHEMA
+from homeassistant.components.light import PLATFORM_SCHEMA, Light
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
@@ -70,7 +71,6 @@ class SCSGateLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        from scsgate.tasks import ToggleStatusTask
 
         scsgate.SCSGATE.append_task(ToggleStatusTask(target=self._scs_id, toggled=True))
 
@@ -79,7 +79,6 @@ class SCSGateLight(Light):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        from scsgate.tasks import ToggleStatusTask
 
         scsgate.SCSGATE.append_task(
             ToggleStatusTask(target=self._scs_id, toggled=False)

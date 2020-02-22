@@ -1,9 +1,4 @@
-"""
-Support for ONVIF Cameras with FFmpeg as decoder.
-
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.onvif/
-"""
+"""Support for ONVIF Cameras with FFmpeg as decoder."""
 import asyncio
 import datetime as dt
 import logging
@@ -277,6 +272,10 @@ class ONVIFHassCamera(Camera):
             _LOGGER.debug("Using profile index '%d'", self._profile_index)
 
             _LOGGER.debug("Retrieving stream uri")
+
+            # Fix Onvif setup error on Goke GK7102 based IP camera
+            # where we need to recreate media_service  #26781
+            media_service = self._camera.create_media_service()
 
             req = media_service.create_type("GetStreamUri")
             req.ProfileToken = profiles[self._profile_index].token

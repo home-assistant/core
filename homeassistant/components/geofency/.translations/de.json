@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "description": "M\u00f6chtest du den Geofency Webhook wirklich einrichten?",
-                "title": "Richten Sie den Geofency Webhook ein"
+                "title": "Richte den Geofency Webhook ein"
             }
         },
         "title": "Geofency Webhook"

@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Standort ist bereits konfiguriert."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "radius": "Radius"
+                },
+                "title": "F\u00fclle deine Filterangaben aus."
+            }
+        },
+        "title": "Globales Katastrophenalarm- und Koordinierungssystem (GDACS)"
+    }
+}

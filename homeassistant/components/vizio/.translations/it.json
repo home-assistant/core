@@ -1,0 +1,44 @@
+{
+    "config": {
+        "abort": {
+            "already_in_progress": "Il flusso di configurazione per vizio \u00e8 gi\u00e0 in corso.",
+            "already_setup": "Questa voce \u00e8 gi\u00e0 stata configurata.",
+            "already_setup_with_diff_host_and_name": "Sembra che questa voce sia gi\u00e0 stata configurata con un host e un nome diversi in base al suo numero seriale. Rimuovere eventuali voci precedenti da configuration.yaml e dal menu Integrazioni prima di tentare nuovamente di aggiungere questo dispositivo.",
+            "host_exists": "Componente Vizio con host gi\u00e0 configurato.",
+            "name_exists": "Componente Vizio con nome gi\u00e0 configurato.",
+            "updated_entry": "Questa voce \u00e8 gi\u00e0 stata configurata, ma il nome e/o le opzioni definite nella configurazione non corrispondono alla configurazione importata in precedenza, pertanto la voce di configurazione \u00e8 stata aggiornata di conseguenza.",
+            "updated_options": "Questa voce \u00e8 gi\u00e0 stata impostata, ma le opzioni definite nella configurazione non corrispondono ai valori delle opzioni importate in precedenza, quindi la voce di configurazione \u00e8 stata aggiornata di conseguenza.",
+            "updated_volume_step": "Questa voce \u00e8 gi\u00e0 stata impostata, ma la dimensione del passo del volume nella configurazione non corrisponde alla voce di configurazione, quindi \u00e8 stata aggiornata di conseguenza."
+        },
+        "error": {
+            "cant_connect": "Impossibile connettersi al dispositivo. [Esamina i documenti] (https://www.home-assistant.io/integrations/vizio/) e verifica nuovamente che: \n - Il dispositivo sia acceso \n - Il dispositivo sia collegato alla rete \n - I valori inseriti siano corretti \n prima di ritentare.",
+            "host_exists": "Dispositivo Vizio con host specificato gi\u00e0 configurato.",
+            "name_exists": "Dispositivo Vizio con il nome specificato gi\u00e0 configurato.",
+            "tv_needs_token": "Quando Device Type \u00e8 `tv`, \u00e8 necessario un token di accesso valido."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_token": "Token di accesso",
+                    "device_class": "Tipo di dispositivo",
+                    "host": "< Host / IP >: <Port>",
+                    "name": "Nome"
+                },
+                "title": "Installazione del client Vizio SmartCast"
+            }
+        },
+        "title": "Vizio SmartCast"
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "timeout": "Timeout richiesta API (secondi)",
+                    "volume_step": "Dimensione del passo del volume"
+                },
+                "title": "Aggiornamento delle opzioni di Vizo SmartCast"
+            }
+        },
+        "title": "Aggiornamento delle opzioni di Vizo SmartCast"
+    }
+}

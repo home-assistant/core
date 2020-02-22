@@ -6,8 +6,8 @@ from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.logging import catch_log_exception
-from .typing import HomeAssistantType
 
+from .typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 DATA_DISPATCHER = "dispatcher"

@@ -1,7 +1,6 @@
 """The tests for the MQTT discovery."""
 from pathlib import Path
 import re
-
 from unittest.mock import patch
 
 from homeassistant.components import mqtt
@@ -180,9 +179,7 @@ async def test_discovery_incl_nodeid(hass, mqtt_mock, caplog):
     await async_start(hass, "homeassistant", {}, entry)
 
     async_fire_mqtt_message(
-        hass,
-        "homeassistant/binary_sensor/my_node_id/bla" "/config",
-        '{ "name": "Beer" }',
+        hass, "homeassistant/binary_sensor/my_node_id/bla/config", '{ "name": "Beer" }',
     )
     await hass.async_block_till_done()
 
@@ -213,7 +210,7 @@ async def test_non_duplicate_discovery(hass, mqtt_mock, caplog):
     assert state is not None
     assert state.name == "Beer"
     assert state_duplicate is None
-    assert "Component has already been discovered: " "binary_sensor bla" in caplog.text
+    assert "Component has already been discovered: binary_sensor bla" in caplog.text
 
 
 async def test_discovery_expansion(hass, mqtt_mock, caplog):
@@ -232,7 +229,7 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
         '    "name":"DiscoveryExpansionTest1 Device",'
         '    "mdl":"Generic",'
         '    "sw":"1.2.3.4",'
-        '    "mf":"Noone"'
+        '    "mf":"None"'
         "  }"
         "}"
     )
@@ -253,7 +250,7 @@ async def test_discovery_expansion(hass, mqtt_mock, caplog):
 
 
 ABBREVIATIONS_WHITE_LIST = [
-    # MQTT client/server settings
+    # MQTT client/server/trigger settings
     "CONF_BIRTH_MESSAGE",
     "CONF_BROKER",
     "CONF_CERTIFICATE",
@@ -261,6 +258,7 @@ ABBREVIATIONS_WHITE_LIST = [
     "CONF_CLIENT_ID",
     "CONF_CLIENT_KEY",
     "CONF_DISCOVERY",
+    "CONF_DISCOVERY_ID",
     "CONF_DISCOVERY_PREFIX",
     "CONF_EMBEDDED",
     "CONF_KEEPALIVE",
@@ -425,7 +423,7 @@ async def test_complex_discovery_topic_prefix(hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(
         hass,
-        ("my_home/homeassistant/register" "/binary_sensor/node1/object1/config"),
+        ("my_home/homeassistant/register/binary_sensor/node1/object1/config"),
         '{ "name": "Beer" }',
     )
     await hass.async_block_till_done()

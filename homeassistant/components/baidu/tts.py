@@ -52,7 +52,7 @@ _OPTIONS = {
 SUPPORTED_OPTIONS = [CONF_PERSON, CONF_PITCH, CONF_SPEED, CONF_VOLUME]
 
 
-def get_engine(hass, config):
+def get_engine(hass, config, discovery_info=None):
     """Set up Baidu TTS component."""
     return BaiduTTSProvider(hass, config)
 

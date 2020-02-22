@@ -4,7 +4,7 @@ import logging
 import os
 import sys
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, UnidentifiedImageError
 import numpy as np
 import voluptuous as vol
 
@@ -15,11 +15,11 @@ from homeassistant.components.image_processing import (
     CONF_SOURCE,
     PLATFORM_SCHEMA,
     ImageProcessingEntity,
-    draw_box,
 )
 from homeassistant.core import split_entity_id
 from homeassistant.helpers import template
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,25 +89,22 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         # Verify that the TensorFlow Object Detection API is pre-installed
-        # pylint: disable=unused-import,unused-variable
         os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
         # These imports shouldn't be moved to the top, because they depend on code from the model_dir.
         # (The model_dir is created during the manual setup process. See integration docs.)
-        import tensorflow as tf  # noqa
-        from object_detection.utils import label_map_util  # noqa
+        import tensorflow as tf
+        from object_detection.utils import label_map_util
     except ImportError:
-        # pylint: disable=line-too-long
         _LOGGER.error(
             "No TensorFlow Object Detection library found! Install or compile "
             "for your system following instructions here: "
             "https://github.com/tensorflow/models/blob/master/research/object_detection/g3doc/installation.md"
-        )  # noqa
+        )
         return
 
     try:
         # Display warning that PIL will be used if no OpenCV is found.
-        # pylint: disable=unused-import,unused-variable
-        import cv2  # noqa
+        import cv2  # noqa: F401 pylint: disable=unused-import
     except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "
@@ -290,7 +287,11 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB
             inp_expanded = inp.reshape(1, inp.shape[0], inp.shape[1], 3)
         except ImportError:
-            img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+            try:
+                img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
+            except UnidentifiedImageError:
+                _LOGGER.warning("Unable to process image, bad data")
+                return
             img.thumbnail((460, 460), Image.ANTIALIAS)
             img_width, img_height = img.size
             inp = (

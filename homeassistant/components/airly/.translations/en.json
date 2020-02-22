@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Airly integration for these coordinates is already configured."
+        },
         "error": {
             "auth": "API key is not correct.",
             "name_exists": "Name already exists.",

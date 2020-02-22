@@ -6,6 +6,7 @@ import re
 import aiohttp
 from aiohttp.hdrs import REFERER, USER_AGENT
 import async_timeout
+from gtts_token import gtts_token
 import voluptuous as vol
 import yarl
 
@@ -81,7 +82,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_get_engine(hass, config):
+async def async_get_engine(hass, config, discovery_info=None):
     """Set up Google speech component."""
     return GoogleProvider(hass, config[CONF_LANG])
 
@@ -115,7 +116,6 @@ class GoogleProvider(Provider):
 
     async def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from google."""
-        from gtts_token import gtts_token
 
         token = gtts_token.Token()
         websession = async_get_clientsession(self.hass)

@@ -29,14 +29,12 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
         return
 
     client = hass.data[DOMAIN]["client"]
-    heater = hass.data[DOMAIN]["heater"]
+    heaters = hass.data[DOMAIN]["heaters"]
 
     async_add_entities(
-        [
-            IncomfortPressure(client, heater, INCOMFORT_PRESSURE),
-            IncomfortTemperature(client, heater, INCOMFORT_HEATER_TEMP),
-            IncomfortTemperature(client, heater, INCOMFORT_TAP_TEMP),
-        ]
+        [IncomfortPressure(client, h, INCOMFORT_PRESSURE) for h in heaters]
+        + [IncomfortTemperature(client, h, INCOMFORT_HEATER_TEMP) for h in heaters]
+        + [IncomfortTemperature(client, h, INCOMFORT_TAP_TEMP) for h in heaters]
     )
 
 

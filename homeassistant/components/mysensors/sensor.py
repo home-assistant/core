@@ -2,10 +2,10 @@
 from homeassistant.components import mysensors
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
+    ENERGY_KILO_WATT_HOUR,
+    POWER_WATT,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
-    POWER_WATT,
-    ENERGY_KILO_WATT_HOUR,
 )
 
 SENSORS = {

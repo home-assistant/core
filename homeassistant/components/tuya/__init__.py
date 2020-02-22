@@ -1,13 +1,15 @@
 """Support for Tuya Smart devices."""
 from datetime import timedelta
 import logging
+
+from tuyaha import TuyaApi
 import voluptuous as vol
 
+from homeassistant.const import CONF_PASSWORD, CONF_PLATFORM, CONF_USERNAME
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM
 from homeassistant.helpers import discovery
-from homeassistant.helpers.dispatcher import dispatcher_send, async_dispatcher_connect
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
@@ -50,7 +52,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 def setup(hass, config):
     """Set up Tuya Component."""
-    from tuyaha import TuyaApi
 
     tuya = TuyaApi()
     username = config[DOMAIN][CONF_USERNAME]

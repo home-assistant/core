@@ -16,9 +16,9 @@ from . import (
     CONF_ADS_VAR,
     CONF_ADS_VAR_BRIGHTNESS,
     DATA_ADS,
-    AdsEntity,
     STATE_KEY_BRIGHTNESS,
     STATE_KEY_STATE,
+    AdsEntity,
 )
 
 _LOGGER = logging.getLogger(__name__)

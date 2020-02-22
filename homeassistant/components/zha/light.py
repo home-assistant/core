@@ -1,5 +1,6 @@
 """Lights on Zigbee Home Automation networks."""
 from datetime import timedelta
+import functools
 import logging
 
 from zigpy.zcl.foundation import Status
@@ -11,16 +12,18 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
 
+from .core import discovery
 from .core.const import (
     CHANNEL_COLOR,
     CHANNEL_LEVEL,
     CHANNEL_ON_OFF,
     DATA_ZHA,
     DATA_ZHA_DISPATCHERS,
+    SIGNAL_ADD_ENTITIES,
     SIGNAL_ATTR_UPDATED,
     SIGNAL_SET_LEVEL,
-    ZHA_DISCOVERY_NEW,
 )
+from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,51 +39,27 @@ UPDATE_COLORLOOP_HUE = 0x8
 
 UNSUPPORTED_ATTRIBUTE = 0x86
 SCAN_INTERVAL = timedelta(minutes=60)
+STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, light.DOMAIN)
 PARALLEL_UPDATES = 5
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Old way of setting up Zigbee Home Automation lights."""
-    pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the Zigbee Home Automation light from config entry."""
-
-    async def async_discover(discovery_info):
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, [discovery_info]
-        )
+    entities_to_create = hass.data[DATA_ZHA][light.DOMAIN] = []
 
     unsub = async_dispatcher_connect(
-        hass, ZHA_DISCOVERY_NEW.format(light.DOMAIN), async_discover
+        hass,
+        SIGNAL_ADD_ENTITIES,
+        functools.partial(
+            discovery.async_add_entities, async_add_entities, entities_to_create
+        ),
     )
     hass.data[DATA_ZHA][DATA_ZHA_DISPATCHERS].append(unsub)
 
-    lights = hass.data.get(DATA_ZHA, {}).get(light.DOMAIN)
-    if lights is not None:
-        await _async_setup_entities(
-            hass, config_entry, async_add_entities, lights.values()
-        )
-        del hass.data[DATA_ZHA][light.DOMAIN]
 
-
-async def _async_setup_entities(
-    hass, config_entry, async_add_entities, discovery_infos
-):
-    """Set up the ZHA lights."""
-    entities = []
-    for discovery_info in discovery_infos:
-        zha_light = Light(**discovery_info)
-        entities.append(zha_light)
-
-    async_add_entities(entities, update_before_add=True)
-
-
+@STRICT_MATCH(channel_names=CHANNEL_ON_OFF, aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL})
 class Light(ZhaEntity, light.Light):
     """Representation of a ZHA or ZLL light."""
-
-    _domain = light.DOMAIN
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA light."""
@@ -168,6 +147,7 @@ class Light(ZhaEntity, light.Light):
         """Flag supported features."""
         return self._supported_features
 
+    @callback
     def async_set_state(self, state):
         """Set the state."""
         self._state = bool(state)

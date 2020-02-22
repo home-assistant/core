@@ -13,6 +13,8 @@ ATTR_RSSI_LEVEL = "rssi_level"
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tahoma switches."""
+    if discovery_info is None:
+        return
     controller = hass.data[TAHOMA_DOMAIN]["controller"]
     devices = []
     for switch in hass.data[TAHOMA_DOMAIN]["devices"]["switch"]:
@@ -45,9 +47,14 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
             else:
                 self._state = STATE_OFF
 
-        self._available = bool(
-            self.tahoma_device.active_states.get("core:StatusState") == "available"
-        )
+        # A RTS power socket doesn't have a feedback channel,
+        # so we must assume the socket is available.
+        if self.tahoma_device.type == "rts:OnOffRTSComponent":
+            self._available = True
+        else:
+            self._available = bool(
+                self.tahoma_device.active_states.get("core:StatusState") == "available"
+            )
 
         _LOGGER.debug("Update %s, state: %s", self._name, self._state)
 

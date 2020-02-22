@@ -168,15 +168,14 @@ class CommandSensorData:
 
         if rendered_args == args:
             # No template used. default behavior
-            shell = True
+            pass
         else:
             # Template used. Construct the string used in the shell
             command = str(" ".join([prog] + shlex.split(rendered_args)))
-            shell = True
         try:
             _LOGGER.debug("Running command: %s", command)
             return_value = subprocess.check_output(
-                command, shell=shell, timeout=self.timeout
+                command, shell=True, timeout=self.timeout  # nosec # shell by design
             )
             self.value = return_value.strip().decode("utf-8")
         except subprocess.CalledProcessError:

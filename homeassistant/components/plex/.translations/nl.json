@@ -6,6 +6,7 @@
             "already_in_progress": "Plex wordt geconfigureerd",
             "discovery_no_file": "Geen legacy configuratiebestand gevonden",
             "invalid_import": "Ge\u00efmporteerde configuratie is ongeldig",
+            "non-interactive": "Niet-interactieve import",
             "token_request_timeout": "Time-out verkrijgen van token",
             "unknown": "Mislukt om onbekende reden"
         },

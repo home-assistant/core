@@ -1,7 +1,7 @@
 """Time-based One Time Password auth module."""
 import asyncio
-import logging
 from io import BytesIO
+import logging
 from typing import Any, Dict, Optional, Tuple
 
 import voluptuous as vol
@@ -10,9 +10,9 @@ from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant
 
 from . import (
-    MultiFactorAuthModule,
-    MULTI_FACTOR_AUTH_MODULES,
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
+    MULTI_FACTOR_AUTH_MODULES,
+    MultiFactorAuthModule,
     SetupFlow,
 )
 
@@ -215,7 +215,11 @@ class TotpSetupFlow(SetupFlow):
 
         else:
             hass = self._auth_module.hass
-            self._ota_secret, self._url, self._image = await hass.async_add_executor_job(
+            (
+                self._ota_secret,
+                self._url,
+                self._image,
+            ) = await hass.async_add_executor_job(
                 _generate_secret_and_qr_code,  # type: ignore
                 str(self._user.name),
             )

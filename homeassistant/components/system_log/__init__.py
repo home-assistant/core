@@ -8,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant import __path__ as HOMEASSISTANT_PATH
 from homeassistant.components.http import HomeAssistantView
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+import homeassistant.helpers.config_validation as cv
 
 CONF_MAX_ENTRIES = "max_entries"
 CONF_FIRE_EVENT = "fire_event"
@@ -57,6 +57,7 @@ def _figure_out_source(record, call_stack, hass):
     paths = [HOMEASSISTANT_PATH[0], hass.config.config_dir]
     try:
         # If netdisco is installed check its path too.
+        # pylint: disable=import-outside-toplevel
         from netdisco import __path__ as netdisco_path
 
         paths.append(netdisco_path[0])
@@ -98,6 +99,7 @@ class LogEntry:
     def __init__(self, record, stack, source):
         """Initialize a log entry."""
         self.first_occured = self.timestamp = record.created
+        self.name = record.name
         self.level = record.levelname
         self.message = record.getMessage()
         self.exception = ""
@@ -113,7 +115,7 @@ class LogEntry:
 
     def hash(self):
         """Calculate a key for DedupStore."""
-        return frozenset([self.message, self.root_cause])
+        return frozenset([self.name, self.message, self.root_cause])
 
     def to_dict(self):
         """Convert object into dict to maintain backward compatibility."""
