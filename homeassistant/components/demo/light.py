@@ -86,6 +86,7 @@ class DemoLight(Light):
         self._effect_list = effect_list
         self._effect = effect
         self._available = True
+        self._color_mode = "hs"
 
     @property
     def device_info(self):
@@ -128,12 +129,14 @@ class DemoLight(Light):
     @property
     def hs_color(self) -> tuple:
         """Return the hs color value."""
-        return self._hs_color
+        if self._color_mode == "hs":
+            return self._hs_color
 
     @property
     def color_temp(self) -> int:
         """Return the CT color temperature."""
-        return self._ct
+        if self._color_mode == "ct":
+            return self._ct
 
     @property
     def white_value(self) -> int:
@@ -165,9 +168,11 @@ class DemoLight(Light):
         self._state = True
 
         if ATTR_HS_COLOR in kwargs:
+            self._color_mode = "hs"
             self._hs_color = kwargs[ATTR_HS_COLOR]
 
         if ATTR_COLOR_TEMP in kwargs:
+            self._color_mode = "ct"
             self._ct = kwargs[ATTR_COLOR_TEMP]
 
         if ATTR_BRIGHTNESS in kwargs:

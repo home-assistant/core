@@ -23,6 +23,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "media_player",
     "sensor",
     "switch",
+    "vacuum",
     "water_heater",
 ]
 
