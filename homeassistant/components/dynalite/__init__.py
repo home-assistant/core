@@ -231,5 +231,9 @@ async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     LOGGER.debug("Unloading entry %s", entry.data)
     hass.data[DOMAIN].pop(entry.entry_id)
-    result = await hass.config_entries.async_forward_entry_unload(entry, "light")
+    result = True
+    for platform in ENTITY_PLATFORMS:
+        result = result and await hass.config_entries.async_forward_entry_unload(
+            entry, platform
+        )
     return result
