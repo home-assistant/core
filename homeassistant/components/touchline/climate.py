@@ -97,7 +97,7 @@ class Touchline(ClimateDevice):
     @property
     def hvac_modes(self) -> List[str]:
         """Return the list of available hvac operation modes.
-        
+
         Need to be a subset of HVAC_MODES.
         """
         return [HVAC_MODE_HEAT]
