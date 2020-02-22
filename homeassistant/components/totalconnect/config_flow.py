@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class TotalConnectConfigFlow(config_entries.ConfigFlow):
+class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Total Connect config flow."""
 
     VERSION = 1
@@ -36,7 +36,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow):
                 # authentication success / valid
                 return self.async_create_entry(
                     title="Total Connect",
-                    data={"Username": username, "Password": password},
+                    data={CONF_USERNAME: username, CONF_PASSWORD: password},
                 )
             # authentication failed / invalid
             errors["base"] = "login"
@@ -48,6 +48,10 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow):
         return self.async_show_form(
             step_id="user", data_schema=data_schema, errors=errors
         )
+
+    async def async_step_import(self, user_input):
+        """Import a config entry."""
+        return await self.async_step_user(user_input)
 
     async def is_valid(self, username="", password=""):
         """Return true if the given username and password are valid."""

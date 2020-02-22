@@ -8,6 +8,7 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_NIGHT,
 )
 from homeassistant.const import (
+    CONF_USERNAME,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME,
@@ -23,19 +24,18 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up an alarm control panel for a TotalConnect device."""
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(hass, entry, async_add_entities) -> None:
+    """Set up TotalConnect alarm panels based on a config entry."""
+    username = entry.data[CONF_USERNAME]
     alarms = []
 
-    client = hass.data[DOMAIN].client
+    client = hass.data[DOMAIN][username].client
 
     for location_id, location in client.locations.items():
         location_name = location.location_name
         alarms.append(TotalConnectAlarm(location_name, location_id, client))
-    add_entities(alarms)
+
+    async_add_entities(alarms, True)
 
 
 class TotalConnectAlarm(alarm.AlarmControlPanel):

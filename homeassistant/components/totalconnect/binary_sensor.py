@@ -7,25 +7,25 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASS_SMOKE,
     BinarySensorDevice,
 )
+from homeassistant.const import CONF_USERNAME
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up a sensor for a TotalConnect device."""
-    if discovery_info is None:
-        return
-
+async def async_setup_entry(hass, entry, async_add_entities) -> None:
+    """Set up TotalConnect device sensors based on a config entry."""
+    username = entry.data[CONF_USERNAME]
     sensors = []
 
-    client_locations = hass.data[DOMAIN].client.locations
+    client_locations = hass.data[DOMAIN][username].client.locations
 
     for location_id, location in client_locations.items():
         for zone_id, zone in location.zones.items():
             sensors.append(TotalConnectBinarySensor(zone_id, location_id, zone))
-    add_entities(sensors, True)
+
+    async_add_entities(sensors, True)
 
 
 class TotalConnectBinarySensor(BinarySensorDevice):

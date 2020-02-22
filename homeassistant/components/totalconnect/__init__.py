@@ -2,15 +2,13 @@
 import asyncio
 import logging
 
-import homeassistant.helpers.config_validation as cv
+from total_connect_client import TotalConnectClient
 import voluptuous as vol
-from homeassistant.config_entries import ConfigEntry
+
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-from total_connect_client import TotalConnectClient
-
-from pprint import pprint
+import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
@@ -33,54 +31,58 @@ PLATFORMS = ["alarm_control_panel", "binary_sensor"]
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Setup from existing/saved configuration."""
+    """Set up from existing/saved configuration."""
     conf = config.get(DOMAIN)
     if conf is None:
         return True
-        
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
-    client = TotalConnectClient.TotalConnectClient(username, password)
 
-    if not client.is_logged_in():
-        _LOGGER.error("TotalConnect authentication failed")
-        return False
-
-    hass.data[DOMAIN] = TotalConnectSystem(username, password, client)
-
-    for platform in PLATFORMS:
-        hass.async_create_task(discovery.async_load_platform(hass, platform, DOMAIN, {}, config))
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
+        )
+    )
 
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Setup upon config entry in user interface."""
-
-    _LOGGER.info("TotalConnect async_setup_entry")
+    """Set up upon config entry in user interface."""
+    hass.data.setdefault(DOMAIN, {})
 
     conf = entry.data
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
+
     client = TotalConnectClient.TotalConnectClient(username, password)
 
     if not client.is_logged_in():
         _LOGGER.error("TotalConnect authentication failed")
         return False
 
-    hass.data[DOMAIN] = TotalConnectSystem(username, password, client)
+    hass.data[DOMAIN][username] = TotalConnectSystem(username, password, client)
 
-    for platform in PLATFORMS:
-        hass.async_create_task(discovery.async_load_platform(hass, platform, DOMAIN, {}, entry))
-
-    #Pretty sure we don't do this because the component itself doesn't need the configuration data
-#    for component in PLATFORMS:
-#        hass.async_create_task(
-#            hass.config_entries.async_forward_entry_setup(entry, component)
-#        )
+    for component in PLATFORMS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(entry, component)
+        )
 
     return True
 
+
+async def async_unload_entry(hass, entry: ConfigEntry):
+    """Unload a config entry."""
+    unload_ok = all(
+        await asyncio.gather(
+            *[
+                hass.config_entries.async_forward_entry_unload(entry, platform)
+                for platform in PLATFORMS
+            ]
+        )
+    )
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.data[CONF_USERNAME])
+
+    return unload_ok
 
 
 class TotalConnectSystem:
