@@ -182,9 +182,7 @@ class DirecTvDevice(MediaPlayerDevice):
             self._unique_id = f"{receiver_id}-{device}"
 
         if self._is_client:
-            _LOGGER.debug(
-                "Created DirecTV client %s for device %s", self._name, device
-            )
+            _LOGGER.debug("Created DirecTV client %s for device %s", self._name, device)
         else:
             _LOGGER.debug("Created DirecTV device for %s", self._name)
 
