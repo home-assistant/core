@@ -51,12 +51,6 @@ class AirVisualFlowHandler(config_entries.ConfigFlow):
             errors=errors or {},
         )
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry):
-        """Define an options flow handler."""
-        return AirVisualOptionsFlowHandler(config_entry)
-
     async def async_step_import(self, import_config):
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)
@@ -96,33 +90,4 @@ class AirVisualFlowHandler(config_entries.ConfigFlow):
 
         return self.async_create_entry(
             title=f"Cloud API (API key: {user_input[CONF_API_KEY][:4]}...)", data=data,
-        )
-
-
-class AirVisualOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a AirVisual options flow."""
-
-    def __init__(self, config_entry):
-        """Initialize UniFi options flow."""
-        self.config_entry = config_entry
-        self.options = dict(config_entry.options)
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        if user_input is not None:
-            self.options.update(user_input)
-            return self.async_create_entry(title="", data=self.options)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_SHOW_ON_MAP,
-                        default=self.config_entry.options.get(
-                            CONF_SHOW_ON_MAP, self.config_entry.data[CONF_SHOW_ON_MAP]
-                        ),
-                    ): bool
-                }
-            ),
         )

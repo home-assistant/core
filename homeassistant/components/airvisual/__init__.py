@@ -30,7 +30,6 @@ from .const import (
     DATA_CLIENT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    TOPIC_OPTIONS_UPDATE,
     TOPIC_UPDATE,
 )
 
@@ -116,7 +115,6 @@ async def async_setup_entry(hass, config_entry):
         hass,
         Client(websession, api_key=config_entry.data[CONF_API_KEY]),
         config_entry.data[CONF_GEOGRAPHIES],
-        config_entry.options.get(CONF_SHOW_ON_MAP, config_entry.data[CONF_SHOW_ON_MAP]),
     )
 
     try:
@@ -137,17 +135,7 @@ async def async_setup_entry(hass, config_entry):
         hass, refresh, timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
     )
 
-    config_entry.add_update_listener(async_update_entry)
-
     return True
-
-
-async def async_update_entry(hass, config_entry):
-    """Process an options update to the config entry."""
-    hass.data[DOMAIN][DATA_CLIENT][
-        config_entry.entry_id
-    ].show_on_map = config_entry.options[CONF_SHOW_ON_MAP]
-    async_dispatcher_send(hass, TOPIC_OPTIONS_UPDATE)
 
 
 async def async_unload_entry(hass, config_entry):
@@ -165,12 +153,11 @@ async def async_unload_entry(hass, config_entry):
 class AirVisualData:
     """Define a class to manage data from the AirVisual cloud API."""
 
-    def __init__(self, hass, client, geographies, show_on_map):
+    def __init__(self, hass, client, geographies):
         """Initialize."""
         self._client = client
         self._hass = hass
         self.data = {}
-        self.show_on_map = show_on_map
 
         if geographies:
             self.geographies = {
