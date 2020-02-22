@@ -31,16 +31,14 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-from .const import (
-    ATTR_MEDIA_CURRENTLY_RECORDING,
-    ATTR_MEDIA_RATING,
-    ATTR_MEDIA_RECORDED,
-    ATTR_MEDIA_START_TIME,
-    DATA_DIRECTV,
-    DEFAULT_DEVICE,
-    DEFAULT_NAME,
-    DEFAULT_PORT,
-)
+ATTR_MEDIA_CURRENTLY_RECORDING = "media_currently_recording"
+ATTR_MEDIA_RATING = "media_rating"
+ATTR_MEDIA_RECORDED = "media_recorded"
+ATTR_MEDIA_START_TIME = "media_start_time"
+
+DEFAULT_DEVICE = "0"
+DEFAULT_NAME = "DirecTV Receiver"
+DEFAULT_PORT = 8080
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,6 +61,8 @@ SUPPORT_DTV_CLIENT = (
     | SUPPORT_PREVIOUS_TRACK
     | SUPPORT_PLAY
 )
+
+DATA_DIRECTV = "data_directv"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
