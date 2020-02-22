@@ -581,7 +581,7 @@ async def test_play_media_invalid_type(hass, remote):
     ):
         url = "https://example.com"
         await setup_samsungtv(hass, MOCK_CONFIG)
-        remote.reset_mock()
+        assert remote.call_count == 1
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -595,7 +595,7 @@ async def test_play_media_invalid_type(hass, remote):
         # only update called
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
-        assert remote.call_count == 1
+        assert remote.call_count == 2
 
 
 async def test_play_media_channel_as_string(hass):
@@ -605,7 +605,7 @@ async def test_play_media_channel_as_string(hass):
     ):
         url = "https://example.com"
         await setup_samsungtv(hass, MOCK_CONFIG)
-        remote.reset_mock()
+        assert remote.call_count == 1
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -619,7 +619,7 @@ async def test_play_media_channel_as_string(hass):
         # only update called
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
-        assert remote.call_count == 1
+        assert remote.call_count == 2
 
 
 async def test_play_media_channel_as_non_positive(hass):
@@ -628,7 +628,7 @@ async def test_play_media_channel_as_non_positive(hass):
         "homeassistant.components.samsungtv.config_flow.socket"
     ):
         await setup_samsungtv(hass, MOCK_CONFIG)
-        remote.reset_mock()
+        assert remote.call_count == 1
         assert await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -642,7 +642,7 @@ async def test_play_media_channel_as_non_positive(hass):
         # only update called
         assert remote.control.call_count == 0
         assert remote.close.call_count == 0
-        assert remote.call_count == 1
+        assert remote.call_count == 2
 
 
 async def test_select_source(hass, remote):
