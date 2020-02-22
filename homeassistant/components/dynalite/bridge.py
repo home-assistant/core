@@ -18,6 +18,7 @@ class DynaliteBridge:
 
     def __init__(self, hass, config):
         """Initialize the system based on host parameter."""
+        LOGGER.error("XXX bridge config=%s", config)
         self.hass = hass
         self.area = {}
         self.async_add_devices = {}
