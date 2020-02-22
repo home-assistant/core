@@ -1,4 +1,6 @@
 """Tests for init module."""
+import aiohttp
+
 from homeassistant.components import nws
 from homeassistant.components.nws.const import CONF_STATION, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
@@ -65,3 +67,16 @@ async def test_unsuccessful_duplicate_config(hass, mock_simple_nws):
     """Test that nws setup with duplicate config."""
     assert await async_setup_component(hass, DOMAIN, DUPLICATE_CONFIG) is True
     assert len(hass.data[DOMAIN]) == 1
+
+
+async def test_error_station(hass, mock_simple_nws):
+    """Test error in setting station."""
+
+    instance = mock_simple_nws.return_value
+    instance.set_station.side_effect = aiohttp.ClientError
+
+    assert await async_setup_component(hass, DOMAIN, MINIMAL_CONFIG) is False
+    await hass.async_block_till_done()
+
+    assert hass.states.get("weather.abc_hourly") is None
+    assert hass.states.get("weather.abc_daynight") is None
