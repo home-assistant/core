@@ -284,11 +284,6 @@ class NWSWeather(WeatherEntity):
         return f"{base_id}_{self.mode}"
 
     @property
-    def assumed_state(self):
-        """Return if state is assumed."""
-        return not self.nws.update_observation_success
-
-    @property
     def available(self):
         """Return if state is available."""
         return self.nws.update_observation_success
