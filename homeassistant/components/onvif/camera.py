@@ -3,6 +3,7 @@ import asyncio
 import datetime as dt
 import logging
 import os
+from typing import Optional
 
 from aiohttp.client_exceptions import ClientConnectionError, ServerDisconnectedError
 from haffmpeg.camera import CameraMjpeg
@@ -136,6 +137,7 @@ class ONVIFHassCamera(Camera):
         self._profile_index = config.get(CONF_PROFILE)
         self._ptz_service = None
         self._input = None
+        self._mac = None
 
         _LOGGER.debug(
             "Setting up the ONVIF camera device @ '%s:%s'", self._host, self._port
@@ -160,6 +162,7 @@ class ONVIFHassCamera(Camera):
             _LOGGER.debug("Updating service addresses")
             await self._camera.update_xaddrs()
 
+            await self.async_obtain_mac_address()
             await self.async_check_date_and_time()
             await self.async_obtain_input_uri()
             self.setup_ptz()
@@ -177,6 +180,14 @@ class ONVIFHassCamera(Camera):
                 self._name,
                 err,
             )
+
+    async def async_obtain_mac_address(self):
+        """Obtain the MAC address of the camera to use as the unique ID."""
+        devicemgmt = self._camera.create_devicemgmt_service()
+        network_interfaces = await devicemgmt.GetNetworkInterfaces()
+        for interface in network_interfaces:
+            if interface.Enabled:
+                self._mac = interface.Info.HwAddress
 
     async def async_check_date_and_time(self):
         """Warns if camera and system date not synced."""
@@ -398,3 +409,8 @@ class ONVIFHassCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    @property
+    def unique_id(self) -> Optional[str]:
+        """Return a unique ID."""
+        return self._mac
