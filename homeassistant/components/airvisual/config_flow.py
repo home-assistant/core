@@ -38,7 +38,7 @@ class AirVisualFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         schema = OrderedDict()
         schema[vol.Required(CONF_API_KEY)] = str
         schema[
-            vol.Optional(CONF_LATITUDE, default=self.hass.config.latitude)
+            vol.Required(CONF_LATITUDE, default=self.hass.config.latitude)
         ] = cv.latitude
         schema[
             vol.Optional(CONF_LONGITUDE, default=self.hass.config.longitude)
