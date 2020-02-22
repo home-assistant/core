@@ -204,6 +204,11 @@ class AFSAPIDevice(MediaPlayerDevice):
             self._album_name = await fs_device.get_play_album()
 
             self._source = await fs_device.get_mode()
+            # There appears to be a bug in the API where if the first source on the
+            # list is selected it returns the string "None".
+            if self._source == "None" and self._source_list:
+                self._source = self._source_list[0]
+
             self._mute = await fs_device.get_mute()
             self._media_image_url = await fs_device.get_play_graphic()
         else:
