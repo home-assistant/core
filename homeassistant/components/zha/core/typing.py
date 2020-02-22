@@ -30,7 +30,6 @@ if TYPE_CHECKING:
     import homeassistant.components.zha.entity
     import homeassistant.components.zha.core.channels
 
-    # pylint: disable=invalid-name
     ChannelType = base_channels.ZigbeeChannel
     ChannelsType = channels.Channels
     ChannelPoolType = channels.ChannelPool

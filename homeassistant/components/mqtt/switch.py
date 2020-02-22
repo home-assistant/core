@@ -99,7 +99,6 @@ async def _async_setup_entity(
     async_add_entities([MqttSwitch(config, config_entry, discovery_hash)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttSwitch(
     MqttAttributes,
     MqttAvailability,

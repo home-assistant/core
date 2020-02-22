@@ -99,7 +99,6 @@ async def async_setup_entity_template(
     async_add_entities([MqttTemplate(config, config_entry, discovery_hash)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttTemplate(
     MqttAttributes,
     MqttAvailability,

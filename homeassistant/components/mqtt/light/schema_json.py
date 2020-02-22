@@ -125,7 +125,6 @@ async def async_setup_entity_json(
     async_add_entities([MqttLightJson(config, config_entry, discovery_hash)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttLightJson(
     MqttAttributes,
     MqttAvailability,

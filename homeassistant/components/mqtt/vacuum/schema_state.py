@@ -163,7 +163,6 @@ async def async_setup_entity_state(
     async_add_entities([MqttStateVacuum(config, config_entry, discovery_hash)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttStateVacuum(
     MqttAttributes,
     MqttAvailability,

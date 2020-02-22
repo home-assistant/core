@@ -154,7 +154,6 @@ async def async_setup_entity_basic(
     async_add_entities([MqttLight(config, config_entry, discovery_hash)])
 
 
-# pylint: disable=too-many-ancestors
 class MqttLight(
     MqttAttributes,
     MqttAvailability,

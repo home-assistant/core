@@ -115,7 +115,7 @@ async def async_setup(hass, config):
 
         return call_data
 
-    service_disable_schema = vol.Schema(  # pylint: disable=invalid-name
+    service_disable_schema = vol.Schema(
         vol.All(
             {
                 vol.Required(SERVICE_DISABLE_ATTR_DURATION): vol.All(
