@@ -11,7 +11,7 @@ PROJECT_PACKAGE_NAME = "homeassistant"
 PROJECT_LICENSE = "Apache License 2.0"
 PROJECT_AUTHOR = "The Home Assistant Authors"
 PROJECT_COPYRIGHT = " 2013-{}, {}".format(dt.now().year, PROJECT_AUTHOR)
-PROJECT_URL = "https://home-assistant.io/"
+PROJECT_URL = "https://www.home-assistant.io/"
 PROJECT_EMAIL = "hello@home-assistant.io"
 
 PROJECT_GITHUB_USERNAME = "home-assistant"
