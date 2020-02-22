@@ -81,12 +81,14 @@ async def async_setup_entry(
     if not config_entry.update_listeners:
         config_entry.add_update_listener(update_listener)
 
+    name = config_entry.data[CONF_NAME]
+    entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name, hass=hass)
     async_add_entities(
         [
             ElecPriceSensor(
-                hass,
                 websession=async_get_clientsession(hass),
-                name=config_entry.data[CONF_NAME],
+                name=name,
+                entity_id=entity_id,
                 tariff=config_entry.data[ATTR_TARIFF],
                 timeout=config_entry.data.get(CONF_TIMEOUT, 5),
             )
@@ -131,14 +133,11 @@ def extract_prices_for_tariff(
 class ElecPriceSensor(RestoreEntity):
     """Class to hold the prices of electricity as a sensor."""
 
-    def __init__(self, hass, websession, name, tariff, timeout):
+    def __init__(self, websession, name, entity_id, tariff, timeout):
         """Initialize the sensor object."""
-        self.hass = hass
         self._websession = websession
         self._name = name
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, self._name, hass=self.hass
-        )
+        self.entity_id = entity_id
         self._tariff = tariff
         self._timeout = timeout
         self._num_retries = 0
@@ -146,24 +145,10 @@ class ElecPriceSensor(RestoreEntity):
         self._attributes = None
         self._today_prices = None
         self._tomorrow_prices = None
+
         self._init_done = False
-
-        # Update 'state' value 2 times/hour
-        self._hourly_tracker = async_track_time_change(
-            self.hass, self.async_update, second=[0], minute=[0]
-        )
-        # Update prices at random time, 3 times/hour (don't want to upset API)
-        random_minute = randint(1, 19)
-        mins_update = [random_minute + 20 * i for i in range(3)]
-        self._price_tracker = async_track_time_change(
-            self.hass, self.async_update_prices, second=[0], minute=mins_update
-        )
-
-        _LOGGER.info(
-            f"Setup of price sensor {self.name} ({self.entity_id}) "
-            f"for tariff '{self._tariff}', "
-            f"updating data at {mins_update} min, each hour"
-        )
+        self._hourly_tracker = None
+        self._price_tracker = None
 
     async def async_will_remove_from_hass(self) -> None:
         """Cancel listeners for sensor updates."""
@@ -185,6 +170,22 @@ class ElecPriceSensor(RestoreEntity):
             )
 
         self._init_done = True
+
+        # Update 'state' value 2 times/hour
+        self._hourly_tracker = async_track_time_change(
+            self.hass, self.async_update, second=[0], minute=[0]
+        )
+        # Update prices at random time, 3 times/hour (don't want to upset API)
+        random_minute = randint(1, 19)
+        mins_update = [random_minute + 20 * i for i in range(3)]
+        self._price_tracker = async_track_time_change(
+            self.hass, self.async_update_prices, second=[0], minute=mins_update
+        )
+        _LOGGER.info(
+            f"Setup of price sensor {self.name} ({self.entity_id}) "
+            f"for tariff '{self._tariff}', "
+            f"updating data at {mins_update} min, each hour"
+        )
         await self.async_update_prices()
         await self.async_update_ha_state(True)
 
