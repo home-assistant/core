@@ -2123,6 +2123,7 @@ xfinity-gateway==0.0.4
 xknx==0.11.2
 
 # homeassistant.components.bluesound
+# homeassistant.components.pvpc_hourly_pricing
 # homeassistant.components.rest
 # homeassistant.components.startca
 # homeassistant.components.ted5000
