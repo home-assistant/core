@@ -4,11 +4,12 @@
     "step": {
       "user": {
         "title": "Configure AirVisual",
+        "description": "Monitor air quality in a geographical location.",
         "data": {
           "api_key": "API Key",
           "latitude": "Latitude",
           "longitude": "Longitude",
-          "show_on_map": "Show monitored geographies on the map"
+          "show_on_map": "Show monitored geography on the map"
         }
       }
     },
@@ -18,14 +19,13 @@
     }
   },
   "options": {
-      "step": {
-          "init": {
-              "description": "Options for AirVisual",
-              "data": {
-                  "show_on_map": "Show monitored geographies on the map"
-              }
-          }
+    "step": {
+      "init": {
+        "description": "Configure options for the AirVisual integration.",
+        "data": {
+          "show_on_map": "Show monitored geographies on the map"
+        }
       }
+    }
   }
 }
-
