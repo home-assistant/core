@@ -210,7 +210,7 @@ class CreateShoppingListItemView(http.HomeAssistantView):
     def post(self, request, data):
         """Create a new shopping list item."""
         item = request.app["hass"].data[DOMAIN].async_add(data["name"])
-        request.app["hass"].bus.async_fire(EVENT, {"action": "item_added", "item": item})
+        request.app["hass"].bus.async_fire(EVENT)
         return self.json(item)
 
 
@@ -225,7 +225,7 @@ class ClearCompletedItemsView(http.HomeAssistantView):
         """Retrieve if API is running."""
         hass = request.app["hass"]
         hass.data[DOMAIN].async_clear_completed()
-        hass.bus.async_fire(EVENT, {"action": "cleared_completed"})
+        hass.bus.async_fire(EVENT)
         return self.json_message("Cleared completed items.")
 
 
