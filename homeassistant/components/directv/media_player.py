@@ -138,7 +138,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     loc_name,
                     loc["clientAddr"],
                 )
-                dtv = 
+
                 entities.append(
                     DirecTvDevice(
                         loc_name, 
