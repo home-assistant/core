@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.const import TIME_HOURS, TIME_MINUTES, TIME_SECONDS
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -96,10 +97,14 @@ async def test_dataSet2(hass):
 async def test_dataSet3(hass):
     """Test derivative sensor state."""
     state = await setup_tests(
-        hass, {"unit_time": "s"}, times=[20, 30], values=[5, 10], expected_state=0.5
+        hass,
+        {"unit_time": TIME_SECONDS},
+        times=[20, 30],
+        values=[5, 10],
+        expected_state=0.5,
     )
 
-    assert state.attributes.get("unit_of_measurement") == "/s"
+    assert state.attributes.get("unit_of_measurement") == f"/{TIME_SECONDS}"
 
 
 async def test_dataSet4(hass):
@@ -137,7 +142,12 @@ async def test_data_moving_average_for_discrete_sensor(hass):
     times = list(range(0, 1800 + 30, 30))
 
     config, entity_id = await _setup_sensor(
-        hass, {"time_window": {"seconds": time_window}, "unit_time": "min", "round": 1}
+        hass,
+        {
+            "time_window": {"seconds": time_window},
+            "unit_time": TIME_MINUTES,
+            "round": 1,
+        },
     )  # two minute window
 
     for time, value in zip(times, temperature_values):
@@ -186,7 +196,7 @@ async def test_prefix(hass):
 
     # Testing a power sensor at 1000 Watts for 1hour = 0kW/h
     assert round(float(state.state), config["sensor"]["round"]) == 0.0
-    assert state.attributes.get("unit_of_measurement") == "kW/h"
+    assert state.attributes.get("unit_of_measurement") == f"kW/{TIME_HOURS}"
 
 
 async def test_suffix(hass):

@@ -1,6 +1,6 @@
 """Meteo-France component constants."""
 
-from homeassistant.const import TEMP_CELSIUS, TIME_MINUTES
+from homeassistant.const import TEMP_CELSIUS, TIME_HOURS, TIME_MINUTES
 
 DOMAIN = "meteo_france"
 PLATFORMS = ["sensor", "weather"]
@@ -47,7 +47,7 @@ SENSOR_TYPES = {
     },
     "wind_speed": {
         SENSOR_TYPE_NAME: "Wind Speed",
-        SENSOR_TYPE_UNIT: "km/h",
+        SENSOR_TYPE_UNIT: f"km/{TIME_HOURS}",
         SENSOR_TYPE_ICON: "mdi:weather-windy",
         SENSOR_TYPE_CLASS: None,
     },

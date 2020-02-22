@@ -8,6 +8,8 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     POWER_WATT,
     TEMP_CELSIUS,
+    TIME_HOURS,
+    TIME_SECONDS,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -36,11 +38,11 @@ SENSOR_TYPES = {
         DEVICE_CLASS_TEMPERATURE,
     ],
     SENSOR_TYPE_HUMIDITY: ["Humidity", "%", None, DEVICE_CLASS_HUMIDITY],
-    SENSOR_TYPE_RAINRATE: ["Rain rate", "mm/h", "mdi:water", None],
+    SENSOR_TYPE_RAINRATE: ["Rain rate", f"mm/{TIME_HOURS}", "mdi:water", None],
     SENSOR_TYPE_RAINTOTAL: ["Rain total", "mm", "mdi:water", None],
     SENSOR_TYPE_WINDDIRECTION: ["Wind direction", "", "", None],
-    SENSOR_TYPE_WINDAVERAGE: ["Wind average", "m/s", "", None],
-    SENSOR_TYPE_WINDGUST: ["Wind gust", "m/s", "", None],
+    SENSOR_TYPE_WINDAVERAGE: ["Wind average", f"m/{TIME_SECONDS}", "", None],
+    SENSOR_TYPE_WINDGUST: ["Wind gust", f"m/{TIME_SECONDS}", "", None],
     SENSOR_TYPE_UV: ["UV", "UV", "", None],
     SENSOR_TYPE_WATT: ["Power", POWER_WATT, "", None],
     SENSOR_TYPE_LUMINANCE: ["Luminance", "lx", None, DEVICE_CLASS_ILLUMINANCE],

@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
+    TIME_HOURS,
     __version__,
 )
 import homeassistant.helpers.config_validation as cv
@@ -39,9 +40,14 @@ SENSOR_TYPES = {
     "pressure": ("Pressure", "hPa", "LDstat hPa", float),
     "pressure_sealevel": ("Pressure at Sea Level", "hPa", "LDred hPa", float),
     "humidity": ("Humidity", "%", "RF %", int),
-    "wind_speed": ("Wind Speed", "km/h", "WG km/h", float),
+    "wind_speed": ("Wind Speed", f"km/{TIME_HOURS}", f"WG km/{TIME_HOURS}", float),
     "wind_bearing": ("Wind Bearing", "°", "WR °", int),
-    "wind_max_speed": ("Top Wind Speed", "km/h", "WSG km/h", float),
+    "wind_max_speed": (
+        "Top Wind Speed",
+        f"km/{TIME_HOURS}",
+        f"WSG km/{TIME_HOURS}",
+        float,
+    ),
     "wind_max_bearing": ("Top Wind Bearing", "°", "WSR °", int),
     "sun_last_hour": ("Sun Last Hour", "%", "SO %", int),
     "temperature": ("Temperature", "°C", "T °C", float),

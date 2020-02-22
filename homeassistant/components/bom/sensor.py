@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     TEMP_CELSIUS,
+    TIME_HOURS,
 )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -59,7 +60,7 @@ SENSOR_TYPES = {
     "cloud_type_id": ["Cloud Type ID", None],
     "cloud_type": ["Cloud Type", None],
     "delta_t": ["Delta Temp C", TEMP_CELSIUS],
-    "gust_kmh": ["Wind Gust kmh", "km/h"],
+    "gust_kmh": ["Wind Gust kmh", f"km/{TIME_HOURS}"],
     "gust_kt": ["Wind Gust kt", "kt"],
     "air_temp": ["Air Temp C", TEMP_CELSIUS],
     "dewpt": ["Dew Point C", TEMP_CELSIUS],
@@ -76,7 +77,7 @@ SENSOR_TYPES = {
     "vis_km": ["Visability km", "km"],
     "weather": ["Weather", None],
     "wind_dir": ["Wind Direction", None],
-    "wind_spd_kmh": ["Wind Speed kmh", "km/h"],
+    "wind_spd_kmh": ["Wind Speed kmh", f"km/{TIME_HOURS}"],
     "wind_spd_kt": ["Wind Speed kt", "kt"],
 }
 
