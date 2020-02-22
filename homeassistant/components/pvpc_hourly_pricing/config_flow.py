@@ -7,13 +7,15 @@ from homeassistant.core import callback
 from . import CONF_NAME, UI_CONFIG_SCHEMA
 from .const import ATTR_TARIFF, DOMAIN, TARIFFS
 
+DOMAIN_NAME = DOMAIN
+
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle the Options flow for `pvpc_hourly_pricing` to change the tariff."""
 
-    def __init__(self, entry: config_entries.ConfigEntry):
+    def __init__(self, config_entry: config_entries.ConfigEntry):
         """Initialize the options flow handler with the config entry to modify."""
-        self.config_entry = entry
+        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Manage the options."""
@@ -31,7 +33,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN_NAME):
     """Handle a config flow for `pvpc_hourly_pricing` to select the tariff."""
 
     VERSION = 1
@@ -56,6 +58,6 @@ class TariffSelectorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(entry: config_entries.ConfigEntry):
-        """Handle tariff change via Options panel."""
-        return OptionsFlowHandler(entry)
+    def async_get_options_flow(config_entry: config_entries.ConfigEntry):
+        """Get the options flow for this handler to make a tariff change."""
+        return OptionsFlowHandler(config_entry)

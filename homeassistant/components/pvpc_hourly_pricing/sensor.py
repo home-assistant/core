@@ -98,7 +98,7 @@ async def async_setup_entry(
 
 
 def extract_prices_for_tariff(
-    xml_data: str, tz: timezone, tariff: int = 2
+    xml_data: str, local_tz: timezone, tariff: int = 2
 ) -> Tuple[date, List[float]]:
     """
     PVPC xml data extractor.
@@ -111,7 +111,7 @@ def extract_prices_for_tariff(
     data = xmltodict.parse(xml_data)["PVPCDesgloseHorario"]
 
     str_horiz = data["Horizonte"]["@v"]
-    day: date = parse(str_horiz.split("/")[0]).astimezone(tz).date()
+    day: date = parse(str_horiz.split("/")[0]).astimezone(local_tz).date()
 
     tariff_id = f"Z0{tariff}"
     prices = next(
@@ -165,8 +165,9 @@ class ElecPriceSensor(RestoreEntity):
                 state.attributes[k] for k in state.attributes if k.startswith("price")
             ]
             _LOGGER.debug(
-                f"RestoreState[{self.entity_id}]: "
-                f"Loaded {len(self._today_prices)} prices"
+                "RestoreState[%s]: Loaded %d prices",
+                self.entity_id,
+                len(self._today_prices),
             )
 
         self._init_done = True
@@ -182,9 +183,12 @@ class ElecPriceSensor(RestoreEntity):
             self.hass, self.async_update_prices, second=[0], minute=mins_update
         )
         _LOGGER.info(
-            f"Setup of price sensor {self.name} ({self.entity_id}) "
-            f"for tariff '{self._tariff}', "
-            f"updating data at {mins_update} min, each hour"
+            "Setup of price sensor %s (%s) with tariff '%s', "
+            "updating prices each hour at %s min",
+            self.name,
+            self.entity_id,
+            self._tariff,
+            mins_update,
         )
         await self.async_update_prices()
         await self.async_update_ha_state(True)
@@ -235,7 +239,7 @@ class ElecPriceSensor(RestoreEntity):
         """
         if len(self._today_prices) == 23 and current_hour > 2:
             return self._today_prices[current_hour - 1]
-        elif len(self._today_prices) == 25 and current_hour > 2:
+        if len(self._today_prices) == 25 and current_hour > 2:
             return self._today_prices[current_hour + 1]
         return self._today_prices[current_hour]
 
@@ -246,11 +250,6 @@ class ElecPriceSensor(RestoreEntity):
             # remove 'tomorrow prices' as now they refer to 'today'
             self._tomorrow_prices = None
 
-        if self._today_prices is None:
-            _LOGGER.info(f"Abort process, no values!!")
-            _LOGGER.critical(f"Abort process, no values!!")
-            return
-
         # set current price
         self._state = self._get_current_value(actual_hour)
 
@@ -259,9 +258,7 @@ class ElecPriceSensor(RestoreEntity):
             prices += self._tomorrow_prices
 
         # generate sensor attributes
-        prices_sorted = dict(
-            sorted({i: p for i, p in enumerate(prices)}.items(), key=lambda x: x[1],)
-        )
+        prices_sorted = dict(sorted(enumerate(prices), key=lambda x: x[1]))
         attributes = {ATTR_ATTRIBUTION: _ATTRIBUTION, ATTR_TARIFF: self._tariff}
         attributes["min price"] = min(prices)
         attributes["min price at"] = next(iter(prices_sorted))
@@ -269,11 +266,11 @@ class ElecPriceSensor(RestoreEntity):
             filter(lambda x: x >= actual_hour, prices_sorted.keys())
         )
 
-        for i, p in enumerate(self._today_prices):
-            attributes[f"price {i:02d}h"] = p
+        for i, price_h in enumerate(self._today_prices):
+            attributes[f"price {i:02d}h"] = price_h
         if self._tomorrow_prices is not None:
-            for i, p in enumerate(self._tomorrow_prices):
-                attributes[f"price next day {i:02d}h"] = p
+            for i, price_h in enumerate(self._tomorrow_prices):
+                attributes[f"price next day {i:02d}h"] = price_h
 
         self._attributes = attributes
 
@@ -310,10 +307,6 @@ class ElecPriceSensor(RestoreEntity):
                 if resp.status < 400:
                     text = await resp.text()
                     return text
-                else:
-                    _LOGGER.warning(
-                        "Request error in '%s' [status: %d]", url, resp.status
-                    )
         except asyncio.TimeoutError:
             _LOGGER.warning("Timeout error requesting data from '%s'", url)
         except aiohttp.ClientError:
@@ -322,8 +315,8 @@ class ElecPriceSensor(RestoreEntity):
 
     async def async_update_prices(self, *args):
         """Update electricity prices from the ESIOS API."""
-        tz = self.hass.config.time_zone
-        now = args[0].astimezone(tz) if args else dt_util.now(tz)
+        local_tz = self.hass.config.time_zone
+        now = args[0].astimezone(local_tz) if args else dt_util.now(local_tz)
         text = await self._download_official_data(now.date())
         if text is None:
             self._num_retries += 1
@@ -341,7 +334,7 @@ class ElecPriceSensor(RestoreEntity):
             return
 
         tariff_number = TARIFFS.index(self._tariff) + 1
-        day, prices = extract_prices_for_tariff(text, tz, tariff_number)
+        _day, prices = extract_prices_for_tariff(text, local_tz, tariff_number)
         self._num_retries = 0
         self._today_prices = prices
 
@@ -352,7 +345,7 @@ class ElecPriceSensor(RestoreEntity):
                     (now + timedelta(days=1)).date()
                 )
                 day_fut, prices_fut = extract_prices_for_tariff(
-                    text_tomorrow, tz, tariff_number
+                    text_tomorrow, local_tz, tariff_number
                 )
                 _LOGGER.debug(
                     "Setting tomorrow (%s) prices: %s",
@@ -365,4 +358,4 @@ class ElecPriceSensor(RestoreEntity):
                 _LOGGER.debug("Bad try on getting future prices")
 
         self._tomorrow_prices = None
-        _LOGGER.debug(f"Download done for {self.entity_id}")
+        _LOGGER.debug("Download done for %s", self.entity_id)
