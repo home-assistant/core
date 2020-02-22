@@ -13,6 +13,7 @@ from withings_api.common import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.entity import Entity
@@ -149,7 +150,7 @@ WITHINGS_ATTRIBUTES = [
         const.MEAS_FAT_RATIO_PCT,
         MeasureType.FAT_RATIO,
         "Fat Ratio",
-        const.UOM_PERCENT,
+        UNIT_PERCENTAGE,
         None,
     ),
     WithingsMeasureAttribute(
@@ -174,13 +175,13 @@ WITHINGS_ATTRIBUTES = [
         "mdi:heart-pulse",
     ),
     WithingsMeasureAttribute(
-        const.MEAS_SPO2_PCT, MeasureType.SP02, "SP02", const.UOM_PERCENT, None
+        const.MEAS_SPO2_PCT, MeasureType.SP02, "SP02", UNIT_PERCENTAGE, None
     ),
     WithingsMeasureAttribute(
         const.MEAS_HYDRATION,
         MeasureType.HYDRATION,
         "Hydration",
-        const.UOM_PERCENT,
+        UNIT_PERCENTAGE,
         "mdi:water",
     ),
     WithingsMeasureAttribute(

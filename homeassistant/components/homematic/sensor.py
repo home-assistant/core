@@ -8,6 +8,7 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE,
     ENERGY_WATT_HOUR,
     POWER_WATT,
+    UNIT_PERCENTAGE,
 )
 
 from .const import ATTR_DISCOVER_DEVICES
@@ -30,7 +31,7 @@ HM_STATE_HA_CAST = {
 }
 
 HM_UNIT_HA_CAST = {
-    "HUMIDITY": "%",
+    "HUMIDITY": UNIT_PERCENTAGE,
     "TEMPERATURE": "°C",
     "ACTUAL_TEMPERATURE": "°C",
     "BRIGHTNESS": "#",

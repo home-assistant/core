@@ -11,6 +11,7 @@ from homeassistant.components.adguard.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.typing import HomeAssistantType
 
@@ -133,7 +134,7 @@ class AdGuardHomePercentageBlockedSensor(AdGuardHomeSensor):
             "AdGuard DNS Queries Blocked Ratio",
             "mdi:magnify-close",
             "blocked_percentage",
-            "%",
+            UNIT_PERCENTAGE,
         )
 
     async def _adguard_update(self) -> None:

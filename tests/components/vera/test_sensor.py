@@ -13,6 +13,7 @@ from pyvera import (
     VeraSensor,
 )
 
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory
@@ -64,7 +65,7 @@ async def test_temperature_sensor_f(
         vera_component_factory=vera_component_factory,
         category=CATEGORY_TEMPERATURE_SENSOR,
         class_property="temperature",
-        assert_states=(("33", "1"), ("44", "7"),),
+        assert_states=(("33", "1"), ("44", "7")),
         setup_callback=setup_callback,
     )
 
@@ -78,7 +79,7 @@ async def test_temperature_sensor_c(
         vera_component_factory=vera_component_factory,
         category=CATEGORY_TEMPERATURE_SENSOR,
         class_property="temperature",
-        assert_states=(("33", "33"), ("44", "44"),),
+        assert_states=(("33", "33"), ("44", "44")),
     )
 
 
@@ -91,7 +92,7 @@ async def test_light_sensor(
         vera_component_factory=vera_component_factory,
         category=CATEGORY_LIGHT_SENSOR,
         class_property="light",
-        assert_states=(("12", "12"), ("13", "13"),),
+        assert_states=(("12", "12"), ("13", "13")),
         assert_unit_of_measurement="lx",
     )
 
@@ -105,7 +106,7 @@ async def test_uv_sensor(
         vera_component_factory=vera_component_factory,
         category=CATEGORY_UV_SENSOR,
         class_property="light",
-        assert_states=(("12", "12"), ("13", "13"),),
+        assert_states=(("12", "12"), ("13", "13")),
         assert_unit_of_measurement="level",
     )
 
@@ -119,8 +120,8 @@ async def test_humidity_sensor(
         vera_component_factory=vera_component_factory,
         category=CATEGORY_HUMIDITY_SENSOR,
         class_property="humidity",
-        assert_states=(("12", "12"), ("13", "13"),),
-        assert_unit_of_measurement="%",
+        assert_states=(("12", "12"), ("13", "13")),
+        assert_unit_of_measurement=UNIT_PERCENTAGE,
     )
 
 
@@ -133,7 +134,7 @@ async def test_power_meter_sensor(
         vera_component_factory=vera_component_factory,
         category=CATEGORY_POWER_METER,
         class_property="power",
-        assert_states=(("12", "12"), ("13", "13"),),
+        assert_states=(("12", "12"), ("13", "13")),
         assert_unit_of_measurement="watts",
     )
 
@@ -151,7 +152,7 @@ async def test_trippable_sensor(
         vera_component_factory=vera_component_factory,
         category=999,
         class_property="is_tripped",
-        assert_states=((True, "Tripped"), (False, "Not Tripped"), (True, "Tripped"),),
+        assert_states=((True, "Tripped"), (False, "Not Tripped"), (True, "Tripped")),
         setup_callback=setup_callback,
     )
 
@@ -169,7 +170,7 @@ async def test_unknown_sensor(
         vera_component_factory=vera_component_factory,
         category=999,
         class_property="is_tripped",
-        assert_states=((True, "Unknown"), (False, "Unknown"), (True, "Unknown"),),
+        assert_states=((True, "Unknown"), (False, "Unknown"), (True, "Unknown")),
         setup_callback=setup_callback,
     )
 
@@ -187,7 +188,7 @@ async def test_scene_controller_sensor(
     entity_id = "sensor.dev1_1"
 
     component_data = await vera_component_factory.configure_component(
-        hass=hass, devices=(vera_device,),
+        hass=hass, devices=(vera_device,)
     )
     controller = component_data.controller
     update_callback = controller.register.call_args_list[0][0][1]

@@ -8,7 +8,12 @@ from libpurecool.dyson_pure_cool_link import DysonPureCoolLink
 
 from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import sensor as dyson
-from homeassistant.const import STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    STATE_OFF,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
+)
 from homeassistant.helpers import discovery
 from homeassistant.setup import async_setup_component
 
@@ -169,7 +174,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state is None
-        assert sensor.unit_of_measurement == "%"
+        assert sensor.unit_of_measurement == UNIT_PERCENTAGE
         assert sensor.name == "Device_name Humidity"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -180,7 +185,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == 45
-        assert sensor.unit_of_measurement == "%"
+        assert sensor.unit_of_measurement == UNIT_PERCENTAGE
         assert sensor.name == "Device_name Humidity"
         assert sensor.entity_id == "sensor.dyson_1"
 
@@ -191,7 +196,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         assert not sensor.should_poll
         assert sensor.state == STATE_OFF
-        assert sensor.unit_of_measurement == "%"
+        assert sensor.unit_of_measurement == UNIT_PERCENTAGE
         assert sensor.name == "Device_name Humidity"
         assert sensor.entity_id == "sensor.dyson_1"
 

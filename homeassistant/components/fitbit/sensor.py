@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_UNIT_SYSTEM, UNIT_PERCENTAGE
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -84,11 +84,11 @@ FITBIT_RESOURCES_LIST = {
     ],
     "activities/tracker/steps": ["Tracker Steps", "steps", "walk"],
     "body/bmi": ["BMI", "BMI", "human"],
-    "body/fat": ["Body Fat", "%", "human"],
+    "body/fat": ["Body Fat", UNIT_PERCENTAGE, "human"],
     "body/weight": ["Weight", "", "human"],
     "devices/battery": ["Battery", None, None],
     "sleep/awakeningsCount": ["Awakenings Count", "times awaken", "sleep"],
-    "sleep/efficiency": ["Sleep Efficiency", "%", "sleep"],
+    "sleep/efficiency": ["Sleep Efficiency", UNIT_PERCENTAGE, "sleep"],
     "sleep/minutesAfterWakeup": ["Minutes After Wakeup", "minutes", "sleep"],
     "sleep/minutesAsleep": ["Sleep Minutes Asleep", "minutes", "sleep"],
     "sleep/minutesAwake": ["Sleep Minutes Awake", "minutes", "sleep"],

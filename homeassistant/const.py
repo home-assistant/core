@@ -378,6 +378,9 @@ MASS_POUNDS: str = "lb"
 # UV Index units
 UNIT_UV_INDEX: str = "UV index"
 
+# Percentage units
+UNIT_PERCENTAGE = "%"
+
 # Data units
 DATA_BITS = "bit"
 DATA_KILOBITS = "kbit"

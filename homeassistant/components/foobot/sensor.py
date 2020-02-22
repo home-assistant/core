@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -33,10 +34,10 @@ SENSOR_TYPES = {
     "time": [ATTR_TIME, "s"],
     "pm": [ATTR_PM2_5, "µg/m3", "mdi:cloud"],
     "tmp": [ATTR_TEMPERATURE, TEMP_CELSIUS, "mdi:thermometer"],
-    "hum": [ATTR_HUMIDITY, "%", "mdi:water-percent"],
+    "hum": [ATTR_HUMIDITY, UNIT_PERCENTAGE, "mdi:water-percent"],
     "co2": [ATTR_CARBON_DIOXIDE, "ppm", "mdi:periodic-table-co2"],
     "voc": [ATTR_VOLATILE_ORGANIC_COMPOUNDS, "ppb", "mdi:cloud"],
-    "allpollu": [ATTR_FOOBOT_INDEX, "%", "mdi:percent"],
+    "allpollu": [ATTR_FOOBOT_INDEX, UNIT_PERCENTAGE, "mdi:percent"],
 }
 
 SCAN_INTERVAL = timedelta(minutes=10)

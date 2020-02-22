@@ -1,6 +1,7 @@
 """This component provides HA sensor support for Ring Door Bell/Chimes."""
 import logging
 
+from homeassistant.const import UNIT_PERCENTAGE
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -203,7 +204,7 @@ SENSOR_TYPES = {
     "battery": [
         "Battery",
         ["doorbots", "authorized_doorbots", "stickup_cams"],
-        "%",
+        UNIT_PERCENTAGE,
         None,
         None,
         "battery",

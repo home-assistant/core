@@ -23,6 +23,7 @@ from homeassistant.const import (
     LENGTH_MILES,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -413,7 +414,7 @@ SENSOR_TYPES = {
         "Relative Humidity",
         "conditions",
         value=lambda wu: int(wu.data["current_observation"]["relative_humidity"][:-1]),
-        unit_of_measurement="%",
+        unit_of_measurement=UNIT_PERCENTAGE,
         icon="mdi:water-percent",
         device_class="humidity",
     ),
@@ -830,16 +831,36 @@ SENSOR_TYPES = {
         "mdi:umbrella",
     ),
     "precip_1d": WUDailySimpleForecastSensorConfig(
-        "Precipitation Probability Today", 0, "pop", None, "%", "mdi:umbrella"
+        "Precipitation Probability Today",
+        0,
+        "pop",
+        None,
+        UNIT_PERCENTAGE,
+        "mdi:umbrella",
     ),
     "precip_2d": WUDailySimpleForecastSensorConfig(
-        "Precipitation Probability Tomorrow", 1, "pop", None, "%", "mdi:umbrella"
+        "Precipitation Probability Tomorrow",
+        1,
+        "pop",
+        None,
+        UNIT_PERCENTAGE,
+        "mdi:umbrella",
     ),
     "precip_3d": WUDailySimpleForecastSensorConfig(
-        "Precipitation Probability in 3 Days", 2, "pop", None, "%", "mdi:umbrella"
+        "Precipitation Probability in 3 Days",
+        2,
+        "pop",
+        None,
+        UNIT_PERCENTAGE,
+        "mdi:umbrella",
     ),
     "precip_4d": WUDailySimpleForecastSensorConfig(
-        "Precipitation Probability in 4 Days", 3, "pop", None, "%", "mdi:umbrella"
+        "Precipitation Probability in 4 Days",
+        3,
+        "pop",
+        None,
+        UNIT_PERCENTAGE,
+        "mdi:umbrella",
     ),
 }
 

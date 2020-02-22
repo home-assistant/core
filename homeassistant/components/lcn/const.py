@@ -1,7 +1,7 @@
 """Constants for the LCN component."""
 from itertools import product
 
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_PERCENTAGE
 
 DOMAIN = "lcn"
 DATA_LCN = "lcn"
@@ -155,7 +155,7 @@ VAR_UNITS = [
     "LX",
     "M/S",
     "METERPERSECOND",
-    "%",
+    UNIT_PERCENTAGE,
     "PERCENT",
     "PPM",
     "VOLT",

@@ -1,7 +1,7 @@
 """Support for Homekit sensors."""
 from homekit.model.characteristics import CharacteristicsTypes
 
-from homeassistant.const import DEVICE_CLASS_BATTERY, TEMP_CELSIUS
+from homeassistant.const import DEVICE_CLASS_BATTERY, TEMP_CELSIUS, UNIT_PERCENTAGE
 from homeassistant.core import callback
 
 from . import KNOWN_DEVICES, HomeKitEntity
@@ -11,7 +11,6 @@ TEMP_C_ICON = "mdi:thermometer"
 BRIGHTNESS_ICON = "mdi:brightness-6"
 CO2_ICON = "mdi:periodic-table-co2"
 
-UNIT_PERCENT = "%"
 UNIT_LUX = "lux"
 UNIT_CO2 = "ppm"
 
@@ -41,7 +40,7 @@ class HomeKitHumiditySensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_PERCENT
+        return UNIT_PERCENTAGE
 
     def _update_relative_humidity_current(self, value):
         self._state = value
@@ -213,7 +212,7 @@ class HomeKitBatterySensor(HomeKitEntity):
     @property
     def unit_of_measurement(self):
         """Return units for the sensor."""
-        return UNIT_PERCENT
+        return UNIT_PERCENTAGE
 
     def _update_battery_level(self, value):
         self._state = value

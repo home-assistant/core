@@ -18,6 +18,7 @@ from homeassistant.const import (
     POWER_WATT,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
@@ -50,8 +51,8 @@ SENSOR_TYPES = {
     "ups.firmware": ["Firmware Version", "", "mdi:information-outline"],
     "ups.firmware.aux": ["Firmware Version 2", "", "mdi:information-outline"],
     "ups.temperature": ["UPS Temperature", TEMP_CELSIUS, "mdi:thermometer"],
-    "ups.load": ["Load", "%", "mdi:gauge"],
-    "ups.load.high": ["Overload Setting", "%", "mdi:gauge"],
+    "ups.load": ["Load", UNIT_PERCENTAGE, "mdi:gauge"],
+    "ups.load.high": ["Overload Setting", UNIT_PERCENTAGE, "mdi:gauge"],
     "ups.id": ["System identifier", "", "mdi:information-outline"],
     "ups.delay.start": ["Load Restart Delay", "s", "mdi:timer"],
     "ups.delay.reboot": ["UPS Reboot Delay", "s", "mdi:timer"],
@@ -64,7 +65,7 @@ SENSOR_TYPES = {
     "ups.test.date": ["Self-Test Date", "", "mdi:calendar"],
     "ups.display.language": ["Language", "", "mdi:information-outline"],
     "ups.contacts": ["External Contacts", "", "mdi:information-outline"],
-    "ups.efficiency": ["Efficiency", "%", "mdi:gauge"],
+    "ups.efficiency": ["Efficiency", UNIT_PERCENTAGE, "mdi:gauge"],
     "ups.power": ["Current Apparent Power", "VA", "mdi:flash"],
     "ups.power.nominal": ["Nominal Power", "VA", "mdi:flash"],
     "ups.realpower": ["Current Real Power", POWER_WATT, "mdi:flash"],
@@ -76,10 +77,18 @@ SENSOR_TYPES = {
     "ups.start.battery": ["Start on Battery", "", "mdi:information-outline"],
     "ups.start.reboot": ["Reboot on Battery", "", "mdi:information-outline"],
     "ups.shutdown": ["Shutdown Ability", "", "mdi:information-outline"],
-    "battery.charge": ["Battery Charge", "%", "mdi:gauge"],
-    "battery.charge.low": ["Low Battery Setpoint", "%", "mdi:gauge"],
-    "battery.charge.restart": ["Minimum Battery to Start", "%", "mdi:gauge"],
-    "battery.charge.warning": ["Warning Battery Setpoint", "%", "mdi:gauge"],
+    "battery.charge": ["Battery Charge", UNIT_PERCENTAGE, "mdi:gauge"],
+    "battery.charge.low": ["Low Battery Setpoint", UNIT_PERCENTAGE, "mdi:gauge"],
+    "battery.charge.restart": [
+        "Minimum Battery to Start",
+        UNIT_PERCENTAGE,
+        "mdi:gauge",
+    ],
+    "battery.charge.warning": [
+        "Warning Battery Setpoint",
+        UNIT_PERCENTAGE,
+        "mdi:gauge",
+    ],
     "battery.charger.status": ["Charging Status", "", "mdi:information-outline"],
     "battery.voltage": ["Battery Voltage", "V", "mdi:flash"],
     "battery.voltage.nominal": ["Nominal Battery Voltage", "V", "mdi:flash"],
@@ -189,8 +198,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         data.update(no_throttle=True)
     except data.pynuterror as err:
         _LOGGER.error(
-            "Failure while testing NUT status retrieval. Cannot continue setup: %s",
-            err,
+            "Failure while testing NUT status retrieval. Cannot continue setup: %s", err
         )
         raise PlatformNotReady
 

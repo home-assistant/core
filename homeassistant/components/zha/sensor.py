@@ -17,6 +17,7 @@ from homeassistant.const import (
     POWER_WATT,
     STATE_UNKNOWN,
     TEMP_CELSIUS,
+    UNIT_PERCENTAGE,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -161,7 +162,7 @@ class Battery(Sensor):
     """Battery sensor of power configuration cluster."""
 
     _device_class = DEVICE_CLASS_BATTERY
-    _unit = "%"
+    _unit = UNIT_PERCENTAGE
 
     @staticmethod
     def formatter(value):
@@ -231,7 +232,7 @@ class Humidity(Sensor):
 
     _device_class = DEVICE_CLASS_HUMIDITY
     _divisor = 100
-    _unit = "%"
+    _unit = UNIT_PERCENTAGE
 
 
 @STRICT_MATCH(channel_names=CHANNEL_ILLUMINANCE)
