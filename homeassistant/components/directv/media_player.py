@@ -81,13 +81,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     )
 
     known_devices = hass.data[DATA_DIRECTV]
-    devices = []
+    entities = []
 
     if CONF_HOST in config:
-        name = config.get(CONF_NAME)
-        host = config.get(CONF_HOST)
-        port = config.get(CONF_PORT)
-        device = config.get(CONF_DEVICE)
+        name = config[CONF_NAME]
+        host = config[CONF_HOST]
+        port = config[CONF_PORT]
+        device = config[CONF_DEVICE]
 
         _LOGGER.debug(
             "Adding configured device %s with client address %s", name, device,
@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         dtv = DIRECTV(host, port, device)
         dtv_version = _get_receiver_version(dtv)
 
-        devices.append(DirecTvDevice(name, device, dtv, dtv_version,))
+        entities.append(DirecTvDevice(name, device, dtv, dtv_version,))
         known_devices.add((host, device))
 
     elif discovery_info:
@@ -143,14 +143,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     loc["clientAddr"],
                 )
                 dtv = DIRECTV(host, DEFAULT_PORT, loc["clientAddr"])
-                devices.append(
+                entities.append(
                     DirecTvDevice(
                         loc_name, loc["clientAddr"], dtv, discovery_dtv_version,
                     )
                 )
                 known_devices.add((host, loc["clientAddr"]))
 
-    add_entities(devices)
+    add_entities(entities)
 
 
 def _get_receiver_version(client):
@@ -168,7 +168,6 @@ class DirecTvDevice(MediaPlayerDevice):
     def __init__(self, name, device, dtv, version_info=None):
         """Initialize the device."""
         self.dtv = dtv
-        self._client_addr = device
         self._name = name
         self._unique_id = None
         self._is_standby = True
@@ -177,20 +176,18 @@ class DirecTvDevice(MediaPlayerDevice):
         self._paused = None
         self._last_position = None
         self._is_recorded = None
-        self._is_client = self._client_addr != "0"
+        self._is_client = device != "0"
         self._assumed_state = None
         self._available = False
         self._first_error_timestamp = None
-        self._receiver_id = None
-        self._version_info = version_info
-
-        if self._version_info:
-            self._receiver_id = "".join(self._version_info.get("receiverId").split())
-            self._unique_id = f"{self._receiver_id}-{self._client_addr}"
+        
+        if version_info:
+            receiver_id = "".join(version_info.get("receiverId").split())
+            self._unique_id = f"{receiver_id}-{device}"
 
         if self._is_client:
             _LOGGER.debug(
-                "Created DirecTV client %s for device %s", self._name, self._client_addr
+                "Created DirecTV client %s for device %s", self._name, device
             )
         else:
             _LOGGER.debug("Created DirecTV device for %s", self._name)
