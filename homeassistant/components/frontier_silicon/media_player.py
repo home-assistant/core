@@ -55,14 +55,13 @@ SUPPORT_FRONTIER_SILICON = (
 DEFAULT_PORT = 80
 DEFAULT_PASSWORD = "1234"
 DEVICE_URL = "http://{0}:{1}/device"
-DEFAULT_NAME = ""
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=""): cv.string,
     }
 )
 
@@ -71,11 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     """Set up the Frontier Silicon platform."""
     if discovery_info is not None:
         async_add_entities(
-            [
-                AFSAPIDevice(
-                    discovery_info["ssdp_description"], DEFAULT_PASSWORD, DEFAULT_NAME
-                )
-            ],
+            [AFSAPIDevice(discovery_info["ssdp_description"], DEFAULT_PASSWORD, "")],
             True,
         )
         return True
