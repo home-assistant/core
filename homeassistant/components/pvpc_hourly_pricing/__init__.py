@@ -2,7 +2,6 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -18,7 +17,6 @@ UI_CONFIG_SCHEMA = vol.Schema(
 SENSOR_SCHEMA = UI_CONFIG_SCHEMA.extend(
     {vol.Optional(CONF_TIMEOUT, default=10): cv.positive_int}
 )
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(SENSOR_SCHEMA.schema)
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: cv.ensure_list(SENSOR_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
