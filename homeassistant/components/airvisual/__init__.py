@@ -1,6 +1,5 @@
 """The airvisual component."""
 import asyncio
-from datetime import timedelta
 import logging
 
 from pyairvisual import Client
@@ -12,7 +11,6 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_SCAN_INTERVAL,
     CONF_SHOW_ON_MAP,
     CONF_STATE,
 )
@@ -47,7 +45,6 @@ GEOGRAPHY_SCHEMA = vol.All(
             vol.Inclusive(CONF_COUNTRY, "city"): cv.string,
             vol.Inclusive(CONF_LATITUDE, "coords"): cv.latitude,
             vol.Inclusive(CONF_LONGITUDE, "coords"): cv.longitude,
-            vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
         },
         cv.has_at_least_one_key(CONF_CITY, CONF_LATITUDE),
     )
@@ -59,9 +56,7 @@ CLOUD_API_SCHEMA = vol.Schema(
         vol.Optional(CONF_GEOGRAPHIES, default=[]): vol.All(
             cv.ensure_list, [GEOGRAPHY_SCHEMA]
         ),
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-            cv.time_period, lambda value: value.total_seconds()
-        ),
+        vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
     }
 )
 
@@ -115,6 +110,7 @@ async def async_setup_entry(hass, config_entry):
         hass,
         Client(websession, api_key=config_entry.data[CONF_API_KEY]),
         config_entry.data[CONF_GEOGRAPHIES],
+        config_entry.data[CONF_SHOW_ON_MAP],
     )
 
     try:
@@ -132,7 +128,7 @@ async def async_setup_entry(hass, config_entry):
         await hass.data[DOMAIN][DATA_CLIENT][config_entry.entry_id].async_update()
 
     hass.data[DOMAIN][DATA_LISTENER][config_entry.entry_id] = async_track_time_interval(
-        hass, refresh, timedelta(seconds=config_entry.data[CONF_SCAN_INTERVAL])
+        hass, refresh, DEFAULT_SCAN_INTERVAL
     )
 
     return True
@@ -153,11 +149,12 @@ async def async_unload_entry(hass, config_entry):
 class AirVisualData:
     """Define a class to manage data from the AirVisual cloud API."""
 
-    def __init__(self, hass, client, geographies):
+    def __init__(self, hass, client, geographies, show_on_map):
         """Initialize."""
         self._client = client
         self._hass = hass
         self.data = {}
+        self.show_on_map = show_on_map
 
         if geographies:
             self.geographies = {

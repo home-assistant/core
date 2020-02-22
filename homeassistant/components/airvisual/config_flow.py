@@ -10,13 +10,12 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
     CONF_LONGITUDE,
-    CONF_SCAN_INTERVAL,
     CONF_SHOW_ON_MAP,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
-from .const import CONF_GEOGRAPHIES, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import CONF_GEOGRAPHIES, DOMAIN
 
 
 @callback
@@ -75,22 +74,16 @@ class AirVisualFlowHandler(config_entries.ConfigFlow):
         except InvalidKeyError:
             return await self._show_form({CONF_API_KEY: "invalid_api_key"})
 
-        data = {
-            CONF_API_KEY: user_input[CONF_API_KEY],
-            CONF_GEOGRAPHIES: user_input.get(CONF_GEOGRAPHIES, []),
-            CONF_SCAN_INTERVAL: user_input.get(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL.total_seconds()
-            ),
-            CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, True),
-        }
-        if user_input.get(CONF_LATITUDE):
-            data[CONF_GEOGRAPHIES].append(
-                {
-                    CONF_LATITUDE: user_input[CONF_LATITUDE],
-                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                }
-            )
-
         return self.async_create_entry(
-            title=f"Cloud API (API key: {user_input[CONF_API_KEY][:4]}...)", data=data,
+            title=f"Cloud API (API key: {user_input[CONF_API_KEY][:4]}...)",
+            data={
+                CONF_API_KEY: user_input[CONF_API_KEY],
+                CONF_GEOGRAPHIES: [
+                    {
+                        CONF_LATITUDE: user_input[CONF_LATITUDE],
+                        CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+                    }
+                ],
+                CONF_SHOW_ON_MAP: user_input[CONF_SHOW_ON_MAP],
+            },
         )

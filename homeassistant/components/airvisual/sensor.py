@@ -17,14 +17,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .const import (
-    CONF_CITY,
-    CONF_COUNTRY,
-    DATA_CLIENT,
-    DOMAIN,
-    TOPIC_OPTIONS_UPDATE,
-    TOPIC_UPDATE,
-)
+from .const import CONF_CITY, CONF_COUNTRY, DATA_CLIENT, DOMAIN, TOPIC_UPDATE
 
 _LOGGER = getLogger(__name__)
 
@@ -102,7 +95,6 @@ class AirVisualSensor(Entity):
         """Initialize."""
         self._airvisual = airvisual
         self._async_unsub_dispatcher_connects = []
-        self._geography = airvisual.geographies[geography_id]
         self._geography_id = geography_id
         self._icon = icon
         self._kind = kind
@@ -113,12 +105,17 @@ class AirVisualSensor(Entity):
 
         self._attrs = {
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-            ATTR_CITY: self._airvisual.data[geography_id].get(CONF_CITY),
-            ATTR_STATE: self._airvisual.data[geography_id].get(CONF_STATE),
-            ATTR_COUNTRY: self._airvisual.data[geography_id].get(CONF_COUNTRY),
+            ATTR_CITY: airvisual.data[geography_id].get(CONF_CITY),
+            ATTR_STATE: airvisual.data[geography_id].get(CONF_STATE),
+            ATTR_COUNTRY: airvisual.data[geography_id].get(CONF_COUNTRY),
         }
 
-        self._set_show_on_map()
+        if airvisual.data[geography_id].get(CONF_LATITUDE) and airvisual.show_on_map:
+            self._attrs[ATTR_LATITUDE] = airvisual.data[geography_id][CONF_LATITUDE]
+            self._attrs[ATTR_LONGITUDE] = airvisual.data[geography_id][CONF_LONGITUDE]
+        else:
+            self._attrs["lati"] = airvisual.data[geography_id][CONF_LATITUDE]
+            self._attrs["long"] = airvisual.data[geography_id][CONF_LONGITUDE]
 
     @property
     def available(self):
@@ -160,21 +157,6 @@ class AirVisualSensor(Entity):
         """Return the unit the value is expressed in."""
         return self._unit
 
-    @callback
-    def _set_show_on_map(self):
-        """Add or remove attributes to show the monitored geography on the map."""
-        if CONF_LATITUDE not in self._geography:
-            return
-
-        if self._airvisual.show_on_map:
-            self._attrs[ATTR_LATITUDE] = self._geography[CONF_LATITUDE]
-            self._attrs[ATTR_LONGITUDE] = self._geography[CONF_LONGITUDE]
-        else:
-            self._attrs.pop(ATTR_LATITUDE, None)
-            self._attrs.pop(ATTR_LONGITUDE, None)
-            self._attrs["lati"] = self._geography[CONF_LATITUDE]
-            self._attrs["long"] = self._geography[CONF_LONGITUDE]
-
     async def async_added_to_hass(self):
         """Register callbacks."""
 
@@ -185,16 +167,6 @@ class AirVisualSensor(Entity):
 
         self._async_unsub_dispatcher_connects.append(
             async_dispatcher_connect(self.hass, TOPIC_UPDATE, update)
-        )
-
-        @callback
-        def set_show_on_map():
-            """Update whether the entity shows up on the map."""
-            self._set_show_on_map()
-            update()
-
-        self._async_unsub_dispatcher_connects.append(
-            async_dispatcher_connect(self.hass, TOPIC_OPTIONS_UPDATE, set_show_on_map)
         )
 
     async def async_update(self):
