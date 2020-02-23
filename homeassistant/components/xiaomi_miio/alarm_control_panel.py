@@ -9,25 +9,24 @@ import asyncio
 from functools import partial
 import logging
 
+from miio import Device, DeviceException, gateway
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanel,
     PLATFORM_SCHEMA,
     SUPPORT_ALARM_ARM_AWAY,
+    AlarmControlPanel,
 )
-import homeassistant.helpers.config_validation as cv
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
-    CONF_NAME,
     CONF_HOST,
+    CONF_NAME,
     CONF_TOKEN,
     STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_DISARMED,
     STATE_ALARM_ARMING,
+    STATE_ALARM_DISARMED,
 )
-
-from miio import Device, DeviceException, gateway
+from homeassistant.exceptions import PlatformNotReady
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
