@@ -159,13 +159,13 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
 
     async def async_alarm_arm_away(self, code=None):
         """Turn on."""
-        result = await self._try_command(
+        await self._try_command(
             "Turning the alarm on failed.", self._gateway.alarm.on
         )
 
     async def async_alarm_disarm(self, code=None):
         """Turn off."""
-        result = await self._try_command(
+        await self._try_command(
             "Turning the alarm off failed.", self._gateway.alarm.off
         )
 
@@ -196,7 +196,7 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
                     state,
                     XIAOMI_STATE_ARMED_VALUE,
                     XIAOMI_STATE_DISARMED_VALUE,
-                    XIAOMI_STATE_PENDING_VALUE,
+                    XIAOMI_STATE_ARMING_VALUE,
                 )
                 self._state = None
 
