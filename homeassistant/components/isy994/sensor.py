@@ -4,6 +4,7 @@ from typing import Callable
 
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     POWER_WATT,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
@@ -76,7 +77,7 @@ UOM_FRIENDLY_NAME = {
     "51": "%",
     "52": "lb",
     "53": "power factor",
-    "54": "ppm",
+    "54": CONCENTRATION_PARTS_PER_MILLION,
     "55": "pulse count",
     "57": TIME_SECONDS,
     "58": TIME_SECONDS,

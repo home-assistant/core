@@ -10,6 +10,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_LOCATION,
     ATTR_NAME,
+    CONCENTRATION_PARTS_PER_MILLION,
     CONF_API_KEY,
     EVENT_HOMEASSISTANT_STOP,
     SPEED_MILES_PER_HOUR,
@@ -149,7 +150,7 @@ SENSOR_TYPES = {
     TYPE_BATT8: ("Battery 8", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATT9: ("Battery 9", None, TYPE_BINARY_SENSOR, "battery"),
     TYPE_BATTOUT: ("Battery", None, TYPE_BINARY_SENSOR, "battery"),
-    TYPE_CO2: ("co2", "ppm", TYPE_SENSOR, None),
+    TYPE_CO2: ("co2", CONCENTRATION_PARTS_PER_MILLION, TYPE_SENSOR, None),
     TYPE_DAILYRAININ: ("Daily Rain", "in", TYPE_SENSOR, None),
     TYPE_DEWPOINT: ("Dew Point", "°F", TYPE_SENSOR, "temperature"),
     TYPE_EVENTRAININ: ("Event Rain", "in", TYPE_SENSOR, None),
