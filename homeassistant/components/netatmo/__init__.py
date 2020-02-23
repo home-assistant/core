@@ -5,6 +5,11 @@ import secrets
 
 import voluptuous as vol
 
+from homeassistant.components import cloud
+from homeassistant.components.webhook import (
+    async_register as webhook_register,
+    async_unregister as webhook_unregister,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -25,6 +30,7 @@ from .const import (
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from .webhook import handle_webhook
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,13 +90,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     }
 
     webhook_id = secrets.token_hex()
+    data = hass.data[DOMAIN][entry.entry_id]
 
     if hass.components.cloud.async_active_subscription():
-        hass.data[DOMAIN][entry.entry_id][
-            CONF_CLOUDHOOK_URL
-        ] = await hass.components.cloud.async_create_cloudhook(webhook_id)
+        data[CONF_CLOUDHOOK_URL] = await hass.components.cloud.async_create_cloudhook(
+            webhook_id
+        )
 
-    hass.data[DOMAIN][entry.entry_id][CONF_WEBHOOK_ID] = webhook_id
+    data[CONF_WEBHOOK_ID] = webhook_id
+
+    if CONF_CLOUDHOOK_URL in data:
+        webhook_url = data[CONF_CLOUDHOOK_URL]
+    else:
+        webhook_url = hass.components.webhook.async_generate_url(data[CONF_WEBHOOK_ID])
+
+    webhook_register(hass, DOMAIN, "Netatmo", webhook_id, handle_webhook)
+    data[AUTH].addwebhook(webhook_url)
+    _LOGGER.debug("Netatmo webhook url: %s", webhook_url)
 
     for component in PLATFORMS:
         hass.async_create_task(
@@ -113,4 +129,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
+    data = hass.data[DOMAIN][entry.entry_id]
+
+    webhook_unregister(hass, data[CONF_WEBHOOK_ID])
+    data[AUTH].dropwebhook()
+
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry):
+    """Cleanup when entry is removed."""
+    if CONF_CLOUDHOOK_URL in entry.data:
+        try:
+            await cloud.async_delete_cloudhook(hass, entry.data[CONF_WEBHOOK_ID])
+        except cloud.CloudNotAvailable:
+            pass
