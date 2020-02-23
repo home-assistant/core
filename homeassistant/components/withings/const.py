@@ -59,7 +59,7 @@ MEAS_TEMP_C = "temperature_c"
 MEAS_WEIGHT_KG = "weight_kg"
 
 UOM_BEATS_PER_MINUTE = "bpm"
-UOM_BREATHS_PER_MINUTE = "br/m"
+UOM_BREATHS_PER_MINUTE = f"br/{const.TIME_MINUTES}"
 UOM_FREQUENCY = "times"
 UOM_MMHG = "mmhg"
 UOM_PERCENT = "%"
