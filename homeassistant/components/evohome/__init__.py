@@ -93,14 +93,14 @@ SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
 # system mode schemas are built dynamically, below
 
 
-def _local_dt_to_aware(dt_naive: dt) -> dt:
+def _dt_local_to_aware(dt_naive: dt) -> dt:
     dt_aware = dt_util.now() + (dt_naive - dt.now())
     if dt_aware.microsecond >= 500000:
         dt_aware += timedelta(seconds=1)
     return dt_aware.replace(microsecond=0)
 
 
-def _dt_to_local_naive(dt_aware: dt) -> dt:
+def _dt_aware_to_naive(dt_aware: dt) -> dt:
     dt_naive = dt.now() + (dt_aware - dt_util.now())
     if dt_naive.microsecond >= 500000:
         dt_naive += timedelta(seconds=1)
@@ -190,7 +190,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
         # evohomeasync2 requires naive/local datetimes as strings
         if tokens.get(ACCESS_TOKEN_EXPIRES) is not None:
-            tokens[ACCESS_TOKEN_EXPIRES] = _dt_to_local_naive(
+            tokens[ACCESS_TOKEN_EXPIRES] = _dt_aware_to_naive(
                 dt_util.parse_datetime(tokens[ACCESS_TOKEN_EXPIRES])
             )
 
@@ -217,7 +217,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
     loc_idx = config[DOMAIN][CONF_LOCATION_IDX]
     try:
-        loc_config = client_v2.installation_info[loc_idx][GWS][0][TCS][0]
+        loc_config = client_v2.installation_info[loc_idx]
     except IndexError:
         _LOGGER.error(
             "Config error: '%s' = %s, but the valid range is 0-%s. "
@@ -228,7 +228,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         )
         return False
 
-    _LOGGER.debug("Config = %s", loc_config)
+    _LOGGER.debug("Config = %s", loc_config[GWS][0][TCS][0])
+    _LOGGER.debug("tz_info = %s", loc_config["locationInfo"]["timeZone"])
 
     client_v1 = evohomeasync.EvohomeClient(
         client_v2.username,
@@ -398,7 +399,7 @@ class EvoBroker:
     async def save_auth_tokens(self) -> None:
         """Save access tokens and session IDs to the store for later use."""
         # evohomeasync2 uses naive/local datetimes
-        access_token_expires = _local_dt_to_aware(self.client.access_token_expires)
+        access_token_expires = _dt_local_to_aware(self.client.access_token_expires)
 
         app_storage = {CONF_USERNAME: self.client.username}
         app_storage[REFRESH_TOKEN] = self.client.refresh_token
@@ -650,7 +651,7 @@ class EvoChild(EvoDevice):
                 day = self._schedule["DailySchedules"][(day_of_week + offset) % 7]
                 switchpoint = day["Switchpoints"][idx]
 
-                dt_local_aware = _local_dt_to_aware(
+                dt_local_aware = _dt_local_to_aware(
                     dt_util.parse_datetime(f"{sp_date}T{switchpoint['TimeOfDay']}")
                 )
 
