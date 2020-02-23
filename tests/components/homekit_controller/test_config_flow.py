@@ -1,5 +1,4 @@
 """Tests for homekit_controller config flow."""
-from asyncio import Future
 import json
 from unittest import mock
 
@@ -14,14 +13,6 @@ from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
 
 from tests.common import MockConfigEntry
 from tests.components.homekit_controller.common import Accessory, setup_platform
-
-
-def fail(exception):
-    """Mock a failing coroutine."""
-    future = Future()
-    future.set_exception(exception)
-    return future
-
 
 PAIRING_START_FORM_ERRORS = [
     (aiohomekit.BusyError, "busy_error"),
@@ -465,7 +456,7 @@ async def test_pair_abort_errors_on_start(hass, exception, expected):
     flow = _setup_flow_handler(hass)
 
     discovery = mock.Mock()
-    discovery.start_pairing.return_value = fail(exception("error"))
+    discovery.start_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
 
     flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
         return_value=discovery
@@ -505,7 +496,7 @@ async def test_pair_form_errors_on_start(hass, exception, expected):
     flow = _setup_flow_handler(hass)
 
     discovery = mock.Mock()
-    discovery.start_pairing.return_value = fail(exception("error"))
+    discovery.start_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
 
     flow.controller.find_ip_by_device_id = asynctest.CoroutineMock(
         return_value=discovery
@@ -544,8 +535,7 @@ async def test_pair_abort_errors_on_finish(hass, exception, expected):
 
     flow = _setup_flow_handler(hass)
 
-    finish_pairing = asynctest.CoroutineMock()
-    finish_pairing.return_value = fail(exception("error"))
+    finish_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
 
     discovery = mock.Mock()
     discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
@@ -593,8 +583,7 @@ async def test_pair_form_errors_on_finish(hass, exception, expected):
 
     flow = _setup_flow_handler(hass)
 
-    finish_pairing = asynctest.CoroutineMock()
-    finish_pairing.return_value = fail(exception("error"))
+    finish_pairing = asynctest.CoroutineMock(side_effect=exception("error"))
 
     discovery = mock.Mock()
     discovery.start_pairing = asynctest.CoroutineMock(return_value=finish_pairing)
@@ -730,8 +719,7 @@ async def test_user_works(hass):
 
     flow = _setup_flow_handler(hass)
 
-    finish_pairing = asynctest.CoroutineMock()
-    finish_pairing.return_value = pairing
+    finish_pairing = asynctest.CoroutineMock(return_value=pairing)
 
     discovery = mock.Mock()
     discovery.info = discovery_info
