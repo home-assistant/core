@@ -50,57 +50,78 @@ async def _mock_setup_august(hass, api_instance, authenticate_mock, api_mock):
     return True
 
 
-async def _create_august_with_devices(
-    hass, lock_details=[], doorbell_details=[], api_call_side_effects={}
-):
-    locks = []
-    doorbells = []
-    for lock in lock_details:
-        if isinstance(lock, LockDetail):
-            locks.append(_mock_august_lock(lock.device_id))
-    for doorbell in doorbell_details:
-        if isinstance(doorbell, DoorbellDetail):
-            doorbells.append(_mock_august_doorbell(doorbell.device_id))
+async def _create_august_with_devices(hass, devices, api_call_side_effects={}):
+    device_data = {
+        "doorbells": [],
+        "locks": [],
+    }
+    for device in devices:
+        if isinstance(device, LockDetail):
+            device_data["locks"].append(
+                {"base": _mock_august_lock(device.device_id), "detail": device}
+            )
+        elif isinstance(device, DoorbellDetail):
+            device_data["doorbells"].append(
+                {"base": _mock_august_doorbell(device.device_id), "detail": device}
+            )
+        else:
+            raise ValueError
+
+    def _get_device_detail(device_type, device_id):
+        for device in device_data[device_type]:
+            if device["detail"].device_id == device_id:
+                return device["detail"]
+        raise ValueError
+
+    def _get_base_devices(device_type):
+        base_devices = []
+        for device in device_data[device_type]:
+            base_devices.append(device["base"])
+        return base_devices
 
     def get_lock_detail_side_effect(access_token, device_id):
-        for lock in lock_details:
-            if isinstance(lock, LockDetail) and lock.device_id == device_id:
-                return lock
+        return _get_device_detail("locks", device_id)
 
     def get_operable_locks_side_effect(access_token):
-        return locks
+        return _get_base_devices("locks")
 
     def get_doorbells_side_effect(access_token):
-        return doorbells
+        return _get_base_devices("doorbells")
 
     def get_house_activities_side_effect(access_token, house_id, limit=10):
         return []
 
     def lock_return_activities_side_effect(access_token, device_id):
-        for lock in lock_details:
-            if isinstance(lock, LockDetail) and lock.device_id == device_id:
-                return [
-                    _mock_lock_operation_activity(lock, "lock"),
-                    _mock_door_operation_activity(lock, "doorclosed"),
-                ]
-        return []
+        lock = _get_device_detail("locks", device_id)
+        return [
+            _mock_lock_operation_activity(lock, "lock"),
+            _mock_door_operation_activity(lock, "doorclosed"),
+        ]
 
     def unlock_return_activities_side_effect(access_token, device_id):
-        for lock in lock_details:
-            if isinstance(lock, LockDetail) and lock.device_id == device_id:
-                return [
-                    _mock_lock_operation_activity(lock, "unlock"),
-                    _mock_door_operation_activity(lock, "dooropen"),
-                ]
-        return []
+        lock = _get_device_detail("locks", device_id)
+        return [
+            _mock_lock_operation_activity(lock, "unlock"),
+            _mock_door_operation_activity(lock, "dooropen"),
+        ]
 
-    api_call_side_effects["get_lock_detail"] = get_lock_detail_side_effect
-    api_call_side_effects["get_operable_locks"] = get_operable_locks_side_effect
-    api_call_side_effects["get_doorbells"] = get_doorbells_side_effect
-    api_call_side_effects["lock_return_activities"] = lock_return_activities_side_effect
-    api_call_side_effects[
-        "unlock_return_activities"
-    ] = unlock_return_activities_side_effect
+    if "get_lock_detail" not in api_call_side_effects:
+        api_call_side_effects["get_lock_detail"] = get_lock_detail_side_effect
+    if "get_operable_locks" not in api_call_side_effects:
+        api_call_side_effects["get_operable_locks"] = get_operable_locks_side_effect
+    if "get_doorbells" not in api_call_side_effects:
+        api_call_side_effects["get_doorbells"] = get_doorbells_side_effect
+    if "get_house_activities" not in api_call_side_effects:
+        api_call_side_effects["get_house_activities"] = get_house_activities_side_effect
+    if "lock_return_activities" not in api_call_side_effects:
+        api_call_side_effects[
+            "lock_return_activities"
+        ] = lock_return_activities_side_effect
+    if "unlock_return_activities" not in api_call_side_effects:
+        api_call_side_effects[
+            "unlock_return_activities"
+        ] = unlock_return_activities_side_effect
+
     return await _mock_setup_august_with_api_side_effects(hass, api_call_side_effects)
 
 
@@ -119,6 +140,11 @@ async def _mock_setup_august_with_api_side_effects(hass, api_call_side_effects):
 
     if api_call_side_effects["get_doorbells"]:
         api_instance.get_doorbells.side_effect = api_call_side_effects["get_doorbells"]
+
+    if api_call_side_effects["get_house_activities"]:
+        api_instance.get_house_activities.side_effect = api_call_side_effects[
+            "get_house_activities"
+        ]
 
     if api_call_side_effects["lock_return_activities"]:
         api_instance.lock_return_activities.side_effect = api_call_side_effects[

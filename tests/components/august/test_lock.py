@@ -21,7 +21,7 @@ async def test_one_lock_operation(hass):
         hass, "get_lock.online_with_doorsense.json"
     )
     lock_details = [lock_one]
-    await _create_august_with_devices(hass, lock_details=lock_details)
+    await _create_august_with_devices(hass, lock_details)
 
     lock_abc_name = hass.states.get("lock.abc_name")
 

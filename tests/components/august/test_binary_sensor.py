@@ -19,7 +19,9 @@ from tests.components.august.mocks import (
 
 
 @pytest.mark.skip(
-    reason="The lock and doorsense can get out of sync due to update intervals, this is an existing bug which will be fixed with dispatcher events to tell all linked devices to update."
+    reason="The lock and doorsense can get out of sync due to update intervals, "
+    + "this is an existing bug which will be fixed with dispatcher events to tell "
+    + "all linked devices to update."
 )
 async def test_doorsense(hass):
     """Test creation of a lock with doorsense and bridge."""
@@ -27,7 +29,7 @@ async def test_doorsense(hass):
         hass, "get_lock.online_with_doorsense.json"
     )
     lock_details = [lock_one]
-    await _create_august_with_devices(hass, lock_details=lock_details)
+    await _create_august_with_devices(hass, lock_details)
 
     binary_sensor_abc_name = hass.states.get("binary_sensor.abc_name_open")
     assert binary_sensor_abc_name.state == STATE_ON
@@ -53,7 +55,7 @@ async def test_create_doorbell(hass):
     """Test creation of a doorbell."""
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
     doorbell_details = [doorbell_one]
-    await _create_august_with_devices(hass, doorbell_details=doorbell_details)
+    await _create_august_with_devices(hass, doorbell_details)
 
     binary_sensor_k98gidt45gul_name_motion = hass.states.get(
         "binary_sensor.k98gidt45gul_name_motion"
