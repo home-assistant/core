@@ -59,6 +59,13 @@ def mock_image():
         yield image
 
 
+@pytest.fixture
+def mock_pil_img():
+    """Return a mock PIL image."""
+    with patch("PIL.Image.open") as pil_img:
+        yield pil_img
+
+
 async def test_bad_api_key(hass, caplog):
     """Catch bad api key."""
     with patch("simplehound.core.cloud.detect", side_effect=hound.SimplehoundException):
@@ -96,16 +103,17 @@ async def test_process_image(hass, mock_image, mock_detections):
     assert len(person_events) == 2
 
 
-async def test_save_image(hass, mock_image, mock_detections):
+async def test_save_image(hass, mock_image, mock_detections, mock_pil_img):
     """Save a processed image."""
-    VALID_CONFIG.update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
+    VALID_CONFIG[ip.DOMAIN].update({sh.CONF_SAVE_FILE_FOLDER: TEST_DIR})
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
 
-    data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
-    with patch("PIL.Image.Image.save") as mock_save:
+    with patch("PIL.Image.Image") as pil_img:
+        data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
         await hass.services.async_call(ip.DOMAIN, ip.SERVICE_SCAN, service_data=data)
         await hass.async_block_till_done()
         state = hass.states.get(VALID_ENTITY_ID)
         assert state.state == "2"
-        mock_save.assert_called_with("test.jpg")
+        pil_img.save.assert_called()
+        # pil_img.save.assert_called_with("test.jpg")  # kwargs={format: "JPEG"}
