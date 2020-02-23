@@ -597,6 +597,9 @@ async def test_option_flow(hass, mock_panel):
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_binary"
+    assert result["description_placeholders"] == {
+        "zone": "Zone 2",
+    }
 
     # zone 2
     result = await hass.config_entries.options.async_configure(
@@ -604,6 +607,9 @@ async def test_option_flow(hass, mock_panel):
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_binary"
+    assert result["description_placeholders"] == {
+        "zone": "Zone 6",
+    }
 
     # zone 6
     result = await hass.config_entries.options.async_configure(
@@ -612,6 +618,9 @@ async def test_option_flow(hass, mock_panel):
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_digital"
+    assert result["description_placeholders"] == {
+        "zone": "Zone 3",
+    }
 
     # zone 3
     result = await hass.config_entries.options.async_configure(
@@ -619,6 +628,9 @@ async def test_option_flow(hass, mock_panel):
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_switch"
+    assert result["description_placeholders"] == {
+        "zone": "Zone 4",
+    }
 
     # zone 4
     result = await hass.config_entries.options.async_configure(
@@ -626,6 +638,9 @@ async def test_option_flow(hass, mock_panel):
     )
     assert result["type"] == "form"
     assert result["step_id"] == "options_switch"
+    assert result["description_placeholders"] == {
+        "zone": "OUT",
+    }
 
     # zone out
     result = await hass.config_entries.options.async_configure(
