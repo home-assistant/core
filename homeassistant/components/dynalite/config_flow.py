@@ -22,10 +22,8 @@ class DynaliteFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a new bridge as a config entry."""
         LOGGER.debug("Starting async_step_import - %s", import_info)
         host = import_info[CONF_HOST]
-        LOGGER.debug("XXX before unique_id")
         await self.async_set_unique_id(host)
         self._abort_if_unique_id_configured(import_info)
-        LOGGER.debug("XXX after unique_id")
         # New entry
         bridge = DynaliteBridge(self.hass, import_info)
         if not await bridge.async_setup():

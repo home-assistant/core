@@ -1,4 +1,6 @@
 """Support for the Dynalite networks."""
+import asyncio
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -110,13 +112,18 @@ async def async_setup(hass, config):
 
 async def async_entry_changed(hass, entry):
     """Reload entry since the data has changed."""
-    LOGGER.debug("Reloading entry %s", entry.data)
-    await hass.config_entries.async_reload(entry.entry_id)
+    LOGGER.debug("Reconfiguring entry %s", entry.data)
+    while entry.state == "not_loaded":
+        await asyncio.sleep(1)
+    bridge = hass.data[DOMAIN][entry.entry_id]
+    await bridge.reload_config(entry.data)
+    LOGGER.debug("Reconfiguring entry finished %s", entry.data)
 
 
 async def async_setup_entry(hass, entry):
     """Set up a bridge from a config entry."""
     LOGGER.debug("Setting up entry %s", entry.data)
+    entry.add_update_listener(async_entry_changed)
     bridge = DynaliteBridge(hass, entry.data)
     if not await bridge.async_setup():
         LOGGER.error("Could not set up bridge for entry %s", entry.data)
@@ -128,7 +135,6 @@ async def async_setup_entry(hass, entry):
     hass.async_create_task(
         hass.config_entries.async_forward_entry_setup(entry, "light")
     )
-    entry.add_update_listener(async_entry_changed)
     return True
 
 

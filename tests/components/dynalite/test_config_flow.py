@@ -95,5 +95,4 @@ async def test_existing_update(hass):
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
     bridge = get_bridge_from_hass(hass)
-    assert old_bridge is not bridge
     assert bridge.dynalite_devices.config.get("aaa") == "bbb"
