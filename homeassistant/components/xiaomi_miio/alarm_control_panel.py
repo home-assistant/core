@@ -158,9 +158,7 @@ class XiaomiGatewayAlarm(AlarmControlPanel):
 
     async def async_alarm_arm_away(self, code=None):
         """Turn on."""
-        await self._try_command(
-            "Turning the alarm on failed.", self._gateway.alarm.on
-        )
+        await self._try_command("Turning the alarm on failed.", self._gateway.alarm.on)
 
     async def async_alarm_disarm(self, code=None):
         """Turn off."""
