@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
+    TIME_MINUTES,
 )
 from homeassistant.helpers import location
 import homeassistant.helpers.config_validation as cv
@@ -188,7 +189,7 @@ class GoogleTravelTimeSensor(Entity):
         self._hass = hass
         self._name = name
         self._options = options
-        self._unit_of_measurement = "min"
+        self._unit_of_measurement = TIME_MINUTES
         self._matrix = None
         self.valid_api_connection = True
 
