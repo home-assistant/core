@@ -107,13 +107,6 @@ def _dt_aware_to_naive(dt_aware: dt) -> dt:
     return dt_naive.replace(microsecond=0)
 
 
-def _dt_aware_to_evo(dt_aware: dt, offset: int) -> dt:
-    dt_naive = dt.now() + (dt_aware - dt_util.now())
-    if dt_naive.microsecond >= 500000:
-        dt_naive += timedelta(seconds=1)
-    return dt_naive.replace(microsecond=0)
-
-
 def convert_until(status_dict: dict, until_key: str) -> str:
     """Reformat a dt str from "%Y-%m-%dT%H:%M:%SZ" as local/aware/isoformat."""
     if until_key in status_dict:  # only present for certain modes
