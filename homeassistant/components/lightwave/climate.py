@@ -90,7 +90,7 @@ class LightwaveTrv(ClimateDevice):
                 self._inhibit = 0
         if battery:
             self._battery = battery
-        if trv_output is not None:
+        if trv_output:
             if trv_output > 0:
                 self._hvac_action = CURRENT_HVAC_HEAT
             else:
