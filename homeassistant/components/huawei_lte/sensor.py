@@ -18,6 +18,7 @@ from .const import (
     KEY_DEVICE_INFORMATION,
     KEY_DEVICE_SIGNAL,
     KEY_MONITORING_MONTH_STATISTICS,
+    KEY_MONITORING_STATUS,
     KEY_MONITORING_TRAFFIC_STATISTICS,
     SENSOR_KEYS,
 )
@@ -127,6 +128,26 @@ SENSOR_META = {
     ),
     (KEY_MONITORING_MONTH_STATISTICS, "CurrentMonthUpload"): dict(
         name="Current month upload", unit=DATA_BYTES, icon="mdi:upload"
+    ),
+    KEY_MONITORING_STATUS: dict(
+        include=re.compile(
+            r"^(currentwifiuser|(primary|secondary).*dns)$", re.IGNORECASE
+        )
+    ),
+    (KEY_MONITORING_STATUS, "CurrentWifiUser"): dict(
+        name="WiFi clients connected", icon="mdi:wifi"
+    ),
+    (KEY_MONITORING_STATUS, "PrimaryDns"): dict(
+        name="Primary DNS server", icon="mdi:ip"
+    ),
+    (KEY_MONITORING_STATUS, "SecondaryDns"): dict(
+        name="Secondary DNS server", icon="mdi:ip"
+    ),
+    (KEY_MONITORING_STATUS, "PrimaryIPv6Dns"): dict(
+        name="Primary IPv6 DNS server", icon="mdi:ip"
+    ),
+    (KEY_MONITORING_STATUS, "SecondaryIPv6Dns"): dict(
+        name="Secondary IPv6 DNS server", icon="mdi:ip"
     ),
     KEY_MONITORING_TRAFFIC_STATISTICS: dict(
         exclude=re.compile(r"^showtraffic$", re.IGNORECASE)
