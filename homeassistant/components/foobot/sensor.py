@@ -13,6 +13,7 @@ from homeassistant.const import (
     CONF_TOKEN,
     CONF_USERNAME,
     TEMP_CELSIUS,
+    TIME_SECONDS,
 )
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -30,7 +31,7 @@ ATTR_VOLATILE_ORGANIC_COMPOUNDS = "VOC"
 ATTR_FOOBOT_INDEX = "index"
 
 SENSOR_TYPES = {
-    "time": [ATTR_TIME, "s"],
+    "time": [ATTR_TIME, TIME_SECONDS],
     "pm": [ATTR_PM2_5, "µg/m3", "mdi:cloud"],
     "tmp": [ATTR_TEMPERATURE, TEMP_CELSIUS, "mdi:thermometer"],
     "hum": [ATTR_HUMIDITY, "%", "mdi:water-percent"],

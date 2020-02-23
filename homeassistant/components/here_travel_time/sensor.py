@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
     CONF_UNIT_SYSTEM_METRIC,
     EVENT_HOMEASSISTANT_START,
+    TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import location
@@ -84,8 +85,6 @@ ATTR_TRAFFIC_MODE = CONF_TRAFFIC_MODE
 ATTR_DURATION_IN_TRAFFIC = "duration_in_traffic"
 ATTR_ORIGIN_NAME = "origin_name"
 ATTR_DESTINATION_NAME = "destination_name"
-
-UNIT_OF_MEASUREMENT = "min"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
@@ -209,7 +208,7 @@ class HERETravelTimeSensor(Entity):
         self._origin_entity_id = origin_entity_id
         self._destination_entity_id = destination_entity_id
         self._here_data = here_data
-        self._unit_of_measurement = UNIT_OF_MEASUREMENT
+        self._unit_of_measurement = TIME_MINUTES
         self._attrs = {
             ATTR_UNIT_SYSTEM: self._here_data.units,
             ATTR_MODE: self._here_data.travel_mode,

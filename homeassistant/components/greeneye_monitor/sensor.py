@@ -1,7 +1,14 @@
 """Support for the sensors in a GreenEye Monitor."""
 import logging
 
-from homeassistant.const import CONF_NAME, CONF_TEMPERATURE_UNIT, POWER_WATT
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_TEMPERATURE_UNIT,
+    POWER_WATT,
+    TIME_HOURS,
+    TIME_MINUTES,
+    TIME_SECONDS,
+)
 from homeassistant.helpers.entity import Entity
 
 from . import (
@@ -17,9 +24,6 @@ from . import (
     SENSOR_TYPE_PULSE_COUNTER,
     SENSOR_TYPE_TEMPERATURE,
     SENSOR_TYPE_VOLTAGE,
-    TIME_UNIT_HOUR,
-    TIME_UNIT_MINUTE,
-    TIME_UNIT_SECOND,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -235,11 +239,11 @@ class PulseCounter(GEMSensor):
     @property
     def _seconds_per_time_unit(self):
         """Return the number of seconds in the given display time unit."""
-        if self._time_unit == TIME_UNIT_SECOND:
+        if self._time_unit == TIME_SECONDS:
             return 1
-        if self._time_unit == TIME_UNIT_MINUTE:
+        if self._time_unit == TIME_MINUTES:
             return 60
-        if self._time_unit == TIME_UNIT_HOUR:
+        if self._time_unit == TIME_HOURS:
             return 3600
 
     @property
