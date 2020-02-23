@@ -5,10 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://www.home-assistant.io/integrations/pvpc_hourly_pricing/
 """
 import asyncio
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import logging
 from random import randint
-from typing import List, Optional, Tuple
+from typing import Dict, Optional
 
 import aiohttp
 import async_timeout
@@ -38,6 +38,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(SENSOR_SCHEMA.schema)
 
 _RESOURCE = "https://api.esios.ree.es/archives/80/download?date={day:%Y-%m-%d}"
 _ATTRIBUTION = "Data retrieved from api.esios.ree.es by REE"
+
+# Prices are given in 0 to 24h sets, adjusted to the main timezone in Spain
+_REFERENCE_TZ = timezone("Europe/Madrid")
 
 ATTR_PRICE = "price"
 ICON = "mdi:currency-eur"
@@ -100,9 +103,7 @@ async def async_setup_entry(
     )
 
 
-def extract_prices_for_tariff(
-    xml_data: str, local_tz: timezone, tariff: int = 2
-) -> Tuple[date, List[float]]:
+def extract_prices_for_tariff(xml_data: str, tariff: int = 2) -> Dict[datetime, float]:
     """
     PVPC xml data extractor.
 
@@ -110,11 +111,13 @@ def extract_prices_for_tariff(
     of the official _Spain Electric Network_ (Red Eléctrica Española, REE)
     for the _Voluntary Price for Small Consumers_
     (Precio Voluntario para el Pequeño Consumidor, PVPC).
+
+    Prices are referenced with datetimes in UTC.
     """
     data = xmltodict.parse(xml_data)["PVPCDesgloseHorario"]
 
     str_horiz = data["Horizonte"]["@v"]
-    day: date = parse(str_horiz.split("/")[0]).astimezone(local_tz).date()
+    ts_init: datetime = next(map(parse, str_horiz.split("/")))
 
     tariff_id = f"Z0{tariff}"
     prices = next(
@@ -127,10 +130,11 @@ def extract_prices_for_tariff(
         )
     )
 
-    price_values = [
-        round(float(pair["Ctd"]["@v"]), 5) for pair in prices["Periodo"]["Intervalo"]
-    ]
-    return day, price_values
+    price_values = {
+        ts_init + timedelta(hours=i): round(float(pair["Ctd"]["@v"]), 5)
+        for i, pair in enumerate(prices["Periodo"]["Intervalo"])
+    }
+    return price_values
 
 
 class ElecPriceSensor(RestoreEntity):
@@ -146,8 +150,7 @@ class ElecPriceSensor(RestoreEntity):
         self._num_retries = 0
         self._state = None
         self._attributes = None
-        self._today_prices = None
-        self._tomorrow_prices = None
+        self._current_prices: Dict[datetime, float] = {}
 
         self._init_done = False
         self._hourly_tracker = None
@@ -164,18 +167,8 @@ class ElecPriceSensor(RestoreEntity):
         state = await self.async_get_last_state()
         if state:
             self._state = state.state
-            self._today_prices = [
-                state.attributes[k] for k in state.attributes if k.startswith("price")
-            ]
-            _LOGGER.debug(
-                "RestoreState[%s]: Loaded %d prices",
-                self.entity_id,
-                len(self._today_prices),
-            )
 
-        self._init_done = True
-
-        # Update 'state' value 2 times/hour
+        # Update 'state' value in hour changes
         self._hourly_tracker = async_track_time_change(
             self.hass, self.async_update, second=[0], minute=[0]
         )
@@ -194,6 +187,7 @@ class ElecPriceSensor(RestoreEntity):
             mins_update,
         )
         await self.async_update_prices()
+        self._init_done = True
         await self.async_update_ha_state(True)
 
     @property
@@ -234,48 +228,61 @@ class ElecPriceSensor(RestoreEntity):
         """Return the state attributes."""
         return self._attributes
 
-    def _get_current_value(self, current_hour):
+    def _process_state_and_attributes(self) -> bool:
         """
-        Extract current price from today prices array.
+        Generate the current state and sensor attributes.
 
-        In DST days, this array will have 23 or 25 values, instead of the expected 24.
+        The data source provides prices in 0 to 24h sets, with correspondence
+        with the main timezone in Spain, but they are stored with UTC datetimes.
         """
-        if len(self._today_prices) == 23 and current_hour > 2:
-            return self._today_prices[current_hour - 1]
-        if len(self._today_prices) == 25 and current_hour > 2:
-            return self._today_prices[current_hour + 1]
-        return self._today_prices[current_hour]
 
-    def _process_state_and_attributes(self):
-        """Generate the current state and sensor attributes."""
-        actual_hour = dt_util.now(self.hass.config.time_zone).hour
-        if self._tomorrow_prices is not None and actual_hour < 3:
-            # remove 'tomorrow prices' as now they refer to 'today'
-            self._tomorrow_prices = None
+        def _local(ts: datetime) -> datetime:
+            return ts.astimezone(self.hass.config.time_zone)
+
+        utc_time = dt_util.utcnow().replace(minute=0, second=0, microsecond=0)
+        actual_time = _local(utc_time)
+        if len(self._current_prices) > 25 and actual_time.hour < 20:
+            # there are 'today' and 'next day' prices, but 'today' has expired
+            max_age = (
+                utc_time.astimezone(_REFERENCE_TZ)
+                .replace(hour=0)
+                .astimezone(dt_util.UTC)
+            )
+            self._current_prices = {
+                key_ts: price
+                for key_ts, price in self._current_prices.items()
+                if key_ts >= max_age
+            }
 
         # set current price
-        self._state = self._get_current_value(actual_hour)
-
-        prices = self._today_prices.copy()
-        if self._tomorrow_prices is not None:
-            prices += self._tomorrow_prices
+        try:
+            self._state = self._current_prices[utc_time]
+        except KeyError:  # pragma: no cover
+            return False
 
         # generate sensor attributes
-        prices_sorted = dict(sorted(enumerate(prices), key=lambda x: x[1]))
+        prices_sorted = dict(sorted(self._current_prices.items(), key=lambda x: x[1]))
         attributes = {ATTR_ATTRIBUTION: _ATTRIBUTION, ATTR_TARIFF: self._tariff}
-        attributes["min price"] = min(prices)
-        attributes["min price at"] = next(iter(prices_sorted))
+        attributes["min price"] = min(self._current_prices.values())
+        attributes["min price at"] = _local(next(iter(prices_sorted))).hour
         attributes["next best at"] = list(
-            filter(lambda x: x >= actual_hour, prices_sorted.keys())
+            map(
+                lambda x: _local(x).hour,
+                filter(lambda x: x >= utc_time, prices_sorted.keys()),
+            )
         )
-
-        for i, price_h in enumerate(self._today_prices):
-            attributes[f"price {i:02d}h"] = price_h
-        if self._tomorrow_prices is not None:
-            for i, price_h in enumerate(self._tomorrow_prices):
-                attributes[f"price next day {i:02d}h"] = price_h
+        for ts_utc, price_h in self._current_prices.items():
+            ts_local = _local(ts_utc)
+            if ts_local.day > actual_time.day:
+                attr_key = f"price next day {ts_local.hour:02d}h"
+            else:
+                attr_key = f"price {ts_local.hour:02d}h"
+            if attr_key in attributes:  # DST change with duplicated hour :)
+                attr_key += "_d"
+            attributes[attr_key] = price_h
 
         self._attributes = attributes
+        return True
 
     async def async_update(self, *_args):
         """Update the sensor state."""
@@ -283,16 +290,13 @@ class ElecPriceSensor(RestoreEntity):
             # abort until added_to_hass is finished
             return
 
-        if self._today_prices:
-            self._process_state_and_attributes()
+        if self._process_state_and_attributes():
             await self.async_update_ha_state()
-        else:
+        else:  # pragma: no cover
             # If no prices present, download and schedule a future state update
             self._state = None
-            _LOGGER.debug(
-                "[%s]: Downloading prices, updating after %d seconds",
-                self.entity_id,
-                self._timeout,
+            _LOGGER.warning(
+                "[%s]: Downloading prices as there are no valid ones", self.entity_id,
             )
             async_track_point_in_time(
                 self.hass,
@@ -310,18 +314,17 @@ class ElecPriceSensor(RestoreEntity):
                 if resp.status < 400:
                     text = await resp.text()
                     return text
-        except asyncio.TimeoutError:
+        except asyncio.TimeoutError:  # pragma: no cover
             _LOGGER.warning("Timeout error requesting data from '%s'", url)
-        except aiohttp.ClientError:
+        except aiohttp.ClientError:  # pragma: no cover
             _LOGGER.error("Client error in '%s'", url)
-        return None
+        return None  # pragma: no cover
 
     async def async_update_prices(self, *args):
         """Update electricity prices from the ESIOS API."""
-        local_tz = self.hass.config.time_zone
-        now = args[0].astimezone(local_tz) if args else dt_util.now(local_tz)
-        text = await self._download_official_data(now.date())
-        if text is None:
+        localized_now = dt_util.utcnow().astimezone(_REFERENCE_TZ)
+        text = await self._download_official_data(localized_now.date())
+        if text is None:  # pragma: no cover
             self._num_retries += 1
             if self._num_retries > 3:
                 _LOGGER.error("Bad data update")
@@ -337,28 +340,23 @@ class ElecPriceSensor(RestoreEntity):
             return
 
         tariff_number = TARIFFS.index(self._tariff) + 1
-        _day, prices = extract_prices_for_tariff(text, local_tz, tariff_number)
+        prices = extract_prices_for_tariff(text, tariff_number)
         self._num_retries = 0
-        self._today_prices = prices
+        self._current_prices.update(prices)
 
-        # At evening, it is possible to retrieve 'tomorrow' prices
-        if now.hour >= 20:
+        # At evening, it is possible to retrieve next day prices
+        if localized_now.hour >= 20:
             try:
-                text_tomorrow = await self._download_official_data(
-                    (now + timedelta(days=1)).date()
-                )
-                day_fut, prices_fut = extract_prices_for_tariff(
-                    text_tomorrow, local_tz, tariff_number
-                )
-                _LOGGER.debug(
-                    "Setting tomorrow (%s) prices: %s",
-                    day_fut.strftime("%Y-%m-%d"),
-                    str(prices),
-                )
-                self._tomorrow_prices = prices_fut
-                return
-            except xmltodict.expat.ExpatError:
+                next_day = (localized_now + timedelta(days=1)).date()
+                text_next_day = await self._download_official_data(next_day)
+                prices_fut = extract_prices_for_tariff(text_next_day, tariff_number)
+                self._current_prices.update(prices_fut)
+            except xmltodict.expat.ExpatError:  # pragma: no cover
                 _LOGGER.debug("Bad try on getting future prices")
 
-        self._tomorrow_prices = None
-        _LOGGER.debug("Download done for %s", self.entity_id)
+        _LOGGER.debug(
+            "Download done for %s, now with %d prices from %s UTC",
+            self.entity_id,
+            len(self._current_prices),
+            list(self._current_prices)[0].strftime("%Y-%m-%d %Hh"),
+        )
