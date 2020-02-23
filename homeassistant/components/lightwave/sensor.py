@@ -21,7 +21,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     for device_id, device_config in discovery_info.items():
         name = device_config[CONF_NAME]
         serial = device_config[CONF_SERIAL]
-        batt.append(LightwaveBattery(name, device_id, lwlink, serial))
+        batt.append(LightwaveBattery(name, lwlink, serial))
 
     async_add_entities(batt)
 
@@ -29,10 +29,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class LightwaveBattery(Entity):
     """Lightwave TRV Battery."""
 
-    def __init__(self, name, device_id, lwlink, serial):
+    def __init__(self, name, lwlink, serial):
         """Initialize the Lightwave Trv battery sensor."""
         self._name = name
-        self._device_id = device_id
         self._state = None
         self._lwlink = lwlink
         self._serial = serial
